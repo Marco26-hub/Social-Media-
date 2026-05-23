@@ -2,12 +2,24 @@
   "name": "SOCIAL_J_VALIDA_MEDIA",
   "nodes": [
     {
-      "parameters": { "rule": { "interval": [{ "field": "minutes", "minutesInterval": 30 }] } },
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
       "id": "n1",
       "name": "Schedule 30min",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [200, 300]
+      "position": [
+        200,
+        300
+      ]
     },
     {
       "parameters": {
@@ -18,20 +30,46 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_ANON_KEY }}" },
-            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "return=representation" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
           ]
         },
-        "options": { "response": { "response": { "neverError": true } } }
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
       },
       "id": "n2",
       "name": "Read CALENDARIO",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [420, 300],
-      "credentials": { "httpHeaderAuth": { "id": "SUPABASE", "name": "Supabase API" } },
+      "position": [
+        420,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SUPABASE",
+          "name": "Supabase API"
+        }
+      },
       "continueOnFail": true
     },
     {
@@ -42,7 +80,10 @@
       "name": "Filter Da Validare",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [640, 300]
+      "position": [
+        640,
+        300
+      ]
     },
     {
       "parameters": {
@@ -52,67 +93,175 @@
       "name": "Build URL list",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [860, 300]
+      "position": [
+        860,
+        300
+      ]
     },
     {
       "parameters": {
         "method": "HEAD",
         "url": "={{ $json.link_media_1 }}",
-        "options": { "response": { "response": { "neverError": true } }, "redirect": { "redirect": { "followRedirects": true } } }
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
       },
       "id": "n5",
       "name": "HEAD media_1",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1080, 300],
+      "position": [
+        1080,
+        300
+      ],
       "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const ctx = $('Build URL list').item.json;\nconst code = $json.statusCode || 0;\nconst ok = code >= 200 && code < 400 && ctx._enoughCount;\nreturn [{ json: { id_contenuto: ctx.id_contenuto, ok, code, minRequired: ctx._minRequired, count: ctx._urls.length } }];"
+        "jsCode": "const ctx = $('Build URL list').item.json;\nconst code = $json.statusCode || 0;\nconst ok = code >= 200 && code < 400 && ctx._enoughCount;\nreturn [{ json: { cliente_id: ctx.cliente_id, id_contenuto: ctx.id_contenuto, ok, code, minRequired: ctx._minRequired, count: ctx._urls.length } }];"
       },
       "id": "n6",
       "name": "Decide",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1300, 300]
+      "position": [
+        1300,
+        300
+      ]
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/calendario?id_contenuto=eq.{{ $json.id_contenuto }}",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/calendario?cliente_id=eq.{{ $json.cliente_id }}&id_contenuto=eq.{{ $json.id_contenuto }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_ANON_KEY }}" },
-            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "return=representation" }
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"media_validato\": \"{{ $json.ok ? 'SI' : 'NO' }}\", \"errore_tecnico\": \"{{ $json.ok ? '' : 'media KO code='+$json.code }}\" }",
-        "options": { "response": { "response": { "neverError": true } } }
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
       },
       "id": "n7",
       "name": "Update media_validato",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1520, 300],
-      "credentials": { "httpHeaderAuth": { "id": "SUPABASE", "name": "Supabase API" } },
+      "position": [
+        1520,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SUPABASE",
+          "name": "Supabase API"
+        }
+      },
       "continueOnFail": true
     }
   ],
   "connections": {
-    "Schedule 30min": { "main": [[{ "node": "Read CALENDARIO", "type": "main", "index": 0 }]] },
-    "Read CALENDARIO": { "main": [[{ "node": "Filter Da Validare", "type": "main", "index": 0 }]] },
-    "Filter Da Validare": { "main": [[{ "node": "Build URL list", "type": "main", "index": 0 }]] },
-    "Build URL list": { "main": [[{ "node": "HEAD media_1", "type": "main", "index": 0 }]] },
-    "HEAD media_1": { "main": [[{ "node": "Decide", "type": "main", "index": 0 }]] },
-    "Decide": { "main": [[{ "node": "Update media_validato", "type": "main", "index": 0 }]] }
+    "Schedule 30min": {
+      "main": [
+        [
+          {
+            "node": "Read CALENDARIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read CALENDARIO": {
+      "main": [
+        [
+          {
+            "node": "Filter Da Validare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Da Validare": {
+      "main": [
+        [
+          {
+            "node": "Build URL list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build URL list": {
+      "main": [
+        [
+          {
+            "node": "HEAD media_1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HEAD media_1": {
+      "main": [
+        [
+          {
+            "node": "Decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide": {
+      "main": [
+        [
+          {
+            "node": "Update media_validato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": { "timezone": "Europe/Rome" }
+  "settings": {
+    "timezone": "Europe/Rome"
+  }
 }

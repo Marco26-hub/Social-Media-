@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation'
 import StatusBadge from '@/components/StatusBadge'
 import ConfirmModal from '@/components/ConfirmModal'
 import type { Contenuto } from '@/lib/types'
+import { useActiveClienteId } from '@/lib/tenant/client'
 
 const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
@@ -29,6 +30,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [aiModel, setAiModel] = useState('claude-sonnet-4-6')
   const supabase = createClient()
   const demo = isDemo()
+  const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -42,16 +44,18 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
         setRecenti(demoContenuti.filter(c => c.canale === config.canaleDb).slice(0, 5))
         return
       }
+      if (loadingCliente) return
       const { data } = await supabase
         .from('calendario')
         .select('*')
+        .eq('cliente_id', clienteId ?? '')
         .eq('canale', config.canaleDb)
         .order('data_pubblicazione', { ascending: false })
         .limit(5)
       setRecenti(((data ?? []) as unknown) as Contenuto[])
     }
     load()
-  }, [demo, supabase, config.canaleDb])
+  }, [demo, supabase, config.canaleDb, clienteId, loadingCliente])
 
   function chiediGenera(f: FormatoConfig) {
     setPending(f)
@@ -67,6 +71,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       return
     }
     try {
+      if (!clienteId) throw new Error('Cliente non selezionato')
       const base = process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE
       if (!base) throw new Error('n8n non configurato')
       const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
@@ -76,7 +81,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       const res = await fetch(`${base}/${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ canale: config.canaleDb, formato: f.formato, model: aiModel, openrouter_key: orKey || undefined }),
+        body: JSON.stringify({ cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, model: aiModel, openrouter_key: orKey || undefined }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setStates(s => ({ ...s, [f.id]: 'success' }))

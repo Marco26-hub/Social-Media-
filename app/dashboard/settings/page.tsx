@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Setting } from '@/lib/types'
 import { Save, RefreshCw } from 'lucide-react'
 import { demoSettings } from '@/lib/demo-data'
+import { useActiveClienteId } from '@/lib/tenant/client'
 
 const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
@@ -16,6 +17,7 @@ export default function SettingsPage() {
   const [saved, setSaved]       = useState<string | null>(null)
   const supabase = createClient()
   const demo = isDemo()
+  const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
   useEffect(() => {
     if (demo) {
@@ -23,9 +25,10 @@ export default function SettingsPage() {
       setLoading(false)
       return
     }
-    supabase.from('settings').select('*').order('chiave')
+    if (loadingCliente) return
+    supabase.from('settings').select('*').eq('cliente_id', clienteId ?? '').order('chiave')
       .then(({ data }) => { setSettings(data ?? []); setLoading(false) })
-  }, [supabase, demo])
+  }, [supabase, demo, clienteId, loadingCliente])
 
   async function updateSetting(s: Setting, newVal: string) {
     setSaving(s.id)

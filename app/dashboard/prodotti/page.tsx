@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Prodotto } from '@/lib/types'
 import { demoProdotti } from '@/lib/demo-data'
+import { getActiveClienteId } from '@/lib/tenant/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,12 @@ export default async function ProdottiPage() {
     prodotti = demoProdotti
   } else {
     const supabase = await createClient()
-    const res = await supabase.from('prodotti').select('*').order('priorita', { ascending: true })
+    const clienteId = await getActiveClienteId(supabase)
+    const res = await supabase
+      .from('prodotti')
+      .select('*')
+      .eq('cliente_id', clienteId ?? '')
+      .order('priorita', { ascending: true })
     prodotti = res.data
   }
 

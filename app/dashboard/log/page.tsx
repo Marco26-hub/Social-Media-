@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import StatusBadge from '@/components/StatusBadge'
 import { demoLogs } from '@/lib/demo-data'
+import { getActiveClienteId } from '@/lib/tenant/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,13 @@ export default async function LogPage() {
     logs = demoLogs
   } else {
     const supabase = await createClient()
-    const res = await supabase.from('log_pubblicazioni').select('*').order('timestamp', { ascending: false }).limit(100)
+    const clienteId = await getActiveClienteId(supabase)
+    const res = await supabase
+      .from('log_pubblicazioni')
+      .select('*')
+      .eq('cliente_id', clienteId ?? '')
+      .order('timestamp', { ascending: false })
+      .limit(100)
     logs = res.data
   }
 

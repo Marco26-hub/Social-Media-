@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { demoSeoAudit } from '@/lib/demo-data'
 import type { SeoAudit } from '@/lib/types'
 import { TrendingUp, AlertTriangle, Target, CheckCircle2, Calendar, Search, Loader2, Globe, Sparkles } from 'lucide-react'
+import { useActiveClienteId } from '@/lib/tenant/client'
 
 const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
@@ -18,16 +19,23 @@ export default function SeoPage() {
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const supabase = createClient()
   const demo = isDemo()
+  const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
   useEffect(() => {
     async function load() {
       if (demo) { setAudits(demoSeoAudit); setLoading(false); return }
-      const { data } = await supabase.from('seo_audit').select('*').order('data_audit', { ascending: false }).limit(10)
+      if (loadingCliente) return
+      const { data } = await supabase
+        .from('seo_audit')
+        .select('*')
+        .eq('cliente_id', clienteId ?? '')
+        .order('data_audit', { ascending: false })
+        .limit(10)
       setAudits(((data ?? []) as unknown) as SeoAudit[])
       setLoading(false)
     }
     load()
-  }, [supabase, demo])
+  }, [supabase, demo, clienteId, loadingCliente])
 
   async function avviaAudit() {
     if (!url.trim()) {
@@ -45,6 +53,7 @@ export default function SeoPage() {
     }
 
     try {
+      if (!clienteId) throw new Error('Cliente non selezionato')
       const base = process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE
       if (!base) throw new Error('n8n non configurato')
       const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
@@ -52,7 +61,7 @@ export default function SeoPage() {
       const res = await fetch(`${base}/workflow-L`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sito_url: url, periodo, model: aiModel, openrouter_key: orKey || undefined }),
+        body: JSON.stringify({ cliente_id: clienteId, sito_url: url, periodo, model: aiModel, openrouter_key: orKey || undefined }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setMsg({ type: 'ok', text: `Audit avviato per ${url}` })

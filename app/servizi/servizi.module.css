@@ -1,0 +1,971 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+.pageShell {
+  --ink: #10120e;
+  --forest: #223f2c;
+  --moss: #617c45;
+  --sage: #c7d3a4;
+  --gold: #d6a839;
+  --rust: #a8532d;
+  --paper: #f4efe4;
+  --cream: #fffaf0;
+  --line: rgba(16, 18, 14, 0.14);
+  --soft: rgba(255, 250, 240, 0.72);
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(214, 168, 57, 0.32), transparent 28rem),
+    radial-gradient(circle at 88% 4%, rgba(97, 124, 69, 0.28), transparent 30rem),
+    linear-gradient(135deg, #f7f1e4 0%, #e9ddc8 48%, #f8f3e9 100%);
+  font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+  overflow-x: hidden;
+}
+
+.pageShell * {
+  box-sizing: border-box;
+}
+
+.navbar {
+  position: sticky;
+  top: 16px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(1180px, calc(100% - 32px));
+  margin: 16px auto 0;
+  padding: 12px;
+  border: 1px solid rgba(16, 18, 14, 0.1);
+  border-radius: 24px;
+  background: rgba(255, 250, 240, 0.78);
+  box-shadow: 0 20px 70px rgba(16, 18, 14, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.brandMark {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  color: var(--ink);
+  background: var(--gold);
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 26px;
+  font-weight: 900;
+  box-shadow: 7px 7px 0 rgba(16, 18, 14, 0.1);
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.navLinks a,
+.navCta {
+  color: rgba(16, 18, 14, 0.72);
+  text-decoration: none;
+}
+
+.navCta {
+  padding: 12px 16px;
+  border-radius: 999px;
+  color: var(--cream);
+  background: var(--ink);
+  font-weight: 800;
+}
+
+.mobileStickyCta {
+  display: none;
+}
+
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.72fr);
+  gap: 42px;
+  align-items: center;
+  width: min(1180px, calc(100% - 32px));
+  margin: 26px auto 0;
+  padding: 76px 0 68px;
+}
+
+.heroGlow {
+  position: absolute;
+  inset: 40px -160px auto auto;
+  width: 520px;
+  height: 520px;
+  border-radius: 999px;
+  background: rgba(214, 168, 57, 0.25);
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.heroContent,
+.heroPanel {
+  position: relative;
+  z-index: 1;
+}
+
+.kicker,
+.sectionLabel,
+.packageTopline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  color: var(--rust);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.problemText h2,
+.sectionIntro h2,
+.sectionIntroNarrow h2,
+.methodIntro h2,
+.approvalSection h2,
+.extrasSection h2,
+.ctaBox h2 {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 900;
+  letter-spacing: -0.065em;
+  line-height: 0.94;
+}
+
+.hero h1 {
+  max-width: 790px;
+  font-size: clamp(58px, 8vw, 118px);
+}
+
+.heroLead {
+  max-width: 720px;
+  margin: 28px 0 0;
+  color: rgba(16, 18, 14, 0.72);
+  font-size: clamp(18px, 2vw, 23px);
+  line-height: 1.55;
+}
+
+.heroActions,
+.ctaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 32px;
+}
+
+.primaryButton,
+.secondaryButton,
+.secondaryButtonDark,
+.packageCta,
+.packageCtaFeatured {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.primaryButton {
+  color: var(--ink);
+  background: var(--gold);
+  box-shadow: 0 18px 34px rgba(168, 83, 45, 0.19);
+}
+
+.secondaryButton {
+  color: var(--ink);
+  border: 1px solid rgba(16, 18, 14, 0.16);
+  background: rgba(255, 250, 240, 0.62);
+}
+
+.secondaryButtonDark {
+  color: var(--cream);
+  border: 1px solid rgba(255, 250, 240, 0.22);
+}
+
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 680px;
+  margin-top: 36px;
+}
+
+.heroStats div {
+  padding: 18px;
+  border: 1px solid rgba(16, 18, 14, 0.1);
+  border-radius: 22px;
+  background: rgba(255, 250, 240, 0.58);
+}
+
+.heroStats strong {
+  display: block;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.heroStats span {
+  display: block;
+  margin-top: 8px;
+  color: rgba(16, 18, 14, 0.62);
+  font-size: 13px;
+}
+
+.heroPanel {
+  padding: 24px;
+  border: 1px solid rgba(255, 250, 240, 0.24);
+  border-radius: 34px;
+  color: var(--cream);
+  background:
+    radial-gradient(circle at top right, rgba(214, 168, 57, 0.26), transparent 14rem),
+    linear-gradient(155deg, var(--ink), var(--forest));
+  box-shadow: 0 32px 80px rgba(16, 18, 14, 0.24);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 250, 240, 0.78);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.liveDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #8bff9d;
+  box-shadow: 0 0 0 8px rgba(139, 255, 157, 0.1);
+}
+
+.panelCardLarge {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  margin-top: 26px;
+  padding: 24px;
+  border: 1px solid rgba(255, 250, 240, 0.15);
+  border-radius: 28px;
+  background: rgba(255, 250, 240, 0.09);
+}
+
+.panelIcon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  color: var(--ink);
+  background: var(--gold);
+}
+
+.panelCardLarge strong {
+  display: block;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.panelCardLarge p,
+.panelRows,
+.ctaBox p {
+  color: rgba(255, 250, 240, 0.72);
+}
+
+.pipelineMini {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.pipelineMini span {
+  padding: 10px 6px;
+  border-radius: 999px;
+  color: rgba(255, 250, 240, 0.82);
+  background: rgba(255, 250, 240, 0.09);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.panelRows {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.panelRows div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border-radius: 16px;
+  background: rgba(255, 250, 240, 0.08);
+}
+
+.problemSection,
+.outcomesSection,
+.packagesSection,
+.methodSection,
+.approvalSection,
+.extrasSection,
+.faqSection,
+.ctaSection,
+.footer {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.problemSection {
+  display: grid;
+  grid-template-columns: 0.72fr 1.28fr;
+  gap: 28px;
+  padding: 54px 0;
+}
+
+.problemText h2,
+.sectionIntro h2,
+.sectionIntroNarrow h2,
+.methodIntro h2,
+.extrasSection h2,
+.ctaBox h2 {
+  font-size: clamp(40px, 5vw, 72px);
+}
+
+.problemCards,
+.outcomeGrid,
+.faqGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.problemCards {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.problemCards article,
+.outcomeCard,
+.packageCard,
+.methodTimeline article,
+.faqGrid article {
+  border: 1px solid var(--line);
+  background: rgba(255, 250, 240, 0.68);
+  box-shadow: 0 18px 54px rgba(16, 18, 14, 0.08);
+}
+
+.problemCards article,
+.outcomeCard,
+.faqGrid article {
+  padding: 24px;
+  border-radius: 26px;
+}
+
+.problemCards span,
+.outcomeCard span {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 42px;
+  border-radius: 15px;
+  color: var(--cream);
+  background: var(--forest);
+}
+
+.problemCards h3,
+.outcomeCard h3,
+.packageCard h3,
+.methodTimeline h3,
+.faqGrid h3 {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+
+.problemCards h3,
+.outcomeCard h3,
+.faqGrid h3 {
+  font-size: 28px;
+}
+
+.problemCards p,
+.outcomeCard p,
+.sectionIntro p,
+.sectionIntroNarrow p,
+.methodIntro p,
+.packageCard p,
+.methodTimeline p,
+.faqGrid p,
+.approvalSection p,
+.extrasList div {
+  color: rgba(16, 18, 14, 0.66);
+}
+
+.outcomesSection,
+.packagesSection,
+.methodSection,
+.faqSection {
+  padding: 72px 0;
+}
+
+.sectionIntro,
+.sectionIntroNarrow {
+  margin-bottom: 34px;
+}
+
+.sectionIntro {
+  max-width: 820px;
+}
+
+.sectionIntroNarrow {
+  max-width: 760px;
+}
+
+.sectionIntro p,
+.sectionIntroNarrow p,
+.methodIntro p {
+  margin: 18px 0 0;
+  font-size: 18px;
+}
+
+.outcomeGrid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.outcomeCard span {
+  margin-bottom: 54px;
+  color: var(--ink);
+  background: var(--gold);
+}
+
+.packagesSection {
+  position: relative;
+  padding: 70px 32px;
+  border-radius: 42px;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(214, 168, 57, 0.28), transparent 24rem),
+    linear-gradient(155deg, rgba(16, 18, 14, 0.94), rgba(34, 63, 44, 0.96));
+}
+
+.packagesSection .sectionLabel,
+.packagesSection h2,
+.packagesSection .sectionIntroNarrow p {
+  color: var(--cream);
+}
+
+.packageGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.packageCard {
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  padding: 24px;
+  border-radius: 30px;
+}
+
+.featuredPackage {
+  color: var(--cream);
+  background:
+    radial-gradient(circle at top right, rgba(214, 168, 57, 0.32), transparent 12rem),
+    linear-gradient(180deg, #a8532d, #10120e);
+  transform: translateY(-18px);
+}
+
+.packageTopline {
+  color: var(--rust);
+}
+
+.featuredPackage .packageTopline,
+.featuredPackage p,
+.featuredPackage li {
+  color: rgba(255, 250, 240, 0.78);
+}
+
+.packageCard h3 {
+  font-size: 34px;
+}
+
+.priceBlock {
+  margin: 18px 0;
+  padding: 18px 0;
+  border-top: 1px solid rgba(16, 18, 14, 0.12);
+  border-bottom: 1px solid rgba(16, 18, 14, 0.12);
+}
+
+.featuredPackage .priceBlock {
+  border-color: rgba(255, 250, 240, 0.18);
+}
+
+.priceBlock strong,
+.priceBlock span {
+  display: block;
+}
+
+.priceBlock strong {
+  font-size: 24px;
+}
+
+.priceBlock span {
+  margin-top: 6px;
+  color: var(--rust);
+  font-weight: 900;
+}
+
+.featuredPackage .priceBlock span {
+  color: var(--gold);
+}
+
+.packageCard ul {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.packageCard li {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.packageCta,
+.packageCtaFeatured {
+  width: 100%;
+  margin-top: auto;
+}
+
+.packageCta {
+  color: var(--ink);
+  border: 1px solid rgba(16, 18, 14, 0.14);
+  background: rgba(16, 18, 14, 0.04);
+}
+
+.packageCtaFeatured {
+  color: var(--ink);
+  background: var(--gold);
+}
+
+.methodSection {
+  display: grid;
+  grid-template-columns: 0.68fr 1.32fr;
+  gap: 32px;
+}
+
+.methodTimeline {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.methodTimeline article {
+  min-height: 310px;
+  padding: 20px;
+  border-radius: 26px;
+}
+
+.methodTimeline span {
+  display: block;
+  margin-bottom: 72px;
+  color: var(--rust);
+  font-weight: 900;
+}
+
+.methodTimeline h3 {
+  font-size: 26px;
+}
+
+.approvalSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 22px 0 72px;
+}
+
+.approvalCardDark,
+.approvalCardLight {
+  padding: 34px;
+  border-radius: 34px;
+}
+
+.approvalCardDark {
+  color: var(--cream);
+  background: var(--ink);
+}
+
+.approvalCardLight {
+  background: var(--gold);
+}
+
+.approvalCardDark p {
+  color: rgba(255, 250, 240, 0.72);
+}
+
+.extrasSection {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 34px;
+  padding: 58px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.extrasList {
+  display: grid;
+  gap: 12px;
+}
+
+.extrasList div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 250, 240, 0.7);
+}
+
+.faqGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.ctaSection {
+  padding: 20px 0 72px;
+}
+
+.ctaBox {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 34px;
+  align-items: center;
+  padding: 44px;
+  border-radius: 38px;
+  color: var(--cream);
+  background:
+    radial-gradient(circle at top right, rgba(214, 168, 57, 0.3), transparent 22rem),
+    linear-gradient(135deg, var(--forest), var(--ink));
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 28px 0 40px;
+  color: rgba(16, 18, 14, 0.58);
+  font-size: 14px;
+}
+
+@media (max-width: 1100px) {
+  .hero,
+  .problemSection,
+  .methodSection,
+  .extrasSection,
+  .ctaBox {
+    grid-template-columns: 1fr;
+  }
+
+  .packageGrid,
+  .outcomeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .problemCards,
+  .methodTimeline {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .heroPanel {
+    max-width: 680px;
+  }
+}
+
+@media (max-width: 760px) {
+  .pageShell {
+    padding-bottom: 88px;
+  }
+
+  .navbar {
+    position: static;
+    align-items: flex-start;
+    flex-direction: column;
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    margin-top: 10px;
+    border-radius: 22px;
+  }
+
+  .navLinks {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 24px;
+    padding: 2px 4px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .navLinks a {
+    flex: 0 0 auto;
+  }
+
+  .navCta {
+    display: none;
+  }
+
+  .hero {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    gap: 28px;
+    margin-top: 10px;
+    padding-top: 36px;
+    padding-bottom: 42px;
+  }
+
+  .heroContent,
+  .problemText,
+  .methodIntro,
+  .ctaBox > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .heroContent,
+  .heroPanel {
+    width: 100%;
+    max-width: 350px;
+    min-width: 0;
+  }
+
+  .hero h1 {
+    max-width: 100%;
+    font-size: clamp(38px, 11.5vw, 48px);
+    letter-spacing: -0.045em;
+    line-height: 0.98;
+    overflow-wrap: break-word;
+  }
+
+  .heroLead {
+    max-width: 100%;
+    margin-top: 22px;
+    font-size: 16px;
+    line-height: 1.55;
+    overflow-wrap: break-word;
+  }
+
+  .kicker,
+  .sectionLabel,
+  .packageTopline {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+
+  .heroActions,
+  .ctaActions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 26px;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .secondaryButtonDark {
+    width: 100%;
+    min-height: 56px;
+  }
+
+  .heroStats div {
+    padding: 14px;
+  }
+
+  .heroStats strong {
+    font-size: 32px;
+  }
+
+  .heroPanel {
+    padding: 18px;
+    border-radius: 26px;
+  }
+
+  .panelCardLarge {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .panelCardLarge strong {
+    font-size: 26px;
+  }
+
+  .heroStats,
+  .problemCards,
+  .outcomeGrid,
+  .packageGrid,
+  .methodTimeline,
+  .approvalSection,
+  .faqGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .problemSection,
+  .outcomesSection,
+  .methodSection,
+  .extrasSection,
+  .faqSection,
+  .approvalSection,
+  .ctaSection,
+  .footer {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+  }
+
+  .problemSection,
+  .outcomesSection,
+  .methodSection,
+  .faqSection {
+    padding: 46px 0;
+  }
+
+  .problemText h2,
+  .sectionIntro h2,
+  .sectionIntroNarrow h2,
+  .methodIntro h2,
+  .extrasSection h2,
+  .ctaBox h2 {
+    font-size: clamp(36px, 12vw, 52px);
+    letter-spacing: -0.052em;
+  }
+
+  .sectionIntro p,
+  .sectionIntroNarrow p,
+  .methodIntro p {
+    font-size: 16px;
+  }
+
+  .problemCards article,
+  .outcomeCard,
+  .faqGrid article {
+    padding: 20px;
+  }
+
+  .problemCards span,
+  .outcomeCard span {
+    margin-bottom: 28px;
+  }
+
+  .packagesSection,
+  .ctaBox,
+  .approvalCardDark,
+  .approvalCardLight {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    padding: 26px;
+    border-radius: 28px;
+  }
+
+  .packageCard {
+    min-height: auto;
+    padding: 20px;
+  }
+
+  .packageCard h3 {
+    font-size: 31px;
+  }
+
+  .featuredPackage {
+    transform: none;
+  }
+
+  .methodTimeline article {
+    min-height: auto;
+  }
+
+  .methodTimeline span {
+    margin-bottom: 36px;
+  }
+
+  .extrasSection {
+    padding: 46px 0;
+  }
+
+  .pipelineMini {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mobileStickyCta {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 56px;
+    border: 1px solid rgba(16, 18, 14, 0.18);
+    border-radius: 999px;
+    color: var(--ink);
+    background: var(--gold);
+    box-shadow: 0 18px 42px rgba(16, 18, 14, 0.22);
+    font-weight: 900;
+    text-decoration: none;
+  }
+
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand {
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .brandMark {
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+    font-size: 23px;
+  }
+
+  .hero h1 {
+    font-size: clamp(36px, 10.8vw, 43px);
+  }
+
+  .panelRows div,
+  .extrasList div {
+    align-items: flex-start;
+  }
+}

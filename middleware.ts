@@ -31,10 +31,10 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  // Redirige / → /dashboard o /login
+  // Redirige / → scelta cliente o /login
   if (pathname === '/') {
     return NextResponse.redirect(
-      new URL(user ? '/dashboard' : '/login', request.url)
+      new URL(user ? '/dashboard/clienti' : '/login', request.url)
     )
   }
 
@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
 
   // Se loggato, non mostrare /login
   if (pathname === '/login' && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/dashboard/clienti', request.url))
   }
 
   return supabaseResponse

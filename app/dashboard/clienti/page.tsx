@@ -1,75 +1,260 @@
-import { Users, Plus, Briefcase } from 'lucide-react'
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Building2, CheckCircle2, Loader2, Plus, Users } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import type { Cliente } from '@/lib/types'
+import { readActiveClienteId, writeActiveClienteId } from '@/lib/tenant/client'
 
 export const dynamic = 'force-dynamic'
 
-const demoClienti = [
-  { id: 'c1', nome: 'Brand Fashion Demo',  settore: 'Abbigliamento', email: 'info@brand.com',     telefono: '+39 339 1234567', piano: 'Pro',  contenuti_mese: 30, attivo: true },
-  { id: 'c2', nome: 'Negozio Sport SRL',   settore: 'Sport',         email: 'marketing@sport.it', telefono: '+39 348 9876543', piano: 'Free', contenuti_mese: 7,  attivo: true },
+const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+
+const demoClienti: Cliente[] = [
+  {
+    id: 'demo-silkincom',
+    nome: 'SILKinCOM',
+    slug: 'silkincom',
+    settore: 'Fashion e-commerce',
+    email: 'info@silkincom.com',
+    telefono: null,
+    piano: 'pro',
+    contenuti_mese: 30,
+    attivo: true,
+    note: null,
+    created_at: '2026-05-23T00:00:00Z',
+    updated_at: '2026-05-23T00:00:00Z',
+  },
 ]
 
+function toSlug(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 export default function ClientiPage() {
+  const router = useRouter()
+  const supabase = createClient()
+  const demo = isDemo()
+  const [clienti, setClienti] = useState<Cliente[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [form, setForm] = useState({
+    nome: '',
+    settore: '',
+    email: '',
+    telefono: '',
+    piano: 'pro',
+  })
+
+  const slug = useMemo(() => toSlug(form.nome), [form.nome])
+
+  async function load() {
+    setLoading(true)
+    setError(null)
+
+    if (demo) {
+      setClienti(demoClienti)
+      setActiveId(demoClienti[0]?.id ?? null)
+      setLoading(false)
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('clienti')
+      .select('*')
+      .order('nome')
+
+    if (error) setError(error.message)
+    const rows = ((data ?? []) as unknown) as Cliente[]
+    const cookieId = readActiveClienteId()
+    const nextId = cookieId && rows.some(row => row.id === cookieId) ? cookieId : rows[0]?.id ?? null
+
+    if (nextId) writeActiveClienteId(nextId)
+    setClienti(rows)
+    setActiveId(nextId)
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function createCliente() {
+    if (!form.nome.trim()) {
+      setError('Inserisci il nome cliente')
+      return
+    }
+
+    setSaving(true)
+    setError(null)
+
+    if (demo) {
+      await new Promise(resolve => setTimeout(resolve, 700))
+      setSaving(false)
+      return
+    }
+
+    const { data, error } = await supabase.rpc('create_cliente_for_current_user', {
+      cliente_nome: form.nome.trim(),
+      cliente_slug: slug || toSlug(form.nome.trim()),
+      cliente_settore: form.settore.trim() || null,
+      cliente_email: form.email.trim() || null,
+      cliente_telefono: form.telefono.trim() || null,
+      cliente_piano: form.piano,
+    })
+
+    if (error) {
+      setError(error.message)
+      setSaving(false)
+      return
+    }
+
+    if (data) writeActiveClienteId(String(data))
+    setForm({ nome: '', settore: '', email: '', telefono: '', piano: 'pro' })
+    await load()
+    router.refresh()
+    setSaving(false)
+  }
+
+  function selectCliente(clienteId: string) {
+    writeActiveClienteId(clienteId)
+    setActiveId(clienteId)
+    router.push('/dashboard')
+    router.refresh()
+  }
+
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl md:text-3xl font-bold text-gray-900 tracking-tight">Clienti</h1>
-          <p className="text-xs md:text-sm text-gray-500 mt-1">Brand che gestisci · {demoClienti.length} attivi</p>
+          <p className="text-xs md:text-sm text-gray-500 mt-1">{clienti.length} brand gestiti</p>
         </div>
-        <button className="btn-primary text-sm">
-          <Plus className="w-4 h-4" />
-          <span className="hidden md:inline">Nuovo cliente</span>
-        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {demoClienti.map(c => (
-          <div key={c.id} className="card p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-start gap-3 mb-3">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                <Briefcase className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-gray-900 truncate">{c.nome}</h3>
-                <p className="text-xs text-gray-500">{c.settore}</p>
-              </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                c.piano === 'Pro' ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-600'
-              }`}>{c.piano}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {loading ? (
+            <div className="card p-10 text-center text-gray-400 md:col-span-2">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+              Caricamento clienti
             </div>
+          ) : clienti.length === 0 ? (
+            <div className="card p-10 text-center text-gray-400 md:col-span-2">
+              <Users className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+              Nessun cliente assegnato
+            </div>
+          ) : (
+            clienti.map(cliente => (
+              <button
+                key={cliente.id}
+                onClick={() => selectCliente(cliente.id)}
+                className={`card p-5 text-left transition hover:shadow-md ${
+                  activeId === cliente.id ? 'ring-2 ring-brand-500' : ''
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-11 h-11 rounded-lg bg-gray-900 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-gray-900 truncate">{cliente.nome}</h3>
+                {activeId === cliente.id && <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">{cliente.settore ?? 'Settore non indicato'}</p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium uppercase">
+                        {cliente.piano}
+                      </span>
+                    <span className={cliente.attivo ? 'text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium' : 'text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium'}>
+                      {cliente.attivo ? 'Attivo' : 'Inattivo'}
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 font-medium">
+                      Apri workspace
+                    </span>
+                  </div>
+                  </div>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
 
-            <div className="space-y-1.5 text-xs text-gray-600 mb-4">
-              <p>📧 {c.email}</p>
-              <p>📞 {c.telefono}</p>
-            </div>
-
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Contenuti / mese</p>
-                <p className="text-xl font-bold text-gray-900">{c.contenuti_mese}</p>
-              </div>
-              <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
-                c.attivo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-              }`}>
-                {c.attivo ? 'Attivo' : 'Inattivo'}
-              </span>
-            </div>
+        <div className="card p-5 h-fit">
+          <div className="flex items-center gap-2 mb-4">
+            <Plus className="w-4 h-4 text-brand-600" />
+            <h2 className="font-semibold text-gray-900">Nuovo cliente</h2>
           </div>
-        ))}
 
-        {/* Add card */}
-        <button className="card p-5 border-dashed border-2 border-gray-200 hover:border-brand-400 hover:bg-brand-50 transition-colors flex flex-col items-center justify-center text-center min-h-[200px]">
-          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2">
-            <Plus className="w-5 h-5 text-gray-400" />
+          <div className="space-y-3">
+            <div>
+              <label className="label">Nome brand</label>
+              <input
+                value={form.nome}
+                onChange={event => setForm(prev => ({ ...prev, nome: event.target.value }))}
+                className="input"
+                placeholder="Es. Nuovo Brand"
+              />
+              {slug && <p className="text-[11px] text-gray-400 mt-1">Slug: {slug}</p>}
+            </div>
+            <div>
+              <label className="label">Settore</label>
+              <input
+                value={form.settore}
+                onChange={event => setForm(prev => ({ ...prev, settore: event.target.value }))}
+                className="input"
+                placeholder="Es. Fashion"
+              />
+            </div>
+            <div>
+              <label className="label">Email</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={event => setForm(prev => ({ ...prev, email: event.target.value }))}
+                className="input"
+                placeholder="marketing@example.com"
+              />
+            </div>
+            <div>
+              <label className="label">Telefono</label>
+              <input
+                value={form.telefono}
+                onChange={event => setForm(prev => ({ ...prev, telefono: event.target.value }))}
+                className="input"
+                placeholder="+39 ..."
+              />
+            </div>
+            <div>
+              <label className="label">Piano</label>
+              <select
+                value={form.piano}
+                onChange={event => setForm(prev => ({ ...prev, piano: event.target.value }))}
+                className="input"
+              >
+                <option value="free">Free</option>
+                <option value="pro">Pro</option>
+                <option value="agency">Agency</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+
+            {error && <div className="text-xs rounded-lg bg-red-50 text-red-700 border border-red-100 p-2">{error}</div>}
+
+            <button onClick={createCliente} disabled={saving} className="btn-primary w-full justify-center">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              {saving ? 'Creazione...' : 'Crea cliente'}
+            </button>
           </div>
-          <p className="text-sm font-medium text-gray-700">Aggiungi cliente</p>
-          <p className="text-xs text-gray-400 mt-0.5">Onboard nuovo brand</p>
-        </button>
+        </div>
       </div>
-
-      <p className="text-xs text-gray-400 mt-6 flex items-center gap-1.5">
-        <Users className="w-3.5 h-3.5" />
-        Demo: tabella <code className="bg-gray-100 px-1 py-0.5 rounded font-mono">clienti</code> in Supabase (da creare con migration 003)
-      </p>
     </div>
   )
 }

@@ -8,7 +8,7 @@ export const isDemoMode = () =>
 
 export const demoContenuti: Contenuto[] = [
   {
-    id: '1', id_contenuto: 'C001',
+    id: '1', cliente_id: 'demo-silkincom', id_contenuto: 'C001',
     data_pubblicazione: '2026-05-24', ora_pubblicazione: '12:30',
     canale: 'instagram', formato: 'post', obiettivo: 'ispirazione',
     product_id: 'P001', nome_prodotto: 'Blazer in lino', tema: 'Outfit elegante da giorno',
@@ -32,7 +32,7 @@ export const demoContenuti: Contenuto[] = [
     created_at: '2026-05-23T08:00:00Z', updated_at: '2026-05-23T08:00:00Z',
   },
   {
-    id: '2', id_contenuto: 'C002',
+    id: '2', cliente_id: 'demo-silkincom', id_contenuto: 'C002',
     data_pubblicazione: '2026-05-24', ora_pubblicazione: '18:00',
     canale: 'instagram', formato: 'carousel', obiettivo: 'awareness',
     product_id: 'P002', nome_prodotto: 'Jeans dritti vita alta', tema: 'Denim essenziale',
@@ -58,7 +58,7 @@ export const demoContenuti: Contenuto[] = [
     created_at: '2026-05-23T08:00:00Z', updated_at: '2026-05-23T08:00:00Z',
   },
   {
-    id: '3', id_contenuto: 'C003',
+    id: '3', cliente_id: 'demo-silkincom', id_contenuto: 'C003',
     data_pubblicazione: '2026-05-23', ora_pubblicazione: '10:00',
     canale: 'tiktok', formato: 'reel', obiettivo: 'engagement',
     product_id: 'P003', nome_prodotto: 'T-shirt cotone bio', tema: 'Mini haul',
@@ -83,7 +83,7 @@ export const demoContenuti: Contenuto[] = [
     created_at: '2026-05-22T08:00:00Z', updated_at: '2026-05-23T10:00:00Z',
   },
   {
-    id: '4', id_contenuto: 'C004',
+    id: '4', cliente_id: 'demo-silkincom', id_contenuto: 'C004',
     data_pubblicazione: '2026-05-23', ora_pubblicazione: '14:00',
     canale: 'facebook', formato: 'post', obiettivo: 'vendita',
     product_id: 'P001', nome_prodotto: 'Blazer in lino', tema: 'Saldi',
@@ -108,7 +108,7 @@ export const demoContenuti: Contenuto[] = [
     created_at: '2026-05-22T08:00:00Z', updated_at: '2026-05-23T14:15:00Z',
   },
   {
-    id: '5', id_contenuto: 'C005',
+    id: '5', cliente_id: 'demo-silkincom', id_contenuto: 'C005',
     data_pubblicazione: '2026-05-25', ora_pubblicazione: '09:00',
     canale: 'pinterest', formato: 'pin', obiettivo: 'traffic',
     product_id: 'P002', nome_prodotto: 'Jeans dritti vita alta', tema: 'Style inspiration',
@@ -136,7 +136,7 @@ export const demoContenuti: Contenuto[] = [
 
 export const demoProdotti: Prodotto[] = [
   {
-    id: 'p1', product_id: 'P001', nome_prodotto: 'Blazer in lino',
+    id: 'p1', cliente_id: 'demo-silkincom', product_id: 'P001', nome_prodotto: 'Blazer in lino',
     categoria: 'giacche', collezione: 'primavera-estate',
     prezzo: 129, prezzo_promo: null,
     link_prodotto: 'https://example.com/p/blazer-lino',
@@ -150,7 +150,7 @@ export const demoProdotti: Prodotto[] = [
     created_at: '2026-05-01T00:00:00Z', updated_at: '2026-05-22T00:00:00Z',
   },
   {
-    id: 'p2', product_id: 'P002', nome_prodotto: 'Jeans dritti vita alta',
+    id: 'p2', cliente_id: 'demo-silkincom', product_id: 'P002', nome_prodotto: 'Jeans dritti vita alta',
     categoria: 'jeans', collezione: 'permanente',
     prezzo: 89, prezzo_promo: null,
     link_prodotto: 'https://example.com/p/jeans-dritti',
@@ -164,7 +164,7 @@ export const demoProdotti: Prodotto[] = [
     created_at: '2026-05-01T00:00:00Z', updated_at: '2026-05-22T00:00:00Z',
   },
   {
-    id: 'p3', product_id: 'P003', nome_prodotto: 'T-shirt cotone bio',
+    id: 'p3', cliente_id: 'demo-silkincom', product_id: 'P003', nome_prodotto: 'T-shirt cotone bio',
     categoria: 't-shirt', collezione: 'sostenibile',
     prezzo: 39, prezzo_promo: 29,
     link_prodotto: 'https://example.com/p/tshirt',
@@ -180,29 +180,29 @@ export const demoProdotti: Prodotto[] = [
 ]
 
 export const demoSettings: Setting[] = [
-  { id: 's1',  chiave: 'automation_enabled',        valore: 'TRUE',           descrizione: 'Se FALSE nessun contenuto viene pubblicato',     updated_at: '2026-05-01T00:00:00Z' },
-  { id: 's2',  chiave: 'dry_run',                   valore: 'TRUE',           descrizione: 'Se TRUE simula senza pubblicare',                updated_at: '2026-05-01T00:00:00Z' },
-  { id: 's3',  chiave: 'timezone',                  valore: 'Europe/Rome',    descrizione: 'Timezone ufficiale del workflow',                updated_at: '2026-05-01T00:00:00Z' },
-  { id: 's4',  chiave: 'max_retry',                 valore: '2',              descrizione: 'Numero massimo di retry automatici',             updated_at: '2026-05-01T00:00:00Z' },
-  { id: 's5',  chiave: 'default_utm_campaign',      valore: 'social_default', descrizione: 'Campagna UTM di default',                        updated_at: '2026-05-01T00:00:00Z' },
-  { id: 's6',  chiave: 'telegram_notifications',    valore: 'TRUE',           descrizione: 'Abilita notifiche Telegram',                     updated_at: '2026-05-01T00:00:00Z' },
-  { id: 's7',  chiave: 'backup_enabled',            valore: 'TRUE',           descrizione: 'Abilita backup giornaliero',                     updated_at: '2026-05-01T00:00:00Z' },
-  { id: 's8',  chiave: 'approval_required',         valore: 'TRUE',           descrizione: 'Pubblica solo contenuti approvati',              updated_at: '2026-05-01T00:00:00Z' },
-  { id: 's9',  chiave: 'media_validation_required', valore: 'TRUE',           descrizione: 'Blocca contenuti con media non validi',          updated_at: '2026-05-01T00:00:00Z' },
-  { id: 's10', chiave: 'stock_check_required',      valore: 'TRUE',           descrizione: 'Blocca prodotti non attivi o esauriti',          updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's1', cliente_id: 'demo-silkincom',  chiave: 'automation_enabled',        valore: 'TRUE',           descrizione: 'Se FALSE nessun contenuto viene pubblicato',     updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's2', cliente_id: 'demo-silkincom',  chiave: 'dry_run',                   valore: 'TRUE',           descrizione: 'Se TRUE simula senza pubblicare',                updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's3', cliente_id: 'demo-silkincom',  chiave: 'timezone',                  valore: 'Europe/Rome',    descrizione: 'Timezone ufficiale del workflow',                updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's4', cliente_id: 'demo-silkincom',  chiave: 'max_retry',                 valore: '2',              descrizione: 'Numero massimo di retry automatici',             updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's5', cliente_id: 'demo-silkincom',  chiave: 'default_utm_campaign',      valore: 'social_default', descrizione: 'Campagna UTM di default',                        updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's6', cliente_id: 'demo-silkincom',  chiave: 'telegram_notifications',    valore: 'TRUE',           descrizione: 'Abilita notifiche Telegram',                     updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's7', cliente_id: 'demo-silkincom',  chiave: 'backup_enabled',            valore: 'TRUE',           descrizione: 'Abilita backup giornaliero',                     updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's8', cliente_id: 'demo-silkincom',  chiave: 'approval_required',         valore: 'TRUE',           descrizione: 'Pubblica solo contenuti approvati',              updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's9', cliente_id: 'demo-silkincom',  chiave: 'media_validation_required', valore: 'TRUE',           descrizione: 'Blocca contenuti con media non validi',          updated_at: '2026-05-01T00:00:00Z' },
+  { id: 's10', cliente_id: 'demo-silkincom', chiave: 'stock_check_required',      valore: 'TRUE',           descrizione: 'Blocca prodotti non attivi o esauriti',          updated_at: '2026-05-01T00:00:00Z' },
 ]
 
 export const demoLogs: LogPubblicazione[] = [
-  { id: 'l1', timestamp: '2026-05-23T10:00:15Z', id_contenuto: 'C003', canale: 'tiktok',    formato: 'reel', status_precedente: 'IN_PUBBLICAZIONE', status_finale: 'PUBBLICATO',      blotato_post_id: 'blt_xyz_123', messaggio: 'ok', errore: null },
-  { id: 'l2', timestamp: '2026-05-23T14:15:32Z', id_contenuto: 'C004', canale: 'facebook',  formato: 'post', status_precedente: 'IN_PUBBLICAZIONE', status_finale: 'ERRORE',          blotato_post_id: null,          messaggio: null, errore: 'media KO code=404' },
-  { id: 'l3', timestamp: '2026-05-22T18:30:00Z', id_contenuto: 'C002', canale: 'instagram', formato: 'carousel', status_precedente: 'APPROVATO',     status_finale: 'DRY_RUN_OK',      blotato_post_id: null,          messaggio: 'Dry run simulato',         errore: null },
-  { id: 'l4', timestamp: '2026-05-22T12:30:45Z', id_contenuto: 'C001', canale: 'instagram', formato: 'post', status_precedente: 'APPROVATO',     status_finale: 'DRY_RUN_OK',      blotato_post_id: null,          messaggio: 'Dry run simulato',         errore: null },
-  { id: 'l5', timestamp: '2026-05-21T20:00:00Z', id_contenuto: 'C000', canale: 'instagram', formato: 'post', status_precedente: 'IN_PUBBLICAZIONE', status_finale: 'PUBBLICATO',      blotato_post_id: 'blt_aaa_001', messaggio: 'ok', errore: null },
+  { id: 'l1', cliente_id: 'demo-silkincom', timestamp: '2026-05-23T10:00:15Z', id_contenuto: 'C003', canale: 'tiktok',    formato: 'reel', status_precedente: 'IN_PUBBLICAZIONE', status_finale: 'PUBBLICATO',      blotato_post_id: 'blt_xyz_123', messaggio: 'ok', errore: null },
+  { id: 'l2', cliente_id: 'demo-silkincom', timestamp: '2026-05-23T14:15:32Z', id_contenuto: 'C004', canale: 'facebook',  formato: 'post', status_precedente: 'IN_PUBBLICAZIONE', status_finale: 'ERRORE',          blotato_post_id: null,          messaggio: null, errore: 'media KO code=404' },
+  { id: 'l3', cliente_id: 'demo-silkincom', timestamp: '2026-05-22T18:30:00Z', id_contenuto: 'C002', canale: 'instagram', formato: 'carousel', status_precedente: 'APPROVATO',     status_finale: 'DRY_RUN_OK',      blotato_post_id: null,          messaggio: 'Dry run simulato',         errore: null },
+  { id: 'l4', cliente_id: 'demo-silkincom', timestamp: '2026-05-22T12:30:45Z', id_contenuto: 'C001', canale: 'instagram', formato: 'post', status_precedente: 'APPROVATO',     status_finale: 'DRY_RUN_OK',      blotato_post_id: null,          messaggio: 'Dry run simulato',         errore: null },
+  { id: 'l5', cliente_id: 'demo-silkincom', timestamp: '2026-05-21T20:00:00Z', id_contenuto: 'C000', canale: 'instagram', formato: 'post', status_precedente: 'IN_PUBBLICAZIONE', status_finale: 'PUBBLICATO',      blotato_post_id: 'blt_aaa_001', messaggio: 'ok', errore: null },
 ]
 
 export const demoBlogArticoli: BlogArticolo[] = [
   {
-    id: 'b1', slug: 'come-abbinare-blazer-lino-estate',
+    id: 'b1', cliente_id: 'demo-silkincom', slug: 'come-abbinare-blazer-lino-estate',
     meta_title: 'Come abbinare il blazer in lino: guida pratica estate 2026',
     meta_description: 'Scopri 5 abbinamenti perfetti per il blazer in lino. Outfit casual, eleganti e da ufficio. Guida completa con foto e idee styling.',
     h1: 'Come abbinare il blazer in lino: 5 outfit pratici per l\'estate',
@@ -232,7 +232,7 @@ export const demoBlogArticoli: BlogArticolo[] = [
 
 export const demoSeoAudit: SeoAudit[] = [
   {
-    id: 'a1', data_audit: '2026-05-19', periodo: 'settimanale',
+    id: 'a1', cliente_id: 'demo-silkincom', data_audit: '2026-05-19', periodo: 'settimanale',
     score_globale: 72,
     score_seo_tecnico: 85, score_seo_contenuti: 70, score_geo_ai_search: 58,
     score_social_coerenza: 80, score_eeat: 65, score_performance_social: 75,

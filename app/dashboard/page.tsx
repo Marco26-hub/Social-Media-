@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { demoContenuti, demoLogs } from '@/lib/demo-data'
 import AIModelSelector from '@/components/AIModelSelector'
 import { PLATFORM_LIST } from '@/lib/social-config'
+import { getActiveClienteId } from '@/lib/tenant/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,7 @@ async function getStats() {
     }
   }
   const supabase = await createClient()
+  const clienteId = await getActiveClienteId(supabase)
   const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
 
   const [
@@ -29,11 +31,11 @@ async function getStats() {
     { count: inCoda },
     { data: ultimi },
   ] = await Promise.all([
-    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('status', 'DA_APPROVARE'),
-    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('status', 'PUBBLICATO').gte('data_pubblicazione', weekAgo),
-    supabase.from('calendario').select('*', { count: 'exact', head: true }).in('status', ['ERRORE', 'ERRORE_MANUALE']),
-    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('status', 'APPROVATO'),
-    supabase.from('log_pubblicazioni').select('*').order('timestamp', { ascending: false }).limit(5),
+    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('cliente_id', clienteId ?? '').eq('status', 'DA_APPROVARE'),
+    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('cliente_id', clienteId ?? '').eq('status', 'PUBBLICATO').gte('data_pubblicazione', weekAgo),
+    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('cliente_id', clienteId ?? '').in('status', ['ERRORE', 'ERRORE_MANUALE']),
+    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('cliente_id', clienteId ?? '').eq('status', 'APPROVATO'),
+    supabase.from('log_pubblicazioni').select('*').eq('cliente_id', clienteId ?? '').order('timestamp', { ascending: false }).limit(5),
   ])
 
   return { daApprovare, pubblicati7g, errori, inCoda, ultimi: ultimi ?? [] }

@@ -7,8 +7,42 @@ export type Canale = 'instagram' | 'facebook' | 'tiktok' | 'pinterest' | 'youtub
 export type Formato = 'post' | 'carousel' | 'reel' | 'story' | 'pin' | 'short' | 'video' | 'articolo'
 export type MediaType = 'image' | 'video' | 'pin' | 'short'
 
+export interface Profile {
+  id: string
+  email: string | null
+  nome: string | null
+  ruolo_globale: 'super_admin' | 'admin' | 'user'
+  created_at: string
+  updated_at: string
+}
+
+export interface Cliente {
+  id: string
+  nome: string
+  slug: string
+  settore: string | null
+  email: string | null
+  telefono: string | null
+  piano: 'free' | 'pro' | 'agency' | 'enterprise'
+  contenuti_mese: number
+  attivo: boolean
+  note: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface UserClientAccess {
+  user_id: string
+  cliente_id: string
+  ruolo: 'owner' | 'admin' | 'editor' | 'viewer'
+  attivo: boolean
+  created_at: string
+  clienti?: Cliente | null
+}
+
 export interface Contenuto {
   id: string
+  cliente_id: string
   id_contenuto: string
   data_pubblicazione: string
   ora_pubblicazione: string
@@ -65,6 +99,7 @@ export interface Contenuto {
 
 export interface Prodotto {
   id: string
+  cliente_id: string
   product_id: string
   nome_prodotto: string
   categoria: string | null
@@ -91,6 +126,7 @@ export interface Prodotto {
 
 export interface Brand {
   id: string
+  cliente_id: string
   brand_name: string
   sito_url: string | null
   tono_voce: string | null
@@ -109,6 +145,7 @@ export interface Brand {
 
 export interface AccountSocial {
   id: string
+  cliente_id: string
   canale: Canale
   nome_account: string
   platform_account_id: string
@@ -121,6 +158,7 @@ export interface AccountSocial {
 
 export interface Promo {
   id: string
+  cliente_id: string
   promo_id: string
   promo_nome: string
   promo_codice: string | null
@@ -136,6 +174,7 @@ export interface Promo {
 
 export interface LogPubblicazione {
   id: string
+  cliente_id: string
   timestamp: string
   id_contenuto: string | null
   canale: string | null
@@ -149,6 +188,7 @@ export interface LogPubblicazione {
 
 export interface Setting {
   id: string
+  cliente_id: string
   chiave: string
   valore: string
   descrizione: string | null
@@ -157,6 +197,7 @@ export interface Setting {
 
 export interface BlogArticolo {
   id: string
+  cliente_id: string
   slug: string
   meta_title: string
   meta_description: string | null
@@ -182,6 +223,7 @@ export interface BlogArticolo {
 
 export interface SeoAudit {
   id: string
+  cliente_id: string
   data_audit: string
   periodo: 'settimanale' | 'mensile'
   score_globale: number
@@ -205,6 +247,9 @@ export interface SeoAudit {
 export interface Database {
   public: {
     Tables: {
+      profiles:         { Row: Profile;           Insert: Partial<Omit<Profile,           'created_at' | 'updated_at'>>; Update: Partial<Omit<Profile,           'id' | 'created_at'>> }
+      clienti:          { Row: Cliente;           Insert: Partial<Omit<Cliente,           'id' | 'created_at' | 'updated_at'>>; Update: Partial<Omit<Cliente,           'id' | 'created_at'>> }
+      user_client_access:{ Row: UserClientAccess; Insert: Partial<Omit<UserClientAccess, 'created_at'>>; Update: Partial<Omit<UserClientAccess, 'user_id' | 'cliente_id' | 'created_at'>> }
       calendario:       { Row: Contenuto;        Insert: Partial<Omit<Contenuto,        'id'>>; Update: Partial<Omit<Contenuto,        'id' | 'created_at'>> }
       prodotti:         { Row: Prodotto;          Insert: Partial<Omit<Prodotto,          'id'>>; Update: Partial<Omit<Prodotto,          'id' | 'created_at'>> }
       brand:            { Row: Brand;             Insert: Partial<Omit<Brand,             'id'>>; Update: Partial<Omit<Brand,             'id' | 'created_at'>> }
@@ -212,6 +257,8 @@ export interface Database {
       promo:            { Row: Promo;             Insert: Partial<Omit<Promo,             'id'>>; Update: Partial<Omit<Promo,             'id'>> }
       log_pubblicazioni:{ Row: LogPubblicazione;  Insert: Partial<Omit<LogPubblicazione,  'id'>>; Update: Partial<Omit<LogPubblicazione,  'id'>> }
       settings:         { Row: Setting;           Insert: Partial<Omit<Setting,           'id'>>; Update: Partial<Omit<Setting,           'id'>> }
+      blog_articoli:    { Row: BlogArticolo;      Insert: Partial<Omit<BlogArticolo,      'id'>>; Update: Partial<Omit<BlogArticolo,      'id' | 'created_at'>> }
+      seo_audit:        { Row: SeoAudit;          Insert: Partial<Omit<SeoAudit,          'id'>>; Update: Partial<Omit<SeoAudit,          'id' | 'created_at'>> }
     }
   }
 }

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { PLATFORM_LIST, type PlatformKey } from '@/lib/social-config'
 import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
+import { useActiveClienteId } from '@/lib/tenant/client'
 
 const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
@@ -16,6 +17,7 @@ export default function PianoPage() {
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [aiModel, setAiModel] = useState('claude-sonnet-4-6')
+  const { clienteId } = useActiveClienteId()
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -49,6 +51,7 @@ export default function PianoPage() {
     }
 
     try {
+      if (!clienteId) throw new Error('Cliente non selezionato')
       const base = process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE
       if (!base) throw new Error('n8n non configurato')
       const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
@@ -57,7 +60,7 @@ export default function PianoPage() {
       const res = await fetch(`${base}/${workflow}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ piattaforme, obiettivo, model: aiModel, openrouter_key: orKey || undefined }),
+        body: JSON.stringify({ cliente_id: clienteId, piattaforme, obiettivo, model: aiModel, openrouter_key: orKey || undefined }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setMsg({ type: 'ok', text: 'Piano avviato. I contenuti compariranno nel calendario tra poco.' })

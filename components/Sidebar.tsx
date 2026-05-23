@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PLATFORM_LIST } from '@/lib/social-config'
+import ClienteSelector from '@/components/ClienteSelector'
 import {
   LayoutDashboard, Calendar, FileText, Settings,
   Package, LogOut, Zap, Menu, X, Search, Target,
@@ -68,7 +69,7 @@ export default function Sidebar() {
           <div className="w-7 h-7 bg-brand-600 rounded-lg flex items-center justify-center">
             <Zap className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="font-semibold text-sm">Social Admin</span>
+          <span className="font-semibold text-sm">Social Automation</span>
         </div>
         <button onClick={() => setOpen(true)} className="p-2 -mr-2" aria-label="Apri menu">
           <Menu className="w-5 h-5" />
@@ -93,12 +94,14 @@ export default function Sidebar() {
             <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="text-white font-semibold text-sm">Social Admin</span>
+            <span className="text-white font-semibold text-sm">Social Automation</span>
           </div>
           <button onClick={() => setOpen(false)} className="md:hidden text-white/60 hover:text-white p-1">
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        <ClienteSelector />
 
         {/* Nav con sezioni */}
         <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">

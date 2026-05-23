@@ -9,6 +9,7 @@ import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter } from 'lucid
 import { useSearchParams } from 'next/navigation'
 import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
+import { useActiveClienteId } from '@/lib/tenant/client'
 
 const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
@@ -37,8 +38,10 @@ function CalendarioInner() {
   const [demoData, setDemoData]     = useState<Contenuto[]>(demoContenuti)
   const supabase = createClient()
   const demo = isDemo()
+  const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
   const fetchData = useCallback(async () => {
+    if (!demo && loadingCliente) return
     setLoading(true)
     if (demo) {
       let filtered = demoData
@@ -49,12 +52,13 @@ function CalendarioInner() {
       return
     }
     let q = supabase.from('calendario').select('*').order('data_pubblicazione', { ascending: true })
+    q = q.eq('cliente_id', clienteId ?? '')
     if (filterStatus !== 'tutti') q = q.eq('status', filterStatus)
     if (filterCanale !== 'tutti') q = q.eq('canale', filterCanale)
     const { data } = await q
     setContenuti(data ?? [])
     setLoading(false)
-  }, [filterStatus, filterCanale, supabase, demo, demoData])
+  }, [filterStatus, filterCanale, supabase, demo, demoData, clienteId, loadingCliente])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -62,10 +66,10 @@ function CalendarioInner() {
   useEffect(() => {
     if (demo) return
     const channel = supabase.channel('calendario-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'calendario' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'calendario', filter: `cliente_id=eq.${clienteId}` }, fetchData)
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [fetchData, supabase, demo])
+  }, [fetchData, supabase, demo, clienteId])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cal = () => supabase.from('calendario') as any

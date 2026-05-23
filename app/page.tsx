@@ -1,51 +1,38 @@
 import Link from 'next/link'
-import { ArrowRight, Sparkles, Calendar, CheckCircle, Send, Zap, ShieldCheck, Bot } from 'lucide-react'
-
-const PIATTAFORME = [
-  {
-    nome: 'Instagram',
-    icon: '📸',
-    formati: ['Post', 'Carousel', 'Reel', 'Story'],
-    color: 'from-pink-500 to-purple-600',
-    desc: 'Foto, caroselli multi-slide, reel verticali, story 24h',
-  },
-  {
-    nome: 'Facebook',
-    icon: '🔵',
-    formati: ['Post', 'Carousel', 'Video'],
-    color: 'from-blue-500 to-blue-700',
-    desc: 'Pagine business, post con CTA, video native',
-  },
-  {
-    nome: 'TikTok',
-    icon: '🎵',
-    formati: ['Video', 'Reel'],
-    color: 'from-gray-800 to-black',
-    desc: 'Video verticali 9:16, trending audio, hashtag virali',
-  },
-  {
-    nome: 'Pinterest',
-    icon: '📌',
-    formati: ['Pin'],
-    color: 'from-red-500 to-red-700',
-    desc: 'Pin verticali con link prodotto, board categorizzate',
-  },
-  {
-    nome: 'YouTube Shorts',
-    icon: '▶️',
-    formati: ['Short'],
-    color: 'from-red-600 to-red-800',
-    desc: 'Video corti verticali, descrizione + tag automatici',
-  },
-]
+import { PLATFORM_LIST } from '@/lib/social-config'
+import {
+  ArrowRight,
+  Sparkles,
+  Calendar,
+  CheckCircle,
+  Send,
+  Zap,
+  ShieldCheck,
+  Bot,
+  BarChart3,
+  FileText,
+  Settings,
+  Target,
+} from 'lucide-react'
 
 const FEATURES = [
   { icon: Bot,         titolo: 'AI genera tutto',        desc: 'Claude scrive hook, caption, hashtag e CTA per ogni post' },
-  { icon: Calendar,    titolo: 'Piano settimanale auto', desc: 'Ogni lunedì alle 8:00 genera 7-10 contenuti per i 5 canali' },
+  { icon: Calendar,    titolo: 'Piano settimanale auto', desc: 'Ogni lunedì alle 8:00 genera contenuti per tutti i canali' },
   { icon: CheckCircle, titolo: '1-click approval',       desc: 'Approva o rifiuta i post direttamente dal pannello admin' },
   { icon: Send,        titolo: 'Pubblicazione auto',     desc: 'Blotato pubblica sui canali ogni 15 minuti' },
   { icon: ShieldCheck, titolo: '8 validazioni',          desc: 'Stock, media, link, promo, account, consenso, dry-run, retry' },
   { icon: Zap,         titolo: 'Realtime dashboard',     desc: 'Supabase realtime — vedi pubblicazioni e errori live' },
+]
+
+const SERVIZI = [
+  { icon: Target, titolo: 'Piano editoriale', desc: 'Piani settimanali e mensili generati in automatico', href: '/dashboard/piano' },
+  { icon: Sparkles, titolo: 'Generatori social', desc: 'Formati dedicati per ogni canale e obiettivo', href: '/dashboard' },
+  { icon: CheckCircle, titolo: 'Approvazione contenuti', desc: 'Coda editoriale con revisione umana prima della pubblicazione', href: '/dashboard/calendario?filter=DA_APPROVARE' },
+  { icon: ShieldCheck, titolo: 'Validazioni sicurezza', desc: 'Controlli su media, account, stock, promo, link e consenso', href: '/dashboard/calendario' },
+  { icon: Send, titolo: 'Pubblicazione Blotato', desc: 'Invio automatico ai canali con retry e tracking UTM', href: '/dashboard/log' },
+  { icon: BarChart3, titolo: 'Log e report', desc: 'Attivita, errori, report settimanali e storico pubblicazioni', href: '/dashboard/log' },
+  { icon: FileText, titolo: 'Blog SEO + GEO', desc: 'Articoli lunghi con FAQ schema e ottimizzazione per AI search', href: '/dashboard/social/blog' },
+  { icon: Settings, titolo: 'Impostazioni operative', desc: 'Clienti, prodotti, variabili e configurazione workflow', href: '/dashboard/settings' },
 ]
 
 export default function LandingPage() {
@@ -58,12 +45,17 @@ export default function LandingPage() {
             <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">Social Admin</span>
+            <span className="font-bold text-gray-900">Social Automation</span>
           </div>
-          <Link href="/dashboard" className="btn-primary">
-            Vai al pannello
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/servizi" className="btn-secondary hidden sm:inline-flex">
+              Landing servizi
+            </Link>
+            <Link href="/dashboard" className="btn-primary">
+              Vai al pannello
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -75,11 +67,11 @@ export default function LandingPage() {
         </div>
         <h1 className="text-5xl font-bold text-gray-900 mb-6 leading-tight">
           Automazione social<br />
-          <span className="text-brand-600">per brand di abbigliamento</span>
+          <span className="text-brand-600">con tutti i servizi attivi</span>
         </h1>
         <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto">
-          AI scrive i post. Tu approvi con 1 click. Sistema pubblica automaticamente su 5 canali.
-          Senza pensare a niente.
+          AI scrive i post, prepara il piano editoriale, valida i contenuti, pubblica sui canali e registra tutto nel pannello.
+          La preview ora mostra l'intero sistema.
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link href="/dashboard" className="btn-primary text-base px-6 py-3">
@@ -95,35 +87,54 @@ export default function LandingPage() {
       {/* Piattaforme supportate */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">5 piattaforme supportate</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">{PLATFORM_LIST.length} canali e servizi contenuto</h2>
           <p className="text-gray-600">Crea e pubblica su tutti i canali principali da un unico pannello</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {PIATTAFORME.map(p => (
+          {PLATFORM_LIST.map(p => (
             <div key={p.nome} className="card p-6 group hover:shadow-lg transition-all hover:-translate-y-0.5">
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${p.color} flex items-center justify-center text-2xl mb-4 shadow-md`}>
-                {p.icon}
+              <div className={`w-14 h-14 rounded-2xl ${p.colorBg} flex items-center justify-center text-2xl mb-4 shadow-md`}>
+                {p.emoji}
               </div>
               <h3 className="font-bold text-lg text-gray-900 mb-1">{p.nome}</h3>
-              <p className="text-sm text-gray-500 mb-4">{p.desc}</p>
+              <p className="text-sm text-gray-500 mb-4">{p.descrizione}</p>
               <div className="flex flex-wrap gap-1.5">
                 {p.formati.map(f => (
-                  <span key={f} className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full font-medium">
-                    {f}
+                  <span key={f.id} className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full font-medium">
+                    {f.nome}
                   </span>
                 ))}
               </div>
             </div>
           ))}
+        </div>
+      </section>
 
-          {/* Card CTA "altri canali" */}
-          <div className="card p-6 border-dashed border-2 border-gray-200 flex flex-col items-center justify-center text-center">
-            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center text-2xl mb-4">
-              ✨
+      {/* Servizi disponibili */}
+      <section className="bg-white border-y border-gray-100">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">Tutti i servizi operativi</h2>
+              <p className="text-gray-600">Dalla generazione alla pubblicazione, ogni modulo e raggiungibile dalla preview.</p>
             </div>
-            <h3 className="font-bold text-lg text-gray-900 mb-1">Threads, LinkedIn...</h3>
-            <p className="text-sm text-gray-500">Disponibili su richiesta Blotato</p>
+            <Link href="/dashboard" className="btn-primary w-fit">
+              Apri dashboard
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {SERVIZI.map(({ icon: Icon, titolo, desc, href }) => (
+              <Link key={titolo} href={href} className="card p-5 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-4">
+                  <Icon className="w-5 h-5 text-brand-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-1">{titolo}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -158,7 +169,7 @@ export default function LandingPage() {
 
         <div className="space-y-3">
           {[
-            { step: '1', titolo: 'AI genera piano',       desc: 'Lunedì 08:00 — Claude crea 7-10 post per IG/FB/TikTok/Pinterest/YT',  color: 'bg-purple-100 text-purple-700' },
+            { step: '1', titolo: 'AI genera piano',       desc: 'Lunedì 08:00 — Claude crea contenuti per social, YouTube Shorts e blog', color: 'bg-purple-100 text-purple-700' },
             { step: '2', titolo: 'AI scrive contenuti',   desc: 'Ogni 30min — hook, caption, hashtag, CTA per ogni riga IDEA',         color: 'bg-blue-100 text-blue-700' },
             { step: '3', titolo: 'Sistema valida media',  desc: 'HEAD check link Drive/CDN — media_validato = SI/NO',                  color: 'bg-cyan-100 text-cyan-700' },
             { step: '4', titolo: 'TU approvi',            desc: 'Pannello admin — 1 click Approva, oppure modifica + Approva',         color: 'bg-yellow-100 text-yellow-700' },
