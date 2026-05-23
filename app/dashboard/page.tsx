@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Calendar, CheckCircle, AlertCircle, Send, Clock, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 async function getStats() {
   const supabase = await createClient()

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import StatusBadge from '@/components/StatusBadge'
 
-export const revalidate = 30
+export const dynamic = 'force-dynamic'
 
 export default async function LogPage() {
   const supabase = await createClient()

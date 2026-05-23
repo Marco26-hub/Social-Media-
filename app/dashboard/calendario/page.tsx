@@ -1,5 +1,7 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
@@ -13,6 +15,14 @@ const CANALE_ICON: Record<string, string> = {
 }
 
 export default function CalendarioPage() {
+  return (
+    <Suspense fallback={<div className="p-8"><RefreshCw className="w-6 h-6 text-gray-400 animate-spin" /></div>}>
+      <CalendarioInner />
+    </Suspense>
+  )
+}
+
+function CalendarioInner() {
   const searchParams = useSearchParams()
   const [contenuti, setContenuti]   = useState<Contenuto[]>([])
   const [loading, setLoading]       = useState(true)
