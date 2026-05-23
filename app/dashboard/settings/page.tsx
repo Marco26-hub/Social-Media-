@@ -8,7 +8,7 @@ import { Save, RefreshCw } from 'lucide-react'
 import { demoSettings } from '@/lib/demo-data'
 import { useActiveClienteId } from '@/lib/tenant/client'
 
-const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+import { isDemo } from '@/lib/demo'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Setting[]>([])

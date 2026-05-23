@@ -13,7 +13,7 @@ import ConfirmModal from '@/components/ConfirmModal'
 import type { Contenuto } from '@/lib/types'
 import { useActiveClienteId } from '@/lib/tenant/client'
 
-const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+import { isDemo } from '@/lib/demo'
 
 export default function SocialPlatformPage({ params }: { params: Promise<{ platform: string }> }) {
   const { platform } = use(params)

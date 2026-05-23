@@ -8,7 +8,7 @@ import type { SeoAudit } from '@/lib/types'
 import { TrendingUp, AlertTriangle, Target, CheckCircle2, Calendar, Search, Loader2, Globe, Sparkles } from 'lucide-react'
 import { useActiveClienteId } from '@/lib/tenant/client'
 
-const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+import { isDemo } from '@/lib/demo'
 
 export default function SeoPage() {
   const [audits, setAudits] = useState<SeoAudit[]>([])

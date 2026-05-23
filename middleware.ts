@@ -1,11 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { isDemo } from '@/lib/demo'
 
 export async function middleware(request: NextRequest) {
-  const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
-
   // In demo mode: landing su /, tutto accessibile senza auth
-  if (isDemo) {
+  if (isDemo()) {
     return NextResponse.next()
   }
 

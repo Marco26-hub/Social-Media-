@@ -11,7 +11,7 @@ import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
 import { useActiveClienteId } from '@/lib/tenant/client'
 
-const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+import { isDemo } from '@/lib/demo'
 
 const CANALI = ['tutti','instagram','facebook','tiktok','pinterest','youtube_shorts']
 const STATI: Status[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','IN_PUBBLICAZIONE','PUBBLICATO','ERRORE','ERRORE_MANUALE']

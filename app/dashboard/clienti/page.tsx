@@ -9,7 +9,7 @@ import { readActiveClienteId, writeActiveClienteId } from '@/lib/tenant/client'
 
 export const dynamic = 'force-dynamic'
 
-const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+import { isDemo } from '@/lib/demo'
 
 const demoClienti: Cliente[] = [
   {

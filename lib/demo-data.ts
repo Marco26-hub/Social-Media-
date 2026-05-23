@@ -1,10 +1,8 @@
-// Demo data — usato quando NEXT_PUBLIC_DEMO_MODE=true (env mancante)
+// Demo data — usato quando NEXT_PUBLIC_DEMO_MODE=true o env Supabase mancanti/fake
 import type { Contenuto, Prodotto, Setting, LogPubblicazione, BlogArticolo, SeoAudit } from './types'
+import { isDemo } from './demo'
 
-export const isDemoMode = () =>
-  typeof window !== 'undefined'
-    ? !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
-    : !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+export const isDemoMode = isDemo
 
 export const demoContenuti: Contenuto[] = [
   {

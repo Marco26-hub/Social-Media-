@@ -5,7 +5,7 @@ import { getActiveClienteId } from '@/lib/tenant/server'
 
 export const dynamic = 'force-dynamic'
 
-const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+import { isDemo } from '@/lib/demo'
 
 export default async function ProdottiPage() {
   let prodotti

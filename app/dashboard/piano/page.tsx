@@ -7,7 +7,7 @@ import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info } fr
 import ConfirmModal from '@/components/ConfirmModal'
 import { useActiveClienteId } from '@/lib/tenant/client'
 
-const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+import { isDemo } from '@/lib/demo'
 
 export default function PianoPage() {
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
