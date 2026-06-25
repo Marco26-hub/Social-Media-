@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Building2, ChevronDown } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import {
   readActiveClienteId,
   writeActiveClienteId,
@@ -12,18 +11,26 @@ import {
 
 export default function ClienteSelector() {
   const router = useRouter()
-  const supabase = createClient()
   const [rows, setRows] = useState<ClienteAccessRow[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from('user_client_access')
-        .select('cliente_id, ruolo, clienti(*)')
-        .eq('attivo', true)
+      const response = await fetch('/api/data/clienti')
+      if (!response.ok) {
+        setRows([])
+        setActiveId(null)
+        return
+      }
 
-      const access = ((data ?? []) as unknown) as ClienteAccessRow[]
+      const clienti = await response.json() as ClienteAccessRow['clienti'][]
+      const access = clienti
+        .filter(Boolean)
+        .map(cliente => ({
+          cliente_id: cliente!.id,
+          ruolo: 'owner',
+          clienti: cliente,
+        }))
       const cookieId = readActiveClienteId()
       const nextId = cookieId && access.some(row => row.cliente_id === cookieId)
         ? cookieId
@@ -35,7 +42,7 @@ export default function ClienteSelector() {
     }
 
     load()
-  }, [supabase])
+  }, [])
 
   if (rows.length === 0) {
     return (

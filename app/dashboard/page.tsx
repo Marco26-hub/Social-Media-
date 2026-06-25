@@ -1,14 +1,25 @@
-import { createClient } from '@/lib/supabase/server'
-import { Calendar, CheckCircle, AlertCircle, Send, Clock, TrendingUp, ChevronRight } from 'lucide-react'
+import { dbReady as isDbReady, q } from '@/lib/db'
+import { requireAuth, requireClienteId } from '@/lib/auth-utils'
+import {
+  Calendar, CheckCircle, AlertCircle, Send, Clock, TrendingUp, ChevronRight,
+  Bot, Database, Rocket, ShieldCheck, Sparkles, Workflow
+} from 'lucide-react'
 import Link from 'next/link'
 import { demoContenuti, demoLogs } from '@/lib/demo-data'
 import AIModelSelector from '@/components/AIModelSelector'
 import { PLATFORM_LIST } from '@/lib/social-config'
-import { getActiveClienteId } from '@/lib/tenant/server'
+import { isDemo } from '@/lib/demo'
 
 export const dynamic = 'force-dynamic'
 
-import { isDemo } from '@/lib/demo'
+type DashboardLog = {
+  id: string
+  timestamp: string
+  id_contenuto: string | null
+  status_finale: string
+  canale: string | null
+  messaggio: string | null
+}
 
 async function getStats() {
   if (isDemo()) {
@@ -17,32 +28,86 @@ async function getStats() {
       pubblicati7g: demoContenuti.filter(c => c.status === 'PUBBLICATO').length,
       errori: demoContenuti.filter(c => c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE').length,
       inCoda: demoContenuti.filter(c => c.status === 'APPROVATO').length,
-      ultimi: demoLogs,
+      jobAttivi: 0,
+      jobFalliti: 0,
+      ultimi: demoLogs as DashboardLog[],
     }
   }
-  const supabase = await createClient()
-  const clienteId = await getActiveClienteId(supabase)
+  const cid = await requireClienteId()
+  await requireAuth()
   const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
 
   const [
-    { count: daApprovare },
-    { count: pubblicati7g },
-    { count: errori },
-    { count: inCoda },
-    { data: ultimi },
+    daRows,
+    pubRows,
+    errRows,
+    codaRows,
+    jobARows,
+    jobFRows,
+    ultimiRows,
   ] = await Promise.all([
-    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('cliente_id', clienteId ?? '').eq('status', 'DA_APPROVARE'),
-    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('cliente_id', clienteId ?? '').eq('status', 'PUBBLICATO').gte('data_pubblicazione', weekAgo),
-    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('cliente_id', clienteId ?? '').in('status', ['ERRORE', 'ERRORE_MANUALE']),
-    supabase.from('calendario').select('*', { count: 'exact', head: true }).eq('cliente_id', clienteId ?? '').eq('status', 'APPROVATO'),
-    supabase.from('log_pubblicazioni').select('*').eq('cliente_id', clienteId ?? '').order('timestamp', { ascending: false }).limit(5),
+    q('SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND status = $2', [cid, 'DA_APPROVARE']),
+    q('SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND status = $2 AND data_pubblicazione >= $3', [cid, 'PUBBLICATO', weekAgo]),
+    q("SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND status IN ('ERRORE','ERRORE_MANUALE')", [cid]),
+    q('SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND status = $2', [cid, 'APPROVATO']),
+    q("SELECT count(*)::int as c FROM generation_jobs WHERE cliente_id = $1 AND status IN ('queued','running')", [cid]),
+    q('SELECT count(*)::int as c FROM generation_jobs WHERE cliente_id = $1 AND status = $2', [cid, 'failed']),
+    q('SELECT * FROM log_pubblicazioni WHERE cliente_id = $1 ORDER BY timestamp DESC LIMIT 5', [cid]),
   ])
 
-  return { daApprovare, pubblicati7g, errori, inCoda, ultimi: ultimi ?? [] }
+  return {
+    daApprovare: (daRows[0] as { c: number } | undefined)?.c ?? 0,
+    pubblicati7g: (pubRows[0] as { c: number } | undefined)?.c ?? 0,
+    errori: (errRows[0] as { c: number } | undefined)?.c ?? 0,
+    inCoda: (codaRows[0] as { c: number } | undefined)?.c ?? 0,
+    jobAttivi: (jobARows[0] as { c: number } | undefined)?.c ?? 0,
+    jobFalliti: (jobFRows[0] as { c: number } | undefined)?.c ?? 0,
+    ultimi: (ultimiRows ?? []) as DashboardLog[],
+  }
+}
+
+function getSystemHealth() {
+  const demo = isDemo()
+  const databaseReady = demo || isDbReady()
+  const authReady = Boolean(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET)
+  const aiReady = Boolean(process.env.ANTHROPIC_API_KEY || process.env.OPENROUTER_API_KEY)
+  const operationsReady = !demo
+
+  return {
+    demo,
+    ready: databaseReady && authReady && aiReady,
+    items: [
+      {
+        label: 'Neon DB',
+        value: databaseReady ? 'DATABASE_URL attivo' : 'Da configurare',
+        icon: Database,
+        tone: databaseReady ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50',
+      },
+      {
+        label: 'Auth',
+        value: authReady ? 'NextAuth pronto' : 'Serve secret',
+        icon: ShieldCheck,
+        tone: authReady ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50',
+      },
+      {
+        label: 'AI backend',
+        value: aiReady ? 'Chiave attiva' : 'Serve chiave AI',
+        icon: Bot,
+        tone: aiReady ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50',
+      },
+      {
+        label: 'Ops schema',
+        value: operationsReady ? 'Migration pronta' : 'Demo mode',
+        icon: Workflow,
+        tone: operationsReady ? 'text-blue-700 bg-blue-50' : 'text-slate-700 bg-slate-100',
+      },
+    ],
+  }
 }
 
 export default async function DashboardPage() {
-  const { daApprovare, pubblicati7g, errori, inCoda, ultimi } = await getStats()
+  const { daApprovare, pubblicati7g, errori, inCoda, jobAttivi, jobFalliti, ultimi } = await getStats()
+  const systemHealth = getSystemHealth()
 
   const stats = [
     { label: 'Da approvare',    value: daApprovare ?? 0, icon: Clock,         color: 'text-yellow-600', bg: 'bg-yellow-50', href: '/dashboard/calendario?filter=DA_APPROVARE' },
@@ -61,12 +126,53 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-xl md:text-3xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-        <p className="text-gray-500 text-xs md:text-sm mt-1">
-          {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-        </p>
+      <div className="relative overflow-hidden rounded-3xl bg-slate-950 text-white p-6 md:p-8 mb-6 shadow-xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,197,94,0.28),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.22),transparent_30%)]" />
+        <div className="relative grid lg:grid-cols-[1.2fr_0.8fr] gap-6 items-end">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-white/80 mb-4">
+              <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+              Control room · {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </div>
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
+              Social Automation è pronta a diventare operativa.
+            </h1>
+            <p className="text-sm md:text-base text-slate-300 mt-3 max-w-2xl">
+              Neon/Postgres, API e frontend sono allineati sul prossimo obiettivo: generare, approvare e preparare la pubblicazione dei contenuti senza perdere visibilità sui job.
+            </p>
+            <div className="flex flex-wrap gap-3 mt-5">
+              <Link href="/dashboard/piano" className="btn-primary">
+                <Rocket className="w-4 h-4" />
+                Genera piano
+              </Link>
+              <Link href="/dashboard/calendario?filter=DA_APPROVARE" className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-sm font-medium rounded-lg hover:bg-white/15 transition-colors">
+                <ShieldCheck className="w-4 h-4" />
+                Approva contenuti
+              </Link>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold">Stato sistema</p>
+              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${systemHealth.ready ? 'bg-emerald-400/20 text-emerald-100' : 'bg-amber-400/20 text-amber-100'}`}>
+                {systemHealth.ready ? 'Ready' : 'Setup'}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {systemHealth.items.map(({ label, value, icon: Icon, tone }) => (
+                <div key={label} className="flex items-center justify-between rounded-xl bg-white/90 p-3 text-slate-900">
+                  <div className="flex items-center gap-3">
+                    <span className={`rounded-lg p-2 ${tone}`}>
+                      <Icon className="w-4 h-4" />
+                    </span>
+                    <span className="text-sm font-medium">{label}</span>
+                  </div>
+                  <span className="text-xs text-slate-500">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Selettore modello AI — top dashboard */}
@@ -83,6 +189,47 @@ export default async function DashboardPage() {
             <div className="text-sm text-gray-500 mt-0.5">{label}</div>
           </Link>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
+        <div className="lg:col-span-2 card p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="font-semibold text-gray-900">Pipeline immediata</h2>
+              <p className="text-sm text-gray-500 mt-1">Le tre mosse che portano il prodotto da demo a produzione.</p>
+            </div>
+            <Link href="/api/system/health" className="text-sm text-brand-600 hover:underline">Health JSON →</Link>
+          </div>
+          <div className="grid md:grid-cols-3 gap-3">
+            {[
+              { step: '01', title: 'DB operativo', text: 'Esegui la migration 004 su Neon per job ed eventi.' },
+              { step: '02', title: 'Backend osservabile', text: 'Usa /api/system/health come check deploy.' },
+              { step: '03', title: 'Publish bridge', text: 'Collega APPROVATO a Blotato o webhook custom.' },
+            ].map(item => (
+              <div key={item.step} className="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-4">
+                <span className="text-xs font-bold text-brand-600">{item.step}</span>
+                <h3 className="font-semibold text-gray-900 mt-2">{item.title}</h3>
+                <p className="text-sm text-gray-500 mt-1">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card p-6">
+          <h2 className="font-semibold text-gray-900 mb-4">Job backend</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-blue-50 p-4">
+              <p className="text-3xl font-bold text-blue-700">{jobAttivi ?? 0}</p>
+              <p className="text-xs text-blue-700/70 mt-1">Queued/running</p>
+            </div>
+            <div className="rounded-2xl bg-red-50 p-4">
+              <p className="text-3xl font-bold text-red-700">{jobFalliti ?? 0}</p>
+              <p className="text-xs text-red-700/70 mt-1">Failed</p>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 mt-3">
+            Se i valori restano a zero prima della migration, è normale: la base è già pronta per il prossimo step async.
+          </p>
+        </div>
       </div>
 
       {/* Grid social — entry-point per ogni piattaforma */}
@@ -121,7 +268,7 @@ export default async function DashboardPage() {
             <p className="text-sm text-gray-400">Nessuna attività ancora.</p>
           ) : (
             <div className="space-y-3">
-              {ultimi.map((log: { id: string; timestamp: string; id_contenuto?: string; status_finale: string; canale?: string; messaggio?: string }) => (
+              {ultimi.map((log: DashboardLog) => (
                 <div key={log.id} className="flex items-start gap-3 text-sm">
                   <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-2 flex-shrink-0" />
                   <div className="flex-1 min-w-0">

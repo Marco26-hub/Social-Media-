@@ -2,11 +2,11 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { signOut } from 'next-auth/react'
 import { PLATFORM_LIST } from '@/lib/social-config'
 import ClienteSelector from '@/components/ClienteSelector'
 import {
-  LayoutDashboard, Calendar, FileText, Settings,
+  LayoutDashboard, Calendar, Settings,
   Package, LogOut, Zap, Menu, X, Search, Target,
   Users, BarChart3
 } from 'lucide-react'
@@ -51,14 +51,13 @@ const SECTIONS: NavSection[] = [
 export default function Sidebar() {
   const pathname = usePathname()
   const router   = useRouter()
-  const supabase = createClient()
   const [open, setOpen] = useState(false)
 
   useEffect(() => { setOpen(false) }, [pathname])
 
   async function handleLogout() {
-    await supabase.auth.signOut()
-    router.push('/login')
+    await signOut({ redirect: false })
+    router.replace('/login')
   }
 
   return (

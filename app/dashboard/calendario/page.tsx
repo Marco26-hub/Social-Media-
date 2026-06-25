@@ -2,14 +2,13 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState, useCallback, Suspense } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
 import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
-import { useActiveClienteId } from '@/lib/tenant/client'
+import { readClienteId } from '@/lib/use-data'
 
 import { isDemo } from '@/lib/demo'
 
@@ -36,12 +35,11 @@ function CalendarioInner() {
   const [filterCanale, setCanale]   = useState('tutti')
   const [saving, setSaving]         = useState<string | null>(null)
   const [demoData, setDemoData]     = useState<Contenuto[]>(demoContenuti)
-  const supabase = createClient()
   const demo = isDemo()
-  const { clienteId, loading: loadingCliente } = useActiveClienteId()
+
+  const clienteId = readClienteId()
 
   const fetchData = useCallback(async () => {
-    if (!demo && loadingCliente) return
     setLoading(true)
     if (demo) {
       let filtered = demoData
@@ -51,28 +49,26 @@ function CalendarioInner() {
       setLoading(false)
       return
     }
-    let q = supabase.from('calendario').select('*').order('data_pubblicazione', { ascending: true })
-    q = q.eq('cliente_id', clienteId ?? '')
-    if (filterStatus !== 'tutti') q = q.eq('status', filterStatus)
-    if (filterCanale !== 'tutti') q = q.eq('canale', filterCanale)
-    const { data } = await q
-    setContenuti(data ?? [])
+    const params = new URLSearchParams()
+    if (clienteId) params.set('cliente_id', clienteId)
+    if (filterStatus !== 'tutti') params.set('status', filterStatus)
+    if (filterCanale !== 'tutti') params.set('canale', filterCanale)
+
+    try {
+      const res = await fetch(`/api/data/calendario?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setContenuti(data as Contenuto[])
+      } else {
+        setContenuti([])
+      }
+    } catch {
+      setContenuti([])
+    }
     setLoading(false)
-  }, [filterStatus, filterCanale, supabase, demo, demoData, clienteId, loadingCliente])
+  }, [filterStatus, filterCanale, demo, demoData, clienteId])
 
   useEffect(() => { fetchData() }, [fetchData])
-
-  // Realtime — skip in demo
-  useEffect(() => {
-    if (demo) return
-    const channel = supabase.channel('calendario-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'calendario', filter: `cliente_id=eq.${clienteId}` }, fetchData)
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-  }, [fetchData, supabase, demo, clienteId])
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cal = () => supabase.from('calendario') as any
 
   async function approva(c: Contenuto, user: string = 'admin') {
     setSaving(c.id)
@@ -83,12 +79,17 @@ function CalendarioInner() {
         approvato_da: user, data_approvazione: new Date().toISOString(),
       } : x))
     } else {
-      await cal().update({
-        status: 'APPROVATO',
-        checked_copy: 'SI', checked_media: 'SI', checked_link: 'SI',
-        approvato_da: user,
-        data_approvazione: new Date().toISOString(),
-      }).eq('id', c.id)
+      await fetch('/api/data/calendario', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: c.id,
+          status: 'APPROVATO',
+          checked_copy: 'SI',
+          checked_media: 'SI',
+          checked_link: 'SI',
+        }),
+      })
     }
     setSelected(null)
     setSaving(null)
@@ -99,7 +100,11 @@ function CalendarioInner() {
     if (demo) {
       setDemoData(prev => prev.map(x => x.id === c.id ? { ...x, status: 'BOZZA' as Status } : x))
     } else {
-      await cal().update({ status: 'BOZZA' }).eq('id', c.id)
+      await fetch('/api/data/calendario', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: c.id, status: 'BOZZA' }),
+      })
     }
     setSelected(null)
     setSaving(null)
@@ -112,12 +117,17 @@ function CalendarioInner() {
         ...x, status: 'APPROVATO' as Status, errore_tecnico: null, retry_count: 0, publish_lock_id: null,
       } : x))
     } else {
-      await cal().update({
-        status: 'APPROVATO',
-        errore_tecnico: null,
-        retry_count: 0,
-        publish_lock_id: null,
-      }).eq('id', c.id)
+      await fetch('/api/data/calendario', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: c.id,
+          status: 'APPROVATO',
+          errore_tecnico: null,
+          retry_count: 0,
+          publish_lock_id: null,
+        }),
+      })
     }
     setSaving(null)
   }

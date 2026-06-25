@@ -1,32 +1,36 @@
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { useEffect, useState } from 'react'
 import type { Prodotto } from '@/lib/types'
 import { demoProdotti } from '@/lib/demo-data'
-import { getActiveClienteId } from '@/lib/tenant/server'
+import { isDemo } from '@/lib/demo'
 
 export const dynamic = 'force-dynamic'
 
-import { isDemo } from '@/lib/demo'
+const stockColor: Record<string, string> = {
+  disponibile: 'text-green-700 bg-green-50',
+  esaurito:    'text-red-700 bg-red-50',
+  in_arrivo:   'text-yellow-700 bg-yellow-50',
+}
 
-export default async function ProdottiPage() {
-  let prodotti
-  if (isDemo()) {
-    prodotti = demoProdotti
-  } else {
-    const supabase = await createClient()
-    const clienteId = await getActiveClienteId(supabase)
-    const res = await supabase
-      .from('prodotti')
-      .select('*')
-      .eq('cliente_id', clienteId ?? '')
-      .order('priorita', { ascending: true })
-    prodotti = res.data
+export default function ProdottiPage() {
+  const demo = isDemo()
+  const [prodotti, setProdotti] = useState<Prodotto[] | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  async function load() {
+    if (demo) {
+      setProdotti(demoProdotti)
+      setLoading(false)
+      return
+    }
+    const res = await fetch('/api/data/prodotti')
+    const data = res.ok ? await res.json() : null
+    setProdotti(data ?? [])
+    setLoading(false)
   }
 
-  const stockColor: Record<string, string> = {
-    disponibile: 'text-green-700 bg-green-50',
-    esaurito:    'text-red-700 bg-red-50',
-    in_arrivo:   'text-yellow-700 bg-yellow-50',
-  }
+  useEffect(() => { load() }, [])
 
   return (
     <div className="p-4 md:p-8">

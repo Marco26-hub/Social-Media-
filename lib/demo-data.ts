@@ -1,5 +1,5 @@
 // Demo data — usato quando NEXT_PUBLIC_DEMO_MODE=true o env Supabase mancanti/fake
-import type { Contenuto, Prodotto, Setting, LogPubblicazione, BlogArticolo, SeoAudit } from './types'
+import type { Cliente, Contenuto, Prodotto, Setting, LogPubblicazione, BlogArticolo, SeoAudit } from './types'
 import { isDemo } from './demo'
 
 export const isDemoMode = isDemo
@@ -196,6 +196,23 @@ export const demoLogs: LogPubblicazione[] = [
   { id: 'l3', cliente_id: 'demo-silkincom', timestamp: '2026-05-22T18:30:00Z', id_contenuto: 'C002', canale: 'instagram', formato: 'carousel', status_precedente: 'APPROVATO',     status_finale: 'DRY_RUN_OK',      blotato_post_id: null,          messaggio: 'Dry run simulato',         errore: null },
   { id: 'l4', cliente_id: 'demo-silkincom', timestamp: '2026-05-22T12:30:45Z', id_contenuto: 'C001', canale: 'instagram', formato: 'post', status_precedente: 'APPROVATO',     status_finale: 'DRY_RUN_OK',      blotato_post_id: null,          messaggio: 'Dry run simulato',         errore: null },
   { id: 'l5', cliente_id: 'demo-silkincom', timestamp: '2026-05-21T20:00:00Z', id_contenuto: 'C000', canale: 'instagram', formato: 'post', status_precedente: 'IN_PUBBLICAZIONE', status_finale: 'PUBBLICATO',      blotato_post_id: 'blt_aaa_001', messaggio: 'ok', errore: null },
+]
+
+export const demoClienti: Cliente[] = [
+  {
+    id: 'demo-silkincom',
+    nome: 'SILKinCOM',
+    slug: 'silkincom',
+    settore: 'Fashion e-commerce',
+    email: 'info@silkincom.com',
+    telefono: null,
+    piano: 'pro',
+    contenuti_mese: 30,
+    attivo: true,
+    note: null,
+    created_at: '2026-05-23T00:00:00Z',
+    updated_at: '2026-05-23T00:00:00Z',
+  },
 ]
 
 export const demoBlogArticoli: BlogArticolo[] = [

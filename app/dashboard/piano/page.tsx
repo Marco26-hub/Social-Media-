@@ -52,18 +52,15 @@ export default function PianoPage() {
 
     try {
       if (!clienteId) throw new Error('Cliente non selezionato')
-      const base = process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE
-      if (!base) throw new Error('n8n non configurato')
       const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
       const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
-      const workflow = periodo === 'mensile' ? 'workflow-K' : 'workflow-A'
-      const res = await fetch(`${base}/${workflow}`, {
+      const res = await fetch('/api/generate/plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, piattaforme, obiettivo, model: aiModel, openrouter_key: orKey || undefined }),
+        body: JSON.stringify({ cliente_id: clienteId, piattaforme, obiettivo, periodo, model: aiModel, openrouter_key: orKey || undefined }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      setMsg({ type: 'ok', text: 'Piano avviato. I contenuti compariranno nel calendario tra poco.' })
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || `HTTP ${res.status}`) }
+      setMsg({ type: 'ok', text: 'Piano generato. I contenuti sono nel calendario.' })
     } catch (e) {
       setMsg({ type: 'err', text: (e as Error).message })
     }

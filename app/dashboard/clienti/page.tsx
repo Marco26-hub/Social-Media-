@@ -3,30 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Building2, CheckCircle2, Loader2, Plus, Users } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import type { Cliente } from '@/lib/types'
-import { readActiveClienteId, writeActiveClienteId } from '@/lib/tenant/client'
+import { isDemo } from '@/lib/demo'
+import { readClienteId, writeClienteId } from '@/lib/use-data'
+import { demoClienti } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
-
-import { isDemo } from '@/lib/demo'
-
-const demoClienti: Cliente[] = [
-  {
-    id: 'demo-silkincom',
-    nome: 'SILKinCOM',
-    slug: 'silkincom',
-    settore: 'Fashion e-commerce',
-    email: 'info@silkincom.com',
-    telefono: null,
-    piano: 'pro',
-    contenuti_mese: 30,
-    attivo: true,
-    note: null,
-    created_at: '2026-05-23T00:00:00Z',
-    updated_at: '2026-05-23T00:00:00Z',
-  },
-]
 
 function toSlug(value: string) {
   return value
@@ -39,7 +21,6 @@ function toSlug(value: string) {
 
 export default function ClientiPage() {
   const router = useRouter()
-  const supabase = createClient()
   const demo = isDemo()
   const [clienti, setClienti] = useState<Cliente[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -67,17 +48,17 @@ export default function ClientiPage() {
       return
     }
 
-    const { data, error } = await supabase
-      .from('clienti')
-      .select('*')
-      .order('nome')
-
-    if (error) setError(error.message)
-    const rows = ((data ?? []) as unknown) as Cliente[]
-    const cookieId = readActiveClienteId()
+    const res = await fetch('/api/data/clienti')
+    if (!res.ok) {
+      setError('Errore nel caricamento clienti')
+      setLoading(false)
+      return
+    }
+    const rows = await res.json() as Cliente[]
+    const cookieId = readClienteId()
     const nextId = cookieId && rows.some(row => row.id === cookieId) ? cookieId : rows[0]?.id ?? null
 
-    if (nextId) writeActiveClienteId(nextId)
+    if (nextId) writeClienteId(nextId)
     setClienti(rows)
     setActiveId(nextId)
     setLoading(false)
@@ -100,22 +81,28 @@ export default function ClientiPage() {
       return
     }
 
-    const { data, error } = await supabase.rpc('create_cliente_for_current_user', {
-      cliente_nome: form.nome.trim(),
-      cliente_slug: slug || toSlug(form.nome.trim()),
-      cliente_settore: form.settore.trim() || null,
-      cliente_email: form.email.trim() || null,
-      cliente_telefono: form.telefono.trim() || null,
-      cliente_piano: form.piano,
+    const res = await fetch('/api/data/clienti', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nome: form.nome.trim(),
+        slug: slug || toSlug(form.nome.trim()),
+        settore: form.settore.trim() || null,
+        email: form.email.trim() || null,
+        telefono: form.telefono.trim() || null,
+        piano: form.piano,
+      }),
     })
 
-    if (error) {
-      setError(error.message)
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Errore sconosciuto' }))
+      setError(err.error || 'Errore nella creazione')
       setSaving(false)
       return
     }
 
-    if (data) writeActiveClienteId(String(data))
+    const data = await res.json()
+    if (data?.id) writeClienteId(String(data.id))
     setForm({ nome: '', settore: '', email: '', telefono: '', piano: 'pro' })
     await load()
     router.refresh()
@@ -123,7 +110,7 @@ export default function ClientiPage() {
   }
 
   function selectCliente(clienteId: string) {
-    writeActiveClienteId(clienteId)
+    writeClienteId(clienteId)
     setActiveId(clienteId)
     router.push('/dashboard')
     router.refresh()

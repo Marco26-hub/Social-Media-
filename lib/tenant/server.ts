@@ -1,29 +1,23 @@
 import { cookies } from 'next/headers'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/lib/types'
+import { q } from '@/lib/db'
+import { requireAuth } from '@/lib/auth-utils'
 
 export const ACTIVE_CLIENTE_COOKIE = 'active_cliente_id'
 
-export async function getActiveClienteId(supabase: SupabaseClient<Database>) {
+export async function getActiveClienteId() {
   const cookieStore = await cookies()
   const cookieClienteId = cookieStore.get(ACTIVE_CLIENTE_COOKIE)?.value
 
   if (cookieClienteId) return cookieClienteId
 
-  const { data } = await supabase
-    .from('user_client_access')
-    .select('cliente_id')
-    .eq('attivo', true)
-    .limit(1)
-    .maybeSingle()
-
-  const row = data as { cliente_id?: string } | null
-  return row?.cliente_id ?? null
+  const user = await requireAuth()
+  const rows = await q(
+    'SELECT cliente_id FROM user_client_access WHERE user_id = $1 AND attivo = true LIMIT 1',
+    [user.id]
+  )
+  return (rows[0] as { cliente_id?: string } | undefined)?.cliente_id ?? null
 }
 
-export function applyClienteFilter<T extends { eq: (column: string, value: string) => T }>(
-  query: T,
-  clienteId: string | null
-) {
-  return clienteId ? query.eq('cliente_id', clienteId) : query
+export function applyClienteFilter(baseSql: string, clienteId: string | null) {
+  return clienteId ? `${baseSql} WHERE cliente_id = $1` : baseSql
 }

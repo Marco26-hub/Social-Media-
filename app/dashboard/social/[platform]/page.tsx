@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, use } from 'react'
 import { PLATFORMS, type PlatformKey, type FormatoConfig } from '@/lib/social-config'
-import { createClient } from '@/lib/supabase/client'
 import { demoContenuti } from '@/lib/demo-data'
 import { Sparkles, Loader2, Check, X, ArrowLeft, Calendar, Eye, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -28,7 +27,6 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [states, setStates]   = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({})
   const [pending, setPending] = useState<FormatoConfig | null>(null)
   const [aiModel, setAiModel] = useState('claude-sonnet-4-6')
-  const supabase = createClient()
   const demo = isDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
@@ -45,17 +43,13 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
         return
       }
       if (loadingCliente) return
-      const { data } = await supabase
-        .from('calendario')
-        .select('*')
-        .eq('cliente_id', clienteId ?? '')
-        .eq('canale', config.canaleDb)
-        .order('data_pubblicazione', { ascending: false })
-        .limit(5)
-      setRecenti(((data ?? []) as unknown) as Contenuto[])
+      const params = new URLSearchParams({ canale: config.canaleDb, limit: '5' })
+      const response = await fetch(`/api/data/calendario?${params.toString()}`)
+      const data = response.ok ? await response.json() as Contenuto[] : []
+      setRecenti(data)
     }
     load()
-  }, [demo, supabase, config.canaleDb, clienteId, loadingCliente])
+  }, [demo, config.canaleDb, clienteId, loadingCliente])
 
   function chiediGenera(f: FormatoConfig) {
     setPending(f)
@@ -72,18 +66,14 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     }
     try {
       if (!clienteId) throw new Error('Cliente non selezionato')
-      const base = process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE
-      if (!base) throw new Error('n8n non configurato')
       const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
       const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
-      // workflow path: SOCIAL_K → workflow-K
-      const path = f.workflow.replace('SOCIAL_', 'workflow-')
-      const res = await fetch(`${base}/${path}`, {
+      const res = await fetch('/api/generate/content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, model: aiModel, openrouter_key: orKey || undefined }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || `HTTP ${res.status}`) }
       setStates(s => ({ ...s, [f.id]: 'success' }))
     } catch {
       setStates(s => ({ ...s, [f.id]: 'error' }))
@@ -133,7 +123,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
                     <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-mono">{f.aspectRatio}</span>
-                      <span className="text-[10px] text-gray-400 font-mono">{f.workflow}</span>
+                      <span className="text-[10px] text-gray-400 font-mono">{f.formato}</span>
                     </div>
                   </div>
                 </div>

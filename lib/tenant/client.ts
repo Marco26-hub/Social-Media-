@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import type { Cliente } from '@/lib/types'
 
 export const ACTIVE_CLIENTE_COOKIE = 'active_cliente_id'
@@ -29,20 +28,17 @@ export function useActiveClienteId() {
       return
     }
 
-    const supabase = createClient()
-    supabase
-      .from('user_client_access')
-      .select('cliente_id')
-      .eq('attivo', true)
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.cliente_id) {
-          writeActiveClienteId(data.cliente_id)
-          setClienteId(data.cliente_id)
+    fetch('/api/data/clienti')
+      .then(response => response.ok ? response.json() : [])
+      .then((clienti: Cliente[]) => {
+        const firstId = clienti[0]?.id
+        if (firstId) {
+          writeActiveClienteId(firstId)
+          setClienteId(firstId)
         }
         setLoading(false)
       })
+      .catch(() => setLoading(false))
   }, [clienteId])
 
   return { clienteId, loading }

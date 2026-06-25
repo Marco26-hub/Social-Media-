@@ -243,7 +243,39 @@ export interface SeoAudit {
   created_at: string
 }
 
-// Supabase Database type (minimal for type safety)
+export interface GenerationJob {
+  id: string
+  cliente_id: string
+  tipo: 'content' | 'plan' | 'seo_audit' | 'media_validation' | 'publish' | 'report'
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+  input: Record<string, unknown>
+  output: Record<string, unknown> | null
+  error_message: string | null
+  model: string | null
+  attempts: number
+  started_at: string | null
+  completed_at: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface IntegrationEvent {
+  id: string
+  cliente_id: string | null
+  provider: string
+  event_type: string
+  direction: 'inbound' | 'outbound'
+  status: 'received' | 'processing' | 'processed' | 'failed' | 'ignored'
+  entity_type: string | null
+  entity_id: string | null
+  payload: Record<string, unknown>
+  error_message: string | null
+  processed_at: string | null
+  created_at: string
+}
+
+// Database type (minimal for type safety)
 export interface Database {
   public: {
     Tables: {
@@ -259,6 +291,8 @@ export interface Database {
       settings:         { Row: Setting;           Insert: Partial<Omit<Setting,           'id'>>; Update: Partial<Omit<Setting,           'id'>> }
       blog_articoli:    { Row: BlogArticolo;      Insert: Partial<Omit<BlogArticolo,      'id'>>; Update: Partial<Omit<BlogArticolo,      'id' | 'created_at'>> }
       seo_audit:        { Row: SeoAudit;          Insert: Partial<Omit<SeoAudit,          'id'>>; Update: Partial<Omit<SeoAudit,          'id' | 'created_at'>> }
+      generation_jobs:  { Row: GenerationJob;     Insert: Partial<Omit<GenerationJob,     'id' | 'created_at' | 'updated_at'>>; Update: Partial<Omit<GenerationJob,     'id' | 'created_at'>> }
+      integration_events:{ Row: IntegrationEvent; Insert: Partial<Omit<IntegrationEvent,  'id' | 'created_at'>>; Update: Partial<Omit<IntegrationEvent,  'id' | 'created_at'>> }
     }
   }
 }

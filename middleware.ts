@@ -1,53 +1,28 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { getToken } from 'next-auth/jwt'
 import { isDemo } from '@/lib/demo'
 
 export async function middleware(request: NextRequest) {
-  // In demo mode: landing su /, tutto accessibile senza auth
-  if (isDemo()) {
-    return NextResponse.next()
-  }
+  if (isDemo()) return NextResponse.next()
 
-  let supabaseResponse = NextResponse.next({ request })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options as Parameters<typeof supabaseResponse.cookies.set>[2])
-          )
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
+  const token = await getToken({ req: request, secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET })
+  const isAuthPage = pathname === '/login'
+  const isDashboard = pathname.startsWith('/dashboard')
 
-  // Redirige / → scelta cliente o /login
   if (pathname === '/') {
-    return NextResponse.redirect(
-      new URL(user ? '/dashboard/clienti' : '/login', request.url)
-    )
+    return NextResponse.redirect(new URL(token ? '/dashboard/clienti' : '/login', request.url))
   }
 
-  // Protegge /dashboard/*
-  if (pathname.startsWith('/dashboard') && !user) {
+  if (isDashboard && !token) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Se loggato, non mostrare /login
-  if (pathname === '/login' && user) {
+  if (isAuthPage && token) {
     return NextResponse.redirect(new URL('/dashboard/clienti', request.url))
   }
 
-  return supabaseResponse
+  return NextResponse.next()
 }
 
 export const config = {

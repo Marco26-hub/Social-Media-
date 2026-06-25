@@ -5,6 +5,7 @@ import {
   Square, Video, Pin, FileText, Calendar, CalendarRange,
   BarChart3, Search, Edit3, ChevronDown
 } from 'lucide-react'
+import { isDemo } from '@/lib/demo'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
@@ -88,8 +89,6 @@ const SECTIONS: Section[] = [
   },
 ]
 
-const isDemo = () => !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
-
 export default function GeneratorCards() {
   const [states, setStates] = useState<Record<string, Status>>({})
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ plan: true, instagram: true })
@@ -103,14 +102,12 @@ export default function GeneratorCards() {
       return
     }
     try {
-      const base = process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE
-      if (!base) throw new Error('webhook non config')
-      const res = await fetch(`${base}/${g.workflow.toLowerCase()}`, {
+      const res = await fetch('/api/generate/content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(g.payload ?? {}),
+        body: JSON.stringify({ ...(g.payload ?? {}) }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || `HTTP ${res.status}`) }
       setStates(s => ({ ...s, [g.id]: 'success' }))
     } catch {
       setStates(s => ({ ...s, [g.id]: 'error' }))
@@ -151,7 +148,7 @@ export default function GeneratorCards() {
                         <Icon className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm text-gray-900 leading-tight">{g.titolo}</p>
-                          <p className="text-[10px] text-gray-400 font-mono mt-0.5">{g.workflow}</p>
+                          <p className="text-[10px] text-gray-400 font-mono mt-0.5">{g.id}</p>
                         </div>
                       </div>
                       <p className="text-xs text-gray-500 mb-3 leading-snug flex-1">{g.desc}</p>

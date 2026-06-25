@@ -2,11 +2,9 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import type { Setting } from '@/lib/types'
 import { Save, RefreshCw } from 'lucide-react'
 import { demoSettings } from '@/lib/demo-data'
-import { useActiveClienteId } from '@/lib/tenant/client'
 
 import { isDemo } from '@/lib/demo'
 
@@ -15,9 +13,7 @@ export default function SettingsPage() {
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState<string | null>(null)
   const [saved, setSaved]       = useState<string | null>(null)
-  const supabase = createClient()
   const demo = isDemo()
-  const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
   useEffect(() => {
     if (demo) {
@@ -25,16 +21,20 @@ export default function SettingsPage() {
       setLoading(false)
       return
     }
-    if (loadingCliente) return
-    supabase.from('settings').select('*').eq('cliente_id', clienteId ?? '').order('chiave')
-      .then(({ data }) => { setSettings(data ?? []); setLoading(false) })
-  }, [supabase, demo, clienteId, loadingCliente])
+    fetch('/api/data/settings')
+      .then(res => res.json())
+      .then(data => { setSettings(data ?? []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [demo])
 
   async function updateSetting(s: Setting, newVal: string) {
     setSaving(s.id)
     if (!demo) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from('settings') as any).update({ valore: newVal }).eq('id', s.id)
+      await fetch('/api/data/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: s.id, valore: newVal })
+      })
     }
     setSettings(prev => prev.map(x => x.id === s.id ? { ...x, valore: newVal } : x))
     setSaved(s.id)

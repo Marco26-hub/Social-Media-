@@ -1,41 +1,40 @@
 # Social Automation V2 — Admin Dashboard
 
-Next.js 15 + Supabase. Sostituisce Google Sheets con dashboard web full.
+Next.js 15 + Neon/Postgres. Sostituisce Google Sheets con dashboard web full.
 
 ## Stack
 
 - **Next.js 15** (App Router, Server Components)
-- **Supabase** (Postgres, Auth, Realtime, Row Level Security)
+- **Neon/Postgres** via `DATABASE_URL`
+- **NextAuth** con login credentials
 - **Tailwind CSS**
-- **n8n** (workflow automation — legge/scrive su Supabase)
+- **API Routes** (generazione contenuti via AI)
 
 ## Setup
 
-### 1. Supabase
+### 1. Database Neon/Postgres
 
-1. Crea progetto su [supabase.com](https://supabase.com)
-2. Vai su **SQL Editor** → esegui `supabase/migrations/001_initial_schema.sql`
-3. Esegui `supabase/migrations/002_blog_seo.sql`
-4. Esegui `supabase/migrations/003_multi_tenant.sql`
-5. Copia `Project URL` e le chiavi da **Settings → API**
+1. Crea un database Neon/Postgres.
+2. Configura `DATABASE_URL` in `.env.local`.
+3. Applica lo schema SQL esistente al database.
+4. Esegui `db/migrations/004_operations_foundation.sql` per job backend ed eventi integrazione.
 
 ### 2. Variabili ambiente
 
 ```bash
 cp .env.local.example .env.local
-# Compila con i tuoi valori Supabase
+# Compila con i tuoi valori reali
 ```
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
+DATABASE_URL=postgresql://...
+AUTH_SECRET=una-stringa-lunga-random
 ```
 
 ### 3. Crea utente admin
 
-Supabase Dashboard → **Authentication → Users → Invite user** (o Add user)  
-Inserisci email + password per il login admin.
+Crea una riga in `profiles` con `email`, `nome` e `password_hash` bcrypt.
+Il login usa NextAuth credentials.
 
 ### 4. Install + dev
 
@@ -45,22 +44,11 @@ npm run dev
 # → http://localhost:3000
 ```
 
-### 5. n8n
+### 5. Chiavi AI
 
-Importa i 3 JSON da `n8n_workflows/` in n8n.
-
-Crea credential **SUPABASE** (HTTP Header Auth):
-- Header name: `apikey`
-- Header value: `<SUPABASE_ANON_KEY>`
-
-Aggiungi variabili n8n:
-```
-SUPABASE_URL     = https://xxxx.supabase.co
-SUPABASE_ANON_KEY = eyJ...
-SUPABASE_SERVICE_KEY = eyJ... (service role key)
-```
-
-Nota: nel frontend la variabile si chiama `SUPABASE_SERVICE_ROLE_KEY`, mentre nei workflow n8n è usata come `SUPABASE_SERVICE_KEY` (stesso valore).
+Aggiungi almeno una chiave AI in `.env.local`:
+- `ANTHROPIC_API_KEY` per modelli Claude (default)
+- `OPENROUTER_API_KEY` per modelli free/esterni (opzionale)
 
 ### 6. Deploy (Vercel)
 
@@ -86,12 +74,23 @@ components/
   Sidebar.tsx
   StatusBadge.tsx
 lib/
-  supabase/           → client + server helpers
+  db.ts               → helper query Neon/Postgres
+  auth.ts             → configurazione NextAuth credentials
   types.ts            → TypeScript types
-supabase/
-  migrations/         → SQL schema completo + multi-cliente/multiutente
-n8n_workflows/        → C (pubblica), B (genera), J (valida media)
+db/
+  migrations/         → migration operative Neon/Postgres
+api/generate/         → contenuti, piano, blog, audit
+app/api/system/       → health check operativo
+db/migrations/004_operations_foundation.sql → job + eventi integrazioni
 ```
+
+## Goal immediato
+
+La priorita ora e portare il prodotto da demo a operativo:
+
+1. Applicare `db/migrations/004_operations_foundation.sql` su Neon per tracciare job backend ed eventi integrazione.
+2. Usare `/api/system/health` come controllo rapido di env, DB e AI prima del deploy.
+3. Collegare il flusso `APPROVATO → publish` con Blotato o webhook custom, salvando gli esiti in `integration_events`.
 
 ## Strategia commerciale
 
@@ -127,20 +126,13 @@ La pagina `/servizi` e una landing premium pubblica per vendere sito, e-commerce
 ## Flusso operativo
 
 ```
-SOCIAL_A (n8n, lun 08:00)
-  → genera piano → scrive in Supabase calendario
-
-SOCIAL_B (n8n, ogni 30min)
-  → righe IDEA → Claude → DA_APPROVARE
-
-SOCIAL_J (n8n, ogni 30min)
-  → HEAD check media → media_validato=SI/NO
-
 TU (dashboard web)
-  → /dashboard/calendario → approva con 1 click
+  → /dashboard/piano → genera piano → AI scrive in calendario
+  → /dashboard/social/* → genera contenuto → AI scrive in calendario
+  → /dashboard/calendario → approva con 1 click → DA_APPROVARE → APPROVATO
 
-SOCIAL_C (n8n, ogni 15min)
-  → APPROVATO → valida per cliente → pubblica su Blotato → PUBBLICATO
+NEXT (blotato/webhook esterno)
+  → APPROVATO → pubblica sul social → PUBBLICATO
 ```
 
 ## Multi-cliente
@@ -154,4 +146,4 @@ La migration `003_multi_tenant.sql` aggiunge:
 - policy RLS per separare i dati tra utenti/clienti
 - RPC `create_cliente_for_current_user` per creare un cliente e assegnare l'utente come owner
 
-Il cliente attivo viene salvato nel cookie `active_cliente_id` e passato ai workflow n8n tramite `cliente_id`.
+Il cliente attivo viene salvato nel cookie `active_cliente_id`.

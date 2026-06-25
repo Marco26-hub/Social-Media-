@@ -1,27 +1,31 @@
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { useEffect, useState } from 'react'
 import StatusBadge from '@/components/StatusBadge'
+import type { LogPubblicazione } from '@/lib/types'
 import { demoLogs } from '@/lib/demo-data'
-import { getActiveClienteId } from '@/lib/tenant/server'
+import { isDemo } from '@/lib/demo'
 
 export const dynamic = 'force-dynamic'
 
-import { isDemo } from '@/lib/demo'
+export default function LogPage() {
+  const demo = isDemo()
+  const [logs, setLogs] = useState<LogPubblicazione[] | null>(null)
+  const [loading, setLoading] = useState(true)
 
-export default async function LogPage() {
-  let logs
-  if (isDemo()) {
-    logs = demoLogs
-  } else {
-    const supabase = await createClient()
-    const clienteId = await getActiveClienteId(supabase)
-    const res = await supabase
-      .from('log_pubblicazioni')
-      .select('*')
-      .eq('cliente_id', clienteId ?? '')
-      .order('timestamp', { ascending: false })
-      .limit(100)
-    logs = res.data
+  async function load() {
+    if (demo) {
+      setLogs(demoLogs)
+      setLoading(false)
+      return
+    }
+    const res = await fetch('/api/data/log?limit=100')
+    const data = res.ok ? await res.json() : null
+    setLogs(data ?? [])
+    setLoading(false)
   }
+
+  useEffect(() => { load() }, [])
 
   return (
     <div className="p-4 md:p-8">
@@ -42,16 +46,7 @@ export default async function LogPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {(logs ?? []).map((log: {
-              id: string
-              timestamp: string
-              id_contenuto?: string
-              canale?: string
-              status_finale: string
-              messaggio?: string
-              errore?: string
-              blotato_post_id?: string
-            }) => (
+            {(logs ?? []).map((log) => (
               <tr key={log.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
                   {new Date(log.timestamp).toLocaleString('it-IT', {
@@ -60,16 +55,16 @@ export default async function LogPage() {
                   })}
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-gray-700">
-                  {log.id_contenuto ?? '—'}
+                  {log.id_contenuto ?? '\u2014'}
                 </td>
-                <td className="px-4 py-3 text-gray-600">{log.canale ?? '—'}</td>
+                <td className="px-4 py-3 text-gray-600">{log.canale ?? '\u2014'}</td>
                 <td className="px-4 py-3">
                   <StatusBadge status={log.status_finale} />
                 </td>
                 <td className="px-4 py-3 text-xs text-gray-500 max-w-xs truncate">
                   {log.errore
                     ? <span className="text-red-600">{log.errore}</span>
-                    : (log.messaggio ?? (log.blotato_post_id ? `post_id: ${log.blotato_post_id}` : '—'))
+                    : (log.messaggio ?? (log.blotato_post_id ? `post_id: ${log.blotato_post_id}` : '\u2014'))
                   }
                 </td>
               </tr>
