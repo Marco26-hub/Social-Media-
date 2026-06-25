@@ -69,6 +69,9 @@ export default function BrandPage() {
   const [genKeywords, setGenKeywords] = useState(false)
   const [genHashtags, setGenHashtags] = useState(false)
   const [genTrends, setGenTrends] = useState(false)
+  const [genCTA, setGenCTA] = useState(false)
+  const [genCompliance, setGenCompliance] = useState(false)
+  const [complianceResult, setComplianceResult] = useState<Record<string, unknown> | null>(null)
   const [url, setUrl] = useState('')
   const [includeSeo, setIncludeSeo] = useState(false)
   const [includeGeo, setIncludeGeo] = useState(false)
@@ -152,8 +155,8 @@ export default function BrandPage() {
     setDiscovering(false)
   }
 
-  async function generateField(type: 'keywords' | 'hashtags' | 'trends') {
-    const setter = type === 'keywords' ? setGenKeywords : type === 'hashtags' ? setGenHashtags : setGenTrends
+  async function generateField(type: 'keywords' | 'hashtags' | 'trends' | 'cta') {
+    const setter = type === 'keywords' ? setGenKeywords : type === 'hashtags' ? setGenHashtags : type === 'trends' ? setGenTrends : setGenCTA
     setter(true)
     const settore = (brand as Record<string, string>)?.settore || ''
     const target = (brand as Record<string, string>)?.target || ''
@@ -191,8 +194,49 @@ export default function BrandPage() {
       if (type === 'trends') {
         update('colori_brand', data.colori_tendenza || 'Tendenze aggiornate')
       }
+      if (type === 'cta') {
+        const ctaSuggeriti = data.cta_suggeriti as string[] | undefined
+        update('cta_base', ctaSuggeriti?.[0] || 'Scopri di più')
+      }
     } catch (e) { setMsg({ type: 'err', text: `AI: ${(e as Error).message}` }) }
     setter(false)
+  }
+
+  async function generateCompliance() {
+    setGenCompliance(true)
+    setComplianceResult(null)
+    if (demo) {
+      await new Promise(r => setTimeout(r, 2000))
+      setComplianceResult({
+        cookie_policy: 'Questo sito utilizza cookie tecnici per il corretto funzionamento e cookie di profilazione...',
+        gdpr_informativa: 'Titolare del trattamento: SILKinCOM Srl. DPO: dpo@silkincom.com',
+        privacy_policy: 'SILKinCOM rispetta la tua privacy. Non vendiamo i tuoi dati a terzi.',
+        disclaimer: 'Le immagini sono a scopo illustrativo. I colori possono variare.',
+        condizioni_vendita: 'Diritto di recesso entro 14 giorni (Art. 52 D.Lgs. 206/2005).',
+        normative_riferimento: ['Reg. UE 2016/679', 'D.Lgs. 206/2005', 'D.Lgs. 70/2003'],
+        note: 'Documenti generati automaticamente. Si consiglia revisione legale.',
+      })
+      setGenCompliance(false); return
+    }
+    try {
+      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
+      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const settore = (brand as Record<string, string>)?.settore || ''
+      const target = (brand as Record<string, string>)?.target || ''
+      const url = (brand as Record<string, string>)?.sito_url || ''
+      const res = await fetch('/api/generate/compliance', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand: brand || {}, settore, url, target, model: aiModel, openrouter_key: orKey || undefined }),
+      })
+      if (!res.ok) throw new Error('Compliance generation failed')
+      const data = await res.json()
+      setComplianceResult(data)
+      if (data.cookie_policy) update('cookie_policy', (data.cookie_policy as string).slice(0, 500))
+      if (data.gdpr_informativa) update('gdpr_note', (data.gdpr_informativa as string).slice(0, 500))
+      if (data.privacy_policy) update('privacy_note', (data.privacy_policy as string).slice(0, 500))
+      if (data.disclaimer) update('disclaimer_text', (data.disclaimer as string).slice(0, 300))
+    } catch (e) { setMsg({ type: 'err', text: `AI Compliance: ${(e as Error).message}` }) }
+    setGenCompliance(false)
   }
 
   async function handleSave() {
@@ -429,6 +473,34 @@ export default function BrandPage() {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function ComplianceDocs({ result }: { result: Record<string, unknown> }) {
+  const fields = [
+    { key: 'cookie_policy', emoji: '\u{1F36A}', label: 'Cookie Policy' },
+    { key: 'gdpr_informativa', emoji: '\u{1F510}', label: 'GDPR / Trattamento Dati' },
+    { key: 'privacy_policy', emoji: '\u{1F4CB}', label: 'Privacy Policy' },
+    { key: 'disclaimer', emoji: '\u26A0\uFE0F', label: 'Disclaimer' },
+    { key: 'condizioni_vendita', emoji: '\u{1F4C4}', label: 'Condizioni di Vendita' },
+  ]
+  const normative = Array.isArray(result.normative_riferimento) ? result.normative_riferimento as string[] : []
+  const note = typeof result.note === 'string' ? result.note : null
+  return (
+    <div className="space-y-2 max-h-96 overflow-y-auto bg-white rounded-lg border border-amber-200 p-3 text-xs">
+      {fields.map(({ key, emoji, label }) => {
+        const val = typeof result[key] === 'string' ? (result[key] as string).slice(0, 1500) : null
+        if (!val) return null
+        return (
+          <details key={key} className="group">
+            <summary className="cursor-pointer font-semibold text-amber-800 py-1 hover:text-amber-900">{emoji} {label}</summary>
+            <p className="text-gray-600 mt-1 whitespace-pre-wrap pl-2">{val}</p>
+          </details>
+        )
+      })}
+      {normative.length > 0 && <div className="pt-1"><p className="text-[10px] text-gray-400">Normative: {normative.join(', ')}</p></div>}
+      {note && <p className="text-[10px] text-amber-600 italic pt-1">{note}</p>}
     </div>
   )
 }

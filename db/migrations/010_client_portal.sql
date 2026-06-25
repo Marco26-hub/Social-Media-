@@ -8,6 +8,8 @@ create table if not exists approval_tokens (
   token text unique not null,
   status text not null default 'pending'
     check (status in ('pending','approved','rejected','expired')),
+  tipo_invio text not null default 'approvazione'
+    check (tipo_invio in ('approvazione','feedback')),
   email_inviato text,
   email_inviato_at timestamptz,
   visualizzato_at timestamptz,

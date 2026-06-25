@@ -1,0 +1,190 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import PostPreview from '@/components/PostPreview'
+import type { Contenuto } from '@/lib/types'
+
+const ALL_PLATFORMS: { canale: Contenuto['canale']; formato: Contenuto['formato']; label: string }[] = [
+  { canale: 'instagram', formato: 'post', label: 'Instagram Post' },
+  { canale: 'instagram', formato: 'reel', label: 'Instagram Reel' },
+  { canale: 'instagram', formato: 'story', label: 'Instagram Story' },
+  { canale: 'facebook', formato: 'post', label: 'Facebook Post' },
+  { canale: 'tiktok', formato: 'video', label: 'TikTok Video' },
+  { canale: 'pinterest', formato: 'pin', label: 'Pinterest Pin' },
+]
+
+const DEMO_DATA = {
+  cliente_nome: 'SILKinCOM',
+  hook: 'Il capo che rende elegante anche il look più semplice',
+  caption: 'Un blazer leggero, una base pulita e il look è fatto.\nScoprilo ora sul sito.',
+  hashtag: '#outfit #moda #fashion #blazer #stileitaliano #ootd',
+  cta: 'Scoprilo ora sul sito',
+  link_media_1: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400',
+  nome_prodotto: 'Blazer in lino',
+  tema: 'Outfit elegante da giorno',
+}
+
+export default function PreviewPage({ params }: { params: Promise<{ id: string }> }) {
+  const [id, setId] = useState('')
+  const [hook, setHook] = useState(DEMO_DATA.hook)
+  const [caption, setCaption] = useState(DEMO_DATA.caption)
+  const [hashtag, setHashtag] = useState(DEMO_DATA.hashtag)
+  const [cta, setCta] = useState(DEMO_DATA.cta)
+  const [mediaUrl, setMediaUrl] = useState(DEMO_DATA.link_media_1)
+
+  useEffect(() => {
+    params.then(p => setId(p.id))
+  }, [params])
+
+  // Parse content from URL hash (?)  — shareable via link
+  useEffect(() => {
+    if (!id) return
+    try {
+      const raw = localStorage.getItem(`preview_${id}`)
+      if (raw) {
+        const d = JSON.parse(raw)
+        if (d.hook) setHook(d.hook)
+        if (d.caption) setCaption(d.caption)
+        if (d.hashtag) setHashtag(d.hashtag)
+        if (d.cta) setCta(d.cta)
+        if (d.link_media_1) setMediaUrl(d.link_media_1)
+      }
+    } catch {}
+  }, [id])
+
+  const baseContenuto: Contenuto = {
+    id, cliente_id: '', id_contenuto: id,
+    data_pubblicazione: '', ora_pubblicazione: '',
+    canale: 'instagram', formato: 'post',
+    hook, caption, hashtag, cta,
+    link_media_1: mediaUrl, link_media_2: null, link_media_3: null,
+    link_media_4: null, link_media_5: null, link_media_6: null, link_media_7: null,
+    nome_prodotto: DEMO_DATA.nome_prodotto, tema: DEMO_DATA.tema,
+    obiettivo: null, product_id: null,
+    link_prodotto: null, link_prodotto_finale: null,
+    status: 'DA_APPROVARE', media_type: 'image', retry_count: 0,
+    approvato_da: null, data_approvazione: null,
+    blotato_post_id: null, blotato_scheduled_at: null,
+    blotato_status: null, blotato_post_url: null, blotato_sync_at: null,
+    errore: null, note: null,
+    platform_account_id: null, publish_lock_id: null,
+    media_validato: null,
+    last_retry_at: null, errore_tecnico: null,
+    checked_copy: null, checked_media: null, checked_link: null, checked_price: null,
+    checked_by: null, checked_at: null,
+    utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null,
+    promo_id: null, promo_codice: null, promo_validata: null,
+    fonte_media: null, consenso_utilizzo: null,
+    scenes_json: null, slides_json: null, overlay_text: null,
+    alt_text: null, tags: null, thumbnail_url: null,
+    idea_visual: null, voiceover_script: null, music_mood: null,
+    checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
+    created_at: '', updated_at: '',
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-6 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Anteprima Contenuto</h1>
+          <p className="text-sm text-gray-500 mt-1">Come apparirà su ogni piattaforma social</p>
+        </div>
+
+        {/* Form inputs per modificare il contenuto in tempo reale */}
+        <div className="card p-4 mb-6 max-w-3xl mx-auto">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Modifica contenuto</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] text-gray-400">Hook</label>
+              <input value={hook} onChange={e => setHook(e.target.value)} className="input text-xs mt-0.5" />
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-400">CTA</label>
+              <input value={cta} onChange={e => setCta(e.target.value)} className="input text-xs mt-0.5" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] text-gray-400">Caption</label>
+              <textarea value={caption} onChange={e => setCaption(e.target.value)} className="input text-xs mt-0.5 h-16 resize-none" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] text-gray-400">Hashtag</label>
+              <input value={hashtag} onChange={e => setHashtag(e.target.value)} className="input text-xs mt-0.5" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-[10px] text-gray-400">URL Media</label>
+              <input value={mediaUrl} onChange={e => setMediaUrl(e.target.value)} className="input text-xs mt-0.5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Condividi link */}
+        <div className="card p-4 mb-6 max-w-3xl mx-auto bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-indigo-100">
+          <p className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-1.5"> Condividi anteprima con il cliente</p>
+          <div className="flex flex-wrap gap-2">
+            {/* WhatsApp */}
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(`📱 Anteprima contenuto per ${DEMO_DATA.cliente_nome}\n\nHook: ${hook}\n\n${typeof window !== 'undefined' ? window.location.href : ''}\n\n---\nSocial Automation V2`)}`}
+              target="_blank" rel="noopener"
+              className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white text-xs font-medium rounded-full hover:bg-green-600 transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              WhatsApp
+            </a>
+
+            {/* Telegram */}
+            <a
+              href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(`📱 Anteprima contenuto: ${hook}`)}`}
+              target="_blank" rel="noopener"
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 text-white text-xs font-medium rounded-full hover:bg-blue-600 transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+              Telegram
+            </a>
+
+            {/* Email */}
+            <a
+              href={`mailto:?subject=${encodeURIComponent(`Anteprima contenuto - ${DEMO_DATA.cliente_nome}`)}&body=${encodeURIComponent(`Ciao,\n\nti inviamo l'anteprima del contenuto per ${DEMO_DATA.cliente_nome}.\n\nHook: ${hook}\n\nLink: ${typeof window !== 'undefined' ? window.location.href : ''}\n\n---\nSocial Automation V2`)}`}
+              className="flex items-center gap-1.5 px-4 py-2 bg-gray-600 text-white text-xs font-medium rounded-full hover:bg-gray-700 transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 8L2 4"/></svg>
+              Email
+            </a>
+
+            {/* Copia link */}
+            <button
+              onClick={() => navigator.clipboard?.writeText(typeof window !== 'undefined' ? window.location.href : '')}
+              className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-700 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-50 transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copia link
+            </button>
+          </div>
+        </div>
+
+        {/* Griglia anteprime */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {ALL_PLATFORMS.map(({ canale, formato, label }) => {
+            const c: Contenuto = {
+              ...baseContenuto,
+              canale,
+              formato,
+              link_media_1: mediaUrl,
+            }
+            return (
+              <div key={`${canale}-${formato}`} className="card p-3">
+                <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-2">{label}</p>
+                <PostPreview c={c} />
+              </div>
+            )
+          })}
+        </div>
+
+        <p className="text-center text-[10px] text-gray-400 mt-6">
+          Anteprima in tempo reale · Modifica i campi sopra per vedere le modifiche
+        </p>
+      </div>
+    </div>
+  )
+}

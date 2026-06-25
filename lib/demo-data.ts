@@ -31,6 +31,7 @@ export const demoContenuti: Contenuto[] = [
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
     blotato_scheduled_at: null,
+    blotato_status: null, blotato_post_url: null, blotato_sync_at: null,
     created_at: '2026-05-23T08:00:00Z', updated_at: '2026-05-23T08:00:00Z',
   },
   {
@@ -61,6 +62,7 @@ export const demoContenuti: Contenuto[] = [
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
     blotato_scheduled_at: null,
+    blotato_status: null, blotato_post_url: null, blotato_sync_at: null,
     created_at: '2026-05-23T08:00:00Z', updated_at: '2026-05-23T08:00:00Z',
   },
   {
@@ -90,6 +92,7 @@ export const demoContenuti: Contenuto[] = [
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
     blotato_scheduled_at: null,
+    blotato_status: 'published', blotato_post_url: 'https://instagram.com/p/xyz123', blotato_sync_at: '2026-05-23T10:00:00Z',
     created_at: '2026-05-22T08:00:00Z', updated_at: '2026-05-23T10:00:00Z',
   },
   {
@@ -119,6 +122,7 @@ export const demoContenuti: Contenuto[] = [
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
     blotato_scheduled_at: null,
+    blotato_status: null, blotato_post_url: null, blotato_sync_at: null,
     created_at: '2026-05-22T08:00:00Z', updated_at: '2026-05-23T14:15:00Z',
   },
   {
@@ -148,6 +152,7 @@ export const demoContenuti: Contenuto[] = [
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
     blotato_scheduled_at: null,
+    blotato_status: 'scheduled', blotato_post_url: null, blotato_sync_at: '2026-05-23T11:00:00Z',
     created_at: '2026-05-22T08:00:00Z', updated_at: '2026-05-23T11:00:00Z',
   },
 ]

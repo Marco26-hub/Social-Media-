@@ -61,21 +61,23 @@ export async function PATCH(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { cliente_id, contenuto_id, email_inviato } = await request.json()
+  const { cliente_id, contenuto_id, email_inviato, tipo_invio } = await request.json()
   if (!cliente_id || !contenuto_id) {
     return NextResponse.json({ error: 'cliente_id e contenuto_id richiesti' }, { status: 400 })
   }
 
   const token = crypto.randomBytes(24).toString('hex')
   const expiresAt = new Date(Date.now() + 7 * 86400000).toISOString()
+  const tipo = tipo_invio === 'feedback' ? 'feedback' : 'approvazione'
 
   await q(
-    `INSERT INTO approval_tokens (cliente_id, contenuto_id, token, email_inviato, expires_at) VALUES ($1,$2,$3,$4,$5)`,
-    [cliente_id, contenuto_id, token, email_inviato || null, expiresAt],
+    `INSERT INTO approval_tokens (cliente_id, contenuto_id, token, email_inviato, tipo_invio, expires_at) VALUES ($1,$2,$3,$4,$5,$6)`,
+    [cliente_id, contenuto_id, token, email_inviato || null, tipo, expiresAt],
   )
 
   return NextResponse.json({
     token,
+    tipo_invio: tipo,
     url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/approve/${token}`,
   })
 }

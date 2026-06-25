@@ -95,11 +95,11 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="label">Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input" placeholder="admin@brand.com" required />
+              <input type="text" value={email} onChange={e => setEmail(e.target.value)} className="input" placeholder="admin" required autoComplete="username" />
             </div>
             <div>
               <label className="label">Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="input" placeholder="••••••••" required />
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="input" placeholder="••••••••" required autoComplete="current-password" />
             </div>
             {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
             <button type="submit" className="btn-primary w-full justify-center" disabled={loading}>{loading ? 'Accesso...' : 'Accedi'}</button>

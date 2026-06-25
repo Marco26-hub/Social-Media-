@@ -6,6 +6,7 @@ import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
 import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter, Sparkles, Share2 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
 import { readClienteId } from '@/lib/use-data'
@@ -306,13 +307,37 @@ function CalendarioInner() {
                       ⚠ {c.errore_tecnico}
                     </p>
                   )}
+                  {c.blotato_status && (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+                        c.blotato_status === 'published' ? 'bg-green-500' :
+                        c.blotato_status === 'scheduled' ? 'bg-blue-500' :
+                        c.blotato_status === 'failed' ? 'bg-red-500' : 'bg-gray-400'
+                      }`} />
+                      <span className="text-[10px] text-gray-500">
+                        {c.blotato_status === 'published' ? 'Pubblicato' :
+                         c.blotato_status === 'scheduled' ? 'In coda Blotato' :
+                         c.blotato_status === 'failed' ? 'Fallito' : c.blotato_status}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Azioni */}
                 <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1.5 md:gap-2 flex-shrink-0">
-                  <button onClick={() => setSelected(c)} className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
+                  <Link
+                    href={`/preview/${c.id_contenuto}`}
+                    onClick={() => {
+                      try { localStorage.setItem(`preview_${c.id_contenuto}`, JSON.stringify({
+                        hook: c.hook, caption: c.caption, hashtag: c.hashtag, cta: c.cta,
+                        link_media_1: c.link_media_1, nome_prodotto: c.nome_prodotto,
+                      })) } catch {}
+                    }}
+                    className="btn-secondary py-1.5 px-2 md:px-3 justify-center inline-flex items-center gap-1.5"
+                  >
                     <Eye className="w-3.5 h-3.5" />
-                  </button>
+                    <span className="hidden md:inline text-xs">Preview</span>
+                  </Link>
                   <button
                     onClick={() => handleScore(c)}
                     disabled={scoring === c.id}

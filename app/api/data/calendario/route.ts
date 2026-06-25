@@ -63,26 +63,13 @@ export async function PATCH(request: Request) {
         const content = await q('SELECT * FROM calendario WHERE id = $1', [id])
         if (content.length) {
           const row = content[0]
-          const mediaUrls = ([row.link_media_1, row.link_media_2, row.link_media_3] as string[]).filter(Boolean)
-          const scheduledAt = `${row.data_pubblicazione}T${row.ora_pubblicazione}:00`
 
-          await scheduleOnBlotato(
-            cid,
-            row.canale as string,
-            (row.caption || row.hook || '') as string,
-            scheduledAt,
-            mediaUrls,
-            { hashtag: row.hashtag, cta: row.cta, link: row.link_prodotto },
-          )
-
-          // Aggiorna con blotato_scheduled_at
-          await q('UPDATE calendario SET blotato_scheduled_at = now() WHERE id = $1', [id])
+          const blotatoId = await scheduleOnBlotato(cid, row)
         }
       } catch (scheduleError) {
-        // Non bloccante: logga ma non fallire l'approvazione
         console.error('Blotato scheduling failed:', scheduleError)
         await q('UPDATE calendario SET errore_tecnico = $1 WHERE id = $2', [
-          `Blotato scheduling: ${(scheduleError as Error).message}`,
+          `Blotato: ${(scheduleError as Error).message.slice(0, 300)}`,
           id,
         ])
       }

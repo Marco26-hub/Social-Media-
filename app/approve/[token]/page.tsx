@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CheckCircle, XCircle, Loader2, Clock, ExternalLink } from 'lucide-react'
+import { CheckCircle, XCircle, Loader2, Clock } from 'lucide-react'
 import PostPreview from '@/components/PostPreview'
-import StatusBadge from '@/components/StatusBadge'
 
 type ApprovalData = Record<string, unknown>
 
@@ -21,6 +20,27 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
 
   useEffect(() => {
     if (!token) return
+    if (token.startsWith('demo-')) {
+      const isFeedback = token.includes('feedback')
+      setTimeout(() => {
+        setData({
+          cliente_nome: 'SILKinCOM',
+          canale: 'instagram',
+          formato: 'post',
+          hook: 'Il capo che rende elegante anche il look più semplice',
+          caption: 'Un blazer leggero, una base pulita e il look è fatto.\nScoprilo ora sul sito.',
+          hashtag: '#outfit #moda #fashion #blazer #stileitaliano',
+          cta: 'Scoprilo ora sul sito',
+          link_media_1: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400',
+          data_pubblicazione: '2026-06-28',
+          ora_pubblicazione: '12:30',
+          nome_prodotto: 'Blazer in lino',
+          tipo_invio: isFeedback ? 'feedback' : 'approvazione',
+        })
+        setLoading(false)
+      }, 800)
+      return
+    }
     fetch(`/api/data/approve?token=${token}`)
       .then(res => res.ok ? res.json() : Promise.reject('Token non valido'))
       .then(d => { setData(d); setLoading(false) })
@@ -29,6 +49,12 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
 
   async function handleAction(status: 'approved' | 'rejected') {
     setAction(status === 'approved' ? 'approving' : 'rejecting')
+    if (token.startsWith('demo-')) {
+      await new Promise(r => setTimeout(r, 600))
+      setDone(true)
+      setAction('idle')
+      return
+    }
     try {
       const res = await fetch('/api/data/approve', {
         method: 'PATCH',
@@ -66,6 +92,8 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
   )
 
   const c = data as Record<string, string>
+  const tipoInvio = c.tipo_invio || 'approvazione'
+  const isFeedback = tipoInvio === 'feedback'
   const contenuto = {
     id: c.id || '',
     cliente_id: c.cliente_id || '',
@@ -96,12 +124,19 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-1.5 rounded-full text-xs font-medium mb-3">
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-3 ${
+            isFeedback ? 'bg-amber-100 text-amber-800' : 'bg-brand-600 text-white'
+          }">
             <Clock className="w-3 h-3" />
-            Approvazione contenuto
+            {isFeedback ? 'Richiesta parere' : 'Approvazione contenuto'}
           </div>
           <h1 className="text-xl font-bold text-gray-900">{c.cliente_nome || 'Brand'}</h1>
-          <p className="text-sm text-gray-500 mt-1">Rivedi il contenuto e approva o richiedi modifiche</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {isFeedback
+              ? 'Rivedi il contenuto e dicci cosa ne pensi. Il tuo feedback ci aiuta a migliorare.'
+              : 'Rivedi il contenuto e approva o richiedi modifiche.'
+            }
+          </p>
         </div>
 
         {/* Content Card */}
@@ -126,17 +161,38 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
 
         {/* Actions */}
         <div className="card p-5">
-          <p className="text-xs text-gray-500 mb-3 text-center">Il tuo feedback aiuta il team a migliorare i contenuti.</p>
-          <div className="flex gap-3">
-            <button onClick={() => handleAction('rejected')} disabled={action !== 'idle'} className="btn-danger flex-1 justify-center py-3">
-              {action === 'rejecting' ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-              Richiedi modifica
-            </button>
-            <button onClick={() => handleAction('approved')} disabled={action !== 'idle'} className="btn-primary flex-1 justify-center py-3">
-              {action === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-              Approva
-            </button>
-          </div>
+          <p className="text-xs text-gray-500 mb-3 text-center">
+            {isFeedback
+              ? 'Il tuo parere è importante per creare contenuti sempre migliori.'
+              : 'Il tuo feedback aiuta il team a migliorare i contenuti.'
+            }
+          </p>
+          {isFeedback ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-3">
+                <button onClick={() => handleAction('rejected')} disabled={action !== 'idle'} className="btn-danger flex-1 justify-center py-3">
+                  {action === 'rejecting' ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                  Non mi piace
+                </button>
+                <button onClick={() => handleAction('approved')} disabled={action !== 'idle'} className="btn-primary flex-1 justify-center py-3">
+                  {action === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                  Mi piace
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-400 text-center">Il contenuto rimarrà in bozza. L'admin riceverà il tuo feedback.</p>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <button onClick={() => handleAction('rejected')} disabled={action !== 'idle'} className="btn-danger flex-1 justify-center py-3">
+                {action === 'rejecting' ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                Richiedi modifica
+              </button>
+              <button onClick={() => handleAction('approved')} disabled={action !== 'idle'} className="btn-primary flex-1 justify-center py-3">
+                {action === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                Approva
+              </button>
+            </div>
+          )}
         </div>
 
         <p className="text-center text-[10px] text-gray-400 mt-4">Link valido 7 giorni · Social Automation V2</p>

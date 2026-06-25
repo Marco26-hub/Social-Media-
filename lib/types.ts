@@ -108,6 +108,9 @@ export interface Contenuto {
   checked_aspect_ratio: 'SI' | 'NO' | null
   checked_media_valid: 'SI' | 'NO' | null
   blotato_scheduled_at: string | null
+  blotato_status: string | null
+  blotato_post_url: string | null
+  blotato_sync_at: string | null
   created_at: string
   updated_at: string
 }

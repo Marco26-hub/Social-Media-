@@ -10,8 +10,9 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = pathname === '/login'
   const isDashboard = pathname.startsWith('/dashboard')
   const isApprove = pathname.startsWith('/approve')
+  const isPreview = pathname.startsWith('/preview')
 
-  if (isApprove) return NextResponse.next()
+  if (isApprove || isPreview) return NextResponse.next()
 
   if (pathname === '/') {
     return NextResponse.redirect(new URL(token ? '/dashboard/clienti' : '/login', request.url))
