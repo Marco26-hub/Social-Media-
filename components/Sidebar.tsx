@@ -8,7 +8,7 @@ import ClienteSelector from '@/components/ClienteSelector'
 import {
   LayoutDashboard, Calendar, Settings,
   Package, LogOut, Zap, Menu, X, Search, Target,
-  Users, BarChart3, Sparkles
+  Users, BarChart3, Sparkles, TrendingUp
 } from 'lucide-react'
 
 type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string }
@@ -34,6 +34,7 @@ const SECTIONS: NavSection[] = [
     title: 'STRUMENTI',
     items: [
       { href: '/dashboard/piano',  label: 'Piano editoriale', icon: Target },
+      { href: '/dashboard/ads',    label: 'Campagne Ads',     icon: TrendingUp },
       { href: '/dashboard/seo',    label: 'SEO + GEO Audit',  icon: Search },
       { href: '/dashboard/log',    label: 'Log + Report',     icon: BarChart3 },
     ],

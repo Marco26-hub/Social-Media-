@@ -1,370 +1,224 @@
 # HANDOFF — Social Automation V2
 
-> Documento per AI agent (Claude, Codex, Cursor, etc.). Stato attuale del progetto.
+> Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
 **Data**: 2026-06-25
-**Progetto**: Social Automation — SaaS gestito per sito, e-commerce e social automation
-**Stack attuale**: Next.js 15 + Neon/Postgres + NextAuth + Tailwind + AI (Anthropic/OpenRouter)
+**Progetto**: Social Automation — SaaS social media management per agenzie
+**Stack**: Next.js 15 + Neon/Postgres + NextAuth + Tailwind + AI (Anthropic/OpenRouter)
 **Percorso locale**: `/Users/md/Downloads/social_automation_v2`
-**Repo GitHub**: `https://github.com/Marco26-hub/social-media-manager.git`
-**Ultimo push noto**: `main` → commit `a7ecfce prepare Neon production foundation`
+**Repo**: `https://github.com/Marco26-hub/social-media-manager.git`
 
 ---
 
-## 1. Stato Executive
+## 📌 Regole per Multi-Agent Team
 
-Il progetto è stato riallineato da Supabase a **Neon/Postgres via `DATABASE_URL`** con login **NextAuth credentials**.
+### Convenzioni per evitare conflitti
 
-Build produzione verificata:
+1. **Leggi sempre HANDOFF.md prima di iniziare** — contiene lo stato attuale.
+2. **Non modificare HANDOFF.md** durante il lavoro (lo fa solo l'agente che completa una fase).
+3. **Commit atomici**: un commit = una feature o un fix. Mai commit "wip" o "fix vari".
+4. **Messaggi commit**: `tipo: cosa (area)` — es. `feat: brand discovery API (brand)` o `fix: TS type errors in ads page (ads)`.
+5. **TypeScript**: MAI usare `as Type` in JSX (causa errori `unknown is not assignable to ReactNode`). Estrarre sempre le variabili prima del return:
+   ```tsx
+   // ❌ SCORRETTO
+   <p>{data.valore as string}</p>
+
+   // ✅ CORRETTO
+   const valore = typeof data.valore === 'string' ? data.valore : ''
+   <p>{valore}</p>
+   ```
+6. **Componenti**: un componente per file. Se un componente diventa >400 righe, spezzare.
+7. **Client vs Server**: pagine dashboard in `app/dashboard/` possono essere `'use client'` se usano stati/hooks. API routes in `app/api/` sono server.
+8. **AI provider**: tutti i generate endpoint accettano `model` e `openrouter_key` dal body. `lib/ai.ts` gestisce fallback automatico OpenRouter → Anthropic.
+9. **Demo mode**: ogni pagina DEVE funzionare anche senza DB (`isDemo()` → dati finti). Non rompere mai la demo.
+
+---
+
+## 1. Stato Build
 
 ```bash
-npm run build
+npm run build  # ✅ 31 route, verde
+npm run dev    # http://localhost:3000
+npm run start  # build produzione
 ```
 
-Risultato: ✅ build verde.
-
-Il codice è pronto per deploy tecnico, ma il go-live reale richiede ancora env, schema dati completo, utente admin, seed cliente/prodotti/brand e test con chiavi vere.
-
----
-
-## 2. Architettura Attuale
-
-```
-Browser
-  → Next.js 15 App Router
-      ├── /login                  → login NextAuth credentials
-      ├── /dashboard/*            → area admin protetta da middleware/sessione
-      ├── /servizi                → landing pubblica vendita servizi
-      ├── /api/data/*             → CRUD/query dati via Neon/Postgres
-      ├── /api/generate/*         → generazione AI + insert su Postgres
-      ├── /api/auth/[...nextauth] → auth NextAuth
-      └── /api/system/health      → health check env/runtime
-
-Database:
-  Neon/Postgres
-    ├── profiles                  → utenti app con password_hash bcrypt
-    ├── clienti + user_client_access
-    ├── brand, prodotti, calendario, settings, log_pubblicazioni
-    ├── blog_articoli, seo_audit
-    ├── generation_jobs           → nuovo tracking job backend
-    └── integration_events        → nuovo outbox/inbox integrazioni
-```
-
-**Supabase non è più il backend attivo.**
-La cartella `supabase/migrations/` resta materiale storico/legacy e non va considerata la fonte runtime attuale.
-
----
-
-## 3. Struttura File Importante
-
-```
-app/
-  api/
-    auth/[...nextauth]/route.ts       → handler NextAuth
-    data/
-      brand/route.ts                  → GET brand cliente attivo
-      calendario/route.ts             → GET/PATCH contenuti calendario
-      clienti/route.ts                → GET/POST clienti
-      log/route.ts                    → GET log pubblicazioni
-      prodotti/route.ts               → GET prodotti
-      seo-audit/route.ts              → GET ultimi audit
-      settings/route.ts               → GET/PATCH impostazioni
-      stats/route.ts                  → GET statistiche dashboard
-    generate/
-      content/route.ts                → POST genera contenuto social
-      plan/route.ts                   → POST genera piano editoriale
-      seo-audit/route.ts              → POST genera audit SEO/GEO
-    system/health/route.ts            → GET stato env/app
-  dashboard/
-    page.tsx                          → control room moderna + stats/job
-    calendario/page.tsx               → approvazione contenuti
-    clienti/page.tsx                  → gestione clienti
-    prodotti/page.tsx                 → catalogo prodotti
-    social/[platform]/page.tsx        → generatori per piattaforma
-    piano/page.tsx                    → wizard piano editoriale
-    seo/page.tsx                      → audit SEO/GEO
-    log/page.tsx                      → storico pubblicazioni
-    settings/page.tsx                 → configurazione automazione
-  login/page.tsx                      → login NextAuth
-  servizi/page.tsx                    → landing pubblica
-
-components/
-  Sidebar.tsx                         → nav + logout NextAuth
-  ClienteSelector.tsx                 → selettore cliente via /api/data/clienti
-  DemoBanner.tsx                      → banner demo mode
-  AIModelSelector.tsx                 → modello AI + OpenRouter key localStorage
-  StatusBadge.tsx
-  PostPreview.tsx
-  ConfirmModal.tsx
-
-lib/
-  db.ts                               → query helper Neon/Postgres (`q`, `q1`)
-  auth.ts                             → configurazione NextAuth credentials
-  auth-utils.ts                       → requireAuth/requireClienteId
-  ai.ts                               → Anthropic/OpenRouter + extract JSON
-  demo.ts                             → demo mode detection
-  demo-data.ts                        → dati demo
-  use-data.ts                         → fetch helper client
-  social-config.ts                    → piattaforme/formati
-  types.ts                            → tipi TypeScript
-  tenant/
-    client.ts                         → cookie cliente lato client
-    server.ts                         → cliente attivo lato server
-
-db/
-  migrations/
-    004_operations_foundation.sql     → generation_jobs + integration_events
+Smoke test:
+```bash
+bash scripts/smoke-test.sh http://localhost:3000
 ```
 
 ---
 
-## 4. Backend Dati
+## 2. Architettura
 
-### `lib/db.ts`
+```
+Next.js 15 App Router
+  ├── /login              → NextAuth credentials
+  ├── /dashboard/*        → admin (protetto da middleware)
+  ├── /servizi            → landing pubblica
+  ├── /api/data/*         → CRUD Neon/Postgres
+  ├── /api/generate/*     → AI generation con fallback
+  ├── /api/auth/*         → NextAuth
+  └── /api/system/health  → health check
 
-Usa `DATABASE_URL` e chiama l’endpoint SQL HTTP Neon:
-
-- `dbReady()` → controlla se `DATABASE_URL` esiste
-- `q(query, params)` → ritorna array righe
-- `q1(query, params)` → ritorna prima riga o `null`
-
-Tutte le nuove API route attive usano `q()` e query parametrizzate.
-
-### Auth
-
-NextAuth credentials:
-
-- file: `lib/auth.ts`
-- provider: email/password
-- tabella: `profiles`
-- campi attesi: `id`, `email`, `nome`, `password_hash`
-- hash password: bcrypt
-
-Il middleware protegge `/dashboard/*`.
+Database (Neon/Postgres):
+  14 tabelle: profiles, clienti, brand, prodotti, calendario,
+  log_pubblicazioni, blog_articoli, seo_audit, settings,
+  promo, account_social, user_client_access,
+  generation_jobs, integration_events
+```
 
 ---
 
-## 5. API Route Attive
+## 3. Pagine Esistenti
 
-### Data API
+| Pagina | Route | Descrizione |
+|---|---|---|
+| **Dashboard** | `/dashboard` | Control room, stats, pipeline, AI score |
+| **Brand** | `/dashboard/brand` | Profilo brand + AI discovery + SEO/GEO + Lead scraping + Client/Marketing |
+| **Calendario** | `/dashboard/calendario` | Lista contenuti con filtri, approva/rifiuta, AI content scoring |
+| **Social** | `/dashboard/social/[platform]` | Generatore contenuti per ogni piattaforma (6) |
+| **Piano** | `/dashboard/piano` | Piano editoriale settimanale/mensile |
+| **Ads** | `/dashboard/ads` | Campagne Google, FB/IG, TikTok generate da AI |
+| **SEO** | `/dashboard/seo` | Audit SEO + GEO, score, miglioramenti |
+| **Prodotti** | `/dashboard/prodotti` | Catalogo prodotti |
+| **Clienti** | `/dashboard/clienti` | Gestione clienti multi-tenant |
+| **Log** | `/dashboard/log` | Storico pubblicazioni |
+| **Settings** | `/dashboard/settings` | Configurazioni operativa |
+| **Login** | `/login` | Auto-login in demo mode |
+| **Landing** | `/servizi` | Pagina vendita servizi |
 
-- `GET /api/data/clienti`
-- `POST /api/data/clienti`
-- `GET /api/data/calendario`
-- `PATCH /api/data/calendario`
-- `GET /api/data/prodotti`
-- `GET /api/data/brand`
-- `GET /api/data/settings`
-- `PATCH /api/data/settings`
-- `GET /api/data/log`
-- `GET /api/data/stats`
-- `GET /api/data/seo-audit`
+---
 
-### Generate API
+## 4. API Route — Complete
 
-#### `POST /api/generate/content`
+### Data API (GET/PATCH)
 
-Input:
+| Route | GET | PATCH/POST |
+|---|---|---|
+| `/api/data/calendario` | Lista contenuti filtrata | Aggiorna status + eventuale publish Blotato |
+| `/api/data/brand` | Profilo brand | Upsert brand |
+| `/api/data/clienti` | Lista clienti | Crea cliente |
+| `/api/data/prodotti` | Lista prodotti | — |
+| `/api/data/settings` | Lista settings | Aggiorna valore |
+| `/api/data/log` | Log pubblicazioni | — |
+| `/api/data/stats` | Statistiche dashboard | — |
+| `/api/data/seo-audit` | Lista audit | — |
 
-```json
-{
-  "cliente_id": "...",
-  "canale": "instagram",
-  "formato": "post",
-  "model": "claude-sonnet-4-6",
-  "openrouter_key": "...",
-  "tema": "...",
-  "nome_prodotto": "...",
-  "product_id": "..."
-}
-```
+### Generate API (POST)
 
-Fa:
-
-1. Carica `brand` + `prodotti` da Neon/Postgres.
-2. Costruisce prompt inline.
-3. Chiama AI.
-4. Inserisce in `calendario` con status `DA_APPROVARE`.
-
-#### `POST /api/generate/plan`
-
-Genera piano settimanale/mensile e inserisce righe `BOZZA` in `calendario`.
-
-#### `POST /api/generate/seo-audit`
-
-Carica brand, ultimi contenuti e log; genera audit; inserisce in `seo_audit`.
+| Route | Input | Output |
+|---|---|---|
+| `/api/generate/content` | canale, formato, model, openrouter_key | Contenuto salvato in calendario |
+| `/api/generate/plan` | piattaforme, periodo, model | Piano salvato in calendario |
+| `/api/generate/blog` | tema, model | Articolo salvato in blog_articoli |
+| `/api/generate/seo-audit` | sito_url, periodo, model | Audit salvato in seo_audit |
+| `/api/generate/brand-discovery` | url, model | Profilo brand (SETTORE, TONO, TARGET...) |
+| `/api/generate/score-content` | canale, formato, hook, caption | Score 0-100 con suggerimenti |
+| `/api/generate/scrape-contacts` | url, model | Email, WA, TG, social, indirizzo |
+| `/api/generate/client-discovery` | url, settore, model | ICP, buyer personas, competitor, KPI |
+| `/api/generate/ads` | platform, brand, obiettivo, budget | Campagna Google/FB/TikTok completa |
 
 ### System API
-
-#### `GET /api/system/health`
-
-Controlla:
-
-- `DATABASE_URL`
-- `AUTH_SECRET` o `NEXTAUTH_SECRET`
-- `ANTHROPIC_API_KEY` o `OPENROUTER_API_KEY`
-
-Ritorna `ready` solo se DB + auth secret + almeno una chiave AI sono presenti.
+| Route | Descrizione |
+|---|---|
+| `GET /api/system/health` | Stato: DB, Auth, AI, modalità demo/prod |
 
 ---
 
-## 6. Variabili Ambiente
+## 5. Componenti
 
-Minime per produzione:
+| Componente | File | Uso |
+|---|---|---|
+| `AIModelSelector` | `components/AIModelSelector.tsx` | Selettore modello AI con task context (dashboard, piano, seo, brand) |
+| `OpenRouterKeyInput` | `components/OpenRouterKeyInput.tsx` | Input key OpenRouter (dashboard) |
+| `SeoScoreGrid` | `components/SeoScoreGrid.tsx` | Card punteggi SEO/GEO a 6 colonne |
+| `LeadsCard` | `components/LeadsCard.tsx` | Risultati scraping contatti (email, WA, TG) |
+| `ClientsCard` | `components/ClientsCard.tsx` | Risultati client discovery (ICP, personas, competitor) |
+| `PostPreview` | `components/PostPreview.tsx` | Anteprima post per canale |
+| `StatusBadge` | `components/StatusBadge.tsx` | Badge colorato per status |
+| `ConfirmModal` | `components/ConfirmModal.tsx` | Modale conferma con stima token |
+| `ClienteSelector` | `components/ClienteSelector.tsx` | Dropdown cambio cliente attivo |
+| `Sidebar` | `components/Sidebar.tsx` | Navigazione principale |
+| `GeneratorCards` | `components/GeneratorCards.tsx` | Card generazione rapida |
+
+---
+
+## 6. Modelli AI
+
+Provider supportati (in `lib/ai.ts`):
+- **Anthropic**: `claude-sonnet-4-6` (default), `claude-opus-4-7`, `claude-haiku-4-5`
+- **OpenRouter free**: `nvidia/nemotron-3-super-120b-a12b:free`, `nvidia/nemotron-3-super:free`, `nvidia/nemotron-3.5-content-safety:free`, `deepseek/deepseek-v4-flash:free`, altri 8 modelli
+
+**Fallback automatico**: se OpenRouter fallisce, prova altri modelli gratuiti in cascade.
+**Silent fallback**: errori AI loggati ma non bloccanti per l'utente.
+
+---
+
+## 7. Flusso Brand Discovery (completo)
+
+```
+Inserisci URL → [✓] SEO Audit → [✓] GEO Audit → [✓] Trova Contatti → [✓] Clienti & Marketing
+                                                                    ↓
+                    ┌──────────────┬───────────────┬─────────────────┐
+                    ↓              ↓               ↓                 ↓
+              Profilo Brand   SEO/GEO Score    Email/WA/TG       ICP+Personas
+              (Tono, Target,  (6 dimensioni)   Telefono/Social   +Competitor
+               Promessa...)                                       +KPI Vendita
+
+                    └──────────────┴───────────────┴─────────────────┘
+                    Tutto in parallelo con 1 click "Analizza sito"
+```
+
+---
+
+## 8. Flusso Pubblicazione
+
+```
+Genera contenuto (AI con contesto brand) → Calendario → Score (AI valuta) → Approva
+→ Blotato schedulazione → Pubblicato
+```
+
+---
+
+## 9. Cosa NON aggiungere mai
+
+- ❌ Supabase (rimosso dal runtime)
+- ❌ n8n (rimosso)
+- ❌ `as Type` in JSX (usa estrazione variabili)
+- ❌ `ANY` Nuove dipendenze senza approvazione
+
+---
+
+## 10. In Lavoro / Prossimi Step
+
+- [ ] **Enhanced Piano Editoriale**: analisi dati, strategia, risultati (da completare)
+- [ ] **Publish Bridge Blotato**: endpoint reale, scheduling (bloccato da API key)
+- [ ] **Media Validation**: check link media prima di pubblicazione
+- [ ] **Calendar drag & drop**: spostamento visuale contenuti
+- [ ] **Client portal**: link approvazione senza login
+- [ ] **White-label**: logo agenzia custom
+
+---
+
+## 11. Variabili Ambiente
 
 ```bash
-DATABASE_URL=postgresql://...
-AUTH_SECRET=...
-NEXTAUTH_URL=https://tuo-dominio.it
-ANTHROPIC_API_KEY=sk-ant-...
-# oppure:
-OPENROUTER_API_KEY=sk-or-v1-...
+DATABASE_URL=postgresql://...    # Neon
+AUTH_SECRET=...                   # NextAuth
+NEXTAUTH_URL=...                  # URL produzione
+ANTHROPIC_API_KEY=...             # Claude (opzionale se usi OpenRouter)
+OPENROUTER_API_KEY=...            # Modelli free (opzionale se usi Claude)
+NEXT_PUBLIC_DEMO_MODE=true        # Demo mode senza DB
+BLOTATO_API_KEY=...               # Quando pronto
 ```
 
-Opzionale:
+---
+
+## 12. Ultimo Commit
 
 ```bash
-NEXT_PUBLIC_DEMO_MODE=true
+d70ec36 feat: ads page Google/FB/IG/TikTok with AI generation
 ```
 
-Note:
-
-- Non usare env Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` non sono più parte del backend attivo.
-- `.env.local` è ignorato da git.
-
----
-
-## 7. Stato Componenti
-
-| Area | Stato | Note |
-|---|---:|---|
-| Next.js App Router | ✅ | Build produzione verde |
-| Neon/Postgres helper | ✅ | `lib/db.ts` |
-| NextAuth login | ✅ | Credentials + bcrypt |
-| Middleware auth dashboard | ✅ | `/dashboard/*` protetto |
-| Dashboard control room | ✅ | Stato sistema + job backend |
-| Cliente selector | ✅ | Cookie `active_cliente_id` |
-| Calendario approvazione | ✅ | GET/PATCH via API data |
-| Pagine social generator | ✅ | Generano via API route AI |
-| Piano editoriale | ✅ | Wizard + API generate plan |
-| SEO/GEO audit | ✅ | Generate + lista audit |
-| Prodotti | ✅ | Lista prodotti cliente |
-| Settings | ✅ | GET/PATCH settings |
-| Log | ✅ | Storico log |
-| Health check | ✅ | `/api/system/health` |
-| `generation_jobs` schema | ✅ | Migration 004 pronta |
-| `integration_events` schema | ✅ | Migration 004 pronta |
-| Pubblicazione Blotato/webhook | ❌ | Da implementare |
-| Validazione media | ❌ | Da implementare |
-| Report automatico | ❌ | Da implementare |
-| E2E con DB/AI reali | ❌ | Da fare prima del go-live |
-
----
-
-## 8. Flusso Operativo Attuale
-
-```
-1. Admin fa login da /login (NextAuth credentials)
-2. Admin seleziona cliente attivo
-3. Admin genera piano o contenuto singolo
-4. API generate chiama AI e scrive in calendario
-5. Admin approva da /dashboard/calendario
-6. Contenuto passa a APPROVATO
-7. [NEXT] Bridge Blotato/webhook pubblica e registra esito
-```
-
-Il punto 7 non è ancora implementato.
-
----
-
-## 9. Produzione: Cosa Manca Davvero
-
-Prima di dire “go-live”:
-
-- [ ] **Env production**: `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_URL`, chiave AI.
-- [x] **Schema Neon pronto**: `db/migrations/001_full_schema.sql` (tutte le 14 tabelle).
-- [x] **Seed pronto**: `db/migrations/002_seed.sql` (admin + SILKinCOM + brand + prodotti + settings).
-- [ ] **Eseguire su Neon**: 001_full_schema → 002_seed → 004_operations_foundation (opzionale).
-- [ ] **Modificare password admin** in 002_seed.sql (default: `admin123`).
-- [ ] Testare login reale su /login.
-- [ ] Testare `GET /api/system/health`.
-- [ ] Testare generazione contenuto con chiave AI reale.
-- [ ] Testare approvazione calendario.
-- [ ] Implementare pubblicazione `APPROVATO → Blotato/webhook → PUBBLICATO/ERRORE`.
-- [ ] Configurare dominio/deploy Vercel o target equivalente.
-
----
-
-## 10. Decisioni Tecniche
-
-- **Supabase dismesso dal runtime**: rimossi client `lib/supabase/*` dal codice attivo.
-- **Neon/Postgres come DB**: accesso tramite `DATABASE_URL` e `lib/db.ts`.
-- **NextAuth credentials**: sostituisce Supabase Auth.
-- **n8n non attivo**: workflow JSON restano storico/riferimento.
-- **Prompt inline**: prompt AI nelle API route per semplicità operativa.
-- **Multi-cliente**: ogni dato usa `cliente_id`; cliente attivo via cookie `active_cliente_id`.
-- **Job/event tracking**: `generation_jobs` e `integration_events` preparano queue, publish bridge e osservabilità.
-
----
-
-## 11. Modelli AI
-
-`AIModelSelector` salva in `localStorage`:
-
-- `ai_model`
-- `openrouter_key`
-
-Provider:
-
-- Anthropic se modello `claude-*` e `ANTHROPIC_API_KEY` presente.
-- OpenRouter se modello esterno/free o se viene passata `openrouter_key`.
-
-Modello default UI/API:
-
-- `claude-sonnet-4-6`
-
----
-
-## 12. Comandi Utili
-
-```bash
-npm run dev      # http://localhost:3000
-npm run build    # build produzione
-npm run start    # avvia build prod
-```
-
-Git:
-
-```bash
-git status -sb
-git log -1 --oneline
-git push origin main
-```
-
----
-
-## 13. Ultimo Stato Git
-
-Branch locale/remoto:
-
-```bash
-main -> origin/main
-```
-
-Ultimo commit pushato:
-
-```bash
-a7ecfce prepare Neon production foundation
-```
-
-**Contenuto pronto per go-live**: schema + seed + build verde + 50 prompt differenziati.
-
-Repo:
-
-```bash
-https://github.com/Marco26-hub/social-media-manager.git
-```
-
----
-
-*Fine handoff. Prossimo agent: non reintrodurre Supabase nel runtime; lavorare su schema Neon base, seed production e publish bridge.*
+*Fine handoff. Non reintrodurre Supabase o n8n. Mantieni la demo mode funzionante.*
