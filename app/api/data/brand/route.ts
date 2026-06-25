@@ -25,8 +25,9 @@ export async function PATCH(request: Request) {
     if (!existing.length) {
       await q(
         `INSERT INTO brand (cliente_id, brand_name, settore, sito_url, tono_voce, target, promessa_brand,
-          colori_brand, parole_da_usare, parole_da_evitare, emoji_policy, hashtag_base, cta_base, note_legali)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+          colori_brand, parole_da_usare, parole_da_evitare, emoji_policy, hashtag_base, cta_base, note_legali,
+          disclaimer_text, gdpr_note, privacy_note, cookie_policy)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
         [
           cid,
           body.brand_name || '',
@@ -42,6 +43,10 @@ export async function PATCH(request: Request) {
           body.hashtag_base || null,
           body.cta_base || null,
           body.note_legali || null,
+          body.disclaimer_text || null,
+          body.gdpr_note || null,
+          body.privacy_note || null,
+          body.cookie_policy || null,
         ],
       )
     } else {

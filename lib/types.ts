@@ -155,6 +155,10 @@ export interface Brand {
   hashtag_base: string | null
   cta_base: string | null
   note_legali: string | null
+  disclaimer_text: string | null
+  gdpr_note: string | null
+  privacy_note: string | null
+  cookie_policy: string | null
   created_at: string
   updated_at: string
 }

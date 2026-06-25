@@ -14,14 +14,61 @@ import SeoScoreGrid from '@/components/SeoScoreGrid'
 import LeadsCard from '@/components/LeadsCard'
 import ClientsCard from '@/components/ClientsCard'
 
-const TONI_VOCE = ['elegante','casual','ironico','professionale','emozionale','tecnico','luxury','friendly','sostenibile','istituzionale','ribelle','minimal']
-const SETTORI = ['Fashion/Abbigliamento','Beauty/Cosmesi','Food/Bevande','Tech/Elettronica','Arredamento/Design','Fitness/Sport','Gioielli/Accessori','Libri/Editoria','Arte/Cultura','Servizi','Altro']
+const TONI_VOCE = ['elegante','casual','ironico','professionale','emozionale','tecnico','luxury','friendly','sostenibile','istituzionale','ribelle','minimal','autoritario','giovanile']
+
+const SETTORI = ['Fashion/Abbigliamento','Beauty/Cosmesi','Food/Bevande','Tech/Elettronica','Arredamento/Design','Fitness/Sport','Gioielli/Accessori','Libri/Editoria','Arte/Cultura','Servizi professionali','Turismo/Hospitality','Benessere/Salute','Auto/Mobility','Educazione/Formazione','Real Estate','Altro']
+
+const PROMESSE = [
+  { value: '', label: 'Seleziona promessa...' },
+  { value: 'eleganza-accessibile', label: '✨ Eleganza accessibile' },
+  { value: 'qualita-sostenibile', label: '🌿 Qualità sostenibile' },
+  { value: 'innovazione-design', label: '💡 Innovazione + Design' },
+  { value: 'lusso-discreto', label: '👑 Lusso discreto' },
+  { value: 'tradizione-artigianale', label: '🛠️ Tradizione artigianale' },
+  { value: 'benessere-autentico', label: '🧘 Benessere autentico' },
+  { value: 'velocita-affidabilita', label: '⚡ Velocità + Affidabilità' },
+  { value: 'personalizzazione-totale', label: '🎨 Personalizzazione totale' },
+  { value: 'risparmio-qualita', label: '💰 Risparmio + Qualità' },
+  { value: 'community-appartenenza', label: '🤝 Community & Appartenenza' },
+  { value: 'avanguardia-tecnologica', label: '🔬 Avanguardia tecnologica' },
+  { value: 'sicurezza-fiducia', label: '🛡️ Sicurezza & Fiducia' },
+  { value: 'esperienza-premium', label: '🌟 Esperienza Premium' },
+  { value: 'inclusivita-diversita', label: '🌈 Inclusività & Diversità' },
+  { value: 'altre', label: 'Altre (scrivi sotto)' },
+]
+
+const TARGET_OPTIONS = [
+  'Donna 18-24', 'Donna 25-34', 'Donna 35-44', 'Donna 45-54', 'Donna 55+',
+  'Uomo 18-24', 'Uomo 25-34', 'Uomo 35-44', 'Uomo 45-54', 'Uomo 55+',
+  'Unisex', 'Professionisti', 'Imprenditori', 'Studenti', 'Neomamme',
+  'Famiglie', 'Appassionati moda', 'Appassionati tech', 'Fitness addicted',
+  'Viaggiatori', 'Foodies', 'Artisti/Creativi', 'Senior/Over 60',
+  'Lusso/Alto spendenti', 'Budget conscious', 'Eco-consapevoli',
+]
+
+const EMOJI_OPTIONS = [
+  { value: '', label: 'Seleziona policy...', emoji: '' },
+  { value: 'nessuna', label: '❌ Nessuna emoji', emoji: '' },
+  { value: 'minimal-2', label: '✨🤍 Max 2 emoji eleganti per post', emoji: '✨🤍🖤' },
+  { value: 'moderato', label: '📸🔥 3-5 emoji naturali per post', emoji: '🔥💪✨🎯📸' },
+  { value: 'friendly', label: '😊👍 Emoji amichevoli, frequenti', emoji: '😊👍💕🎉🙌' },
+  { value: 'trendy', label: '💅✨ Emoji trend, giovani, molti', emoji: '💅✨💫🌟👑' },
+  { value: 'business', label: '📊✅ Emoji professionali, rari', emoji: '📊✅📈💼🎯' },
+  { value: 'food', label: '🍝🍷 Emoji cibo/vino, abbondanti', emoji: '🍝🍷🥗🍰☕' },
+  { value: 'nature', label: '🌿🌸 Emoji natura, sostenibili', emoji: '🌿🌸🌍🍃💚' },
+  { value: 'tech', label: '💻⚡ Emoji tech, moderni', emoji: '💻⚡🤖🚀📱' },
+  { value: 'max', label: '🎉 Sì a tutte, max 6 per post', emoji: '🎉✨🔥💯💫🎯' },
+  { value: 'custom', label: '✏️ Personalizzata (scrivi sotto)', emoji: '' },
+]
 
 export default function BrandPage() {
   const [brand, setBrand] = useState<Partial<Brand> | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [discovering, setDiscovering] = useState(false)
+  const [genKeywords, setGenKeywords] = useState(false)
+  const [genHashtags, setGenHashtags] = useState(false)
+  const [genTrends, setGenTrends] = useState(false)
   const [url, setUrl] = useState('')
   const [includeSeo, setIncludeSeo] = useState(false)
   const [includeGeo, setIncludeGeo] = useState(false)
@@ -41,15 +88,19 @@ export default function BrandPage() {
           sito_url: 'https://silkincom.com',
           settore: 'Fashion/Abbigliamento',
           tono_voce: 'elegante',
-          target: 'Donna 25-45, professionista, attenta allo stile',
-          promessa_brand: 'Eleganza accessibile per la donna moderna',
+          target: 'Donna 25-34, Donna 35-44, Professioniste',
+          promessa_brand: '✨ Eleganza accessibile',
           colori_brand: 'Beige, Nero, Bianco, Oro',
-          parole_da_usare: 'eleganza, stile, qualità, made in Italy, versatilità, charme, look, outfit',
-          parole_da_evitare: 'saldi, cheap, low cost, cinese, fast fashion',
-          emoji_policy: 'Pochi emoji, solo ✨🤍🖤. Mai più di 2 per post.',
-          hashtag_base: '#silkincom #stileitaliano #elegance #fashion #madeinitaly',
+          parole_da_usare: '#SEO:eleganza,#SEO:moda,#GEO:stile italiano,#LONGTAIL:abiti eleganti,#BRANDED:silkincom',
+          parole_da_evitare: '#EVITA:economico,low cost,#EVITA:fast fashion, cinese,#EVITA:saldi',
+          emoji_policy: '✨🤍🖤 Max 2 emoji eleganti per post',
+          hashtag_base: '#BRANDED:silkincom, #BRANDED:stileitaliano, #SETTORE:fashion, #SETTORE:modadonna, #NICCHIA:outfitprimavera',
           cta_base: 'Scopri la collezione',
           note_legali: '',
+          disclaimer_text: 'Le immagini sono a scopo illustrativo. I colori reali possono variare.',
+          gdpr_note: 'I dati personali sono trattati secondo il Reg. UE 2016/679. Titolare: SILKinCOM Srl.',
+          privacy_note: 'Informativa completa su www.silkincom.com/privacy',
+          cookie_policy: 'Questo sito utilizza cookie tecnici e di profilazione.',
         })
         setUrl('https://silkincom.com')
         setLoading(false)
@@ -68,492 +119,315 @@ export default function BrandPage() {
 
   async function handleDiscovery() {
     if (!url.trim()) { setMsg({ type: 'err', text: 'Inserisci URL del sito' }); return }
-    setDiscovering(true)
-    setMsg(null)
-    setSeoResult(null)
-    setLeadsResult(null)
-    setClientsResult(null)
-
+    setDiscovering(true); setMsg(null); setSeoResult(null); setLeadsResult(null); setClientsResult(null)
     const runSeo = includeSeo || includeGeo
 
     if (demo) {
       await new Promise(r => setTimeout(r, 1500))
-      setBrand(prev => ({
-        ...prev,
-        sito_url: url,
-        settore: 'Fashion/Abbigliamento',
-        tono_voce: 'elegante',
-        target: 'Donna 25-45, professionista',
-        promessa_brand: 'Eleganza accessibile',
-        colori_brand: 'Beige, Nero, Bianco',
-        parole_da_usare: 'eleganza, stile, qualità, made in Italy',
-        parole_da_evitare: 'economico, low cost',
-        emoji_policy: '✨🤍🖤 max 2 per post',
-        hashtag_base: '#brand #stile #moda',
-        cta_base: 'Scopri di più',
-      }))
-      if (runSeo) {
-        setSeoResult({
-          score_globale: 72,
-          score_seo_tecnico: 85, score_seo_contenuti: 70, score_geo_ai_search: 58,
-          score_social_coerenza: 80, score_eeat: 65,
-          riepilogo: 'Brand solido su SEO tecnico. Da migliorare presenza GEO e segnali E-E-A-T.',
-          punti_forti: ['Schema prodotto completo', 'Velocità sito ok'],
-          punti_critici: ['Manca llms.txt', 'Bio TikTok senza link sito'],
-        })
-      }
-      if (includeLeads) {
-        setLeadsResult({
-          email: ['info@silkincom.com', 'marketing@silkincom.com'],
-          whatsapp: [{ numero: '+39 351 1234567', link: 'https://wa.me/393511234567', note: 'WhatsApp Business' }],
-          telegram: [],
-          telefono: ['+39 02 12345678'],
-          social: [
-            { piattaforma: 'Instagram', url: 'https://instagram.com/silkincom', note: 'Profilo verificato' },
-            { piattaforma: 'Facebook', url: 'https://facebook.com/silkincom', note: '' },
-            { piattaforma: 'TikTok', url: 'https://tiktok.com/@silkincom', note: '' },
-          ],
-          form_contatti_url: 'https://silkincom.com/contatti',
-          indirizzo: 'Via della Moda 42, 20121 Milano MI',
-          piva: '',
-          orari: 'Lun-Ven 9-18',
-          note_scraping: 'Demo',
-        })
-      }
-      if (includeClients) {
-        setClientsResult({
-          icp: 'Donna 25-45, professionista, reddito medio-alto, attenta alle tendenze moda ma cerca qualità senza eccessi',
-          buyer_personas: [
-            { nome: 'Laura', eta: '32', ruolo: 'Marketing Manager', obiettivi: 'Vestirsi bene per ufficio e aperitivo senza cambiarsi', pain_point: 'Poco tempo per shopping, vuole qualità garantita', canali: 'Instagram, Pinterest, Google', citazione: '"Voglio un look che funzioni dalla scrivania allo spritz"' },
-            { nome: 'Chiara', eta: '28', ruolo: 'Freelance Designer', obiettivi: 'Esprimere personalità attraverso lo stile', pain_point: 'Budget limitato ma non vuole fast fashion', canali: 'Instagram, TikTok, Depop', citazione: '"Cerco pezzi unici che durino nel tempo"' },
-          ],
-          mercato_target: { dimensione: '€2.5B in Italia', trend: '+8% YoY moda online', stagionalita: 'Picchi: marzo-aprile e settembre-ottobre' },
-          competitor: [
-            { nome: 'Zalando', sito: 'zalando.it', punto_forte: 'Reso gratuito, vasta scelta', punto_debole: 'Esperienza impersonale' },
-            { nome: 'LuisaViaRoma', sito: 'luisaviaroma.com', punto_forte: 'Luxury positioning', punto_debole: 'Prezzi alti, target ristretto' },
-            { nome: 'Yoox', sito: 'yoox.com', punto_forte: 'Outlet di lusso', punto_debole: 'Navigazione complessa' },
-          ],
-          opportunita_vendita: ['Bundle blazer + pantaloni', 'Sconto fedeltà dopo 3 acquisti', 'Collezione capsule a tempo limitato'],
-          canali_acquisizione: ['Instagram Ads (carousel)', 'Google Shopping', 'Pinterest Shopping', 'Influencer micro (5-20K follower)'],
-          lead_magnet: ['Guida stile stagionale PDF', 'Sconto 10% primo ordine via email', 'Quiz "Scopri il tuo stile"'],
-          sales_pitch: 'SILKinCOM porta l\'eleganza italiana nel tuo quotidiano, con capi di qualità che ti fanno sentire sicura dalla mattina alla sera.',
-          obiezioni: [{ obiezione: 'Prezzo più alto della fast fashion', risposta: 'I nostri capi durano 3x, costo per utilizzo inferiore. Qualità made in Italy garantita.' }],
-          kpi_suggeriti: ['CAC < €15', 'LTV > €200', 'Conversion rate > 2.5%'],
-        })
-      }
-      const parts = ['Profilo brand generato']
-      if (runSeo) parts.push('+ SEO/GEO audit')
-      if (includeLeads) parts.push('+ Contatti estratti')
-      if (includeClients) parts.push('+ Marketing/Clienti')
-      setMsg({ type: 'ok', text: parts.join(' ') + '. Rivedi e salva.' })
-      setDiscovering(false)
-      return
+      setBrand(prev => ({ ...prev, sito_url: url, settore: 'Fashion/Abbigliamento', tono_voce: 'elegante', target: 'Donna 25-34, Donna 35-44, Professioniste', promessa_brand: '✨ Eleganza accessibile', colori_brand: 'Beige, Nero, Bianco', parole_da_usare: '#SEO:eleganza, #SEO:qualità', parole_da_evitare: '#EVITA:economico, low cost', emoji_policy: '✨🤍🖤', hashtag_base: '#BRANDED:silkincom, #SETTORE:fashion' }))
+      if (runSeo) setSeoResult({ score_globale: 72, score_seo_tecnico: 85, score_seo_contenuti: 70, score_geo_ai_search: 58, score_social_coerenza: 80, score_eeat: 65, riepilogo: 'Analisi completata.', punti_forti: ['SEO base presente'], punti_critici: ['Migliorare GEO'] })
+      if (includeLeads) setLeadsResult({ email: ['info@silkincom.com'], whatsapp: [], telegram: [], telefono: [], social: [], form_contatti_url: 'https://silkincom.com/contatti', indirizzo: '' })
+      if (includeClients) setClientsResult({ icp: 'Donna 25-45', buyer_personas: [], competitor: [], opportunita_vendita: [], canali_acquisizione: [] })
+      const parts = ['Profilo brand generato']; if (runSeo) parts.push('+ SEO/GEO'); if (includeLeads) parts.push('+ Contatti'); if (includeClients) parts.push('+ Marketing')
+      setMsg({ type: 'ok', text: parts.join(' ') + '. Rivedi e salva.' }); setDiscovering(false); return
     }
 
     try {
       const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
       const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
-
       const tasks: Promise<unknown>[] = [
-        fetch('/api/generate/brand-discovery', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, model: aiModel, openrouter_key: orKey || undefined }),
-        }).then(async res => {
-          if (!res.ok) { const err = await res.json(); throw new Error(err.error) }
-          const discovered = await res.json()
-          setBrand(prev => ({ ...prev, ...discovered, sito_url: url }))
-          return 'brand'
-        }),
+        fetch('/api/generate/brand-discovery', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, model: aiModel, openrouter_key: orKey || undefined }) })
+          .then(async res => { if (!res.ok) throw new Error((await res.json()).error); const d = await res.json(); setBrand(prev => ({ ...prev, ...d, sito_url: url })) }),
       ]
-
       if (runSeo && typeof window !== 'undefined') {
         const cid = localStorage.getItem('active_cliente_id') || ''
-        tasks.push(
-          fetch('/api/generate/seo-audit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              cliente_id: cid,
-              sito_url: url,
-              periodo: 'settimanale',
-              model: aiModel,
-              openrouter_key: orKey || undefined,
-            }),
-          }).then(async res => {
-            if (!res.ok) {
-              const err = await res.json()
-              console.warn('SEO audit fallito (non bloccante):', err.error)
-              return 'seo-skipped'
-            }
-            const result = await res.json()
-            // Fetch latest audit
-            const auditRes = await fetch('/api/data/seo-audit')
-            if (auditRes.ok) {
-              const audits = await auditRes.json()
-              if (Array.isArray(audits) && audits.length > 0) {
-                setSeoResult(audits[0])
-              }
-            }
-            return 'seo'
-          }).catch(err => {
-            console.warn('SEO audit errore:', err)
-            return 'seo-error'
-          }),
-        )
+        tasks.push(fetch('/api/generate/seo-audit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cliente_id: cid, sito_url: url, periodo: 'settimanale', model: aiModel, openrouter_key: orKey || undefined }) }).then(async res => { if (res.ok) { const a = await (await fetch('/api/data/seo-audit')).json(); if (Array.isArray(a) && a.length > 0) setSeoResult(a[0]) } }).catch(() => {}))
       }
-
-      if (includeLeads) {
-        tasks.push(
-          fetch('/api/generate/scrape-contacts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url, model: aiModel, openrouter_key: orKey || undefined }),
-          }).then(async res => {
-            if (!res.ok) {
-              const err = await res.json()
-              console.warn('Scraping contatti fallito:', err.error)
-              return 'leads-skipped'
-            }
-            const data = await res.json()
-            setLeadsResult(data)
-            return 'leads'
-          }).catch(err => {
-            console.warn('Scraping contatti errore:', err)
-            return 'leads-error'
-          }),
-        )
-      }
-
+      if (includeLeads) tasks.push(fetch('/api/generate/scrape-contacts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, model: aiModel, openrouter_key: orKey || undefined }) }).then(async res => { if (res.ok) setLeadsResult(await res.json()) }).catch(() => {}))
+      if (includeClients) tasks.push(fetch('/api/generate/client-discovery', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, settore: brand?.settore || '', model: aiModel, openrouter_key: orKey || undefined }) }).then(async res => { if (res.ok) setClientsResult(await res.json()) }).catch(() => {}))
       await Promise.all(tasks)
-      const parts = ['Profilo generato']
-      if (runSeo) parts.push('+ SEO/GEO audit')
-      if (includeLeads) parts.push('+ Contatti estratti')
-      setMsg({ type: 'ok', text: parts.join(' ') + '! Rivedi i campi e clicca Salva.' })
-    } catch (e) {
-      setMsg({ type: 'err', text: (e as Error).message })
-    }
+      const parts = ['Profilo generato']; if (runSeo) parts.push('+ SEO/GEO'); if (includeLeads) parts.push('+ Contatti'); if (includeClients) parts.push('+ Marketing')
+      setMsg({ type: 'ok', text: parts.join(' ') + '! Rivedi e clicca Salva.' })
+    } catch (e) { setMsg({ type: 'err', text: (e as Error).message }) }
     setDiscovering(false)
   }
 
-  async function handleSave() {
-    setSaving(true)
-    setMsg(null)
+  async function generateField(type: 'keywords' | 'hashtags' | 'trends') {
+    const setter = type === 'keywords' ? setGenKeywords : type === 'hashtags' ? setGenHashtags : setGenTrends
+    setter(true)
+    const settore = (brand as Record<string, string>)?.settore || ''
+    const target = (brand as Record<string, string>)?.target || ''
+    const tono = (brand as Record<string, string>)?.tono_voce || ''
+
     if (demo) {
-      await new Promise(r => setTimeout(r, 800))
-      setMsg({ type: 'ok', text: 'Profilo brand salvato (demo)' })
-      setSaving(false); return
+      await new Promise(r => setTimeout(r, 1200))
+      if (type === 'keywords') update('parole_da_usare', '#SEO:parola1, #SEO:parola2, #GEO:keyword geo, #LONGTAIL:frase lunga, #BRANDED:nome brand')
+      if (type === 'hashtags') update('hashtag_base', '#BRANDED:nomebrand, #SETTORE:settore, #NICCHIA:parola, #TREND:tendenza')
+      if (type === 'trends') update('colori_brand', '🔮 Tendenze: Pantone 2026: Digital Lavender, Mocha Mousse. Colori caldi e neutri dominanti.')
+      setter(false); return
     }
+
     try {
-      const res = await fetch('/api/data/brand', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(brand),
+      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
+      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const res = await fetch('/api/generate/brand-keywords', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand: brand || {}, settore, target, tono, model: aiModel, openrouter_key: orKey || undefined }),
       })
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error) }
+      if (!res.ok) throw new Error('Generation failed')
+      const data = await res.json()
+      if (type === 'keywords') {
+        const words = (data.parole_da_usare as Array<Record<string, string>> || []).map((w: Record<string, string>) => `#${w.categoria}:${w.keyword}`).join(', ')
+        update('parole_da_usare', words || JSON.stringify(data.parole_da_usare))
+      }
+      if (type === 'hashtags') {
+        const tags = (data.hashtag as Array<Record<string, string>> || []).map((h: Record<string, string>) => `#${h.categoria}:${h.tag}`).join(', ')
+        update('hashtag_base', tags || JSON.stringify(data.hashtag))
+        if (data.emoji_consigliate) {
+          const ep = data.emoji_consigliate as Record<string, unknown>
+          update('emoji_policy', `${(ep.brand as string[] || []).join(' ')} ${(ep.post as string[] || []).slice(0, 3).join(' ')} — ${ep.frequenza || ''}`)
+        }
+      }
+      if (type === 'trends') {
+        update('colori_brand', data.colori_tendenza || 'Tendenze aggiornate')
+      }
+    } catch (e) { setMsg({ type: 'err', text: `AI: ${(e as Error).message}` }) }
+    setter(false)
+  }
+
+  async function handleSave() {
+    setSaving(true); setMsg(null)
+    if (demo) { await new Promise(r => setTimeout(r, 800)); setMsg({ type: 'ok', text: 'Profilo brand salvato (demo)' }); setSaving(false); return }
+    try {
+      const res = await fetch('/api/data/brand', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(brand) })
+      if (!res.ok) throw new Error((await res.json()).error)
       setMsg({ type: 'ok', text: 'Profilo brand salvato con successo' })
-    } catch (e) {
-      setMsg({ type: 'err', text: (e as Error).message })
-    }
+    } catch (e) { setMsg({ type: 'err', text: (e as Error).message }) }
     setSaving(false)
   }
 
-  function update(field: string, value: string) {
-    setBrand(prev => prev ? { ...prev, [field]: value } : null)
+  function update(field: string, value: string) { setBrand(prev => prev ? { ...prev, [field]: value } : null) }
+
+  function toggleTarget(tag: string) {
+    const current = brand?.target ? brand.target.split(',').map((x: string) => x.trim()).filter(Boolean) : []
+    const idx = current.indexOf(tag)
+    if (idx >= 0) current.splice(idx, 1); else current.push(tag)
+    update('target', current.join(', '))
   }
 
-  if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
-      </div>
-    )
+  function handlePromessa(val: string) {
+    const label = PROMESSE.find(p => p.value === val)?.label?.replace(/^[^\s]+\s/, '') || val
+    update('promessa_brand', label || val)
   }
+
+  function handleEmoji(val: string) {
+    const opt = EMOJI_OPTIONS.find(e => e.value === val)
+    update('emoji_policy', opt?.label || val)
+  }
+
+  const selectedTargets = brand?.target ? brand.target.split(',').map((x: string) => x.trim()).filter(Boolean) : []
+
+  if (loading) return <div className="p-8 flex items-center justify-center py-20"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto">
       <div className="mb-6">
         <h1 className="text-xl md:text-3xl font-bold text-gray-900 tracking-tight">Profilo Brand</h1>
-        <p className="text-xs md:text-sm text-gray-500 mt-1">
-          Configura il DNA del brand. L&apos;AI userà questi dati per generare contenuti coerenti e differenziati.
-        </p>
+        <p className="text-xs md:text-sm text-gray-500 mt-1">DNA del brand. AI usa questi dati per contenuti, ads, SEO e marketing.</p>
       </div>
 
       {/* AI Discovery */}
       <div className="card p-5 mb-6 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border-violet-100">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0"><Sparkles className="w-5 h-5 text-white" /></div>
           <div>
             <h2 className="font-bold text-gray-900">AI Brand Discovery</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Inserisci l&apos;URL del sito. L&apos;AI analizza tono, target, stile e compila il profilo automaticamente.
-            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Inserisci URL sito. AI analizza e compila il profilo automaticamente.</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Globe className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="url"
-              value={url}
-              onChange={e => setUrl(e.target.value)}
-              placeholder="https://esempio.com"
-              className="input pl-9"
-            />
-          </div>
+          <div className="relative flex-1"><Globe className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="url" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://esempio.com" className="input pl-9" /></div>
           <button onClick={handleDiscovery} disabled={discovering} className="btn-primary text-sm px-5">
             {discovering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {discovering ? 'Analizzo...' : 'Analizza sito'}
           </button>
         </div>
-
-        {/* Flags SEO / GEO */}
-        <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-violet-200">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={includeSeo}
-              onChange={e => setIncludeSeo(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-            />
-            <Search className="w-3.5 h-3.5 text-gray-500" />
-            <span className="text-xs text-gray-700">Includi SEO Audit</span>
-            <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">Tecnico + Contenuti</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={includeGeo}
-              onChange={e => {
-                setIncludeGeo(e.target.checked)
-                if (e.target.checked) setIncludeSeo(true)
-              }}
-              className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-            />
-            <TrendingUp className="w-3.5 h-3.5 text-gray-500" />
-            <span className="text-xs text-gray-700">Includi GEO Audit</span>
-            <span className="text-[10px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full">AI Search</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={includeLeads}
-              onChange={e => setIncludeLeads(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-            />
-            <MessageCircle className="w-3.5 h-3.5 text-gray-500" />
-            <span className="text-xs text-gray-700">Trova contatti</span>
-            <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full">Email, WA, TG</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={includeClients}
-              onChange={e => setIncludeClients(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-            />
-            <Target className="w-3.5 h-3.5 text-gray-500" />
-            <span className="text-xs text-gray-700">Clienti & Marketing</span>
-            <span className="text-[10px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full">ICP, Buyer Personas, Vendita</span>
-          </label>
+        <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-violet-200">
+          {[{ k: includeSeo, s: setIncludeSeo, icon: Search, label: 'SEO Audit', badge: 'Tecnico', badgeClass: 'bg-gray-100 text-gray-700' },
+            { k: includeGeo, s: setIncludeGeo, icon: TrendingUp, label: 'GEO Audit', badge: 'AI Search', badgeClass: 'bg-purple-100 text-purple-700' },
+            { k: includeLeads, s: setIncludeLeads, icon: MessageCircle, label: 'Trova contatti', badge: 'Lead', badgeClass: 'bg-green-100 text-green-700' },
+            { k: includeClients, s: setIncludeClients, icon: Target, label: 'Clienti & Marketing', badge: 'ICP', badgeClass: 'bg-orange-100 text-orange-700' },
+          ].map(({ k, s, icon: Icon, label, badge, badgeClass }) => (
+            <label key={label} className="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" checked={k} onChange={e => { s(e.target.checked); if (label === 'GEO Audit' && e.target.checked) setIncludeSeo(true) }} className="w-3.5 h-3.5 rounded border-gray-300 text-brand-600" />
+              <Icon className="w-3 h-3 text-gray-500" />
+              <span className="text-xs text-gray-700">{label}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${badgeClass}`}>{badge}</span>
+            </label>
+          ))}
         </div>
       </div>
 
-      {/* SEO/GEO Results */}
       <SeoScoreGrid result={seoResult} includeGeo={includeGeo} />
-
-      {/* Lead Contacts */}
       <LeadsCard result={leadsResult} url={url} />
-
       <ClientsCard result={clientsResult} />
 
-      {/* Brand form */}
-      <div className="space-y-4">
+      {/* Brand Form */}
+      <div className="space-y-3">
         {/* Nome + Settore */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-gray-400" />
-              Nome Brand
-            </label>
-            <input
-              value={brand?.brand_name || ''}
-              onChange={e => update('brand_name', e.target.value)}
-              placeholder="Nome del brand"
-              className="input mt-1"
-            />
+            <label className="label"><Globe className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> Nome Brand</label>
+            <input value={brand?.brand_name || ''} onChange={e => update('brand_name', e.target.value)} placeholder="Nome del brand" className="input mt-1" />
           </div>
           <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-gray-400" />
-              Settore
-            </label>
-            <select
-              value={(brand as Record<string, string>)?.settore || ''}
-              onChange={e => update('settore', e.target.value)}
-              className="input mt-1"
-            >
+            <label className="label"><Globe className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> Settore</label>
+            <select value={(brand as Record<string, string>)?.settore || ''} onChange={e => update('settore', e.target.value)} className="input mt-1">
               <option value="">Seleziona settore...</option>
               {SETTORI.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
 
-        {/* Tono + Target */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Tono + Promessa */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <MessageCircle className="w-3.5 h-3.5 text-gray-400" />
-              Tono di voce
-            </label>
-            <select
-              value={brand?.tono_voce || ''}
-              onChange={e => update('tono_voce', e.target.value)}
-              className="input mt-1"
-            >
+            <label className="label"><MessageCircle className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> Tono di voce</label>
+            <select value={brand?.tono_voce || ''} onChange={e => update('tono_voce', e.target.value)} className="input mt-1">
               <option value="">Seleziona tono...</option>
               {TONI_VOCE.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5 text-gray-400" />
-              Target Audience
-            </label>
-            <input
-              value={brand?.target || ''}
-              onChange={e => update('target', e.target.value)}
-              placeholder="Es: Donna 25-45, professionista, attenta allo stile"
-              className="input mt-1"
-            />
+            <label className="label"><Sparkles className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> Promessa Brand</label>
+            <select value={PROMESSE.find(p => brand?.promessa_brand?.includes(p.value) || brand?.promessa_brand?.includes(p.label.replace(/^[^\s]+\s/, '')))?.value || ''} onChange={e => handlePromessa(e.target.value)} className="input mt-1">
+              {PROMESSE.map(p => <option key={p.value} value={p.value}>{p.label || p.value}</option>)}
+            </select>
+            {brand?.promessa_brand && <p className="text-[10px] text-gray-400 mt-1">Valore attuale: {brand.promessa_brand}</p>}
           </div>
         </div>
 
-        {/* Promessa + Colori */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-gray-400" />
-              Promessa Brand
-            </label>
-            <input
-              value={brand?.promessa_brand || ''}
-              onChange={e => update('promessa_brand', e.target.value)}
-              placeholder="Es: Eleganza accessibile per la donna moderna"
-              className="input mt-1"
-            />
+        {/* Target multi-select */}
+        <div className="card p-4">
+          <label className="label"><Target className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> Target Audience</label>
+          <p className="text-[10px] text-gray-400 mb-2">Seleziona uno o più target:</p>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {TARGET_OPTIONS.map(t => {
+              const sel = selectedTargets.includes(t)
+              return <button key={t} type="button" onClick={() => toggleTarget(t)} className={`text-[11px] px-2.5 py-1 rounded-full border transition-all ${sel ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{sel ? '✓ ' : ''}{t}</button>
+            })}
           </div>
-          <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <Palette className="w-3.5 h-3.5 text-gray-400" />
-              Colori Brand
-            </label>
-            <input
-              value={brand?.colori_brand || ''}
-              onChange={e => update('colori_brand', e.target.value)}
-              placeholder="Es: Beige, Nero, Bianco, Oro"
-              className="input mt-1"
-            />
+          <input value={brand?.target || ''} onChange={e => update('target', e.target.value)} placeholder="Target personalizzato..." className="input text-xs" />
+        </div>
+
+        {/* Colori + Trend */}
+        <div className="card p-4">
+          <div className="flex items-center justify-between mb-1">
+            <label className="label"><Palette className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> Colori Brand</label>
+            <button type="button" onClick={() => generateField('trends')} disabled={genTrends} className="text-[10px] px-2 py-1 bg-gradient-to-r from-pink-100 to-purple-100 text-purple-700 rounded-full hover:from-pink-200 flex items-center gap-1">
+              {genTrends ? <Loader2 className="w-3 h-3 animate-spin" /> : <TrendingUp className="w-3 h-3" />}
+              {genTrends ? 'Analizzo...' : 'Analizza tendenze'}
+            </button>
+          </div>
+          <input value={brand?.colori_brand || ''} onChange={e => update('colori_brand', e.target.value)} placeholder="Es: Beige, #F5F5F5, RGB(139,92,246), Pantone..." className="input mt-1" />
+        </div>
+
+        {/* Parole da usare SEO/GEO */}
+        <div className="card p-4">
+          <div className="flex items-center justify-between mb-1">
+            <label className="label"><Check className="w-3.5 h-3.5 text-green-500 inline mr-1" /> Parole da usare (SEO + GEO)</label>
+            <button type="button" onClick={() => generateField('keywords')} disabled={genKeywords} className="text-[10px] px-2 py-1 bg-green-100 text-green-700 rounded-full hover:bg-green-200 flex items-center gap-1">
+              {genKeywords ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              {genKeywords ? 'Genero...' : 'AI genera'}
+            </button>
+          </div>
+          <p className="text-[10px] text-gray-400 mb-1">Usa formato: #CATEGORIA:keyword. Categorie: SEO|GEO|LONGTAIL|BRANDED</p>
+          <textarea value={brand?.parole_da_usare || ''} onChange={e => update('parole_da_usare', e.target.value)} placeholder="#SEO:eleganza, #GEO:stile italiano, #LONGTAIL:abiti eleganti donna, #BRANDED:silkincom" className="input mt-1 h-20 resize-none font-mono text-xs" />
+        </div>
+
+        {/* Parole da evitare */}
+        <div className="card p-4">
+          <div className="flex items-center justify-between mb-1">
+            <label className="label"><AlertTriangle className="w-3.5 h-3.5 text-red-500 inline mr-1" /> Parole da evitare (SEO + GEO)</label>
+            <button type="button" onClick={() => generateField('keywords')} disabled={genKeywords} className="text-[10px] px-2 py-1 bg-red-100 text-red-700 rounded-full hover:bg-red-200 flex items-center gap-1">
+              {genKeywords ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              {genKeywords ? 'Genero...' : 'AI genera'}
+            </button>
+          </div>
+          <p className="text-[10px] text-gray-400 mb-1">Usa formato: #EVITA:motivo:parola. Motivi: FUORI_TARGET|BASSO_QUALITÀ|COMPETITORE</p>
+          <textarea value={brand?.parole_da_evitare || ''} onChange={e => update('parole_da_evitare', e.target.value)} placeholder="#EVITA:FUORI_TARGET:economico, #EVITA:BASSO_QUALITÀ:fast fashion, #EVITA:COMPETITORE:zara" className="input mt-1 h-20 resize-none font-mono text-xs" />
+        </div>
+
+        {/* Emoji policy */}
+        <div className="card p-4">
+          <label className="label"><Sparkles className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> Emoji Policy</label>
+          <select value={EMOJI_OPTIONS.find(e => brand?.emoji_policy?.includes(e.value) || (e.emoji && brand?.emoji_policy?.includes(e.emoji)))?.value || ''} onChange={e => handleEmoji(e.target.value)} className="input mt-1">
+            {EMOJI_OPTIONS.map(e => <option key={e.value} value={e.value}>{e.label || e.value}</option>)}
+          </select>
+          <input value={(EMOJI_OPTIONS.find(e => e.value === 'custom')?.value === (EMOJI_OPTIONS.find(e => brand?.emoji_policy?.includes(e.value))?.value || '') ? brand?.emoji_policy || '' : '') || ''} onChange={e => update('emoji_policy', e.target.value)} placeholder="Oppure personalizza..." className="input mt-1 text-xs" />
+        </div>
+
+        {/* Hashtag */}
+        <div className="card p-4">
+          <div className="flex items-center justify-between mb-1">
+            <label className="label"><Hash className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> Hashtag strategici</label>
+            <button type="button" onClick={() => generateField('hashtags')} disabled={genHashtags} className="text-[10px] px-2 py-1 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 flex items-center gap-1">
+              {genHashtags ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              {genHashtags ? 'Genero...' : 'AI genera hashtag'}
+            </button>
+          </div>
+          <p className="text-[10px] text-gray-400 mb-1">Formato: #CATEGORIA:tag. Categorie: BRANDED|SETTORE|NICCHIA|TREND</p>
+          <textarea value={brand?.hashtag_base || ''} onChange={e => update('hashtag_base', e.target.value)} placeholder="#BRANDED:silkincom, #SETTORE:fashion, #NICCHIA:outfitprimavera, #TREND:spring2026" className="input mt-1 h-16 resize-none font-mono text-xs" />
+        </div>
+
+        {/* CTA */}
+        <div className="card p-4">
+          <label className="label"><MousePointerClick className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> CTA Default</label>
+          <input value={brand?.cta_base || ''} onChange={e => update('cta_base', e.target.value)} placeholder="Es: Scopri la collezione" className="input mt-1" />
+        </div>
+
+        {/* Compliance section */}
+        <div className="card p-4 border-t-4 border-amber-400">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="w-5 h-5 text-amber-600" />
+            <h3 className="font-bold text-gray-900 text-sm">Compliance & Note Legali</h3>
+            <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">GDPR · Privacy · Cookie</span>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="label text-xs">⚠️ Disclaimer / Limitazione responsabilità</label>
+              <input value={brand?.disclaimer_text || ''} onChange={e => update('disclaimer_text', e.target.value)} placeholder="Es: Le immagini sono a scopo illustrativo..." className="input text-xs" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="label text-xs">🔐 GDPR / Trattamento dati</label>
+                <textarea value={brand?.gdpr_note || ''} onChange={e => update('gdpr_note', e.target.value)} placeholder="Reg. UE 2016/679 - Informativa..." className="input text-xs h-16 resize-none" />
+              </div>
+              <div>
+                <label className="label text-xs">📋 Privacy Policy (sintesi)</label>
+                <textarea value={brand?.privacy_note || ''} onChange={e => update('privacy_note', e.target.value)} placeholder="URL o testo sintetico privacy..." className="input text-xs h-16 resize-none" />
+              </div>
+            </div>
+            <div>
+              <label className="label text-xs">🍪 Cookie Policy</label>
+              <input value={brand?.cookie_policy || ''} onChange={e => update('cookie_policy', e.target.value)} placeholder="Es: Questo sito utilizza cookie tecnici e di profilazione..." className="input text-xs" />
+            </div>
+            <div>
+              <label className="label text-xs">📄 Altre note legali</label>
+              <textarea value={brand?.note_legali || ''} onChange={e => update('note_legali', e.target.value)} placeholder="Diritto di recesso, condizioni di vendita, ecc..." className="input text-xs h-16 resize-none" />
+            </div>
           </div>
         </div>
 
-        {/* Parole da usare / evitare */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-green-500" />
-              Parole da usare
-            </label>
-            <textarea
-              value={brand?.parole_da_usare || ''}
-              onChange={e => update('parole_da_usare', e.target.value)}
-              placeholder="Parole chiave da includere, separate da virgola"
-              className="input mt-1 h-20 resize-none"
-            />
-          </div>
-          <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
-              Parole da evitare
-            </label>
-            <textarea
-              value={brand?.parole_da_evitare || ''}
-              onChange={e => update('parole_da_evitare', e.target.value)}
-              placeholder="Parole da NON usare, separate da virgola"
-              className="input mt-1 h-20 resize-none"
-            />
-          </div>
+        {msg && <div className={`p-3 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{msg.text}</div>}
+
+        <div className="flex items-center gap-3">
+          <button onClick={handleSave} disabled={saving} className="btn-primary px-8 py-3">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? 'Salvando...' : 'Salva profilo brand'}
+          </button>
         </div>
-
-        {/* Emoji + Hashtag */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-gray-400" />
-              Emoji Policy
-            </label>
-            <input
-              value={brand?.emoji_policy || ''}
-              onChange={e => update('emoji_policy', e.target.value)}
-              placeholder="Es: Solo ✨🤍🖤, max 2 per post"
-              className="input mt-1"
-            />
-          </div>
-          <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <Hash className="w-3.5 h-3.5 text-gray-400" />
-              Hashtag base
-            </label>
-            <input
-              value={brand?.hashtag_base || ''}
-              onChange={e => update('hashtag_base', e.target.value)}
-              placeholder="Es: #brand #stile #modaitaliana"
-              className="input mt-1"
-            />
-          </div>
-        </div>
-
-        {/* CTA + Note */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <MousePointerClick className="w-3.5 h-3.5 text-gray-400" />
-              CTA Default
-            </label>
-            <input
-              value={brand?.cta_base || ''}
-              onChange={e => update('cta_base', e.target.value)}
-              placeholder="Es: Scopri la collezione"
-              className="input mt-1"
-            />
-          </div>
-          <div className="card p-4">
-            <label className="label flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-gray-400" />
-              Note legali / Disclaimer
-            </label>
-            <input
-              value={brand?.note_legali || ''}
-              onChange={e => update('note_legali', e.target.value)}
-              placeholder="Eventuali note legali obbligatorie"
-              className="input mt-1"
-            />
-          </div>
-        </div>
-
-        {/* Message + Save */}
-        {msg && (
-          <div className={`p-3 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-            {msg.text}
-          </div>
-        )}
-
-        <button onClick={handleSave} disabled={saving} className="btn-primary w-full sm:w-auto text-sm px-8 py-3">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {saving ? 'Salvando...' : 'Salva profilo brand'}
-        </button>
       </div>
     </div>
   )
