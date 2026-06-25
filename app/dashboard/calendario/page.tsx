@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter, Sparkles } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
@@ -34,6 +34,8 @@ function CalendarioInner() {
   const [filterStatus, setFilter]   = useState<string>(searchParams.get('filter') ?? 'DA_APPROVARE')
   const [filterCanale, setCanale]   = useState('tutti')
   const [saving, setSaving]         = useState<string | null>(null)
+  const [scoring, setScoring]       = useState<string | null>(null)
+  const [scores, setScores]         = useState<Record<string, Record<string, unknown>>>({})
   const [demoData, setDemoData]     = useState<Contenuto[]>(demoContenuti)
   const demo = isDemo()
 
@@ -130,6 +132,57 @@ function CalendarioInner() {
       })
     }
     setSaving(null)
+  }
+
+  async function handleScore(c: Contenuto) {
+    setScoring(c.id)
+    if (demo) {
+      await new Promise(r => setTimeout(r, 1200))
+      setScores(prev => ({
+        ...prev,
+        [c.id]: {
+          score_globale: 78,
+          hook_strength: 72,
+          copy_quality: 85,
+          brand_fit: 80,
+          cta_effectiveness: 70,
+          hashtag_relevance: 76,
+          seo_potential: 65,
+          compliance: 90,
+          giudizio: 'BUONO',
+          punti_forti: ['Hook coinvolgente', 'Tono coerente con il brand'],
+          punti_deboli: ['CTA poco incisiva', 'Hashtag generici'],
+          suggerimenti: ['Rendi la CTA più urgente', 'Aggiungi 2 hashtag di nicchia'],
+        },
+      }))
+      setScoring(null)
+      return
+    }
+    try {
+      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
+      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const res = await fetch('/api/generate/score-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          canale: c.canale,
+          formato: c.formato,
+          hook: c.hook,
+          caption: c.caption,
+          hashtag: c.hashtag,
+          cta: c.cta,
+          visual: c.idea_visual || c.alt_text || '',
+          model: aiModel,
+          openrouter_key: orKey || undefined,
+        }),
+      })
+      if (!res.ok) throw new Error('Scoring failed')
+      const data = await res.json()
+      setScores(prev => ({ ...prev, [c.id]: data }))
+    } catch (e) {
+      console.error('Score failed:', e)
+    }
+    setScoring(null)
   }
 
   const mediaUrls = (c: Contenuto) =>
@@ -234,6 +287,21 @@ function CalendarioInner() {
                   <button onClick={() => setSelected(c)} className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
                     <Eye className="w-3.5 h-3.5" />
                   </button>
+                  <button
+                    onClick={() => handleScore(c)}
+                    disabled={scoring === c.id}
+                    className={`py-1.5 px-2 md:px-3 justify-center rounded-lg text-xs font-medium transition-colors ${
+                      scores[c.id]
+                        ? 'bg-violet-50 text-violet-700 border border-violet-200'
+                        : 'btn-secondary'
+                    }`}
+                  >
+                    {scoring === c.id
+                      ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      : <Sparkles className="w-3.5 h-3.5" />
+                    }
+                    {scores[c.id] && <span className="hidden md:inline ml-1">{(scores[c.id].score_globale as number)}</span>}
+                  </button>
                   {c.status === 'DA_APPROVARE' && (
                     <>
                       <button onClick={() => approva(c)} disabled={saving === c.id} className="btn-primary py-1.5 px-2 md:px-3 justify-center">
@@ -324,7 +392,99 @@ function CalendarioInner() {
                     )
                   })}
                 </div>
+                <button
+                  onClick={() => handleScore(selected)}
+                  disabled={scoring === selected.id}
+                  className="btn-secondary w-full justify-center mt-3 text-xs py-2"
+                >
+                  {scoring === selected.id
+                    ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    : <Sparkles className="w-3.5 h-3.5" />
+                  }
+                  {scoring === selected.id ? 'Valutando...' : scores[selected.id] ? 'Rivaluta contenuto' : 'AI Score — Valuta qualità'}
+                </button>
               </div>
+
+              {/* AI Score */}
+              {scores[selected.id] && (
+                <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-4 border border-violet-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-bold text-violet-900">AI Content Score</p>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      (scores[selected.id].giudizio as string) === 'OTTIMO' ? 'bg-green-100 text-green-700' :
+                      (scores[selected.id].giudizio as string) === 'BUONO' ? 'bg-violet-100 text-violet-700' :
+                      (scores[selected.id].giudizio as string) === 'MEDIOCRE' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {scores[selected.id].giudizio as string} · {scores[selected.id].score_globale as number}/100
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                    {[
+                      { k: 'hook_strength', l: 'Hook' },
+                      { k: 'copy_quality', l: 'Copy' },
+                      { k: 'brand_fit', l: 'Brand' },
+                      { k: 'cta_effectiveness', l: 'CTA' },
+                      { k: 'hashtag_relevance', l: 'Hashtag' },
+                      { k: 'seo_potential', l: 'SEO' },
+                      { k: 'compliance', l: 'Regole' },
+                    ].map(({ k, l }) => {
+                      const val = scores[selected.id][k] as number
+                      const color = val >= 80 ? 'bg-green-500' : val >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                      return (
+                        <div key={k} className="bg-white rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-gray-400 uppercase">{l}</p>
+                          <p className="text-sm font-bold text-gray-900">{val}</p>
+                          <div className="w-full h-1 bg-gray-100 rounded-full mt-1">
+                            <div className={`h-full rounded-full ${color}`} style={{ width: `${val}%` }} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {Array.isArray(scores[selected.id].punti_forti) && (scores[selected.id].punti_forti as string[]).length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-[10px] uppercase text-green-600 font-bold mb-1">Punti forti</p>
+                      <ul className="space-y-0.5">
+                        {(scores[selected.id].punti_forti as string[]).map((p: string, i: number) => (
+                          <li key={i} className="text-xs text-green-700 flex items-start gap-1">
+                            <span className="text-green-500 mt-0.5">✓</span> {p}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {Array.isArray(scores[selected.id].punti_deboli) && (scores[selected.id].punti_deboli as string[]).length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-[10px] uppercase text-red-500 font-bold mb-1">Da migliorare</p>
+                      <ul className="space-y-0.5">
+                        {(scores[selected.id].punti_deboli as string[]).map((p: string, i: number) => (
+                          <li key={i} className="text-xs text-red-600 flex items-start gap-1">
+                            <span className="text-red-400 mt-0.5">○</span> {p}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {Array.isArray(scores[selected.id].suggerimenti) && (scores[selected.id].suggerimenti as string[]).length > 0 && (
+                    <div>
+                      <p className="text-[10px] uppercase text-violet-600 font-bold mb-1">Suggerimenti</p>
+                      <ul className="space-y-0.5">
+                        {(scores[selected.id].suggerimenti as string[]).map((s: string, i: number) => (
+                          <li key={i} className="text-xs text-violet-700 flex items-start gap-1">
+                            <Sparkles className="w-3 h-3 text-violet-400 mt-0.5 flex-shrink-0" />
+                            {s}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Errore */}
               {selected.errore_tecnico && (

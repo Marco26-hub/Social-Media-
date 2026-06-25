@@ -281,6 +281,30 @@ function extractOverlay(parsed: Record<string, unknown>): string | null {
   return null
 }
 
+function buildBrandContext(brand: Record<string, unknown> | null): string {
+  if (!brand || !brand.brand_name) return ''
+  const settoreIt = ((brand as Record<string, string>).settore || 'moda ed e-commerce').toLowerCase()
+  return `CONTESTO BRAND (USA SEMPRE QUESTI DATI):
+Nome: ${brand.brand_name || ''}
+Settore: ${brand.settore || 'moda e-commerce'}
+Tono di voce: ${brand.tono_voce || 'elegante e professionale'}
+Target: ${brand.target || 'adulti 25-55'}
+Promessa: ${brand.promessa_brand || 'qualità e stile'}
+Colori brand: ${brand.colori_brand || ''}
+Parole da usare: ${brand.parole_da_usare || ''}
+Parole da EVITARE: ${brand.parole_da_evitare || ''}
+Emoji consentiti: ${brand.emoji_policy || ''}
+Hashtag base: ${brand.hashtag_base || ''}
+CTA base: ${brand.cta_base || ''}
+`
+}
+
+function buildSystemPrompt(brand: Record<string, unknown> | null): string {
+  const settore = (brand as Record<string, string>)?.settore || 'moda ed e-commerce'
+  const nome = (brand as Record<string, string>)?.brand_name || 'brand'
+  return `Sei un copywriter social media senior specializzato in ${settore} per il brand ${nome}. Rispondi sempre SOLO con JSON valido, nessun altro testo, nessuna spiegazione. Usa il tono di voce, le parole chiave e lo stile indicati nel contesto brand.`
+}
+
 export async function POST(request: Request) {
   try {
     const { cliente_id, canale, formato, model, openrouter_key, tema, nome_prodotto, product_id } = await request.json()
@@ -295,10 +319,12 @@ export async function POST(request: Request) {
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id]),
       q('SELECT * FROM prodotti WHERE cliente_id = $1', [cliente_id]),
     ])
-    const brand = brandRows[0] ?? null
+    const brand = (brandRows[0] ?? null) as Record<string, unknown> | null
     const product = (products as Array<Record<string, unknown>>).find(p => p.product_id === product_id) || products[0] || {}
 
-    const userPrompt = build(
+    const brandContext = buildBrandContext(brand)
+
+    const basePrompt = build(
       spec,
       JSON.stringify(brand || {}, null, 2),
       JSON.stringify(product, null, 2),
@@ -307,9 +333,12 @@ export async function POST(request: Request) {
       nome_prodotto || (product as Record<string, unknown>)?.nome_prodotto as string || '',
     )
 
+    // Prepend brand context for richer generation
+    const userPrompt = brandContext ? `${brandContext}\n---\n${basePrompt}` : basePrompt
+
     const aiRes = await callAI({
       model: model || 'claude-sonnet-4-6',
-      systemPrompt: 'Sei un copywriter social media senior specializzato in moda ed e-commerce. Rispondi sempre SOLO con JSON valido, nessun altro testo, nessuna spiegazione.',
+      systemPrompt: buildSystemPrompt(brand),
       userPrompt,
       openrouterKey: openrouter_key,
       maxTokens: 4000,
