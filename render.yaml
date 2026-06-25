@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: social-automation-v2
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/system/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: BLOTATO_API_KEY
+        sync: false
+      - key: BLOTATO_API_URL
+        sync: false

@@ -107,6 +107,7 @@ export interface Contenuto {
   checked_alt_text: 'SI' | 'NO' | null
   checked_aspect_ratio: 'SI' | 'NO' | null
   checked_media_valid: 'SI' | 'NO' | null
+  blotato_scheduled_at: string | null
   created_at: string
   updated_at: string
 }

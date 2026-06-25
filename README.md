@@ -2,6 +2,21 @@
 
 Next.js 15 + Neon/Postgres. Sostituisce Google Sheets con dashboard web full.
 
+## Deploy su Render (Free)
+
+1. Push su GitHub
+2. Vai su [render.com](https://render.com) → New → Blueprint
+3. Collega il repo → Render legge `render.yaml` automaticamente
+4. Compila `DATABASE_URL` con la connection string di Neon
+5. Deploy automatico
+
+**Env da impostare su Render:**
+- `DATABASE_URL` — connection string Neon (da neon.tech → Dashboard → Connection)
+- `AUTH_SECRET` — generato automaticamente da Render
+- `BLOTATO_API_KEY` — da Blotato quando pronto
+
+**Cold start:** Render free tier si spegne dopo 15 min di inattività. Prima richiesta ~30s. Per admin panel è accettabile.
+
 ## Stack
 
 - **Next.js 15** (App Router, Server Components)

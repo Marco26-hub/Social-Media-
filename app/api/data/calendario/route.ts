@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
+import { scheduleOnBlotato } from '@/lib/publish/schedule'
 
 export async function GET(request: Request) {
   try {
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     await requireAuth()
-    await requireClienteId()
+    const cid = await requireClienteId()
     const body = await request.json() as Record<string, unknown>
     const { id } = body
     if (!id) return NextResponse.json({ error: 'id richiesto' }, { status: 400 })
@@ -55,6 +56,38 @@ export async function PATCH(request: Request) {
     }
     if (!fields.length) return NextResponse.json({ error: 'niente da aggiornare' }, { status: 400 })
     await q(`UPDATE calendario SET ${fields.join(', ')} WHERE id = $1`, params)
+
+    // Se approvato, schedula su Blotato
+    if (body.status === 'APPROVATO') {
+      try {
+        const content = await q('SELECT * FROM calendario WHERE id = $1', [id])
+        if (content.length) {
+          const row = content[0]
+          const mediaUrls = ([row.link_media_1, row.link_media_2, row.link_media_3] as string[]).filter(Boolean)
+          const scheduledAt = `${row.data_pubblicazione}T${row.ora_pubblicazione}:00`
+
+          await scheduleOnBlotato(
+            cid,
+            row.canale as string,
+            (row.caption || row.hook || '') as string,
+            scheduledAt,
+            mediaUrls,
+            { hashtag: row.hashtag, cta: row.cta, link: row.link_prodotto },
+          )
+
+          // Aggiorna con blotato_scheduled_at
+          await q('UPDATE calendario SET blotato_scheduled_at = now() WHERE id = $1', [id])
+        }
+      } catch (scheduleError) {
+        // Non bloccante: logga ma non fallire l'approvazione
+        console.error('Blotato scheduling failed:', scheduleError)
+        await q('UPDATE calendario SET errore_tecnico = $1 WHERE id = $2', [
+          `Blotato scheduling: ${(scheduleError as Error).message}`,
+          id,
+        ])
+      }
+    }
+
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 })

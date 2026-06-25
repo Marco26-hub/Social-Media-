@@ -20,6 +20,7 @@ const MODELS: Model[] = [
   { id: 'claude-haiku-4-5',  name: 'Claude Haiku 4.5',  provider: 'anthropic', tier: 'default', context: '200K', speed: 'fast',   quality: 'high', badge: 'Veloce' },
 
   // OpenRouter Free — top
+  { id: 'nvidia/nemotron-3.5-content-safety:free', name: 'NVIDIA Nemotron 3.5 Safety', provider: 'openrouter', tier: 'free', context: '131K', speed: 'fast',   quality: 'high', badge: 'Content Safety' },
   { id: 'nvidia/nemotron-3-super:free',       name: 'NVIDIA Nemotron 3 Super', provider: 'openrouter', tier: 'free', context: '1M',   speed: 'medium', quality: 'top',  badge: 'Consigliato' },
   { id: 'deepseek/deepseek-v4-flash:free',    name: 'DeepSeek V4 Flash',       provider: 'openrouter', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high' },
   { id: 'openai/gpt-oss-120b:free',           name: 'OpenAI gpt-oss-120b',     provider: 'openrouter', tier: 'free', context: '131K', speed: 'medium', quality: 'high' },

@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
@@ -10,7 +10,35 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
+  const [isDemo, setIsDemo]     = useState(false)
   const router = useRouter()
+
+  // Check demo mode and auto-login
+  useEffect(() => {
+    async function checkDemo() {
+      try {
+        const res = await fetch('/api/system/health')
+        const data = await res.json()
+        if (data.mode === 'demo') {
+          setIsDemo(true)
+          setLoading(true)
+          const result = await signIn('credentials', {
+            email: 'demo@brand.com',
+            password: 'demo123',
+            redirect: false,
+          })
+          if (result?.ok) {
+            router.push('/dashboard/clienti')
+          } else {
+            setLoading(false)
+          }
+        }
+      } catch {
+        // Not in demo mode, show login form
+      }
+    }
+    checkDemo()
+  }, [router])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -23,6 +51,23 @@ export default function LoginPage() {
     } else {
       router.push('/dashboard/clienti')
     }
+  }
+
+  if (isDemo && loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-sidebar">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-600 rounded-2xl mb-4 animate-pulse">
+            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Social Automation</h1>
+          <p className="text-gray-400 text-sm">Accesso demo in corso...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -39,6 +84,14 @@ export default function LoginPage() {
           <p className="text-gray-400 text-sm mt-1">Automazione contenuti</p>
         </div>
         <div className="card p-6">
+          {isDemo && (
+            <div className="mb-4 p-3 bg-brand-50 rounded-lg border border-brand-200">
+              <p className="text-sm text-brand-700 font-medium">Modalità Demo</p>
+              <p className="text-xs text-brand-600 mt-1">
+                Usa qualsiasi email e password per accedere
+              </p>
+            </div>
+          )}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="label">Email</label>

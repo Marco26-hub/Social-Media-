@@ -30,6 +30,7 @@ export const demoContenuti: Contenuto[] = [
     scenes_json: null, slides_json: null, overlay_text: null, alt_text: null, tags: null, thumbnail_url: null,
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
+    blotato_scheduled_at: null,
     created_at: '2026-05-23T08:00:00Z', updated_at: '2026-05-23T08:00:00Z',
   },
   {
@@ -59,6 +60,7 @@ export const demoContenuti: Contenuto[] = [
     scenes_json: null, slides_json: null, overlay_text: null, alt_text: null, tags: null, thumbnail_url: null,
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
+    blotato_scheduled_at: null,
     created_at: '2026-05-23T08:00:00Z', updated_at: '2026-05-23T08:00:00Z',
   },
   {
@@ -87,6 +89,7 @@ export const demoContenuti: Contenuto[] = [
     scenes_json: null, slides_json: null, overlay_text: null, alt_text: null, tags: null, thumbnail_url: null,
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
+    blotato_scheduled_at: null,
     created_at: '2026-05-22T08:00:00Z', updated_at: '2026-05-23T10:00:00Z',
   },
   {
@@ -115,6 +118,7 @@ export const demoContenuti: Contenuto[] = [
     scenes_json: null, slides_json: null, overlay_text: null, alt_text: null, tags: null, thumbnail_url: null,
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
+    blotato_scheduled_at: null,
     created_at: '2026-05-22T08:00:00Z', updated_at: '2026-05-23T14:15:00Z',
   },
   {
@@ -143,6 +147,7 @@ export const demoContenuti: Contenuto[] = [
     scenes_json: null, slides_json: null, overlay_text: null, alt_text: null, tags: null, thumbnail_url: null,
     idea_visual: null, voiceover_script: null, music_mood: null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
+    blotato_scheduled_at: null,
     created_at: '2026-05-22T08:00:00Z', updated_at: '2026-05-23T11:00:00Z',
   },
 ]
