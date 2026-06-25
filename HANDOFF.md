@@ -281,19 +281,17 @@ Il punto 7 non è ancora implementato.
 
 Prima di dire “go-live”:
 
-- [ ] Impostare env production: `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_URL`, chiave AI.
-- [ ] Verificare/applicare schema base Neon per tutte le tabelle usate dal codice.
-- [ ] Eseguire `db/migrations/004_operations_foundation.sql`.
-- [ ] Creare utente admin in `profiles` con `password_hash` bcrypt.
-- [ ] Popolare `clienti`, `user_client_access`, `brand`, `prodotti`, `settings`.
-- [ ] Testare login reale.
+- [ ] **Env production**: `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_URL`, chiave AI.
+- [x] **Schema Neon pronto**: `db/migrations/001_full_schema.sql` (tutte le 14 tabelle).
+- [x] **Seed pronto**: `db/migrations/002_seed.sql` (admin + SILKinCOM + brand + prodotti + settings).
+- [ ] **Eseguire su Neon**: 001_full_schema → 002_seed → 004_operations_foundation (opzionale).
+- [ ] **Modificare password admin** in 002_seed.sql (default: `admin123`).
+- [ ] Testare login reale su /login.
 - [ ] Testare `GET /api/system/health`.
 - [ ] Testare generazione contenuto con chiave AI reale.
 - [ ] Testare approvazione calendario.
 - [ ] Implementare pubblicazione `APPROVATO → Blotato/webhook → PUBBLICATO/ERRORE`.
 - [ ] Configurare dominio/deploy Vercel o target equivalente.
-
-Nota importante: la migration `004_operations_foundation.sql` crea solo le nuove tabelle operative. Serve anche uno schema base Neon coerente per tabelle già usate (`profiles`, `clienti`, `calendario`, etc.). Le vecchie migration Supabase possono aiutare come riferimento, ma non vanno eseguite 1:1 su Neon senza adattamento.
 
 ---
 
@@ -358,6 +356,8 @@ Ultimo commit pushato:
 ```bash
 a7ecfce prepare Neon production foundation
 ```
+
+**Contenuto pronto per go-live**: schema + seed + build verde + 50 prompt differenziati.
 
 Repo:
 
