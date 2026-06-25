@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter, Sparkles } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter, Sparkles, Share2 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
@@ -36,6 +36,8 @@ function CalendarioInner() {
   const [saving, setSaving]         = useState<string | null>(null)
   const [scoring, setScoring]       = useState<string | null>(null)
   const [scores, setScores]         = useState<Record<string, Record<string, unknown>>>({})
+  const [sendingToken, setSendingToken] = useState<string | null>(null)
+  const [approvalUrl, setApprovalUrl]   = useState<string | null>(null)
   const [demoData, setDemoData]     = useState<Contenuto[]>(demoContenuti)
   const demo = isDemo()
 
@@ -183,6 +185,30 @@ function CalendarioInner() {
       console.error('Score failed:', e)
     }
     setScoring(null)
+  }
+
+  async function generateApprovalLink(c: Contenuto) {
+    setSendingToken(c.id)
+    setApprovalUrl(null)
+    if (demo) {
+      await new Promise(r => setTimeout(r, 500))
+      setApprovalUrl(`${window.location.origin}/approve/demo-${c.id}`)
+      setSendingToken(null)
+      return
+    }
+    try {
+      const clienteId = readClienteId()
+      if (!clienteId) throw new Error('Nessun cliente selezionato')
+      const res = await fetch('/api/data/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente_id: clienteId, contenuto_id: c.id_contenuto }),
+      })
+      if (!res.ok) throw new Error('Errore generazione link')
+      const data = await res.json()
+      setApprovalUrl(data.url as string)
+    } catch (e) { console.error('Approval link error:', e) }
+    setSendingToken(null)
   }
 
   const mediaUrls = (c: Contenuto) =>
@@ -504,18 +530,42 @@ function CalendarioInner() {
             </div>
 
             {/* Footer azioni */}
-            {selected.status === 'DA_APPROVARE' && (
-              <div className="p-6 border-t flex gap-3">
-                <button onClick={() => approva(selected)} className="btn-primary flex-1 justify-center" disabled={saving === selected.id}>
-                  <CheckCircle className="w-4 h-4" />
-                  {saving === selected.id ? 'Salvando...' : 'Approva'}
-                </button>
-                <button onClick={() => rifiuta(selected)} className="btn-danger flex-1 justify-center" disabled={saving === selected.id}>
-                  <XCircle className="w-4 h-4" />
-                  Rimanda a bozza
-                </button>
-              </div>
-            )}
+            <div className="p-6 border-t space-y-3">
+              {/* Approval link */}
+              {selected.status === 'DA_APPROVARE' && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-3">
+                    <button onClick={() => generateApprovalLink(selected)} disabled={sendingToken === selected.id} className="btn-secondary flex-1 justify-center py-2">
+                      <Share2 className="w-4 h-4" />
+                      {sendingToken === selected.id ? 'Genero...' : 'Invia al cliente'}
+                    </button>
+                  </div>
+                  {approvalUrl && (
+                    <div className="bg-brand-50 border border-brand-200 rounded-lg p-2.5">
+                      <p className="text-xs text-brand-700 font-medium mb-1">✅ Link approvazione generato:</p>
+                      <div className="flex gap-2">
+                        <input readOnly value={approvalUrl} className="input text-xs flex-1" onClick={e => (e.target as HTMLInputElement).select()} />
+                        <button onClick={() => { navigator.clipboard?.writeText(approvalUrl) }} className="btn-primary text-xs px-3">Copia</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selected.status === 'DA_APPROVARE' && (
+                <div className="flex gap-3">
+                  <button onClick={() => approva(selected)} className="btn-primary flex-1 justify-center" disabled={saving === selected.id}>
+                    <CheckCircle className="w-4 h-4" />
+                    {saving === selected.id ? 'Salvando...' : 'Approva'}
+                  </button>
+                  <button onClick={() => rifiuta(selected)} className="btn-danger flex-1 justify-center" disabled={saving === selected.id}>
+                    <XCircle className="w-4 h-4" />
+                    Rimanda a bozza
+                  </button>
+                </div>
+              )}
+            </div>
+
             {(selected.status === 'ERRORE' || selected.status === 'ERRORE_MANUALE') && (
               <div className="p-6 border-t">
                 <button onClick={() => resetErrore(selected)} className="btn-secondary w-full justify-center" disabled={saving === selected.id}>
