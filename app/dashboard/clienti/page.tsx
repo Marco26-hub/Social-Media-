@@ -1,8 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, CheckCircle2, Loader2, Plus, Users } from 'lucide-react'
+import { Building2, CheckCircle2, Loader2, Plus, Users, ExternalLink } from 'lucide-react'
 import type { Cliente } from '@/lib/types'
 import { isDemo } from '@/lib/demo'
 import { readClienteId, writeClienteId } from '@/lib/use-data'
