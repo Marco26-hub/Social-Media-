@@ -7,6 +7,7 @@ import {
 import Link from 'next/link'
 import { demoContenuti, demoLogs } from '@/lib/demo-data'
 import AIModelSelector from '@/components/AIModelSelector'
+import OpenRouterKeyInput from '@/components/OpenRouterKeyInput'
 import { PLATFORM_LIST } from '@/lib/social-config'
 import { isDemo } from '@/lib/demo'
 
@@ -177,6 +178,9 @@ export default async function DashboardPage() {
 
       {/* Selettore modello AI — top dashboard */}
       <AIModelSelector />
+
+      {/* API Key OpenRouter */}
+      <OpenRouterKeyInput />
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
