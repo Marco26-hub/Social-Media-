@@ -7,8 +7,8 @@ import type { SeoAudit } from '@/lib/types'
 import { TrendingUp, AlertTriangle, Target, CheckCircle2, Calendar, Search, Loader2, Globe, Sparkles } from 'lucide-react'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
-
-import { isDemo } from '@/lib/demo'
+import { readAISettings, readApiError } from '@/lib/ai-client'
+import { useRuntimeDemo } from '@/lib/demo-client'
 
 export default function SeoPage() {
   const [audits, setAudits] = useState<SeoAudit[]>([])
@@ -17,7 +17,7 @@ export default function SeoPage() {
   const [url, setUrl] = useState('')
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
-  const demo = isDemo()
+  const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
   useEffect(() => {
@@ -49,14 +49,13 @@ export default function SeoPage() {
 
     try {
       if (!clienteId) throw new Error('Cliente non selezionato')
-      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
-      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const aiSettings = readAISettings()
       const res = await fetch('/api/generate/seo-audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, sito_url: url, periodo, model: aiModel, openrouter_key: orKey || undefined }),
+        body: JSON.stringify({ cliente_id: clienteId, sito_url: url, periodo, ...aiSettings }),
       })
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || `HTTP ${res.status}`) }
+      if (!res.ok) throw new Error(await readApiError(res, 'Audit SEO/GEO fallito'))
       setMsg({ type: 'ok', text: `Audit completato per ${url}` })
     } catch (e) {
       setMsg({ type: 'err', text: (e as Error).message })

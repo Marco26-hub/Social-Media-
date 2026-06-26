@@ -12,8 +12,8 @@ import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import type { Contenuto } from '@/lib/types'
 import { useActiveClienteId } from '@/lib/tenant/client'
-
-import { isDemo } from '@/lib/demo'
+import { readAISettings, readApiError } from '@/lib/ai-client'
+import { useRuntimeDemo } from '@/lib/demo-client'
 
 export default function SocialPlatformPage({ params }: { params: Promise<{ platform: string }> }) {
   const { platform } = use(params)
@@ -26,9 +26,10 @@ export default function SocialPlatformPage({ params }: { params: Promise<{ platf
 function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) {
   const [recenti, setRecenti] = useState<Contenuto[]>([])
   const [states, setStates]   = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({})
+  const [errors, setErrors]   = useState<Record<string, string>>({})
   const [pending, setPending] = useState<FormatoConfig | null>(null)
   const [aiModel, setAiModel] = useState('claude-sonnet-4-6')
-  const demo = isDemo()
+  const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
   useEffect(() => {
@@ -53,12 +54,18 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   }, [demo, config.canaleDb, clienteId, loadingCliente])
 
   function chiediGenera(f: FormatoConfig) {
+    setAiModel(readAISettings().model)
     setPending(f)
   }
 
   async function genera(f: FormatoConfig) {
     setPending(null)
     setStates(s => ({ ...s, [f.id]: 'loading' }))
+    setErrors(prev => {
+      const next = { ...prev }
+      delete next[f.id]
+      return next
+    })
     if (demo) {
       await new Promise(r => setTimeout(r, 1200))
       setStates(s => ({ ...s, [f.id]: 'success' }))
@@ -67,21 +74,21 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     }
     try {
       if (!clienteId) throw new Error('Cliente non selezionato')
-      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
-      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const aiSettings = readAISettings()
       const isBlog = f.formato === 'articolo'
       const endpoint = isBlog ? '/api/generate/blog' : '/api/generate/content'
       const body = isBlog
-        ? { cliente_id: clienteId, model: aiModel, openrouter_key: orKey || undefined, tema: config.nome + ' - ' + f.nome }
-        : { cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, model: aiModel, openrouter_key: orKey || undefined }
+        ? { cliente_id: clienteId, tema: config.nome + ' - ' + f.nome, ...aiSettings }
+        : { cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, ...aiSettings }
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || `HTTP ${res.status}`) }
+      if (!res.ok) throw new Error(await readApiError(res, `Generazione ${f.nome} fallita`))
       setStates(s => ({ ...s, [f.id]: 'success' }))
-    } catch {
+    } catch (e) {
+      setErrors(prev => ({ ...prev, [f.id]: (e as Error).message }))
       setStates(s => ({ ...s, [f.id]: 'error' }))
     }
     setTimeout(() => setStates(s => ({ ...s, [f.id]: 'idle' })), 3500)
@@ -110,6 +117,12 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       </div>
 
       <AIModelSelector task="contenuti-social" />
+
+      {Object.values(errors).length > 0 && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          AI: {Object.values(errors)[0]}
+        </div>
+      )}
 
       {/* Format scegliere cosa creare */}
       <div className="mb-8">

@@ -6,8 +6,11 @@ import {
   Eye, Plus, Trash2, Sparkles, Loader2, TrendingUp, TrendingDown,
   Target, Hash, Lightbulb, Zap, BarChart3, Globe, MessageCircle, AlertTriangle
 } from 'lucide-react'
-import { isDemo } from '@/lib/demo'
-import { readClienteId } from '@/lib/use-data'
+import { readAISettings, readApiError } from '@/lib/ai-client'
+import { useRuntimeDemo } from '@/lib/demo-client'
+import { useActiveClienteId } from '@/lib/tenant/client'
+import AIModelSelector from '@/components/AIModelSelector'
+import OpenRouterKeyInput from '@/components/OpenRouterKeyInput'
 
 type CompetitorAnalysis = {
   competitor_nome: string
@@ -25,13 +28,15 @@ type CompetitorAnalysis = {
 }
 
 export default function CompetitorPage() {
-  const demo = isDemo()
+  const demo = useRuntimeDemo()
+  const { clienteId } = useActiveClienteId()
   const [competitorNome, setCompetitorNome] = useState('')
   const [competitorSito, setCompetitorSito] = useState('')
   const [competitorSocial, setCompetitorSocial] = useState<string[]>([''])
   const [loading, setLoading] = useState(false)
   const [analyses, setAnalyses] = useState<CompetitorAnalysis[]>([])
   const [selected, setSelected] = useState<CompetitorAnalysis | null>(null)
+  const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   function updateSocial(i: number, val: string) {
     setCompetitorSocial(prev => prev.map((s, j) => j === i ? val : s))
@@ -42,6 +47,7 @@ export default function CompetitorPage() {
   async function runAnalysis() {
     if (!competitorNome.trim()) return
     setLoading(true)
+    setMsg(null)
     if (demo) {
       await new Promise(r => setTimeout(r, 1800))
       const mock: CompetitorAnalysis = {
@@ -73,26 +79,27 @@ export default function CompetitorPage() {
       return
     }
     try {
-      const cid = readClienteId()
-      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
-      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      if (!clienteId) throw new Error('Cliente non selezionato')
+      const aiSettings = readAISettings()
       const res = await fetch('/api/generate/competitor-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cliente_id: cid,
+          cliente_id: clienteId,
           competitor_nome: competitorNome,
           competitor_sito: competitorSito || undefined,
           competitor_social: competitorSocial.filter(s => s.trim()),
-          model: aiModel,
-          openrouter_key: orKey || undefined,
+          ...aiSettings,
         }),
       })
-      if (!res.ok) throw new Error('Analysis failed')
+      if (!res.ok) throw new Error(await readApiError(res, 'Analisi competitor fallita'))
       const data = await res.json() as CompetitorAnalysis
       setAnalyses(prev => [data, ...prev])
       setSelected(data)
-    } catch (e) { console.error(e) }
+      setMsg({ type: 'ok', text: 'Analisi competitor completata.' })
+    } catch (e) {
+      setMsg({ type: 'err', text: (e as Error).message })
+    }
     setLoading(false)
   }
 
@@ -103,6 +110,9 @@ export default function CompetitorPage() {
     <div className="p-4 md:p-8">
       <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Competitor Tracking</h1>
       <p className="text-sm text-gray-500 mb-6">Analizza i social dei competitor e ottieni azioni per superarli</p>
+
+      <AIModelSelector task="contenuti-social" />
+      <OpenRouterKeyInput />
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Form */}
@@ -138,6 +148,12 @@ export default function CompetitorPage() {
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {loading ? 'Analisi AI in corso...' : 'Analizza competitor'}
             </button>
+
+            {msg && (
+              <div className={`p-3 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                {msg.text}
+              </div>
+            )}
 
             {/* History */}
             {analyses.length > 0 && (

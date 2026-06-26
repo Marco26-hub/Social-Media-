@@ -5,7 +5,9 @@ import {
   Square, Video, Pin, FileText, Calendar, CalendarRange,
   BarChart3, Search, Edit3, ChevronDown
 } from 'lucide-react'
-import { isDemo } from '@/lib/demo'
+import { readAISettings, readApiError } from '@/lib/ai-client'
+import { useRuntimeDemo } from '@/lib/demo-client'
+import { useActiveClienteId } from '@/lib/tenant/client'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
@@ -91,25 +93,44 @@ const SECTIONS: Section[] = [
 
 export default function GeneratorCards() {
   const [states, setStates] = useState<Record<string, Status>>({})
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ plan: true, instagram: true })
+  const demo = useRuntimeDemo()
+  const { clienteId } = useActiveClienteId()
 
   async function trigger(g: Gen) {
     setStates(s => ({ ...s, [g.id]: 'loading' }))
-    if (isDemo()) {
+    setErrors(prev => {
+      const next = { ...prev }
+      delete next[g.id]
+      return next
+    })
+    if (demo) {
       await new Promise(r => setTimeout(r, 1000))
       setStates(s => ({ ...s, [g.id]: 'success' }))
       setTimeout(() => setStates(s => ({ ...s, [g.id]: 'idle' })), 2500)
       return
     }
     try {
-      const res = await fetch('/api/generate/content', {
+      if (!clienteId) throw new Error('Cliente non selezionato')
+      const aiSettings = readAISettings()
+      const isPlan = g.id === 'PLAN-W' || g.id === 'PLAN-M'
+      const isBlog = g.payload?.formato === 'articolo'
+      const endpoint = isPlan ? '/api/generate/plan' : isBlog ? '/api/generate/blog' : '/api/generate/content'
+      const body = isPlan
+        ? { cliente_id: clienteId, piattaforme: ['instagram', 'facebook', 'tiktok', 'pinterest'], obiettivo: 'mix', periodo: g.id === 'PLAN-M' ? 'mensile' : 'settimanale', ...aiSettings }
+        : isBlog
+        ? { cliente_id: clienteId, tema: g.titolo, ...aiSettings }
+        : { cliente_id: clienteId, ...(g.payload ?? {}), ...aiSettings }
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...(g.payload ?? {}) }),
+        body: JSON.stringify(body),
       })
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || `HTTP ${res.status}`) }
+      if (!res.ok) throw new Error(await readApiError(res, `Generazione ${g.titolo} fallita`))
       setStates(s => ({ ...s, [g.id]: 'success' }))
-    } catch {
+    } catch (e) {
+      setErrors(prev => ({ ...prev, [g.id]: (e as Error).message }))
       setStates(s => ({ ...s, [g.id]: 'error' }))
     }
     setTimeout(() => setStates(s => ({ ...s, [g.id]: 'idle' })), 3000)
@@ -152,6 +173,7 @@ export default function GeneratorCards() {
                         </div>
                       </div>
                       <p className="text-xs text-gray-500 mb-3 leading-snug flex-1">{g.desc}</p>
+                      {errors[g.id] && <p className="text-[10px] text-red-600 bg-red-50 rounded p-1.5 mb-2 line-clamp-2">{errors[g.id]}</p>}
                       <button
                         onClick={() => trigger(g)}
                         disabled={st === 'loading'}

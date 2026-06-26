@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
-import { q } from '@/lib/db'
+import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
 const PROMPT = `Sei SEO + GEO auditor senior. Analizza performance e crea audit con miglioramenti concreti.
@@ -29,6 +29,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cliente_id e sito_url richiesti' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
+    if (!dbReady()) {
+      return NextResponse.json({ error: 'DATABASE_URL non configurato: l’audit SEO/GEO deve salvare su DB. In demo usa il fallback simulato o configura Neon su Render.' }, { status: 503 })
+    }
 
     const [brandRows, calendario, logs] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id]),

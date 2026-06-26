@@ -9,7 +9,9 @@ import {
   MousePointerClick, AlertTriangle, FileText,
   Search, TrendingUp
 } from 'lucide-react'
-import { isDemo } from '@/lib/demo'
+import { readAISettings, readApiError } from '@/lib/ai-client'
+import { useRuntimeDemo } from '@/lib/demo-client'
+import { useActiveClienteId } from '@/lib/tenant/client'
 import SeoScoreGrid from '@/components/SeoScoreGrid'
 import LeadsCard from '@/components/LeadsCard'
 import ClientsCard from '@/components/ClientsCard'
@@ -64,7 +66,6 @@ const EMOJI_OPTIONS = [
 ]
 
 export default function BrandPage() {
-  const [runtimeDemo, setRuntimeDemo] = useState(() => isDemo())
   const [brand, setBrand] = useState<Partial<Brand> | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -84,23 +85,12 @@ export default function BrandPage() {
   const [leadsResult, setLeadsResult] = useState<Record<string, unknown> | null>(null)
   const [clientsResult, setClientsResult] = useState<Record<string, unknown> | null>(null)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
-  const demo = runtimeDemo
+  const demo = useRuntimeDemo()
+  const { clienteId } = useActiveClienteId()
 
   useEffect(() => {
     async function load() {
-      let detectedDemo = isDemo()
-      if (!detectedDemo) {
-        try {
-          const health = await fetch('/api/system/health', { cache: 'no-store' })
-          const data = health.ok ? await health.json() : null
-          detectedDemo = data?.mode === 'demo'
-        } catch {
-          detectedDemo = false
-        }
-      }
-      setRuntimeDemo(detectedDemo)
-
-      if (detectedDemo) {
+      if (demo) {
         setBrand({
           brand_name: 'SILKinCOM',
           sito_url: 'https://silkincom.com',
@@ -133,19 +123,10 @@ export default function BrandPage() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [demo])
 
   function hasOpenRouterKey() {
     return typeof window !== 'undefined' && Boolean(localStorage.getItem('openrouter_key')?.trim())
-  }
-
-  async function apiError(res: Response, fallback: string) {
-    try {
-      const data = await res.json()
-      return typeof data?.error === 'string' ? data.error : fallback
-    } catch {
-      return fallback
-    }
   }
 
   async function handleDiscovery() {
@@ -164,21 +145,70 @@ export default function BrandPage() {
     }
 
     try {
-      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
-      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
-      const tasks: Promise<unknown>[] = [
-        fetch('/api/generate/brand-discovery', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, model: aiModel, openrouter_key: orKey || undefined }) })
-          .then(async res => { if (!res.ok) throw new Error(await apiError(res, 'Brand discovery fallita')); const d = await res.json(); setBrand(prev => ({ ...prev, ...d, sito_url: url })) }),
-      ]
-      if (runSeo && typeof window !== 'undefined') {
-        const cid = localStorage.getItem('active_cliente_id') || ''
-        tasks.push(fetch('/api/generate/seo-audit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cliente_id: cid, sito_url: url, periodo: 'settimanale', model: aiModel, openrouter_key: orKey || undefined }) }).then(async res => { if (res.ok) { const a = await (await fetch('/api/data/seo-audit')).json(); if (Array.isArray(a) && a.length > 0) setSeoResult(a[0]) } }).catch(() => {}))
+      const aiSettings = readAISettings()
+      const discoveryRes = await fetch('/api/generate/brand-discovery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, ...aiSettings }),
+      })
+      if (!discoveryRes.ok) throw new Error(await readApiError(discoveryRes, 'Brand discovery fallita'))
+      const discoveryData = await discoveryRes.json()
+      setBrand(prev => ({ ...prev, ...discoveryData, sito_url: url }))
+
+      const sideTasks: Array<{ label: string; run: () => Promise<void> }> = []
+      if (runSeo) {
+        sideTasks.push({
+          label: 'SEO/GEO',
+          run: async () => {
+            if (!clienteId) throw new Error('cliente non selezionato')
+            const res = await fetch('/api/generate/seo-audit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cliente_id: clienteId, sito_url: url, periodo: 'settimanale', ...aiSettings }),
+            })
+            if (!res.ok) throw new Error(await readApiError(res, 'Audit SEO/GEO fallito'))
+            const auditsRes = await fetch('/api/data/seo-audit')
+            if (!auditsRes.ok) throw new Error(await readApiError(auditsRes, 'Lettura audit fallita'))
+            const audits = await auditsRes.json()
+            if (Array.isArray(audits) && audits.length > 0) setSeoResult(audits[0])
+          },
+        })
       }
-      if (includeLeads) tasks.push(fetch('/api/generate/scrape-contacts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, model: aiModel, openrouter_key: orKey || undefined }) }).then(async res => { if (res.ok) setLeadsResult(await res.json()) }).catch(() => {}))
-      if (includeClients) tasks.push(fetch('/api/generate/client-discovery', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, settore: brand?.settore || '', model: aiModel, openrouter_key: orKey || undefined }) }).then(async res => { if (res.ok) setClientsResult(await res.json()) }).catch(() => {}))
-      await Promise.all(tasks)
+      if (includeLeads) {
+        sideTasks.push({
+          label: 'Contatti',
+          run: async () => {
+            const res = await fetch('/api/generate/scrape-contacts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url, ...aiSettings }),
+            })
+            if (!res.ok) throw new Error(await readApiError(res, 'Ricerca contatti fallita'))
+            setLeadsResult(await res.json())
+          },
+        })
+      }
+      if (includeClients) {
+        sideTasks.push({
+          label: 'Marketing',
+          run: async () => {
+            const res = await fetch('/api/generate/client-discovery', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url, settore: brand?.settore || '', ...aiSettings }),
+            })
+            if (!res.ok) throw new Error(await readApiError(res, 'Analisi clienti fallita'))
+            setClientsResult(await res.json())
+          },
+        })
+      }
+
+      const settled = await Promise.allSettled(sideTasks.map(task => task.run()))
+      const warnings = settled
+        .map((result, index) => result.status === 'rejected' ? `${sideTasks[index].label}: ${(result.reason as Error).message}` : null)
+        .filter(Boolean)
       const parts = ['Profilo generato']; if (runSeo) parts.push('+ SEO/GEO'); if (includeLeads) parts.push('+ Contatti'); if (includeClients) parts.push('+ Marketing')
-      setMsg({ type: 'ok', text: parts.join(' ') + '! Rivedi e clicca Salva.' })
+      setMsg({ type: 'ok', text: warnings.length ? `${parts.join(' ')}. Warning: ${warnings.join(' · ')}` : parts.join(' ') + '! Rivedi e clicca Salva.' })
     } catch (e) { setMsg({ type: 'err', text: (e as Error).message }) }
     setDiscovering(false)
   }
@@ -199,13 +229,12 @@ export default function BrandPage() {
     }
 
     try {
-      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
-      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const aiSettings = readAISettings()
       const res = await fetch('/api/generate/brand-keywords', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brand: brand || {}, settore, target, tono, model: aiModel, openrouter_key: orKey || undefined }),
+        body: JSON.stringify({ brand: brand || {}, settore, target, tono, ...aiSettings }),
       })
-      if (!res.ok) throw new Error(await apiError(res, 'Generazione keyword fallita'))
+      if (!res.ok) throw new Error(await readApiError(res, 'Generazione keyword fallita'))
       const data = await res.json()
       if (type === 'keywords') {
         const words = (data.parole_da_usare as Array<Record<string, string>> || []).map((w: Record<string, string>) => `#${w.categoria}:${w.keyword}`).join(', ')
@@ -247,16 +276,15 @@ export default function BrandPage() {
       setGenCompliance(false); return
     }
     try {
-      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
-      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const aiSettings = readAISettings()
       const settore = (brand as Record<string, string>)?.settore || ''
       const target = (brand as Record<string, string>)?.target || ''
       const url = (brand as Record<string, string>)?.sito_url || ''
       const res = await fetch('/api/generate/compliance', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brand: brand || {}, settore, url, target, model: aiModel, openrouter_key: orKey || undefined }),
+        body: JSON.stringify({ brand: brand || {}, settore, url, target, ...aiSettings }),
       })
-      if (!res.ok) throw new Error(await apiError(res, 'Generazione compliance fallita'))
+      if (!res.ok) throw new Error(await readApiError(res, 'Generazione compliance fallita'))
       const data = await res.json()
       setComplianceResult(data)
       if (data.cookie_policy) update('cookie_policy', (data.cookie_policy as string).slice(0, 500))

@@ -5,12 +5,21 @@ import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
+type AccessHint = {
+  enabled: boolean
+  mode: 'demo' | 'production-hint'
+  username: string
+  password: string
+  note?: string
+}
+
 export default function LoginPage() {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
   const [isDemo, setIsDemo]     = useState(false)
+  const [accessHint, setAccessHint] = useState<AccessHint | null>(null)
   const router = useRouter()
 
   // Check demo mode and auto-login
@@ -19,12 +28,19 @@ export default function LoginPage() {
       try {
         const res = await fetch('/api/system/health')
         const data = await res.json()
+        const hintRes = await fetch('/api/system/access')
+        const hint = hintRes.ok ? await hintRes.json() as AccessHint : null
+        if (hint?.enabled) {
+          setAccessHint(hint)
+          setEmail(hint.username)
+          setPassword(hint.password)
+        }
         if (data.mode === 'demo') {
           setIsDemo(true)
           setLoading(true)
           const result = await signIn('credentials', {
-            email: 'demo@brand.com',
-            password: 'demo123',
+            email: hint?.username || 'admin',
+            password: hint?.password || '1234567',
             redirect: false,
           })
           if (result?.ok) {
@@ -39,6 +55,13 @@ export default function LoginPage() {
     }
     checkDemo()
   }, [router])
+
+  function fillAccessHint() {
+    if (!accessHint) return
+    setEmail(accessHint.username)
+    setPassword(accessHint.password)
+    setError('')
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -65,6 +88,11 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Social Automation</h1>
           <p className="text-gray-400 text-sm">Accesso demo in corso...</p>
+          <div className="mt-4 rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-left text-xs text-gray-200">
+            <p className="font-semibold text-white">Accesso Admin Demo</p>
+            <p className="mt-1">Utente: <span className="font-mono">{accessHint?.username || 'admin'}</span></p>
+            <p>Password: <span className="font-mono">{accessHint?.password || '1234567'}</span></p>
+          </div>
         </div>
       </div>
     )
@@ -84,12 +112,23 @@ export default function LoginPage() {
           <p className="text-gray-400 text-sm mt-1">Automazione contenuti</p>
         </div>
         <div className="card p-6">
-          {isDemo && (
+          {(isDemo || accessHint) && (
             <div className="mb-4 p-3 bg-brand-50 rounded-lg border border-brand-200">
-              <p className="text-sm text-brand-700 font-medium">Modalità Demo</p>
-              <p className="text-xs text-brand-600 mt-1">
-                Usa qualsiasi email e password per accedere
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-brand-700 font-medium">Accesso Admin</p>
+                  <p className="text-xs text-brand-600 mt-1">
+                    Utente: <span className="font-mono font-semibold">{accessHint?.username || 'admin'}</span>
+                    {' '}· Password: <span className="font-mono font-semibold">{accessHint?.password || '1234567'}</span>
+                  </p>
+                  {accessHint?.note && <p className="text-[11px] text-brand-500 mt-1">{accessHint.note}</p>}
+                </div>
+                {accessHint && (
+                  <button type="button" onClick={fillAccessHint} className="text-xs px-2 py-1 rounded-md bg-white text-brand-700 border border-brand-200 hover:bg-brand-100">
+                    Compila
+                  </button>
+                )}
+              </div>
             </div>
           )}
           <form onSubmit={handleLogin} className="space-y-4">

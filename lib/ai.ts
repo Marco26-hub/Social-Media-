@@ -3,16 +3,52 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 const FALLBACK_MODELS = [
   'openrouter/free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
   'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
   'google/gemma-4-31b-it:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'nvidia/nemotron-3-super:free',
+  'google/gemma-4-26b-a4b-it:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'openai/gpt-oss-120b:free',
   'claude-sonnet-4-6',
 ]
 
+type AIAttempt = {
+  provider: 'openrouter' | 'anthropic'
+  model: string
+  ok: boolean
+  error?: string
+}
+
 function isAnthropicModel(model: string) {
   return model.startsWith('claude-')
+}
+
+function sanitizeAIError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || 'errore sconosciuto')
+  return message
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/g, 'Bearer [redacted]')
+    .replace(/sk-or-v1-[A-Za-z0-9._-]+/g, 'sk-or-v1-[redacted]')
+    .slice(0, 500)
+}
+
+function recordAttempt(attempts: AIAttempt[], attempt: AIAttempt) {
+  attempts.push(attempt)
+  if (!attempt.ok) {
+    console.warn('[AI fallback]', `${attempt.provider}(${attempt.model}): ${attempt.error}`)
+  } else if (attempts.length > 1) {
+    console.warn('[AI fallback ok]', `${attempt.provider}(${attempt.model}) dopo ${attempts.length - 1} fallback`)
+  }
+}
+
+function buildFailureMessage(attempts: AIAttempt[]) {
+  if (!attempts.length) {
+    return 'No AI provider configured. Aggiungi OPENROUTER_API_KEY o ANTHROPIC_API_KEY su Render, oppure incolla una OpenRouter API Key nella pagina.'
+  }
+
+  const summary = attempts
+    .map((attempt, index) => `${index + 1}. ${attempt.provider}/${attempt.model}: ${attempt.ok ? 'ok' : attempt.error || 'errore'}`)
+    .join(' | ')
+  return `AI generation failed after ${attempts.length} attempt(s): ${summary}`
 }
 
 export async function callAI(params: {
@@ -27,17 +63,18 @@ export async function callAI(params: {
   const orKey = (params.openrouterKey || process.env.OPENROUTER_API_KEY || '').trim()
   const anthropicKey = (process.env.ANTHROPIC_API_KEY || '').trim()
 
-  const errors: string[] = []
+  const attempts: AIAttempt[] = []
 
   // Try 1: OpenRouter (if key available)
   if (orKey) {
     try {
       // Try requested model first
       const res = await callOpenRouter(model, systemPrompt, userPrompt, orKey, maxTokens)
-      if (res) return res
+      if (!res.trim()) throw new Error('Risposta AI vuota')
+      recordAttempt(attempts, { provider: 'openrouter', model, ok: true })
+      return res
     } catch (e) {
-      errors.push(`OpenRouter(${model}): ${(e as Error).message}`)
-      console.warn('[AI fallback]', errors[errors.length - 1])
+      recordAttempt(attempts, { provider: 'openrouter', model, ok: false, error: sanitizeAIError(e) })
 
       // Try fallback models on OpenRouter
       if (silentFallback) {
@@ -45,9 +82,11 @@ export async function callAI(params: {
           if (fb === model || isAnthropicModel(fb)) continue
           try {
             const res = await callOpenRouter(fb, systemPrompt, userPrompt, orKey, maxTokens)
-            if (res) return res
-          } catch {
-            // continue to next fallback
+            if (!res.trim()) throw new Error('Risposta AI vuota')
+            recordAttempt(attempts, { provider: 'openrouter', model: fb, ok: true })
+            return res
+          } catch (fallbackError) {
+            recordAttempt(attempts, { provider: 'openrouter', model: fb, ok: false, error: sanitizeAIError(fallbackError) })
           }
         }
       }
@@ -58,26 +97,26 @@ export async function callAI(params: {
   if (anthropicKey && isAnthropicModel(model)) {
     try {
       const res = await callAnthropic(model, systemPrompt, userPrompt, anthropicKey, maxTokens)
-      if (res) return res
+      if (!res.trim()) throw new Error('Risposta AI vuota')
+      recordAttempt(attempts, { provider: 'anthropic', model, ok: true })
+      return res
     } catch (e) {
-      errors.push(`Anthropic: ${(e as Error).message}`)
-      console.warn('[AI fallback]', errors[errors.length - 1])
+      recordAttempt(attempts, { provider: 'anthropic', model, ok: false, error: sanitizeAIError(e) })
     }
   } else if (anthropicKey && silentFallback) {
     // Try with Claude fallback on Anthropic
     try {
       const res = await callAnthropic('claude-sonnet-4-6', systemPrompt, userPrompt, anthropicKey, maxTokens)
-      if (res) return res
-    } catch {
-      // silent
+      if (!res.trim()) throw new Error('Risposta AI vuota')
+      recordAttempt(attempts, { provider: 'anthropic', model: 'claude-sonnet-4-6', ok: true })
+      return res
+    } catch (fallbackError) {
+      recordAttempt(attempts, { provider: 'anthropic', model: 'claude-sonnet-4-6', ok: false, error: sanitizeAIError(fallbackError) })
     }
   }
 
   // Give up
-  const errMsg = errors.length > 0
-    ? `AI generation failed after ${errors.length} attempt(s): ${errors.join('; ')}`
-    : 'No AI provider configured. Aggiungi OPENROUTER_API_KEY o ANTHROPIC_API_KEY su Render, oppure incolla una OpenRouter API Key nella pagina.'
-  throw new Error(errMsg)
+  throw new Error(buildFailureMessage(attempts))
 }
 
 async function callOpenRouter(

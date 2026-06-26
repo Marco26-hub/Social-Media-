@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
+import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
 const PROMPT = `Sei un social media analyst senior. Analizza i profili social di un competitor e produci un report dettagliato.
@@ -45,8 +46,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cliente_id e competitor_nome richiesti' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
+    if (!dbReady()) {
+      return NextResponse.json({ error: 'DATABASE_URL non configurato: l’analisi competitor richiede il profilo brand su DB. In demo usa il fallback simulato o configura Neon su Render.' }, { status: 503 })
+    }
 
-    const { q } = await import('@/lib/db')
     const brandRows = await q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id])
     const brand = brandRows[0] ?? null
 

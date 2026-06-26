@@ -60,7 +60,8 @@ Next.js 15 App Router
   ├── /api/data/*         → CRUD Neon/Postgres
   ├── /api/generate/*     → AI generation con fallback
   ├── /api/auth/*         → NextAuth
-  └── /api/system/health  → health check
+  ├── /api/system/health  → health check
+  └── /api/system/access  → credenziali demo/setup
 
 Database (Neon/Postgres):
   14 tabelle: profiles, clienti, brand, prodotti, calendario,
@@ -87,7 +88,7 @@ Database (Neon/Postgres):
 | **Log** | `/dashboard/log` | Storico pubblicazioni |
 | **Settings** | `/dashboard/settings` | Configurazioni operativa |
 | **Report** | `/dashboard/report` | KPI, grafici per canale/formato, stampa PDF |
-| **Login** | `/login` | Auto-login in demo mode |
+| **Login** | `/login` | Auto-login in demo mode + box Accesso Admin demo/setup |
 | **Preview** | `/preview/[id]` | Anteprima multi-piattaforma (IG, FB, TT, Pinterest) con condivisione WA/TG/Email |
 | **Approve** | `/approve/[token]` | Client portal pubblico: approva/richiedi modifica senza login |
 | **Competitor** | `/dashboard/competitor` | Analisi AI social competitor: strategy, engagement, hashtag, punti forza/debolezza, azioni |
@@ -136,6 +137,7 @@ Database (Neon/Postgres):
 | Route | Descrizione |
 |---|---|
 | `GET /api/system/health` | Stato: DB, Auth, AI, modalità demo/prod |
+| `GET /api/system/access` | Hint accesso admin per demo/setup; 404 in produzione se `SHOW_LOGIN_HINT` non è attivo |
 | `POST /api/webhook/blotato` | Callback Blotato: aggiorna status pubblicazione (scheduled/published/failed) |
 
 ---
@@ -163,10 +165,18 @@ Database (Neon/Postgres):
 
 Provider supportati (in `lib/ai.ts`):
 - **Anthropic**: `claude-sonnet-4-6` (default), `claude-opus-4-7`, `claude-haiku-4-5`
-- **OpenRouter free**: `nvidia/nemotron-3-super-120b-a12b:free`, `nvidia/nemotron-3-super:free`, `nvidia/nemotron-3.5-content-safety:free`, `deepseek/deepseek-v4-flash:free`, altri 8 modelli
+- **OpenRouter free**: `openrouter/free`, `nvidia/nemotron-3-ultra-550b-a55b:free`, `nvidia/nemotron-3-super-120b-a12b:free`, `google/gemma-4-31b-it:free`, `google/gemma-4-26b-a4b-it:free`, `qwen/qwen3-next-80b-a3b-instruct:free`, `openai/gpt-oss-120b:free`
 
 **Fallback automatico**: se OpenRouter fallisce, prova altri modelli gratuiti in cascade.
-**Silent fallback**: errori AI loggati ma non bloccanti per l'utente.
+**Fallback osservabile**: errori AI sanificati, loggati e riportati all'utente se tutti i tentativi falliscono.
+
+## 6.1 Accesso Admin
+
+- URL login: `/login`
+- URL admin: `/dashboard/clienti`
+- Demo/setup senza DB: `GET /api/system/access` espone `admin` / `1234567` e la login li mostra nel box **Accesso Admin**.
+- Produzione: esegui `db/migrations/011_admin_user.sql`, entra con `admin` / `1234567`, poi cambia password/crea admin reale.
+- Non usare `SHOW_LOGIN_HINT=true` su siti pubblici già venduti, salvo demo controllata.
 
 ---
 
@@ -243,6 +253,7 @@ Audit/fix P0 completato il 26/06/2026:
 - [ ] **Multi-lingua**: generazione contenuti in altre lingue
 - [ ] **White-label**: logo agenzia custom
 - [ ] **Stripe**: pagamenti integrati nel funnel di vendita
+- [ ] **Checklist vendita**: usare `CHECKLIST-VENDITA.md` per demo call, onboarding e limiti da non promettere
 
 ---
 
@@ -258,6 +269,9 @@ NEXT_PUBLIC_DEMO_MODE=true        # Demo mode senza DB
 BLOTATO_API_KEY=...               # Quando pronto
 BLOTATO_API_URL=https://api.blotato.com
 BLOTATO_WEBHOOK_SECRET=...        # Firma webhook Blotato in produzione
+SHOW_LOGIN_HINT=true              # Solo demo controllata: mostra credenziali admin anche con DB
+ADMIN_LOGIN_USER=admin            # Opzionale, usato da /api/system/access
+ADMIN_LOGIN_PASSWORD=1234567      # Opzionale, usato da /api/system/access
 ```
 
 ---
@@ -265,9 +279,9 @@ BLOTATO_WEBHOOK_SECRET=...        # Firma webhook Blotato in produzione
 ## 14. Ultima Fase Locale
 
 ```bash
-fix: audit sicurezza P0, tenant isolation, webhook signing, dependency CVE
+fix: AI fallback osservabili, runtime demo client, accesso admin demo/setup, checklist vendita
 ```
 
-**42 route, build verde, audit npm verde.**
+**43 route, build verde, audit npm verde.**
 
 *Fine handoff. Non reintrodurre Supabase o n8n. Mantieni la demo mode funzionante.*

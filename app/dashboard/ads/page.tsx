@@ -3,8 +3,11 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { Sparkles, Loader2, Check, Target, Hash, DollarSign, TrendingUp, Users, Eye, Smartphone, Monitor, Search, ChevronDown } from 'lucide-react'
-import { isDemo } from '@/lib/demo'
 import { useActiveClienteId } from '@/lib/tenant/client'
+import { readAISettings, readApiError } from '@/lib/ai-client'
+import { useRuntimeDemo } from '@/lib/demo-client'
+import AIModelSelector from '@/components/AIModelSelector'
+import OpenRouterKeyInput from '@/components/OpenRouterKeyInput'
 
 const PLATFORMS = [
   { id: 'google', name: 'Google Ads', icon: Search, gradient: 'from-blue-500 to-cyan-600' },
@@ -26,7 +29,7 @@ export default function AdsPage() {
   const [result, setResult] = useState<AdsResult>(null)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [brand, setBrand] = useState<Record<string, unknown> | null>(null)
-  const demo = isDemo()
+  const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
   useEffect(() => {
@@ -108,8 +111,7 @@ export default function AdsPage() {
     }
 
     try {
-      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
-      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const aiSettings = readAISettings()
       const res = await fetch('/api/generate/ads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -119,11 +121,10 @@ export default function AdsPage() {
           product: productName,
           obiettivo,
           budget: `${budget}EUR/giorno`,
-          model: aiModel,
-          openrouter_key: orKey || undefined,
+          ...aiSettings,
         }),
       })
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || `HTTP ${res.status}`) }
+      if (!res.ok) throw new Error(await readApiError(res, 'Generazione campagna fallita'))
       const data = await res.json()
       setResult(data)
       setMsg({ type: 'ok', text: 'Campagna pubblicitaria generata!' })
@@ -141,6 +142,9 @@ export default function AdsPage() {
         <h1 className="text-xl md:text-3xl font-bold text-gray-900 tracking-tight">Campagne Ads</h1>
         <p className="text-xs md:text-sm text-gray-500 mt-1">AI genera annunci Google, Facebook/Instagram e TikTok con copy, targeting e strategia.</p>
       </div>
+
+      <AIModelSelector task="contenuti-social" />
+      <OpenRouterKeyInput />
 
       {/* Platform Tabs */}
       <div className="flex gap-2 mb-5 overflow-x-auto pb-2">

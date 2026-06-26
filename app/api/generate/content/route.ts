@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
-import { q } from '@/lib/db'
+import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
 type PromptSpec = {
@@ -314,6 +314,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cliente_id, canale, formato richiesti' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
+    if (!dbReady()) {
+      return NextResponse.json({ error: 'DATABASE_URL non configurato: la generazione persistente richiede il DB. In demo usa il fallback simulato o configura Neon su Render.' }, { status: 503 })
+    }
 
     const key = `${canale}:${formato}`
     const spec = PROMPTS[key] || PROMPTS[`instagram:post`]

@@ -27,6 +27,14 @@ Next.js 15 + Neon/Postgres. Sostituisce Google Sheets con dashboard web full.
 
 ## Setup
 
+## Accesso admin
+
+- Login: `/login`
+- Dashboard admin: `/dashboard/clienti`
+- In demo/setup senza DB il sito mostra il box **Accesso Admin** con `admin` / `1234567`.
+- In produzione esegui `db/migrations/011_admin_user.sql`, entra con `admin` / `1234567`, poi cambia password o crea un admin reale.
+- Non lasciare `SHOW_LOGIN_HINT=true` su un sito pubblico venduto: serve solo per demo controllate.
+
 ### 1. Database Neon/Postgres
 
 1. Crea un database Neon/Postgres.
@@ -118,6 +126,8 @@ Il file `PACCHETTI-VENDITA.md` contiene i pacchetti consigliati per vendere il s
 - Dominio Digitale
 
 Regola base: Social Automation vende il servizio gestito, non il motore interno. Workflow, prompt, chiavi API e automazioni restano proprieta Social Automation.
+
+Il file `CHECKLIST-VENDITA.md` contiene la checklist operativa: accesso admin, demo call, cosa configurare prima di vendere e cosa non promettere finché Blotato non è testato end-to-end.
 
 ## Brand
 

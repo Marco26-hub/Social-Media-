@@ -7,8 +7,8 @@ import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info } fr
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
-
-import { isDemo } from '@/lib/demo'
+import { readAISettings, readApiError } from '@/lib/ai-client'
+import { useRuntimeDemo } from '@/lib/demo-client'
 
 export default function PianoPage() {
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
@@ -19,6 +19,7 @@ export default function PianoPage() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [aiModel, setAiModel] = useState('claude-sonnet-4-6')
   const { clienteId } = useActiveClienteId()
+  const demo = useRuntimeDemo()
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -35,6 +36,7 @@ export default function PianoPage() {
       setMsg({ type: 'err', text: 'Seleziona almeno una piattaforma' })
       return
     }
+    setAiModel(readAISettings().model)
     setConfirmOpen(true)
   }
 
@@ -43,7 +45,7 @@ export default function PianoPage() {
     setRunning(true)
     setMsg(null)
 
-    if (isDemo()) {
+    if (demo) {
       await new Promise(r => setTimeout(r, 1800))
       const count = periodo === 'mensile' ? 30 : 7
       setMsg({ type: 'ok', text: `${count} contenuti generati per ${piattaforme.length} piattaforme. Vai al calendario per approvare.` })
@@ -53,14 +55,13 @@ export default function PianoPage() {
 
     try {
       if (!clienteId) throw new Error('Cliente non selezionato')
-      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
-      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const aiSettings = readAISettings()
       const res = await fetch('/api/generate/plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, piattaforme, obiettivo, periodo, model: aiModel, openrouter_key: orKey || undefined }),
+        body: JSON.stringify({ cliente_id: clienteId, piattaforme, obiettivo, periodo, ...aiSettings }),
       })
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || `HTTP ${res.status}`) }
+      if (!res.ok) throw new Error(await readApiError(res, 'Generazione piano fallita'))
       setMsg({ type: 'ok', text: 'Piano generato. I contenuti sono nel calendario.' })
     } catch (e) {
       setMsg({ type: 'err', text: (e as Error).message })

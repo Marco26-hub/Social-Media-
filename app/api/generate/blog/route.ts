@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { q } from '@/lib/db'
+import { dbReady, q } from '@/lib/db'
 import { callAI, extractJSON } from '@/lib/ai'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
@@ -41,6 +41,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cliente_id richiesto' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
+    if (!dbReady()) {
+      return NextResponse.json({ error: 'DATABASE_URL non configurato: il blog deve salvare su DB. In demo usa il fallback simulato o configura Neon su Render.' }, { status: 503 })
+    }
 
     const [brandRows, products] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id]),

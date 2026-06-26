@@ -10,8 +10,8 @@ import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
 import { readClienteId } from '@/lib/use-data'
-
-import { isDemo } from '@/lib/demo'
+import { readAISettings, readApiError } from '@/lib/ai-client'
+import { useRuntimeDemo } from '@/lib/demo-client'
 
 const CANALI = ['tutti','instagram','facebook','tiktok','pinterest','youtube_shorts']
 const STATI: Status[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','IN_PUBBLICAZIONE','PUBBLICATO','ERRORE','ERRORE_MANUALE']
@@ -36,6 +36,7 @@ function CalendarioInner() {
   const [filterCanale, setCanale]   = useState('tutti')
   const [saving, setSaving]         = useState<string | null>(null)
   const [scoring, setScoring]       = useState<string | null>(null)
+  const [scoreError, setScoreError] = useState<string | null>(null)
   const [scores, setScores]         = useState<Record<string, Record<string, unknown>>>({})
   const [sendingToken, setSendingToken] = useState<string | null>(null)
   const [approvalUrl, setApprovalUrl]   = useState<string | null>(null)
@@ -43,7 +44,7 @@ function CalendarioInner() {
   const [dragItem, setDragItem]     = useState<string | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
   const [dragOverDate, setDragOverDate] = useState<string | null>(null)
-  const demo = isDemo()
+  const demo = useRuntimeDemo()
 
   const clienteId = readClienteId()
 
@@ -142,6 +143,7 @@ function CalendarioInner() {
 
   async function handleScore(c: Contenuto) {
     setScoring(c.id)
+    setScoreError(null)
     if (demo) {
       await new Promise(r => setTimeout(r, 1200))
       setScores(prev => ({
@@ -165,8 +167,7 @@ function CalendarioInner() {
       return
     }
     try {
-      const aiModel = typeof window !== 'undefined' ? localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
-      const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
+      const aiSettings = readAISettings()
       const res = await fetch('/api/generate/score-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -178,15 +179,14 @@ function CalendarioInner() {
           hashtag: c.hashtag,
           cta: c.cta,
           visual: c.idea_visual || c.alt_text || '',
-          model: aiModel,
-          openrouter_key: orKey || undefined,
+          ...aiSettings,
         }),
       })
-      if (!res.ok) throw new Error('Scoring failed')
+      if (!res.ok) throw new Error(await readApiError(res, 'Scoring AI fallito'))
       const data = await res.json()
       setScores(prev => ({ ...prev, [c.id]: data }))
     } catch (e) {
-      console.error('Score failed:', e)
+      setScoreError((e as Error).message)
     }
     setScoring(null)
   }
@@ -254,6 +254,12 @@ function CalendarioInner() {
           <span className="hidden md:inline">Aggiorna</span>
         </button>
       </div>
+
+      {scoreError && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          AI scoring: {scoreError}
+        </div>
+      )}
 
       {/* Filtri */}
       <div className="flex flex-wrap gap-2 md:gap-3 mb-4 md:mb-6">
