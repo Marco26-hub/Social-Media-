@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useEffect, useState, useCallback, Suspense, useRef } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
 import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter, Sparkles, Share2 } from 'lucide-react'
@@ -40,6 +40,9 @@ function CalendarioInner() {
   const [sendingToken, setSendingToken] = useState<string | null>(null)
   const [approvalUrl, setApprovalUrl]   = useState<string | null>(null)
   const [demoData, setDemoData]     = useState<Contenuto[]>(demoContenuti)
+  const [dragItem, setDragItem]     = useState<string | null>(null)
+  const [dropTarget, setDropTarget] = useState<string | null>(null)
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null)
   const demo = isDemo()
 
   const clienteId = readClienteId()
@@ -212,6 +215,29 @@ function CalendarioInner() {
     setSendingToken(null)
   }
 
+  async function handleDrop(c: Contenuto, newDate: string) {
+    setDragOverDate(null)
+    if (c.data_pubblicazione === newDate) return
+    if (demo) {
+      setDemoData(prev => prev.map(x => x.id === c.id ? { ...x, data_pubblicazione: newDate } : x))
+      return
+    }
+    try {
+      await fetch('/api/data/calendario', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: c.id, data_pubblicazione: newDate }),
+      })
+      setContenuti(prev => prev.map(x => x.id === c.id ? { ...x, data_pubblicazione: newDate } : x))
+    } catch (e) { console.error('Drag drop PATCH failed', e) }
+  }
+
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - d.getDay() + 1 + i)
+    return d.toISOString().split('T')[0]
+  })
+
   const mediaUrls = (c: Contenuto) =>
     [c.link_media_1,c.link_media_2,c.link_media_3].filter(Boolean) as string[]
 
@@ -260,6 +286,46 @@ function CalendarioInner() {
         </div>
       </div>
 
+      {/* Week date bar — drop targets */}
+      <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">
+        {weekDays.map(date => {
+          const countOnDate = contenuti.filter(c => c.data_pubblicazione === date).length
+          const isToday = date === new Date().toISOString().split('T')[0]
+          const isOver = dragOverDate === date
+          return (
+            <div
+              key={date}
+              onDragOver={e => { e.preventDefault(); setDragOverDate(date) }}
+              onDragLeave={() => setDragOverDate(null)}
+              onDrop={e => {
+                e.preventDefault()
+                setDragOverDate(null)
+                const cid = e.dataTransfer.getData('contenuto_id')
+                const content = contenuti.find(c => c.id === cid)
+                if (content) handleDrop(content, date)
+              }}
+              className={`flex-1 min-w-[60px] rounded-xl border-2 px-2 py-2 text-center cursor-pointer transition-colors ${
+                isOver ? 'border-brand-400 bg-brand-50 scale-105' :
+                isToday ? 'border-brand-300 bg-brand-50/50' :
+                'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <p className="text-[10px] text-gray-400 uppercase">
+                {['LUN','MAR','MER','GIO','VEN','SAB','DOM'][new Date(date).getDay() === 0 ? 6 : new Date(date).getDay() - 1]}
+              </p>
+              <p className={`text-sm font-bold ${isToday ? 'text-brand-600' : 'text-gray-700'}`}>
+                {date.split('-')[2]}
+              </p>
+              {countOnDate > 0 && (
+                <span className={`text-[10px] font-medium ${isToday ? 'text-brand-500' : 'text-gray-400'}`}>
+                  {countOnDate}
+                </span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
       {/* Lista */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -273,7 +339,13 @@ function CalendarioInner() {
       ) : (
         <div className="space-y-3">
           {contenuti.map(c => (
-            <div key={c.id} className="card p-3 md:p-4 hover:shadow-md transition-shadow">
+            <div
+              key={c.id}
+              draggable
+              onDragStart={e => { e.dataTransfer.setData('contenuto_id', c.id); setDragItem(c.id) }}
+              onDragEnd={() => setDragItem(null)}
+              className={`card p-3 md:p-4 hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing ${dragItem === c.id ? 'opacity-50 scale-95' : ''}`}
+            >
               <div className="flex items-start gap-3 md:gap-4">
                 {/* Media thumb */}
                 <div className="w-16 h-16 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">

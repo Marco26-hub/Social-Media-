@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
 import { q } from '@/lib/db'
+import { requireAuth } from '@/lib/auth-utils'
 
 const PROMPT = `Sei SEO + GEO auditor senior. Analizza performance e crea audit con miglioramenti concreti.
 
@@ -22,6 +23,7 @@ Output SOLO JSON:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { cliente_id, sito_url, periodo, model, openrouter_key } = await request.json()
     if (!cliente_id || !sito_url) {
       return NextResponse.json({ error: 'cliente_id e sito_url richiesti' }, { status: 400 })

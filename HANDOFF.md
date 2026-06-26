@@ -2,7 +2,7 @@
 
 > Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
-**Data**: 2026-06-25
+**Data**: 2026-06-26
 **Progetto**: Social Automation — SaaS social media management per agenzie
 **Stack**: Next.js 15 + Neon/Postgres + NextAuth + Tailwind + AI (Anthropic/OpenRouter)
 **Percorso locale**: `/Users/md/Downloads/social_automation_v2`
@@ -37,7 +37,7 @@
 ## 1. Stato Build
 
 ```bash
-npm run build  # ✅ 33 route, verde
+npm run build  # ✅ 48 route, verde
 npm run dev    # http://localhost:3000
 npm run start  # build produzione
 ```
@@ -85,8 +85,14 @@ Database (Neon/Postgres):
 | **Clienti** | `/dashboard/clienti` | Gestione clienti multi-tenant |
 | **Log** | `/dashboard/log` | Storico pubblicazioni |
 | **Settings** | `/dashboard/settings` | Configurazioni operativa |
+| **Report** | `/dashboard/report` | KPI, grafici per canale/formato, stampa PDF |
 | **Login** | `/login` | Auto-login in demo mode |
-| **Landing** | `/servizi` | Pagina vendita servizi |
+| **Preview** | `/preview/[id]` | Anteprima multi-piattaforma (IG, FB, TT, Pinterest) con condivisione WA/TG/Email |
+| **Approve** | `/approve/[token]` | Client portal pubblico: approva/richiedi modifica senza login |
+| **Competitor** | `/dashboard/competitor` | Analisi AI social competitor: strategy, engagement, hashtag, punti forza/debolezza, azioni |
+| **Onboarding** | `/dashboard/onboarding` | Wizard 5-step: cliente → brand AI → prodotti → contenuti → fine |
+| **Dettaglio Cliente** | `/dashboard/clienti/[id]` | Stats cliente, contenuti recenti, azioni rapide |
+| **Landing** | `/servizi` | Pagina vendita con 5 pacchetti (Starter €390 → Dominio €2.590) |
 
 ---
 
@@ -99,11 +105,13 @@ Database (Neon/Postgres):
 | `/api/data/calendario` | Lista contenuti filtrata | Aggiorna status + eventuale publish Blotato |
 | `/api/data/brand` | Profilo brand | Upsert brand |
 | `/api/data/clienti` | Lista clienti | Crea cliente |
-| `/api/data/prodotti` | Lista prodotti | — |
+| `/api/data/prodotti` | Lista prodotti | Crea prodotto |
 | `/api/data/settings` | Lista settings | Aggiorna valore |
 | `/api/data/log` | Log pubblicazioni | — |
 | `/api/data/stats` | Statistiche dashboard | — |
 | `/api/data/seo-audit` | Lista audit | — |
+| `/api/data/report` | Report KPI | — |
+| `/api/data/approve` | GET token info (pubblico) | POST crea token / PATCH approva/rifiuta |
 
 ### Generate API (POST)
 
@@ -119,11 +127,15 @@ Database (Neon/Postgres):
 | `/api/generate/strategy` | brand, settore, target, tono | Content pillars, frequenza, best time |
 | `/api/generate/scrape-contacts` | url, model | Email, WA, TG, social, indirizzo |
 | `/api/generate/client-discovery` | url, settore, model | ICP, buyer personas, competitor, KPI |
+| `/api/generate/brand-keywords` | brand, settore | Parole da usare/evitare, hashtag, emoji |
+| `/api/generate/compliance` | brand, tipologia | Cookie Policy, GDPR, Privacy, Disclaimer, Vendita |
+| `/api/generate/competitor-analysis` | competitor_nome, social | Content strategy, engagement, hashtag, gap, azioni migliorative |
 
 ### System API
 | Route | Descrizione |
 |---|---|
 | `GET /api/system/health` | Stato: DB, Auth, AI, modalità demo/prod |
+| `POST /api/webhook/blotato` | Callback Blotato: aggiorna status pubblicazione (scheduled/published/failed) |
 
 ---
 
@@ -142,6 +154,7 @@ Database (Neon/Postgres):
 | `ClienteSelector` | `components/ClienteSelector.tsx` | Dropdown cambio cliente attivo |
 | `Sidebar` | `components/Sidebar.tsx` | Navigazione principale |
 | `GeneratorCards` | `components/GeneratorCards.tsx` | Card generazione rapida |
+| `BlotatoStatusBadge` | `components/BlotatoStatusBadge.tsx` | Stato sincronizzazione Blotato |
 
 ---
 
@@ -191,16 +204,40 @@ Genera contenuto (AI con contesto brand) → Calendario → Score (AI valuta) �
 
 ---
 
-## 10. In Lavoro / Prossimi Step
+## 10. Sicurezza
 
-- [ ] **Publish Bridge Blotato**: endpoint reale, scheduling (bloccato da API key)
-- [ ] **Media Validation**: check link media prima di pubblicazione
-- [ ] **Calendar drag & drop**: spostamento visuale contenuti
-- [ ] **Client portal**: link approvazione senza login
-- [ ] **Piano potenziato**: analisi dati + strategia + risultati
-- [ ] **Report PDF**: report automatico per cliente
+Tutte le route che leggono/scrivono DB ora richiedono autenticazione:
+- **5 route fixate** (26/06/2026): `generate/content`, `generate/plan`, `generate/blog`, `generate/seo-audit`, `data/approve` POST
+- Pattern: `import { requireAuth } from '@/lib/auth-utils'` + `await requireAuth()` prima di ogni handler
+- `GET /api/data/approve` e `PATCH /api/data/approve` restano pubblici (portal con token)
+- Webhook Blotato (`POST /api/webhook/blotato`) non richiede auth (callback esterno)
+
+## 11. Media Validation
+
+`lib/media-validate.ts` — valida URL media prima di approvare/pubblicare:
+- HEAD request con timeout 5s
+- Verifica content-type (image/jpeg, png, webp, gif, avif, video/mp4, webm, quicktime)
+- Integrato in:
+  - `app/api/data/calendario/route.ts` PATCH — prima di APPROVATO
+  - `lib/publish/schedule.ts` — prima di inviare a Blotato
+- Errori salvati in `errore_tecnico` con formato `media KO code=404 — link_media_N non raggiungibile`
+
+## 12. Notifiche Telegram
+
+`lib/notifications.ts` — invio notifiche via Telegram Bot API:
+- Per cliente: `telegram_bot_token` + `telegram_chat_id` da settings DB
+- Per agenzia: `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` da env
+- Eventi: approvazione, pubblicato, errore, richiesta modifica
+- Integrato in `app/api/data/calendario/route.ts` PATCH (status APPROVATO, ERRORE)
+- Graceful fallback: se non configurato, non blocca
+
+## 13. In Lavoro / Prossimi Step
+
+- [ ] **Deploy effettivo su Render**: DATABASE_URL + AUTH_SECRET + BLOTATO_API_KEY
+- [ ] **API key OpenRouter/Blotato**: per test end-to-end produzione
+- [ ] **Multi-lingua**: generazione contenuti in altre lingue
 - [ ] **White-label**: logo agenzia custom
-- [ ] **Deploy effettivo**: database reale + env production su Render
+- [ ] **Stripe**: pagamenti integrati nel funnel di vendita
 
 ---
 
@@ -218,12 +255,12 @@ BLOTATO_API_KEY=...               # Quando pronto
 
 ---
 
-## 12. Ultimo Commit
+## 14. Ultimo Commit
 
 ```bash
-482336a feat: ads, brand discovery, client discovery, leads scraping, strategy API, silent AI fallback, smoke test, marketing video
+feat: sicurezza requireAuth su 5 route, media validation, notifiche Telegram, onboarding wizard, calendar drag & drop, competitor tracking + sidebar update
 ```
 
-**33 route, build verde.**
+**48 route, build verde.**
 
 *Fine handoff. Non reintrodurre Supabase o n8n. Mantieni la demo mode funzionante.*

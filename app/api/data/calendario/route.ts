@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 import { scheduleOnBlotato } from '@/lib/publish/schedule'
+import { validateMediaUrls, formatMediaError } from '@/lib/media-validate'
+import { notifyAgency } from '@/lib/notifications'
 
 export async function GET(request: Request) {
   try {
@@ -53,6 +55,21 @@ export async function PATCH(request: Request) {
     if (body.status === 'APPROVATO') {
       params.push(new Date().toISOString())
       fields.push(`data_approvazione = $${params.length}`)
+
+      // Validate media URLs before approving
+      const currentContent = await q('SELECT * FROM calendario WHERE id = $1', [id])
+      if (currentContent.length) {
+        const row = currentContent[0] as Record<string, unknown>
+        const mediaUrls = [row.link_media_1, row.link_media_2, row.link_media_3, row.link_media_4, row.link_media_5, row.link_media_6, row.link_media_7]
+        if (mediaUrls.some(u => u)) {
+          const validation = await validateMediaUrls(mediaUrls as (string | null | undefined)[])
+          if (!validation.ok) {
+            const errMsg = formatMediaError(validation.errors)
+            params.push(errMsg)
+            fields.push(`errore_tecnico = $${params.length}`)
+          }
+        }
+      }
     }
     if (!fields.length) return NextResponse.json({ error: 'niente da aggiornare' }, { status: 400 })
     await q(`UPDATE calendario SET ${fields.join(', ')} WHERE id = $1`, params)
@@ -62,8 +79,7 @@ export async function PATCH(request: Request) {
       try {
         const content = await q('SELECT * FROM calendario WHERE id = $1', [id])
         if (content.length) {
-          const row = content[0]
-
+          const row = content[0] as Record<string, unknown>
           const blotatoId = await scheduleOnBlotato(cid, row)
         }
       } catch (scheduleError) {
@@ -72,6 +88,20 @@ export async function PATCH(request: Request) {
           `Blotato: ${(scheduleError as Error).message.slice(0, 300)}`,
           id,
         ])
+      }
+    }
+
+    // Notifiche Telegram
+    if (body.status) {
+      const content = await q('SELECT * FROM calendario WHERE id = $1', [id])
+      if (content.length) {
+        const row = content[0] as Record<string, unknown>
+        const statusStr = body.status as string
+        if (statusStr === 'APPROVATO') {
+          notifyAgency({ type: 'pubblicato', id_contenuto: row.id_contenuto as string, canale: row.canale as string, formato: row.formato as string }).catch(() => {})
+        } else if (statusStr === 'ERRORE' || statusStr === 'ERRORE_MANUALE') {
+          notifyAgency({ type: 'errore', id_contenuto: row.id_contenuto as string, canale: row.canale as string, errore: (row.errore_tecnico as string) || 'Errore sconosciuto' }).catch(() => {})
+        }
       }
     }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { q } from '@/lib/db'
 import { callAI, extractJSON } from '@/lib/ai'
+import { requireAuth } from '@/lib/auth-utils'
 
 const PROMPT = `Sei un content writer SEO senior per brand fashion e-commerce.
 Scrivi articolo blog 800-1200 parole in italiano, ottimizzato per SEO e GEO (AI search).
@@ -34,6 +35,7 @@ Output SOLO JSON valido:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { cliente_id, model, openrouter_key, tema, prodotti_linkati } = await request.json()
     if (!cliente_id) {
       return NextResponse.json({ error: 'cliente_id richiesto' }, { status: 400 })

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSONArray } from '@/lib/ai'
 import { q } from '@/lib/db'
+import { requireAuth } from '@/lib/auth-utils'
 
 const PROMPT_WEEKLY = `Agisci come Social Media Manager senior per brand abbigliamento e-commerce.
 Crea piano editoriale SETTIMANALE (7 giorni) per {{PIATTAFORME}}.
@@ -41,6 +42,7 @@ Output SOLO JSON array valido:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo } = await request.json()
     if (!cliente_id || !piattaforme?.length) {
       return NextResponse.json({ error: 'cliente_id e piattaforme richiesti' }, { status: 400 })

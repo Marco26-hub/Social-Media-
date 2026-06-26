@@ -8,7 +8,7 @@ import ClienteSelector from '@/components/ClienteSelector'
 import {
   LayoutDashboard, Calendar, Settings,
   Package, LogOut, Zap, Menu, X, Search, Target,
-  Users, BarChart3, Sparkles, TrendingUp, FileText
+  Users, BarChart3, Sparkles, TrendingUp, FileText, UserPlus, Eye
 } from 'lucide-react'
 
 type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string }
@@ -36,16 +36,18 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboard/piano',  label: 'Piano editoriale', icon: Target },
       { href: '/dashboard/ads',    label: 'Campagne Ads',     icon: TrendingUp },
       { href: '/dashboard/seo',    label: 'SEO + GEO Audit',  icon: Search },
-      { href: '/dashboard/report', label: 'Report',           icon: BarChart3 },
-      { href: '/dashboard/log',    label: 'Log + Report',     icon: FileText },
+      { href: '/dashboard/report', label: 'Report',        icon: BarChart3 },
+      { href: '/dashboard/log',    label: 'Log + Report',  icon: FileText },
+      { href: '/dashboard/competitor', label: 'Competitor',   icon: Eye },
     ],
   },
   {
     title: 'GESTIONE',
     items: [
-      { href: '/dashboard/brand',    label: 'Profilo Brand',  icon: Sparkles },
-      { href: '/dashboard/clienti',  label: 'Clienti',       icon: Users },
-      { href: '/dashboard/prodotti', label: 'Prodotti',      icon: Package },
+      { href: '/dashboard/brand',       label: 'Profilo Brand',  icon: Sparkles },
+      { href: '/dashboard/clienti',     label: 'Clienti',       icon: Users },
+      { href: '/dashboard/onboarding',  label: 'Onboarding',    icon: UserPlus },
+      { href: '/dashboard/prodotti',    label: 'Prodotti',      icon: Package },
       { href: '/dashboard/settings', label: 'Impostazioni',  icon: Settings },
     ],
   },

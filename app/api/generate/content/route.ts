@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
 import { q } from '@/lib/db'
+import { requireAuth } from '@/lib/auth-utils'
 
 type PromptSpec = {
   persona: string
@@ -307,6 +308,7 @@ function buildSystemPrompt(brand: Record<string, unknown> | null): string {
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { cliente_id, canale, formato, model, openrouter_key, tema, nome_prodotto, product_id } = await request.json()
     if (!cliente_id || !canale || !formato) {
       return NextResponse.json({ error: 'cliente_id, canale, formato richiesti' }, { status: 400 })

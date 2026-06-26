@@ -2,6 +2,7 @@
 // Chiamato quando status → APPROVATO. Supporta tutti i formati.
 
 import { q } from '@/lib/db'
+import { validateMediaUrls } from '@/lib/media-validate'
 
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://api.blotato.com'
 const BLOTATO_API_KEY = process.env.BLOTATO_API_KEY
@@ -35,6 +36,15 @@ export async function scheduleOnBlotato(
   // Raccogli media disponibili (fino a 7)
   const mediaUrls = [row.link_media_1, row.link_media_2, row.link_media_3, row.link_media_4, row.link_media_5, row.link_media_6, row.link_media_7]
     .filter((u): u is string => typeof u === 'string' && u.length > 0)
+
+  // Validate media URLs before sending to Blotato
+  if (mediaUrls.length > 0) {
+    const validation = await validateMediaUrls(mediaUrls)
+    if (!validation.ok) {
+      const invalid = validation.errors.map(e => `[media_${e.index}] ${e.url}: ${e.reason}`).join('; ')
+      throw new Error(`Media validation failed before Blotato: ${invalid}`)
+    }
+  }
 
   const scheduledAt = `${row.data_pubblicazione}T${String(row.ora_pubblicazione).slice(0, 5)}:00`
 
