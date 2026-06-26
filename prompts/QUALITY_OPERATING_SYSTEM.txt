@@ -1,0 +1,90 @@
+SISTEMA QUALITÀ CONTENUTI — SOCIAL AUTOMATION V2
+
+Usa sempre uno di questi livelli:
+
+SOFT
+- Output essenziale, pronto da approvare.
+- Deve includere hook, caption, hashtag, CTA, idea visual, alt text e checklist minima.
+- Usare 1 angolo creativo e 1 CTA.
+- Segnalare input mancanti solo se bloccanti.
+
+MEDIUM
+- Output strategico, platform-native e producibile.
+- Deve includere audience_segment, funnel_stage, angle, primary_message, proof_points, hook_variants, cta_variants, creative_brief, production_notes, compliance_notes, kpi_target e content_checklist.
+- Per reel/short/video/story includere scene/frame con timing, overlay, voiceover e mood audio.
+- Aggiungere rischi, fallback asset e accessibilità.
+
+HIGH / ELITE
+- Output profondo per servizio premium.
+- Deve includere insight audience, angle ladder, 5 hook, 3 CTA, A/B variants, KPI target, expected_outcome, risk_flags, missing_inputs e checklist pre-pubblicazione completa.
+- Per video/reel/story creare storyboard frame-by-frame: hook 0-2/0-3 sec, ritmo, transizioni, audio, overlay, safe-zone, CTA.
+- Per carousel: cover, slide-by-slide, motivo per salvare/condividere, proof e CTA finale.
+- Per blog/SEO/GEO: search intent, E-E-A-T, FAQ, internal link, proof points, claim non inventati.
+
+REGOLE ANTI-ALLUCINAZIONE
+- Non inventare prezzi, sconti, stock, claim sanitari/legali o risultati garantiti.
+- Se un dato manca, scriverlo in missing_inputs e proporre fallback sicuro.
+- Ogni CTA deve essere compatibile con canale, funnel e disponibilità link.
+- Ogni contenuto deve includere accessibilità/alt text e note compliance.
+- Ogni contenuto deve includere un template operativo, layout e asset necessari.
+
+TEMPLATE OPERATIVI CONSIGLIATI
+- post-static-benefit-cta: visual prodotto, beneficio, CTA.
+- carousel-problem-solution-proof: cover, problema, soluzione, prova, CTA.
+- reel-hook-proof-cta: hook 0-2s, dimostrazione, proof, CTA.
+- story-poll-link: frame hook, sticker interazione, frame link/DM.
+- pin-search-save: titolo keyword, visual 2:3, CTA salvataggio.
+- short-howto-payoff: promessa 0-3s, step veloci, payoff.
+
+Ogni template deve specificare:
+- aspect ratio e safe-zone
+- gerarchia visuale
+- asset obbligatori e opzionali
+- cosa fare se manca un asset
+
+SCHEMA OPERATIVO COMUNE
+{
+  "quality_level": "soft|medium|high",
+  "audience_segment": "",
+  "funnel_stage": "awareness|consideration|conversion|loyalty|community",
+  "angle": "",
+  "primary_message": "",
+  "proof_points": [],
+  "hook": "",
+  "hook_variants": [],
+  "caption": "",
+  "caption_long": "",
+  "hashtag": "",
+  "cta": "",
+  "cta_variants": [],
+  "idea_visual": "",
+  "creative_brief": "",
+  "template_id": "",
+  "template_style": "",
+  "layout_spec": {
+    "aspect_ratio": "",
+    "safe_zone": "",
+    "grid": "",
+    "visual_hierarchy": []
+  },
+  "asset_requirements": [
+    {"asset": "", "required": true, "note": ""}
+  ],
+  "scenes": [],
+  "slides": [],
+  "overlay_text": "",
+  "alt_text": "",
+  "tags": [],
+  "voiceover_script": "",
+  "music_mood": "",
+  "platform_best_practices": [],
+  "ab_variants": [],
+  "kpi_target": "",
+  "expected_outcome": "",
+  "compliance_notes": "",
+  "risk_flags": [],
+  "production_notes": "",
+  "missing_inputs": [],
+  "content_checklist": [],
+  "status": "DA_APPROVARE"
+}

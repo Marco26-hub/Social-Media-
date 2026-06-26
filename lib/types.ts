@@ -6,6 +6,7 @@ export type Status =
 export type Canale = 'instagram' | 'facebook' | 'tiktok' | 'pinterest' | 'linkedin' | 'youtube_shorts' | 'blog'
 export type Formato = 'post' | 'carousel' | 'reel' | 'story' | 'pin' | 'short' | 'video' | 'articolo'
 export type MediaType = 'image' | 'video' | 'pin' | 'short'
+export type ContentQuality = 'soft' | 'medium' | 'high'
 
 export interface Profile {
   id: string
@@ -103,6 +104,29 @@ export interface Contenuto {
   idea_visual: string | null
   voiceover_script: string | null
   music_mood: string | null
+  quality_level?: ContentQuality | null
+  audience_segment?: string | null
+  funnel_stage?: string | null
+  angle?: string | null
+  primary_message?: string | null
+  proof_points?: unknown | null
+  hook_variants?: unknown | null
+  caption_long?: string | null
+  cta_variants?: unknown | null
+  creative_brief?: string | null
+  template_id?: string | null
+  template_style?: string | null
+  layout_spec_json?: unknown | null
+  asset_requirements_json?: unknown | null
+  production_notes?: string | null
+  compliance_notes?: string | null
+  risk_flags?: unknown | null
+  platform_best_practices?: unknown | null
+  ab_variants_json?: unknown | null
+  kpi_target?: string | null
+  expected_outcome?: string | null
+  missing_inputs?: unknown | null
+  content_checklist?: unknown | null
   // Pre-publish checklist
   checked_alt_text: 'SI' | 'NO' | null
   checked_aspect_ratio: 'SI' | 'NO' | null

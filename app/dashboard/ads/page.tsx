@@ -8,6 +8,9 @@ import { readAISettings, readApiError } from '@/lib/ai-client'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import AIModelSelector from '@/components/AIModelSelector'
 import OpenRouterKeyInput from '@/components/OpenRouterKeyInput'
+import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
+
+type QualitySelection = 'auto' | ContentQuality
 
 const PLATFORMS = [
   { id: 'google', name: 'Google Ads', icon: Search, gradient: 'from-blue-500 to-cyan-600' },
@@ -24,6 +27,7 @@ export default function AdsPage() {
   const [obiettivo, setObiettivo] = useState('conversion')
   const [budget, setBudget] = useState('50')
   const [productId, setProductId] = useState('')
+  const [quality, setQuality] = useState<QualitySelection>('auto')
   const [products, setProducts] = useState<Record<string, unknown>[]>([])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AdsResult>(null)
@@ -121,6 +125,7 @@ export default function AdsPage() {
           product: productName,
           obiettivo,
           budget: `${budget}EUR/giorno`,
+          quality,
           ...aiSettings,
         }),
       })
@@ -195,6 +200,15 @@ export default function AdsPage() {
           <div className="card p-4">
             <label className="label flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5 text-gray-400" /> Budget giornaliero (€)</label>
             <input type="number" value={budget} onChange={e => setBudget(e.target.value)} min="5" className="input mt-1" />
+          </div>
+
+          <div className="card p-4">
+            <label className="label flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-gray-400" /> Qualità strategia</label>
+            <select value={quality} onChange={event => setQuality(event.target.value as QualitySelection)} className="input mt-1">
+              {CONTENT_QUALITY_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>{option.label} — {option.desc}</option>
+              ))}
+            </select>
           </div>
 
           {/* Generate */}

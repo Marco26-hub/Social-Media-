@@ -3,6 +3,7 @@ import { dbReady, q } from '@/lib/db'
 import { callAI, extractJSON } from '@/lib/ai'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
+import { resolveContentQuality, summarizeQualityForPrompt } from '@/lib/content-quality'
 
 const PROMPT = `Sei un content writer SEO senior per brand fashion e-commerce.
 Scrivi articolo blog 800-1200 parole in italiano, ottimizzato per SEO e GEO (AI search).
@@ -31,43 +32,61 @@ Regole GEO (AI citability):
 - Dati concreti, numeri, percentuali
 - Tono E-E-A-T (esperienza, competenza, autorevolezza)
 
+QUALITÀ OPERATIVA:
+{{QUALITY_CONTEXT}}
+
+Campi strategici obbligatori nel JSON:
+- angle_editoriale: tesi o angolo dell'articolo
+- search_intent: intento principale e secondario
+- audience_segment: pubblico specifico
+- proof_points: prove, dati o elementi verificabili da usare senza inventare fonti
+- conversion_path: come l'articolo porta a prodotto/lead
+- content_checklist: controlli SEO/GEO/accessibilità
+- missing_inputs: dati mancanti da chiedere al cliente
+
 Output SOLO JSON valido:
-{"slug":"","meta_title":"50-60 char","meta_description":"140-160 char","h1":"","intro":"","sezioni":[{"h2":"","paragrafi":[],"lista_punti":[]}],"faq":[{"domanda":"","risposta":""}],"cta_finale":"","keywords_target":[],"prodotti_linkati":[],"immagine_cover":"","tempo_lettura_min":5,"status":"DA_APPROVARE"}`
+{"slug":"","meta_title":"50-60 char","meta_description":"140-160 char","h1":"","intro":"","sezioni":[{"h2":"","paragrafi":[],"lista_punti":[]}],"faq":[{"domanda":"","risposta":""}],"cta_finale":"","keywords_target":[],"prodotti_linkati":[],"immagine_cover":"","tempo_lettura_min":5,"angle_editoriale":"","search_intent":"","audience_segment":"","proof_points":[],"conversion_path":"","content_checklist":[],"missing_inputs":[],"status":"DA_APPROVARE"}`
 
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, model, openrouter_key, tema, prodotti_linkati } = await request.json()
+    const { cliente_id, model, openrouter_key, tema, prodotti_linkati, quality, quality_level, post_quality, qualita } = await request.json()
     if (!cliente_id) {
       return NextResponse.json({ error: 'cliente_id richiesto' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
     if (isDemo() || !dbReady()) {
+      const demoQuality = resolveContentQuality({ requestedQuality: quality ?? quality_level ?? post_quality ?? qualita })
       return NextResponse.json({
         ok: true,
         demo: true,
+        quality_level: demoQuality,
         slug: `demo-${String(tema || 'articolo').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'articolo'}`,
         warning: 'Fallback demo: DATABASE_URL non configurato, articolo non persistito su Neon.',
       })
     }
 
-    const [brandRows, products] = await Promise.all([
+    const [brandRows, products, clientRows] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id]),
       q('SELECT * FROM prodotti WHERE cliente_id = $1', [cliente_id]),
+      q('SELECT * FROM clienti WHERE id = $1 LIMIT 1', [cliente_id]),
     ])
     const brand = brandRows[0] ?? null
+    const client = (clientRows[0] ?? null) as Record<string, unknown> | null
+    const contentQuality = resolveContentQuality({ requestedQuality: quality ?? quality_level ?? post_quality ?? qualita, piano: client?.piano })
 
     const userPrompt = PROMPT
       .replace('{{BRAND}}', JSON.stringify(brand || {}, null, 2))
       .replace('{{TEMA}}', tema || 'Guida prodotto')
       .replace('{{PRODOTTI}}', JSON.stringify(products || [], null, 2))
+      .replace('{{QUALITY_CONTEXT}}', summarizeQualityForPrompt(contentQuality))
 
     const aiRes = await callAI({
       model: model || 'claude-sonnet-4-6',
-      systemPrompt: 'Sei un content writer SEO/GEO senior. Rispondi SOLO con JSON valido.',
+      systemPrompt: `Sei un content writer SEO/GEO senior. Livello qualità: ${contentQuality}. Rispondi SOLO con JSON valido. Non inventare dati o fonti esterne: segnala missing_inputs quando servono prove.`,
       userPrompt,
       openrouterKey: openrouter_key,
-      maxTokens: 4000,
+      maxTokens: contentQuality === 'high' ? 6500 : contentQuality === 'medium' ? 5200 : 4000,
     })
 
     const parsed = extractJSON(aiRes) as Record<string, unknown>

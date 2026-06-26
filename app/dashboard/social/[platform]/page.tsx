@@ -14,6 +14,9 @@ import type { Contenuto } from '@/lib/types'
 import { useActiveClienteId } from '@/lib/tenant/client'
 import { readAISettings, readApiError } from '@/lib/ai-client'
 import { useRuntimeDemo } from '@/lib/demo-client'
+import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
+
+type QualitySelection = 'auto' | ContentQuality
 
 export default function SocialPlatformPage({ params }: { params: Promise<{ platform: string }> }) {
   const { platform } = use(params)
@@ -29,6 +32,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [errors, setErrors]   = useState<Record<string, string>>({})
   const [pending, setPending] = useState<FormatoConfig | null>(null)
   const [aiModel, setAiModel] = useState('claude-sonnet-4-6')
+  const [quality, setQuality] = useState<QualitySelection>('auto')
   const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
 
@@ -78,8 +82,8 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       const isBlog = f.formato === 'articolo'
       const endpoint = isBlog ? '/api/generate/blog' : '/api/generate/content'
       const body = isBlog
-        ? { cliente_id: clienteId, tema: config.nome + ' - ' + f.nome, ...aiSettings }
-        : { cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, ...aiSettings }
+        ? { cliente_id: clienteId, tema: config.nome + ' - ' + f.nome, quality, ...aiSettings }
+        : { cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, quality, ...aiSettings }
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,6 +121,24 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       </div>
 
       <AIModelSelector task="contenuti-social" />
+
+      <div className="card p-4 mb-5">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold text-gray-900">Qualità generazione</p>
+            <p className="text-xs text-gray-500">Auto usa il pacchetto cliente; High crea brief elite con KPI, varianti e checklist.</p>
+          </div>
+          <select
+            value={quality}
+            onChange={event => setQuality(event.target.value as QualitySelection)}
+            className="input md:max-w-xs"
+          >
+            {CONTENT_QUALITY_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>{option.label} — {option.desc}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {Object.values(errors).length > 0 && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -227,6 +249,9 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="font-mono text-[10px] text-gray-400">{c.id_contenuto}</span>
                     <StatusBadge status={c.status} />
+                    {c.quality_level && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700 uppercase">{c.quality_level}</span>
+                    )}
                   </div>
                   <p className="text-sm font-medium text-gray-800 truncate">{c.hook || c.caption}</p>
                   <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">

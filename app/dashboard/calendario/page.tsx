@@ -179,6 +179,15 @@ function CalendarioInner() {
           hashtag: c.hashtag,
           cta: c.cta,
           visual: c.idea_visual || c.alt_text || '',
+          quality_level: c.quality_level,
+          audience_segment: c.audience_segment,
+          funnel_stage: c.funnel_stage,
+          angle: c.angle,
+          primary_message: c.primary_message,
+          creative_brief: c.creative_brief,
+          kpi_target: c.kpi_target,
+          production_notes: c.production_notes,
+          compliance_notes: c.compliance_notes,
           ...aiSettings,
         }),
       })
@@ -371,6 +380,9 @@ function CalendarioInner() {
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <span className="font-mono text-xs text-gray-400">{c.id_contenuto}</span>
                     <StatusBadge status={c.status} />
+                    {c.quality_level && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700 uppercase">{c.quality_level}</span>
+                    )}
                     <span className="text-xs text-gray-400">
                       {CANALE_ICON[c.canale]} {c.canale} · {c.formato}
                     </span>
@@ -463,6 +475,11 @@ function CalendarioInner() {
               <div>
                 <h2 className="font-bold text-gray-900">{selected.id_contenuto}</h2>
                 <p className="text-sm text-gray-500">{selected.canale} · {selected.formato} · {selected.data_pubblicazione}</p>
+                {selected.quality_level && (
+                  <span className="inline-flex mt-2 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-violet-100 text-violet-700">
+                    Qualità {selected.quality_level}
+                  </span>
+                )}
               </div>
               <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600">
                 <XCircle className="w-5 h-5" />
@@ -498,6 +515,63 @@ function CalendarioInner() {
                 <div>
                   <p className="label">CTA</p>
                   <p className="text-sm text-gray-700">{selected.cta}</p>
+                </div>
+              )}
+
+              {(selected.angle || selected.audience_segment || selected.funnel_stage || selected.kpi_target || selected.primary_message || selected.creative_brief || selected.template_id || selected.template_style || selected.production_notes || selected.compliance_notes || selected.expected_outcome) && (
+                <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-4">
+                  <p className="text-sm font-bold text-violet-900 mb-3">Strategia operativa</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                    {[
+                      { label: 'Audience', value: selected.audience_segment },
+                      { label: 'Funnel', value: selected.funnel_stage },
+                      { label: 'Angolo', value: selected.angle },
+                      { label: 'KPI', value: selected.kpi_target },
+                      { label: 'Messaggio', value: selected.primary_message },
+                      { label: 'Outcome', value: selected.expected_outcome },
+                      { label: 'Template', value: selected.template_id },
+                      { label: 'Stile', value: selected.template_style },
+                    ].filter(item => Boolean(item.value)).map(item => (
+                      <div key={item.label} className="bg-white rounded-lg p-2 border border-violet-100">
+                        <p className="text-[10px] uppercase text-violet-500 font-bold">{item.label}</p>
+                        <p className="text-xs text-gray-800 mt-0.5">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {selected.creative_brief && (
+                    <div className="mb-2">
+                      <p className="text-[10px] uppercase text-violet-600 font-bold">Brief creativo</p>
+                      <p className="text-xs text-violet-900 whitespace-pre-wrap">{selected.creative_brief}</p>
+                    </div>
+                  )}
+                  {Boolean(selected.layout_spec_json || selected.asset_requirements_json) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                      {Boolean(selected.layout_spec_json) && (
+                        <div className="bg-white rounded-lg p-2 border border-violet-100">
+                          <p className="text-[10px] uppercase text-violet-600 font-bold">Layout</p>
+                          <pre className="text-[10px] text-violet-900 whitespace-pre-wrap font-mono mt-1">{JSON.stringify(selected.layout_spec_json, null, 2)}</pre>
+                        </div>
+                      )}
+                      {Boolean(selected.asset_requirements_json) && (
+                        <div className="bg-white rounded-lg p-2 border border-violet-100">
+                          <p className="text-[10px] uppercase text-violet-600 font-bold">Asset richiesti</p>
+                          <pre className="text-[10px] text-violet-900 whitespace-pre-wrap font-mono mt-1">{JSON.stringify(selected.asset_requirements_json, null, 2)}</pre>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {selected.production_notes && (
+                    <div className="mb-2">
+                      <p className="text-[10px] uppercase text-violet-600 font-bold">Produzione</p>
+                      <p className="text-xs text-violet-900 whitespace-pre-wrap">{selected.production_notes}</p>
+                    </div>
+                  )}
+                  {selected.compliance_notes && (
+                    <div>
+                      <p className="text-[10px] uppercase text-violet-600 font-bold">Compliance</p>
+                      <p className="text-xs text-violet-900 whitespace-pre-wrap">{selected.compliance_notes}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -557,9 +631,14 @@ function CalendarioInner() {
                       { k: 'cta_effectiveness', l: 'CTA' },
                       { k: 'hashtag_relevance', l: 'Hashtag' },
                       { k: 'seo_potential', l: 'SEO' },
+                      { k: 'platform_native_fit', l: 'Native' },
+                      { k: 'creative_clarity', l: 'Brief' },
+                      { k: 'conversion_path', l: 'Funnel' },
+                      { k: 'accessibility', l: 'Access' },
                       { k: 'compliance', l: 'Regole' },
                     ].map(({ k, l }) => {
-                      const val = scores[selected.id][k] as number
+                      const rawValue = scores[selected.id][k]
+                      const val = typeof rawValue === 'number' ? rawValue : 0
                       const color = val >= 80 ? 'bg-green-500' : val >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                       return (
                         <div key={k} className="bg-white rounded-lg p-2 text-center">

@@ -9,6 +9,9 @@ import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
 import { readAISettings, readApiError } from '@/lib/ai-client'
 import { useRuntimeDemo } from '@/lib/demo-client'
+import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
+
+type QualitySelection = 'auto' | ContentQuality
 
 export default function PianoPage() {
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
@@ -18,6 +21,7 @@ export default function PianoPage() {
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [aiModel, setAiModel] = useState('claude-sonnet-4-6')
+  const [quality, setQuality] = useState<QualitySelection>('auto')
   const { clienteId } = useActiveClienteId()
   const demo = useRuntimeDemo()
 
@@ -59,7 +63,7 @@ export default function PianoPage() {
       const res = await fetch('/api/generate/plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, piattaforme, obiettivo, periodo, ...aiSettings }),
+        body: JSON.stringify({ cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, ...aiSettings }),
       })
       if (!res.ok) throw new Error(await readApiError(res, 'Generazione piano fallita'))
       setMsg({ type: 'ok', text: 'Piano generato. I contenuti sono nel calendario.' })
@@ -91,6 +95,25 @@ export default function PianoPage() {
       </div>
 
       <AIModelSelector task="piano-editoriale" />
+
+      <div className="card p-5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 font-bold text-xs flex items-center justify-center">Q</div>
+          <h2 className="font-semibold text-gray-900">Qualità operativa</h2>
+        </div>
+        <select
+          value={quality}
+          onChange={event => setQuality(event.target.value as QualitySelection)}
+          className="input"
+        >
+          {CONTENT_QUALITY_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>{option.label} — {option.desc}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 mt-2">
+          High/Elite aggiunge per ogni contenuto: audience, funnel, KPI, angle, brief creativo, A/B test, rischi e checklist.
+        </p>
+      </div>
 
       {/* Step 1 — Periodo */}
       <div className="card p-5 mb-4">
@@ -194,7 +217,8 @@ export default function PianoPage() {
               {' '}<span className="capitalize">{periodo}</span> distribuiti su
               {' '}<span className="font-semibold">{piattaforme.length}</span> piattaforme
               ({piattaforme.map(p => PLATFORM_LIST.find(x => x.key === p)?.emoji).join(' ')})
-              {' '}con obiettivo <span className="font-semibold">{obiettivo}</span>.
+              {' '}con obiettivo <span className="font-semibold">{obiettivo}</span>
+              {' '}e qualità <span className="font-semibold uppercase">{quality}</span>.
             </p>
           </div>
         </div>
@@ -213,7 +237,7 @@ export default function PianoPage() {
           onClose={() => setConfirmOpen(false)}
           onConfirm={genera}
           title="Conferma generazione piano"
-          desc={`Stai per generare ${numContenuti} contenuti per ${piattaforme.length} piattaforme. L'AI verrà chiamata UNA volta.`}
+          desc={`Stai per generare ${numContenuti} contenuti per ${piattaforme.length} piattaforme con qualità ${quality}. L'AI verrà chiamata UNA volta.`}
           modello={aiModel}
           isFree={isFree}
           tokenEstimate={tokenStima}

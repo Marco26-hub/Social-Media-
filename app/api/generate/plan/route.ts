@@ -4,6 +4,16 @@ import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
 import { demoContenuti } from '@/lib/demo-data'
+import {
+  buildExtendedOutputSchema,
+  jsonbParam,
+  normalizeContentQuality,
+  pickJson,
+  pickText,
+  resolveContentQuality,
+  summarizeQualityForPrompt,
+  isQualityDowngraded,
+} from '@/lib/content-quality'
 
 const PROMPT_WEEKLY = `Agisci come Social Media Manager senior per brand abbigliamento e-commerce.
 Crea piano editoriale SETTIMANALE (7 giorni) per {{PIATTAFORME}}.
@@ -45,42 +55,60 @@ Output SOLO JSON array valido:
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo } = await request.json()
+    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita } = await request.json()
     if (!cliente_id || !piattaforme?.length) {
       return NextResponse.json({ error: 'cliente_id e piattaforme richiesti' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
+    const requestedQuality = quality ?? quality_level ?? post_quality ?? qualita
     if (isDemo() || !dbReady()) {
+      const demoQuality = resolveContentQuality({ requestedQuality })
       const selectedPlatforms = new Set<string>(piattaforme)
       const count = demoContenuti.filter((item) => selectedPlatforms.has(item.canale)).length || (periodo === 'mensile' ? 30 : 7)
       return NextResponse.json({
         ok: true,
         demo: true,
         count,
+        quality_level: demoQuality,
+        quality_downgraded: isQualityDowngraded(requestedQuality, demoQuality),
         warning: 'Fallback demo: DATABASE_URL non configurato, piano non persistito su Neon.',
       })
     }
 
-    const [brandRows, products] = await Promise.all([
+    const [brandRows, products, clientRows] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id]),
       q('SELECT * FROM prodotti WHERE cliente_id = $1', [cliente_id]),
+      q('SELECT * FROM clienti WHERE id = $1 LIMIT 1', [cliente_id]),
     ])
     const brand = brandRows[0] ?? null
+    const client = (clientRows[0] ?? null) as Record<string, unknown> | null
+    const contentQuality = resolveContentQuality({ requestedQuality, piano: client?.piano })
 
     const promptTemplate = periodo === 'mensile' ? PROMPT_MONTHLY : PROMPT_WEEKLY
     const piattaformeStr = piattaforme.join(', ')
+    const qualityPrompt = `
+
+QUALITÀ OPERATIVA:
+${summarizeQualityForPrompt(contentQuality)}
+
+Per ogni contenuto del piano NON limitarti a idea/caption: includi anche audience_segment, funnel_stage, angle, primary_message, proof_points, hook_variants, cta_variants, creative_brief, template_id, template_style, layout_spec, asset_requirements, production_notes, compliance_notes, risk_flags, platform_best_practices, ab_variants, kpi_target, expected_outcome, missing_inputs, content_checklist.
+Per Reel/Short/Video includi scenes con timing. Per Story includi frames o scenes. Per Carousel includi slides.
+Schema operativo extra per ogni item:
+${buildExtendedOutputSchema()}
+`
 
     const userPrompt = promptTemplate
       .replace('{{PIATTAFORME}}', `/ ${piattaformeStr} /`)
       .replace('{{BRAND}}', JSON.stringify(brand || {}, null, 2))
       .replace('{{PRODOTTI}}', JSON.stringify(products || [], null, 2))
+      + qualityPrompt
 
     const aiRes = await callAI({
       model: model || 'claude-sonnet-4-6',
-      systemPrompt: `Sei un social media manager senior. Obiettivo: ${obiettivo || 'mix'}. Rispondi con JSON array valido, nessun altro testo.`,
+      systemPrompt: `Sei un social media manager e creative strategist senior. Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock o claim non presenti nei dati.`,
       userPrompt,
       openrouterKey: openrouter_key,
-      maxTokens: 8000,
+      maxTokens: contentQuality === 'high' ? 12000 : contentQuality === 'medium' ? 9500 : 8000,
     })
 
     const items = extractJSONArray(aiRes) as Record<string, unknown>[]
@@ -88,37 +116,80 @@ export async function POST(request: Request) {
 
     for (const item of items) {
       const id_contenuto = `C${Date.now().toString(36).toUpperCase()}_${inseriti.length}`
+      const itemQuality = normalizeContentQuality(item.quality_level) ?? contentQuality
+      const insertColumns = [
+        'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
+        'canale', 'formato', 'obiettivo', 'product_id', 'nome_prodotto',
+        'tema', 'hook', 'caption', 'hashtag', 'cta', 'status',
+        'scenes_json', 'slides_json', 'overlay_text', 'alt_text', 'tags',
+        'idea_visual', 'voiceover_script', 'music_mood',
+        'quality_level', 'audience_segment', 'funnel_stage', 'angle', 'primary_message',
+        'proof_points', 'hook_variants', 'caption_long', 'cta_variants', 'creative_brief',
+        'template_id', 'template_style', 'layout_spec_json', 'asset_requirements_json',
+        'production_notes', 'compliance_notes', 'risk_flags', 'platform_best_practices',
+        'ab_variants_json', 'kpi_target', 'expected_outcome', 'missing_inputs', 'content_checklist',
+      ]
+      const insertValues = [
+        cliente_id,
+        id_contenuto,
+        item.data_pubblicazione || null,
+        item.ora_pubblicazione || '10:00',
+        item.canale || 'instagram',
+        item.formato || 'post',
+        item.obiettivo || obiettivo || 'mix',
+        item.product_id || null,
+        item.nome_prodotto || null,
+        item.tema || null,
+        item.hook || null,
+        item.caption || null,
+        item.hashtag || null,
+        item.cta || null,
+        'BOZZA',
+        jsonbParam(pickJson(item, ['scenes', 'scene', 'frames'])),
+        jsonbParam(pickJson(item, ['slides', 'immagini'])),
+        pickText(item, ['overlay_text', 'overlay_testo']) || null,
+        pickText(item, ['alt_text', 'alt']) || null,
+        jsonbParam(pickJson(item, ['tags', 'keywords_target', 'hashtag_array'])),
+        pickText(item, ['idea_visual', 'visual']) || null,
+        pickText(item, ['voiceover_script', 'voiceover']) || null,
+        pickText(item, ['music_mood', 'musica_mood']) || null,
+        itemQuality,
+        pickText(item, ['audience_segment', 'audience', 'target_segment']) || null,
+        pickText(item, ['funnel_stage', 'fase_funnel']) || null,
+        pickText(item, ['angle', 'angolo_creativo']) || null,
+        pickText(item, ['primary_message', 'messaggio_chiave']) || null,
+        jsonbParam(pickJson(item, ['proof_points', 'prove', 'benefici_verificabili'])),
+        jsonbParam(pickJson(item, ['hook_variants', 'hook_alternativi'])),
+        pickText(item, ['caption_long', 'caption_estesa', 'corpo']) || null,
+        jsonbParam(pickJson(item, ['cta_variants', 'cta_alternative'])),
+        pickText(item, ['creative_brief', 'brief_creativo']) || null,
+        pickText(item, ['template_id', 'template', 'template_operativo']) || null,
+        pickText(item, ['template_style', 'stile_template', 'visual_style']) || null,
+        jsonbParam(pickJson(item, ['layout_spec', 'layout_spec_json', 'layout'])),
+        jsonbParam(pickJson(item, ['asset_requirements', 'asset_requirements_json', 'asset_richiesti'])),
+        pickText(item, ['production_notes', 'note_produzione']) || null,
+        pickText(item, ['compliance_notes', 'note_compliance']) || null,
+        jsonbParam(pickJson(item, ['risk_flags', 'rischi'])),
+        jsonbParam(pickJson(item, ['platform_best_practices', 'best_practices_applicate'])),
+        jsonbParam(pickJson(item, ['ab_variants', 'ab_variants_json', 'varianti_ab'])),
+        pickText(item, ['kpi_target', 'kpi_primario']) || null,
+        pickText(item, ['expected_outcome', 'risultato_atteso']) || null,
+        jsonbParam(pickJson(item, ['missing_inputs', 'input_mancanti'])),
+        jsonbParam(pickJson(item, ['content_checklist', 'checklist'])),
+      ]
       await q(
-        `INSERT INTO calendario (
-          cliente_id, id_contenuto, data_pubblicazione, ora_pubblicazione,
-          canale, formato, obiettivo, product_id, nome_prodotto,
-          tema, hook, caption, hashtag, cta, status
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8,
-          $9, $10, $11, $12, $13, $14, $15
-        )`,
-        [
-          cliente_id,
-          id_contenuto,
-          item.data_pubblicazione || null,
-          item.ora_pubblicazione || '10:00',
-          item.canale || 'instagram',
-          item.formato || 'post',
-          item.obiettivo || obiettivo || 'mix',
-          item.product_id || null,
-          item.nome_prodotto || null,
-          item.tema || null,
-          item.hook || null,
-          item.caption || null,
-          item.hashtag || null,
-          item.cta || null,
-          'BOZZA',
-        ],
+        `INSERT INTO calendario (${insertColumns.join(', ')}) VALUES (${insertColumns.map((_, index) => `$${index + 1}`).join(', ')})`,
+        insertValues,
       )
       inseriti.push({ id_contenuto, canale: item.canale as string, data_pubblicazione: item.data_pubblicazione as string })
     }
 
-    return NextResponse.json({ ok: true, count: inseriti.length })
+    return NextResponse.json({
+      ok: true,
+      count: inseriti.length,
+      quality_level: contentQuality,
+      quality_downgraded: isQualityDowngraded(requestedQuality, contentQuality),
+    })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Errore generazione piano'
     return NextResponse.json({ error: msg }, { status: 500 })

@@ -119,9 +119,9 @@ Database (Neon/Postgres):
 
 | Route | Input | Output |
 |---|---|---|
-| `/api/generate/content` | canale, formato, model, openrouter_key | Contenuto salvato in calendario |
-| `/api/generate/plan` | piattaforme, periodo, model | Piano salvato in calendario |
-| `/api/generate/blog` | tema, model | Articolo salvato in blog_articoli |
+| `/api/generate/content` | canale, formato, model, openrouter_key, quality | Contenuto salvato in calendario con campi strategici |
+| `/api/generate/plan` | piattaforme, periodo, model, quality | Piano salvato in calendario con quality/funnel/KPI/brief |
+| `/api/generate/blog` | tema, model, quality | Articolo salvato in blog_articoli |
 | `/api/generate/seo-audit` | sito_url, periodo, model | Audit salvato in seo_audit |
 | `/api/generate/brand-discovery` | url, model | Profilo brand (SETTORE, TONO, TARGET...) |
 | `/api/generate/score-content` | canale, formato, hook, caption | Score 0-100 con suggerimenti |
@@ -177,6 +177,30 @@ Provider supportati (in `lib/ai.ts`):
 - Demo/setup senza DB: `GET /api/system/access` espone `admin` / `1234567` e la login li mostra nel box **Accesso Admin**.
 - Produzione: esegui `db/migrations/011_admin_user.sql`, entra con `admin` / `1234567`, poi cambia password/crea admin reale.
 - Non usare `SHOW_LOGIN_HINT=true` su siti pubblici già venduti, salvo demo controllata.
+
+## 6.2 Sistema Qualità Contenuti
+
+Fase completata il 26/06/2026:
+- Nuovo motore `lib/content-quality.ts`: livelli `soft`, `medium`, `high` con mapping automatico da piano cliente (`free/starter → soft`, `pro/growth → medium`, `agency/enterprise/dominio → high`).
+- API aggiornate: `/api/generate/content`, `/api/generate/plan`, `/api/generate/blog`, `/api/generate/ads`, `/api/generate/score-content`.
+- Nuova migrazione `db/migrations/013_content_quality_ops.sql`: salva `quality_level`, `audience_segment`, `funnel_stage`, `angle`, `primary_message`, `proof_points`, `hook_variants`, `caption_long`, `cta_variants`, `creative_brief`, `production_notes`, `compliance_notes`, `risk_flags`, `platform_best_practices`, `ab_variants_json`, `kpi_target`, `expected_outcome`, `missing_inputs`, `content_checklist`.
+- UI aggiornata: Social, Piano e Ads hanno selettore qualità `Auto pacchetto / Soft / Medium / High`.
+- Calendario mostra badge qualità e pannello **Strategia operativa** nel dettaglio contenuto.
+- Prompt memory aggiornata: `prompts/QUALITY_OPERATING_SYSTEM.txt`, `prompts/K_piano_mensile.txt`, `prompts/G_blog_article.txt`.
+- Validazioni locali: `npm run build` ✅, `npm run lint` ✅ con warning storici, `npm run migrate:dry` ✅, `npm audit --audit-level=moderate` ✅, smoke production locale `30 PASS / 0 FAIL`.
+
+Nota operativa:
+- Per produzione Neon/Render eseguire `npm run migrate` dopo il deploy per applicare anche `013_content_quality_ops.sql`.
+- `quality=auto` è consigliato: decide dal pacchetto cliente; usare `quality=high` per servizi premium/elite.
+- Dal 26/06/2026 il server limita la qualità richiesta al piano cliente: un piano `starter/free` non può generare `high` anche se il client prova a inviarlo dal browser.
+- Nuova migrazione `db/migrations/014_visual_templates.sql`: salva `template_id`, `template_style`, `layout_spec_json`, `asset_requirements_json` per rendere producibili post/reel/story/carousel.
+
+## 6.3 Report Cliente Vendibile
+
+Fase completata il 26/06/2026:
+- `/api/data/report` produce ora executive report deterministico: sintesi direzionale, health servizio, risk level, blocchi, prossime azioni, highlights contenuti.
+- `/dashboard/report` è stato trasformato in report stampabile/PDF per cliente: KPI, distribuzioni canale/formato/qualità/funnel, rischi, next actions e contenuti da valorizzare.
+- Il report funziona anche in demo mode con dati sintetici, utile per call commerciali.
 
 ---
 

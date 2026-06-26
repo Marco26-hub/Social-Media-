@@ -14,6 +14,12 @@ Prodotti disponibili:
 Promo attive nel periodo:
 {{PROMO_DATA}}
 
+Livello qualità:
+{{QUALITY_LEVEL}}
+
+Sistema qualità:
+{{QUALITY_OPERATING_SYSTEM}}
+
 Regole distribuzione:
 - 4-5 post Instagram a settimana
 - 2-3 carousel Instagram al mese (max)
@@ -32,6 +38,12 @@ Regole contenuto:
 - Se promo_attiva=SI nel periodo, includi 2-3 contenuti promo
 - Non inventare prezzi/taglie/disponibilita
 - Tono moderno fashion coerente con brand
+- Ogni contenuto deve indicare audience_segment, funnel_stage, angle, primary_message, kpi_target e expected_outcome
+- Per Reel/Short/Video/Story aggiungi scenes con timing, overlay, voiceover, mood audio e note produzione
+- Per Carousel aggiungi slides con testo, visual, obiettivo slide e motivo per salvare/condividere
+- Per Pin aggiungi keyword/search intent e visual 2:3
+- Aggiungi compliance_notes, risk_flags, missing_inputs e content_checklist
+- Aggiungi template_id, template_style, layout_spec e asset_requirements per produzione grafica/video
 
 Output: SOLO JSON array valido, niente spiegazioni.
 
@@ -48,9 +60,39 @@ Schema:
     "nome_prodotto": "",
     "tema": "",
     "hook": "",
+    "hook_variants": [],
     "caption": "",
+    "caption_long": "",
     "hashtag": "",
     "cta": "",
+    "cta_variants": [],
+    "audience_segment": "",
+    "funnel_stage": "",
+    "angle": "",
+    "primary_message": "",
+    "proof_points": [],
+    "idea_visual": "",
+    "creative_brief": "",
+    "template_id": "",
+    "template_style": "",
+    "layout_spec": {},
+    "asset_requirements": [],
+    "scenes": [],
+    "slides": [],
+    "overlay_text": "",
+    "alt_text": "",
+    "tags": [],
+    "voiceover_script": "",
+    "music_mood": "",
+    "platform_best_practices": [],
+    "ab_variants": [],
+    "kpi_target": "",
+    "expected_outcome": "",
+    "production_notes": "",
+    "compliance_notes": "",
+    "risk_flags": [],
+    "missing_inputs": [],
+    "content_checklist": [],
     "promo_id": "",
     "status": "BOZZA"
   }

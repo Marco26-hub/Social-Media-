@@ -1,0 +1,43 @@
+alter table calendario add column if not exists quality_level text
+  check (quality_level in ('soft','medium','high'));
+alter table calendario add column if not exists audience_segment text;
+alter table calendario add column if not exists funnel_stage text;
+alter table calendario add column if not exists angle text;
+alter table calendario add column if not exists primary_message text;
+alter table calendario add column if not exists proof_points jsonb;
+alter table calendario add column if not exists hook_variants jsonb;
+alter table calendario add column if not exists caption_long text;
+alter table calendario add column if not exists cta_variants jsonb;
+alter table calendario add column if not exists creative_brief text;
+alter table calendario add column if not exists production_notes text;
+alter table calendario add column if not exists compliance_notes text;
+alter table calendario add column if not exists risk_flags jsonb;
+alter table calendario add column if not exists platform_best_practices jsonb;
+alter table calendario add column if not exists ab_variants_json jsonb;
+alter table calendario add column if not exists kpi_target text;
+alter table calendario add column if not exists expected_outcome text;
+alter table calendario add column if not exists missing_inputs jsonb;
+alter table calendario add column if not exists content_checklist jsonb;
+
+comment on column calendario.quality_level is 'Livello generazione: soft, medium, high/elite';
+comment on column calendario.audience_segment is 'Segmento audience target del contenuto';
+comment on column calendario.funnel_stage is 'Fase funnel: awareness, consideration, conversion, loyalty, community';
+comment on column calendario.angle is 'Angolo creativo/strategico principale';
+comment on column calendario.primary_message is 'Messaggio chiave del contenuto';
+comment on column calendario.proof_points is 'Proof points/benefici verificabili usati dal copy';
+comment on column calendario.hook_variants is 'Varianti hook per A/B test o revisione';
+comment on column calendario.caption_long is 'Versione estesa caption/copy';
+comment on column calendario.cta_variants is 'Varianti CTA';
+comment on column calendario.creative_brief is 'Brief operativo per designer/creator';
+comment on column calendario.production_notes is 'Note produzione: asset, riprese, edit, pubblicazione';
+comment on column calendario.compliance_notes is 'Note compliance, privacy, claim e accessibilità';
+comment on column calendario.risk_flags is 'Rischi/controlli da verificare prima della pubblicazione';
+comment on column calendario.platform_best_practices is 'Best practice piattaforma applicate dal generatore';
+comment on column calendario.ab_variants_json is 'Varianti creative A/B';
+comment on column calendario.kpi_target is 'KPI principale da monitorare';
+comment on column calendario.expected_outcome is 'Ipotesi di risultato realistica';
+comment on column calendario.missing_inputs is 'Input mancanti o opzionali per produrre meglio';
+comment on column calendario.content_checklist is 'Checklist pre-pubblicazione generata dall AI';
+
+create index if not exists idx_calendario_cliente_quality on calendario(cliente_id, quality_level);
+create index if not exists idx_calendario_cliente_funnel on calendario(cliente_id, funnel_stage);

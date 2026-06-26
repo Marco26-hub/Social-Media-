@@ -11,6 +11,12 @@ Argomento/Tema:
 Prodotti correlati:
 {{PRODUCTS_DATA}}
 
+Livello qualità:
+{{QUALITY_LEVEL}}
+
+Sistema qualità:
+{{QUALITY_OPERATING_SYSTEM}}
+
 Regole SEO:
 - Titolo H1 unico, 50-60 char, con keyword principale
 - Meta description 140-160 char
@@ -29,6 +35,8 @@ Regole GEO (AI engine optimization):
 - Dati concreti e specifici (numeri, percentuali)
 - Tono autoritativo + esperienza (E-E-A-T)
 - Citazioni interne con anchor descrittive
+- Non inventare fonti esterne, statistiche o claim: se mancano dati, scrivi missing_inputs
+- Aggiungi angle_editoriale, search_intent, audience_segment, proof_points e conversion_path
 
 Regole stile:
 - Tono brand coerente
@@ -58,6 +66,13 @@ Schema:
   "cta_finale": "Call to action chiusura",
   "keywords_target": ["primaria", "secondaria"],
   "prodotti_linkati": ["P001", "P002"],
+  "angle_editoriale": "Tesi/angolo dell'articolo",
+  "search_intent": "Intento ricerca principale",
+  "audience_segment": "Segmento audience",
+  "proof_points": ["prova verificabile"],
+  "conversion_path": "Percorso da lettura a prodotto/lead",
+  "content_checklist": ["SEO", "GEO", "accessibilità"],
+  "missing_inputs": [],
   "tempo_lettura_min": 5,
   "status": "DA_APPROVARE"
 }

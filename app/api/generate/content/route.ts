@@ -3,6 +3,17 @@ import { callAI, extractJSON } from '@/lib/ai'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
+import {
+  buildExtendedOutputSchema,
+  buildQualityContext,
+  getQualityTokenBudget,
+  jsonbParam,
+  normalizeContentQuality,
+  pickJson,
+  pickText,
+  resolveContentQuality,
+  isQualityDowngraded,
+} from '@/lib/content-quality'
 
 type PromptSpec = {
   persona: string
@@ -17,7 +28,7 @@ type PromptSpec = {
   outputSchema: string
 }
 
-function build(p: PromptSpec, brand: string, prodotto: string, canale: string, formato: string, tema: string, nomeProdotto: string) {
+function build(p: PromptSpec, brand: string, prodotto: string, canale: string, formato: string, tema: string, nomeProdotto: string, qualityContext: string) {
   return `${p.persona}
 
 BRAND:
@@ -37,8 +48,14 @@ HASHTAG: ${p.hashtag}
 CTA: ${p.cta}
 EFFETTI: ${p.effetti}
 
-Output SOLO JSON valido. Schema:
-${p.outputSchema}`
+${qualityContext}
+
+Output SOLO JSON valido.
+Schema base storico:
+${p.outputSchema}
+
+Schema operativo obbligatorio da includere o fondere nel JSON:
+${buildExtendedOutputSchema()}`
 }
 
 const PROMPTS: Record<string, PromptSpec> = {
@@ -245,7 +262,7 @@ const PROMPTS: Record<string, PromptSpec> = {
   },
 }
 
-function extractCaption(parsed: Record<string, unknown>, canale: string, formato: string): string {
+function extractCaption(parsed: Record<string, unknown>): string {
   if (parsed.caption_tiktok) return parsed.caption_tiktok as string
   if (parsed.caption_adattata) return parsed.caption_adattata as string
   if (parsed.descrizione_seo) return parsed.descrizione_seo as string
@@ -285,7 +302,6 @@ function extractOverlay(parsed: Record<string, unknown>): string | null {
 
 function buildBrandContext(brand: Record<string, unknown> | null): string {
   if (!brand || !brand.brand_name) return ''
-  const settoreIt = ((brand as Record<string, string>).settore || 'moda ed e-commerce').toLowerCase()
   return `CONTESTO BRAND (USA SEMPRE QUESTI DATI):
 Nome: ${brand.brand_name || ''}
 Settore: ${brand.settore || 'moda e-commerce'}
@@ -301,27 +317,31 @@ CTA base: ${brand.cta_base || ''}
 `
 }
 
-function buildSystemPrompt(brand: Record<string, unknown> | null): string {
+function buildSystemPrompt(brand: Record<string, unknown> | null, quality: string): string {
   const settore = (brand as Record<string, string>)?.settore || 'moda ed e-commerce'
   const nome = (brand as Record<string, string>)?.brand_name || 'brand'
-  return `Sei un copywriter social media senior specializzato in ${settore} per il brand ${nome}. Rispondi sempre SOLO con JSON valido, nessun altro testo, nessuna spiegazione. Usa il tono di voce, le parole chiave e lo stile indicati nel contesto brand.`
+  return `Sei un creative strategist e copywriter social media senior specializzato in ${settore} per il brand ${nome}. Livello qualità richiesto: ${quality}. Rispondi sempre SOLO con JSON valido, nessun altro testo, nessuna spiegazione. Usa il tono di voce, le parole chiave e lo stile indicati nel contesto brand. Non inventare claim, prezzi, stock o dati non forniti.`
 }
 
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, canale, formato, model, openrouter_key, tema, nome_prodotto, product_id } = await request.json()
+    const { cliente_id, canale, formato, model, openrouter_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo } = await request.json()
     if (!cliente_id || !canale || !formato) {
       return NextResponse.json({ error: 'cliente_id, canale, formato richiesti' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
+    const requestedQuality = quality ?? quality_level ?? post_quality ?? qualita
     if (isDemo() || !dbReady()) {
+      const demoQuality = resolveContentQuality({ requestedQuality })
       const id_contenuto = `DEMO_${Date.now().toString(36).toUpperCase()}`
       return NextResponse.json({
         ok: true,
         demo: true,
         id_contenuto,
         tipo: 'calendario',
+        quality_level: demoQuality,
+        quality_downgraded: isQualityDowngraded(requestedQuality, demoQuality),
         warning: 'Fallback demo: DATABASE_URL non configurato, contenuto non persistito su Neon.',
       })
     }
@@ -329,14 +349,18 @@ export async function POST(request: Request) {
     const key = `${canale}:${formato}`
     const spec = PROMPTS[key] || PROMPTS[`instagram:post`]
 
-    const [brandRows, products] = await Promise.all([
+    const [brandRows, products, clientRows] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id]),
       q('SELECT * FROM prodotti WHERE cliente_id = $1', [cliente_id]),
+      q('SELECT * FROM clienti WHERE id = $1 LIMIT 1', [cliente_id]),
     ])
     const brand = (brandRows[0] ?? null) as Record<string, unknown> | null
+    const client = (clientRows[0] ?? null) as Record<string, unknown> | null
+    const contentQuality = resolveContentQuality({ requestedQuality, piano: client?.piano })
     const product = (products as Array<Record<string, unknown>>).find(p => p.product_id === product_id) || products[0] || {}
 
     const brandContext = buildBrandContext(brand)
+    const qualityContext = buildQualityContext({ quality: contentQuality, canale, formato, obiettivo })
 
     const basePrompt = build(
       spec,
@@ -345,6 +369,7 @@ export async function POST(request: Request) {
       canale, formato,
       tema || 'contenuto brand',
       nome_prodotto || (product as Record<string, unknown>)?.nome_prodotto as string || '',
+      qualityContext,
     )
 
     // Prepend brand context for richer generation
@@ -352,65 +377,99 @@ export async function POST(request: Request) {
 
     const aiRes = await callAI({
       model: model || 'claude-sonnet-4-6',
-      systemPrompt: buildSystemPrompt(brand),
+      systemPrompt: buildSystemPrompt(brand, contentQuality),
       userPrompt,
       openrouterKey: openrouter_key,
-      maxTokens: 4000,
+      maxTokens: getQualityTokenBudget(contentQuality),
     })
 
     const parsed = extractJSON(aiRes) as Record<string, unknown>
     const id_contenuto = `C${Date.now().toString(36).toUpperCase()}`
 
-    const caption = extractCaption(parsed, canale, formato)
+    const caption = extractCaption(parsed)
     const scenes = extractScenes(parsed)
     const slides = extractSlides(parsed)
     const tags = extractTags(parsed)
     const overlay = extractOverlay(parsed)
     const ideaVisual = (parsed.idea_visual || parsed.idea_visual_descrizione || '') as string
     const voiceover = (parsed.voiceover || '') as string
+    const voiceoverScript = pickText(parsed, ['voiceover_script', 'voiceover'])
     const music = (parsed.musica_mood || parsed.music_mood || '') as string
     const titolo = (parsed.titolo || parsed.titolo_video || parsed.titolo_carosello || parsed.titolo_immagine || '') as string
     const altText = (parsed.alt_text || parsed.alt || '') as string
     const thumbnail = (parsed.thumbnail_url || parsed.immagine_cover || '') as string
-    const hook = (parsed.hook || parsed.hook_0_2_sec || parsed.hook_0_3_sec || '') as string
+    const hook = (parsed.hook || parsed.hook_0_2_sec || parsed.hook_0_3_sec || titolo || '') as string
     const hashtag = (parsed.hashtag || '') as string
     const cta = (parsed.cta || parsed.cta_finale || parsed.domanda_finale || '') as string
+    const generatedQuality = normalizeContentQuality(parsed.quality_level) ?? contentQuality
+    const insertColumns = [
+      'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
+      'canale', 'formato', 'obiettivo', 'tema', 'product_id', 'nome_prodotto',
+      'hook', 'caption', 'hashtag', 'cta', 'note', 'status', 'media_type',
+      'scenes_json', 'slides_json', 'overlay_text', 'alt_text', 'tags', 'thumbnail_url',
+      'idea_visual', 'voiceover_script', 'music_mood',
+      'quality_level', 'audience_segment', 'funnel_stage', 'angle', 'primary_message',
+      'proof_points', 'hook_variants', 'caption_long', 'cta_variants', 'creative_brief',
+      'template_id', 'template_style', 'layout_spec_json', 'asset_requirements_json',
+      'production_notes', 'compliance_notes', 'risk_flags', 'platform_best_practices',
+      'ab_variants_json', 'kpi_target', 'expected_outcome', 'missing_inputs', 'content_checklist',
+    ]
+    const insertValues = [
+      cliente_id, id_contenuto,
+      new Date(Date.now() + 86400000).toISOString().split('T')[0], '10:00',
+      canale, formato, obiettivo || null, tema || null, product_id || null,
+      nome_prodotto || (product as Record<string, unknown>)?.nome_prodotto as string || null,
+      hook || null,
+      caption || null,
+      hashtag || null,
+      cta || null,
+      JSON.stringify(parsed).slice(0, 3000),
+      'DA_APPROVARE',
+      formato === 'reel' || formato === 'video' || formato === 'short' ? 'video' : 'image',
+      scenes, slides, overlay || null,
+      altText || null,
+      tags ? JSON.stringify(tags) : null,
+      thumbnail || null,
+      ideaVisual || null,
+      voiceoverScript || voiceover || null,
+      music || null,
+      generatedQuality,
+      pickText(parsed, ['audience_segment', 'audience', 'target_segment']) || null,
+      pickText(parsed, ['funnel_stage', 'fase_funnel']) || null,
+      pickText(parsed, ['angle', 'angolo_creativo']) || null,
+      pickText(parsed, ['primary_message', 'messaggio_chiave']) || null,
+      jsonbParam(pickJson(parsed, ['proof_points', 'prove', 'benefici_verificabili'])),
+      jsonbParam(pickJson(parsed, ['hook_variants', 'hook_alternativi'])),
+      pickText(parsed, ['caption_long', 'caption_estesa', 'corpo']) || null,
+      jsonbParam(pickJson(parsed, ['cta_variants', 'cta_alternative'])),
+      pickText(parsed, ['creative_brief', 'brief_creativo']) || null,
+      pickText(parsed, ['template_id', 'template', 'template_operativo']) || null,
+      pickText(parsed, ['template_style', 'stile_template', 'visual_style']) || null,
+      jsonbParam(pickJson(parsed, ['layout_spec', 'layout_spec_json', 'layout'])),
+      jsonbParam(pickJson(parsed, ['asset_requirements', 'asset_requirements_json', 'asset_richiesti'])),
+      pickText(parsed, ['production_notes', 'note_produzione']) || null,
+      pickText(parsed, ['compliance_notes', 'note_compliance']) || null,
+      jsonbParam(pickJson(parsed, ['risk_flags', 'rischi'])),
+      jsonbParam(pickJson(parsed, ['platform_best_practices', 'best_practices_applicate'])),
+      jsonbParam(pickJson(parsed, ['ab_variants', 'ab_variants_json', 'varianti_ab'])),
+      pickText(parsed, ['kpi_target', 'kpi_primario']) || null,
+      pickText(parsed, ['expected_outcome', 'risultato_atteso']) || null,
+      jsonbParam(pickJson(parsed, ['missing_inputs', 'input_mancanti'])),
+      jsonbParam(pickJson(parsed, ['content_checklist', 'checklist'])),
+    ]
 
     await q(
-      `INSERT INTO calendario (
-        cliente_id, id_contenuto, data_pubblicazione, ora_pubblicazione,
-        canale, formato, tema, product_id, nome_prodotto,
-        hook, caption, hashtag, cta, note, status, media_type,
-        scenes_json, slides_json, overlay_text, alt_text, tags, thumbnail_url,
-        idea_visual, voiceover_script, music_mood
-      ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,
-        $10,$11,$12,$13,$14,$15,$16,
-        $17,$18,$19,$20,$21,$22,$23,$24,$25
-      )`,
-      [
-        cliente_id, id_contenuto,
-        new Date(Date.now() + 86400000).toISOString().split('T')[0], '10:00',
-        canale, formato, tema || null, product_id || null,
-        nome_prodotto || (product as Record<string, unknown>)?.nome_prodotto as string || null,
-        hook || null,
-        caption || null,
-        hashtag || null,
-        cta || null,
-        JSON.stringify(parsed).slice(0, 3000),
-        'DA_APPROVARE',
-        formato === 'reel' || formato === 'video' || formato === 'short' ? 'video' : 'image',
-        scenes, slides, overlay || null,
-        altText || null,
-        tags ? JSON.stringify(tags) : null,
-        thumbnail || null,
-        ideaVisual || null,
-        voiceover || null,
-        music || null,
-      ],
+      `INSERT INTO calendario (${insertColumns.join(', ')}) VALUES (${insertColumns.map((_, index) => `$${index + 1}`).join(', ')})`,
+      insertValues,
     )
 
-    return NextResponse.json({ ok: true, id_contenuto, tipo: 'calendario' })
+    return NextResponse.json({
+      ok: true,
+      id_contenuto,
+      tipo: 'calendario',
+      quality_level: generatedQuality,
+      quality_downgraded: isQualityDowngraded(requestedQuality, generatedQuality),
+    })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Errore generazione'
     return NextResponse.json({ error: msg }, { status: 500 })
