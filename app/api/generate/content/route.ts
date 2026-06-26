@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
 
 type PromptSpec = {
   persona: string
@@ -314,8 +315,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cliente_id, canale, formato richiesti' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
-    if (!dbReady()) {
-      return NextResponse.json({ error: 'DATABASE_URL non configurato: la generazione persistente richiede il DB. In demo usa il fallback simulato o configura Neon su Render.' }, { status: 503 })
+    if (isDemo() || !dbReady()) {
+      const id_contenuto = `DEMO_${Date.now().toString(36).toUpperCase()}`
+      return NextResponse.json({
+        ok: true,
+        demo: true,
+        id_contenuto,
+        tipo: 'calendario',
+        warning: 'Fallback demo: DATABASE_URL non configurato, contenuto non persistito su Neon.',
+      })
     }
 
     const key = `${canale}:${formato}`

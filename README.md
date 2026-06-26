@@ -2,18 +2,23 @@
 
 Next.js 15 + Neon/Postgres. Sostituisce Google Sheets con dashboard web full.
 
-## Deploy su Render (Free)
+## Deploy su Render
 
-1. Push su GitHub
-2. Vai su [render.com](https://render.com) → New → Blueprint
-3. Collega il repo → Render legge `render.yaml` automaticamente
-4. Compila `DATABASE_URL` con la connection string di Neon
-5. Deploy automatico
+1. Vai su [render.com](https://render.com) → New → Blueprint.
+2. Collega il repo → Render legge `render.yaml` automaticamente.
+3. Compila le env `sync: false`: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXT_PUBLIC_SITE_URL`, chiave AI e Blotato quando pronto.
+4. Il deploy Render esegue `npm run migrate` prima dello start; in alternativa lancialo manualmente con `DATABASE_URL="postgresql://..." npm run migrate`.
+5. Apri `/api/system/health` e verifica `status: "ready"`.
 
 **Env da impostare su Render:**
 - `DATABASE_URL` — connection string Neon (da neon.tech → Dashboard → Connection)
 - `AUTH_SECRET` — generato automaticamente da Render
-- `BLOTATO_API_KEY` — da Blotato quando pronto
+- `NEXTAUTH_URL` — URL Render o dominio custom
+- `NEXT_PUBLIC_SITE_URL` — stesso URL pubblico
+- `OPENROUTER_API_KEY` o `ANTHROPIC_API_KEY` — almeno una chiave AI
+- `BLOTATO_API_KEY` / `BLOTATO_WEBHOOK_SECRET` — da Blotato quando vendi autopubblicazione
+
+Guida completa: `RENDER_PRODUCTION.md`.
 
 **Cold start:** Render free tier si spegne dopo 15 min di inattività. Prima richiesta ~30s. Per admin panel è accettabile.
 
@@ -39,8 +44,8 @@ Next.js 15 + Neon/Postgres. Sostituisce Google Sheets con dashboard web full.
 
 1. Crea un database Neon/Postgres.
 2. Configura `DATABASE_URL` in `.env.local`.
-3. Applica lo schema SQL esistente al database.
-4. Esegui `db/migrations/004_operations_foundation.sql` per job backend ed eventi integrazione.
+3. Applica tutte le migration con `npm run migrate`.
+4. Usa `npm run migrate:dry` per controllare l'ordine senza toccare il DB.
 
 ### 2. Variabili ambiente
 
@@ -80,6 +85,8 @@ npx vercel --prod
 # Aggiungi le 3 env vars nel Vercel dashboard
 ```
 
+Per produzione Render usa `RENDER_PRODUCTION.md`.
+
 ## Struttura
 
 ```
@@ -111,7 +118,7 @@ db/migrations/004_operations_foundation.sql → job + eventi integrazioni
 
 La priorita ora e portare il prodotto da demo a operativo:
 
-1. Applicare `db/migrations/004_operations_foundation.sql` su Neon per tracciare job backend ed eventi integrazione.
+1. Applicare `npm run migrate` su Neon per schema, seed e tabelle operative.
 2. Usare `/api/system/health` come controllo rapido di env, DB e AI prima del deploy.
 3. Collegare il flusso `APPROVATO → publish` con Blotato o webhook custom, salvando gli esiti in `integration_events`.
 
@@ -132,7 +139,7 @@ Il file `CHECKLIST-VENDITA.md` contiene la checklist operativa: accesso admin, d
 ## Brand
 
 - **Software / prodotto**: Social Automation (servizio gestito SaaS-as-a-service)
-- **Primo cliente test**: SILKinCOM (seedato in migration `003_multi_tenant.sql` riga 45 — fashion e-commerce, piano `pro`, 30 contenuti/mese)
+- **Primo cliente test**: SILKinCOM (seedato in `db/migrations/002_seed.sql` — fashion e-commerce, piano `pro`, 30 contenuti/mese)
 - I documenti commerciali (brochure, landing, pacchetti) usano il brand **Social Automation**
 - Il cliente test SILKinCOM resta nel DB come esempio operativo per QA e demo
 
@@ -162,7 +169,7 @@ NEXT (blotato/webhook esterno)
 
 ## Multi-cliente
 
-La migration `003_multi_tenant.sql` aggiunge:
+La migration `001_full_schema.sql` crea la base multi-cliente:
 
 - tabella `clienti`
 - tabella `profiles`

@@ -248,7 +248,7 @@ Audit/fix P0 completato il 26/06/2026:
 
 ## 13. In Lavoro / Prossimi Step
 
-- [ ] **Deploy effettivo su Render**: DATABASE_URL + AUTH_SECRET + BLOTATO_API_KEY + BLOTATO_WEBHOOK_SECRET
+- [ ] **Deploy effettivo su Render**: env `sync: false`, `npm run migrate`, `/api/system/health` ready
 - [ ] **API key OpenRouter/Blotato**: per test end-to-end produzione
 - [ ] **Multi-lingua**: generazione contenuti in altre lingue
 - [ ] **White-label**: logo agenzia custom
@@ -263,25 +263,41 @@ Audit/fix P0 completato il 26/06/2026:
 DATABASE_URL=postgresql://...    # Neon
 AUTH_SECRET=...                   # NextAuth
 NEXTAUTH_URL=...                  # URL produzione
+NEXT_PUBLIC_SITE_URL=...          # URL pubblico per link e referrer
 ANTHROPIC_API_KEY=...             # Claude (opzionale se usi OpenRouter)
 OPENROUTER_API_KEY=...            # Modelli free (opzionale se usi Claude)
-NEXT_PUBLIC_DEMO_MODE=true        # Demo mode senza DB
+NEXT_PUBLIC_DEMO_MODE=true        # Solo demo controllata, mai produzione venduta
 BLOTATO_API_KEY=...               # Quando pronto
 BLOTATO_API_URL=https://api.blotato.com
 BLOTATO_WEBHOOK_SECRET=...        # Firma webhook Blotato in produzione
-SHOW_LOGIN_HINT=true              # Solo demo controllata: mostra credenziali admin anche con DB
+SHOW_LOGIN_HINT=true              # Solo demo controllata: mai su sito pubblico venduto
 ADMIN_LOGIN_USER=admin            # Opzionale, usato da /api/system/access
 ADMIN_LOGIN_PASSWORD=1234567      # Opzionale, usato da /api/system/access
 ```
 
 ---
 
-## 14. Ultima Fase Locale
+## 14. Produzione Render
 
 ```bash
-fix: AI fallback osservabili, runtime demo client, accesso admin demo/setup, checklist vendita
+npm run prod:check
+npm run migrate:dry
+DATABASE_URL="postgresql://..." npm run migrate
+npm run build
 ```
 
-**43 route, build verde, audit npm verde.**
+- `render.yaml` usa `npm ci && npm run build` e `preDeployCommand: npm run migrate`.
+- `scripts/run-migrations.mjs` applica `db/migrations/*.sql` e registra checksum in `schema_migrations`.
+- `scripts/render-production-check.mjs` segnala env mancanti e flag demo pericolosi.
+- Guida operativa: `RENDER_PRODUCTION.md`.
+- Audit finale interconnessioni/fallback:
+  - `lib/db.ts` usa il driver ufficiale `@neondatabase/serverless`, non fetch custom.
+  - `app/api/data/calendario` e `app/api/data/report` hanno fallback demo/no-DB espliciti.
+  - `app/api/generate/{plan,content,blog,seo-audit,competitor-analysis}` risponde con fallback demo controllato quando il DB manca.
+  - `middleware.ts` restituisce `401` JSON per API data/generate protette senza sessione.
+  - `app/api/data/approve` gestisce DB non disponibile con `503` controllato.
+- CI GitHub Actions: `.github/workflows/ci.yml` esegue install, lint, build, audit, migration dry-run e smoke test demo runtime.
+
+**43 route, build verde, smoke test 30/30 verde, audit npm verde.**
 
 *Fine handoff. Non reintrodurre Supabase o n8n. Mantieni la demo mode funzionante.*

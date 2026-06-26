@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { callAI, extractJSONArray } from '@/lib/ai'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
+import { demoContenuti } from '@/lib/demo-data'
 
 const PROMPT_WEEKLY = `Agisci come Social Media Manager senior per brand abbigliamento e-commerce.
 Crea piano editoriale SETTIMANALE (7 giorni) per {{PIATTAFORME}}.
@@ -48,8 +50,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cliente_id e piattaforme richiesti' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
-    if (!dbReady()) {
-      return NextResponse.json({ error: 'DATABASE_URL non configurato: il piano editoriale deve salvare su calendario. In demo usa il fallback simulato o configura Neon su Render.' }, { status: 503 })
+    if (isDemo() || !dbReady()) {
+      const selectedPlatforms = new Set<string>(piattaforme)
+      const count = demoContenuti.filter((item) => selectedPlatforms.has(item.canale)).length || (periodo === 'mensile' ? 30 : 7)
+      return NextResponse.json({
+        ok: true,
+        demo: true,
+        count,
+        warning: 'Fallback demo: DATABASE_URL non configurato, piano non persistito su Neon.',
+      })
     }
 
     const [brandRows, products] = await Promise.all([

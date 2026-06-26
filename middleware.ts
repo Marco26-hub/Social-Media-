@@ -11,8 +11,16 @@ export async function middleware(request: NextRequest) {
   const isDashboard = pathname.startsWith('/dashboard')
   const isApprove = pathname.startsWith('/approve')
   const isPreview = pathname.startsWith('/preview')
+  const isPublicApprovalApi = pathname === '/api/data/approve' && request.method !== 'POST'
+  const isProtectedApi =
+    pathname.startsWith('/api/generate') ||
+    (pathname.startsWith('/api/data') && !isPublicApprovalApi)
 
   if (isApprove || isPreview) return NextResponse.next()
+
+  if (isProtectedApi && !token) {
+    return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
+  }
 
   if (pathname === '/') {
     return NextResponse.redirect(new URL(token ? '/dashboard/clienti' : '/login', request.url))

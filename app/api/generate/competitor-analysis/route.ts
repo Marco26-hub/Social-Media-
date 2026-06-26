@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
 
 const PROMPT = `Sei un social media analyst senior. Analizza i profili social di un competitor e produci un report dettagliato.
 
@@ -46,8 +47,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cliente_id e competitor_nome richiesti' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
-    if (!dbReady()) {
-      return NextResponse.json({ error: 'DATABASE_URL non configurato: l’analisi competitor richiede il profilo brand su DB. In demo usa il fallback simulato o configura Neon su Render.' }, { status: 503 })
+    if (isDemo() || !dbReady()) {
+      return NextResponse.json({
+        competitor_nome,
+        data_analisi: new Date().toISOString().split('T')[0],
+        content_strategy: {
+          tipo: 'Fallback demo',
+          temi: ['prodotto', 'lifestyle', 'educazione'],
+          stile_visivo: 'pulito, verticale, orientato a reel e carousel',
+          tono_voce: 'diretto e aspirazionale',
+        },
+        frequenza: { instagram: '4-5/settimana', facebook: '2/settimana', tiktok: '3/settimana', pinterest: '8-12 pin/settimana', migliori_ore: ['09:00', '12:30', '19:00'] },
+        engagement: { rate_stimato: 'medio', tipo_interazioni: ['salvataggi', 'commenti', 'click'], crescita: 'stabile', note: 'Configura Neon per analisi su profilo brand reale.' },
+        hashtag_strategy: { principali: ['#brand', '#settore', '#nicchia'], branded: [], note: 'Mix demo ampio/nicchia/branded.' },
+        punti_forti: ['Presenza visual coerente', 'Buona frequenza contenuti'],
+        punti_deboli: ['Poche CTA misurabili', 'Scarso riuso SEO/GEO dei contenuti'],
+        miglioramenti_per_cliente: [
+          { azione: 'Creare serie video ricorrente', impatto: 'alto', effort: 'medio', canale: 'tiktok' },
+          { azione: 'Trasformare carousel in blog FAQ', impatto: 'medio', effort: 'basso', canale: 'blog' },
+        ],
+        score_competitor: 74,
+        gap_analysis: 'Fallback demo: opportunità su formati verticali, contenuti educativi e CTA tracciabili.',
+        contenuti_suggeriti: [
+          { tema: 'Prima/dopo prodotto', formato: 'reel', canale: 'instagram', perche: 'Aumenta salvataggi e prova sociale' },
+        ],
+        demo: true,
+      })
     }
 
     const brandRows = await q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id])

@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint .",
+    "migrate": "node scripts/run-migrations.mjs",
+    "migrate:dry": "node scripts/run-migrations.mjs --dry-run",
+    "prod:check": "node scripts/render-production-check.mjs",
+    "prod:check:strict": "node scripts/render-production-check.mjs --strict",
+    "ci:verify": "npm run lint && npm run build && npm audit --audit-level=moderate && npm run migrate:dry"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

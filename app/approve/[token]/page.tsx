@@ -179,7 +179,7 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
                   Mi piace
                 </button>
               </div>
-              <p className="text-[10px] text-gray-400 text-center">Il contenuto rimarrà in bozza. L'admin riceverà il tuo feedback.</p>
+              <p className="text-[10px] text-gray-400 text-center">Il contenuto rimarrà in bozza. L&apos;admin riceverà il tuo feedback.</p>
             </div>
           ) : (
             <div className="flex gap-3">

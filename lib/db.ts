@@ -1,36 +1,28 @@
-const DB_URL = process.env.DATABASE_URL
-
-export function dbReady() {
-  return !!DB_URL
-}
-
-function neonApiUrl(): string {
-  const url = new URL(DB_URL!.replace('postgresql://', 'https://').replace('postgres://', 'https://'))
-  url.pathname = '/sql'
-  return url.toString()
-}
+import { neon } from '@neondatabase/serverless'
 
 type QueryRow = Record<string, unknown>
-type QueryResult = { rows: QueryRow[] }
 
-async function fetchNeon(query: string, params: unknown[] = []): Promise<QueryResult> {
-  if (!DB_URL) throw new Error('DATABASE_URL not configured')
-  const res = await fetch(neonApiUrl(), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${DB_URL}`,
-    },
-    body: JSON.stringify({ query, params }),
-  })
-  const data = await res.json()
-  if (!res.ok) throw new Error(`Neon error: ${JSON.stringify(data)}`)
-  return data as QueryResult
+let cachedDatabaseUrl = ''
+let cachedSql: ReturnType<typeof neon> | null = null
+
+export function dbReady() {
+  return Boolean(process.env.DATABASE_URL?.trim())
+}
+
+function getSql() {
+  const databaseUrl = process.env.DATABASE_URL?.trim()
+  if (!databaseUrl) throw new Error('DATABASE_URL not configured')
+
+  if (!cachedSql || cachedDatabaseUrl !== databaseUrl) {
+    cachedDatabaseUrl = databaseUrl
+    cachedSql = neon(databaseUrl)
+  }
+
+  return cachedSql
 }
 
 export async function q(query: string, params: unknown[] = []): Promise<QueryRow[]> {
-  const result = await fetchNeon(query, params)
-  return result.rows
+  return await getSql().query<false, false>(query, params) as QueryRow[]
 }
 
 export async function q1(query: string, params: unknown[] = []): Promise<QueryRow | null> {

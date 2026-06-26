@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
 
 const PROMPT = `Sei SEO + GEO auditor senior. Analizza performance e crea audit con miglioramenti concreti.
 
@@ -29,8 +30,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cliente_id e sito_url richiesti' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
-    if (!dbReady()) {
-      return NextResponse.json({ error: 'DATABASE_URL non configurato: l’audit SEO/GEO deve salvare su DB. In demo usa il fallback simulato o configura Neon su Render.' }, { status: 503 })
+    if (isDemo() || !dbReady()) {
+      return NextResponse.json({
+        ok: true,
+        demo: true,
+        score_globale: 82,
+        riepilogo: `Fallback demo: audit SEO/GEO simulato per ${sito_url}. Configura Neon per salvare audit reali.`,
+        miglioramenti: [
+          { area: 'SEO contenuti', azione: 'Creare pagine pillar e FAQ per query commerciali', impatto: 'alto', effort: 'medio' },
+          { area: 'GEO/AI search', azione: 'Aggiungere risposte dirette e dati strutturati nei contenuti', impatto: 'alto', effort: 'medio' },
+        ],
+      })
     }
 
     const [brandRows, calendario, logs] = await Promise.all([

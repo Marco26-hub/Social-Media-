@@ -29,11 +29,13 @@
 ### Obbligatorio
 
 - Configurare dominio o URL Render stabile.
-- Configurare `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_URL`.
-- Eseguire migrations `001` → `012` su Neon.
-- Eseguire seed admin `db/migrations/011_admin_user.sql`.
+- Configurare `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_SITE_URL`.
+- Eseguire `DATABASE_URL="postgresql://..." npm run migrate` su Neon.
+- Verificare `/api/system/health` con `status: "ready"` e `mode: "production"`.
+- Verificare che la seed admin `db/migrations/011_admin_user.sql` sia stata applicata dal runner.
 - Cambiare password admin dopo il primo accesso.
 - Configurare almeno una chiave AI: `OPENROUTER_API_KEY` o `ANTHROPIC_API_KEY`.
+- Lanciare `npm run prod:check` prima del deploy finale.
 - Preparare privacy/cookie/contratto servizio per l’agenzia.
 
 ### Consigliato

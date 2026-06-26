@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
-import { q } from '@/lib/db'
+import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 import { scheduleOnBlotato } from '@/lib/publish/schedule'
 import { validateMediaUrls, formatMediaError } from '@/lib/media-validate'
 import { notifyAgency } from '@/lib/notifications'
+import { isDemo } from '@/lib/demo'
+import { demoContenuti } from '@/lib/demo-data'
 
 const CALENDARIO_UPDATE_COLUMNS = new Set([
   'data_pubblicazione',
@@ -67,12 +69,19 @@ const CALENDARIO_UPDATE_COLUMNS = new Set([
 export async function GET(request: Request) {
   try {
     await requireAuth()
-    const cid = await requireClienteId()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const canale = searchParams.get('canale')
     const limit = parseInt(searchParams.get('limit') || '50')
 
+    if (isDemo() || !dbReady()) {
+      let rows = demoContenuti
+      if (status && status !== 'tutti') rows = rows.filter((item) => item.status === status)
+      if (canale && canale !== 'tutti') rows = rows.filter((item) => item.canale === canale)
+      return NextResponse.json(rows.slice(0, limit))
+    }
+
+    const cid = await requireClienteId()
     let query: string
     const params: unknown[] = [cid]
 
@@ -99,11 +108,15 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     await requireAuth()
-    const cid = await requireClienteId()
     const body = await request.json() as Record<string, unknown>
     const { id } = body
     if (!id) return NextResponse.json({ error: 'id richiesto' }, { status: 400 })
 
+    if (isDemo() || !dbReady()) {
+      return NextResponse.json({ ok: true, demo: true })
+    }
+
+    const cid = await requireClienteId()
     const existingContent = await q('SELECT * FROM calendario WHERE id = $1 AND cliente_id = $2', [id, cid])
     if (!existingContent.length) {
       return NextResponse.json({ error: 'contenuto non trovato' }, { status: 404 })

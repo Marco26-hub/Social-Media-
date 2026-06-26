@@ -71,7 +71,7 @@ export default function LandingPage() {
         </h1>
         <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto">
           AI scrive i post, prepara il piano editoriale, valida i contenuti, pubblica sui canali e registra tutto nel pannello.
-          La preview ora mostra l'intero sistema.
+          La preview ora mostra l&apos;intero sistema.
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link href="/dashboard" className="btn-primary text-base px-6 py-3">

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { dbReady, q } from '@/lib/db'
 import { callAI, extractJSON } from '@/lib/ai'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
 
 const PROMPT = `Sei un content writer SEO senior per brand fashion e-commerce.
 Scrivi articolo blog 800-1200 parole in italiano, ottimizzato per SEO e GEO (AI search).
@@ -41,8 +42,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cliente_id richiesto' }, { status: 400 })
     }
     await requireClienteAccess(cliente_id)
-    if (!dbReady()) {
-      return NextResponse.json({ error: 'DATABASE_URL non configurato: il blog deve salvare su DB. In demo usa il fallback simulato o configura Neon su Render.' }, { status: 503 })
+    if (isDemo() || !dbReady()) {
+      return NextResponse.json({
+        ok: true,
+        demo: true,
+        slug: `demo-${String(tema || 'articolo').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'articolo'}`,
+        warning: 'Fallback demo: DATABASE_URL non configurato, articolo non persistito su Neon.',
+      })
     }
 
     const [brandRows, products] = await Promise.all([
