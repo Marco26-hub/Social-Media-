@@ -5,14 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/render-start.mjs",
     "lint": "eslint .",
     "migrate": "node scripts/run-migrations.mjs",
     "migrate:dry": "node scripts/run-migrations.mjs --dry-run",
     "prod:check": "node scripts/render-production-check.mjs",
     "prod:check:strict": "node scripts/render-production-check.mjs --strict",
     "render:sync-env": "node scripts/render-sync-env.mjs",
-    "ci:verify": "npm run lint && npm run build && npm audit --audit-level=moderate && npm run migrate:dry"
+    "ci:verify": "npm run lint && npm run build && npm audit --audit-level=moderate && npm run migrate:dry",
+    "next:start": "next start"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
