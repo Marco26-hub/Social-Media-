@@ -96,7 +96,7 @@ export async function GET() {
       error: databaseChecks.error,
     },
     next_actions: [
-      ...(!hasDatabase ? ['Configura DATABASE_URL per Neon/Postgres'] : []),
+      ...(!checks.databaseUrl ? ['Configura DATABASE_URL per Neon/Postgres'] : []),
       ...(checks.databaseUrl && !checks.dbConnection ? ['DATABASE_URL presente ma connessione Neon fallita: verifica stringa/SSL/password'] : []),
       ...(checks.dbConnection && !checks.profilesTable ? ['Esegui migrations Neon: tabella profiles mancante'] : []),
       ...(checks.profilesTable && !checks.adminUser ? ['Esegui db/migrations/011_admin_user.sql: admin mancante'] : []),
