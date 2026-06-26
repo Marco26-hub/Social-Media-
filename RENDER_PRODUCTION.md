@@ -37,6 +37,32 @@ Health check:
 
 ## 2. Variabili ambiente Render
 
+Nel repo viene preparato un file locale ignorato da Git:
+
+```bash
+.env.render.production.local
+```
+
+Compila lì `DATABASE_URL`, una chiave AI e `BLOTATO_API_KEY`, poi copia i valori nella dashboard Render.
+
+Se vuoi sincronizzare via API Render:
+
+```bash
+RENDER_API_KEY="rnd_..." npm run render:sync-env
+```
+
+Se lo script non trova il servizio dal nome, aggiungi:
+
+```bash
+RENDER_SERVICE_ID="srv_..." RENDER_API_KEY="rnd_..." npm run render:sync-env
+```
+
+Per sincronizzare e avviare deploy:
+
+```bash
+RENDER_API_KEY="rnd_..." npm run render:sync-env -- --deploy
+```
+
 ### Obbligatorie
 
 | Variabile | Valore |

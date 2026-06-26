@@ -11,6 +11,7 @@
     "migrate:dry": "node scripts/run-migrations.mjs --dry-run",
     "prod:check": "node scripts/render-production-check.mjs",
     "prod:check:strict": "node scripts/render-production-check.mjs --strict",
+    "render:sync-env": "node scripts/render-sync-env.mjs",
     "ci:verify": "npm run lint && npm run build && npm audit --audit-level=moderate && npm run migrate:dry"
   },
   "dependencies": {
