@@ -12,7 +12,12 @@ export async function getSession() {
 
 export async function requireAuth() {
   const session = await getSession()
-  if (!session?.user?.id) throw new Error('Non autenticato')
+  if (!session?.user?.id) {
+    if (isDemo() || !dbReady()) {
+      return { id: 'demo-user', email: 'demo@social-automation.local', name: 'Admin Demo' }
+    }
+    throw new Error('Non autenticato')
+  }
   return session.user as { id: string; email: string; name: string }
 }
 

@@ -2,11 +2,18 @@ const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 const FALLBACK_MODELS = [
+  'openrouter/free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'google/gemma-4-31b-it:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
   'nvidia/nemotron-3-super:free',
-  'deepseek/deepseek-v4-flash:free',
-  'google/gemma-4-31b:free',
   'claude-sonnet-4-6',
 ]
+
+function isAnthropicModel(model: string) {
+  return model.startsWith('claude-')
+}
 
 export async function callAI(params: {
   model: string
@@ -35,7 +42,7 @@ export async function callAI(params: {
       // Try fallback models on OpenRouter
       if (silentFallback) {
         for (const fb of FALLBACK_MODELS) {
-          if (fb === model || !fb.includes(':')) continue // skip same model and non-OR models
+          if (fb === model || isAnthropicModel(fb)) continue
           try {
             const res = await callOpenRouter(fb, systemPrompt, userPrompt, orKey, maxTokens)
             if (res) return res
@@ -48,7 +55,7 @@ export async function callAI(params: {
   }
 
   // Try 2: Anthropic direct
-  if (anthropicKey && !model.includes(':')) {
+  if (anthropicKey && isAnthropicModel(model)) {
     try {
       const res = await callAnthropic(model, systemPrompt, userPrompt, anthropicKey, maxTokens)
       if (res) return res
@@ -56,7 +63,7 @@ export async function callAI(params: {
       errors.push(`Anthropic: ${(e as Error).message}`)
       console.warn('[AI fallback]', errors[errors.length - 1])
     }
-  } else if (anthropicKey && model.includes(':') && silentFallback) {
+  } else if (anthropicKey && silentFallback) {
     // Try with Claude fallback on Anthropic
     try {
       const res = await callAnthropic('claude-sonnet-4-6', systemPrompt, userPrompt, anthropicKey, maxTokens)
@@ -69,7 +76,7 @@ export async function callAI(params: {
   // Give up
   const errMsg = errors.length > 0
     ? `AI generation failed after ${errors.length} attempt(s): ${errors.join('; ')}`
-    : 'No AI provider configured. Add OPENROUTER_API_KEY or ANTHROPIC_API_KEY.'
+    : 'No AI provider configured. Aggiungi OPENROUTER_API_KEY o ANTHROPIC_API_KEY su Render, oppure incolla una OpenRouter API Key nella pagina.'
   throw new Error(errMsg)
 }
 

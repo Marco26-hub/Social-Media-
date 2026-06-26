@@ -13,6 +13,8 @@ import { isDemo } from '@/lib/demo'
 import SeoScoreGrid from '@/components/SeoScoreGrid'
 import LeadsCard from '@/components/LeadsCard'
 import ClientsCard from '@/components/ClientsCard'
+import AIModelSelector from '@/components/AIModelSelector'
+import OpenRouterKeyInput from '@/components/OpenRouterKeyInput'
 
 const TONI_VOCE = ['elegante','casual','ironico','professionale','emozionale','tecnico','luxury','friendly','sostenibile','istituzionale','ribelle','minimal','autoritario','giovanile']
 
@@ -62,6 +64,7 @@ const EMOJI_OPTIONS = [
 ]
 
 export default function BrandPage() {
+  const [runtimeDemo, setRuntimeDemo] = useState(() => isDemo())
   const [brand, setBrand] = useState<Partial<Brand> | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -81,11 +84,23 @@ export default function BrandPage() {
   const [leadsResult, setLeadsResult] = useState<Record<string, unknown> | null>(null)
   const [clientsResult, setClientsResult] = useState<Record<string, unknown> | null>(null)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
-  const demo = isDemo()
+  const demo = runtimeDemo
 
   useEffect(() => {
     async function load() {
-      if (demo) {
+      let detectedDemo = isDemo()
+      if (!detectedDemo) {
+        try {
+          const health = await fetch('/api/system/health', { cache: 'no-store' })
+          const data = health.ok ? await health.json() : null
+          detectedDemo = data?.mode === 'demo'
+        } catch {
+          detectedDemo = false
+        }
+      }
+      setRuntimeDemo(detectedDemo)
+
+      if (detectedDemo) {
         setBrand({
           brand_name: 'SILKinCOM',
           sito_url: 'https://silkincom.com',
@@ -118,14 +133,27 @@ export default function BrandPage() {
       setLoading(false)
     }
     load()
-  }, [demo])
+  }, [])
+
+  function hasOpenRouterKey() {
+    return typeof window !== 'undefined' && Boolean(localStorage.getItem('openrouter_key')?.trim())
+  }
+
+  async function apiError(res: Response, fallback: string) {
+    try {
+      const data = await res.json()
+      return typeof data?.error === 'string' ? data.error : fallback
+    } catch {
+      return fallback
+    }
+  }
 
   async function handleDiscovery() {
     if (!url.trim()) { setMsg({ type: 'err', text: 'Inserisci URL del sito' }); return }
     setDiscovering(true); setMsg(null); setSeoResult(null); setLeadsResult(null); setClientsResult(null)
     const runSeo = includeSeo || includeGeo
 
-    if (demo) {
+    if (demo && !hasOpenRouterKey()) {
       await new Promise(r => setTimeout(r, 1500))
       setBrand(prev => ({ ...prev, sito_url: url, settore: 'Fashion/Abbigliamento', tono_voce: 'elegante', target: 'Donna 25-34, Donna 35-44, Professioniste', promessa_brand: '✨ Eleganza accessibile', colori_brand: 'Beige, Nero, Bianco', parole_da_usare: '#SEO:eleganza, #SEO:qualità', parole_da_evitare: '#EVITA:economico, low cost', emoji_policy: '✨🤍🖤', hashtag_base: '#BRANDED:silkincom, #SETTORE:fashion' }))
       if (runSeo) setSeoResult({ score_globale: 72, score_seo_tecnico: 85, score_seo_contenuti: 70, score_geo_ai_search: 58, score_social_coerenza: 80, score_eeat: 65, riepilogo: 'Analisi completata.', punti_forti: ['SEO base presente'], punti_critici: ['Migliorare GEO'] })
@@ -140,7 +168,7 @@ export default function BrandPage() {
       const orKey = typeof window !== 'undefined' ? localStorage.getItem('openrouter_key') ?? '' : ''
       const tasks: Promise<unknown>[] = [
         fetch('/api/generate/brand-discovery', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, model: aiModel, openrouter_key: orKey || undefined }) })
-          .then(async res => { if (!res.ok) throw new Error((await res.json()).error); const d = await res.json(); setBrand(prev => ({ ...prev, ...d, sito_url: url })) }),
+          .then(async res => { if (!res.ok) throw new Error(await apiError(res, 'Brand discovery fallita')); const d = await res.json(); setBrand(prev => ({ ...prev, ...d, sito_url: url })) }),
       ]
       if (runSeo && typeof window !== 'undefined') {
         const cid = localStorage.getItem('active_cliente_id') || ''
@@ -162,7 +190,7 @@ export default function BrandPage() {
     const target = (brand as Record<string, string>)?.target || ''
     const tono = (brand as Record<string, string>)?.tono_voce || ''
 
-    if (demo) {
+    if (demo && !hasOpenRouterKey()) {
       await new Promise(r => setTimeout(r, 1200))
       if (type === 'keywords') update('parole_da_usare', '#SEO:parola1, #SEO:parola2, #GEO:keyword geo, #LONGTAIL:frase lunga, #BRANDED:nome brand')
       if (type === 'hashtags') update('hashtag_base', '#BRANDED:nomebrand, #SETTORE:settore, #NICCHIA:parola, #TREND:tendenza')
@@ -177,7 +205,7 @@ export default function BrandPage() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ brand: brand || {}, settore, target, tono, model: aiModel, openrouter_key: orKey || undefined }),
       })
-      if (!res.ok) throw new Error('Generation failed')
+      if (!res.ok) throw new Error(await apiError(res, 'Generazione keyword fallita'))
       const data = await res.json()
       if (type === 'keywords') {
         const words = (data.parole_da_usare as Array<Record<string, string>> || []).map((w: Record<string, string>) => `#${w.categoria}:${w.keyword}`).join(', ')
@@ -205,7 +233,7 @@ export default function BrandPage() {
   async function generateCompliance() {
     setGenCompliance(true)
     setComplianceResult(null)
-    if (demo) {
+    if (demo && !hasOpenRouterKey()) {
       await new Promise(r => setTimeout(r, 2000))
       setComplianceResult({
         cookie_policy: 'Questo sito utilizza cookie tecnici per il corretto funzionamento e cookie di profilazione...',
@@ -228,7 +256,7 @@ export default function BrandPage() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ brand: brand || {}, settore, url, target, model: aiModel, openrouter_key: orKey || undefined }),
       })
-      if (!res.ok) throw new Error('Compliance generation failed')
+      if (!res.ok) throw new Error(await apiError(res, 'Generazione compliance fallita'))
       const data = await res.json()
       setComplianceResult(data)
       if (data.cookie_policy) update('cookie_policy', (data.cookie_policy as string).slice(0, 500))
@@ -279,6 +307,15 @@ export default function BrandPage() {
         <h1 className="text-xl md:text-3xl font-bold text-gray-900 tracking-tight">Profilo Brand</h1>
         <p className="text-xs md:text-sm text-gray-500 mt-1">DNA del brand. AI usa questi dati per contenuti, ads, SEO e marketing.</p>
       </div>
+
+      {demo && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Modalità demo rilevata: senza `DATABASE_URL`/auth l’AI usa dati simulati. Se incolli una OpenRouter key qui sotto, i generatori AI usano comunque la chiamata reale.
+        </div>
+      )}
+
+      <AIModelSelector />
+      <OpenRouterKeyInput />
 
       {/* AI Discovery */}
       <div className="card p-5 mb-6 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border-violet-100">
