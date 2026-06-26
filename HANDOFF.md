@@ -2,7 +2,7 @@
 
 > Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
-**Data**: 2026-06-26
+**Data ultimo aggiornamento**: 2026-06-26 (fix AI timeout + deploy)
 **Progetto**: Social Automation — SaaS social media management per agenzie
 **Stack**: Next.js 15.5.19 + Neon/Postgres + NextAuth + Tailwind + AI (Anthropic/OpenRouter)
 **Percorso locale**: `/Users/md/Downloads/social_automation_v2`
@@ -68,6 +68,7 @@ Database (Neon/Postgres):
   log_pubblicazioni, blog_articoli, seo_audit, settings,
   promo, account_social, user_client_access,
   generation_jobs, integration_events
+  Migrazioni: 14 file (001-015, excl. 003), 13 applicate su Neon — manca 015
 ```
 
 ---
@@ -182,11 +183,14 @@ Database (Neon/Postgres):
 ## 6. Modelli AI
 
 Provider supportati (in `lib/ai.ts`):
-- **Anthropic**: `claude-sonnet-4-6` (default), `claude-opus-4-7`, `claude-haiku-4-5`
+- **Anthropic via OpenRouter**: `claude-sonnet-4-6` (default — MA non è ID valido per OpenRouter, manca prefisso `anthropic/`)
 - **OpenRouter free**: `openrouter/free`, `nvidia/nemotron-3-ultra-550b-a55b:free`, `nvidia/nemotron-3-super-120b-a12b:free`, `google/gemma-4-31b-it:free`, `google/gemma-4-26b-a4b-it:free`, `qwen/qwen3-next-80b-a3b-instruct:free`, `openai/gpt-oss-120b:free`
 
 **Fallback automatico**: se OpenRouter fallisce, prova altri modelli gratuiti in cascade.
 **Fallback osservabile**: errori AI sanificati, loggati e riportati all'utente se tutti i tentativi falliscono.
+**Timeout**: `callOpenRouter` e `callAnthropic` hanno AbortController con 60s timeout. Client-side: 90s timeout sul fetch piano editoriale con messaggio chiaro.
+
+⚠️ **Issue nota**: il default `claude-sonnet-4-6` NON è un ID valido su OpenRouter. Selezionare un modello OpenRouter free (es. `nvidia/nemotron-3-ultra-550b-a55b:free`) dal selettore `AIModelSelector`.
 
 ## 6.1 Accesso Admin
 
@@ -291,7 +295,10 @@ Audit/fix P0 completato il 26/06/2026:
 
 ## 13. In Lavoro / Prossimi Step
 
-- [ ] **Deploy su Render**: build blocca su `tailwindcss` in devDependencies (spostato in dependencies); serve `npm ci && npm run build` su Render — assicurarsi che il build command sia corretto e DATABASE_URL configurato
+- [x] **AI timeout fix**: AbortController 60s su OpenRouter/Anthropic, 90s client-side su piano
+- [x] **maxTokens ridotti**: 12000→6000, 9500→4500, 8000→3000 per generazione piano
+- [ ] **Eseguire migration 015 su Neon**: dopo il deploy, `npm run migrate` applica `015_generation_optimization_cycle.sql` (altrimenti INSERT piano fallisce per colonne mancanti)
+- [ ] **Fix default model**: `claude-sonnet-4-6` non valido su OpenRouter — cambiare default in `nvidia/nemotron-3-ultra-550b-a55b:free` o altro modello valido
 - [ ] **API key OpenRouter/Blotato**: per test end-to-end produzione
 - [ ] **Multi-lingua**: generazione contenuti in altre lingue
 - [ ] **White-label**: logo agenzia custom
@@ -335,6 +342,7 @@ npm run build
 - Guida operativa: `RENDER_PRODUCTION.md`.
 - CI GitHub Actions: `.github/workflows/ci.yml` esegue install, lint, build, audit, migration dry-run e smoke test demo runtime.
 - Setup live in app: `/dashboard/setup` legge `/api/system/health` e mostra checklist produzione, credenziali admin, comandi Render Shell e readiness vendita.
+- **⚠️ Dopo ogni deploy**, eseguire `npm run migrate` sul Neon DB — il comando postDeploy di render.yaml documenta ma non esegue automaticamente il migrate via dashboard Render.
 - Upload asset contenuti: `/dashboard/social/[platform]` permette upload immagini o URL pubblici; content/blog usano gli asset nei prompt e salvano media/cover.
 - Nota storage: `public/uploads` su Render è filesystem runtime, utile per servizio gestito; per SaaS self-service serve storage persistente S3/R2/Cloudinary.
 
