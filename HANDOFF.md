@@ -88,6 +88,7 @@ Database (Neon/Postgres):
 | **Log** | `/dashboard/log` | Storico pubblicazioni |
 | **Settings** | `/dashboard/settings` | Configurazioni operativa |
 | **Report** | `/dashboard/report` | KPI, grafici per canale/formato, stampa PDF |
+| **Setup Produzione** | `/dashboard/setup` | Readiness live: DB, migrations, admin, AI, Blotato, comandi Render e azioni mancanti |
 | **Login** | `/login` | Auto-login in demo mode + box Accesso Admin demo/setup |
 | **Preview** | `/preview/[id]` | Anteprima multi-piattaforma (IG, FB, TT, Pinterest) con condivisione WA/TG/Email + flag escludi piattaforma dalla pubblicazione |
 | **Approve** | `/approve/[token]` | Client portal pubblico: approva/richiedi modifica senza login |
@@ -315,6 +316,7 @@ npm run build
 - `scripts/render-production-check.mjs` segnala env mancanti e flag demo pericolosi.
 - Guida operativa: `RENDER_PRODUCTION.md`.
 - CI GitHub Actions: `.github/workflows/ci.yml` esegue install, lint, build, audit, migration dry-run e smoke test demo runtime.
+- Setup live in app: `/dashboard/setup` legge `/api/system/health` e mostra checklist produzione, credenziali admin, comandi Render Shell e readiness vendita.
 
 ### Deploy fixes applicati
 - `next.config.ts` → `next.config.mjs` (non richiede TypeScript runtime)
