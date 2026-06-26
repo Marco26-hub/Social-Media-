@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Key, Check, ExternalLink, ShieldCheck } from 'lucide-react'
+import { Key, ExternalLink, ShieldCheck } from 'lucide-react'
 
 export default function OpenRouterKeyInput() {
   const [key, setKey] = useState('')

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { LogPubblicazione } from '@/lib/types'
 import { demoLogs } from '@/lib/demo-data'
@@ -13,7 +13,7 @@ export default function LogPage() {
   const [logs, setLogs] = useState<LogPubblicazione[] | null>(null)
   const [loading, setLoading] = useState(true)
 
-  async function load() {
+  const load = useCallback(async () => {
     if (demo) {
       setLogs(demoLogs)
       setLoading(false)
@@ -23,9 +23,9 @@ export default function LogPage() {
     const data = res.ok ? await res.json() : null
     setLogs(data ?? [])
     setLoading(false)
-  }
+  }, [demo])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   return (
     <div className="p-4 md:p-8">
@@ -35,6 +35,7 @@ export default function LogPage() {
       </div>
 
       <div className="card overflow-x-auto">
+        {loading && <div className="p-4 text-sm text-gray-400">Caricamento log...</div>}
         <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="border-b bg-gray-50">

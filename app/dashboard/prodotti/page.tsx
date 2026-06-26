@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Prodotto } from '@/lib/types'
 import { demoProdotti } from '@/lib/demo-data'
 import { isDemo } from '@/lib/demo'
@@ -18,7 +18,7 @@ export default function ProdottiPage() {
   const [prodotti, setProdotti] = useState<Prodotto[] | null>(null)
   const [loading, setLoading] = useState(true)
 
-  async function load() {
+  const load = useCallback(async () => {
     if (demo) {
       setProdotti(demoProdotti)
       setLoading(false)
@@ -28,9 +28,9 @@ export default function ProdottiPage() {
     const data = res.ok ? await res.json() : null
     setProdotti(data ?? [])
     setLoading(false)
-  }
+  }, [demo])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   return (
     <div className="p-4 md:p-8">
@@ -39,6 +39,7 @@ export default function ProdottiPage() {
         <p className="text-xs md:text-sm text-gray-500 mt-0.5">{prodotti?.length ?? 0} prodotti nel catalogo</p>
       </div>
 
+      {loading && <div className="card p-4 text-sm text-gray-400">Caricamento prodotti...</div>}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
         {(prodotti ?? []).map((p: Prodotto) => (
           <div key={p.id} className="card p-4">

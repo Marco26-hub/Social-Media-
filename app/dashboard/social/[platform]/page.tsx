@@ -21,6 +21,7 @@ type QualitySelection = 'auto' | ContentQuality
 type UploadedAsset = {
   name: string
   url: string
+  previewUrl?: string
   path?: string
   mime?: string
   size?: number
@@ -40,7 +41,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [states, setStates]   = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({})
   const [errors, setErrors]   = useState<Record<string, string>>({})
   const [pending, setPending] = useState<FormatoConfig | null>(null)
-  const [aiModel, setAiModel] = useState('claude-sonnet-4-6')
+  const [aiModel, setAiModel] = useState('nvidia/nemotron-3-ultra-550b-a55b:free')
   const [quality, setQuality] = useState<QualitySelection>('auto')
   const [assets, setAssets] = useState<UploadedAsset[]>([])
   const [assetUrl, setAssetUrl] = useState('')
@@ -50,7 +51,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setAiModel(localStorage.getItem('ai_model') ?? 'claude-sonnet-4-6')
+      setAiModel(localStorage.getItem('ai_model') ?? 'nvidia/nemotron-3-ultra-550b-a55b:free')
     }
   }, [])
 
@@ -81,11 +82,14 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       setUploading(true)
       const form = new FormData()
       form.append('cliente_id', clienteId)
-      Array.from(files).slice(0, 7 - assets.length).forEach(file => form.append('files', file))
+      const selectedFiles = Array.from(files).slice(0, 7 - assets.length)
+      selectedFiles.forEach(file => form.append('files', file))
+      const previews = new Map(selectedFiles.map(file => [file.name, URL.createObjectURL(file)]))
       const res = await fetch('/api/assets/upload', { method: 'POST', body: form })
       if (!res.ok) throw new Error(await readApiError(res, 'Upload immagini fallito'))
       const data = await res.json() as { assets?: UploadedAsset[] }
-      setAssets(prev => [...prev, ...(data.assets || [])].slice(0, 7))
+      const uploaded = (data.assets || []).map(asset => ({ ...asset, previewUrl: previews.get(asset.name) || asset.url }))
+      setAssets(prev => [...prev, ...uploaded].slice(0, 7))
     } catch (e) {
       setErrors(prev => ({ ...prev, asset_upload: (e as Error).message }))
     } finally {
@@ -265,7 +269,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
             {assets.map((asset, index) => (
               <div key={`${asset.url}-${index}`} className="relative rounded-xl overflow-hidden border border-gray-200 bg-white group">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={asset.url} alt={asset.name} className="w-full aspect-square object-cover" />
+                <img src={asset.previewUrl || asset.url} alt={asset.name} className="w-full aspect-square object-cover" />
                 <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-[10px] px-2 py-1 truncate">
                   {asset.source === 'upload' ? 'Upload' : 'URL'} · {asset.name}
                 </div>

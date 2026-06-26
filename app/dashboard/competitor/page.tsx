@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import {
   Eye, Plus, Trash2, Sparkles, Loader2, TrendingUp, TrendingDown,
-  Target, Hash, Lightbulb, Zap, BarChart3, Globe, MessageCircle, AlertTriangle
+  Target, Hash, Lightbulb, Zap, BarChart3, AlertTriangle
 } from 'lucide-react'
 import { readAISettings, readApiError } from '@/lib/ai-client'
 import { useRuntimeDemo } from '@/lib/demo-client'

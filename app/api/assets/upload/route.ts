@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       const bytes = Buffer.from(await file.arrayBuffer())
       await writeFile(diskPath, bytes)
 
-      const pathname = `/uploads/${clienteId}/${filename}`
+      const pathname = `/api/assets/file/${encodeURIComponent(clienteId)}/${encodeURIComponent(filename)}`
       uploaded.push({
         name: file.name,
         url: `${publicBaseUrl(request)}${pathname}`,

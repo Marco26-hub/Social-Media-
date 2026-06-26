@@ -119,7 +119,7 @@ export async function POST(request: Request) {
       .replace('{{OPS_NOTES}}', [production_notes, compliance_notes].filter(Boolean).join('\n') || '(non indicate)')
 
     const aiRes = await callAI({
-      model: model || 'claude-sonnet-4-6',
+      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
       systemPrompt: 'Sei un social media quality auditor. Valuta contenuti in modo oggettivo. Rispondi SOLO con JSON valido.',
       userPrompt,
       openrouterKey: openrouter_key || undefined,

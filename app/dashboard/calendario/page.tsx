@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState, useCallback, Suspense, useRef } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
 import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle } from 'lucide-react'
@@ -52,7 +52,6 @@ function CalendarioInner() {
   const [approvalUrl, setApprovalUrl]   = useState<string | null>(null)
   const [demoData, setDemoData]     = useState<Contenuto[]>(demoContenuti)
   const [dragItem, setDragItem]     = useState<string | null>(null)
-  const [dropTarget, setDropTarget] = useState<string | null>(null)
   const [dragOverDate, setDragOverDate] = useState<string | null>(null)
   const [backuping, setBackuping] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Contenuto | null>(null)
@@ -309,9 +308,6 @@ function CalendarioInner() {
     d.setDate(d.getDate() - d.getDay() + 1 + i)
     return d.toISOString().split('T')[0]
   })
-
-  const mediaUrls = (c: Contenuto) =>
-    [c.link_media_1,c.link_media_2,c.link_media_3].filter(Boolean) as string[]
 
   return (
     <div className="p-4 md:p-8">

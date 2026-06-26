@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       .replace('{{COMPETITOR_SOCIAL}}', Array.isArray(competitor_social) ? competitor_social.join(', ') : (competitor_social || 'non disponibile'))
 
     const aiRes = await callAI({
-      model: model || 'claude-sonnet-4-6',
+      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
       systemPrompt: 'Sei un social media analyst senior. Rispondi SOLO con JSON valido.',
       userPrompt,
       openrouterKey: openrouter_key,

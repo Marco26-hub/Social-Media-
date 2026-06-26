@@ -30,8 +30,8 @@ const TASK_LABELS: Record<Task, string> = {
 const TASK_RECOMMENDED: Record<Task, string> = {
   'contenuti-social': 'nvidia/nemotron-3-super-120b-a12b:free',
   'piano-editoriale': 'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'seo-audit': 'claude-sonnet-4-6',
-  'blog-articolo': 'claude-sonnet-4-6',
+  'seo-audit': 'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'blog-articolo': 'nvidia/nemotron-3-ultra-550b-a55b:free',
 }
 
 const MODELS: Model[] = [
@@ -62,7 +62,7 @@ const QUALITY_DOT: Record<string, string> = {
 
 export default function AIModelSelector({ task }: { task?: Task }) {
   const [open, setOpen] = useState(false)
-  const [selectedId, setSelectedId] = useState('claude-sonnet-4-6')
+  const [selectedId, setSelectedId] = useState('nvidia/nemotron-3-ultra-550b-a55b:free')
   const [showKeyInput, setShowKeyInput] = useState(false)
   const [orKey, setOrKey] = useState('')
   const [savedKey, setSavedKey] = useState('')
@@ -71,11 +71,11 @@ export default function AIModelSelector({ task }: { task?: Task }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    setSelectedId(localStorage.getItem('ai_model') || 'claude-sonnet-4-6')
+    setSelectedId(localStorage.getItem('ai_model') || (task ? TASK_RECOMMENDED[task] : 'nvidia/nemotron-3-ultra-550b-a55b:free'))
     const key = localStorage.getItem('openrouter_key') || ''
     setSavedKey(key)
     setOrKey(key)
-  }, [])
+  }, [task])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -110,7 +110,6 @@ export default function AIModelSelector({ task }: { task?: Task }) {
   const needsOrKey = selected.provider === 'openrouter' && !savedKey
 
   const recommendedId = task ? TASK_RECOMMENDED[task] : null
-  const recommended = recommendedId ? MODELS.find(m => m.id === recommendedId) : null
   const isOnRecommended = recommendedId === selectedId
 
   const taskModels = task
@@ -118,7 +117,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
     : []
 
   return (
-    <div className="card p-4 md:p-5 mb-6 bg-gradient-to-br from-white to-gray-50 border-gray-100">
+    <div className="card p-4 md:p-5 mb-6 bg-gradient-to-br from-white to-gray-50 border-gray-100 overflow-visible">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -148,9 +147,9 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap md:flex-nowrap">
+        <div className="flex items-stretch sm:items-center gap-2 flex-shrink-0 flex-col sm:flex-row md:flex-nowrap w-full md:w-auto">
           {!savedKey ? (
-            <button onClick={() => setShowKeyInput(s => !s)} className="btn-secondary text-xs py-2 px-3">
+            <button onClick={() => setShowKeyInput(s => !s)} className="btn-secondary text-xs py-2 px-3 justify-center">
               <Key className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">OpenRouter</span>
             </button>
@@ -160,10 +159,10 @@ export default function AIModelSelector({ task }: { task?: Task }) {
             </span>
           )}
 
-          <div className="relative max-w-full" ref={dropdownRef}>
+          <div className="relative max-w-full w-full sm:w-auto" ref={dropdownRef}>
             <button
               onClick={() => setOpen(o => !o)}
-              className="btn-primary text-xs py-2 px-3 min-w-0 sm:min-w-[140px] justify-between"
+              className="btn-primary text-xs py-2 px-3 min-w-0 sm:min-w-[140px] justify-between w-full sm:w-auto"
             >
               <span className="flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5" />
@@ -173,7 +172,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
             </button>
 
             {open && (
-              <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-[360px] max-w-[360px] bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+              <div className="fixed left-3 right-3 top-24 max-h-[calc(100vh-7rem)] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[360px] sm:max-w-[360px] bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
                 <div className="p-2 border-b border-gray-100">
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -185,7 +184,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
                   </div>
                 </div>
 
-                <div className="max-h-[460px] overflow-y-auto">
+                <div className="max-h-[calc(100vh-12rem)] sm:max-h-[460px] overflow-y-auto overscroll-contain">
                   {/* Task recommendation banner */}
                   {task && taskModels.length > 0 && !search && (
                     <div className="px-3 py-2.5 border-b border-gray-100">
@@ -262,9 +261,9 @@ export default function AIModelSelector({ task }: { task?: Task }) {
       {showKeyInput && (
         <div className="mt-4 pt-4 border-t border-gray-100">
           <label className="label">OpenRouter API Key</label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input type="password" value={orKey} onChange={e => setOrKey(e.target.value)} placeholder="sk-or-v1-..." className="input flex-1" />
-            <button onClick={saveKey} className="btn-primary text-xs">Salva</button>
+            <button onClick={saveKey} className="btn-primary text-xs justify-center">Salva</button>
           </div>
           <p className="text-[10px] text-gray-400 mt-1.5">
             Crea key gratis su <a href="https://openrouter.ai/keys" target="_blank" rel="noopener" className="text-brand-600 hover:underline">openrouter.ai/keys</a>

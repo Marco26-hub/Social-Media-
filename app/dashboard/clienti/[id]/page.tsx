@@ -2,16 +2,16 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { isDemo } from '@/lib/demo'
 import type { Contenuto, Cliente } from '@/lib/types'
 import {
   Building2, Calendar, BarChart3, Target, ShoppingBag, FileText,
   TrendingUp, AlertTriangle, CheckCircle, Clock, ArrowLeft,
-  Loader2, ExternalLink,
+  Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
-import { demoContenuti, demoClienti, demoLogs } from '@/lib/demo-data'
+import { demoContenuti, demoClienti } from '@/lib/demo-data'
 import StatusBadge from '@/components/StatusBadge'
 
 const CANALE_ICON: Record<string, string> = {
@@ -20,7 +20,6 @@ const CANALE_ICON: Record<string, string> = {
 
 export default function ClienteDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const id = params.id as string
 
   const [cliente, setCliente] = useState<Cliente | null>(null)

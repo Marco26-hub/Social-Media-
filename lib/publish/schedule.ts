@@ -7,15 +7,6 @@ import { validateMediaUrls } from '@/lib/media-validate'
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://api.blotato.com'
 const BLOTATO_API_KEY = process.env.BLOTATO_API_KEY
 
-type FormatConfig = {
-  instagram: string[]   // 'post','reel','story','carousel'
-  facebook: string[]    // 'post','video','reel'
-  tiktok: string[]      // 'video','reel'
-  pinterest: string[]   // 'pin'
-  youtube_shorts: string[] // 'short'
-  linkedin: string[]    // 'post','articolo'
-}
-
 type ContentRow = Record<string, unknown>
 
 export async function scheduleOnBlotato(

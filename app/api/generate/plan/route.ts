@@ -54,6 +54,27 @@ Tono moderno fashion coerente con brand.
 Output SOLO JSON array valido:
 [{"data_pubblicazione":"YYYY-MM-DD","ora_pubblicazione":"HH:MM","canale":"instagram|facebook|tiktok|pinterest|youtube_shorts","formato":"post|carousel|reel|story|pin|short|video","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
 
+function isMissingDbColumn(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || '')
+  return /column .* does not exist|42703/i.test(message)
+}
+
+async function insertCalendario(columns: string[], values: unknown[], retryColumns: string[]) {
+  try {
+    await q(
+      `INSERT INTO calendario (${columns.join(', ')}) VALUES (${columns.map((_, index) => `$${index + 1}`).join(', ')})`,
+      values,
+    )
+  } catch (error) {
+    if (!isMissingDbColumn(error)) throw error
+    const retryValues = retryColumns.map(column => values[columns.indexOf(column)])
+    await q(
+      `INSERT INTO calendario (${retryColumns.join(', ')}) VALUES (${retryColumns.map((_, index) => `$${index + 1}`).join(', ')})`,
+      retryValues,
+    )
+  }
+}
+
 export async function POST(request: Request) {
   try {
     await requireAuth()
@@ -110,7 +131,7 @@ ${buildExtendedOutputSchema()}
       + qualityPrompt
 
     const aiRes = await callAI({
-      model: model || 'claude-sonnet-4-6',
+      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
       systemPrompt: `Sei un social media manager e creative strategist senior. Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock o claim non presenti nei dati.`,
       userPrompt,
       openrouterKey: openrouter_key,
@@ -189,10 +210,13 @@ ${buildExtendedOutputSchema()}
         jsonbParam(pickJson(item, ['missing_inputs', 'input_mancanti'])),
         jsonbParam(pickJson(item, ['content_checklist', 'checklist'])),
       ]
-      await q(
-        `INSERT INTO calendario (${insertColumns.join(', ')}) VALUES (${insertColumns.map((_, index) => `$${index + 1}`).join(', ')})`,
-        insertValues,
-      )
+      await insertCalendario(insertColumns, insertValues, [
+        'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
+        'canale', 'formato', 'obiettivo', 'product_id', 'nome_prodotto',
+        'tema', 'hook', 'caption', 'hashtag', 'cta', 'status',
+        'scenes_json', 'slides_json', 'overlay_text', 'alt_text', 'tags',
+        'idea_visual', 'voiceover_script', 'music_mood',
+      ])
       inseriti.push({ id_contenuto, canale: item.canale as string, data_pubblicazione: item.data_pubblicazione as string })
     }
 

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     const userPrompt = SCRAPE_PROMPT.replace('{{URL}}', url)
 
     const aiRes = await callAI({
-      model: model || 'claude-sonnet-4-6',
+      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
       systemPrompt: 'Sei un lead generation specialist. Analizza siti web e estrai contatti. Rispondi SOLO con JSON valido, nessun altro testo.',
       userPrompt,
       openrouterKey: openrouter_key || undefined,

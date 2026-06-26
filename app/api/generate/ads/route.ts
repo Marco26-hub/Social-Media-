@@ -129,7 +129,7 @@ export async function POST(request: Request) {
     }
 
     const aiRes = await callAI({
-      model: model || 'claude-sonnet-4-6',
+      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
       systemPrompt: `${systemPrompts[platform] || 'Sei un ads specialist. Rispondi SOLO con JSON valido.'} Livello qualità: ${contentQuality}. Non inventare dati non forniti; formula ipotesi misurabili.`,
       userPrompt,
       openrouterKey: openrouter_key || undefined,

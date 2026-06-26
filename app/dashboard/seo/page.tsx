@@ -56,7 +56,14 @@ export default function SeoPage() {
         body: JSON.stringify({ cliente_id: clienteId, sito_url: url, periodo, ...aiSettings }),
       })
       if (!res.ok) throw new Error(await readApiError(res, 'Audit SEO/GEO fallito'))
-      setMsg({ type: 'ok', text: `Audit completato per ${url}` })
+      const data = await res.json()
+      if (data?.score_globale) {
+        setAudits(prev => [data as SeoAudit, ...prev])
+      } else {
+        const response = await fetch('/api/data/seo-audit')
+        if (response.ok) setAudits(await response.json() as SeoAudit[])
+      }
+      setMsg({ type: 'ok', text: data?.fallback ? `Audit completato con fallback sicuro per ${url}` : `Audit completato per ${url}` })
     } catch (e) {
       setMsg({ type: 'err', text: (e as Error).message })
     }

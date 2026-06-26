@@ -1,6 +1,6 @@
 'use client'
 
-export const DEFAULT_AI_MODEL = 'claude-sonnet-4-6'
+export const DEFAULT_AI_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free'
 
 export function readAISettings() {
   if (typeof window === 'undefined') {

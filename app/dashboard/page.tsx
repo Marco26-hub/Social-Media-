@@ -138,6 +138,16 @@ export default async function DashboardPage() {
   const productionFlow = [
     {
       step: '01',
+      title: 'Piano editoriale',
+      input: 'Obiettivo, periodo, canali, qualità',
+      output: 'Calendario con brief collegati al motore',
+      href: '/dashboard/piano',
+      icon: Workflow,
+      done: daApprovare + inCoda + pubblicati7g > 0,
+      cta: 'Genera piano',
+    },
+    {
+      step: '02',
       title: 'Brand & regole',
       input: 'Sito, tono, target, compliance',
       output: 'Prompt memory e vincoli creativi',
@@ -147,7 +157,7 @@ export default async function DashboardPage() {
       cta: brandConfigurato ? 'Rivedi brand' : 'Completa brand',
     },
     {
-      step: '02',
+      step: '03',
       title: 'Prodotti & asset',
       input: 'Catalogo, immagini, link prodotto',
       output: 'Asset pronti per post/reel/story/blog',
@@ -155,16 +165,6 @@ export default async function DashboardPage() {
       icon: Package,
       done: prodotti > 0,
       cta: prodotti > 0 ? `${prodotti} prodotti` : 'Carica prodotti',
-    },
-    {
-      step: '03',
-      title: 'Strategia & piano',
-      input: 'Obiettivo, periodo, canali, qualità',
-      output: 'Calendario con idee e brief',
-      href: '/dashboard/piano',
-      icon: Workflow,
-      done: daApprovare + inCoda + pubblicati7g > 0,
-      cta: 'Genera piano',
     },
     {
       step: '04',
@@ -223,10 +223,10 @@ export default async function DashboardPage() {
               Control room · {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
             <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
-              Social Automation è pronta a diventare operativa.
+              Parti dal piano editoriale, poi il motore produce e ottimizza.
             </h1>
             <p className="text-sm md:text-base text-slate-300 mt-3 max-w-2xl">
-              Neon/Postgres, API e frontend sono allineati sul prossimo obiettivo: generare, approvare e preparare la pubblicazione dei contenuti senza perdere visibilità sui job.
+              Il piano è il primo step: decide canali, formati, funnel e KPI; poi ogni contenuto eredita brand identity, asset, qualità pacchetto e ciclo di ottimizzazione.
             </p>
             <div className="flex flex-wrap gap-3 mt-5">
               <Link href={nextStep.href} className="btn-primary">

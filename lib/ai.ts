@@ -65,29 +65,31 @@ export async function callAI(params: {
 
   const attempts: AIAttempt[] = []
 
+  const canUseRequestedOnOpenRouter = !isAnthropicModel(model) || model.startsWith('anthropic/')
+
   // Try 1: OpenRouter (if key available)
   if (orKey) {
-    try {
-      // Try requested model first
-      const res = await callOpenRouter(model, systemPrompt, userPrompt, orKey, maxTokens)
-      if (!res.trim()) throw new Error('Risposta AI vuota')
-      recordAttempt(attempts, { provider: 'openrouter', model, ok: true })
-      return res
-    } catch (e) {
-      recordAttempt(attempts, { provider: 'openrouter', model, ok: false, error: sanitizeAIError(e) })
+    if (canUseRequestedOnOpenRouter) {
+      try {
+        const res = await callOpenRouter(model, systemPrompt, userPrompt, orKey, maxTokens)
+        if (!res.trim()) throw new Error('Risposta AI vuota')
+        recordAttempt(attempts, { provider: 'openrouter', model, ok: true })
+        return res
+      } catch (e) {
+        recordAttempt(attempts, { provider: 'openrouter', model, ok: false, error: sanitizeAIError(e) })
+      }
+    }
 
-      // Try fallback models on OpenRouter
-      if (silentFallback) {
-        for (const fb of FALLBACK_MODELS) {
-          if (fb === model || isAnthropicModel(fb)) continue
-          try {
-            const res = await callOpenRouter(fb, systemPrompt, userPrompt, orKey, maxTokens)
-            if (!res.trim()) throw new Error('Risposta AI vuota')
-            recordAttempt(attempts, { provider: 'openrouter', model: fb, ok: true })
-            return res
-          } catch (fallbackError) {
-            recordAttempt(attempts, { provider: 'openrouter', model: fb, ok: false, error: sanitizeAIError(fallbackError) })
-          }
+    if (silentFallback) {
+      for (const fb of FALLBACK_MODELS) {
+        if (fb === model || isAnthropicModel(fb)) continue
+        try {
+          const res = await callOpenRouter(fb, systemPrompt, userPrompt, orKey, maxTokens)
+          if (!res.trim()) throw new Error('Risposta AI vuota')
+          recordAttempt(attempts, { provider: 'openrouter', model: fb, ok: true })
+          return res
+        } catch (fallbackError) {
+          recordAttempt(attempts, { provider: 'openrouter', model: fb, ok: false, error: sanitizeAIError(fallbackError) })
         }
       }
     }

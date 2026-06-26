@@ -326,6 +326,10 @@ export default function BrandPage() {
   }
 
   const selectedTargets = brand?.target ? brand.target.split(',').map((x: string) => x.trim()).filter(Boolean) : []
+  void genCTA
+  void genCompliance
+  void complianceResult
+  void generateCompliance
 
   if (loading) return <div className="p-8 flex items-center justify-center py-20"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
 
@@ -569,3 +573,5 @@ function ComplianceDocs({ result }: { result: Record<string, unknown> }) {
     </div>
   )
 }
+
+void ComplianceDocs

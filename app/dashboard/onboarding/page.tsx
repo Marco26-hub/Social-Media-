@@ -5,13 +5,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   UserPlus, Globe, Sparkles, Package, CheckCircle, ArrowRight, ArrowLeft,
-  Loader2, Camera, Search, Hash, Palette, Target, MessageCircle
+  Loader2, Camera, Search, Target, MessageCircle
 } from 'lucide-react'
 import { isDemo } from '@/lib/demo'
-import { readClienteId } from '@/lib/use-data'
 
 const STEP_LABELS = ['Cliente', 'Brand', 'Prodotti', 'Contenuti', 'Fine']
-const SETTORI = ['Fashion/Abbigliamento','Beauty/Cosmesi','Food/Bevande','Tech/Elettronica','Arredamento/Design','Fitness/Sport','Gioielli/Accessori','Altro']
 
 type BrandProfile = {
   settore: string; tono_voce: string; target: string; promessa_brand: string
@@ -60,7 +58,6 @@ export default function OnboardingPage() {
       setClienteId('demo-onboard')
     } else {
       try {
-        const cid = readClienteId()
         const res = await fetch('/api/data/clienti', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -97,7 +94,7 @@ export default function OnboardingPage() {
         const res = await fetch('/api/generate/brand-discovery', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: urlSito, cliente_id: clienteId, model: 'claude-sonnet-4-6' }),
+          body: JSON.stringify({ url: urlSito, cliente_id: clienteId, model: 'nvidia/nemotron-3-ultra-550b-a55b:free' }),
         })
         const data = await res.json()
         if (data.settore) setBrandProfile(data as BrandProfile)

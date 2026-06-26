@@ -2,7 +2,7 @@
 
 > Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
-**Data ultimo aggiornamento**: 2026-06-26 (fix AI timeout + deploy)
+**Data ultimo aggiornamento**: 2026-06-27 (handoff per audit finale Claude Code)
 **Progetto**: Social Automation — SaaS social media management per agenzie
 **Stack**: Next.js 15.5.19 + Neon/Postgres + NextAuth + Tailwind + AI (Anthropic/OpenRouter)
 **Percorso locale**: `/Users/md/Downloads/social_automation_v2`
@@ -68,7 +68,7 @@ Database (Neon/Postgres):
   log_pubblicazioni, blog_articoli, seo_audit, settings,
   promo, account_social, user_client_access,
   generation_jobs, integration_events
-  Migrazioni: 14 file (001-015, excl. 003), 13 applicate su Neon — manca 015
+Migrazioni: 15 file (001-015, excl. 003). Se Neon live non ha ancora `015`, content/plan hanno fallback insert compatibile.
 ```
 
 ---
@@ -139,7 +139,8 @@ Database (Neon/Postgres):
 ### Asset API
 | Route | Input | Output |
 |---|---|---|
-| `POST /api/assets/upload` | `cliente_id`, immagini multipart | URL pubblici `/uploads/...` per prompt, preview e `link_media_1..7` |
+| `POST /api/assets/upload` | `cliente_id`, immagini multipart | URL pubblici `/api/assets/file/[clienteId]/[filename]` per prompt, preview e `link_media_1..7` |
+| `GET /api/assets/file/[clienteId]/[filename]` | file caricato | Serve immagine dal filesystem runtime con MIME/cache sicuri |
 
 ### System API
 | Route | Descrizione |
@@ -153,11 +154,13 @@ Database (Neon/Postgres):
 - Cancellazione admin: `DELETE /api/data/calendario?id=...` richiede profilo `super_admin`/`admin`, elimina contenuto, token approvazione collegati e scrive log.
 
 ### Ciclo Produzione Operativo
-- `/dashboard` mostra il workflow collegato: Brand → Prodotti/Asset → Piano → Produzione → Revisione → Pubblicazione → Report.
+- `/dashboard` mostra il workflow collegato con primo step operativo: Piano editoriale → Brand/Regole → Prodotti/Asset → Produzione → Revisione → Pubblicazione → Report.
 - Ogni step dichiara input/output e punta alla pagina operativa corretta, così i servizi non restano scollegati.
 - Il CTA principale della hero punta sempre al prossimo step mancante o urgente.
 - Generazioni cliente-aware: `lib/client-context.ts` risolve sempre il cliente selezionato, carica brand identity, prodotti attivi e settings, poi li passa a content/blog/plan/ads/strategy/keywords/compliance/scoring.
 - Ciclo generazione/ottimizzazione: `lib/production-cycle.ts` definisce brief → concept → produzione → review → pubblicazione → learn; content, piano, blog, scoring e dashboard usano ipotesi performance, metrica da osservare, fallback e prossime azioni.
+- Upload asset robusto: `/api/assets/upload` salva su disco e ritorna URL `/api/assets/file/[clienteId]/[filename]`; la UI mostra preview locale immediata anche se Render tarda a servire il file.
+- SEO/GEO audit robusto: `/api/generate/seo-audit` usa cliente attivo se manca `cliente_id`, salva audit e produce fallback deterministico se AI/non-JSON fallisce.
 
 ---
 
@@ -183,14 +186,15 @@ Database (Neon/Postgres):
 ## 6. Modelli AI
 
 Provider supportati (in `lib/ai.ts`):
-- **Anthropic via OpenRouter**: `claude-sonnet-4-6` (default — MA non è ID valido per OpenRouter, manca prefisso `anthropic/`)
+- **Anthropic diretto**: `claude-sonnet-4-6` solo se `ANTHROPIC_API_KEY` è configurata.
 - **OpenRouter free**: `openrouter/free`, `nvidia/nemotron-3-ultra-550b-a55b:free`, `nvidia/nemotron-3-super-120b-a12b:free`, `google/gemma-4-31b-it:free`, `google/gemma-4-26b-a4b-it:free`, `qwen/qwen3-next-80b-a3b-instruct:free`, `openai/gpt-oss-120b:free`
 
-**Fallback automatico**: se OpenRouter fallisce, prova altri modelli gratuiti in cascade.
+**Default AI valido**: client e API usano `nvidia/nemotron-3-ultra-550b-a55b:free` come default operativo.
+**Fallback automatico**: se OpenRouter fallisce, prova altri modelli gratuiti in cascade; i modelli Claude senza prefisso non vengono più provati su OpenRouter come primo tentativo.
 **Fallback osservabile**: errori AI sanificati, loggati e riportati all'utente se tutti i tentativi falliscono.
 **Timeout**: `callOpenRouter` e `callAnthropic` hanno AbortController con 60s timeout. Client-side: 90s timeout sul fetch piano editoriale con messaggio chiaro.
 
-⚠️ **Issue nota**: il default `claude-sonnet-4-6` NON è un ID valido su OpenRouter. Selezionare un modello OpenRouter free (es. `nvidia/nemotron-3-ultra-550b-a55b:free`) dal selettore `AIModelSelector`.
+✅ **Fix 27/06/2026**: il default non è più `claude-sonnet-4-6`; resta disponibile solo per Anthropic diretto/fallback se configurato.
 
 ## 6.1 Accesso Admin
 
@@ -209,7 +213,7 @@ Fase completata il 26/06/2026:
 - UI aggiornata: Social, Piano e Ads hanno selettore qualità `Auto pacchetto / Soft / Medium / High`.
 - Calendario mostra badge qualità e pannello **Strategia operativa** nel dettaglio contenuto.
 - Prompt memory aggiornata: `prompts/QUALITY_OPERATING_SYSTEM.txt`, `prompts/K_piano_mensile.txt`, `prompts/G_blog_article.txt`.
-- Validazioni locali: `npm run build` ✅, `npm run lint` ✅ con warning storici, `npm run migrate:dry` ✅, `npm audit --audit-level=moderate` ✅, smoke production locale `30 PASS / 0 FAIL`.
+- Validazioni locali: `npm run build` ✅, `npm run lint` ✅ senza warning, `npm run migrate:dry` ✅, `npm audit --audit-level=moderate` ✅, smoke production locale `30 PASS / 0 FAIL`.
 
 Nota operativa:
 - Per produzione Neon/Render eseguire `npm run migrate` dopo il deploy per applicare anche `013_content_quality_ops.sql`.
@@ -297,8 +301,8 @@ Audit/fix P0 completato il 26/06/2026:
 
 - [x] **AI timeout fix**: AbortController 60s su OpenRouter/Anthropic, 90s client-side su piano
 - [x] **maxTokens ridotti**: 12000→6000, 9500→4500, 8000→3000 per generazione piano
-- [ ] **Eseguire migration 015 su Neon**: dopo il deploy, `npm run migrate` applica `015_generation_optimization_cycle.sql` (altrimenti INSERT piano fallisce per colonne mancanti)
-- [ ] **Fix default model**: `claude-sonnet-4-6` non valido su OpenRouter — cambiare default in `nvidia/nemotron-3-ultra-550b-a55b:free` o altro modello valido
+- [ ] **Eseguire migration 015 su Neon**: dopo il deploy, `npm run migrate` applica `015_generation_optimization_cycle.sql`; content/plan hanno comunque fallback insert compatibile.
+- [x] **Fix default model**: default spostato a `nvidia/nemotron-3-ultra-550b-a55b:free`; Claude resta solo fallback Anthropic diretto.
 - [ ] **API key OpenRouter/Blotato**: per test end-to-end produzione
 - [ ] **Multi-lingua**: generazione contenuti in altre lingue
 - [ ] **White-label**: logo agenzia custom
@@ -307,7 +311,29 @@ Audit/fix P0 completato il 26/06/2026:
 
 ---
 
-## 16. Variabili Ambiente
+## 14. Stato Corrente Prima Del Prossimo Commit
+
+Ultimo controllo Codex 2026-06-27:
+- Repo remoto `origin/main` allineato a commit `aa8620a`.
+- Le ultime modifiche locali **non sono ancora committate né pushate**.
+- Validazioni locali eseguite dopo i fix: `npm run lint` ✅ zero warning, `npm run build` ✅, `npm run migrate:dry` ✅, `npm audit --audit-level=moderate` ✅.
+- Health live pubblico: `https://social-media-manager-zte4.onrender.com/api/system/health` risponde `status=ready`, `mode=production`.
+- Live health segnala ancora `migrationCount=14`: manca `015_generation_optimization_cycle.sql` su Neon live.
+- Live health segnala `openrouter=true`, `anthropic=false`, `blotatoApiKey=false`, `blotatoWebhookSecret=true`.
+- GitHub Actions su `main`: ultimo commit `aa8620a` success ✅; run fallite precedenti (`45edec1` → `7a50b80`) erano tutte su step `Lint` e risultano superate da `878bad9` in poi.
+- Render MCP/CLI non disponibile in questa sessione (`RENDER_API_KEY` assente, Render CLI assente): non è possibile leggere storico privato dei deploy Render da qui; usare dashboard Render o configurare MCP.
+
+Modifiche locali principali da revisionare prima del commit:
+- SEO/GEO audit fallback deterministico e cliente-aware: `app/api/generate/seo-audit/route.ts`.
+- Upload immagini: route file servita da API e preview locale immediata: `app/api/assets/file/[clienteId]/[filename]/route.ts`, `app/api/assets/upload/route.ts`, `app/dashboard/social/[platform]/page.tsx`.
+- AI default/fallback: default OpenRouter valido, skip modelli Claude non validi su OpenRouter: `lib/ai-client.ts`, `lib/ai.ts`, endpoint `/api/generate/*`.
+- Mobile-first AI selector: `components/AIModelSelector.tsx`.
+- Dashboard workflow: primo step operativo ora è `Piano editoriale`: `app/dashboard/page.tsx`.
+- Warning lint storici rimossi: pagine dashboard, componenti e helper.
+
+---
+
+## 15. Variabili Ambiente
 
 ```bash
 DATABASE_URL=postgresql://...    # Neon
@@ -327,7 +353,7 @@ ADMIN_LOGIN_PASSWORD=1234567      # Opzionale, usato da /api/system/access
 
 ---
 
-## 14. Produzione Render
+## 16. Produzione Render
 
 ```bash
 npm run prod:check
@@ -346,6 +372,14 @@ npm run build
 - Upload asset contenuti: `/dashboard/social/[platform]` permette upload immagini o URL pubblici; content/blog usano gli asset nei prompt e salvano media/cover.
 - Nota storage: `public/uploads` su Render è filesystem runtime, utile per servizio gestito; per SaaS self-service serve storage persistente S3/R2/Cloudinary.
 
+### Controllo Deploy Render / OpenCode
+- Stato live pubblico verificabile senza auth: `curl https://social-media-manager-zte4.onrender.com/api/system/health`.
+- Se la prima richiesta va in timeout, è probabilmente cold start Render Free: riprovare dopo 30-60s.
+- Per storico deploy riusciti/falliti serve Render Dashboard, Render CLI o MCP con `RENDER_API_KEY`.
+- Comandi Render MCP consigliati se configurato: `list_services`, `list_deploys(serviceId, limit: 10)`, `list_logs(resource:[serviceId], type:["build"], limit:200)`, `list_logs(resource:[serviceId], level:["error"], limit:100)`.
+- Pattern già visti e risolti: build fail per `tailwindcss`/PostCSS/devDeps mancanti, CI fail su lint, default model OpenRouter non valido.
+- Stato attuale live: app ready ma DB live non ha ancora migration `015`; prima di vendere pubblicazione automatica serve `BLOTATO_API_KEY`.
+
 ### Deploy fixes applicati
 - `next.config.ts` → `next.config.mjs` (non richiede TypeScript runtime)
 - `typescript` spostato da `devDependencies` a `dependencies` (garantito su Render)
@@ -361,7 +395,7 @@ npm run build
   - `middleware.ts` restituisce `401` JSON per API data/generate protette senza sessione.
   - `app/api/data/approve` gestisce DB non disponibile con `503` controllato.
 
-## 15. Nuove Feature (26/06/2026)
+## 17. Nuove Feature (26/06/2026)
 
 ### Calendar Drag & Drop
 - Week date bar con 7 giorni come drop target sopra la lista contenuti
@@ -390,6 +424,43 @@ npm run build
 ### Sidebar aggiornata
 - Aggiunti: **Onboarding** (`/dashboard/onboarding`), **Competitor** (`/dashboard/competitor`)
 
-**48 route, build verde, 0 vulnerabilità npm.**
+**Build verde, lint zero warning, 0 vulnerabilità npm.**
+
+---
+
+## 18. Passaggio A Claude Code — Audit Finale Maniacale
+
+Obiettivo: fare controllo finale severo prima di commit/push/deploy. Non fidarsi del “sembra ok”: verificare codice, UI, API, DB e fallback.
+
+### Sequenza obbligatoria
+1. Leggere interamente `HANDOFF.md`, poi eseguire `git status --short` e `git diff --stat`.
+2. Verificare che non ci siano segreti hardcoded: cercare `sk-`, `sk-or-`, password reali, token Render/Neon/Blotato.
+3. Eseguire in locale: `npm run lint`, `npm run build`, `npm run migrate:dry`, `npm audit --audit-level=moderate`.
+4. Se possibile avviare locale con env sicure e fare smoke: `bash scripts/smoke-test.sh http://localhost:3000`.
+5. Controllare live health: `/api/system/health`; dopo deploy+migrate deve mostrare `migrationCount >= 15`.
+6. Se Render MCP è configurato: controllare ultimi 10 deploy, build logs e runtime error logs.
+
+### Flussi da testare manualmente
+- Login admin → `/dashboard/clienti` → selezione cliente attivo.
+- Primo step piano: `/dashboard/piano` genera piano e salva contenuti nel calendario del cliente selezionato.
+- Upload asset: `/dashboard/social/facebook` o Instagram, caricare immagine, verificare preview visibile e URL `/api/assets/file/...`.
+- Generazione post/reel/story/carousel/blog con asset: deve salvare `link_media_1` e campi operativi, senza fallire se `015` manca.
+- SEO/GEO audit: `/dashboard/seo` deve completare con risultato AI o fallback deterministico salvato.
+- Calendario: dettaglio contenuto, score AI, backup JSON, delete admin, approvazione.
+- Report: `/dashboard/report` deve leggere dati reali/demo senza crash.
+- Mobile: sidebar, AI selector e pagine social/piano/seo non devono sbordare.
+
+### Controlli sicurezza/interconnessioni
+- Ogni route `/api/generate/*` deve richiedere `requireAuth()`.
+- Ogni route che riceve `cliente_id` deve usare `requireClienteAccess()` o `getClientGenerationContext()`.
+- Nessun ritorno silenzioso che nasconde errore critico: fallback sì, ma con `warning`, `fallback` o log leggibile.
+- Demo mode deve restare funzionante senza DB, ma produzione non deve avere `NEXT_PUBLIC_DEMO_MODE=true`.
+- Non reintrodurre Supabase/n8n nel runtime.
+- Non usare `as Type` direttamente dentro JSX; estrarre variabili prima del render.
+
+### Criterio per chiudere
+- Se tutto è verde: preparare commit atomico, messaggio consigliato `fix: stabilizza generazione asset seo e deploy readiness`.
+- Dopo push: verificare GitHub Actions, Render deploy, poi eseguire `npm run migrate` su Render Shell/DB live.
+- Solo dopo health `ready` con `migrationCount >= 15` considerare chiuso il controllo tecnico.
 
 *Fine handoff. Non reintrodurre Supabase o n8n. Mantieni la demo mode funzionante.*

@@ -141,7 +141,7 @@ export async function POST(request: Request) {
       .replace('{{OPTIMIZATION_CYCLE}}', buildGenerationOptimizationCyclePrompt(contentQuality))
 
     const aiRes = await callAI({
-      model: model || 'claude-sonnet-4-6',
+      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
       systemPrompt: `Sei un content writer SEO/GEO senior. Livello qualità: ${contentQuality}. Rispondi SOLO con JSON valido. Non inventare dati o fonti esterne: segnala missing_inputs quando servono prove.`,
       userPrompt,
       openrouterKey: openrouter_key,

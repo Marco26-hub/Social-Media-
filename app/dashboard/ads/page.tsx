@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
-import { Sparkles, Loader2, Check, Target, Hash, DollarSign, TrendingUp, Users, Eye, Smartphone, Monitor, Search, ChevronDown } from 'lucide-react'
+import { Sparkles, Loader2, Target, Hash, DollarSign, TrendingUp, Users, Smartphone, Search } from 'lucide-react'
 import { useActiveClienteId } from '@/lib/tenant/client'
 import { readAISettings, readApiError } from '@/lib/ai-client'
 import { useRuntimeDemo } from '@/lib/demo-client'

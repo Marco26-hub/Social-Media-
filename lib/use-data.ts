@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { isDemo } from '@/lib/demo'
 
 type FetchState<T> = { data: T; loading: boolean }
@@ -17,21 +17,23 @@ export function refreshClienteId() { _clienteId = null }
 
 export function useApi<T>(url: string, demoFallback: T, deps: unknown[] = []): FetchState<T> {
   const [state, setState] = useState<FetchState<T>>({ data: demoFallback, loading: !isDemo() })
+  const depsKey = JSON.stringify(deps)
 
-  const fetchData = useCallback(async () => {
-    if (isDemo()) { setState({ data: demoFallback, loading: false }); return }
-    setState(s => ({ ...s, loading: true }))
-    try {
-      const res = await fetch(url)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
-      setState({ data: data as T, loading: false })
-    } catch {
-      setState(s => ({ ...s, loading: false }))
+  useEffect(() => {
+    async function fetchData() {
+      if (isDemo()) { setState({ data: demoFallback, loading: false }); return }
+      setState(s => ({ ...s, loading: true }))
+      try {
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        setState({ data: data as T, loading: false })
+      } catch {
+        setState(s => ({ ...s, loading: false }))
+      }
     }
-  }, [url, ...deps])
-
-  useEffect(() => { fetchData() }, [fetchData])
+    fetchData()
+  }, [url, demoFallback, depsKey])
   return state
 }
 
