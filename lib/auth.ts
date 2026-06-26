@@ -34,7 +34,11 @@ export const authOptions: NextAuthOptions = {
           const valid = await bcrypt.compare(credentials.password, user.password_hash)
           if (!valid) return null
           return { id: user.id, email: user.email, name: user.nome || user.email }
-        } catch { return null }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          console.error('[auth credentials] database lookup failed:', message.slice(0, 500))
+          return null
+        }
       },
     }),
   ],

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { isDemo } from '@/lib/demo'
-import { dbReady } from '@/lib/db'
+import { dbReady, q } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,10 +8,70 @@ function hasEnv(name: string) {
   return Boolean(process.env[name]?.trim())
 }
 
+async function getDatabaseChecks(enabled: boolean) {
+  if (!enabled) {
+    return {
+      dbConnection: false,
+      profilesTable: false,
+      adminUser: false,
+      migrationsTable: false,
+      migrationCount: 0,
+      error: null,
+    }
+  }
+
+  try {
+    const [connectionRows, schemaRows] = await Promise.all([
+      q('SELECT 1 AS ok'),
+      q(`SELECT
+        to_regclass('public.profiles') IS NOT NULL AS profiles_table,
+        to_regclass('public.schema_migrations') IS NOT NULL AS migrations_table`),
+    ])
+
+    const schema = schemaRows[0] as Record<string, unknown> | undefined
+    const profilesTable = Boolean(schema?.profiles_table)
+    const migrationsTable = Boolean(schema?.migrations_table)
+    const adminRows = profilesTable
+      ? await q(`SELECT EXISTS(SELECT 1 FROM profiles WHERE email = 'admin') AS admin_user`)
+      : []
+    const migrationRows = migrationsTable
+      ? await q(`SELECT count(*)::int AS migration_count FROM schema_migrations`)
+      : []
+    const admin = adminRows[0] as Record<string, unknown> | undefined
+    const migrations = migrationRows[0] as Record<string, unknown> | undefined
+
+    return {
+      dbConnection: Boolean((connectionRows[0] as Record<string, unknown> | undefined)?.ok),
+      profilesTable,
+      adminUser: Boolean(admin?.admin_user),
+      migrationsTable,
+      migrationCount: Number(migrations?.migration_count || 0),
+      error: null,
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('[system health] database check failed:', message.slice(0, 500))
+    return {
+      dbConnection: false,
+      profilesTable: false,
+      adminUser: false,
+      migrationsTable: false,
+      migrationCount: 0,
+      error: message.slice(0, 240),
+    }
+  }
+}
+
 export async function GET() {
   const demo = isDemo()
+  const hasDatabaseUrl = dbReady()
+  const databaseChecks = await getDatabaseChecks(hasDatabaseUrl)
   const checks = {
-    databaseUrl: dbReady(),
+    databaseUrl: hasDatabaseUrl,
+    dbConnection: demo || databaseChecks.dbConnection,
+    profilesTable: demo || databaseChecks.profilesTable,
+    adminUser: demo || databaseChecks.adminUser,
+    migrationsTable: demo || databaseChecks.migrationsTable,
     authSecret: hasEnv('AUTH_SECRET') || hasEnv('NEXTAUTH_SECRET'),
     nextauthUrl: hasEnv('NEXTAUTH_URL'),
     siteUrl: hasEnv('NEXT_PUBLIC_SITE_URL'),
@@ -21,9 +81,9 @@ export async function GET() {
     blotatoWebhookSecret: hasEnv('BLOTATO_WEBHOOK_SECRET'),
   }
 
-  const hasDatabase = demo || checks.databaseUrl
+  const hasDatabase = demo || (checks.databaseUrl && checks.dbConnection && checks.profilesTable)
   const hasAi = checks.anthropic || checks.openrouter
-  const ready = hasDatabase && checks.authSecret && checks.nextauthUrl && hasAi
+  const ready = hasDatabase && checks.adminUser && checks.authSecret && checks.nextauthUrl && hasAi
 
   return NextResponse.json({
     status: ready ? 'ready' : 'needs_setup',
@@ -31,8 +91,15 @@ export async function GET() {
     database: 'neon-postgres',
     checked_at: new Date().toISOString(),
     checks,
+    database_details: {
+      migrationCount: databaseChecks.migrationCount,
+      error: databaseChecks.error,
+    },
     next_actions: [
       ...(!hasDatabase ? ['Configura DATABASE_URL per Neon/Postgres'] : []),
+      ...(checks.databaseUrl && !checks.dbConnection ? ['DATABASE_URL presente ma connessione Neon fallita: verifica stringa/SSL/password'] : []),
+      ...(checks.dbConnection && !checks.profilesTable ? ['Esegui migrations Neon: tabella profiles mancante'] : []),
+      ...(checks.profilesTable && !checks.adminUser ? ['Esegui db/migrations/011_admin_user.sql: admin mancante'] : []),
       ...(!checks.authSecret ? ['Configura AUTH_SECRET o NEXTAUTH_SECRET'] : []),
       ...(!checks.nextauthUrl ? ['Configura NEXTAUTH_URL con URL Render o dominio custom'] : []),
       ...(!checks.siteUrl ? ['Configura NEXT_PUBLIC_SITE_URL per link e referrer OpenRouter'] : []),
