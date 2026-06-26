@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
-import { q } from '@/lib/db'
+import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
+import { demoSettings } from '@/lib/demo-data'
 
 export async function GET() {
   try {
     await requireAuth()
+    if (isDemo() || !dbReady()) return NextResponse.json(demoSettings)
     const cid = await requireClienteId()
     const rows = await q('SELECT * FROM settings WHERE cliente_id = $1 ORDER BY chiave', [cid])
     return NextResponse.json(rows)
@@ -16,6 +19,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     await requireAuth()
+    if (isDemo() || !dbReady()) return NextResponse.json({ ok: true, demo: true })
     const cid = await requireClienteId()
     const { id, valore } = await request.json()
     if (!id) return NextResponse.json({ error: 'id richiesto' }, { status: 400 })

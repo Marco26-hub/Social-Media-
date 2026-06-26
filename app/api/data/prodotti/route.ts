@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
-import { q } from '@/lib/db'
+import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
+import { demoProdotti } from '@/lib/demo-data'
 
 export async function GET() {
   try {
     await requireAuth()
+    if (isDemo() || !dbReady()) return NextResponse.json(demoProdotti)
     const cid = await requireClienteId()
     const rows = await q('SELECT * FROM prodotti WHERE cliente_id = $1 ORDER BY nome_prodotto', [cid])
     return NextResponse.json(rows)
@@ -16,9 +19,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const cid = await requireClienteId()
     const { nome_prodotto, categoria, prezzo, link_prodotto, link_img_1, note } = await request.json()
     if (!nome_prodotto) return NextResponse.json({ error: 'nome_prodotto richiesto' }, { status: 400 })
+    if (isDemo() || !dbReady()) return NextResponse.json({ ok: true, id: `demo-${Date.now().toString(36)}`, product_id: `P${Date.now().toString(36).toUpperCase()}`, demo: true })
+    const cid = await requireClienteId()
     const pid = `P${Date.now().toString(36).toUpperCase()}`
     const rows = await q(
       `INSERT INTO prodotti (cliente_id, product_id, nome_prodotto, categoria, prezzo, link_prodotto, link_img_1, note)

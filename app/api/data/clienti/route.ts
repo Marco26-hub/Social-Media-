@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
-import { q } from '@/lib/db'
+import { dbReady, q } from '@/lib/db'
 import { requireAuth } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
+import { demoClienti } from '@/lib/demo-data'
 
 export async function GET() {
   try {
     const user = await requireAuth()
+    if (isDemo() || !dbReady()) return NextResponse.json(demoClienti)
     const rows = await q(
       `SELECT c.* FROM clienti c
        INNER JOIN user_client_access uca ON uca.cliente_id = c.id
@@ -23,6 +26,7 @@ export async function POST(request: Request) {
     const user = await requireAuth()
     const { nome, settore, email, telefono, piano } = await request.json()
     if (!nome) return NextResponse.json({ error: 'nome richiesto' }, { status: 400 })
+    if (isDemo() || !dbReady()) return NextResponse.json({ id: `demo-${Date.now().toString(36)}`, demo: true })
     const slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     const rows = await q(
       'INSERT INTO clienti (nome, slug, settore, email, telefono, piano, attivo) VALUES ($1,$2,$3,$4,$5,$6,true) RETURNING id',

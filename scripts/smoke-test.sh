@@ -15,9 +15,12 @@ echo "  🔥 SMOKE TEST — Social Automation V2"
 echo "  Target: $HOST"
 echo ""
 
+HEALTH=$(curl -s --max-time 10 "$HOST/api/system/health")
+MODE=$(echo "$HEALTH" | python3 -c "import sys,json; print(json.load(sys.stdin).get('mode','?'))" 2>/dev/null || echo "?")
+
 # ── PA,GE TESTS ──
 echo "  📄 PAGES"
-sep()
+sep
 
 PAGES=(
   "/"
@@ -53,7 +56,7 @@ done
 # ── API TESTS ──
 echo ""
 echo "  ⚡ API"
-sep()
+sep
 
 APIS=(
   "/api/system/health"
@@ -69,6 +72,15 @@ for api in "${APIS[@]}"; do
   fi
 done
 
+ACCESS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HOST/api/system/access")
+if [ "$MODE" = "demo" ] && [ "$ACCESS_STATUS" = "200" ]; then
+  green "/api/system/access → $ACCESS_STATUS (demo credentials hint ✓)"
+elif [ "$MODE" != "demo" ] && { [ "$ACCESS_STATUS" = "404" ] || [ "$ACCESS_STATUS" = "200" ]; }; then
+  green "/api/system/access → $ACCESS_STATUS"
+else
+  red "/api/system/access → $ACCESS_STATUS"
+fi
+
 # Auth-required API
 AUTH_APIS=(
   "/api/data/stats"
@@ -82,20 +94,20 @@ AUTH_APIS=(
 # These should 401/redirect without auth
 for api in "${AUTH_APIS[@]}"; do
   STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HOST$api")
-  if [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ]; then
+  if [ "$MODE" = "demo" ] && [ "$STATUS" = "200" ]; then
+    green "$api → $STATUS (demo fallback ✓)"
+  elif [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ]; then
     green "$api → $STATUS (auth required ✓)"
   else
-    red "$api → $STATUS (should require auth)"
+    red "$api → $STATUS (should be demo 200 or auth-required)"
   fi
 done
 
 # ── HEALTH CHECK ──
 echo ""
 echo "  🩺 Health Check Response"
-sep()
-HEALTH=$(curl -s --max-time 10 "$HOST/api/system/health")
+sep
 if echo "$HEALTH" | python3 -m json.tool > /dev/null 2>&1; then
-  MODE=$(echo "$HEALTH" | python3 -c "import sys,json; print(json.load(sys.stdin).get('mode','?'))")
   STATUS=$(echo "$HEALTH" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','?'))")
   green "Valid JSON — mode=$MODE status=$STATUS"
 else
@@ -105,7 +117,7 @@ fi
 # ── DEMO MODE CHECK ──
 echo ""
 echo "  🎭 Demo Mode"
-sep()
+sep
 DASH=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HOST/dashboard")
 if [ "$DASH" = "200" ] || [ "$DASH" = "302" ]; then
   green "Dashboard accessible: $DASH"
@@ -115,9 +127,9 @@ fi
 
 # ── SUMMARY ──
 echo ""
-sep()
+sep
 echo "  📊 TOTALE: $PASS PASS / $FAIL FAIL"
-sep()
+sep
 echo ""
 
 if [ "$FAIL" -gt 0 ]; then exit 1; else exit 0; fi

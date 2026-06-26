@@ -1,6 +1,29 @@
 import { NextResponse } from 'next/server'
-import { q } from '@/lib/db'
+import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
+
+const DEMO_BRAND = {
+  id: 'demo-brand',
+  cliente_id: 'demo-silkincom',
+  brand_name: 'SILKinCOM',
+  sito_url: 'https://silkincom.com',
+  settore: 'Fashion/Abbigliamento',
+  tono_voce: 'elegante',
+  target: 'Donna 25-34, Donna 35-44, Professioniste',
+  promessa_brand: 'Eleganza accessibile',
+  colori_brand: 'Beige, Nero, Bianco, Oro',
+  parole_da_usare: '#SEO:eleganza,#SEO:moda,#GEO:stile italiano,#LONGTAIL:abiti eleganti,#BRANDED:silkincom',
+  parole_da_evitare: '#EVITA:economico,low cost,#EVITA:fast fashion,cinese',
+  emoji_policy: 'Max 2 emoji eleganti per post',
+  hashtag_base: '#BRANDED:silkincom, #SETTORE:fashion, #NICCHIA:outfitprimavera',
+  cta_base: 'Scopri la collezione',
+  note_legali: '',
+  disclaimer_text: 'Le immagini sono a scopo illustrativo.',
+  gdpr_note: 'Dati trattati secondo Reg. UE 2016/679.',
+  privacy_note: 'Informativa completa su /privacy.',
+  cookie_policy: 'Cookie tecnici e analytics.',
+}
 
 const BRAND_UPDATE_COLUMNS = new Set([
   'brand_name',
@@ -25,6 +48,7 @@ const BRAND_UPDATE_COLUMNS = new Set([
 export async function GET() {
   try {
     await requireAuth()
+    if (isDemo() || !dbReady()) return NextResponse.json(DEMO_BRAND)
     const cid = await requireClienteId()
     const row = await q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cid])
     return NextResponse.json(row[0] || null)
@@ -36,6 +60,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     await requireAuth()
+    if (isDemo() || !dbReady()) return NextResponse.json({ ok: true, demo: true })
     const cid = await requireClienteId()
     const body = await request.json() as Record<string, unknown>
 
