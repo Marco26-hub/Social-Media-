@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import PostPreview from '@/components/PostPreview'
 import type { Contenuto } from '@/lib/types'
+import { Ban, Check } from 'lucide-react'
 
 const ALL_PLATFORMS: { canale: Contenuto['canale']; formato: Contenuto['formato']; label: string }[] = [
   { canale: 'instagram', formato: 'post', label: 'Instagram Post' },
@@ -31,6 +32,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
   const [hashtag, setHashtag] = useState(DEMO_DATA.hashtag)
   const [cta, setCta] = useState(DEMO_DATA.cta)
   const [mediaUrl, setMediaUrl] = useState(DEMO_DATA.link_media_1)
+  const [excluded, setExcluded] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     params.then(p => setId(p.id))
@@ -49,8 +51,23 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         if (d.cta) setCta(d.cta)
         if (d.link_media_1) setMediaUrl(d.link_media_1)
       }
+      const exRaw = localStorage.getItem(`preview_${id}_excluded`)
+      if (exRaw) setExcluded(new Set(JSON.parse(exRaw)))
     } catch {}
   }, [id])
+
+  function toggleExclude(key: string) {
+    setExcluded(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      try { localStorage.setItem(`preview_${id}_excluded`, JSON.stringify([...next])) } catch {}
+      return next
+    })
+  }
+
+  const excludedCount = excluded.size
+  const publishableCount = ALL_PLATFORMS.length - excludedCount
 
   const baseContenuto: Contenuto = {
     id, cliente_id: '', id_contenuto: id,
@@ -166,6 +183,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         {/* Griglia anteprime */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {ALL_PLATFORMS.map(({ canale, formato, label }) => {
+            const key = `${canale}-${formato}`
+            const isExcluded = excluded.has(key)
             const c: Contenuto = {
               ...baseContenuto,
               canale,
@@ -173,16 +192,66 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
               link_media_1: mediaUrl,
             }
             return (
-              <div key={`${canale}-${formato}`} className="card p-3">
-                <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-2">{label}</p>
+              <div
+                key={key}
+                className={`card p-3 transition-all relative ${isExcluded ? 'opacity-40 border-red-300' : ''}`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">{label}</p>
+                  <label className="flex items-center gap-1 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={isExcluded}
+                      onChange={() => toggleExclude(key)}
+                      className="sr-only peer"
+                    />
+                    <span className={`flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full transition-colors ${
+                      isExcluded
+                        ? 'bg-red-100 text-red-600 peer-checked:bg-red-500 peer-checked:text-white'
+                        : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                    }`}>
+                      {isExcluded ? <Ban className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+                      {isExcluded ? 'Escluso' : 'Includi'}
+                    </span>
+                  </label>
+                </div>
                 <PostPreview c={c} />
+                {isExcluded && (
+                  <div className="absolute inset-0 bg-red-50/30 rounded-xl pointer-events-none flex items-center justify-center">
+                    <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                      NON SARÀ PUBBLICATO
+                    </span>
+                  </div>
+                )}
               </div>
             )
           })}
         </div>
 
+        {/* Riepilogo pubblicazione */}
+        <div className="card p-4 mt-6 max-w-3xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              <span className="text-sm text-gray-700 font-medium">{publishableCount} da pubblicare</span>
+            </div>
+            {excludedCount > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                <span className="text-sm text-gray-500">{excludedCount} esclusi</span>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => { setExcluded(new Set()); try { localStorage.removeItem(`preview_${id}_excluded`) } catch {} }}
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Ripristina tutti
+          </button>
+        </div>
+
         <p className="text-center text-[10px] text-gray-400 mt-6">
-          Anteprima in tempo reale · Modifica i campi sopra per vedere le modifiche
+          Anteprima in tempo reale · Modifica i campi sopra per vedere le modifiche · Seleziona quali piattaforme escludere
         </p>
       </div>
     </div>
