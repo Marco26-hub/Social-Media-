@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
 import { q } from '@/lib/db'
-import { requireAuth } from '@/lib/auth-utils'
+import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
 const PROMPT = `Sei SEO + GEO auditor senior. Analizza performance e crea audit con miglioramenti concreti.
 
@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     if (!cliente_id || !sito_url) {
       return NextResponse.json({ error: 'cliente_id e sito_url richiesti' }, { status: 400 })
     }
+    await requireClienteAccess(cliente_id)
 
     const [brandRows, calendario, logs] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id]),

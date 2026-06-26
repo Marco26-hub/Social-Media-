@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
+import { requireAuth } from '@/lib/auth-utils'
 
 const CLIENT_PROMPT = `Sei un marketing strategist e growth hacker. Analizza il sito web e il settore per identificare il profilo cliente ideale e le opportunità di vendita.
 
@@ -34,6 +35,7 @@ Output SOLO JSON valido:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { url, settore, model, openrouter_key } = await request.json()
     if (!url) {
       return NextResponse.json({ error: 'url richiesto' }, { status: 400 })

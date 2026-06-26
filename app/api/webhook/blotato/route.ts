@@ -2,20 +2,62 @@
 // Blotato chiama questo endpoint quando un post viene pubblicato/fallisce
 
 import { NextResponse } from 'next/server'
+import crypto from 'crypto'
+import { q } from '@/lib/db'
+import { isDemo } from '@/lib/demo'
+
+const VALID_BLOTATO_STATUSES = new Set(['published', 'failed', 'scheduled'])
+
+function safeEqualString(a: string, b: string) {
+  const aBuffer = Buffer.from(a)
+  const bBuffer = Buffer.from(b)
+  return aBuffer.length === bBuffer.length && crypto.timingSafeEqual(aBuffer, bBuffer)
+}
+
+function hasValidWebhookSignature(request: Request, rawBody: string) {
+  const secret = process.env.BLOTATO_WEBHOOK_SECRET?.trim()
+  if (!secret) return isDemo() || process.env.NODE_ENV !== 'production'
+
+  const authHeader = request.headers.get('authorization') || ''
+  if (safeEqualString(authHeader, `Bearer ${secret}`)) return true
+
+  const signature =
+    request.headers.get('x-blotato-signature') ||
+    request.headers.get('x-webhook-signature') ||
+    request.headers.get('x-hub-signature-256')
+
+  if (!signature) return false
+
+  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex')
+  const normalized = signature.startsWith('sha256=') ? signature.slice('sha256='.length) : signature
+  return safeEqualString(normalized, expected)
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const rawBody = await request.text()
+    if (!hasValidWebhookSignature(request, rawBody)) {
+      return NextResponse.json({ error: 'firma webhook non valida' }, { status: 401 })
+    }
+
+    let body: Record<string, unknown>
+    try {
+      body = JSON.parse(rawBody) as Record<string, unknown>
+    } catch {
+      return NextResponse.json({ error: 'payload JSON non valido' }, { status: 400 })
+    }
+
     const { id: blotato_post_id, status, platform, post_url, error, scheduled_at } = body as Record<string, unknown>
 
     if (!blotato_post_id) {
       return NextResponse.json({ error: 'id richiesto' }, { status: 400 })
     }
-
-    const { q } = await import('@/lib/db')
+    if (typeof status !== 'string' || !VALID_BLOTATO_STATUSES.has(status)) {
+      return NextResponse.json({ error: 'status non valido' }, { status: 400 })
+    }
 
     // Trova il contenuto nel calendario tramite blotato_post_id
-    const rows = await q('SELECT id FROM calendario WHERE blotato_post_id = $1 LIMIT 1', [blotato_post_id])
+    let rows = await q('SELECT id FROM calendario WHERE blotato_post_id = $1 LIMIT 1', [blotato_post_id])
 
     if (!rows.length) {
       // Cerca per scheduled_at come fallback
@@ -28,6 +70,7 @@ export async function POST(request: Request) {
         if (!fallback.length) {
           return NextResponse.json({ error: 'Contenuto non trovato' }, { status: 404 })
         }
+        rows = fallback
       } else {
         return NextResponse.json({ error: 'Contenuto non trovato' }, { status: 404 })
       }

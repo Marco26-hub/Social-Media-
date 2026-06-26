@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
+import { requireAuth } from '@/lib/auth-utils'
 
 const DISCOVERY_PROMPT = `Sei un brand strategist senior. Analizza questo sito e-commerce e restituisci un profilo brand completo.
 
@@ -40,6 +41,7 @@ Output SOLO JSON valido:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { url, model, openrouter_key } = await request.json()
     if (!url) {
       return NextResponse.json({ error: 'url richiesto' }, { status: 400 })

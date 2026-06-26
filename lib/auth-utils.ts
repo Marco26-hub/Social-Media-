@@ -1,6 +1,8 @@
 import { getServerSession } from 'next-auth'
 import { cookies } from 'next/headers'
 import { authOptions } from '@/lib/auth'
+import { dbReady, q } from '@/lib/db'
+import { isDemo } from '@/lib/demo'
 
 export const ACTIVE_CLIENTE_COOKIE = 'active_cliente_id'
 
@@ -22,5 +24,30 @@ export async function getActiveClienteId(): Promise<string | null> {
 export async function requireClienteId(): Promise<string> {
   const id = await getActiveClienteId()
   if (!id) throw new Error('Nessun cliente selezionato')
+  return requireClienteAccess(id)
+}
+
+export async function requireClienteAccess(clienteId?: string): Promise<string> {
+  const user = await requireAuth()
+  const id = clienteId || await getActiveClienteId()
+  if (!id) throw new Error('Nessun cliente selezionato')
+
+  if (isDemo() || !dbReady()) return id
+
+  const rows = await q(
+    `SELECT 1
+     FROM profiles p
+     WHERE p.id = $1 AND p.ruolo_globale = 'super_admin'
+     UNION ALL
+     SELECT 1
+     FROM user_client_access uca
+     WHERE uca.user_id = $1
+       AND uca.cliente_id = $2
+       AND uca.attivo = true
+     LIMIT 1`,
+    [user.id, id],
+  )
+
+  if (!rows.length) throw new Error('Accesso cliente negato')
   return id
 }

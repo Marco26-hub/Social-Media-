@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
+import { requireAuth } from '@/lib/auth-utils'
 
 const STRATEGY_PROMPT = `Sei un social media strategist senior. Analizza il brand e crea una strategia editoriale completa.
 
@@ -34,6 +35,7 @@ Output SOLO JSON valido:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { brand, settore, target, tono, model, openrouter_key } = await request.json()
     if (!brand) {
       return NextResponse.json({ error: 'brand richiesto' }, { status: 400 })

@@ -16,10 +16,10 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     await requireAuth()
-    await requireClienteId()
+    const cid = await requireClienteId()
     const { id, valore } = await request.json()
     if (!id) return NextResponse.json({ error: 'id richiesto' }, { status: 400 })
-    await q('UPDATE settings SET valore = $1 WHERE id = $2', [valore, id])
+    await q('UPDATE settings SET valore = $1 WHERE id = $2 AND cliente_id = $3', [valore, id, cid])
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 })

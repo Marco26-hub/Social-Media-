@@ -17,3 +17,5 @@ services:
         sync: false
       - key: BLOTATO_API_URL
         sync: false
+      - key: BLOTATO_WEBHOOK_SECRET
+        generateValue: true

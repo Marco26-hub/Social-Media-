@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
 import { q } from '@/lib/db'
-import { requireAuth } from '@/lib/auth-utils'
+import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
 type PromptSpec = {
   persona: string
@@ -313,6 +313,7 @@ export async function POST(request: Request) {
     if (!cliente_id || !canale || !formato) {
       return NextResponse.json({ error: 'cliente_id, canale, formato richiesti' }, { status: 400 })
     }
+    await requireClienteAccess(cliente_id)
 
     const key = `${canale}:${formato}`
     const spec = PROMPTS[key] || PROMPTS[`instagram:post`]

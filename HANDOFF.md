@@ -4,7 +4,7 @@
 
 **Data**: 2026-06-26
 **Progetto**: Social Automation — SaaS social media management per agenzie
-**Stack**: Next.js 15 + Neon/Postgres + NextAuth + Tailwind + AI (Anthropic/OpenRouter)
+**Stack**: Next.js 15.5.19 + Neon/Postgres + NextAuth + Tailwind + AI (Anthropic/OpenRouter)
 **Percorso locale**: `/Users/md/Downloads/social_automation_v2`
 **Repo**: `https://github.com/Marco26-hub/social-media-manager.git`
 
@@ -37,9 +37,10 @@
 ## 1. Stato Build
 
 ```bash
-npm run build  # ✅ 48 route, verde
-npm run dev    # http://localhost:3000
-npm run start  # build produzione
+npm run build                  # ✅ 42 route, verde
+npm audit --audit-level=moderate # ✅ 0 vulnerabilità
+npm run dev                    # http://localhost:3000
+npm run start                  # build produzione
 ```
 
 Smoke test:
@@ -206,11 +207,15 @@ Genera contenuto (AI con contesto brand) → Calendario → Score (AI valuta) �
 
 ## 10. Sicurezza
 
-Tutte le route che leggono/scrivono DB ora richiedono autenticazione:
-- **5 route fixate** (26/06/2026): `generate/content`, `generate/plan`, `generate/blog`, `generate/seo-audit`, `data/approve` POST
-- Pattern: `import { requireAuth } from '@/lib/auth-utils'` + `await requireAuth()` prima di ogni handler
-- `GET /api/data/approve` e `PATCH /api/data/approve` restano pubblici (portal con token)
-- Webhook Blotato (`POST /api/webhook/blotato`) non richiede auth (callback esterno)
+Audit/fix P0 completato il 26/06/2026:
+- **Auth AI route**: tutte le `/api/generate/*` richiedono `requireAuth()`.
+- **Tenant access**: `requireClienteId()` verifica `user_client_access.attivo = true`; i super admin passano via `profiles.ruolo_globale = 'super_admin'`.
+- **Payload `cliente_id`**: endpoint che ricevono `cliente_id` dal client usano `requireClienteAccess(cliente_id)`.
+- **SQL dinamico**: PATCH `brand` e `calendario` usano whitelist colonne; niente nomi colonna dal body non validati.
+- **IDOR fix**: PATCH `settings` e `calendario` aggiornano solo record del cliente attivo (`cliente_id` nel `WHERE`).
+- **Webhook Blotato**: `POST /api/webhook/blotato` richiede `BLOTATO_WEBHOOK_SECRET` in produzione; supporta `Authorization: Bearer`, `x-blotato-signature`, `x-webhook-signature`, `x-hub-signature-256` HMAC SHA-256.
+- **Dependency audit**: `next` aggiornato a `15.5.19`, `postcss` a `8.5.15`, override `uuid=11.1.1`; `npm audit --audit-level=moderate` verde.
+- `GET /api/data/approve` e `PATCH /api/data/approve` restano pubblici per portal token.
 
 ## 11. Media Validation
 
@@ -233,7 +238,7 @@ Tutte le route che leggono/scrivono DB ora richiedono autenticazione:
 
 ## 13. In Lavoro / Prossimi Step
 
-- [ ] **Deploy effettivo su Render**: DATABASE_URL + AUTH_SECRET + BLOTATO_API_KEY
+- [ ] **Deploy effettivo su Render**: DATABASE_URL + AUTH_SECRET + BLOTATO_API_KEY + BLOTATO_WEBHOOK_SECRET
 - [ ] **API key OpenRouter/Blotato**: per test end-to-end produzione
 - [ ] **Multi-lingua**: generazione contenuti in altre lingue
 - [ ] **White-label**: logo agenzia custom
@@ -251,16 +256,18 @@ ANTHROPIC_API_KEY=...             # Claude (opzionale se usi OpenRouter)
 OPENROUTER_API_KEY=...            # Modelli free (opzionale se usi Claude)
 NEXT_PUBLIC_DEMO_MODE=true        # Demo mode senza DB
 BLOTATO_API_KEY=...               # Quando pronto
+BLOTATO_API_URL=https://api.blotato.com
+BLOTATO_WEBHOOK_SECRET=...        # Firma webhook Blotato in produzione
 ```
 
 ---
 
-## 14. Ultimo Commit
+## 14. Ultima Fase Locale
 
 ```bash
-feat: sicurezza requireAuth su 5 route, media validation, notifiche Telegram, onboarding wizard, calendar drag & drop, competitor tracking + sidebar update
+fix: audit sicurezza P0, tenant isolation, webhook signing, dependency CVE
 ```
 
-**48 route, build verde.**
+**42 route, build verde, audit npm verde.**
 
 *Fine handoff. Non reintrodurre Supabase o n8n. Mantieni la demo mode funzionante.*

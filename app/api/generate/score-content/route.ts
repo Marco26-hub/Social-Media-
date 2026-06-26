@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
+import { requireAuth } from '@/lib/auth-utils'
 
 const SCORING_PROMPT = `Sei un social media quality auditor. Valuta questo contenuto e assegna un punteggio 0-100 per ogni dimensione.
 
@@ -42,6 +43,7 @@ Output SOLO JSON valido:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { canale, formato, hook, caption, hashtag, cta, visual, model, openrouter_key } = await request.json()
     if (!canale || !formato) {
       return NextResponse.json({ error: 'canale e formato richiesti' }, { status: 400 })

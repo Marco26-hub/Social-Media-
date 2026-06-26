@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { q } from '@/lib/db'
 import crypto from 'crypto'
-import { requireAuth } from '@/lib/auth-utils'
+import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -68,6 +68,7 @@ export async function POST(request: Request) {
     if (!cliente_id || !contenuto_id) {
       return NextResponse.json({ error: 'cliente_id e contenuto_id richiesti' }, { status: 400 })
     }
+    await requireClienteAccess(cliente_id)
 
     const token = crypto.randomBytes(24).toString('hex')
     const expiresAt = new Date(Date.now() + 7 * 86400000).toISOString()

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
+import { requireAuth } from '@/lib/auth-utils'
 
 const LEGAL_PROMPT = `Sei un legal compliance specialist per e-commerce e brand digitali italiani.
 Genera documenti legali completi, conformi a GDPR UE 2016/679, Cookie Law (ePrivacy Directive),
@@ -77,6 +78,7 @@ Output SOLO JSON valido con campi markdown:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { brand, settore, url, target, model, openrouter_key } = await request.json()
     if (!brand) {
       return NextResponse.json({ error: 'brand richiesto' }, { status: 400 })

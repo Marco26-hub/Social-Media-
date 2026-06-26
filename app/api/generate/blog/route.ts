@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { q } from '@/lib/db'
 import { callAI, extractJSON } from '@/lib/ai'
-import { requireAuth } from '@/lib/auth-utils'
+import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
 const PROMPT = `Sei un content writer SEO senior per brand fashion e-commerce.
 Scrivi articolo blog 800-1200 parole in italiano, ottimizzato per SEO e GEO (AI search).
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     if (!cliente_id) {
       return NextResponse.json({ error: 'cliente_id richiesto' }, { status: 400 })
     }
+    await requireClienteAccess(cliente_id)
 
     const [brandRows, products] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id]),

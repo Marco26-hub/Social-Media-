@@ -98,8 +98,10 @@ export async function scheduleOnBlotato(
   // Aggiorna status locale
   if (blotatoId && row.id) {
     await q(
-      `UPDATE calendario SET blotato_post_id = $1, blotato_status = 'scheduled', blotato_sync_at = now() WHERE id = $2`,
-      [blotatoId, row.id],
+      `UPDATE calendario
+       SET blotato_post_id = $1, blotato_status = 'scheduled', blotato_scheduled_at = $2, blotato_sync_at = now()
+       WHERE id = $3 AND cliente_id = $4`,
+      [blotatoId, scheduledAt, row.id, clienteId],
     )
   }
 

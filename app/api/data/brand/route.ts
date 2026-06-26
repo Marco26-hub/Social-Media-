@@ -2,6 +2,26 @@ import { NextResponse } from 'next/server'
 import { q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 
+const BRAND_UPDATE_COLUMNS = new Set([
+  'brand_name',
+  'settore',
+  'sito_url',
+  'tono_voce',
+  'target',
+  'promessa_brand',
+  'colori_brand',
+  'parole_da_usare',
+  'parole_da_evitare',
+  'emoji_policy',
+  'hashtag_base',
+  'cta_base',
+  'note_legali',
+  'disclaimer_text',
+  'gdpr_note',
+  'privacy_note',
+  'cookie_policy',
+])
+
 export async function GET() {
   try {
     await requireAuth()
@@ -53,7 +73,7 @@ export async function PATCH(request: Request) {
       const fields: string[] = []
       const params: unknown[] = []
       for (const [key, val] of Object.entries(body)) {
-        if (key === 'id' || key === 'cliente_id' || key === 'created_at' || key === 'updated_at') continue
+        if (!BRAND_UPDATE_COLUMNS.has(key)) continue
         params.push(val)
         fields.push(`${key} = $${params.length}`)
       }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
-import { requireAuth } from '@/lib/auth-utils'
+import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
 const PROMPT = `Sei un social media analyst senior. Analizza i profili social di un competitor e produci un report dettagliato.
 
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
     if (!cliente_id || !competitor_nome) {
       return NextResponse.json({ error: 'cliente_id e competitor_nome richiesti' }, { status: 400 })
     }
+    await requireClienteAccess(cliente_id)
 
     const { q } = await import('@/lib/db')
     const brandRows = await q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id])

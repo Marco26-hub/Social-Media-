@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
+import { requireAuth } from '@/lib/auth-utils'
 
 const PROMPTS: Record<string, string> = {
   google: `Sei un Google Ads specialist senior. Crea una campagna pubblicitaria completa per questo brand.
@@ -81,6 +82,7 @@ Output SOLO JSON valido:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { platform, brand, product, obiettivo, budget, model, openrouter_key } = await request.json()
     if (!platform || !brand) {
       return NextResponse.json({ error: 'platform e brand richiesti' }, { status: 400 })

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSON } from '@/lib/ai'
+import { requireAuth } from '@/lib/auth-utils'
 
 const KEYWORD_PROMPT = `Sei un SEO strategist e copywriter senior. Analizza il brand e genera contenuti SEO/GEO ottimizzati per contenuti social.
 
@@ -47,6 +48,7 @@ Output SOLO JSON valido:
 
 export async function POST(request: Request) {
   try {
+    await requireAuth()
     const { brand, settore, target, tono, model, openrouter_key } = await request.json()
     if (!brand) {
       return NextResponse.json({ error: 'brand richiesto' }, { status: 400 })

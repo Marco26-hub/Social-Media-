@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { callAI, extractJSONArray } from '@/lib/ai'
 import { q } from '@/lib/db'
-import { requireAuth } from '@/lib/auth-utils'
+import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 
 const PROMPT_WEEKLY = `Agisci come Social Media Manager senior per brand abbigliamento e-commerce.
 Crea piano editoriale SETTIMANALE (7 giorni) per {{PIATTAFORME}}.
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     if (!cliente_id || !piattaforme?.length) {
       return NextResponse.json({ error: 'cliente_id e piattaforme richiesti' }, { status: 400 })
     }
+    await requireClienteAccess(cliente_id)
 
     const [brandRows, products] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cliente_id]),

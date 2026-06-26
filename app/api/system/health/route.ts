@@ -15,6 +15,7 @@ export async function GET() {
     authSecret: hasEnv('AUTH_SECRET') || hasEnv('NEXTAUTH_SECRET'),
     anthropic: hasEnv('ANTHROPIC_API_KEY'),
     openrouter: hasEnv('OPENROUTER_API_KEY'),
+    blotatoWebhookSecret: hasEnv('BLOTATO_WEBHOOK_SECRET'),
   }
 
   const hasDatabase = demo || checks.databaseUrl
@@ -31,6 +32,7 @@ export async function GET() {
       ...(!hasDatabase ? ['Configura DATABASE_URL per Neon/Postgres'] : []),
       ...(!checks.authSecret ? ['Configura AUTH_SECRET o NEXTAUTH_SECRET'] : []),
       ...(!hasAi ? ['Aggiungi ANTHROPIC_API_KEY o OPENROUTER_API_KEY'] : []),
+      ...(!checks.blotatoWebhookSecret ? ['Configura BLOTATO_WEBHOOK_SECRET per firmare i callback Blotato'] : []),
       'Esegui db/migrations/004_operations_foundation.sql su Neon',
       'Collega pubblicazione APPROVATO → Blotato/webhook',
     ],
