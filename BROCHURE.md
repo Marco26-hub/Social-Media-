@@ -82,6 +82,25 @@ Per aziende strutturate che vogliono una presenza multicanale avanzata.
 - 40-60 contenuti al mese
 - Social multicanale, SEO/GEO e report strategico
 
+## Premium Analytics (Add-on Intelligence)
+
+Per chi vuole trasformare Social Automation in "Chief Growth Officer" digitale.
+
+**Aggiungibile a qualsiasi pacchetto: +300 euro/mese**
+
+- Report quotidiano (E-Commerce + Social + Web performance)
+- Piano strategico auto-generato mensile
+- Content calendar intelligente con IA (28 giorni)
+- 5 opzioni di contenuto generate → tu approvi → pubblica automatico
+- ROI tracking per ogni post (quanto vende ogni contenuto)
+- Feedback loop automatico (analizza engagement → ottimizza domani)
+- Forecast scenari (se fai X, aspettati Y vendite)
+- Competitive benchmarking settimanale
+- A/B testing roadmap per 8 settimane
+- Web design audit mensile con miglioramenti prioritari
+
+Expected ROI: +400-800 euro/mese da content migliore + ottimizzazione continua.
+
 ## Cosa E Incluso Nel Metodo
 
 - Analisi iniziale del brand

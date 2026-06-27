@@ -25,13 +25,36 @@ Target: €1.000/settimana = €4.300/mese
 | 🚀 **Presenza Social** | €390 | **€590** | 12/mese | 2 | Attività locale, professionista |
 | 🌱 **Starter Social** | €190 | **€390** | 8/mese | 1-2 | Partita IVA, freelance |
 
+## Add-on Intelligence 🚀
+
+### Premium Analytics — AI Intelligence + Automation
+**€300/mese** (aggiungibile a qualsiasi pacchetto)
+
+Trasforma Social Automation in "Chief Growth Officer" digitale:
+- ✨ Report quotidiano (E-Commerce + Social + Web performance)
+- 📊 Piano strategico auto-generato (mensile)
+- 🎯 Content calendar intelligente (28 giorni con IA)
+- 💰 5 opzioni di contenuto generate IA → Tu approvi → Pubblica
+- 📈 ROI tracking per ogni post
+- 🔄 Feedback loop automatico (engagement → optimize next day)
+- 🎬 Forecast scenari (revenue impact prediction)
+- 🏆 Competitive benchmarking (settimanale)
+- ⚡ A/B testing roadmap (8 settimane)
+- 🎨 Web design audit (mensile)
+
+**Expected ROI: +€400-800/mese** (better content + continuous optimization)
+
+---
+
 ## Extra
 
 | Servizio | Prezzo |
 |---|---|
+| **🚀 Premium Analytics (ADD-ON)** | **€300/mese** |
 | Gestione ADS (fee) | 15% budget, min €200/mese |
 | Reel extra editing | €120-180/cad |
 | Blog SEO/GEO | €200-400 cad |
+| Email Marketing automation | €150/mese |
 | Compliance (GDPR, Cookie, Privacy) | €150/cad |
 | Revisione extra cliente | €60/h |
 
