@@ -51,6 +51,10 @@ Tutto su `main`, tree pulito, `tsc`+`eslint` verdi.
 
 **Stato AI provider (deploy live `social-media-manager-zte4.onrender.com`)**: `mode: production`, `openrouter: true` (ma default `:free` → 429), `anthropic: false`, `gemini`/`opencode`: da configurare key. Per generazione reale affidabile: incollare una key Gemini (free) o OpenCode (sk-) nel pannello AI, oppure settare env su Render.
 
+**⚠️ Build sbloccata**: il commit `12832e0 "Multi-Agent Automation System"` aveva aggiunto 15 file scritti per stack **Supabase + shadcn/ui** (`app/api/ai-automation/*`, 3 componenti `*Approval.tsx`, `lib/agents/*`) — non compilavano (`@supabase/supabase-js` non installato, colonne `is_active`/`config` inesistenti, import `@/components/ui/*` mancanti) e **rompevano `next build`** da settimane → i deploy restavano al vecchio build. Erano orfani (nessuna pagina reale li importava). **Rimossi** per sbloccare la produzione. `next build` ora verde.
+
+**TODO agenti v2** (riscrivere sullo stack reale): 4 agenti (weekly-seo, weekly-competitor, weekly-client-report, daily-ads-optimizer) usando `lib/db.ts` `q()` (NON Supabase), schema reale (`attivo`, non `is_active`), `callAI` da `lib/ai.ts`, + entry point: API route `/api/agents/<nome>` protette da secret + scheduler (cron Render `type: cron` o cron-job.org).
+
 **Pending noti**: zero test automatici; `score-content` (calendario) ha feedback locale ma non è nel GenerationBar globale; `BLOTATO_API_KEY` mancante sul deploy (autopublish off).
 
 ---

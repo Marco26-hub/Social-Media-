@@ -24,82 +24,95 @@ Noi costruiamo un sistema: strategia, contenuti, calendario, pubblicazione e con
 
 Il risultato e una comunicazione piu costante, piu professionale e piu facile da gestire.
 
-## I Nostri Pacchetti
+## 🔥 I Nostri Pacchetti — MARKET DOMINATION PRICING
 
-### Presenza Social
+### 🌱 Starter Social
 
-Per chi ha gia un sito e vuole iniziare a comunicare meglio sui social.
+Per freelance e piccoli business che iniziano.
 
-- Setup iniziale: 490 euro
-- Gestione mensile: 590 euro/mese
+- Setup iniziale: €0
+- Gestione mensile: **€299**/mese (invece di €390)
 - 8 contenuti al mese
+- 1-2 canali social
+- ✅ **Lead Scraper incluso**
+
+### 🚀 Presenza Social
+
+Per chi ha un sito e vuole comunicare meglio sui social.
+
+- Setup iniziale: €290 (invece di €490)
+- Gestione mensile: **€499**/mese (invece di €590)
+- 12 contenuti al mese
 - 2 canali social principali
-- Piano editoriale mensile
-- Pubblicazione e report semplice
+- ✅ **Lead Scraper + SEO+GEO inclusi**
 
-### Sito + Social Start
+### ⭐ Crescita Business — CONSIGLIATO
 
-Per attivita locali, professionisti e piccole PMI che vogliono un sito chiaro e social gestiti.
+La soluzione piu equilibrata per PMI che vogliono crescita seria.
 
-- Setup iniziale: 1.900 euro
-- Gestione mensile: 790 euro/mese
-- Sito vetrina fino a 5 pagine o landing completa
-- 10-12 contenuti al mese
-- 2 canali social
-- SEO base, contatti, WhatsApp e report
-
-### Crescita Business — Consigliato
-
-La soluzione piu equilibrata per PMI che vogliono struttura, contenuti e crescita continuativa.
-
-- Setup iniziale: 3.900 euro
-- Gestione mensile: 1.290 euro/mese
-- Sito aziendale fino a 8-10 pagine
-- 16-20 contenuti al mese
+- Setup iniziale: €890 (invece di €3.900)
+- Gestione mensile: **€799**/mese (invece di €1.290) ← **RISPARMIO €491/mese!**
+- 20 contenuti al mese
 - 3 canali social
-- Reels/video brevi base
-- Report mensile e 2 call operative
+- Reels/video brevi
+- ✅ **Lead Scraper + SEO+GEO + ADS Optimizer + Competitor Watch inclusi**
 
-### E-commerce Attivo
+### 🛒 E-commerce Attivo
 
-Per negozi e brand che vogliono vendere online e alimentare i social con prodotti e promozioni.
+Per negozi online e brand che vogliono vendere.
 
-- Setup iniziale: 6.900 euro
-- Gestione mensile: 1.990 euro/mese
-- E-commerce fino a 50 prodotti iniziali
-- 25-30 contenuti al mese
+- Setup iniziale: €1.890 (invece di €6.900)
+- Gestione mensile: **€1.199**/mese (invece di €1.990) ← **RISPARMIO €791/mese!**
+- 30 contenuti al mese
 - 3-4 canali social
-- Promo mensili e contenuti collegati ai prodotti
+- Promo e campagne prodotto
+- ✅ **Tutti gli agenti + Client Reports automatici inclusi**
 
-### Dominio Digitale
+### 👑 Dominio Digitale
 
-Per aziende strutturate che vogliono una presenza multicanale avanzata.
+Per aziende che vuole presenza multicanale avanzata.
 
-- Setup iniziale: da 9.900 euro
-- Gestione mensile: da 2.900 euro/mese
+- Setup iniziale: €2.890 (invece di €9.900)
+- Gestione mensile: **€1.699**/mese (invece di €2.900) ← **RISPARMIO €1.201/mese!**
+- 50-60 contenuti al mese
+- 5 canali social
 - Strategia digitale completa
-- Sito avanzato o e-commerce strutturato
-- 40-60 contenuti al mese
-- Social multicanale, SEO/GEO e report strategico
+- ✅ **Tutti gli agenti + Strategic Planner incluso**
 
-## Premium Analytics (Add-on Intelligence)
+## 🎁 Premium Analytics — Advanced Optimization
 
 Per chi vuole trasformare Social Automation in "Chief Growth Officer" digitale.
 
-**Aggiungibile a qualsiasi pacchetto: +300 euro/mese**
+**Aggiungibile a qualsiasi pacchetto: +€99/mese** (invece di €300)
 
-- Report quotidiano (E-Commerce + Social + Web performance)
-- Piano strategico auto-generato mensile
-- Content calendar intelligente con IA (28 giorni)
-- 5 opzioni di contenuto generate → tu approvi → pubblica automatico
-- ROI tracking per ogni post (quanto vende ogni contenuto)
-- Feedback loop automatico (analizza engagement → ottimizza domani)
-- Forecast scenari (se fai X, aspettati Y vendite)
-- Competitive benchmarking settimanale
-- A/B testing roadmap per 8 settimane
-- Web design audit mensile con miglioramenti prioritari
+### Cosa aggiungi:
 
-Expected ROI: +400-800 euro/mese da content migliore + ottimizzazione continua.
+- ✨ Report quotidiano (E-Commerce + Social + Web performance)
+- 📊 Piano strategico auto-generato mensile
+- 🎯 Content calendar intelligente IA (28 giorni)
+- 💰 5 opzioni di contenuto generate → approvi → pubblica
+- 📈 ROI tracking per ogni post
+- 🔄 Feedback loop automatico (analizza → ottimizza)
+- 🎬 Forecast scenari (se fai X, aspettati Y vendite)
+- 🏆 Competitive benchmarking settimanale
+- ⚡ A/B testing roadmap (8 settimane)
+- 🎨 Web design audit mensile
+
+### Esempi di ROI:
+
+**Crescita Business + Premium Analytics:**
+- Senza Premium: €799/mese
+- Con Premium: €799 + €99 = **€898/mese**
+- Competitor (Doctor Web): €940/mese
+- **VINCI di €42/mese con 3x le features** ✅
+
+**E-commerce Attivo + Premium Analytics:**
+- Senza Premium: €1.199/mese
+- Con Premium: €1.199 + €99 = **€1.298/mese**
+- Competitor (Basile): €1.290/mese
+- **STESSO PREZZO MA TRIPLO IL VALORE** 🔥
+
+Expected ROI: +€400-800/mese da agenti + content + optimization continua.
 
 ## Cosa E Incluso Nel Metodo
 
