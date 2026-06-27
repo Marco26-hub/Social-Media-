@@ -16,7 +16,9 @@ function safeEqualString(a: string, b: string) {
 
 function hasValidWebhookSignature(request: Request, rawBody: string) {
   const secret = process.env.BLOTATO_WEBHOOK_SECRET?.trim()
-  if (!secret) return isDemo() || process.env.NODE_ENV !== 'production'
+  // SICUREZZA: senza secret accetta SOLO in demo esplicito, mai in produzione
+  // reale. Il vecchio `NODE_ENV !== 'production'` lasciava il webhook aperto.
+  if (!secret) return isDemo()
 
   const authHeader = request.headers.get('authorization') || ''
   if (safeEqualString(authHeader, `Bearer ${secret}`)) return true
@@ -111,7 +113,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true })
   } catch (e) {
+    // Non esporre messaggi DB/stack al chiamante non autenticato.
     console.error('[Blotato webhook]', e)
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return NextResponse.json({ error: 'Errore interno' }, { status: 500 })
   }
 }

@@ -60,6 +60,7 @@ async function getDatabaseChecks(enabled: boolean) {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
+    // Logga il dettaglio solo server-side; non esporlo nell'endpoint pubblico.
     console.error('[system health] database check failed:', message.slice(0, 500))
     return {
       dbConnection: false,
@@ -68,7 +69,7 @@ async function getDatabaseChecks(enabled: boolean) {
       migrationsTable: false,
       migrationCount: 0,
       latestMigrationApplied: false,
-      error: message.slice(0, 240),
+      error: 'db_check_failed',
     }
   }
 }

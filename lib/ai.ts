@@ -63,7 +63,11 @@ export async function callAI(params: {
   silentFallback?: boolean
 }): Promise<string> {
   const { model, systemPrompt, userPrompt, maxTokens = 4000, silentFallback = true } = params
-  const orKey = (params.openrouterKey || process.env.OPENROUTER_API_KEY || '').trim()
+  // SICUREZZA: la chiave BYO arriva dal client (localStorage). Accettala solo se
+  // ha il formato OpenRouter atteso, altrimenti ignorala e usa quella server.
+  const byoKey = (params.openrouterKey || '').trim()
+  const validByoKey = /^sk-or-v1-[A-Za-z0-9_-]{20,}$/.test(byoKey) ? byoKey : ''
+  const orKey = (validByoKey || process.env.OPENROUTER_API_KEY || '').trim()
   const anthropicKey = (process.env.ANTHROPIC_API_KEY || '').trim()
 
   const attempts: AIAttempt[] = []
