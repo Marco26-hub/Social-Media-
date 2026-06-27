@@ -7,11 +7,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { demoContenuti, demoLogs } from '@/lib/demo-data'
-import AIModelSelector from '@/components/AIModelSelector'
-import OpenRouterKeyInput from '@/components/OpenRouterKeyInput'
 import { PLATFORM_LIST } from '@/lib/social-config'
 import { isDemo } from '@/lib/demo'
-import { GENERATION_OPTIMIZATION_CYCLE } from '@/lib/production-cycle'
 
 export const dynamic = 'force-dynamic'
 
@@ -117,7 +114,7 @@ function getSystemHealth() {
 }
 
 export default async function DashboardPage() {
-  const { brandConfigurato, prodotti, daApprovare, pubblicati7g, errori, inCoda, jobAttivi, jobFalliti, ultimi } = await getStats()
+  const { brandConfigurato, prodotti, daApprovare, pubblicati7g, errori, inCoda, ultimi } = await getStats()
   const systemHealth = getSystemHealth()
 
   const stats = [
@@ -223,10 +220,10 @@ export default async function DashboardPage() {
               Control room · {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
             <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
-              Parti dal piano editoriale, poi il motore produce e ottimizza.
+              La tua control room.<br className="hidden md:block" /> Dal piano alla pubblicazione, in un flusso unico.
             </h1>
             <p className="text-sm md:text-base text-slate-300 mt-3 max-w-2xl">
-              Il piano è il primo step: decide canali, formati, funnel e KPI; poi ogni contenuto eredita brand identity, asset, qualità pacchetto e ciclo di ottimizzazione.
+              Un solo posto per pianificare, produrre con l&apos;AI, far approvare e pubblicare. Segui il prossimo step suggerito e il sistema fa il resto.
             </p>
             <div className="flex flex-wrap gap-3 mt-5">
               <Link href={nextStep.href} className="btn-primary">
@@ -263,12 +260,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Selettore modello AI — top dashboard */}
-      <AIModelSelector />
-
-      {/* API Key OpenRouter */}
-      <OpenRouterKeyInput />
-
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
         {stats.map(({ label, value, icon: Icon, color, bg, href }) => (
@@ -286,9 +277,9 @@ export default async function DashboardPage() {
       <div className="card p-4 md:p-6 mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
           <div>
-            <h2 className="font-semibold text-gray-900">Ciclo produzione contenuti</h2>
+            <h2 className="text-lg font-bold text-gray-900">Il tuo flusso di lavoro</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Ogni servizio prende l&apos;output dello step precedente: niente pezzi scollegati, solo flusso operativo.
+              7 step collegati: ogni passo usa l&apos;output del precedente. Le card in giallo richiedono la tua azione.
             </p>
           </div>
           <Link href="/dashboard/setup" className="btn-secondary text-xs py-2 px-3 self-start md:self-auto">
@@ -336,78 +327,6 @@ export default async function DashboardPage() {
               <p className="text-xs font-semibold text-brand-600 mt-3">{cta} →</p>
             </Link>
           ))}
-        </div>
-      </div>
-
-      <div className="card p-4 md:p-6 mb-6 border-slate-200 bg-gradient-to-br from-slate-950 to-slate-900 text-white">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-5">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-emerald-100 mb-3">
-              <Workflow className="w-3.5 h-3.5" />
-              Sistema operativo contenuti
-            </div>
-            <h2 className="text-lg md:text-xl font-bold">Ciclo generazione → ottimizzazione</h2>
-            <p className="text-sm text-slate-300 mt-1 max-w-3xl">
-              Ogni contenuto nasce da brand identity e asset cliente, viene prodotto con template, controllato con score e torna nel report come apprendimento per il ciclo successivo.
-            </p>
-          </div>
-          <Link href="/dashboard/social/instagram" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-slate-100 transition-colors self-start lg:self-auto">
-            <Sparkles className="w-4 h-4 text-brand-600" />
-            Avvia generazione
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
-          {GENERATION_OPTIMIZATION_CYCLE.map((stage, index) => (
-            <div key={stage.id} className="rounded-2xl border border-white/10 bg-white/10 p-4">
-              <span className="text-[10px] font-bold text-emerald-200">0{index + 1}</span>
-              <h3 className="font-semibold text-white mt-2">{stage.title}</h3>
-              <p className="text-[11px] text-slate-300 mt-2">
-                <span className="text-slate-100">Output:</span> {stage.output}
-              </p>
-              <p className="text-[11px] text-emerald-100/90 mt-2">{stage.qualityGate}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
-        <div className="lg:col-span-2 card p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="font-semibold text-gray-900">Servizi collegati</h2>
-              <p className="text-sm text-gray-500 mt-1">Come vendere ed erogare il servizio senza buchi operativi.</p>
-            </div>
-            <Link href="/api/system/health" className="text-sm text-brand-600 hover:underline">Health JSON →</Link>
-          </div>
-          <div className="grid md:grid-cols-3 gap-3">
-            {[
-              { step: 'A', title: 'Pacchetto → qualità', text: 'Il piano cliente governa profondità AI, numero contenuti e report.' },
-              { step: 'B', title: 'Asset → template', text: 'Immagini cliente e prodotti alimentano layout, brief e media finali.' },
-              { step: 'C', title: 'Report → rinnovo', text: 'Ogni mese chiude con KPI, insight e azioni del mese successivo.' },
-            ].map(item => (
-              <div key={item.step} className="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-4">
-                <span className="text-xs font-bold text-brand-600">{item.step}</span>
-                <h3 className="font-semibold text-gray-900 mt-2">{item.title}</h3>
-                <p className="text-sm text-gray-500 mt-1">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="card p-6">
-          <h2 className="font-semibold text-gray-900 mb-4">Job backend</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-blue-50 p-4">
-              <p className="text-3xl font-bold text-blue-700">{jobAttivi ?? 0}</p>
-              <p className="text-xs text-blue-700/70 mt-1">Queued/running</p>
-            </div>
-            <div className="rounded-2xl bg-red-50 p-4">
-              <p className="text-3xl font-bold text-red-700">{jobFalliti ?? 0}</p>
-              <p className="text-xs text-red-700/70 mt-1">Failed</p>
-            </div>
-          </div>
-          <p className="text-xs text-gray-400 mt-3">
-            Se i valori restano a zero prima della migration, è normale: la base è già pronta per il prossimo step async.
-          </p>
         </div>
       </div>
 
