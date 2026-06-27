@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { apiError } from '@/lib/api-error'
 import { callAI, extractJSON } from '@/lib/ai'
 import { requireAuth } from '@/lib/auth-utils'
 import { getClientGenerationContext, mergeBrandIdentity } from '@/lib/client-context'
@@ -129,6 +130,6 @@ export async function POST(request: Request) {
     const parsed = extractJSON(aiRes) as Record<string, unknown>
     return NextResponse.json({ cliente_id: clientContext.clienteId, brand_source: clientContext.source, ...parsed })
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import { requireAdmin, requireAuth, requireClienteId } from '@/lib/auth-utils'
 import { scheduleOnBlotato } from '@/lib/publish/schedule'
@@ -128,7 +129,7 @@ export async function GET(request: Request) {
     const rows = await q(query, params)
     return NextResponse.json(rows)
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }
 
@@ -209,7 +210,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ ok: true })
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }
 
@@ -249,6 +250,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ ok: true, deleted_id: id })
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }

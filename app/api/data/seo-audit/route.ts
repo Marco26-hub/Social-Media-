@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
@@ -15,6 +16,6 @@ export async function GET() {
     )
     return NextResponse.json(rows)
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }

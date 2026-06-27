@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import { demoBlogArticoli, demoContenuti, demoLogs } from '@/lib/demo-data'
 import { isDemo } from '@/lib/demo'
@@ -60,6 +61,6 @@ export async function GET() {
       log_pubblicazioni: logPubblicazioni,
     }, clienteId)
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }

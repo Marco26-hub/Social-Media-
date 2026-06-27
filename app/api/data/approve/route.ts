@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
+import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import crypto from 'crypto'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { getPublicBaseUrl } from '@/lib/base-url'
 
 export async function GET(request: Request) {
   try {
@@ -100,9 +102,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       token,
       tipo_invio: tipo,
-      url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/approve/${token}`,
+      url: `${getPublicBaseUrl(request)}/approve/${token}`,
     })
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }

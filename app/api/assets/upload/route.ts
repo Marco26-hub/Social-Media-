@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'
 import { NextResponse } from 'next/server'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { getPublicBaseUrl } from '@/lib/base-url'
 
 export const runtime = 'nodejs'
 
@@ -18,15 +19,6 @@ function safeFilename(name: string) {
     .replace(/^-|-$/g, '')
     .slice(0, 48) || 'asset'
   return `${base}-${randomUUID().slice(0, 8)}${ext}`
-}
-
-function publicBaseUrl(request: Request) {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXTAUTH_URL ||
-    request.headers.get('origin') ||
-    new URL(request.url).origin
-  ).replace(/\/$/, '')
 }
 
 export async function POST(request: Request) {
@@ -61,7 +53,7 @@ export async function POST(request: Request) {
       const pathname = `/api/assets/file/${encodeURIComponent(clienteId)}/${encodeURIComponent(filename)}`
       uploaded.push({
         name: file.name,
-        url: `${publicBaseUrl(request)}${pathname}`,
+        url: `${getPublicBaseUrl(request)}${pathname}`,
         path: pathname,
         mime: file.type,
         size: file.size,

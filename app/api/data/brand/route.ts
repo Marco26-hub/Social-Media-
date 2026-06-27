@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
@@ -53,7 +54,7 @@ export async function GET() {
     const row = await q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cid])
     return NextResponse.json(row[0] || null)
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }
 
@@ -109,6 +110,6 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ ok: true })
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
@@ -12,7 +13,7 @@ export async function GET() {
     const rows = await q('SELECT * FROM prodotti WHERE cliente_id = $1 ORDER BY nome_prodotto', [cid])
     return NextResponse.json(rows)
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }
 
@@ -31,6 +32,6 @@ export async function POST(request: Request) {
     )
     return NextResponse.json({ ok: true, id: (rows[0] as { id: string }).id, product_id: pid })
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    return apiError(e)
   }
 }
