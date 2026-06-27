@@ -86,26 +86,26 @@ function getSystemHealth() {
     ready: databaseReady && authReady && aiReady,
     items: [
       {
-        label: 'Neon DB',
-        value: databaseReady ? 'DATABASE_URL attivo' : 'Da configurare',
+        label: 'Archivio dati',
+        value: databaseReady ? 'Connesso' : 'Da attivare',
         icon: Database,
         tone: databaseReady ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50',
       },
       {
-        label: 'Auth',
-        value: authReady ? 'NextAuth pronto' : 'Serve secret',
+        label: 'Accesso sicuro',
+        value: authReady ? 'Attivo' : 'Da attivare',
         icon: ShieldCheck,
         tone: authReady ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50',
       },
       {
-        label: 'AI backend',
-        value: aiReady ? 'Chiave attiva' : 'Serve chiave AI',
+        label: 'Intelligenza AI',
+        value: aiReady ? 'Pronta' : 'Da attivare',
         icon: Bot,
         tone: aiReady ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50',
       },
       {
-        label: 'Ops schema',
-        value: operationsReady ? 'Migration pronta' : 'Demo mode',
+        label: 'Sistema',
+        value: operationsReady ? 'Pronto' : 'Modalità demo',
         icon: Workflow,
         tone: operationsReady ? 'text-blue-700 bg-blue-50' : 'text-slate-700 bg-slate-100',
       },
@@ -118,10 +118,10 @@ export default async function DashboardPage() {
   const systemHealth = getSystemHealth()
 
   const stats = [
-    { label: 'Da approvare',    value: daApprovare ?? 0, icon: Clock,         color: 'text-yellow-600', bg: 'bg-yellow-50', href: '/dashboard/calendario?filter=DA_APPROVARE' },
-    { label: 'Pubblicati 7gg',  value: pubblicati7g ?? 0,icon: TrendingUp,    color: 'text-green-600',  bg: 'bg-green-50',  href: '/dashboard/log' },
-    { label: 'In coda',         value: inCoda ?? 0,      icon: Send,          color: 'text-blue-600',   bg: 'bg-blue-50',   href: '/dashboard/calendario?filter=APPROVATO' },
-    { label: 'Errori attivi',   value: errori ?? 0,      icon: AlertCircle,   color: 'text-red-600',    bg: 'bg-red-50',    href: '/dashboard/calendario?filter=ERRORE' },
+    { label: 'Da approvare',          value: daApprovare ?? 0, icon: Clock,         color: 'text-yellow-600', bg: 'bg-yellow-50', href: '/dashboard/calendario?filter=DA_APPROVARE' },
+    { label: 'Pubblicati (7 giorni)', value: pubblicati7g ?? 0,icon: TrendingUp,    color: 'text-green-600',  bg: 'bg-green-50',  href: '/dashboard/log' },
+    { label: 'Pronti da pubblicare',  value: inCoda ?? 0,      icon: Send,          color: 'text-blue-600',   bg: 'bg-blue-50',   href: '/dashboard/calendario?filter=APPROVATO' },
+    { label: 'Da sistemare',          value: errori ?? 0,      icon: AlertCircle,   color: 'text-red-600',    bg: 'bg-red-50',    href: '/dashboard/calendario?filter=ERRORE' },
   ]
 
   const statusColor: Record<string, string> = {
@@ -135,19 +135,19 @@ export default async function DashboardPage() {
   const productionFlow = [
     {
       step: '01',
-      title: 'Piano editoriale',
-      input: 'Obiettivo, periodo, canali, qualità',
-      output: 'Calendario con brief collegati al motore',
+      title: '1. Piano del mese',
+      input: 'Cosa vuoi ottenere e su quali social',
+      output: 'Un calendario di contenuti pronto',
       href: '/dashboard/piano',
       icon: Workflow,
       done: daApprovare + inCoda + pubblicati7g > 0,
-      cta: 'Genera piano',
+      cta: 'Crea il piano',
     },
     {
       step: '02',
-      title: 'Brand & regole',
-      input: 'Sito, tono, target, compliance',
-      output: 'Prompt memory e vincoli creativi',
+      title: '2. Brand e stile',
+      input: 'Sito, stile e tono della tua attività',
+      output: 'Le regole che l\'AI seguirà sempre',
       href: '/dashboard/brand',
       icon: Sparkles,
       done: brandConfigurato,
@@ -155,9 +155,9 @@ export default async function DashboardPage() {
     },
     {
       step: '03',
-      title: 'Prodotti & asset',
-      input: 'Catalogo, immagini, link prodotto',
-      output: 'Asset pronti per post/reel/story/blog',
+      title: '3. Prodotti e foto',
+      input: 'Foto e info dei tuoi prodotti',
+      output: 'Materiale pronto per i contenuti',
       href: '/dashboard/prodotti',
       icon: Package,
       done: prodotti > 0,
@@ -165,9 +165,9 @@ export default async function DashboardPage() {
     },
     {
       step: '04',
-      title: 'Produzione contenuti',
-      input: 'Template, asset, qualità pacchetto',
-      output: 'Post/reel/story/carousel/blog completi',
+      title: '4. Crea contenuti',
+      input: 'Le scelte fatte nei passi prima',
+      output: 'Post, reel, storie e articoli scritti',
       href: '/dashboard/social/instagram',
       icon: ImagePlus,
       done: daApprovare > 0 || inCoda > 0 || pubblicati7g > 0,
@@ -175,31 +175,31 @@ export default async function DashboardPage() {
     },
     {
       step: '05',
-      title: 'Revisione cliente',
-      input: 'Preview, score AI, link approvazione',
-      output: 'Contenuti approvati o da correggere',
+      title: '5. Approva',
+      input: 'I contenuti appena creati',
+      output: 'Contenuti approvati o da sistemare',
       href: '/dashboard/calendario?filter=DA_APPROVARE',
       icon: ShieldCheck,
       done: daApprovare === 0 && (inCoda > 0 || pubblicati7g > 0),
       attention: daApprovare > 0,
-      cta: daApprovare > 0 ? `${daApprovare} da approvare` : 'Tutto revisionato',
+      cta: daApprovare > 0 ? `${daApprovare} da approvare` : 'Tutto approvato',
     },
     {
       step: '06',
-      title: 'Pubblicazione',
-      input: 'APPROVATO, media validi, Blotato',
-      output: 'Post schedulati/pubblicati e log',
+      title: '6. Pubblica',
+      input: 'I contenuti approvati',
+      output: 'Post pubblicati sui social',
       href: '/dashboard/log',
       icon: Megaphone,
       done: pubblicati7g > 0,
       attention: errori > 0,
-      cta: errori > 0 ? `${errori} errori` : 'Controlla log',
+      cta: errori > 0 ? `${errori} da sistemare` : 'Vedi pubblicati',
     },
     {
       step: '07',
-      title: 'Report & rinnovo',
-      input: 'KPI, log, contenuti migliori',
-      output: 'PDF cliente e prossime azioni',
+      title: '7. Report cliente',
+      input: 'I risultati del mese',
+      output: 'Un report chiaro da consegnare',
       href: '/dashboard/report',
       icon: BarChart3,
       done: pubblicati7g > 0,
@@ -217,10 +217,10 @@ export default async function DashboardPage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-white/80 mb-4">
               <Sparkles className="w-3.5 h-3.5 text-brand-500" />
-              Control room · {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}
+              La tua bacheca · {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
             <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
-              La tua control room.<br className="hidden md:block" /> Dal piano alla pubblicazione, in un flusso unico.
+              Dal piano alla pubblicazione,<br className="hidden md:block" /> tutto in un unico posto.
             </h1>
             <p className="text-sm md:text-base text-slate-300 mt-3 max-w-2xl">
               Un solo posto per pianificare, produrre con l&apos;AI, far approvare e pubblicare. Segui il prossimo step suggerito e il sistema fa il resto.
@@ -228,7 +228,7 @@ export default async function DashboardPage() {
             <div className="flex flex-wrap gap-3 mt-5">
               <Link href={nextStep.href} className="btn-primary">
                 <Rocket className="w-4 h-4" />
-                Prossimo step: {nextStep.cta}
+                Da fare adesso: {nextStep.cta}
               </Link>
               <Link href="/dashboard/calendario?filter=DA_APPROVARE" className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-sm font-medium rounded-lg hover:bg-white/15 transition-colors">
                 <ShieldCheck className="w-4 h-4" />
@@ -313,16 +313,16 @@ export default async function DashboardPage() {
                       ? 'bg-emerald-100 text-emerald-700'
                       : 'bg-gray-100 text-gray-500'
                 }`}>
-                  {attention ? 'azione' : done ? 'ok' : 'setup'}
+                  {attention ? 'da fare ora' : done ? 'fatto' : 'da fare'}
                 </span>
               </div>
               <Icon className={`w-5 h-5 mb-3 ${attention ? 'text-amber-600' : done ? 'text-emerald-600' : 'text-brand-600'}`} />
               <h3 className="text-sm font-bold text-gray-900">{title}</h3>
               <p className="text-[11px] text-gray-500 mt-2">
-                <span className="font-semibold text-gray-700">Input:</span> {input}
+                <span className="font-semibold text-gray-700">Ti serve:</span> {input}
               </p>
               <p className="text-[11px] text-gray-500 mt-1">
-                <span className="font-semibold text-gray-700">Output:</span> {output}
+                <span className="font-semibold text-gray-700">Ottieni:</span> {output}
               </p>
               <p className="text-xs font-semibold text-brand-600 mt-3">{cta} →</p>
             </Link>
