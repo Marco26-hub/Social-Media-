@@ -459,7 +459,7 @@ export async function POST(request: Request) {
     const userPrompt = brandContext ? `${brandContext}\n---\n${basePrompt}` : basePrompt
 
     const aiRes = await callAI({
-      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
+      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: buildSystemPrompt(brand, contentQuality),
       userPrompt,
       openrouterKey: openrouter_key,

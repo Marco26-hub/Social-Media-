@@ -20,14 +20,14 @@ export default function PianoPage() {
   const [running, setRunning] = useState(false)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [aiModel, setAiModel] = useState('nvidia/nemotron-3-ultra-550b-a55b:free')
+  const [aiModel, setAiModel] = useState('meta-llama/llama-3.3-70b-instruct:free')
   const [quality, setQuality] = useState<QualitySelection>('auto')
   const { clienteId } = useActiveClienteId()
   const demo = useRuntimeDemo()
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setAiModel(localStorage.getItem('ai_model') ?? 'nvidia/nemotron-3-ultra-550b-a55b:free')
+      setAiModel(localStorage.getItem('ai_model') ?? 'meta-llama/llama-3.3-70b-instruct:free')
     }
   }, [])
 

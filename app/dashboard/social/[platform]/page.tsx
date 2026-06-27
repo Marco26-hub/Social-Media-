@@ -41,7 +41,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [states, setStates]   = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({})
   const [errors, setErrors]   = useState<Record<string, string>>({})
   const [pending, setPending] = useState<FormatoConfig | null>(null)
-  const [aiModel, setAiModel] = useState('nvidia/nemotron-3-ultra-550b-a55b:free')
+  const [aiModel, setAiModel] = useState('meta-llama/llama-3.3-70b-instruct:free')
   const [quality, setQuality] = useState<QualitySelection>('auto')
   const [assets, setAssets] = useState<UploadedAsset[]>([])
   const [assetUrl, setAssetUrl] = useState('')
@@ -51,7 +51,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setAiModel(localStorage.getItem('ai_model') ?? 'nvidia/nemotron-3-ultra-550b-a55b:free')
+      setAiModel(localStorage.getItem('ai_model') ?? 'meta-llama/llama-3.3-70b-instruct:free')
     }
   }, [])
 

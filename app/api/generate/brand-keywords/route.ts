@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       .replace('{{TONO}}', tono || brandField(brandIdentity, 'tono_voce'))
 
     const aiRes = await callAI({
-      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
+      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: 'Sei un SEO/GEO strategist senior. Generi keyword e hashtag ottimizzati per search engines e AI. Rispondi SOLO con JSON valido.',
       userPrompt,
       openrouterKey: openrouter_key || undefined,

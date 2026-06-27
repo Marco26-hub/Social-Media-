@@ -135,11 +135,11 @@ ${buildExtendedOutputSchema()}
       + qualityPrompt
 
     const aiRes = await callAI({
-      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
+      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: `Sei un social media manager e creative strategist senior. Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock o claim non presenti nei dati.`,
       userPrompt,
       openrouterKey: openrouter_key,
-      maxTokens: contentQuality === 'high' ? 6000 : contentQuality === 'medium' ? 4500 : 3000,
+      maxTokens: contentQuality === 'high' ? 8000 : contentQuality === 'medium' ? 6000 : 4000,
     })
 
     const items = extractJSONArray(aiRes) as Record<string, unknown>[]

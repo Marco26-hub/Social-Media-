@@ -1,16 +1,19 @@
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
+// Ordine: modelli veloci/affidabili prima. Il 550B (lento su free tier) è escluso
+// dalla cascade per evitare timeout a catena. claude resta solo per Anthropic diretto.
 const FALLBACK_MODELS = [
-  'openrouter/free',
-  'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'google/gemma-4-31b-it:free',
-  'google/gemma-4-26b-a4b-it:free',
-  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
   'openai/gpt-oss-120b:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'google/gemma-4-31b-it:free',
   'claude-sonnet-4-6',
 ]
+
+// Quanti fallback OpenRouter provare al massimo prima di arrendersi.
+// Con timeout 45s/tentativo, 2 fallback + tentativo primario stanno sotto i 90s del client.
+const MAX_OPENROUTER_FALLBACKS = 2
 
 type AIAttempt = {
   provider: 'openrouter' | 'anthropic'
@@ -81,8 +84,11 @@ export async function callAI(params: {
     }
 
     if (silentFallback) {
+      let fallbacksTried = 0
       for (const fb of FALLBACK_MODELS) {
         if (fb === model || isAnthropicModel(fb)) continue
+        if (fallbacksTried >= MAX_OPENROUTER_FALLBACKS) break
+        fallbacksTried++
         try {
           const res = await callOpenRouter(fb, systemPrompt, userPrompt, orKey, maxTokens)
           if (!res.trim()) throw new Error('Risposta AI vuota')
@@ -127,7 +133,7 @@ async function callOpenRouter(
   userPrompt: string,
   key: string,
   maxTokens: number,
-  timeout = 60000,
+  timeout = 45000,
 ): Promise<string> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
@@ -161,7 +167,7 @@ async function callAnthropic(
   userPrompt: string,
   key: string,
   maxTokens: number,
-  timeout = 60000,
+  timeout = 45000,
 ): Promise<string> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)

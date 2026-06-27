@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       .replace('{{SETTORE}}', settore || 'non specificato')
 
     const aiRes = await callAI({
-      model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
+      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: `Sei un marketing strategist e growth hacker senior. Analizzi siti e-commerce e produci strategie di acquisizione clienti. Settore: ${settore || 'generalista'}. Rispondi SOLO con JSON valido.`,
       userPrompt,
       openrouterKey: openrouter_key || undefined,

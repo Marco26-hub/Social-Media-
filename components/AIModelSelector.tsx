@@ -29,9 +29,9 @@ const TASK_LABELS: Record<Task, string> = {
 
 const TASK_RECOMMENDED: Record<Task, string> = {
   'contenuti-social': 'nvidia/nemotron-3-super-120b-a12b:free',
-  'piano-editoriale': 'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'seo-audit': 'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'blog-articolo': 'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'piano-editoriale': 'meta-llama/llama-3.3-70b-instruct:free',
+  'seo-audit': 'meta-llama/llama-3.3-70b-instruct:free',
+  'blog-articolo': 'meta-llama/llama-3.3-70b-instruct:free',
 }
 
 const MODELS: Model[] = [
@@ -42,14 +42,14 @@ const MODELS: Model[] = [
 
   // OpenRouter Free
   { id: 'nvidia/nemotron-3-super-120b-a12b:free',  name: 'NVIDIA Nemotron 3 Super 120B', provider: 'openrouter', tier: 'free', context: '128K', speed: 'fast',   quality: 'top',  badge: 'Marketing',      recommendedFor: ['contenuti-social'] },
-  { id: 'nvidia/nemotron-3-ultra-550b-a55b:free',   name: 'NVIDIA Nemotron 3 Ultra',       provider: 'openrouter', tier: 'free', context: '1M',   speed: 'medium', quality: 'top',  badge: 'Consigliato',    recommendedFor: ['piano-editoriale', 'contenuti-social'] },
+  { id: 'nvidia/nemotron-3-ultra-550b-a55b:free',   name: 'NVIDIA Nemotron 3 Ultra',       provider: 'openrouter', tier: 'free', context: '1M',   speed: 'slow',   quality: 'top',  badge: '1M contesto · lento' },
   { id: 'nvidia/nemotron-3.5-content-safety:free',  name: 'NVIDIA Nemotron 3.5 Safety',    provider: 'openrouter', tier: 'free', context: '131K', speed: 'fast',   quality: 'high', badge: 'Content Safety', recommendedFor: ['contenuti-social'] },
   { id: 'openrouter/free',                          name: 'OpenRouter Free Router',        provider: 'openrouter', tier: 'free', context: '200K', speed: 'fast',   quality: 'high', badge: 'Auto' },
   { id: 'openai/gpt-oss-120b:free',                 name: 'OpenAI gpt-oss-120b',           provider: 'openrouter', tier: 'free', context: '131K', speed: 'medium', quality: 'high' },
   { id: 'z-ai/glm-4.5-air:free',                    name: 'Z.ai GLM 4.5 Air',              provider: 'openrouter', tier: 'free', context: '131K', speed: 'fast',   quality: 'high' },
   { id: 'google/gemma-4-31b-it:free',               name: 'Google Gemma 4 31B',            provider: 'openrouter', tier: 'free', context: '262K', speed: 'fast',   quality: 'high' },
   { id: 'qwen/qwen3-next-80b-a3b-instruct:free',    name: 'Qwen3 Next 80B',                provider: 'openrouter', tier: 'free', context: '262K', speed: 'medium', quality: 'high' },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free',   name: 'Llama 3.3 70B',                 provider: 'openrouter', tier: 'free', context: '128K', speed: 'medium', quality: 'high' },
+  { id: 'meta-llama/llama-3.3-70b-instruct:free',   name: 'Llama 3.3 70B',                 provider: 'openrouter', tier: 'free', context: '128K', speed: 'fast',   quality: 'high', badge: 'Consigliato',    recommendedFor: ['piano-editoriale', 'seo-audit', 'blog-articolo', 'contenuti-social'] },
   { id: 'qwen/qwen-2.5-72b-instruct:free',          name: 'Qwen 2.5 72B',                  provider: 'openrouter', tier: 'free', context: '32K',  speed: 'medium', quality: 'high' },
   { id: 'mistralai/mistral-nemo:free',              name: 'Mistral Nemo',                  provider: 'openrouter', tier: 'free', context: '128K', speed: 'fast',   quality: 'medium' },
 ]
@@ -62,7 +62,7 @@ const QUALITY_DOT: Record<string, string> = {
 
 export default function AIModelSelector({ task }: { task?: Task }) {
   const [open, setOpen] = useState(false)
-  const [selectedId, setSelectedId] = useState('nvidia/nemotron-3-ultra-550b-a55b:free')
+  const [selectedId, setSelectedId] = useState('meta-llama/llama-3.3-70b-instruct:free')
   const [showKeyInput, setShowKeyInput] = useState(false)
   const [orKey, setOrKey] = useState('')
   const [savedKey, setSavedKey] = useState('')
@@ -71,7 +71,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    setSelectedId(localStorage.getItem('ai_model') || (task ? TASK_RECOMMENDED[task] : 'nvidia/nemotron-3-ultra-550b-a55b:free'))
+    setSelectedId(localStorage.getItem('ai_model') || (task ? TASK_RECOMMENDED[task] : 'meta-llama/llama-3.3-70b-instruct:free'))
     const key = localStorage.getItem('openrouter_key') || ''
     setSavedKey(key)
     setOrKey(key)

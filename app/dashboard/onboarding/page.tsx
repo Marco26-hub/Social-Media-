@@ -94,7 +94,7 @@ export default function OnboardingPage() {
         const res = await fetch('/api/generate/brand-discovery', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: urlSito, cliente_id: clienteId, model: 'nvidia/nemotron-3-ultra-550b-a55b:free' }),
+          body: JSON.stringify({ url: urlSito, cliente_id: clienteId, model: 'meta-llama/llama-3.3-70b-instruct:free' }),
         })
         const data = await res.json()
         if (data.settore) setBrandProfile(data as BrandProfile)

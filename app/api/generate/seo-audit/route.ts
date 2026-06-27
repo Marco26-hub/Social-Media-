@@ -129,7 +129,7 @@ export async function POST(request: Request) {
     let fallback = false
     try {
       const aiRes = await callAI({
-        model: model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
+        model: model || 'meta-llama/llama-3.3-70b-instruct:free',
         systemPrompt: 'Sei un auditor SEO/GEO senior. Rispondi con JSON valido, nessun altro testo.',
         userPrompt,
         openrouterKey: openrouter_key,
