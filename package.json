@@ -13,7 +13,8 @@
     "prod:check:strict": "node scripts/render-production-check.mjs --strict",
     "render:sync-env": "node scripts/render-sync-env.mjs",
     "ci:verify": "npm run lint && npm run build && npm audit --audit-level=moderate && npm run migrate:dry",
-    "next:start": "next start"
+    "next:start": "next start",
+    "demo:video": "node scripts/demo-walkthrough.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
@@ -35,7 +36,8 @@
   },
   "devDependencies": {
     "eslint": "^9",
-    "eslint-config-next": "15.5.19"
+    "eslint-config-next": "15.5.19",
+    "playwright": "^1.61.1"
   },
   "overrides": {
     "postcss": "8.5.15",

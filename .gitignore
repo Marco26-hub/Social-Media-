@@ -8,3 +8,6 @@ out/
 dist/
 tsconfig.tsbuildinfo
 public/uploads/
+
+# demo walkthrough output
+demo/
