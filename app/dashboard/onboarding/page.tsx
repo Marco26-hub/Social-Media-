@@ -8,6 +8,7 @@ import {
   Loader2, Camera, Search, Target, MessageCircle
 } from 'lucide-react'
 import { isDemo } from '@/lib/demo'
+import { useGeneration } from '@/components/GenerationProvider'
 
 const STEP_LABELS = ['Cliente', 'Brand', 'Prodotti', 'Contenuti', 'Fine']
 
@@ -22,6 +23,7 @@ type ProductInput = { nome: string; categoria: string; prezzo: string }
 export default function OnboardingPage() {
   const router = useRouter()
   const demo = isDemo()
+  const gen = useGeneration()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
 
@@ -78,28 +80,18 @@ export default function OnboardingPage() {
   async function scopriBrand() {
     if (!urlSito.trim() && !demo) return
     setLoading(true)
-    if (demo) {
-      await new Promise(r => setTimeout(r, 1500))
-      setBrandProfile({
-        settore: 'Fashion/Abbigliamento', tono_voce: 'elegante', target: 'Donna 25-44',
-        promessa_brand: 'qualità artigianale', colori_brand: '#1a1a1a, #f5f0eb, #b8860b',
-        parole_da_usare: 'collezione, artigianale, capo, tessuto, esclusivo, dettaglio',
-        parole_da_evitare: 'sconto, outlet, economico, offerta, stock',
-        emoji_policy: 'moderato', hashtag_base: '#madeinitaly #fashion #slowfashion',
-        cta_base: 'Scopri la collezione',
-      })
+
+    const result = await gen.run<BrandProfile>({
+      key: 'onboarding-brand-discovery',
+      label: `Brand Discovery · ${urlSito || 'demo'}`,
+      url: '/api/generate/brand-discovery',
+      body: { url: urlSito, cliente_id: clienteId, model: 'meta-llama/llama-3.3-70b-instruct:free' },
+      estMs: 25000,
+    })
+
+    if (result.ok && result.data?.settore) {
+      setBrandProfile(result.data)
       setBrandEdited(null)
-    } else {
-      try {
-        const res = await fetch('/api/generate/brand-discovery', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: urlSito, cliente_id: clienteId, model: 'meta-llama/llama-3.3-70b-instruct:free' }),
-        })
-        const data = await res.json()
-        if (data.settore) setBrandProfile(data as BrandProfile)
-        setBrandEdited(null)
-      } catch (e) { console.error(e) }
     }
     setLoading(false)
   }

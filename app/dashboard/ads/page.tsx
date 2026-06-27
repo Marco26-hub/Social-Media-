@@ -4,11 +4,12 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { Sparkles, Loader2, Target, Hash, DollarSign, TrendingUp, Users, Smartphone, Search } from 'lucide-react'
 import { useActiveClienteId } from '@/lib/tenant/client'
-import { readAISettings, readApiError } from '@/lib/ai-client'
+import { readAISettings } from '@/lib/ai-client'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import AIModelSelector from '@/components/AIModelSelector'
 import OpenRouterKeyInput from '@/components/OpenRouterKeyInput'
 import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
+import { useGeneration } from '@/components/GenerationProvider'
 
 type QualitySelection = 'auto' | ContentQuality
 
@@ -29,12 +30,13 @@ export default function AdsPage() {
   const [productId, setProductId] = useState('')
   const [quality, setQuality] = useState<QualitySelection>('auto')
   const [products, setProducts] = useState<Record<string, unknown>[]>([])
-  const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AdsResult>(null)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [brand, setBrand] = useState<Record<string, unknown> | null>(null)
   const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
+  const gen = useGeneration()
+  const loading = gen.isRunning('ads')
 
   useEffect(() => {
     if (loadingCliente) return
@@ -60,84 +62,28 @@ export default function AdsPage() {
   }, [demo, clienteId, loadingCliente])
 
   async function handleGenerate() {
-    setLoading(true)
     setMsg(null)
     setResult(null)
 
     const product = products.find(p => (p as Record<string, string>).product_id === productId || (p as Record<string, string>).id === productId)
     const productName = product ? (product as Record<string, string>).nome_prodotto || JSON.stringify(product) : 'Prodotto principale'
+    const aiSettings = readAISettings()
+    const platformName = PLATFORMS.find(p => p.id === platform)?.name ?? platform
 
-    if (demo) {
-      await new Promise(r => setTimeout(r, 2000))
-      const demoResults: Record<string, Record<string, unknown>> = {
-        google: {
-          campagna: { nome: `SILKinCOM - Blazer Lino - Search`, tipo: 'Search', reti: 'Google Search Network', budget_giornaliero: '€50' },
-          ad_groups: [
-            { nome: 'Blazer Lino', keyword: ['blazer lino', 'giacca lino donna', 'blazer lino elegante'], headlines: ['Blazer in Lino | Eleganza Italiana', 'Scopri il Blazer Perfetto', 'Linee Essential, Stile Unico'], descriptions: ['Blazer in lino made in Italy. Eleganza e qualità per la donna moderna. Scopri la collezione.', 'Acquista ora il blazer in lino. Reso gratuito, spedizione in 24h. Approfitta delle offerte.'] },
-            { nome: 'Abito Elegante', keyword: ['abito elegante donna', 'outfit ufficio', 'moda donna professionista'], headlines: ['Outfit Elegante | Scopri Ora', 'Il Tuo Stile, La Nostra Qualità', 'Pronta per Ogni Occasione'], descriptions: ['Completa il tuo guardaroba con i nostri capi essenziali. Qualità made in Italy.', 'Scopri la nuova collezione Primavera-Estate. Eleganza senza compromessi.'] },
-          ],
-          sitelinks: ['Collezione Primavera', 'Blazer in Lino', 'Jeans Vita Alta', 'Nuovi Arrivi', 'Outlet', 'Spedizione Gratuita'],
-          callouts: ['Spedizione 24h', 'Reso Gratuito', 'Qualità Made in Italy', 'Pagamenti Sicuri', 'Assistenza Dedicata'],
-          negative_keywords: ['gratis', 'usato', 'economico', 'cinese', 'low cost'],
-          landing_page: 'https://example.com/p/blazer-lino',
-        },
-        facebook: {
-          campagna: { nome: 'SILKinCOM - Blazer Lino - Conversion', obiettivo: 'conversion', buying_type: 'auction' },
-          audience: [
-            { nome: 'Donne Fashion 25-45', tipo: 'Interesse', dettaglio: 'High spender moda', eta: '25-45', interessi: 'Moda, Shopping online, Luxury brands, Stile italiano' },
-            { nome: 'Lookalike Clienti', tipo: 'Lookalike 3%', dettaglio: 'Basato su acquisti recenti', eta: '25-55', interessi: '-' },
-            { nome: 'Retargeting Sito', tipo: 'Retargeting', dettaglio: 'Visitatori ultimi 30gg', eta: '-', interessi: '-' },
-          ],
-          ad_copy: [
-            { audience: 'Donne Fashion 25-45', primary_text: 'Scopri il blazer in lino che manca al tuo guardaroba. Eleganza italiana, qualità senza tempo. ✨', headline: 'Blazer in Lino Premium', description: 'Made in Italy | Sped. Gratuita', cta: 'Shop Now', formato_creativo: 'Carousel 3 immagini', aspect_ratio: '1:1' },
-            { audience: 'Lookalike Clienti', primary_text: 'I nostri clienti amano la qualità. Scopri perché.', headline: 'Qualità Italiana', description: 'Unisciti a loro', cta: 'Scopri', formato_creativo: 'Video 15s', aspect_ratio: '9:16' },
-            { audience: 'Retargeting Sito', primary_text: 'Ancora indecisa? Il tuo blazer ti aspetta con il 10% di sconto.', headline: 'Offerta Esclusiva', description: 'Solo per te - 10%', cta: 'Acquista Ora', formato_creativo: 'Single Image', aspect_ratio: '1:1' },
-          ],
-          placement_consigliati: ['Instagram Feed', 'Instagram Stories', 'Facebook Feed', 'Reels'],
-          note_strategia: 'Iniziare con carousel per mostrare varianti colore. Video 15s per retargeting.',
-        },
-        tiktok: {
-          campagna: { nome: 'SILKinCOM - Blazer - TikTok', obiettivo: 'traffic', budget: '€30/giorno' },
-          ad_groups: [
-            { nome: 'Try-on Haul', targeting_eta: '22-35', interessi: ['Fashion', 'Outfit ideas', 'Style tips', 'GRWM'], video_script: 'Apri busta → mostra blazer → try-on davanti specchio → 3 outfit diversi → CTA "Link in bio"', hook: 'POV: trovi il blazer perfetto', caption: 'Il blazer che fa la differenza nel tuo guardaroba primaverile ☀️ Qualità che si vede. #outfitideas #springfashion', cta: 'Link in bio', durata_secondi: 20 },
-            { nome: 'Styling Tips', targeting_eta: '25-40', interessi: ['Fashion styling', 'Office outfits', 'Capsule wardrobe'], video_script: 'Outfit da ufficio con blazer → outfit weekend → outfit serata → stesso blazer, 3 look → CTA', hook: 'Un blazer, 3 look diversi', caption: 'Quanto è versatile il blazer in lino? Scopri 3 modi di indossarlo e trova il tuo stile ✨ #modaitaliana #springstyle', cta: 'Shop now', durata_secondi: 25 },
-          ],
-          trend_audio_mood: 'Musica allegra/estiva, piano acustico o lo-fi. Female target 25-35.',
-          hashtag: { branded: ['#silkincom', '#eleganzaitaliana', '#essentialmoda'], trending: ['#springfashion', '#outfitinspo', '#blazeroutfit', '#modaitaliana', '#styletips'] },
-          note_creative: 'Video verticale 9:16. Luce naturale. Stile autentico, non troppo prodotto. Transizioni veloci.',
-          landing_page: 'https://example.com/p/blazer-lino',
-        },
-      }
-      setResult(demoResults[platform])
-      setMsg({ type: 'ok', text: 'Campagna generata! (demo)' })
-      setLoading(false)
-      return
-    }
+    const result = await gen.run<Record<string, unknown>>({
+      key: 'ads',
+      label: `Campagna ${platformName}`,
+      url: '/api/generate/ads',
+      body: { cliente_id: clienteId, platform, brand, product: productName, obiettivo, budget: `${budget}EUR/giorno`, quality, ...aiSettings },
+      estMs: 20000,
+    })
 
-    try {
-      const aiSettings = readAISettings()
-      const res = await fetch('/api/generate/ads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cliente_id: clienteId,
-          platform,
-          brand,
-          product: productName,
-          obiettivo,
-          budget: `${budget}EUR/giorno`,
-          quality,
-          ...aiSettings,
-        }),
-      })
-      if (!res.ok) throw new Error(await readApiError(res, 'Generazione campagna fallita'))
-      const data = await res.json()
-      setResult(data)
+    if (result.ok && result.data) {
+      setResult(result.data)
       setMsg({ type: 'ok', text: 'Campagna pubblicitaria generata!' })
-    } catch (e) {
-      setMsg({ type: 'err', text: (e as Error).message })
+    } else {
+      setMsg({ type: 'err', text: result.error || 'Generazione campagna fallita' })
     }
-    setLoading(false)
   }
 
   const PlatformIcon = PLATFORMS.find(p => p.id === platform)?.icon || Search

@@ -6,11 +6,12 @@ import {
   Eye, Plus, Trash2, Sparkles, Loader2, TrendingUp, TrendingDown,
   Target, Hash, Lightbulb, Zap, BarChart3, AlertTriangle
 } from 'lucide-react'
-import { readAISettings, readApiError } from '@/lib/ai-client'
+import { readAISettings } from '@/lib/ai-client'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import { useActiveClienteId } from '@/lib/tenant/client'
 import AIModelSelector from '@/components/AIModelSelector'
 import OpenRouterKeyInput from '@/components/OpenRouterKeyInput'
+import { useGeneration } from '@/components/GenerationProvider'
 
 type CompetitorAnalysis = {
   competitor_nome: string
@@ -30,10 +31,10 @@ type CompetitorAnalysis = {
 export default function CompetitorPage() {
   const demo = useRuntimeDemo()
   const { clienteId } = useActiveClienteId()
+  const gen = useGeneration()
   const [competitorNome, setCompetitorNome] = useState('')
   const [competitorSito, setCompetitorSito] = useState('')
   const [competitorSocial, setCompetitorSocial] = useState<string[]>([''])
-  const [loading, setLoading] = useState(false)
   const [analyses, setAnalyses] = useState<CompetitorAnalysis[]>([])
   const [selected, setSelected] = useState<CompetitorAnalysis | null>(null)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
@@ -44,63 +45,34 @@ export default function CompetitorPage() {
   function addSocialHandle() { setCompetitorSocial(prev => [...prev, '']) }
   function removeSocialHandle(i: number) { setCompetitorSocial(prev => prev.filter((_, j) => j !== i)) }
 
+  const loading = gen.isRunning('competitor')
+
   async function runAnalysis() {
     if (!competitorNome.trim()) return
-    setLoading(true)
     setMsg(null)
-    if (demo) {
-      await new Promise(r => setTimeout(r, 1800))
-      const mock: CompetitorAnalysis = {
+    const aiSettings = readAISettings()
+
+    const result = await gen.run<CompetitorAnalysis>({
+      key: 'competitor',
+      label: `Analisi ${competitorNome}`,
+      url: '/api/generate/competitor-analysis',
+      body: {
+        cliente_id: clienteId,
         competitor_nome: competitorNome,
-        data_analisi: new Date().toISOString().split('T')[0],
-        content_strategy: { tipo: 'Lifestyle + prodotto', temi: ['Outfit del giorno','Dietro le quinte','Collezione'], stile_visivo: 'Luce naturale, toni caldi', tono_voce: 'Amichevole, trendy' },
-        frequenza: { instagram: '5-7/settimana', facebook: '2-3/settimana', tiktok: '3-4/settimana', pinterest: '10-15/settimana', migliori_ore: ['9:00','12:30','19:00'] },
-        engagement: { rate_stimato: '2.1%', tipo_interazioni: ['Commenti','Salvataggi','Condivisioni'], crescita: '+12% followers/mese', note: 'Alto engagement su Reel, basso su carousel' },
-        hashtag_strategy: { principali: ['#fashion','#style','#ootd'], branded: ['#brandname','#brandstyle'], note: 'Pochi hashtag di nicchia' },
-        punti_forti: ['Visual consistency elevata','Forte community engagement','Buona frequenza Reel'],
-        punti_deboli: ['Bassa diversificazione formati','Hashtag generici','Pinterest sotto-sfruttato','Mancanza contenuti educativi'],
-        miglioramenti_per_cliente: [
-          { azione: 'Aumentare carousel educativi (styling tips)', impatto: 'Alto', effort: 'Basso', canale: 'instagram' },
-          { azione: 'Targettare hashtag di nicchia (#blazerestate)', impatto: 'Medio', effort: 'Basso', canale: 'tutti' },
-          { azione: 'Radidoppiare pin Pinterest con keyword SEO', impatto: 'Alto', effort: 'Medio', canale: 'pinterest' },
-          { azione: 'Creare serie "How to style" su TikTok', impatto: 'Alto', effort: 'Medio', canale: 'tiktok' },
-          { azione: 'User-generated content per autenticità', impatto: 'Alto', effort: 'Alto', canale: 'instagram' },
-        ],
-        score_competitor: 72,
-        gap_analysis: 'Il competitor ha forte presenza Instagram ma debole su TikTok e Pinterest. Opportunità: contenuti educativi, hashtag di nicchia, UGC per aumentare autenticità.',
-        contenuti_suggeriti: [
-          { tema: '3 modi di abbinare un blazer', formato: 'carousel', canale: 'instagram', perche: 'Colma gap educativo' },
-          { tema: 'Outfit completo sotto €200', formato: 'reel', canale: 'tiktok', perche: 'Trend accessibili' },
-        ],
-      }
-      setAnalyses(prev => [mock, ...prev])
-      setSelected(mock)
-      setLoading(false)
-      return
-    }
-    try {
-      if (!clienteId) throw new Error('Cliente non selezionato')
-      const aiSettings = readAISettings()
-      const res = await fetch('/api/generate/competitor-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cliente_id: clienteId,
-          competitor_nome: competitorNome,
-          competitor_sito: competitorSito || undefined,
-          competitor_social: competitorSocial.filter(s => s.trim()),
-          ...aiSettings,
-        }),
-      })
-      if (!res.ok) throw new Error(await readApiError(res, 'Analisi competitor fallita'))
-      const data = await res.json() as CompetitorAnalysis
-      setAnalyses(prev => [data, ...prev])
-      setSelected(data)
+        competitor_sito: competitorSito || undefined,
+        competitor_social: competitorSocial.filter(s => s.trim()),
+        ...aiSettings,
+      },
+      estMs: 22000,
+    })
+
+    if (result.ok && result.data) {
+      setAnalyses(prev => [result.data!, ...prev])
+      setSelected(result.data!)
       setMsg({ type: 'ok', text: 'Analisi competitor completata.' })
-    } catch (e) {
-      setMsg({ type: 'err', text: (e as Error).message })
+    } else {
+      setMsg({ type: 'err', text: result.error || 'Analisi competitor fallita' })
     }
-    setLoading(false)
   }
 
   const effortColor = (e: string) => e === 'Basso' ? 'bg-green-100 text-green-700' : e === 'Medio' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'

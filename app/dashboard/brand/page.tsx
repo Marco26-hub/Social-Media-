@@ -17,6 +17,7 @@ import LeadsCard from '@/components/LeadsCard'
 import ClientsCard from '@/components/ClientsCard'
 import AIModelSelector from '@/components/AIModelSelector'
 import OpenRouterKeyInput from '@/components/OpenRouterKeyInput'
+import { useGeneration } from '@/components/GenerationProvider'
 
 const TONI_VOCE = ['elegante','casual','ironico','professionale','emozionale','tecnico','luxury','friendly','sostenibile','istituzionale','ribelle','minimal','autoritario','giovanile']
 
@@ -69,13 +70,9 @@ export default function BrandPage() {
   const [brand, setBrand] = useState<Partial<Brand> | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [discovering, setDiscovering] = useState(false)
   const [genKeywords, setGenKeywords] = useState(false)
   const [genHashtags, setGenHashtags] = useState(false)
   const [genTrends, setGenTrends] = useState(false)
-  const [genCTA, setGenCTA] = useState(false)
-  const [genCompliance, setGenCompliance] = useState(false)
-  const [complianceResult, setComplianceResult] = useState<Record<string, unknown> | null>(null)
   const [url, setUrl] = useState('')
   const [includeSeo, setIncludeSeo] = useState(false)
   const [includeGeo, setIncludeGeo] = useState(false)
@@ -87,6 +84,8 @@ export default function BrandPage() {
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const demo = useRuntimeDemo()
   const { clienteId } = useActiveClienteId()
+  const gen = useGeneration()
+  const discovering = gen.isRunning('brand-discovery')
 
   useEffect(() => {
     async function load() {
@@ -131,102 +130,90 @@ export default function BrandPage() {
 
   async function handleDiscovery() {
     if (!url.trim()) { setMsg({ type: 'err', text: 'Inserisci URL del sito' }); return }
-    setDiscovering(true); setMsg(null); setSeoResult(null); setLeadsResult(null); setClientsResult(null)
+    setMsg(null); setSeoResult(null); setLeadsResult(null); setClientsResult(null)
     const runSeo = includeSeo || includeGeo
+    const aiSettings = readAISettings()
 
-    if (demo && !hasOpenRouterKey()) {
-      await new Promise(r => setTimeout(r, 1500))
-      setBrand(prev => ({ ...prev, sito_url: url, settore: 'Fashion/Abbigliamento', tono_voce: 'elegante', target: 'Donna 25-34, Donna 35-44, Professioniste', promessa_brand: '✨ Eleganza accessibile', colori_brand: 'Beige, Nero, Bianco', parole_da_usare: '#SEO:eleganza, #SEO:qualità', parole_da_evitare: '#EVITA:economico, low cost', emoji_policy: '✨🤍🖤', hashtag_base: '#BRANDED:silkincom, #SETTORE:fashion' }))
-      if (runSeo) setSeoResult({ score_globale: 72, score_seo_tecnico: 85, score_seo_contenuti: 70, score_geo_ai_search: 58, score_social_coerenza: 80, score_eeat: 65, riepilogo: 'Analisi completata.', punti_forti: ['SEO base presente'], punti_critici: ['Migliorare GEO'] })
-      if (includeLeads) setLeadsResult({ email: ['info@silkincom.com'], whatsapp: [], telegram: [], telefono: [], social: [], form_contatti_url: 'https://silkincom.com/contatti', indirizzo: '' })
-      if (includeClients) setClientsResult({ icp: 'Donna 25-45', buyer_personas: [], competitor: [], opportunita_vendita: [], canali_acquisizione: [] })
-      const parts = ['Profilo brand generato']; if (runSeo) parts.push('+ SEO/GEO'); if (includeLeads) parts.push('+ Contatti'); if (includeClients) parts.push('+ Marketing')
-      setMsg({ type: 'ok', text: parts.join(' ') + '. Rivedi e salva.' }); setDiscovering(false); return
+    const result = await gen.run<Record<string, unknown>>({
+      key: 'brand-discovery',
+      label: `Brand Discovery · ${url}`,
+      url: '/api/generate/brand-discovery',
+      body: { url, ...aiSettings },
+      estMs: 25000,
+    })
+
+    if (!result.ok) {
+      setMsg({ type: 'err', text: result.error || 'Brand discovery fallita' })
+      return
     }
 
-    try {
-      const aiSettings = readAISettings()
-      const discoveryRes = await fetch('/api/generate/brand-discovery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, ...aiSettings }),
+    setBrand(prev => ({ ...prev, ...result.data, sito_url: url }))
+
+    const sideTasks: Array<{ label: string; run: () => Promise<void> }> = []
+    if (runSeo) {
+      sideTasks.push({
+        label: 'SEO/GEO',
+        run: async () => {
+          if (!clienteId) throw new Error('cliente non selezionato')
+          const res = await fetch('/api/generate/seo-audit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cliente_id: clienteId, sito_url: url, periodo: 'settimanale', ...aiSettings }),
+          })
+          if (!res.ok) throw new Error(await readApiError(res, 'Audit SEO/GEO fallito'))
+          const auditsRes = await fetch('/api/data/seo-audit')
+          if (!auditsRes.ok) throw new Error(await readApiError(auditsRes, 'Lettura audit fallita'))
+          const audits = await auditsRes.json()
+          if (Array.isArray(audits) && audits.length > 0) setSeoResult(audits[0])
+        },
       })
-      if (!discoveryRes.ok) throw new Error(await readApiError(discoveryRes, 'Brand discovery fallita'))
-      const discoveryData = await discoveryRes.json()
-      setBrand(prev => ({ ...prev, ...discoveryData, sito_url: url }))
+    }
+    if (includeLeads) {
+      sideTasks.push({
+        label: 'Contatti',
+        run: async () => {
+          const res = await fetch('/api/generate/scrape-contacts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, ...aiSettings }),
+          })
+          if (!res.ok) throw new Error(await readApiError(res, 'Ricerca contatti fallita'))
+          setLeadsResult(await res.json())
+        },
+      })
+    }
+    if (includeClients) {
+      sideTasks.push({
+        label: 'Marketing',
+        run: async () => {
+          const res = await fetch('/api/generate/client-discovery', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, settore: brand?.settore || '', ...aiSettings }),
+          })
+          if (!res.ok) throw new Error(await readApiError(res, 'Analisi clienti fallita'))
+          setClientsResult(await res.json())
+        },
+      })
+    }
 
-      const sideTasks: Array<{ label: string; run: () => Promise<void> }> = []
-      if (runSeo) {
-        sideTasks.push({
-          label: 'SEO/GEO',
-          run: async () => {
-            if (!clienteId) throw new Error('cliente non selezionato')
-            const res = await fetch('/api/generate/seo-audit', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ cliente_id: clienteId, sito_url: url, periodo: 'settimanale', ...aiSettings }),
-            })
-            if (!res.ok) throw new Error(await readApiError(res, 'Audit SEO/GEO fallito'))
-            const auditsRes = await fetch('/api/data/seo-audit')
-            if (!auditsRes.ok) throw new Error(await readApiError(auditsRes, 'Lettura audit fallita'))
-            const audits = await auditsRes.json()
-            if (Array.isArray(audits) && audits.length > 0) setSeoResult(audits[0])
-          },
-        })
-      }
-      if (includeLeads) {
-        sideTasks.push({
-          label: 'Contatti',
-          run: async () => {
-            const res = await fetch('/api/generate/scrape-contacts', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url, ...aiSettings }),
-            })
-            if (!res.ok) throw new Error(await readApiError(res, 'Ricerca contatti fallita'))
-            setLeadsResult(await res.json())
-          },
-        })
-      }
-      if (includeClients) {
-        sideTasks.push({
-          label: 'Marketing',
-          run: async () => {
-            const res = await fetch('/api/generate/client-discovery', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url, settore: brand?.settore || '', ...aiSettings }),
-            })
-            if (!res.ok) throw new Error(await readApiError(res, 'Analisi clienti fallita'))
-            setClientsResult(await res.json())
-          },
-        })
-      }
-
-      const settled = await Promise.allSettled(sideTasks.map(task => task.run()))
-      const warnings = settled
-        .map((result, index) => result.status === 'rejected' ? `${sideTasks[index].label}: ${(result.reason as Error).message}` : null)
-        .filter(Boolean)
-      const parts = ['Profilo generato']; if (runSeo) parts.push('+ SEO/GEO'); if (includeLeads) parts.push('+ Contatti'); if (includeClients) parts.push('+ Marketing')
-      setMsg({ type: 'ok', text: warnings.length ? `${parts.join(' ')}. Warning: ${warnings.join(' · ')}` : parts.join(' ') + '! Rivedi e clicca Salva.' })
-    } catch (e) { setMsg({ type: 'err', text: (e as Error).message }) }
-    setDiscovering(false)
+    const settled = await Promise.allSettled(sideTasks.map(task => task.run()))
+    const warnings = settled
+      .map((r, i) => r.status === 'rejected' ? `${sideTasks[i].label}: ${(r.reason as Error).message}` : null)
+      .filter(Boolean)
+    const parts = ['Profilo generato']
+    if (runSeo) parts.push('+ SEO/GEO')
+    if (includeLeads) parts.push('+ Contatti')
+    if (includeClients) parts.push('+ Marketing')
+    setMsg({ type: 'ok', text: warnings.length ? `${parts.join(' ')}. Warning: ${warnings.join(' · ')}` : parts.join(' ') + '! Rivedi e clicca Salva.' })
   }
 
-  async function generateField(type: 'keywords' | 'hashtags' | 'trends' | 'cta') {
-    const setter = type === 'keywords' ? setGenKeywords : type === 'hashtags' ? setGenHashtags : type === 'trends' ? setGenTrends : setGenCTA
+  async function generateField(type: 'keywords' | 'hashtags' | 'trends') {
+    const setter = type === 'keywords' ? setGenKeywords : type === 'hashtags' ? setGenHashtags : setGenTrends
     setter(true)
     const settore = (brand as Record<string, string>)?.settore || ''
     const target = (brand as Record<string, string>)?.target || ''
     const tono = (brand as Record<string, string>)?.tono_voce || ''
-
-    if (demo && !hasOpenRouterKey()) {
-      await new Promise(r => setTimeout(r, 1200))
-      if (type === 'keywords') update('parole_da_usare', '#SEO:parola1, #SEO:parola2, #GEO:keyword geo, #LONGTAIL:frase lunga, #BRANDED:nome brand')
-      if (type === 'hashtags') update('hashtag_base', '#BRANDED:nomebrand, #SETTORE:settore, #NICCHIA:parola, #TREND:tendenza')
-      if (type === 'trends') update('colori_brand', '🔮 Tendenze: Pantone 2026: Digital Lavender, Mocha Mousse. Colori caldi e neutri dominanti.')
-      setter(false); return
-    }
 
     try {
       const aiSettings = readAISettings()
@@ -251,48 +238,8 @@ export default function BrandPage() {
       if (type === 'trends') {
         update('colori_brand', data.colori_tendenza || 'Tendenze aggiornate')
       }
-      if (type === 'cta') {
-        const ctaSuggeriti = data.cta_suggeriti as string[] | undefined
-        update('cta_base', ctaSuggeriti?.[0] || 'Scopri di più')
-      }
     } catch (e) { setMsg({ type: 'err', text: `AI: ${(e as Error).message}` }) }
     setter(false)
-  }
-
-  async function generateCompliance() {
-    setGenCompliance(true)
-    setComplianceResult(null)
-    if (demo && !hasOpenRouterKey()) {
-      await new Promise(r => setTimeout(r, 2000))
-      setComplianceResult({
-        cookie_policy: 'Questo sito utilizza cookie tecnici per il corretto funzionamento e cookie di profilazione...',
-        gdpr_informativa: 'Titolare del trattamento: SILKinCOM Srl. DPO: dpo@silkincom.com',
-        privacy_policy: 'SILKinCOM rispetta la tua privacy. Non vendiamo i tuoi dati a terzi.',
-        disclaimer: 'Le immagini sono a scopo illustrativo. I colori possono variare.',
-        condizioni_vendita: 'Diritto di recesso entro 14 giorni (Art. 52 D.Lgs. 206/2005).',
-        normative_riferimento: ['Reg. UE 2016/679', 'D.Lgs. 206/2005', 'D.Lgs. 70/2003'],
-        note: 'Documenti generati automaticamente. Si consiglia revisione legale.',
-      })
-      setGenCompliance(false); return
-    }
-    try {
-      const aiSettings = readAISettings()
-      const settore = (brand as Record<string, string>)?.settore || ''
-      const target = (brand as Record<string, string>)?.target || ''
-      const url = (brand as Record<string, string>)?.sito_url || ''
-      const res = await fetch('/api/generate/compliance', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, brand: brand || {}, settore, url, target, ...aiSettings }),
-      })
-      if (!res.ok) throw new Error(await readApiError(res, 'Generazione compliance fallita'))
-      const data = await res.json()
-      setComplianceResult(data)
-      if (data.cookie_policy) update('cookie_policy', (data.cookie_policy as string).slice(0, 500))
-      if (data.gdpr_informativa) update('gdpr_note', (data.gdpr_informativa as string).slice(0, 500))
-      if (data.privacy_policy) update('privacy_note', (data.privacy_policy as string).slice(0, 500))
-      if (data.disclaimer) update('disclaimer_text', (data.disclaimer as string).slice(0, 300))
-    } catch (e) { setMsg({ type: 'err', text: `AI Compliance: ${(e as Error).message}` }) }
-    setGenCompliance(false)
   }
 
   async function handleSave() {
@@ -326,10 +273,6 @@ export default function BrandPage() {
   }
 
   const selectedTargets = brand?.target ? brand.target.split(',').map((x: string) => x.trim()).filter(Boolean) : []
-  void genCTA
-  void genCompliance
-  void complianceResult
-  void generateCompliance
 
   if (loading) return <div className="p-8 flex items-center justify-center py-20"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
 
@@ -546,32 +489,3 @@ export default function BrandPage() {
   )
 }
 
-function ComplianceDocs({ result }: { result: Record<string, unknown> }) {
-  const fields = [
-    { key: 'cookie_policy', emoji: '\u{1F36A}', label: 'Cookie Policy' },
-    { key: 'gdpr_informativa', emoji: '\u{1F510}', label: 'GDPR / Trattamento Dati' },
-    { key: 'privacy_policy', emoji: '\u{1F4CB}', label: 'Privacy Policy' },
-    { key: 'disclaimer', emoji: '\u26A0\uFE0F', label: 'Disclaimer' },
-    { key: 'condizioni_vendita', emoji: '\u{1F4C4}', label: 'Condizioni di Vendita' },
-  ]
-  const normative = Array.isArray(result.normative_riferimento) ? result.normative_riferimento as string[] : []
-  const note = typeof result.note === 'string' ? result.note : null
-  return (
-    <div className="space-y-2 max-h-96 overflow-y-auto bg-white rounded-lg border border-amber-200 p-3 text-xs">
-      {fields.map(({ key, emoji, label }) => {
-        const val = typeof result[key] === 'string' ? (result[key] as string).slice(0, 1500) : null
-        if (!val) return null
-        return (
-          <details key={key} className="group">
-            <summary className="cursor-pointer font-semibold text-amber-800 py-1 hover:text-amber-900">{emoji} {label}</summary>
-            <p className="text-gray-600 mt-1 whitespace-pre-wrap pl-2">{val}</p>
-          </details>
-        )
-      })}
-      {normative.length > 0 && <div className="pt-1"><p className="text-[10px] text-gray-400">Normative: {normative.join(', ')}</p></div>}
-      {note && <p className="text-[10px] text-amber-600 italic pt-1">{note}</p>}
-    </div>
-  )
-}
-
-void ComplianceDocs

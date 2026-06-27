@@ -7,18 +7,20 @@ import type { SeoAudit } from '@/lib/types'
 import { TrendingUp, AlertTriangle, Target, CheckCircle2, Calendar, Search, Loader2, Globe, Sparkles } from 'lucide-react'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
-import { readAISettings, readApiError } from '@/lib/ai-client'
+import { readAISettings } from '@/lib/ai-client'
 import { useRuntimeDemo } from '@/lib/demo-client'
+import { useGeneration } from '@/components/GenerationProvider'
 
 export default function SeoPage() {
   const [audits, setAudits] = useState<SeoAudit[]>([])
   const [loading, setLoading] = useState(true)
-  const [running, setRunning] = useState(false)
   const [url, setUrl] = useState('')
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
+  const gen = useGeneration()
+  const running = gen.isRunning('seo-audit')
 
   useEffect(() => {
     async function load() {
@@ -37,37 +39,28 @@ export default function SeoPage() {
       setMsg({ type: 'err', text: 'Inserisci URL del sito' })
       return
     }
-    setRunning(true)
     setMsg(null)
+    const aiSettings = readAISettings()
 
-    if (demo) {
-      await new Promise(r => setTimeout(r, 2000))
-      setMsg({ type: 'ok', text: `Audit ${periodo} avviato per ${url}. Riceverai i risultati in 30-60s` })
-      setRunning(false)
-      return
-    }
+    const result = await gen.run<SeoAudit & { fallback?: boolean }>({
+      key: 'seo-audit',
+      label: `SEO Audit · ${url}`,
+      url: '/api/generate/seo-audit',
+      body: { cliente_id: clienteId, sito_url: url, periodo, ...aiSettings },
+      estMs: 30000,
+    })
 
-    try {
-      if (!clienteId) throw new Error('Cliente non selezionato')
-      const aiSettings = readAISettings()
-      const res = await fetch('/api/generate/seo-audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, sito_url: url, periodo, ...aiSettings }),
-      })
-      if (!res.ok) throw new Error(await readApiError(res, 'Audit SEO/GEO fallito'))
-      const data = await res.json()
-      if (data?.score_globale) {
-        setAudits(prev => [data as SeoAudit, ...prev])
+    if (result.ok && result.data) {
+      if (result.data.score_globale) {
+        setAudits(prev => [result.data as SeoAudit, ...prev])
       } else {
         const response = await fetch('/api/data/seo-audit')
         if (response.ok) setAudits(await response.json() as SeoAudit[])
       }
-      setMsg({ type: 'ok', text: data?.fallback ? `Audit completato con fallback sicuro per ${url}` : `Audit completato per ${url}` })
-    } catch (e) {
-      setMsg({ type: 'err', text: (e as Error).message })
+      setMsg({ type: 'ok', text: result.data.fallback ? `Audit completato con fallback sicuro per ${url}` : `Audit completato per ${url}` })
+    } else {
+      setMsg({ type: 'err', text: result.error || 'Audit SEO/GEO fallito' })
     }
-    setRunning(false)
   }
 
   const latest = audits[0]
