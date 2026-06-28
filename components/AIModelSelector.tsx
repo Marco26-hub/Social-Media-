@@ -58,9 +58,9 @@ const MODELS: Model[] = [
   { id: 'gemini-2.0-flash-lite',  name: 'Gemini 2.0 Flash Lite', provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'medium', badge: 'Google · Veloce' },
   { id: 'gemini-1.5-flash',       name: 'Gemini 1.5 Flash',      provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high', badge: 'Google' },
 
-  // OpenCode Zen/Go (gateway, key sk- su opencode.ai/auth). Modelli "-free" gratis.
-  { id: 'opencode/deepseek-v4-flash-free', name: 'DeepSeek V4 Flash',  provider: 'opencode', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high', badge: 'OpenCode · Free', recommendedFor: ['contenuti-social', 'piano-editoriale', 'seo-audit', 'blog-articolo'] },
-  { id: 'opencode/nemotron-3-ultra-free',  name: 'Nemotron 3 Ultra',   provider: 'opencode', tier: 'free', context: '1M',   speed: 'medium', quality: 'top',  badge: 'OpenCode · Free' },
+  // OpenCode Zen/Go (gateway, key sk- su opencode.ai/auth). RICHIEDE account a pagamento/credito.
+  { id: 'opencode/deepseek-v4-flash-free', name: 'DeepSeek V4 Flash',  provider: 'opencode', tier: 'paid', context: '1M',   speed: 'fast',   quality: 'high', badge: 'OpenCode · a pagamento' },
+  { id: 'opencode/nemotron-3-ultra-free',  name: 'Nemotron 3 Ultra',   provider: 'opencode', tier: 'paid', context: '1M',   speed: 'medium', quality: 'top',  badge: 'OpenCode · a pagamento' },
   { id: 'opencode/deepseek-v4-pro',        name: 'DeepSeek V4 Pro',    provider: 'opencode', tier: 'paid', context: '1M',   speed: 'medium', quality: 'top',  badge: 'OpenCode' },
   { id: 'opencode/glm-5.2',                name: 'GLM-5.2',            provider: 'opencode', tier: 'paid', context: '1M',   speed: 'fast',   quality: 'top',  badge: 'OpenCode' },
   { id: 'opencode/kimi-k2.6',              name: 'Kimi K2.6',          provider: 'opencode', tier: 'paid', context: '256K', speed: 'fast',   quality: 'top',  badge: 'OpenCode' },
@@ -323,7 +323,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
                     <>
                       <div className="px-3 py-2 bg-gray-50 sticky top-0 z-10 flex items-center gap-2">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-orange-700">OpenCode Zen/Go</p>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full font-bold tracking-normal">DeepSeek · GLM · Kimi</span>
+                        <span className="text-[9px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full font-bold tracking-normal">a pagamento</span>
                       </div>
                       {opencodeModels.map(m => (
                         <ModelOption
@@ -417,7 +417,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
             {savedOpcKey && <button onClick={removeOpcKey} className="btn-secondary text-xs justify-center text-red-600">Rimuovi</button>}
           </div>
           <p className="text-[10px] text-gray-400 mt-1.5">
-            Crea key su <a href="https://opencode.ai/auth" target="_blank" rel="noopener" className="text-brand-600 hover:underline">opencode.ai/auth</a> (Zen/Go). Modelli &ldquo;Free&rdquo; gratis.
+            <a href="https://opencode.ai/auth" target="_blank" rel="noopener" className="text-brand-600 hover:underline">opencode.ai/auth</a> (Zen/Go) — richiede account a pagamento/credito. Per gratis affidabile usa Gemini.
           </p>
         </div>
       )}
