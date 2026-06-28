@@ -78,6 +78,18 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     setPending(f)
   }
 
+  // Primo nome prodotto ricavato dal filename: "camicia-riva_azzurra.jpg" → "Camicia Riva Azzurra".
+  function prettyName(filename: string): string {
+    const base = filename
+      .replace(/\.[a-z0-9]{2,5}$/i, '')   // togli estensione
+      .replace(/[-_.]+/g, ' ')            // trattini/underscore → spazio
+      .replace(/\d{3,}/g, '')             // togli code numeriche lunghe
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (!base) return ''
+    return base.replace(/\b\p{L}/gu, c => c.toUpperCase()).slice(0, 60)
+  }
+
   async function uploadAssets(files: FileList | null) {
     if (!files?.length) return
     try {
@@ -91,7 +103,8 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       const res = await fetch('/api/assets/upload', { method: 'POST', body: form })
       if (!res.ok) throw new Error(await readApiError(res, 'Upload immagini fallito'))
       const data = await res.json() as { assets?: UploadedAsset[] }
-      const uploaded = (data.assets || []).map(asset => ({ ...asset, previewUrl: previews.get(asset.name) || asset.url }))
+      // name prefillato dal filename pulito (l'utente può correggerlo).
+      const uploaded = (data.assets || []).map(asset => ({ ...asset, previewUrl: previews.get(asset.name) || asset.url, name: prettyName(asset.name) }))
       setAssets(prev => [...prev, ...uploaded].slice(0, 7))
     } catch (e) {
       setErrors(prev => ({ ...prev, asset_upload: (e as Error).message }))
@@ -107,7 +120,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       const parsed = new URL(value)
       if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('URL non valido')
       const asset: UploadedAsset = {
-        name: parsed.pathname.split('/').pop() || 'immagine-url',
+        name: prettyName(parsed.pathname.split('/').pop() || '') || 'Immagine',
         url: parsed.toString(),
         source: 'url',
       }
