@@ -2,7 +2,7 @@
 
 > Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
-**Data ultimo aggiornamento**: 2026-06-27 (sessione: debug E2E live + fix go-live critici)
+**Data ultimo aggiornamento**: 2026-06-28 (sessione: AI provider reliability + vision + landing/SEO + generazione professionale)
 **Progetto**: Social Automation — SaaS social media management per agenzie
 **Stack**: Next.js 15.5.19 + Neon/Postgres + NextAuth + Tailwind + AI (Anthropic/OpenRouter/Gemini/OpenCode)
 **Percorso locale**: `/Users/md/Documents/social_automation_v2`
@@ -57,6 +57,48 @@ Tutto su `main`, tree pulito, `tsc`+`eslint` verdi.
 **TODO agenti v2** (riscrivere sullo stack reale): 4 agenti (weekly-seo, weekly-competitor, weekly-client-report, daily-ads-optimizer) usando `lib/db.ts` `q()` (NON Supabase), schema reale (`attivo`, non `is_active`), `callAI` da `lib/ai.ts`, + entry point: API route `/api/agents/<nome>` protette da secret + scheduler (cron Render `type: cron` o cron-job.org).
 
 **Pending noti**: zero test automatici; `score-content` (calendario) ha feedback locale ma non è nel GenerationBar globale; `BLOTATO_API_KEY` mancante sul deploy (autopublish off).
+
+---
+
+## 🆕 Sessione 2026-06-28 ter (Claude Code) — AI affidabile + VISION + landing/SEO + generazione PRO
+
+Tutto su `main`, build verde a ogni commit, deploy live verificato. ~28 commit.
+
+### Landing + SEO/GEO (era assente/rotta)
+- `347fbfd`: **middleware** non reindirizza più `/` → la landing pubblica si VEDE (prima irraggiungibile, e i crawler indicizzavano /login). Link "Vedi landing" in sidebar (GESTIONE).
+- `20aec0b`: landing **riscritta onesta** (via testimonial finto "Marco Ferrari", metriche inventate ROI 435% ecc., prezzi corretti €390/€1.090/€2.590) + infra SEO/GEO: `app/robots.ts` (allow crawler AI), `app/sitemap.ts`, `public/llms.txt`, `components/JsonLd.tsx` (Organization+WebSite+SoftwareApplication+FAQPage), metadata completo in `app/layout.tsx`.
+- `f62d664`: creata `public/og.png` reale (era 404).
+
+### AI provider — affidabilità (lungo debugging)
+- `f33bafd`: rimossi 3 slug OpenRouter MORTI dal selettore (Qwen 2.5 72B:free, GLM 4.5 Air:free, Mistral Nemo:free → 404). Verificare sempre gli slug contro `openrouter.ai/api/v1/models`.
+- `459f8e7`: key AI ora **modificabile/rimovibile** (pill verde cliccabile + "Rimuovi"). Prima bloccata dopo il salvataggio.
+- `ffc4b91`: **OpenCode Go è a pagamento** → etichette corrette (non più "Free" fuorviante).
+- `b57c926`/`38c19de`: **Gemini robusto** — safety BLOCK_NONE (basta blocchi silenziosi su moda/marketing), timeout, parse `retryDelay`, auto-retry su 429 finestra breve, diagnostica chiara.
+- `a05229b`: **stop dump HTML 502 grezzo** negli errori (readError/readApiError riconoscono pagine gateway) + timeout provider 30s (evita 502 Render).
+- `47705f5`: key formato invalido **non più scartata in silenzio** → diagnostica ("Key Gemini non valida: deve iniziare con AIza"). Regex Gemini ora richiede prefisso `AIza`.
+- `c06d348`/`ff050ef`: **modelli OpenRouter a PAGAMENTO** nel selettore (il credito NON velocizza i `:free`!). Aggiunti: `meta-llama/llama-3.3-70b-instruct`, `openai/gpt-4o-mini`, `deepseek/deepseek-chat`, `google/gemini-2.5-flash-lite`, `google/gemini-2.5-flash`. ~0,001€/post.
+
+**Lezione provider**: free OpenRouter = 429 cronico; OpenCode = a pagamento; Gemini free = 15 req/min; affidabile solo con **credito** (modello paid senza `:free`) o **Gemini key valida**. Il selettore distingue gruppo "a pagamento" (verde scuro) da "Gratis".
+
+### VISION + prodotto reale (immagine → copy)
+- `c4b6ede`: **VISION multimodale** in tutta la cascade — `callAI({images})` thread in callOpenRouter/callOpenCode (content multimodale `image_url`) e callGemini (fetch→base64 inline_data). content+blog passano le immagini caricate. Il prompt: "il prodotto reale è quello NELLE IMMAGINI, l'immagine vince sul catalogo". **Serve un modello VISION** (Gemini 2.5 Flash, GPT-4o mini); i text-only (Llama) le ignorano.
+- `351ff36`/`e0267d0`/`4ce8ed6`: campo **"Prodotto/i nell'immagine"** + nome editabile **per ogni immagine** (prefillato dal filename: "camicia-riva.jpg" → "Camicia Riva"). Flusso completo: vision (vede) + nome (come si chiama) + brand identity.
+- `44ac63a`: carosello multi-prodotto (ogni slide = un prodotto). Tutto su tutti i 7 social (pagina `[platform]` condivisa).
+
+### Generazione PROFESSIONALE
+- `bc0c801`+`e936532`+`0fedcb0`+`a0e1e97`: **bibbia professionale condivisa** in `lib/prompt-standards.ts` (PRO_COPY anti-cliché+grammatica, SEO_GEO, DIVERSITY, FUNNEL, COPY_ANGLES+pickAngle, proSystemPrompt). Importata da content/plan/blog/ads → coerenza in un punto solo. Risolve ripetizione ("eleganza senza sforzo" ovunque) e errori grammatica ("Eleganzasenza"). temperature 0.85 su OpenRouter/OpenCode. **Per aggiornare gli standard: modifica solo `lib/prompt-standards.ts`.**
+
+### Audit + fix go-live
+- `6549812`: stato errore UI (report/brand) invece di vuoto silenzioso; compliance cablata alla brand page; strategy rimossa (morta); `scraped_leads.status` follow-up (PATCH + dropdown).
+- `95ebbcc`: **Cloudflare R2** per storage immagini persistente (`lib/storage.ts` via aws4fetch) — codice pronto, **mancano le 5 env su Render** (`R2_ACCOUNT_ID` ecc.). Senza, upload effimero.
+- `f62d664`: stop fallback silenziosi che fingono dati (seo-audit non inventa più punteggi salvati; prospect-scraper marcato `simulated`+`[DEMO]`).
+
+### Da fare (concordato: testare, poi questi)
+1. **R2**: l'utente mette le 5 env su Render → immagini permanenti. Vedi memoria [[go-live-blockers]].
+2. **Switch generazione manuale/automatico**: vedi memoria [[switch-generazione-manuale-auto]].
+3. **prospect-scraper reale** ("AI da ricerca web", serve search API): vedi [[lead-research-rebuild]].
+4. **Pagina consumi token**: vedi [[next-token-usage-page]].
+5. Env Render: `NEXTAUTH_URL`/`NEXT_PUBLIC_SITE_URL` su dominio reale, `ANTHROPIC_API_KEY`, `BLOTATO_API_KEY`, `dry_run=FALSE`.
 
 ---
 
