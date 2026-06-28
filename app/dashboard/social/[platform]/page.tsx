@@ -47,6 +47,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [assets, setAssets] = useState<UploadedAsset[]>([])
   const [assetUrl, setAssetUrl] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [prodottoNome, setProdottoNome] = useState('')
   const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
   const gen = useGeneration()
@@ -139,8 +140,8 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     const isBlog = f.formato === 'articolo'
     const endpoint = isBlog ? '/api/generate/blog' : '/api/generate/content'
     const body = isBlog
-      ? { cliente_id: clienteId, tema: config.nome + ' - ' + f.nome, quality, uploaded_assets: assets, media_urls: assets.map(asset => asset.url), ...aiSettings }
-      : { cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, quality, uploaded_assets: assets, media_urls: assets.map(asset => asset.url), ...aiSettings }
+      ? { cliente_id: clienteId, tema: prodottoNome.trim() || (config.nome + ' - ' + f.nome), nome_prodotto: prodottoNome.trim() || undefined, quality, uploaded_assets: assets, media_urls: assets.map(asset => asset.url), ...aiSettings }
+      : { cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, tema: prodottoNome.trim() || undefined, nome_prodotto: prodottoNome.trim() || undefined, quality, uploaded_assets: assets, media_urls: assets.map(asset => asset.url), ...aiSettings }
 
     // Generazione nel provider globale: continua anche se cambi pagina, con barra di progresso.
     const result = await gen.run({
@@ -268,6 +269,20 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Nome prodotto/i caricati: la vision VEDE il prodotto, questo dà i NOMI esatti */}
+        <div className="mt-3">
+          <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+            <ImagePlus className="w-3.5 h-3.5 text-brand-600" />
+            Prodotto/i nell&apos;immagine <span className="font-normal text-gray-400">(nome esatto per un copy preciso)</span>
+          </label>
+          <input
+            value={prodottoNome}
+            onChange={event => setProdottoNome(event.target.value)}
+            className="input text-xs mt-1"
+            placeholder="Es: Camicia Riva azzurra in lino, Cappellino Darsena"
+          />
         </div>
 
         {assets.length > 0 && (
