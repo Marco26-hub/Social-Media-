@@ -4,6 +4,7 @@ import { callAI, extractJSON } from '@/lib/ai'
 import { requireAuth } from '@/lib/auth-utils'
 import { resolveContentQuality, summarizeQualityForPrompt } from '@/lib/content-quality'
 import { getClientGenerationContext, mergeBrandIdentity } from '@/lib/client-context'
+import { PRO_COPY_STANDARDS } from '@/lib/prompt-standards'
 
 const PROMPTS: Record<string, string> = {
   google: `Sei un Google Ads specialist senior. Crea una campagna pubblicitaria completa per questo brand.
@@ -122,6 +123,7 @@ export async function POST(request: Request) {
       .replace('{{OBIETTIVO}}', obiettivo || 'conversion')
       .replace('{{BUDGET}}', budget || 'Da definire')
       .replace('{{QUALITY_CONTEXT}}', summarizeQualityForPrompt(contentQuality))
+      + '\n\n' + PRO_COPY_STANDARDS
 
     const systemPrompts: Record<string, string> = {
       google: 'Sei un Google Ads specialist senior. Crea campagne Search/Display performanti. Rispondi SOLO con JSON valido.',

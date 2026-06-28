@@ -6,6 +6,7 @@ import { isDemo } from '@/lib/demo'
 import { resolveContentQuality, summarizeQualityForPrompt } from '@/lib/content-quality'
 import { getClientGenerationContext } from '@/lib/client-context'
 import { buildGenerationOptimizationCyclePrompt } from '@/lib/production-cycle'
+import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS } from '@/lib/prompt-standards'
 
 const PROMPT = `Sei un content writer SEO senior per brand fashion e-commerce.
 Scrivi articolo blog 800-1200 parole in italiano, ottimizzato per SEO e GEO (AI search).
@@ -139,6 +140,7 @@ export async function POST(request: Request) {
       .replace('{{ASSET_CONTEXT}}', assetContext)
       .replace('{{QUALITY_CONTEXT}}', summarizeQualityForPrompt(contentQuality))
       .replace('{{OPTIMIZATION_CYCLE}}', buildGenerationOptimizationCyclePrompt(contentQuality))
+      + '\n\n' + PRO_COPY_STANDARDS + '\n\n' + SEO_GEO_STANDARDS
 
     const aiRes = await callAI({
       model: model || 'meta-llama/llama-3.3-70b-instruct:free',

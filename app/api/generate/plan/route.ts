@@ -15,6 +15,7 @@ import {
   isQualityDowngraded,
 } from '@/lib/content-quality'
 import { getClientGenerationContext } from '@/lib/client-context'
+import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS, DIVERSITY_STANDARDS, FUNNEL_STANDARDS } from '@/lib/prompt-standards'
 import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage } from '@/lib/production-cycle'
 
 const PROMPT_WEEKLY = `Agisci come Social Media Manager senior per brand abbigliamento e-commerce.
@@ -54,32 +55,20 @@ Tono moderno fashion coerente con brand.
 Output SOLO JSON array valido:
 [{"data_pubblicazione":"YYYY-MM-DD","ora_pubblicazione":"HH:MM","canale":"instagram|facebook|tiktok|pinterest|youtube_shorts","formato":"post|carousel|reel|story|pin|short|video","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
 
-// Standard del piano: forza DIVERSITÀ tra i contenuti + copy professionale,
-// SEO/GEO e struttura strategica. È il punto dove nasce/si evita la ripetizione.
+// Standard del piano: composti dalla "bibbia" condivisa (lib/prompt-standards).
+// Forza DIVERSITÀ + funnel strategico + SEO/GEO + copy professionale.
 const PLAN_STANDARDS = `
-STANDARD PROFESSIONALI, STRATEGICI E SEO/GEO DEL PIANO (vincolanti):
+STANDARD DEL PIANO (vincolanti):
 
-1) DIVERSITÀ OBBLIGATORIA — ogni contenuto DEVE essere diverso dagli altri:
-   - Hook diverso ogni volta (mai due hook simili o lo stesso concetto ripetuto).
-   - Angolo creativo diverso, ruotando tra: problema→soluzione, occasione d'uso, sensoriale (materiale/vestibilità), dietro le quinte/artigianale, educativo/how-to, social proof, contrarian, storytelling/POV, comparazione, lista/tip.
-   - Tema e prodotto distribuiti: non ripetere lo stesso prodotto in contenuti consecutivi; copri prodotti diversi.
-   - Se due contenuti si somigliano, RISCRIVINE uno da capo.
+${DIVERSITY_STANDARDS}
 
-2) FUNNEL STRATEGICO — distribuisci i contenuti nel funnel, non solo vendita:
-   - ~40% AWARENESS (curiosità, valori, lifestyle, trend) · ~35% CONSIDERATION (educativo, styling, confronto, prova) · ~25% CONVERSION (prodotto, offerta, CTA forte).
-   - Imposta funnel_stage coerente per ogni contenuto.
+${FUNNEL_STANDARDS}
 
-3) PILASTRI — alterna pilastri editoriali: Prodotto · Educativo/Styling · Brand/Valori · Community/UGC · Dietro le quinte · Trend.
+${SEO_GEO_STANDARDS}
 
-4) SEO/GEO — ogni contenuto sfrutta keyword reali del brand/settore (usa "parole_da_usare"):
-   - Caption e blog strutturati per essere citabili dall'AI search: risposta diretta iniziale, sezioni chiare, eventuale FAQ.
-   - Hashtag mix: 2-3 ampi + 2-3 di nicchia + 1-2 branded (dove la piattaforma li premia).
+${PRO_COPY_STANDARDS}
 
-5) COPY PROFESSIONALE — hook che fermano lo scroll, specifici e concreti. VIETATI i cliché AI: "eleganza senza sforzo", "lusso discreto", "must-have", "scopri il/la", "non può mancare nel tuo armadio", "perfetto per ogni occasione", "senza sforzo".
-
-6) GRAMMATICA E ORTOGRAFIA ITALIANE IMPECCABILI: mai parole attaccate (es. "Eleganzasenza"), accenti/apostrofi corretti, nessun refuso.
-
-7) Non inventare prezzi, stock, sconti o claim non presenti nei dati brand/prodotti.`
+Non inventare prezzi, stock, sconti o claim non presenti nei dati brand/prodotti.`
 
 function isMissingDbColumn(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || '')
