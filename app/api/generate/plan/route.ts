@@ -54,6 +54,33 @@ Tono moderno fashion coerente con brand.
 Output SOLO JSON array valido:
 [{"data_pubblicazione":"YYYY-MM-DD","ora_pubblicazione":"HH:MM","canale":"instagram|facebook|tiktok|pinterest|youtube_shorts","formato":"post|carousel|reel|story|pin|short|video","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
 
+// Standard del piano: forza DIVERSITÀ tra i contenuti + copy professionale,
+// SEO/GEO e struttura strategica. È il punto dove nasce/si evita la ripetizione.
+const PLAN_STANDARDS = `
+STANDARD PROFESSIONALI, STRATEGICI E SEO/GEO DEL PIANO (vincolanti):
+
+1) DIVERSITÀ OBBLIGATORIA — ogni contenuto DEVE essere diverso dagli altri:
+   - Hook diverso ogni volta (mai due hook simili o lo stesso concetto ripetuto).
+   - Angolo creativo diverso, ruotando tra: problema→soluzione, occasione d'uso, sensoriale (materiale/vestibilità), dietro le quinte/artigianale, educativo/how-to, social proof, contrarian, storytelling/POV, comparazione, lista/tip.
+   - Tema e prodotto distribuiti: non ripetere lo stesso prodotto in contenuti consecutivi; copri prodotti diversi.
+   - Se due contenuti si somigliano, RISCRIVINE uno da capo.
+
+2) FUNNEL STRATEGICO — distribuisci i contenuti nel funnel, non solo vendita:
+   - ~40% AWARENESS (curiosità, valori, lifestyle, trend) · ~35% CONSIDERATION (educativo, styling, confronto, prova) · ~25% CONVERSION (prodotto, offerta, CTA forte).
+   - Imposta funnel_stage coerente per ogni contenuto.
+
+3) PILASTRI — alterna pilastri editoriali: Prodotto · Educativo/Styling · Brand/Valori · Community/UGC · Dietro le quinte · Trend.
+
+4) SEO/GEO — ogni contenuto sfrutta keyword reali del brand/settore (usa "parole_da_usare"):
+   - Caption e blog strutturati per essere citabili dall'AI search: risposta diretta iniziale, sezioni chiare, eventuale FAQ.
+   - Hashtag mix: 2-3 ampi + 2-3 di nicchia + 1-2 branded (dove la piattaforma li premia).
+
+5) COPY PROFESSIONALE — hook che fermano lo scroll, specifici e concreti. VIETATI i cliché AI: "eleganza senza sforzo", "lusso discreto", "must-have", "scopri il/la", "non può mancare nel tuo armadio", "perfetto per ogni occasione", "senza sforzo".
+
+6) GRAMMATICA E ORTOGRAFIA ITALIANE IMPECCABILI: mai parole attaccate (es. "Eleganzasenza"), accenti/apostrofi corretti, nessun refuso.
+
+7) Non inventare prezzi, stock, sconti o claim non presenti nei dati brand/prodotti.`
+
 function isMissingDbColumn(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || '')
   return /column .* does not exist|42703/i.test(message)
@@ -132,11 +159,11 @@ ${buildExtendedOutputSchema()}
       .replace('{{PIATTAFORME}}', `/ ${piattaformeStr} /`)
       .replace('{{BRAND}}', JSON.stringify(brand || {}, null, 2))
       .replace('{{PRODOTTI}}', JSON.stringify(products || [], null, 2))
-      + qualityPrompt
+      + '\n' + PLAN_STANDARDS + '\n' + qualityPrompt
 
     const aiRes = await callAI({
       model: model || 'meta-llama/llama-3.3-70b-instruct:free',
-      systemPrompt: `Sei un social media manager e creative strategist senior. Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock o claim non presenti nei dati.`,
+      systemPrompt: `Sei un social media manager, creative strategist e SEO/GEO specialist senior (10+ anni, brand premium). Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Crei piani editoriali dove OGNI contenuto è unico, professionale e strategico: hook diversi, angoli ruotati, funnel bilanciato, keyword SEO/GEO sfruttate, zero cliché, grammatica italiana impeccabile. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock o claim non presenti nei dati.`,
       userPrompt,
       openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
       maxTokens: contentQuality === 'high' ? 8000 : contentQuality === 'medium' ? 6000 : 4000,
