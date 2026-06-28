@@ -199,13 +199,27 @@ export async function callAI(params: {
   const orKey = (validByoKey || process.env.OPENROUTER_API_KEY || '').trim()
   const anthropicKey = (process.env.ANTHROPIC_API_KEY || '').trim()
   const byoGemini = (params.geminiKey || '').trim()
-  const validGemini = /^[A-Za-z0-9_-]{20,}$/.test(byoGemini) ? byoGemini : ''
+  // Key Google AI Studio: iniziano sempre con "AIza". Prefisso esplicito = diagnostica precisa.
+  const validGemini = /^AIza[A-Za-z0-9_-]{20,}$/.test(byoGemini) ? byoGemini : ''
   const geminiKey = (validGemini || process.env.GEMINI_API_KEY || '').trim()
   const byoOpencode = (params.opencodeKey || '').trim()
   const validOpencode = /^sk-[A-Za-z0-9_-]{16,}$/.test(byoOpencode) ? byoOpencode : ''
   const opencodeKey = (validOpencode || process.env.OPENCODE_API_KEY || '').trim()
 
   const attempts: AIAttempt[] = []
+
+  // DIAGNOSTICA: se l'utente ha incollato una key ma il formato è invalido, NON
+  // saltarla in silenzio (prima il provider spariva senza spiegazione). Registra
+  // un tentativo chiaro così il messaggio d'errore dice cosa correggere.
+  if (byoGemini && !validGemini) {
+    recordAttempt(attempts, { provider: 'gemini', model, ok: false, error: 'Key Gemini non valida: deve iniziare con "AIza" (copiala da aistudio.google.com/apikey)' })
+  }
+  if (byoKey && !validByoKey) {
+    recordAttempt(attempts, { provider: 'openrouter', model, ok: false, error: 'Key OpenRouter non valida: deve iniziare con "sk-or-v1-"' })
+  }
+  if (byoOpencode && !validOpencode) {
+    recordAttempt(attempts, { provider: 'opencode', model, ok: false, error: 'Key OpenCode non valida: deve iniziare con "sk-"' })
+  }
 
   // I modelli Gemini/OpenCode/Anthropic non vanno su OpenRouter.
   const canUseRequestedOnOpenRouter = !isAnthropicModel(model) && !isGeminiModel(model) && !isOpenCodeModel(model)
