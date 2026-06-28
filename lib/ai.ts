@@ -64,7 +64,10 @@ function isRateLimit(message?: string) {
 // riversare il corpo JSON grezzo (che contiene user_id, metadata, ecc.).
 function formatHttpError(status: number, body: string): string {
   if (status === 429) {
+    // OpenRouter: retry_after_seconds. Gemini: retryDelay:"27s". OpenCode: vario.
     const m = body.match(/retry_after_seconds"?\s*:\s*"?(\d+)/i)
+      || body.match(/retryDelay"?\s*:\s*"?(\d+)s/i)
+      || body.match(/retry[- ]?after"?\s*:\s*"?(\d+)/i)
     return m ? `429 rate-limited (retry ${m[1]}s)` : '429 rate-limited'
   }
   let reason = ''
@@ -210,6 +213,18 @@ export async function callAI(params: {
   if (geminiKey && isGeminiModel(model)) {
     const res = await tryGeminiModel(model, systemPrompt, userPrompt, geminiKey, maxTokens, attempts)
     if (res) return res
+    // Free tier Gemini = 15 req/min: un 429 con finestra breve si libera in pochi
+    // secondi. Attende il retryDelay (cap 18s, sotto il timeout client) e ritenta UNA volta.
+    const lastGem = attempts.filter(a => a.provider === 'gemini').pop()
+    if (lastGem && isRateLimit(lastGem.error)) {
+      const waitMs = Math.min(rateLimitWaitMs([lastGem]), 18000)
+      if (waitMs > 0) {
+        console.warn('[AI bridge]', `Gemini rate-limited, attendo ${Math.round(waitMs / 1000)}s e ritento`)
+        await sleep(waitMs)
+        const retry = await tryGeminiModel(model, systemPrompt, userPrompt, geminiKey, maxTokens, attempts)
+        if (retry) return retry
+      }
+    }
   }
 
   // Try 0b: OpenCode come provider primario, se l'utente ha scelto un modello opencode/*.
