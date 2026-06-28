@@ -1,0 +1,41 @@
+# Social Automation
+
+> Servizio gestito di social media management con AI per agenzie e PMI italiane. Gestisce piano editoriale, creazione contenuti, audit SEO e GEO, campagne ADS e pubblicazione sui canali social, sempre con approvazione umana prima di pubblicare.
+
+## Cosa fa
+
+- Genera contenuti social: hook, caption, hashtag e CTA tramite AI (Claude).
+- Costruisce il piano editoriale mensile per i canali attivi.
+- Esegue audit SEO e GEO (ottimizzazione per i motori di ricerca generativi).
+- Imposta e segue le campagne ADS; il budget pubblicitario è sempre separato dal canone.
+- Analizza i competitor e supporta la lead generation.
+- Pubblica i contenuti tramite Blotato sui canali collegati.
+- Produce report periodici sull'attività.
+- Ogni contenuto richiede un'approvazione umana 1-click prima della pubblicazione.
+
+## Canali supportati
+
+- Instagram
+- Facebook
+- TikTok
+- Pinterest
+- LinkedIn
+- YouTube Shorts
+- Blog
+
+## Prezzi
+
+- Starter: 390€/mese
+- Crescita: 1.090€/mese (consigliato)
+- Dominio: 2.590€/mese
+
+Il budget delle campagne ADS è sempre separato dal canone mensile. Dettaglio aggiornato dei pacchetti nella pagina Servizi.
+
+## Note
+
+Prodotto nuovo, attualmente in beta. Non sono ancora disponibili clienti, metriche o testimonianze pubbliche.
+
+## Contatti e link
+
+- Sito: https://social-media-manager-zte4.onrender.com
+- Servizi e pacchetti: https://social-media-manager-zte4.onrender.com/servizi
