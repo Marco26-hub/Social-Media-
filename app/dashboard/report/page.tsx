@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { Download, Loader2, BarChart3, TrendingUp, AlertTriangle, CheckCircle, Target, Sparkles, ShieldCheck, Lightbulb } from 'lucide-react'
 import { isDemo } from '@/lib/demo'
 import { demoContenuti, demoLogs } from '@/lib/demo-data'
+import { readApiError } from '@/lib/ai-client'
 
 type ReportData = {
   periodo?: { da: string; a: string }
@@ -90,6 +91,7 @@ function DistributionCard({ title, data, color }: { title: string; data: Record<
 export default function ReportPage() {
   const [data, setData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const demo = isDemo()
 
   useEffect(() => {
@@ -101,14 +103,30 @@ export default function ReportPage() {
       }
       try {
         const res = await fetch('/api/data/report')
-        if (res.ok) setData(await res.json() as ReportData)
-      } catch { /* silent */ }
+        if (!res.ok) throw new Error(await readApiError(res, 'Impossibile caricare il report'))
+        setData(await res.json() as ReportData)
+      } catch (e) {
+        setError((e as Error).message)
+      }
       setLoading(false)
     }
     load()
   }, [demo])
 
   if (loading) return <div className="p-8 flex items-center justify-center py-20"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
+
+  if (error) return (
+    <div className="p-8 max-w-2xl mx-auto">
+      <div className="card p-6 border-red-200 bg-red-50 flex items-start gap-3">
+        <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="font-semibold text-red-900">Report non disponibile</p>
+          <p className="text-sm text-red-700 mt-1">{error}</p>
+          <button onClick={() => location.reload()} className="btn-secondary text-xs mt-3">Riprova</button>
+        </div>
+      </div>
+    </div>
+  )
 
   const stats = data?.stats
   const executive = data?.executive

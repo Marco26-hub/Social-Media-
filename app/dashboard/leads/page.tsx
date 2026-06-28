@@ -81,6 +81,21 @@ export default function LeadsPage() {
     }
   }
 
+  const updateStatus = async (id: string, status: string) => {
+    const prev = leads
+    setLeads(ls => ls.map(l => (l.id === id ? { ...l, status } : l)))  // optimistic
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      })
+      if (!res.ok) throw new Error('Aggiornamento stato fallito')
+    } catch {
+      setLeads(prev)  // rollback
+      alert('❌ Impossibile aggiornare lo stato del lead')
+    }
+  }
+
   const getTemperatureColor = (temp?: string) => {
     switch (temp) {
       case 'CALDO': return 'bg-red-100 text-red-800'
@@ -182,14 +197,14 @@ export default function LeadsPage() {
             <table className="w-full">
               <thead className="border-b border-gray-200 bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Name</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Company</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Nome</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Azienda</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Phone</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Telefono</th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Score</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Temperature</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Source</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Temperatura</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Fonte</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Stato</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -243,9 +258,16 @@ export default function LeadsPage() {
                       <span className="text-lg">{getSourceIcon(lead.source)}</span>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <button className="text-brand-600 hover:text-brand-700 font-medium">
-                        Contact
-                      </button>
+                      <select
+                        value={lead.status || 'PENDING'}
+                        onChange={(e) => updateStatus(lead.id, e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      >
+                        <option value="PENDING">Da contattare</option>
+                        <option value="CONTACTED">Contattato</option>
+                        <option value="WON">Acquisito</option>
+                        <option value="LOST">Perso</option>
+                      </select>
                     </td>
                   </tr>
                 ))}

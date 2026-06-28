@@ -40,3 +40,28 @@ export async function GET(request: Request) {
     return apiError(e)
   }
 }
+
+const VALID_STATUS = new Set(['PENDING', 'CONTACTED', 'WON', 'LOST'])
+
+// Aggiorna lo stato follow-up di un lead (PENDING → CONTACTED → WON/LOST).
+export async function PATCH(request: Request) {
+  try {
+    await requireAuth()
+    const { id, status } = await request.json() as { id?: string; status?: string }
+    if (!id || !status) return NextResponse.json({ error: 'id e status richiesti' }, { status: 400 })
+    if (!VALID_STATUS.has(status)) return NextResponse.json({ error: 'status non valido' }, { status: 400 })
+
+    if (isDemo() || !dbReady()) return NextResponse.json({ ok: true, demo: true })
+
+    const clienteId = await requireClienteId()
+    // WHERE cliente_id impedisce di modificare lead di altri tenant (no IDOR).
+    const rows = await q(
+      'UPDATE scraped_leads SET status = $1, updated_at = now() WHERE id = $2 AND cliente_id = $3 RETURNING id',
+      [status, id, clienteId],
+    )
+    if (!rows.length) return NextResponse.json({ error: 'Lead non trovato' }, { status: 404 })
+    return NextResponse.json({ ok: true, status })
+  } catch (e) {
+    return apiError(e)
+  }
+}

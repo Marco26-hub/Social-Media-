@@ -73,6 +73,7 @@ export default function BrandPage() {
   const [genKeywords, setGenKeywords] = useState(false)
   const [genHashtags, setGenHashtags] = useState(false)
   const [genTrends, setGenTrends] = useState(false)
+  const [genCompliance, setGenCompliance] = useState(false)
   const [url, setUrl] = useState('')
   const [includeSeo, setIncludeSeo] = useState(false)
   const [includeGeo, setIncludeGeo] = useState(false)
@@ -115,10 +116,14 @@ export default function BrandPage() {
       }
       try {
         const res = await fetch('/api/data/brand')
-        const data = res.ok ? await res.json() : null
+        if (!res.ok) throw new Error(await readApiError(res, 'Errore caricamento brand'))
+        const data = await res.json()
         setBrand(data || { brand_name: '' })
         if (data?.sito_url) setUrl(data.sito_url)
-      } catch { setBrand({ brand_name: '' }) }
+      } catch (e) {
+        setBrand({ brand_name: '' })
+        setMsg({ type: 'err', text: `Caricamento brand: ${(e as Error).message}` })
+      }
       setLoading(false)
     }
     load()
@@ -240,6 +245,33 @@ export default function BrandPage() {
       }
     } catch (e) { setMsg({ type: 'err', text: `AI: ${(e as Error).message}` }) }
     setter(false)
+  }
+
+  async function generateCompliance() {
+    setGenCompliance(true)
+    try {
+      const aiSettings = readAISettings()
+      const res = await fetch('/api/generate/compliance', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente_id: clienteId, brand: brand || {},
+          settore: (brand as Record<string, string>)?.settore || '',
+          url: (brand as Record<string, string>)?.sito_url || url,
+          target: (brand as Record<string, string>)?.target || '',
+          ...aiSettings,
+        }),
+      })
+      if (!res.ok) throw new Error(await readApiError(res, 'Generazione documenti legali fallita'))
+      const data = await res.json() as Record<string, string>
+      // Mappa output compliance → campi brand (rivedi e salva)
+      if (data.cookie_policy) update('cookie_policy', data.cookie_policy)
+      if (data.gdpr_informativa) update('gdpr_note', data.gdpr_informativa)
+      if (data.privacy_policy) update('privacy_note', data.privacy_policy)
+      if (data.disclaimer) update('disclaimer_text', data.disclaimer)
+      if (data.condizioni_vendita) update('note_legali', data.condizioni_vendita)
+      setMsg({ type: 'ok', text: 'Documenti legali generati — rivedi e salva il profilo' })
+    } catch (e) { setMsg({ type: 'err', text: `AI: ${(e as Error).message}` }) }
+    setGenCompliance(false)
   }
 
   async function handleSave() {
@@ -445,10 +477,14 @@ export default function BrandPage() {
 
         {/* Compliance section */}
         <div className="card p-4 border-t-4 border-amber-400">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <FileText className="w-5 h-5 text-amber-600" />
             <h3 className="font-bold text-gray-900 text-sm">Compliance & Note Legali</h3>
             <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">GDPR · Privacy · Cookie</span>
+            <button type="button" onClick={generateCompliance} disabled={genCompliance} className="ml-auto text-[10px] px-2 py-1 bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 flex items-center gap-1 disabled:opacity-50">
+              {genCompliance ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              {genCompliance ? 'Genero...' : 'AI genera documenti'}
+            </button>
           </div>
           <div className="space-y-3">
             <div>
