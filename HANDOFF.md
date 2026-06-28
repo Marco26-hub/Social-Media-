@@ -60,6 +60,22 @@ Tutto su `main`, tree pulito, `tsc`+`eslint` verdi.
 
 ---
 
+## 🆕 Sessione 2026-06-28 (Claude Code) — fix build rotto da cowork + stato switch generazione
+
+**⚠️ PATTERN RICORRENTE (3ª volta)**: i commit di "cowork" continuano a **ri-rompere `next build`** aggiungendo codice scritto per **Supabase + shadcn** su uno stack che è **Neon + Tailwind**. Storico: `12832e0` (Multi-Agent System) → rimosso, poi `7714023`+`1fde07a` (Prospect Scraper + Leads Dashboard) → `app/api/leads/route.ts` importava `@supabase/supabase-js` (non installato). **Regola: dopo OGNI commit cowork, eseguire `npx tsc --noEmit` + `npm run build` PRIMA di considerare deployabile.**
+
+Fix in `2034ddc` (build di nuovo verde):
+- `/api/leads` riscritta su Neon (`lib/db` `q()`) + `requireAuth` + `requireClienteId` + fallback demo — niente più Supabase.
+- `/api/agents/prospect-scraper`: aggiunto `requireAuth`, cliente preso dal **cookie/sessione** non dal body (no IDOR), `apiError` per status corretti.
+- nuova migration `016_scraped_leads.sql` (FK `clienti`, `unique(email,cliente_id)`, indici temperature/score) — coerente con l'`INSERT` dell'agente che prima crashava (tabella inesistente).
+- `app/dashboard/leads/page.tsx`: `type Lead` (no `any`), italiano, gestione errore scraper, non invia più `clienteId: 'current-user-client-id'` placeholder.
+
+**🔴 prospect-scraper-agent.ts genera DATI FINTI**: `scrapeLinkedin/scrapeGoogleMaps/scrapeInstagram` ritornano lead **hardcoded** ("Marco Ferrari", "Francesca Moretti"…) — commento `// (simulated)`. **Viola la regola "tutto reale niente demo"**. Da riscrivere con scraping reale (o API LinkedIn/Google Places) prima di vendere lead generation.
+
+**Switch generazione MANUALE/AUTOMATICO — NON esiste ancora.** Richiesto dall'utente, mai costruito. Stato attuale: `automation_enabled` (settings) controlla **solo la pubblicazione**, NON la generazione. La generazione è tutta manuale (click su ogni pagina). Cowork ha costruito un lead-scraper (manuale, dati finti), NON lo switch. **Prossimo task concordato**: toggle `MANUALE | AUTOMATICO`; modalità AUTO con scheduler che genera contenuti da solo (design modalità AUTO — cron vs on-trigger — da definire con l'utente).
+
+---
+
 ## 🆕 Sessione 2026-06-27 bis (Claude Code) — debug E2E live + fix go-live
 
 Test maniacale in produzione (curl autenticato su Render live, login `admin`/`1234567`). Trovati e fixati **4 bug, 2 critici**. Tutto su `main`, `tsc`+`next build` verdi, deploy live verificato.
