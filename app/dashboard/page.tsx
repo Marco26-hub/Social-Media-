@@ -3,7 +3,7 @@ import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 import {
   Calendar, CheckCircle, AlertCircle, Send, Clock, TrendingUp, ChevronRight,
   Bot, Database, Rocket, ShieldCheck, Sparkles, Workflow, Package, ImagePlus,
-  BarChart3, Megaphone
+  BarChart3, Megaphone, Globe
 } from 'lucide-react'
 import Link from 'next/link'
 import { demoContenuti, demoLogs } from '@/lib/demo-data'
@@ -233,6 +233,10 @@ export default async function DashboardPage() {
               <Link href="/dashboard/calendario?filter=DA_APPROVARE" className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-sm font-medium rounded-lg hover:bg-white/15 transition-colors">
                 <ShieldCheck className="w-4 h-4" />
                 Approva contenuti
+              </Link>
+              <Link href="/" target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-sm font-medium rounded-lg hover:bg-white/15 transition-colors">
+                <Globe className="w-4 h-4" />
+                Vedi landing
               </Link>
             </div>
           </div>
