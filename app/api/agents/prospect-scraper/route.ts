@@ -1,26 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { executeProspectScraper } from '@/lib/agents/prospect-scraper-agent'
+import { requireAuth, requireClienteId } from '@/lib/auth-utils'
+import { apiError } from '@/lib/api-error'
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { clienteId, parameters } = await req.json()
+    await requireAuth()
+    // Il cliente viene dal cookie/sessione, MAI dal body (no IDOR).
+    const clienteId = await requireClienteId()
 
-    if (!clienteId || !parameters) {
-      return NextResponse.json(
-        { error: 'Missing clienteId or parameters' },
-        { status: 400 }
-      )
+    const body = await request.json().catch(() => ({})) as { parameters?: unknown }
+    const parameters = body.parameters
+    if (!parameters || typeof parameters !== 'object') {
+      return NextResponse.json({ error: 'parameters richiesti' }, { status: 400 })
     }
 
-    // Execute the scraper (uses Neon PostgreSQL via lib/db)
-    const result = await executeProspectScraper(clienteId, parameters)
-
+    // Esegue lo scraper (Neon via lib/db). NB: dati attualmente simulati.
+    const result = await executeProspectScraper(clienteId, parameters as Parameters<typeof executeProspectScraper>[1])
     return NextResponse.json(result)
-  } catch (error) {
-    console.error('Scraper error:', error)
-    return NextResponse.json(
-      { error: 'Failed to execute scraper', details: String(error) },
-      { status: 500 }
-    )
+  } catch (e) {
+    return apiError(e)
   }
 }

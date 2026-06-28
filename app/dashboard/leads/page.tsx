@@ -1,10 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Mail, Phone, Building2, TrendingUp, Filter, Download } from 'lucide-react'
+import { Mail, Phone, Building2, TrendingUp, Filter } from 'lucide-react'
+
+type Lead = {
+  id: string
+  first_name?: string
+  last_name?: string
+  email: string
+  phone?: string
+  company_name?: string
+  title?: string
+  engagement_score?: number
+  temperature?: string
+  source?: string
+  status?: string
+  notes?: string
+}
 
 export default function LeadsPage() {
-  const [leads, setLeads] = useState<any[]>([])
+  const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState<'CALDO' | 'TIEPIDO' | 'FREDDO' | 'ALL'>('ALL')
   const [executing, setExecuting] = useState(false)
@@ -34,8 +49,8 @@ export default function LeadsPage() {
       const response = await fetch('/api/agents/prospect-scraper', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // clienteId NON inviato: il server usa il cliente attivo (cookie/sessione)
         body: JSON.stringify({
-          clienteId: 'current-user-client-id', // Replace with actual client ID
           parameters: {
             sectors: ['e-commerce'],
             locations: ['Lombardia'],
@@ -49,18 +64,23 @@ export default function LeadsPage() {
       const result = await response.json()
       console.log('Scraper result:', result)
 
+      if (!response.ok || !result?.breakdown) {
+        alert(`❌ ${result?.error || 'Errore esecuzione scraper'}`)
+        return
+      }
+
       // Reload leads
       await loadLeads()
-      alert(`✅ Found ${result.total_leads} leads!\n\nCALDO: ${result.breakdown.CALDO}\nTIEPIDO: ${result.breakdown.TIEPIDO}\nFREDDO: ${result.breakdown.FREDDO}`)
+      alert(`✅ Trovati ${result.total_leads} lead!\n\nCALDO: ${result.breakdown.CALDO}\nTIEPIDO: ${result.breakdown.TIEPIDO}\nFREDDO: ${result.breakdown.FREDDO}`)
     } catch (error) {
       console.error('Error executing scraper:', error)
-      alert('❌ Error executing scraper')
+      alert('❌ Errore esecuzione scraper')
     } finally {
       setExecuting(false)
     }
   }
 
-  const getTemperatureColor = (temp: string) => {
+  const getTemperatureColor = (temp?: string) => {
     switch (temp) {
       case 'CALDO': return 'bg-red-100 text-red-800'
       case 'TIEPIDO': return 'bg-yellow-100 text-yellow-800'
@@ -69,7 +89,7 @@ export default function LeadsPage() {
     }
   }
 
-  const getSourceIcon = (source: string) => {
+  const getSourceIcon = (source?: string) => {
     switch (source) {
       case 'LinkedIn': return '💼'
       case 'GoogleMaps': return '📍'
@@ -151,9 +171,9 @@ export default function LeadsPage() {
           <div className="p-8 text-center text-gray-600">Loading leads...</div>
         ) : leads.length === 0 ? (
           <div className="p-8 text-center text-gray-600">
-            <p className="mb-4">No leads found. Click "Run Prospect Scraper" to get started.</p>
+            <p className="mb-4">Nessun lead trovato. Avvia il prospect scraper per iniziare.</p>
             <button onClick={executeProspectScraper} className="btn-primary">
-              🚀 Run Scraper Now
+              🚀 Avvia Scraper
             </button>
           </div>
         ) : (

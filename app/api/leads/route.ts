@@ -1,37 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server'
+import { dbReady, q } from '@/lib/db'
+import { requireAuth, requireClienteId } from '@/lib/auth-utils'
+import { isDemo } from '@/lib/demo'
+import { apiError } from '@/lib/api-error'
 
-export async function GET(req: NextRequest) {
+const DEMO_LEADS = [
+  {
+    id: 'demo-lead-1', first_name: 'Marco', last_name: 'Ferrari', email: 'marco@demo-store.it',
+    phone: '+39 320 000000', company_name: 'Demo Store', title: 'Founder',
+    engagement_score: 78, temperature: 'CALDO', source: 'LinkedIn', status: 'PENDING', notes: 'Lead demo',
+  },
+]
+
+export async function GET(request: Request) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    const searchParams = req.nextUrl.searchParams
-    const clienteId = searchParams.get('cliente_id') || 'current-user-client-id'
+    await requireAuth()
+    const { searchParams } = new URL(request.url)
     const temperature = searchParams.get('temperature')
 
-    let query = supabase
-      .from('scraped_leads')
-      .select('*')
-      .eq('cliente_id', clienteId)
-      .order('engagement_score', { ascending: false })
-
-    if (temperature) {
-      query = query.eq('temperature', temperature)
+    if (isDemo() || !dbReady()) {
+      const rows = temperature && temperature !== 'ALL'
+        ? DEMO_LEADS.filter((l) => l.temperature === temperature)
+        : DEMO_LEADS
+      return NextResponse.json(rows)
     }
 
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Database error:', error)
-      return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 })
+    const clienteId = await requireClienteId()
+    const params: unknown[] = [clienteId]
+    let sql = 'SELECT * FROM scraped_leads WHERE cliente_id = $1'
+    if (temperature && temperature !== 'ALL') {
+      params.push(temperature)
+      sql += ` AND temperature = $${params.length}`
     }
+    sql += ' ORDER BY engagement_score DESC NULLS LAST, created_at DESC'
 
-    return NextResponse.json(data || [])
-  } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const rows = await q(sql, params)
+    return NextResponse.json(rows)
+  } catch (e) {
+    return apiError(e)
   }
 }
