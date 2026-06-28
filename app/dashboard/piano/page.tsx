@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import { PLATFORM_LIST, type PlatformKey } from '@/lib/social-config'
-import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info } from 'lucide-react'
+import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
@@ -219,6 +219,26 @@ export default function PianoPage() {
               ({piattaforme.map(p => PLATFORM_LIST.find(x => x.key === p)?.emoji).join(' ')})
               {' '}con obiettivo <span className="font-semibold">{obiettivo}</span>
               {' '}e qualità <span className="font-semibold uppercase">{quality}</span>.
+            </p>
+          </div>
+        </div>
+
+        {/* Nota immagini: quante caricarne in base al piano scelto */}
+        <div className="flex items-start gap-2.5 mb-4 p-3 rounded-xl bg-white/70 border border-violet-100">
+          <ImagePlus className="w-4 h-4 text-violet-600 mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-gray-700 leading-relaxed">
+            <p className="font-semibold text-gray-900">Immagini da preparare per questo piano</p>
+            <p className="mt-0.5">
+              Piano <span className="font-semibold capitalize">{periodo}</span> ({numContenuti} contenuti) → servono circa{' '}
+              <span className="font-bold text-violet-700">{periodo === 'mensile' ? '35-60' : '10-20'} immagini</span>.
+            </p>
+            <ul className="mt-1.5 space-y-0.5 text-gray-600">
+              <li>• <span className="font-medium">1 immagine</span> per ogni post e story</li>
+              <li>• <span className="font-medium">5-7 immagini</span> per ogni carosello</li>
+              <li>• <span className="font-medium">1 clip video</span> (o cover) per ogni reel/video</li>
+            </ul>
+            <p className="mt-1.5 text-gray-500">
+              Carica le foto dalle pagine social ({piattaforme.map(p => PLATFORM_LIST.find(x => x.key === p)?.nome).filter(Boolean).join(', ')}) col campo &ldquo;Carica immagini&rdquo;.
             </p>
           </div>
         </div>
