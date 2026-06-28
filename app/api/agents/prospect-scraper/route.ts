@@ -12,14 +12,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Execute the scraper
+    // Execute the scraper (uses Neon PostgreSQL via lib/db)
     const result = await executeProspectScraper(clienteId, parameters)
 
     return NextResponse.json(result)
   } catch (error) {
     console.error('Scraper error:', error)
     return NextResponse.json(
-      { error: 'Failed to execute scraper' },
+      { error: 'Failed to execute scraper', details: String(error) },
       { status: 500 }
     )
   }

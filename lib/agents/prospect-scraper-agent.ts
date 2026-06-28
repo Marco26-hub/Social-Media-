@@ -4,10 +4,10 @@
  *
  * Scrapes: LinkedIn, Google Maps, Instagram, Websites
  * Qualifies: CALDO (70-100), TIEPIDO (40-69), FREDDO (0-39)
- * Saves to: scraped_leads table in Supabase
+ * Saves to: scraped_leads table in Neon PostgreSQL
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { q } from '@/lib/db'
 
 export interface ScraperParameters {
   sectors: string[]
@@ -46,11 +46,9 @@ export interface ProspectScraperResult {
 }
 
 class ProspectScraperAgent {
-  private supabase: ReturnType<typeof createClient>
   private clienteId: string
 
-  constructor(supabaseUrl: string, supabaseKey: string, clienteId: string) {
-    this.supabase = createClient(supabaseUrl, supabaseKey)
+  constructor(clienteId: string) {
     this.clienteId = clienteId
   }
 
@@ -109,7 +107,6 @@ class ProspectScraperAgent {
     console.log('Scraping LinkedIn...')
 
     // Simulated LinkedIn scraping
-    // In production: use LinkedIn API or web scraping service
     const leads: ScrapedLead[] = [
       {
         id: crypto.randomUUID(),
@@ -181,7 +178,6 @@ class ProspectScraperAgent {
   private async scrapeGoogleMaps(params: ScraperParameters): Promise<ScrapedLead[]> {
     console.log('Scraping Google Maps...')
 
-    // Simulated Google Maps scraping
     const leads: ScrapedLead[] = [
       {
         id: crypto.randomUUID(),
@@ -225,7 +221,6 @@ class ProspectScraperAgent {
   private async scrapeInstagram(params: ScraperParameters): Promise<ScrapedLead[]> {
     console.log('Scraping Instagram...')
 
-    // Simulated Instagram scraping
     const leads: ScrapedLead[] = [
       {
         id: crypto.randomUUID(),
@@ -276,35 +271,42 @@ class ProspectScraperAgent {
   private async saveToDB(leads: ScrapedLead[]): Promise<ScrapedLead[]> {
     console.log(`Saving ${leads.length} leads to database...`)
 
-    // Save to Supabase
-    const { data, error } = await this.supabase
-      .from('scraped_leads')
-      .upsert(
-        leads.map(lead => ({
-          cliente_id: this.clienteId,
-          first_name: lead.first_name || null,
-          last_name: lead.last_name || null,
-          email: lead.email,
-          phone: lead.phone || null,
-          company_name: lead.company_name,
-          title: lead.title || null,
-          engagement_score: lead.engagement_score,
-          temperature: lead.temperature,
-          source: lead.source,
-          status: 'PENDING',
-          notes: lead.notes || null,
-        })),
-        { onConflict: 'email,cliente_id' }
-      )
-      .select()
+    try {
+      // Use Neon SQL directly to insert/upsert leads
+      for (const lead of leads) {
+        await q(
+          `INSERT INTO scraped_leads
+            (cliente_id, first_name, last_name, email, phone, company_name, title,
+             engagement_score, temperature, source, status, notes, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+           ON CONFLICT (email, cliente_id)
+           DO UPDATE SET
+             temperature = $9,
+             engagement_score = $8,
+             updated_at = NOW()`,
+          [
+            this.clienteId,
+            lead.first_name || null,
+            lead.last_name || null,
+            lead.email,
+            lead.phone || null,
+            lead.company_name,
+            lead.title || null,
+            lead.engagement_score,
+            lead.temperature,
+            lead.source,
+            'PENDING',
+            lead.notes || null,
+          ]
+        )
+      }
 
-    if (error) {
+      console.log(`Saved ${leads.length} leads`)
+      return leads
+    } catch (error) {
       console.error('Database error:', error)
       throw error
     }
-
-    console.log(`Saved ${data?.length || 0} leads`)
-    return leads
   }
 }
 
@@ -312,9 +314,6 @@ export async function executeProspectScraper(
   clienteId: string,
   params: ScraperParameters
 ): Promise<ProspectScraperResult> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-  const agent = new ProspectScraperAgent(supabaseUrl, supabaseKey, clienteId)
+  const agent = new ProspectScraperAgent(clienteId)
   return await agent.execute(params)
 }
