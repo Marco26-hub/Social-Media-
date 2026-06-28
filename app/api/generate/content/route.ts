@@ -69,6 +69,11 @@ function buildAssetContext(assets: UserAsset[]) {
   return `ASSET FORNITI DALL'UTENTE (USALI COME BASE VISIVA, SENZA INVENTARE IMMAGINI NON PRESENTI):
 ${assets.map((asset, index) => `${index + 1}. ${asset.name || 'asset'} — ${asset.url} — tipo: ${asset.mime || 'image'} — fonte: ${asset.source || 'utente'}`).join('\n')}
 
+⚠️ PRODOTTO REALE = QUELLO NELLE IMMAGINI CARICATE (le vedi in allegato):
+- GUARDA le immagini e scrivi il contenuto SUL PRODOTTO EFFETTIVAMENTE MOSTRATO (es. il capo, il colore, il materiale, lo stile, l'ambientazione che VEDI).
+- NON scrivere su altri prodotti del catalogo (es. un blazer) se NON sono quelli nell'immagine. L'immagine vince sempre sui dati del catalogo.
+- Descrivi dettagli concreti che osservi: tipo di capo, colore, vestibilità, accessori, contesto/luogo.
+
 Regole asset:
 - Il contenuto deve indicare quale asset usare in ogni post/slide/frame/scena.
 - Per post/story/carousel usa gli asset come visual principale o dettaglio prodotto.
@@ -497,6 +502,10 @@ export async function POST(request: Request) {
       userPrompt,
       openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
       maxTokens: getQualityTokenBudget(contentQuality),
+      // VISION: passa le immagini caricate così il modello GUARDA il prodotto reale
+      // e scrive su quello (non sul blazer del catalogo). Serve un modello vision
+      // (Gemini 2.5 Flash, GPT-4o mini). I modelli text-only le ignorano.
+      images: mediaUrls,
     })
 
     const parsed = extractJSON(aiRes) as Record<string, unknown>

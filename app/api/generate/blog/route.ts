@@ -146,6 +146,7 @@ export async function POST(request: Request) {
       userPrompt,
       openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
       maxTokens: contentQuality === 'high' ? 6500 : contentQuality === 'medium' ? 5200 : 4000,
+      images: userAssets.map((a) => a.url), // vision: scrivi sul prodotto mostrato
     })
 
     const parsed = extractJSON(aiRes) as Record<string, unknown>

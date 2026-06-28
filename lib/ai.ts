@@ -131,9 +131,10 @@ async function tryOpenRouterModel(
   key: string,
   maxTokens: number,
   attempts: AIAttempt[],
+  images: string[] = [],
 ): Promise<string | null> {
   try {
-    const res = await callOpenRouter(model, systemPrompt, userPrompt, key, maxTokens)
+    const res = await callOpenRouter(model, systemPrompt, userPrompt, key, maxTokens, 30000, images)
     if (!res.trim()) throw new Error('Risposta AI vuota')
     recordAttempt(attempts, { provider: 'openrouter', model, ok: true })
     return res
@@ -150,9 +151,10 @@ async function tryGeminiModel(
   key: string,
   maxTokens: number,
   attempts: AIAttempt[],
+  images: string[] = [],
 ): Promise<string | null> {
   try {
-    const res = await callGemini(model, systemPrompt, userPrompt, key, maxTokens)
+    const res = await callGemini(model, systemPrompt, userPrompt, key, maxTokens, 30000, images)
     if (!res.trim()) throw new Error('Risposta AI vuota')
     recordAttempt(attempts, { provider: 'gemini', model, ok: true })
     return res
@@ -169,9 +171,10 @@ async function tryOpenCodeModel(
   key: string,
   maxTokens: number,
   attempts: AIAttempt[],
+  images: string[] = [],
 ): Promise<string | null> {
   try {
-    const res = await callOpenCode(stripOpenCodePrefix(model), systemPrompt, userPrompt, key, maxTokens)
+    const res = await callOpenCode(stripOpenCodePrefix(model), systemPrompt, userPrompt, key, maxTokens, 30000, images)
     if (!res.trim()) throw new Error('Risposta AI vuota')
     recordAttempt(attempts, { provider: 'opencode', model, ok: true })
     return res
@@ -190,8 +193,9 @@ export async function callAI(params: {
   opencodeKey?: string
   maxTokens?: number
   silentFallback?: boolean
+  images?: string[]
 }): Promise<string> {
-  const { model, systemPrompt, userPrompt, maxTokens = 4000, silentFallback = true } = params
+  const { model, systemPrompt, userPrompt, maxTokens = 4000, silentFallback = true, images = [] } = params
   // SICUREZZA: le chiavi BYO arrivano dal client (localStorage). Accettale solo se
   // hanno il formato atteso, altrimenti ignorale e usa quelle server.
   const byoKey = (params.openrouterKey || '').trim()
@@ -226,7 +230,7 @@ export async function callAI(params: {
 
   // Try 0a: Gemini come provider primario, se l'utente ha scelto un modello Gemini.
   if (geminiKey && isGeminiModel(model)) {
-    const res = await tryGeminiModel(model, systemPrompt, userPrompt, geminiKey, maxTokens, attempts)
+    const res = await tryGeminiModel(model, systemPrompt, userPrompt, geminiKey, maxTokens, attempts, images)
     if (res) return res
     // Free tier Gemini = 15 req/min: un 429 con finestra breve si libera in pochi
     // secondi. Attende il retryDelay (cap 18s, sotto il timeout client) e ritenta UNA volta.
@@ -236,7 +240,7 @@ export async function callAI(params: {
       if (waitMs > 0) {
         console.warn('[AI bridge]', `Gemini rate-limited, attendo ${Math.round(waitMs / 1000)}s e ritento`)
         await sleep(waitMs)
-        const retry = await tryGeminiModel(model, systemPrompt, userPrompt, geminiKey, maxTokens, attempts)
+        const retry = await tryGeminiModel(model, systemPrompt, userPrompt, geminiKey, maxTokens, attempts, images)
         if (retry) return retry
       }
     }
@@ -244,7 +248,7 @@ export async function callAI(params: {
 
   // Try 0b: OpenCode come provider primario, se l'utente ha scelto un modello opencode/*.
   if (opencodeKey && isOpenCodeModel(model)) {
-    const res = await tryOpenCodeModel(model, systemPrompt, userPrompt, opencodeKey, maxTokens, attempts)
+    const res = await tryOpenCodeModel(model, systemPrompt, userPrompt, opencodeKey, maxTokens, attempts, images)
     if (res) return res
   }
 
@@ -267,7 +271,7 @@ export async function callAI(params: {
 
     // Ondata 1
     for (const m of orModels) {
-      const res = await tryOpenRouterModel(m, systemPrompt, userPrompt, orKey, maxTokens, attempts)
+      const res = await tryOpenRouterModel(m, systemPrompt, userPrompt, orKey, maxTokens, attempts, images)
       if (res) return res
     }
 
@@ -280,7 +284,7 @@ export async function callAI(params: {
       if (waitMs > 0) {
         console.warn('[AI bridge]', `modelli free rate-limited, attendo ${Math.round(waitMs / 1000)}s e ritento`)
         await sleep(waitMs)
-        const res = await tryOpenRouterModel(orModels[0], systemPrompt, userPrompt, orKey, maxTokens, attempts)
+        const res = await tryOpenRouterModel(orModels[0], systemPrompt, userPrompt, orKey, maxTokens, attempts, images)
         if (res) return res
       }
     }
@@ -292,7 +296,7 @@ export async function callAI(params: {
     const triedGemini = new Set(attempts.filter(a => a.provider === 'gemini').map(a => a.model))
     const fbModel = isGeminiModel(model) ? model : GEMINI_DEFAULT_MODEL
     if (!triedGemini.has(fbModel)) {
-      const res = await tryGeminiModel(fbModel, systemPrompt, userPrompt, geminiKey, maxTokens, attempts)
+      const res = await tryGeminiModel(fbModel, systemPrompt, userPrompt, geminiKey, maxTokens, attempts, images)
       if (res) return res
     }
   }
@@ -302,7 +306,7 @@ export async function callAI(params: {
     const triedOpencode = new Set(attempts.filter(a => a.provider === 'opencode').map(a => a.model))
     const fbModel = isOpenCodeModel(model) ? model : OPENCODE_PREFIX + OPENCODE_DEFAULT_MODEL
     if (!triedOpencode.has(fbModel)) {
-      const res = await tryOpenCodeModel(fbModel, systemPrompt, userPrompt, opencodeKey, maxTokens, attempts)
+      const res = await tryOpenCodeModel(fbModel, systemPrompt, userPrompt, opencodeKey, maxTokens, attempts, images)
       if (res) return res
     }
   }
@@ -333,6 +337,17 @@ export async function callAI(params: {
   throw new Error(buildFailureMessage(attempts))
 }
 
+// Contenuto messaggio user per API OpenAI-compatibili (OpenRouter/OpenCode):
+// stringa semplice se niente immagini, array multimodale text+image_url se ci sono.
+// Vision permette al modello di GUARDARE il prodotto caricato e scriverne davvero.
+function buildOpenAIUserContent(userPrompt: string, images: string[]): unknown {
+  if (!images.length) return userPrompt
+  return [
+    { type: 'text', text: userPrompt },
+    ...images.slice(0, 4).map((url) => ({ type: 'image_url', image_url: { url } })),
+  ]
+}
+
 async function callOpenRouter(
   model: string,
   systemPrompt: string | undefined,
@@ -340,13 +355,14 @@ async function callOpenRouter(
   key: string,
   maxTokens: number,
   timeout = 30000,
+  images: string[] = [],
 ): Promise<string> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
 
-  const messages: { role: string; content: string }[] = []
+  const messages: { role: string; content: unknown }[] = []
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt })
-  messages.push({ role: 'user', content: userPrompt })
+  messages.push({ role: 'user', content: buildOpenAIUserContent(userPrompt, images) })
 
   try {
     const res = await fetch(OPENROUTER_API_URL, {
@@ -410,6 +426,24 @@ const GEMINI_SAFETY = [
   'HARM_CATEGORY_DANGEROUS_CONTENT',
 ].map((category) => ({ category, threshold: 'BLOCK_NONE' }))
 
+// Scarica un'immagine e la converte in inline_data base64 per Gemini (vision).
+async function fetchImageInline(url: string): Promise<{ inline_data: { mime_type: string; data: string } } | null> {
+  try {
+    const controller = new AbortController()
+    const t = setTimeout(() => controller.abort(), 10000)
+    const res = await fetch(url, { signal: controller.signal })
+    clearTimeout(t)
+    if (!res.ok) return null
+    const mime = res.headers.get('content-type') || 'image/jpeg'
+    if (!mime.startsWith('image/')) return null
+    const buf = Buffer.from(await res.arrayBuffer())
+    if (buf.length > 6 * 1024 * 1024) return null // cap 6MB
+    return { inline_data: { mime_type: mime, data: buf.toString('base64') } }
+  } catch {
+    return null
+  }
+}
+
 async function callGemini(
   model: string,
   systemPrompt: string | undefined,
@@ -417,12 +451,17 @@ async function callGemini(
   key: string,
   maxTokens: number,
   timeout = 30000,
+  images: string[] = [],
 ): Promise<string> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
 
+  // Vision: scarica le immagini e includile come inline_data così Gemini le "vede".
+  const imageParts = (await Promise.all(images.slice(0, 4).map(fetchImageInline))).filter(Boolean)
+  const userParts: unknown[] = [{ text: userPrompt }, ...imageParts]
+
   const body: Record<string, unknown> = {
-    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    contents: [{ role: 'user', parts: userParts }],
     // maxOutputTokens generoso: con schema JSON ricchi 4000 può troncare (MAX_TOKENS → vuoto).
     generationConfig: { maxOutputTokens: Math.min(Math.max(maxTokens, 2048), 8192), temperature: 0.8 },
     // Marketing/moda può far scattare filtri safety troppo aggressivi → blocco silenzioso.
@@ -465,13 +504,14 @@ async function callOpenCode(
   key: string,
   maxTokens: number,
   timeout = 30000,
+  images: string[] = [],
 ): Promise<string> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
 
-  const messages: { role: string; content: string }[] = []
+  const messages: { role: string; content: unknown }[] = []
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt })
-  messages.push({ role: 'user', content: userPrompt })
+  messages.push({ role: 'user', content: buildOpenAIUserContent(userPrompt, images) })
 
   try {
     const res = await fetch(OPENCODE_API_URL, {
