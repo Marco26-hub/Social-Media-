@@ -8,10 +8,10 @@ import ClienteSelector from '@/components/ClienteSelector'
 import {
   LayoutDashboard, Calendar, Settings,
   Package, LogOut, Zap, Menu, X, Search, Target,
-  Users, BarChart3, Sparkles, TrendingUp, FileText, UserPlus, Eye, ShieldCheck, Magnet
+  Users, BarChart3, Sparkles, TrendingUp, FileText, UserPlus, Eye, ShieldCheck, Magnet, Globe
 } from 'lucide-react'
 
-type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string }
+type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string; external?: boolean }
 type NavSection = { title: string; items: NavItem[] }
 
 const SECTIONS: NavSection[] = [
@@ -51,6 +51,7 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboard/prodotti',    label: 'Prodotti',      icon: Package },
       { href: '/dashboard/setup',       label: 'Setup Produzione', icon: ShieldCheck },
       { href: '/dashboard/settings', label: 'Impostazioni',  icon: Settings },
+      { href: '/',                   label: 'Vedi landing',  icon: Globe, external: true },
     ],
   },
 ]
@@ -120,12 +121,16 @@ export default function Sidebar() {
               )}
               <div className="space-y-0.5">
                 {section.items.map(item => {
-                  const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+                  const active = !item.external && (
+                    pathname === item.href ||
+                    (item.href !== '/dashboard' && item.href !== '/' && pathname.startsWith(item.href))
+                  )
                   const Icon = item.icon
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
+                      {...(item.external ? { target: '_blank', rel: 'noopener' } : {})}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                         active
                           ? 'bg-brand-600 text-white font-medium'

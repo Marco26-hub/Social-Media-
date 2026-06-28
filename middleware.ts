@@ -58,8 +58,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
   }
 
+  // '/' è la landing pubblica: deve renderizzare per visitatori E crawler SEO
+  // (prima reindirizzava sempre a /login o /dashboard, rendendo la landing
+  // irraggiungibile e facendo indicizzare la pagina di login). I loggati vedono
+  // la landing con il CTA "Vai al pannello".
   if (pathname === '/') {
-    return NextResponse.redirect(new URL(token ? '/dashboard/clienti' : '/login', request.url))
+    return NextResponse.next()
   }
 
   if (isDashboard && !token) {
