@@ -138,6 +138,19 @@ export default function AIModelSelector({ task }: { task?: Task }) {
     setShowOpcInput(false)
   }
 
+  function removeKey() {
+    localStorage.removeItem('openrouter_key')
+    setOrKey(''); setSavedKey(''); setShowKeyInput(false)
+  }
+  function removeGemKey() {
+    localStorage.removeItem('gemini_key')
+    setGemKey(''); setSavedGemKey(''); setShowGemInput(false)
+  }
+  function removeOpcKey() {
+    localStorage.removeItem('opencode_key')
+    setOpcKey(''); setSavedOpcKey(''); setShowOpcInput(false)
+  }
+
   const filtered = MODELS.filter(m =>
     !search || m.name.toLowerCase().includes(search.toLowerCase()) || m.id.toLowerCase().includes(search.toLowerCase())
   )
@@ -197,9 +210,9 @@ export default function AIModelSelector({ task }: { task?: Task }) {
               <span className="hidden sm:inline">OpenRouter</span>
             </button>
           ) : (
-            <span className="text-xs text-green-700 bg-green-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1">
-              <Check className="w-3 h-3" /> OpenRouter
-            </span>
+            <button onClick={() => setShowKeyInput(s => !s)} title="Cambia o rimuovi key OpenRouter" className="text-xs text-green-700 bg-green-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-green-100">
+              <Check className="w-3 h-3" /> OpenRouter <span className="text-green-500">· modifica</span>
+            </button>
           )}
 
           {!savedGemKey ? (
@@ -208,9 +221,9 @@ export default function AIModelSelector({ task }: { task?: Task }) {
               <span className="hidden sm:inline">Gemini</span>
             </button>
           ) : (
-            <span className="text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1">
-              <Check className="w-3 h-3" /> Gemini
-            </span>
+            <button onClick={() => setShowGemInput(s => !s)} title="Cambia o rimuovi key Gemini" className="text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-blue-100">
+              <Check className="w-3 h-3" /> Gemini <span className="text-blue-400">· modifica</span>
+            </button>
           )}
 
           {!savedOpcKey ? (
@@ -219,9 +232,9 @@ export default function AIModelSelector({ task }: { task?: Task }) {
               <span className="hidden sm:inline">OpenCode</span>
             </button>
           ) : (
-            <span className="text-xs text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1">
-              <Check className="w-3 h-3" /> OpenCode
-            </span>
+            <button onClick={() => setShowOpcInput(s => !s)} title="Cambia o rimuovi key OpenCode" className="text-xs text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-orange-100">
+              <Check className="w-3 h-3" /> OpenCode <span className="text-orange-400">· modifica</span>
+            </button>
           )}
 
           <div className="relative max-w-full w-full sm:w-auto" ref={dropdownRef}>
@@ -373,6 +386,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           <div className="flex flex-col sm:flex-row gap-2">
             <input type="password" value={orKey} onChange={e => setOrKey(e.target.value)} placeholder="sk-or-v1-..." className="input flex-1" />
             <button onClick={saveKey} className="btn-primary text-xs justify-center">Salva</button>
+            {savedKey && <button onClick={removeKey} className="btn-secondary text-xs justify-center text-red-600">Rimuovi</button>}
           </div>
           <p className="text-[10px] text-gray-400 mt-1.5">
             Crea key gratis su <a href="https://openrouter.ai/keys" target="_blank" rel="noopener" className="text-brand-600 hover:underline">openrouter.ai/keys</a>
@@ -386,6 +400,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           <div className="flex flex-col sm:flex-row gap-2">
             <input type="password" value={gemKey} onChange={e => setGemKey(e.target.value)} placeholder="AIza..." className="input flex-1" />
             <button onClick={saveGemKey} className="btn-primary text-xs justify-center">Salva</button>
+            {savedGemKey && <button onClick={removeGemKey} className="btn-secondary text-xs justify-center text-red-600">Rimuovi</button>}
           </div>
           <p className="text-[10px] text-gray-400 mt-1.5">
             Crea key gratis su <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" className="text-brand-600 hover:underline">aistudio.google.com/apikey</a>
@@ -399,6 +414,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           <div className="flex flex-col sm:flex-row gap-2">
             <input type="password" value={opcKey} onChange={e => setOpcKey(e.target.value)} placeholder="sk-..." className="input flex-1" />
             <button onClick={saveOpcKey} className="btn-primary text-xs justify-center">Salva</button>
+            {savedOpcKey && <button onClick={removeOpcKey} className="btn-secondary text-xs justify-center text-red-600">Rimuovi</button>}
           </div>
           <p className="text-[10px] text-gray-400 mt-1.5">
             Crea key su <a href="https://opencode.ai/auth" target="_blank" rel="noopener" className="text-brand-600 hover:underline">opencode.ai/auth</a> (Zen/Go). Modelli &ldquo;Free&rdquo; gratis.
