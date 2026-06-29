@@ -6,6 +6,10 @@ const GEMINI_DEFAULT_MODEL = 'gemini-2.0-flash'
 const OPENCODE_API_URL = 'https://opencode.ai/zen/v1/chat/completions'
 const OPENCODE_PREFIX = 'opencode/'
 const OPENCODE_DEFAULT_MODEL = 'deepseek-v4-flash-free'
+// Ollama: server LLM LOCALE, API OpenAI-compatible su localhost:11434/v1. NIENTE key.
+// "Porta il tuo modello": gira sul Mac, zero costi, 100% privato, nessun rate-limit.
+const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'http://127.0.0.1:11434/v1/chat/completions'
+const OLLAMA_PREFIX = 'ollama/'
 
 // Ordine: modelli veloci/affidabili prima. Il 550B (lento su free tier) è escluso
 // dalla cascade per evitare timeout a catena. claude resta solo per Anthropic diretto.
@@ -23,7 +27,7 @@ const FALLBACK_MODELS = [
 const MAX_OPENROUTER_FALLBACKS = 2
 
 type AIAttempt = {
-  provider: 'openrouter' | 'anthropic' | 'gemini' | 'opencode'
+  provider: 'openrouter' | 'anthropic' | 'gemini' | 'opencode' | 'ollama'
   model: string
   ok: boolean
   error?: string
@@ -44,6 +48,14 @@ function isOpenCodeModel(model: string) {
 }
 function stripOpenCodePrefix(model: string) {
   return model.startsWith(OPENCODE_PREFIX) ? model.slice(OPENCODE_PREFIX.length) : model
+}
+
+// Modello Ollama locale, marcato col prefisso 'ollama/' nella UI (es. ollama/gemma4:e4b).
+function isOllamaModel(model: string) {
+  return model.startsWith(OLLAMA_PREFIX)
+}
+function stripOllamaPrefix(model: string) {
+  return model.startsWith(OLLAMA_PREFIX) ? model.slice(OLLAMA_PREFIX.length) : model
 }
 
 function sanitizeAIError(error: unknown) {
@@ -184,6 +196,26 @@ async function tryOpenCodeModel(
   }
 }
 
+async function tryOllamaModel(
+  model: string,
+  systemPrompt: string | undefined,
+  userPrompt: string,
+  maxTokens: number,
+  attempts: AIAttempt[],
+  images: string[] = [],
+): Promise<string | null> {
+  try {
+    // Timeout 120s: i modelli locali su MPS sono più lenti del cloud ma niente rete.
+    const res = await callOllama(stripOllamaPrefix(model), systemPrompt, userPrompt, maxTokens, 120000, images)
+    if (!res.trim()) throw new Error('Risposta AI vuota')
+    recordAttempt(attempts, { provider: 'ollama', model, ok: true })
+    return res
+  } catch (e) {
+    recordAttempt(attempts, { provider: 'ollama', model, ok: false, error: sanitizeAIError(e) })
+    return null
+  }
+}
+
 export async function callAI(params: {
   model: string
   systemPrompt?: string
@@ -225,8 +257,15 @@ export async function callAI(params: {
     recordAttempt(attempts, { provider: 'opencode', model, ok: false, error: 'Key OpenCode non valida: deve iniziare con "sk-"' })
   }
 
-  // I modelli Gemini/OpenCode/Anthropic non vanno su OpenRouter.
-  const canUseRequestedOnOpenRouter = !isAnthropicModel(model) && !isGeminiModel(model) && !isOpenCodeModel(model)
+  // I modelli Gemini/OpenCode/Anthropic/Ollama non vanno su OpenRouter.
+  const canUseRequestedOnOpenRouter = !isAnthropicModel(model) && !isGeminiModel(model) && !isOpenCodeModel(model) && !isOllamaModel(model)
+
+  // Try 0: Ollama LOCALE, se l'utente ha scelto ollama/*. Nessuna key, gira sul Mac.
+  // Se il server è spento fallisce subito → con silentFallback passa ai provider cloud.
+  if (isOllamaModel(model)) {
+    const res = await tryOllamaModel(model, systemPrompt, userPrompt, maxTokens, attempts, images)
+    if (res) return res
+  }
 
   // Try 0a: Gemini come provider primario, se l'utente ha scelto un modello Gemini.
   if (geminiKey && isGeminiModel(model)) {
@@ -523,6 +562,54 @@ async function callOpenCode(
     if (!res.ok) throw new Error(formatHttpError(res.status, await res.text().catch(() => '')))
     const data = await res.json()
     return data.choices?.[0]?.message?.content || ''
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// Ollama (locale) è OpenAI-compatible: stesso shape di OpenRouter, base URL locale, NIENTE auth.
+// Vision: i modelli multimodali (es. gemma3 vision) leggono le immagini; i text-only le ignorano.
+async function callOllama(
+  model: string,
+  systemPrompt: string | undefined,
+  userPrompt: string,
+  maxTokens: number,
+  timeout = 120000,
+  images: string[] = [],
+): Promise<string> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeout)
+
+  const messages: { role: string; content: unknown }[] = []
+  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt })
+  messages.push({ role: 'user', content: buildOpenAIUserContent(userPrompt, images) })
+
+  try {
+    const res = await fetch(OLLAMA_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.85, stream: false }),
+    })
+    if (!res.ok) throw new Error(formatHttpError(res.status, await res.text().catch(() => '')))
+    const data = await res.json()
+    const msg = data.choices?.[0]?.message ?? {}
+    // I reasoning model (es. deepseek-r1) a volte mettono il pensiero in `reasoning`
+    // o lo inline-ano in <think>…</think>: tieni solo la risposta finale.
+    let content: string = msg.content || ''
+    content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+    // Fallback: se content è vuoto ma c'è reasoning, il modello ha esaurito i token
+    // pensando (alza max_tokens) — segnala chiaro invece di restituire stringa vuota.
+    if (!content && msg.reasoning) {
+      throw new Error('Modello locale ha esaurito i token nel reasoning prima di rispondere — usa gemma4/gemma3 o alza max_tokens')
+    }
+    return content
+  } catch (e) {
+    // Server locale spento = ECONNREFUSED/fetch failed. Messaggio azionabile invece di errore criptico.
+    if (e instanceof Error && /fetch failed|ECONNREFUSED|network|aborted|terminated/i.test(e.message)) {
+      throw new Error('Ollama locale non raggiungibile su 127.0.0.1:11434 — avvia "ollama serve" sul Mac')
+    }
+    throw e
   } finally {
     clearTimeout(timer)
   }

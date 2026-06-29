@@ -34,7 +34,7 @@ Non concentrare prodotti in pochi giorni.
 Tono moderno fashion coerente con brand.
 
 Output SOLO JSON array valido:
-[{"data_pubblicazione":"YYYY-MM-DD","ora_pubblicazione":"HH:MM","canale":"instagram|facebook|tiktok|pinterest|youtube_shorts","formato":"post|carousel|reel|story|pin|short|video","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
+[{"data_pubblicazione":"YYYY-MM-DD","ora_pubblicazione":"HH:MM","canale":"USA SOLO un canale tra quelli in {{PIATTAFORME}} (valori ammessi: instagram|facebook|tiktok|pinterest|linkedin|threads|x|youtube_shorts|blog)","formato":"post|carousel|reel|story|pin|short|video|articolo","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
 
 const PROMPT_MONTHLY = `Agisci come Social Media Manager senior per brand abbigliamento e-commerce.
 Crea piano editoriale MENSILE (30 giorni) per {{PIATTAFORME}}.
@@ -53,7 +53,7 @@ Non concentrare prodotti in pochi giorni.
 Tono moderno fashion coerente con brand.
 
 Output SOLO JSON array valido:
-[{"data_pubblicazione":"YYYY-MM-DD","ora_pubblicazione":"HH:MM","canale":"instagram|facebook|tiktok|pinterest|youtube_shorts","formato":"post|carousel|reel|story|pin|short|video","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
+[{"data_pubblicazione":"YYYY-MM-DD","ora_pubblicazione":"HH:MM","canale":"USA SOLO un canale tra quelli in {{PIATTAFORME}} (valori ammessi: instagram|facebook|tiktok|pinterest|linkedin|threads|x|youtube_shorts|blog)","formato":"post|carousel|reel|story|pin|short|video|articolo","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
 
 // Standard del piano: composti dalla "bibbia" condivisa (lib/prompt-standards).
 // Forza DIVERSITÀ + funnel strategico + SEO/GEO + copy professionale.

@@ -74,12 +74,14 @@ export default function PianoPage() {
   }
 
   const numContenuti = periodo === 'mensile' ? '25-35' : '7-10'
+  const isLocal = aiModel.startsWith('ollama/')
   const isFree = aiModel.endsWith(':free')
   const stimaContenuti = periodo === 'mensile' ? 30 : 8
   const tokenStima = {
     input:  stimaContenuti * 800,    // ~800 token input per contenuto
     output: stimaContenuti * 600,    // ~600 token output per contenuto
-    cost:   isFree ? 'GRATIS (OpenRouter free tier)' :
+    cost:   isLocal ? 'GRATIS (Ollama locale · Mac)' :
+            isFree ? 'GRATIS (OpenRouter free tier)' :
             aiModel.includes('opus') ? `~$${(stimaContenuti * 0.03).toFixed(2)}` :
             aiModel.includes('haiku') ? `~$${(stimaContenuti * 0.004).toFixed(3)}` :
             `~$${(stimaContenuti * 0.012).toFixed(2)}`,

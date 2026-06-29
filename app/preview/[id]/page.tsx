@@ -12,6 +12,9 @@ const ALL_PLATFORMS: { canale: Contenuto['canale']; formato: Contenuto['formato'
   { canale: 'facebook', formato: 'post', label: 'Facebook Post' },
   { canale: 'tiktok', formato: 'video', label: 'TikTok Video' },
   { canale: 'pinterest', formato: 'pin', label: 'Pinterest Pin' },
+  { canale: 'linkedin', formato: 'post', label: 'LinkedIn Post' },
+  { canale: 'threads', formato: 'post', label: 'Threads Post' },
+  { canale: 'x', formato: 'post', label: 'X Post' },
 ]
 
 const DEMO_DATA = {

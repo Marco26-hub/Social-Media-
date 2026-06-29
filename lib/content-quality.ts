@@ -92,6 +92,16 @@ const PLATFORM_RULES: Record<string, string[]> = {
     'Struttura SEO/GEO: H1, meta, H2, liste, FAQ, internal link, E-E-A-T e claim non inventati.',
     'Aggiungi angolo editoriale, keyword target, proof points e CTA coerente con prodotti/servizi.',
   ],
+  threads: [
+    'Tono conversazionale e autentico, foto-first; scrivi come parli, frasi brevi e dirette.',
+    'Pochi hashtag (0-2 max), nessuno spam; punta al commento e alla conversazione, non alla vendita.',
+    'Apri con un’osservazione o una domanda genuina; cross-post naturale da Instagram ma adatta il tono più informale.',
+  ],
+  x: [
+    'Concisione estrema: il post singolo sta sotto i 280 caratteri, una sola idea incisiva.',
+    'Per i thread: gancio fortissimo nel primo tweet (il 90% si gioca lì), poi un’idea per tweet con ritmo.',
+    'Tono diretto e tempestivo; hashtag in caption con parsimonia (1-2), niente emoji-spam; invita a retweet/risposta.',
+  ],
 }
 
 const FORMAT_RULES: Record<string, string[]> = {

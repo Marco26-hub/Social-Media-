@@ -5,8 +5,8 @@ import { Sparkles, Check, ChevronDown, Key, Zap, AlertCircle, Search, ThumbsUp }
 type Model = {
   id: string
   name: string
-  provider: 'anthropic' | 'openrouter' | 'gemini' | 'opencode'
-  tier: 'default' | 'free' | 'paid'
+  provider: 'anthropic' | 'openrouter' | 'gemini' | 'opencode' | 'ollama'
+  tier: 'default' | 'free' | 'paid' | 'local'
   context: string
   speed: 'fast' | 'medium' | 'slow'
   quality: 'top' | 'high' | 'medium'
@@ -27,14 +27,30 @@ const TASK_LABELS: Record<Task, string> = {
   'blog-articolo': 'Blog SEO',
 }
 
+// Matrice locale-first: AIM locale (Ollama) dove basta velocità/italiano a costo zero;
+// cloud Claude per i task analitici pesanti (audit/blog lungo) dove un 4B locale è debole.
 const TASK_RECOMMENDED: Record<Task, string> = {
-  'contenuti-social': 'nvidia/nemotron-3-super-120b-a12b:free',
-  'piano-editoriale': 'meta-llama/llama-3.3-70b-instruct:free',
-  'seo-audit': 'meta-llama/llama-3.3-70b-instruct:free',
-  'blog-articolo': 'meta-llama/llama-3.3-70b-instruct:free',
+  'contenuti-social': 'ollama/gemma3:4b',     // post brevi e tanti → veloce, gratis, privato (locale)
+  'piano-editoriale': 'ollama/gemma4:e4b',    // miglior italiano locale, output strutturato medio
+  'seo-audit':        'claude-sonnet-4-6',     // analisi tecnica SEO/GEO → serve qualità cloud
+  'blog-articolo':    'claude-sonnet-4-6',     // articoli lunghi, contesto 200K → cloud
+}
+
+// "Perché" mostrato in UI: spiega all'utente la logica della raccomandazione per task.
+const TASK_WHY: Record<Task, string> = {
+  'contenuti-social': 'Post brevi e ad alto volume: meglio veloce, gratis e privato in locale (AIM).',
+  'piano-editoriale': 'Output strutturato in buon italiano: gestibile in locale a costo zero (AIM gemma4).',
+  'seo-audit':        'Analisi tecnica SEO/GEO: serve ragionamento affidabile → Claude cloud, locale come ripiego.',
+  'blog-articolo':    'Articoli lunghi e ben scritti: contesto ampio e qualità → Claude cloud.',
 }
 
 const MODELS: Model[] = [
+  // Ollama LOCALE (gira sul Mac, zero costi, 100% privato, nessun rate-limit, nessuna key).
+  // Richiede "ollama serve" attivo + il modello scaricato con "ollama pull <nome>".
+  // Solo modelli che producono italiano pulito per copy luxury (testati).
+  { id: 'ollama/gemma4:e4b',          name: 'Gemma 4 (locale)',      provider: 'ollama', tier: 'local', context: '128K', speed: 'medium', quality: 'top',  badge: '★ Locale · gratis', recommendedFor: ['piano-editoriale', 'contenuti-social'] },
+  { id: 'ollama/gemma3:4b',           name: 'Gemma 3 4B (locale)',   provider: 'ollama', tier: 'local', context: '128K', speed: 'fast',   quality: 'high', badge: 'Locale · veloce',   recommendedFor: ['contenuti-social'] },
+
   // Anthropic Premium
   { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic', tier: 'default', context: '200K', speed: 'fast',   quality: 'top',  badge: 'Default',        recommendedFor: ['seo-audit', 'blog-articolo', 'piano-editoriale'] },
   { id: 'claude-opus-4-7',   name: 'Claude Opus 4.7',   provider: 'anthropic', tier: 'default', context: '200K', speed: 'medium', quality: 'top',  badge: 'Premium',        recommendedFor: ['blog-articolo', 'seo-audit'] },
@@ -93,6 +109,8 @@ export default function AIModelSelector({ task }: { task?: Task }) {
   const [opcKey, setOpcKey] = useState('')
   const [savedOpcKey, setSavedOpcKey] = useState('')
   const [search, setSearch] = useState('')
+  const [ollama, setOllama] = useState<{ running: boolean; models: string[] } | null>(null)
+  const [startingOllama, setStartingOllama] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -120,6 +138,34 @@ export default function AIModelSelector({ task }: { task?: Task }) {
   }, [open])
 
   const selected = MODELS.find(m => m.id === selectedId) ?? MODELS[0]
+
+  // Health-check Ollama quando è selezionato un modello locale: evita il default
+  // locale che fallisce in silenzio se "ollama serve" è spento o il modello non è scaricato.
+  useEffect(() => {
+    if (selected.provider !== 'ollama') { setOllama(null); return }
+    let cancelled = false
+    fetch('/api/system/local/ollama')
+      .then(r => r.json())
+      .then(d => { if (!cancelled) setOllama({ running: !!d.running, models: d.models || [] }) })
+      .catch(() => { if (!cancelled) setOllama({ running: false, models: [] }) })
+    return () => { cancelled = true }
+  }, [selected.provider, selectedId])
+
+  async function startOllama() {
+    setStartingOllama(true)
+    try {
+      await fetch('/api/system/local/ollama', { method: 'POST' })
+      const r = await fetch('/api/system/local/ollama')
+      const d = await r.json()
+      setOllama({ running: !!d.running, models: d.models || [] })
+    } catch { /* lascia lo stato precedente */ }
+    finally { setStartingOllama(false) }
+  }
+
+  // Nome modello senza prefisso 'ollama/' per confronto con i tag installati.
+  const ollamaTag = selected.provider === 'ollama' ? selected.id.replace(/^ollama\//, '') : ''
+  const ollamaOff = selected.provider === 'ollama' && ollama !== null && !ollama.running
+  const ollamaModelMissing = selected.provider === 'ollama' && ollama?.running === true && !ollama.models.includes(ollamaTag)
 
   function selectModel(id: string) {
     setSelectedId(id)
@@ -162,6 +208,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
   const filtered = MODELS.filter(m =>
     !search || m.name.toLowerCase().includes(search.toLowerCase()) || m.id.toLowerCase().includes(search.toLowerCase())
   )
+  const ollamaModels = filtered.filter(m => m.provider === 'ollama')
   const anthropicModels = filtered.filter(m => m.provider === 'anthropic')
   const geminiModels = filtered.filter(m => m.provider === 'gemini')
   const opencodeModels = filtered.filter(m => m.provider === 'opencode')
@@ -186,6 +233,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
             selected.provider === 'anthropic' ? 'bg-gradient-to-br from-violet-500 to-purple-600'
               : selected.provider === 'gemini' ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
               : selected.provider === 'opencode' ? 'bg-gradient-to-br from-orange-500 to-amber-600'
+              : selected.provider === 'ollama' ? 'bg-gradient-to-br from-slate-700 to-gray-900'
               : 'bg-gradient-to-br from-emerald-500 to-teal-600'
           }`}>
             <Sparkles className="w-5 h-5 text-white" />
@@ -199,6 +247,9 @@ export default function AIModelSelector({ task }: { task?: Task }) {
               {selected.tier === 'free' && (
                 <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">FREE</span>
               )}
+              {selected.tier === 'local' && (
+                <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-100 rounded-full font-medium">LOCALE · GRATIS</span>
+              )}
               {isOnRecommended && (
                 <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium flex items-center gap-1">
                   <ThumbsUp className="w-3 h-3" /> Consigliato
@@ -207,8 +258,11 @@ export default function AIModelSelector({ task }: { task?: Task }) {
             </div>
             <p className="font-semibold text-gray-900 truncate">{selected.name}</p>
             <p className="text-xs text-gray-500 mt-0.5 truncate">
-              {selected.provider === 'anthropic' ? 'Anthropic' : selected.provider === 'gemini' ? 'Google Gemini' : selected.provider === 'opencode' ? 'OpenCode' : 'OpenRouter'} · {selected.context} · {selected.speed} · {selected.quality}
+              {selected.provider === 'anthropic' ? 'Anthropic' : selected.provider === 'gemini' ? 'Google Gemini' : selected.provider === 'opencode' ? 'OpenCode' : selected.provider === 'ollama' ? 'Ollama · Mac locale' : 'OpenRouter'} · {selected.context} · {selected.speed} · {selected.quality}
             </p>
+            {task && (
+              <p className="text-[11px] text-amber-700 mt-1 leading-snug">{TASK_WHY[task]}</p>
+            )}
           </div>
         </div>
 
@@ -275,9 +329,10 @@ export default function AIModelSelector({ task }: { task?: Task }) {
                   {/* Task recommendation banner */}
                   {task && taskModels.length > 0 && !search && (
                     <div className="px-3 py-2.5 border-b border-gray-100">
-                      <p className="text-[10px] uppercase tracking-wide text-amber-700 font-bold mb-2">
+                      <p className="text-[10px] uppercase tracking-wide text-amber-700 font-bold mb-1">
                         Consigliati per {TASK_LABELS[task]}
                       </p>
+                      <p className="text-[10px] text-gray-500 mb-2 leading-snug">{TASK_WHY[task]}</p>
                       <div className="flex flex-wrap gap-1.5">
                         {taskModels.map(m => (
                           <button
@@ -299,6 +354,21 @@ export default function AIModelSelector({ task }: { task?: Task }) {
                     </div>
                   )}
 
+                  {ollamaModels.length > 0 && (
+                    <>
+                      <div className="px-3 py-2 bg-slate-100 sticky top-0 z-10 flex items-center gap-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-800">Ollama · Mac locale</p>
+                        <span className="text-[9px] px-1.5 py-0.5 bg-slate-800 text-slate-100 rounded-full font-bold tracking-normal">gratis · privato · no key</span>
+                      </div>
+                      {ollamaModels.map(m => (
+                        <ModelOption
+                          key={m.id} m={m} selected={m.id === selectedId}
+                          recommended={m.id === recommendedId}
+                          onClick={() => selectModel(m.id)}
+                        />
+                      ))}
+                    </>
+                  )}
                   {anthropicModels.length > 0 && (
                     <>
                       <div className="px-3 py-2 bg-gray-50 sticky top-0 z-10">
@@ -382,6 +452,27 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           </div>
         </div>
       </div>
+
+      {ollamaOff && (
+        <div className="mt-3 flex items-start gap-2 text-xs bg-red-50 border border-red-200 rounded-lg p-2.5 text-red-900">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span className="flex-1">Modello locale (AIM) selezionato ma <strong>Ollama è spento</strong> — la generazione fallirà. Avvialo o scegli un modello cloud.</span>
+          <button
+            onClick={startOllama}
+            disabled={startingOllama}
+            className="btn-primary text-[11px] py-1 px-2.5 flex-shrink-0 disabled:opacity-50"
+          >
+            {startingOllama ? 'Avvio…' : 'Avvia Ollama'}
+          </button>
+        </div>
+      )}
+
+      {ollamaModelMissing && (
+        <div className="mt-3 flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-amber-900">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span>Ollama è attivo ma il modello <strong>{ollamaTag}</strong> non è scaricato — esegui <code className="bg-amber-100 px-1 rounded">ollama pull {ollamaTag}</code> nel terminale.</span>
+        </div>
+      )}
 
       {needsOrKey && (
         <div className="mt-3 flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-amber-900">

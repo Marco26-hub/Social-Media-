@@ -3,7 +3,7 @@ export type Status =
   | 'IN_PUBBLICAZIONE' | 'PUBBLICATO' | 'ERRORE'
   | 'ERRORE_MANUALE' | 'DRY_RUN_OK' | 'ARCHIVIATO'
 
-export type Canale = 'instagram' | 'facebook' | 'tiktok' | 'pinterest' | 'linkedin' | 'youtube_shorts' | 'blog'
+export type Canale = 'instagram' | 'facebook' | 'tiktok' | 'pinterest' | 'linkedin' | 'youtube_shorts' | 'blog' | 'threads' | 'x'
 export type Formato = 'post' | 'carousel' | 'reel' | 'story' | 'pin' | 'short' | 'video' | 'articolo'
 export type MediaType = 'image' | 'video' | 'pin' | 'short'
 export type ContentQuality = 'soft' | 'medium' | 'high'

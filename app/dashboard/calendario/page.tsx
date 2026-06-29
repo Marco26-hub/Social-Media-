@@ -13,10 +13,10 @@ import { readClienteId } from '@/lib/use-data'
 import { readAISettings, readApiError } from '@/lib/ai-client'
 import { useRuntimeDemo } from '@/lib/demo-client'
 
-const CANALI = ['tutti','instagram','facebook','tiktok','pinterest','youtube_shorts']
+const CANALI = ['tutti','instagram','facebook','tiktok','pinterest','linkedin','threads','x','youtube_shorts']
 const STATI: Status[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','IN_PUBBLICAZIONE','PUBBLICATO','ERRORE','ERRORE_MANUALE']
 const CANALE_ICON: Record<string, string> = {
-  instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', youtube_shorts: '▶️'
+  instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', linkedin: '💼', threads: '🧵', x: '✖️', youtube_shorts: '▶️'
 }
 
 function asText(value: unknown) {

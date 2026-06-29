@@ -190,6 +190,9 @@ export default function OnboardingPage() {
     { key: 'facebook', emoji: '🔵', label: 'FB' },
     { key: 'tiktok', emoji: '🎵', label: 'TT' },
     { key: 'pinterest', emoji: '📌', label: 'PIN' },
+    { key: 'linkedin', emoji: '💼', label: 'IN' },
+    { key: 'threads', emoji: '🧵', label: 'TH' },
+    { key: 'x', emoji: '✖️', label: 'X' },
   ]
 
   return (

@@ -9,6 +9,8 @@ import Link from 'next/link'
 import { demoContenuti, demoLogs } from '@/lib/demo-data'
 import { PLATFORM_LIST } from '@/lib/social-config'
 import { isDemo } from '@/lib/demo'
+import { isLocalEnv } from '@/lib/local-only'
+import LocalControlCenter from '@/components/LocalControlCenter'
 
 export const dynamic = 'force-dynamic'
 
@@ -263,6 +265,9 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Centro di Controllo — solo in ambiente locale (AI locale + motore dati + sync) */}
+      {isLocalEnv() && <LocalControlCenter />}
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">

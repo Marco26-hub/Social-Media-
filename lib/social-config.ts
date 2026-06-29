@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
-import { Square, Layers, Film, Clock, Video, Pin, FileText } from 'lucide-react'
+import { Square, Layers, Film, Clock, Video, Pin, FileText, MessageSquare } from 'lucide-react'
 
-export type PlatformKey = 'instagram' | 'facebook' | 'tiktok' | 'pinterest' | 'linkedin' | 'youtube_shorts' | 'blog'
+export type PlatformKey = 'instagram' | 'facebook' | 'tiktok' | 'pinterest' | 'linkedin' | 'youtube_shorts' | 'blog' | 'threads' | 'x'
 
 export type FormatoConfig = {
   id: string
@@ -132,6 +132,36 @@ export const PLATFORMS: Record<PlatformKey, PlatformConfig> = {
     canaleDb: 'blog',
     formati: [
       { id: 'BLOG-ART', nome: 'Articolo', desc: '800-1200 parole SEO con FAQ e prodotti linkati', icon: FileText, formato: 'articolo', aspectRatio: '16:9', esempio: 'Come abbinare il blazer in lino: guida estate', goal: 'Rank organico + citabilità AI engines' },
+    ],
+  },
+  threads: {
+    key: 'threads',
+    nome: 'Threads',
+    emoji: '🧵',
+    colorBg: 'bg-gradient-to-br from-gray-800 to-black',
+    colorTxt: 'text-gray-900',
+    gradient: 'from-gray-50 via-zinc-50 to-slate-50',
+    tagline: 'Conversazioni autentiche',
+    descrizione: 'Post conversazionali e foto-first per Threads. Tono casual e diretto, pochi hashtag, foto 1:1 o verticali 9:16. Cross-post naturale da Instagram.',
+    canaleDb: 'threads',
+    formati: [
+      { id: 'TH-POST',  nome: 'Post',  desc: 'Post testuale conversazionale + foto 1:1, tono casual',  icon: MessageSquare, formato: 'post', aspectRatio: '1:1',  esempio: 'Dietro le quinte della tessitura, in modo autentico', goal: 'Conversazione e community organica' },
+      { id: 'TH-PHOTO', nome: 'Foto',  desc: 'Foto verticale 9:16 con caption breve e diretta',        icon: Film,          formato: 'reel', aspectRatio: '9:16', esempio: 'Il foulard in movimento sul lago',                  goal: 'Awareness visiva foto-first' },
+    ],
+  },
+  x: {
+    key: 'x',
+    nome: 'X',
+    emoji: '✖️',
+    colorBg: 'bg-gradient-to-br from-gray-900 to-black',
+    colorTxt: 'text-gray-900',
+    gradient: 'from-gray-50 via-zinc-50 to-slate-50',
+    tagline: 'Conciso e tempestivo',
+    descrizione: 'Post brevi e incisivi (max 280 caratteri) e thread con gancio nel primo tweet. Immagini 16:9 in timeline. Tono diretto, niente hashtag spam.',
+    canaleDb: 'x',
+    formati: [
+      { id: 'X-POST',   nome: 'Post',   desc: 'Tweet conciso max 280 char + immagine 16:9',          icon: MessageSquare, formato: 'post',  aspectRatio: '16:9', esempio: 'Il lusso silenzioso della seta di Como, in una frase', goal: 'Reach e conversazione rapida' },
+      { id: 'X-VIDEO',  nome: 'Video',  desc: 'Video breve 16:9 nativo con hook immediato',          icon: Video,         formato: 'video', aspectRatio: '16:9', esempio: 'Clip 15s sulla lavorazione artigianale',             goal: 'Engagement e visualizzazioni' },
     ],
   },
 }

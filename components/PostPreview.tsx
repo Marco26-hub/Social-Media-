@@ -8,10 +8,14 @@ const CANALE_HANDLE: Record<string, string> = {
   tiktok: '@brand_official',
   pinterest: 'Brand Official',
   youtube_shorts: 'Brand Official',
+  linkedin: 'Brand Official',
+  threads: '@brand_official',
+  x: '@brand_official',
 }
 
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', youtube_shorts: '▶️',
+  linkedin: '💼', threads: '🧵', x: '✖️',
 }
 
 // Aspect ratios standard per canale/formato
@@ -27,6 +31,12 @@ const ASPECT: Record<string, string> = {
   'tiktok-reel':         'aspect-[9/16]',
   'pinterest-pin':       'aspect-[2/3]',        // 2:3 pin
   'youtube_shorts-short':'aspect-[9/16]',
+  'linkedin-post':       'aspect-square',       // 1:1
+  'linkedin-articolo':   'aspect-video',        // 16:9
+  'threads-post':        'aspect-square',       // 1:1
+  'threads-reel':        'aspect-[9/16]',       // 9:16
+  'x-post':              'aspect-video',        // 16:9
+  'x-video':             'aspect-video',        // 16:9
 }
 
 export default function PostPreview({ c }: { c: Contenuto }) {

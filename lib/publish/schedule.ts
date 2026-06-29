@@ -4,10 +4,33 @@
 import { q } from '@/lib/db'
 import { validateMediaUrls } from '@/lib/media-validate'
 
-const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://api.blotato.com'
+const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 const BLOTATO_API_KEY = process.env.BLOTATO_API_KEY
 
 type ContentRow = Record<string, unknown>
+
+// Mapping canale interno → nome piattaforma atteso da Blotato (schema MCP blotato_create_post).
+// X interno = 'twitter' per Blotato; youtube_shorts = 'youtube'. 'blog' NON ha target Blotato.
+const CANALE_TO_BLOTATO: Record<string, string> = {
+  instagram: 'instagram',
+  facebook: 'facebook',
+  tiktok: 'tiktok',
+  pinterest: 'pinterest',
+  linkedin: 'linkedin',
+  threads: 'threads',
+  x: 'twitter',
+  youtube_shorts: 'youtube',
+}
+
+// Timestamp ISO 8601 con timezone (Blotato richiede scheduledTime ISO).
+function toIso(data: unknown, ora: unknown): string {
+  const d = String(data || '').trim()
+  const t = String(ora || '00:00').slice(0, 5)
+  if (!d) throw new Error('data_pubblicazione mancante: impossibile programmare il post')
+  const dt = new Date(`${d}T${t}:00`)
+  if (isNaN(dt.getTime())) throw new Error(`data/ora non valide: ${d} ${t}`)
+  return dt.toISOString()
+}
 
 export async function scheduleOnBlotato(
   clienteId: string,
@@ -21,8 +44,22 @@ export async function scheduleOnBlotato(
   const canale = row.canale as string
   const formato = row.formato as string
 
-  // Costruisci il contenuto testuale completo per la piattaforma
-  const content = buildPlatformContent(canale, formato, row)
+  // 'blog' non è una piattaforma Blotato: va pubblicato altrove (CMS), non qui.
+  const platform = CANALE_TO_BLOTATO[canale]
+  if (!platform) {
+    console.warn(`[Blotato] canale '${canale}' non pubblicabile via Blotato (es. blog) — saltato`)
+    return null
+  }
+
+  // accountId è OBBLIGATORIO per Blotato: identifica SU QUALE account social pubblicare.
+  // Va salvato in calendario.platform_account_id (da blotato_list_accounts → mappa canale→accountId).
+  const accountId = (row.platform_account_id as string | null)?.trim()
+  if (!accountId) {
+    throw new Error(`Account Blotato non collegato per il canale '${canale}': imposta platform_account_id (vedi blotato_list_accounts)`)
+  }
+
+  // Costruisci il contenuto testuale completo per la piattaforma (hook+caption+cta+hashtag).
+  const text = buildPlatformContent(canale, formato, row)
 
   // Raccogli media disponibili (fino a 7)
   const mediaUrls = [row.link_media_1, row.link_media_2, row.link_media_3, row.link_media_4, row.link_media_5, row.link_media_6, row.link_media_7]
@@ -37,43 +74,31 @@ export async function scheduleOnBlotato(
     }
   }
 
-  const scheduledAt = `${row.data_pubblicazione}T${String(row.ora_pubblicazione).slice(0, 5)}:00`
+  const scheduledTime = toIso(row.data_pubblicazione, row.ora_pubblicazione)
 
-  // Payload ricco per Blotato
+  // Payload contratto Blotato v2 (POST /v2/posts): post{ accountId, target, content } + scheduledTime.
+  // Campi confermati dallo schema MCP blotato_create_post: accountId, platform, text, mediaUrls, scheduledTime.
   const payload: Record<string, unknown> = {
-    platform: canale,
-    format: formato,
-    content,
-    media_urls: mediaUrls.length > 0 ? mediaUrls : undefined,
-    scheduled_at: scheduledAt,
-    metadata: {
-      hook: row.hook || null,
-      cta: row.cta || null,
-      link: row.link_prodotto || null,
-      hashtag: row.hashtag || null,
-      alt_text: row.alt_text || null,
-      overlay_text: row.overlay_text || null,
-      thumbnail_url: row.thumbnail_url || null,
-      voiceover_script: row.voiceover_script || null,
-      music_mood: row.music_mood || null,
-      scenes_json: row.scenes_json || null,
-      slides_json: row.slides_json || null,
-      idea_visual: row.idea_visual || null,
-      nome_prodotto: row.nome_prodotto || null,
-      product_link: row.link_prodotto_finale || row.link_prodotto || null,
-      utm_source: row.utm_source || canale,
-      utm_medium: 'social',
-      utm_campaign: row.utm_campaign || 'social_default',
+    post: {
+      accountId,
+      target: { targetType: platform },
+      content: {
+        platform,
+        text,
+        mediaUrls,
+      },
     },
+    scheduledTime,
   }
 
-  console.log(`[Blotato] Sending ${canale}/${formato} scheduled at ${scheduledAt}`)
+  console.log(`[Blotato] Sending ${canale}→${platform} account=${accountId} scheduled at ${scheduledTime}`)
 
-  const res = await fetch(`${BLOTATO_API_BASE}/schedule`, {
+  const res = await fetch(`${BLOTATO_API_BASE}/v2/posts`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${BLOTATO_API_KEY}`,
+      'blotato-api-key': BLOTATO_API_KEY,
     },
     body: JSON.stringify(payload),
   })
@@ -84,7 +109,7 @@ export async function scheduleOnBlotato(
   }
 
   const result = await res.json()
-  const blotatoId = result.id || result.scheduled_id
+  const blotatoId = result.id || result.postSubmissionId || result.submissionId || result.scheduled_id
 
   // Aggiorna status locale
   if (blotatoId && row.id) {
@@ -92,7 +117,7 @@ export async function scheduleOnBlotato(
       `UPDATE calendario
        SET blotato_post_id = $1, blotato_status = 'scheduled', blotato_scheduled_at = $2, blotato_sync_at = now()
        WHERE id = $3 AND cliente_id = $4`,
-      [blotatoId, scheduledAt, row.id, clienteId],
+      [String(blotatoId), scheduledTime, row.id, clienteId],
     )
   }
 
@@ -125,8 +150,9 @@ function buildPlatformContent(canale: string, formato: string, row: ContentRow):
 
   if (hashtag) {
     // Instagram: hashtag nel primo commento (metadata.first_comment)
-    // Facebook/TikTok/Pinterest: hashtag nella caption
-    if (['facebook', 'tiktok', 'pinterest'].includes(canale)) {
+    // Facebook/TikTok/Pinterest/LinkedIn/Threads/X: hashtag nella caption
+    // (per X/Threads l'AI ne genera già pochi/mirati, vedi PLATFORM_RULES)
+    if (['facebook', 'tiktok', 'pinterest', 'linkedin', 'threads', 'x'].includes(canale)) {
       parts.push(`\n${hashtag}`)
     }
   }
