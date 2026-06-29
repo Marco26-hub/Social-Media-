@@ -635,4 +635,21 @@ Obiettivo: fare controllo finale severo prima di commit/push/deploy. Non fidarsi
 - Dopo push: verificare GitHub Actions, Render deploy e `/api/system/health`; migrare solo se `latestMigrationApplied=false`.
 - Solo dopo health `ready` con `latestMigrationApplied=true` considerare chiuso il controllo tecnico.
 
+---
+
+## Generazione VISUAL AI (Blotato) — commit `467e1df`
+
+Chiude il gap vs Predis/Ocoya: l'AI scrive il testo **e** genera la grafica.
+
+- **DB `018_visual_generation.sql`**: colonne `visual_job_id, visual_status, visual_template_id, visual_kind, visual_url, visual_image_urls(jsonb), visual_error, visual_synced_at` su `calendario`.
+- **`lib/blotato-visual.ts`**: REST `POST {BACKEND}/v2/videos/from-templates` + `GET /v2/videos/creations/:id` (header `blotato-api-key`). `BACKEND` = `BLOTATO_BACKEND_URL` o default `https://backend.blotato.com`. `planVisual(row)` sceglie template:
+  - reel/video/story/short → slideshow video (`5903b592…`), kind `video` → `mediaUrl`
+  - carousel → carosello IG (`53cfec04…`), kind `carousel` → `imageUrls[]`
+  - post con foto prodotto → product scene placement (`f524614b…`, passa `productImage`), kind `image`
+  - post senza foto → 1 immagine lifestyle generata
+- **`/api/generate/visual`** (POST `{cliente_id,id_contenuto}`): avvia job, salva `visual_job_id`+`generating`.
+- **`/api/generate/visual/status`** (GET `?id_contenuto=`): polling; a `done` salva URL e riempie gli **slot `link_media_*` liberi** (no overwrite delle foto utente) → pronto per pubblicazione Blotato.
+- **UI** `/dashboard/calendario`: card "Grafica AI" nel dettaglio — genera/rigenera, preview immagini/video, polling auto ogni 15s (max 5 min).
+- **Env**: richiede `BLOTATO_API_KEY` (già in render.yaml). `BLOTATO_BACKEND_URL` opzionale.
+
 *Fine handoff. Non reintrodurre Supabase o n8n. Mantieni la demo mode funzionante.*
