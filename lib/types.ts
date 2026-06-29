@@ -139,6 +139,15 @@ export interface Contenuto {
   blotato_status: string | null
   blotato_post_url: string | null
   blotato_sync_at: string | null
+  // Generazione grafica AI (Blotato visual)
+  visual_job_id?: string | null
+  visual_status?: string | null
+  visual_template_id?: string | null
+  visual_kind?: string | null
+  visual_url?: string | null
+  visual_image_urls?: unknown | null
+  visual_error?: string | null
+  visual_synced_at?: string | null
   created_at: string
   updated_at: string
 }

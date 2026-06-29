@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Wand2, Film } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
@@ -57,6 +57,8 @@ function CalendarioInner() {
   const [deleteTarget, setDeleteTarget] = useState<Contenuto | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
+  const [visualState, setVisualState] = useState<Record<string, 'idle' | 'generating' | 'done' | 'error'>>({})
+  const [visualMsg, setVisualMsg] = useState<Record<string, string>>({})
   const demo = useRuntimeDemo()
 
   const clienteId = readClienteId()
@@ -91,6 +93,60 @@ function CalendarioInner() {
   }, [filterStatus, filterCanale, demo, demoData, clienteId])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  async function refreshSelected(idContenuto: string) {
+    if (!clienteId) return
+    try {
+      const r = await fetch(`/api/data/calendario?cliente_id=${encodeURIComponent(clienteId)}`)
+      if (!r.ok) return
+      const all = await r.json() as Contenuto[]
+      const found = all.find(c => c.id_contenuto === idContenuto)
+      if (found) setSelected(found)
+    } catch { /* noop */ }
+  }
+
+  // Genera la GRAFICA AI (immagine/carosello/video) per il contenuto, via Blotato.
+  // Asincrono: avvia il job e fa polling finché è pronta, poi aggiorna i media.
+  async function generaVisual(c: Contenuto) {
+    const id = c.id_contenuto
+    setVisualMsg(m => ({ ...m, [id]: '' }))
+    setVisualState(s => ({ ...s, [id]: 'generating' }))
+    try {
+      const res = await fetch('/api/generate/visual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente_id: clienteId, id_contenuto: id }),
+      })
+      if (!res.ok) throw new Error(await readApiError(res, 'Avvio generazione grafica fallito'))
+
+      const deadline = Date.now() + 5 * 60 * 1000
+      while (Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, 15000))
+        const params = new URLSearchParams({ id_contenuto: id })
+        if (clienteId) params.set('cliente_id', clienteId)
+        const sres = await fetch(`/api/generate/visual/status?${params.toString()}`)
+        if (!sres.ok) continue
+        const data = await sres.json() as { status?: string; error?: string }
+        if (data.status === 'done') {
+          setVisualState(s => ({ ...s, [id]: 'done' }))
+          setVisualMsg(m => ({ ...m, [id]: 'Grafica generata e aggiunta ai media del contenuto.' }))
+          await fetchData()
+          await refreshSelected(id)
+          return
+        }
+        if (data.status === 'failed') {
+          setVisualState(s => ({ ...s, [id]: 'error' }))
+          setVisualMsg(m => ({ ...m, [id]: data.error || 'Generazione grafica fallita' }))
+          return
+        }
+      }
+      setVisualState(s => ({ ...s, [id]: 'error' }))
+      setVisualMsg(m => ({ ...m, [id]: 'Timeout: la grafica ci mette troppo. Riprova tra poco.' }))
+    } catch (e) {
+      setVisualState(s => ({ ...s, [id]: 'error' }))
+      setVisualMsg(m => ({ ...m, [id]: (e as Error).message }))
+    }
+  }
 
   async function approva(c: Contenuto, user: string = 'admin') {
     setSaving(c.id)
@@ -793,6 +849,60 @@ function CalendarioInner() {
                   )}
                 </div>
               )}
+
+              {/* Grafica AI (Blotato visual) */}
+              {(() => {
+                const id = selected.id_contenuto
+                const vstate = visualState[id] ?? (selected.visual_status === 'done' ? 'done' : 'idle')
+                const generating = vstate === 'generating'
+                const imgs = Array.isArray(selected.visual_image_urls) ? (selected.visual_image_urls as string[]) : []
+                const video = typeof selected.visual_url === 'string' ? selected.visual_url : ''
+                return (
+                  <div className="rounded-xl border border-fuchsia-100 bg-gradient-to-br from-fuchsia-50/70 to-violet-50/70 p-4">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Wand2 className="w-4 h-4 text-fuchsia-600" />
+                        <p className="text-sm font-bold text-fuchsia-900">Grafica AI</p>
+                      </div>
+                      <span className="text-[10px] text-fuchsia-600 uppercase font-bold">
+                        {selected.formato === 'carousel' ? 'carosello' : ['reel','video','story','short'].includes(String(selected.formato)) ? 'video' : 'immagine'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-fuchsia-700/80 mb-3">
+                      L&apos;AI crea la grafica dal contenuto: foto prodotto in scena lifestyle, carosello o slideshow video. Viene aggiunta ai media del post.
+                    </p>
+
+                    {(imgs.length > 0 || video) && (
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {video && (
+                          <div className="col-span-3 rounded-lg overflow-hidden border border-fuchsia-100 bg-black/5">
+                            <video src={video} controls className="w-full max-h-64 object-contain">
+                              <track kind="captions" />
+                            </video>
+                          </div>
+                        )}
+                        {imgs.slice(0, 6).map((u, i) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={i} src={u} alt={`Grafica AI ${i + 1}`} className="w-full aspect-square object-cover rounded-lg border border-fuchsia-100" />
+                        ))}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => generaVisual(selected)}
+                      disabled={generating}
+                      className="btn-secondary w-full justify-center text-xs py-2 border-fuchsia-200 text-fuchsia-700 hover:bg-fuchsia-50"
+                    >
+                      {generating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : (video || imgs.length ? <RefreshCw className="w-3.5 h-3.5" /> : <Film className="w-3.5 h-3.5" />)}
+                      {generating ? 'Generando la grafica… (può richiedere 1-3 min)' : (video || imgs.length ? 'Rigenera grafica' : 'Genera grafica AI')}
+                    </button>
+
+                    {visualMsg[id] && (
+                      <p className={`text-xs mt-2 ${vstate === 'error' ? 'text-red-600' : 'text-fuchsia-700'}`}>{visualMsg[id]}</p>
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* Errore */}
               {selected.errore_tecnico && (
