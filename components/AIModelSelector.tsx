@@ -262,7 +262,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
 
   return (
     <div className="card p-4 md:p-5 mb-6 bg-gradient-to-br from-white to-gray-50 border-gray-100 overflow-visible">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
             selected.provider === 'anthropic' ? 'bg-gradient-to-br from-violet-500 to-purple-600'
@@ -301,7 +301,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           </div>
         </div>
 
-        <div className="flex items-stretch sm:items-center gap-2 flex-shrink-0 flex-col sm:flex-row sm:flex-wrap w-full md:w-auto">
+        <div className="flex items-stretch sm:items-center gap-2 flex-shrink-0 flex-col sm:flex-row sm:flex-wrap w-full lg:w-auto">
           {!savedKey ? (
             <button onClick={() => setShowKeyInput(s => !s)} className="btn-secondary text-xs py-2 px-3 justify-center">
               <Key className="w-3.5 h-3.5" />
