@@ -36,6 +36,15 @@ const TASK_RECOMMENDED: Record<Task, string> = {
   'blog-articolo':    'claude-sonnet-4-6',     // articoli lunghi, contesto 200K → cloud
 }
 
+// Default per ambiente CLOUD (Render/Vercel, niente Ollama locale): solo modelli cloud.
+// Evita che il deploy in produzione defaulti a un modello locale che non può girare.
+const TASK_RECOMMENDED_CLOUD: Record<Task, string> = {
+  'contenuti-social': 'meta-llama/llama-3.3-70b-instruct:free',
+  'piano-editoriale': 'meta-llama/llama-3.3-70b-instruct:free',
+  'seo-audit':        'claude-sonnet-4-6',
+  'blog-articolo':    'claude-sonnet-4-6',
+}
+
 // "Perché" mostrato in UI: spiega all'utente la logica della raccomandazione per task.
 const TASK_WHY: Record<Task, string> = {
   'contenuti-social': 'Post brevi e ad alto volume: meglio veloce, gratis e privato in locale (AIM).',
@@ -110,12 +119,15 @@ export default function AIModelSelector({ task }: { task?: Task }) {
   const [savedOpcKey, setSavedOpcKey] = useState('')
   const [search, setSearch] = useState('')
   const [ollama, setOllama] = useState<{ running: boolean; models: string[] } | null>(null)
+  const [localEnv, setLocalEnv] = useState<boolean | null>(null)
   const [startingOllama, setStartingOllama] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    setSelectedId(localStorage.getItem('ai_model') || (task ? TASK_RECOMMENDED[task] : 'meta-llama/llama-3.3-70b-instruct:free'))
+    // Default cloud-safe iniziale; il default locale-first si applica solo se siamo in locale
+    // (gestito dall'effetto su localEnv più sotto), così il deploy cloud non parte rotto.
+    setSelectedId(localStorage.getItem('ai_model') || 'meta-llama/llama-3.3-70b-instruct:free')
     const key = localStorage.getItem('openrouter_key') || ''
     setSavedKey(key)
     setOrKey(key)
@@ -139,17 +151,35 @@ export default function AIModelSelector({ task }: { task?: Task }) {
 
   const selected = MODELS.find(m => m.id === selectedId) ?? MODELS[0]
 
-  // Health-check Ollama quando è selezionato un modello locale: evita il default
-  // locale che fallisce in silenzio se "ollama serve" è spento o il modello non è scaricato.
+  // Probe al mount: rileva se siamo in ambiente LOCALE (Ollama disponibile) o CLOUD,
+  // e lo stato di Ollama. Su cloud i modelli locali non possono girare.
   useEffect(() => {
-    if (selected.provider !== 'ollama') { setOllama(null); return }
     let cancelled = false
     fetch('/api/system/local/ollama')
       .then(r => r.json())
-      .then(d => { if (!cancelled) setOllama({ running: !!d.running, models: d.models || [] }) })
-      .catch(() => { if (!cancelled) setOllama({ running: false, models: [] }) })
+      .then(d => {
+        if (cancelled) return
+        setOllama({ running: !!d.running, models: d.models || [] })
+        setLocalEnv(d.localEnv === true)
+      })
+      .catch(() => { if (!cancelled) { setOllama({ running: false, models: [] }); setLocalEnv(false) } })
     return () => { cancelled = true }
-  }, [selected.provider, selectedId])
+  }, [])
+
+  // Riconciliazione default in base all'ambiente, una volta noto localEnv.
+  useEffect(() => {
+    if (localEnv === null || typeof window === 'undefined') return
+    const stored = localStorage.getItem('ai_model')
+    if (stored) {
+      // Rispetta la scelta utente, MA un modello locale su cloud non funziona → fallback cloud.
+      if (!localEnv && stored.startsWith('ollama/')) {
+        setSelectedId(task ? TASK_RECOMMENDED_CLOUD[task] : 'meta-llama/llama-3.3-70b-instruct:free')
+      }
+      return
+    }
+    // Nessuna preferenza salvata: consigliato per ambiente (locale-first in locale, cloud su cloud).
+    if (task) setSelectedId(localEnv ? TASK_RECOMMENDED[task] : TASK_RECOMMENDED_CLOUD[task])
+  }, [localEnv, task])
 
   async function startOllama() {
     setStartingOllama(true)
@@ -164,8 +194,10 @@ export default function AIModelSelector({ task }: { task?: Task }) {
 
   // Nome modello senza prefisso 'ollama/' per confronto con i tag installati.
   const ollamaTag = selected.provider === 'ollama' ? selected.id.replace(/^ollama\//, '') : ''
-  const ollamaOff = selected.provider === 'ollama' && ollama !== null && !ollama.running
-  const ollamaModelMissing = selected.provider === 'ollama' && ollama?.running === true && !ollama.models.includes(ollamaTag)
+  // Avvisi solo pertinenti all'ambiente: "Ollama spento" SOLO in locale; "richiede locale" su cloud.
+  const ollamaOnCloud = selected.provider === 'ollama' && localEnv === false
+  const ollamaOff = selected.provider === 'ollama' && localEnv === true && ollama !== null && !ollama.running
+  const ollamaModelMissing = selected.provider === 'ollama' && localEnv === true && ollama?.running === true && !ollama.models.includes(ollamaTag)
 
   function selectModel(id: string) {
     setSelectedId(id)
@@ -208,7 +240,8 @@ export default function AIModelSelector({ task }: { task?: Task }) {
   const filtered = MODELS.filter(m =>
     !search || m.name.toLowerCase().includes(search.toLowerCase()) || m.id.toLowerCase().includes(search.toLowerCase())
   )
-  const ollamaModels = filtered.filter(m => m.provider === 'ollama')
+  // Su cloud (localEnv false) nascondi i modelli locali: non possono girare lì.
+  const ollamaModels = localEnv === false ? [] : filtered.filter(m => m.provider === 'ollama')
   const anthropicModels = filtered.filter(m => m.provider === 'anthropic')
   const geminiModels = filtered.filter(m => m.provider === 'gemini')
   const opencodeModels = filtered.filter(m => m.provider === 'opencode')
@@ -218,7 +251,9 @@ export default function AIModelSelector({ task }: { task?: Task }) {
   const needsGemKey = selected.provider === 'gemini' && !savedGemKey
   const needsOpcKey = selected.provider === 'opencode' && !savedOpcKey
 
-  const recommendedId = task ? TASK_RECOMMENDED[task] : null
+  const recommendedId = task
+    ? (localEnv === false ? TASK_RECOMMENDED_CLOUD[task] : TASK_RECOMMENDED[task])
+    : null
   const isOnRecommended = recommendedId === selectedId
 
   const taskModels = task
@@ -452,6 +487,13 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           </div>
         </div>
       </div>
+
+      {ollamaOnCloud && (
+        <div className="mt-3 flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-amber-900">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span>Questo è un modello <strong>locale (AIM)</strong>: gira solo sulla tua installazione sul Mac, non su questo server cloud. Scegli un modello cloud qui sopra.</span>
+        </div>
+      )}
 
       {ollamaOff && (
         <div className="mt-3 flex items-start gap-2 text-xs bg-red-50 border border-red-200 rounded-lg p-2.5 text-red-900">
