@@ -873,7 +873,7 @@ function CalendarioInner() {
                     </p>
 
                     {(imgs.length > 0 || video) && (
-                      <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                         {video && (
                           <div className="col-span-3 rounded-lg overflow-hidden border border-fuchsia-100 bg-black/5">
                             <video src={video} controls className="w-full max-h-64 object-contain">

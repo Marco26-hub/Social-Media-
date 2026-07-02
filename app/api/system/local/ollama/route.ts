@@ -25,10 +25,10 @@ async function probe(timeoutMs = 1500): Promise<{ running: boolean; models: stri
   }
 }
 
-// GET — stato Ollama locale
+// GET — stato Ollama locale + se siamo in ambiente locale (per UI env-aware)
 export async function GET() {
   const status = await probe()
-  return NextResponse.json({ ...status, baseUrl: BASE })
+  return NextResponse.json({ ...status, baseUrl: BASE, localEnv: isLocalEnv() })
 }
 
 // POST — avvia "ollama serve" in background (solo ambiente locale)

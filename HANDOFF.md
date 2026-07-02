@@ -60,6 +60,30 @@ Tutto su `main`, tree pulito, `tsc`+`eslint` verdi.
 
 ---
 
+## 🆕 Sessione 2026-07-02 (Claude Code) — visual AI Blotato + AI selector + storage dual-mode
+
+### Commit principali
+| Commit | Cosa |
+|--------|------|
+| `467e1df` | **Generazione grafica AI via Blotato** — reel/video/carousel/immagine prodotto (vedi sezione dedicata sotto) |
+| `a862c56` | HANDOFF visual AI |
+| `46c2985` | AIM locale (Ollama) + canali X/Threads + Centro di Controllo AI |
+| `9a17b02` | fix: badge "Consigliato" usa `TASK_RECOMMENDED_CLOUD` su cloud (non Ollama) |
+
+### Storage dual-mode (verificato, nessuna modifica necessaria)
+`app/api/assets/upload/route.ts` già funziona:
+- **locale**: scrive su `public/uploads/` → URL `/api/assets/file/…`
+- **cloud (Render)**: carica su Cloudflare R2 → URL pubblico permanente `https://pub-xxx.r2.dev/…`
+Decide automaticamente con `isR2Configured()`. Mancano solo le 5 env su Render.
+
+### AI Selector — 5 provider completi
+`components/AIModelSelector.tsx`: Ollama locale / Anthropic / Gemini / OpenRouter free+paid / OpenCode. Key salvataggio/rimozione, env-aware (Ollama nascosto su cloud), badge Consigliato corretto per ambiente. `readAISettings()` passa tutte e 3 le key BYO ai route generate.
+
+### Migration count attuale: 18 file (001–018, escluso 003)
+Latest: `018_visual_generation.sql` (colonne visual_* su calendario).
+
+---
+
 ## 🆕 Sessione 2026-06-29 (Claude Code) — generazione PRO + Analytics + Insights IG automatiche
 
 ### Generazione professionale (bibbia condivisa)
@@ -471,7 +495,12 @@ Audit/fix P0 completato il 26/06/2026:
 - [x] **insertCalendario fallback osservabile**: ritorna bool, logga colonna mancante, aggiunge `schema_fallback`+`warning` nella risposta API quando migration mancante.
 - [x] **Smoke test robusto**: accetta 307 (Next.js auth redirect) e 401 (auth required) come risposte valide in produzione — ora 30/30 su Render live.
 - [x] **Health migration senza falso allarme**: `/api/system/health` verifica `latestRequiredMigration=015_generation_optimization_cycle.sql` e `latestMigrationApplied=true`; `migrationCount=14` è normale perché non esiste una migration `003`.
-- [ ] **🔜 Pagina Consumi Token** (PROSSIMA SESSIONE): token disponibili + consumati per generazione e per agenti. Piano dettagliato nella sezione "🔜 PROSSIMA SESSIONE" in cima al doc.
+- [x] **Generazione grafica AI via Blotato**: reel/video/carousel/immagine lifestyle prodotto. `lib/blotato-visual.ts` + `/api/generate/visual` + `/api/generate/visual/status` + UI in calendario.
+- [x] **Storage dual-mode**: locale (disco) vs cloud (Cloudflare R2) automatico. Codice pronto, **mancano 5 env R2 su Render**.
+- [x] **AI Selector completo**: 5 provider (Ollama/Anthropic/Gemini/OpenRouter/OpenCode), badge Consigliato env-aware.
+- [ ] **🔜 Reel + Caroselli SILKinCOM con Claude Design** (PROSSIMA SESSIONE): visual HTML/CSS animati generati da AI, preview iframe, export. Brand SILKinCOM: donna 25-45, luxury accessibile, prodotti Blazer €129 / Jeans €89 / T-shirt bio €39.
+- [ ] **🔴 Env R2 su Render**: `R2_ACCOUNT_ID/ACCESS_KEY_ID/SECRET_ACCESS_KEY/BUCKET/PUBLIC_URL` → immagini permanenti.
+- [ ] **Pagina Consumi Token**: token disponibili + consumati per generazione e agenti.
 - [ ] **🔴 Object storage immagini** (Cloudflare R2/S3): blocco go-live, upload attualmente effimero su Render.
 - [ ] **Agenti v2 su Neon + cron**: riscrivere i 4 agenti rimossi (weekly-seo, weekly-competitor, weekly-client-report, daily-ads-optimizer) su stack reale `lib/db.ts`+`callAI`, route `/api/agents/<nome>` protette da secret, scheduler cron Render.
 - [ ] **Fix env Render**: `NEXTAUTH_URL`/`NEXT_PUBLIC_SITE_URL` su dominio reale, `ANTHROPIC_API_KEY`, `BLOTATO_API_KEY`, `dry_run=FALSE`.
@@ -654,23 +683,15 @@ Chiude il gap vs Predis/Ocoya: l'AI scrive il testo **e** genera la grafica.
 
 ---
 
-## Prossima sessione pianificata: Reel + Caroselli SILKinCOM con Claude Design
+## Prossima sessione: Reel + Caroselli SILKinCOM con Claude Design
 
-**Goal**: creare visual reali (reel 9:16 + caroselli 4:5) per SILKinCOM usando Claude Design (artifact HTML/SVG animati) come alternativa a Blotato per chi non ha BLOTATO_API_KEY o vuole controllo totale.
+Task: creare visual animati (reel 9:16 + caroselli 4:5 + post 1:1) per SILKinCOM via Claude Design (artifact HTML/CSS). NON ancora costruito — da fare nella prossima sessione.
 
-**Brand SILKinCOM**:
-- Settore: Fashion e-commerce, luxury accessibile
-- Target: donna 25-45 professionista
+**Brand SILKinCOM** (già in DB seed):
+- Fashion e-commerce · luxury accessibile · donna 25-45 professionista
 - Tono: moderno, elegante, accessibile
-- Colori: non definiti (da stabilire in sessione — proposta: bianco/nero/oro/sabbia)
-- Prodotti seed: Blazer lino (€129), Jeans dritti (€89), T-shirt cotone bio (€39 promo)
-- CTA base: "Scopri il look completo su silkincom.com"
-- Hashtag: #silkincom #modaaccessibile
-
-**Approccio tecnico**:
-- Claude Design → artifact HTML/CSS animato → export come immagine/video
-- Route `/api/generate/visual-design` → AI genera codice del visual (HTML+CSS+font) → salvato come `visual_html` in calendario
-- Preview nel browser con iframe → bottone screenshot/export
-- Formati: reel (9:16, 1080x1920), carosello (4:5, 1080x1350), post quadrato (1:1)
+- Prodotti: Blazer lino €129 / Jeans dritti €89 / T-shirt cotone bio €39 (promo)
+- CTA: "Scopri il look completo su silkincom.com" · Hashtag: #silkincom #modaaccessibile
+- Colori: da definire in sessione (proposta: bianco/nero/oro/sabbia)
 
 *Fine handoff. Non reintrodurre Supabase o n8n. Mantieni la demo mode funzionante.*
