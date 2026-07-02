@@ -5,6 +5,13 @@ import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
 import { demoProdotti } from '@/lib/demo-data'
 
+const PRODOTTO_UPDATE_COLUMNS = new Set([
+  'nome_prodotto', 'categoria', 'collezione', 'prezzo', 'prezzo_promo',
+  'link_prodotto', 'link_img_1', 'link_img_2', 'link_img_3',
+  'colori', 'taglie', 'mood', 'target', 'priorita',
+  'prodotto_attivo', 'stock_status', 'stock_quantity', 'note',
+])
+
 export async function GET() {
   try {
     await requireAuth()
@@ -31,6 +38,35 @@ export async function POST(request: Request) {
       [cid, pid, nome_prodotto, categoria || null, parseFloat(prezzo) || null, link_prodotto || null, link_img_1 || null, note || null],
     )
     return NextResponse.json({ ok: true, id: (rows[0] as { id: string }).id, product_id: pid })
+  } catch (e) {
+    return apiError(e)
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    await requireAuth()
+    const body = await request.json() as Record<string, unknown>
+    const id = String(body.id || '')
+    if (!id) return NextResponse.json({ error: 'id richiesto' }, { status: 400 })
+    if (isDemo() || !dbReady()) return NextResponse.json({ ok: true, demo: true })
+    const cid = await requireClienteId()
+
+    const fields: string[] = []
+    const params: unknown[] = []
+    for (const [key, val] of Object.entries(body)) {
+      if (!PRODOTTO_UPDATE_COLUMNS.has(key)) continue
+      params.push(val === '' ? null : val)
+      fields.push(`${key} = $${params.length}`)
+    }
+    if (!fields.length) return NextResponse.json({ error: 'niente da aggiornare' }, { status: 400 })
+
+    params.push(id, cid)
+    await q(
+      `UPDATE prodotti SET ${fields.join(', ')}, updated_at = now() WHERE id = $${params.length - 1} AND cliente_id = $${params.length}`,
+      params,
+    )
+    return NextResponse.json({ ok: true })
   } catch (e) {
     return apiError(e)
   }

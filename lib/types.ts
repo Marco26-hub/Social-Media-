@@ -183,6 +183,7 @@ export interface Brand {
   id: string
   cliente_id: string
   brand_name: string
+  social_handle: string | null
   settore: string | null
   sito_url: string | null
   tono_voce: string | null

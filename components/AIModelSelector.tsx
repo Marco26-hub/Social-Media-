@@ -276,7 +276,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Modello AI</p>
-              {selected.badge && (
+              {selected.badge && !(selected.badge === 'Consigliato' && isOnRecommended) && (
                 <span className="text-[10px] px-1.5 py-0.5 bg-brand-100 text-brand-700 rounded-full font-medium">{selected.badge}</span>
               )}
               {selected.tier === 'free' && (
@@ -301,14 +301,14 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           </div>
         </div>
 
-        <div className="flex items-stretch sm:items-center gap-2 flex-shrink-0 flex-col sm:flex-row md:flex-nowrap w-full md:w-auto">
+        <div className="flex items-stretch sm:items-center gap-2 flex-shrink-0 flex-col sm:flex-row sm:flex-wrap w-full md:w-auto">
           {!savedKey ? (
             <button onClick={() => setShowKeyInput(s => !s)} className="btn-secondary text-xs py-2 px-3 justify-center">
               <Key className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">OpenRouter</span>
             </button>
           ) : (
-            <button onClick={() => setShowKeyInput(s => !s)} title="Cambia o rimuovi key OpenRouter" className="text-xs text-green-700 bg-green-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-green-100">
+            <button onClick={() => setShowKeyInput(s => !s)} title="Cambia o rimuovi key OpenRouter" className="text-xs text-green-700 bg-green-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-green-100 whitespace-nowrap">
               <Check className="w-3 h-3" /> OpenRouter <span className="text-green-500">· modifica</span>
             </button>
           )}
@@ -319,7 +319,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
               <span className="hidden sm:inline">Gemini</span>
             </button>
           ) : (
-            <button onClick={() => setShowGemInput(s => !s)} title="Cambia o rimuovi key Gemini" className="text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-blue-100">
+            <button onClick={() => setShowGemInput(s => !s)} title="Cambia o rimuovi key Gemini" className="text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-blue-100 whitespace-nowrap">
               <Check className="w-3 h-3" /> Gemini <span className="text-blue-400">· modifica</span>
             </button>
           )}
@@ -330,7 +330,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
               <span className="hidden sm:inline">OpenCode</span>
             </button>
           ) : (
-            <button onClick={() => setShowOpcInput(s => !s)} title="Cambia o rimuovi key OpenCode" className="text-xs text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-orange-100">
+            <button onClick={() => setShowOpcInput(s => !s)} title="Cambia o rimuovi key OpenCode" className="text-xs text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-orange-100 whitespace-nowrap">
               <Check className="w-3 h-3" /> OpenCode <span className="text-orange-400">· modifica</span>
             </button>
           )}

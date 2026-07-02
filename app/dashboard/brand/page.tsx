@@ -10,6 +10,7 @@ import {
   Search, TrendingUp
 } from 'lucide-react'
 import { readAISettings, readApiError } from '@/lib/ai-client'
+import { deriveHandleSlug } from '@/lib/social-handle'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import { useActiveClienteId } from '@/lib/tenant/client'
 import SeoScoreGrid from '@/components/SeoScoreGrid'
@@ -376,6 +377,20 @@ export default function BrandPage() {
               {SETTORI.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
+        </div>
+
+        {/* Handle social */}
+        <div className="card p-4">
+          <label className="label"><Globe className="w-3.5 h-3.5 text-gray-400 inline mr-1" /> Handle social (opzionale)</label>
+          <input
+            value={brand?.social_handle || ''}
+            onChange={e => update('social_handle', e.target.value)}
+            placeholder={`Auto: ${deriveHandleSlug(brand?.brand_name || 'brand')}`}
+            className="input mt-1"
+          />
+          <p className="text-[10px] text-gray-400 mt-1">
+            Mostrato nelle preview (IG/FB/TikTok/…). Vuoto = derivato automaticamente dal Nome Brand.
+          </p>
         </div>
 
         {/* Tono + Promessa */}

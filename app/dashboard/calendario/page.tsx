@@ -59,9 +59,14 @@ function CalendarioInner() {
   const [adminError, setAdminError] = useState<string | null>(null)
   const [visualState, setVisualState] = useState<Record<string, 'idle' | 'generating' | 'done' | 'error'>>({})
   const [visualMsg, setVisualMsg] = useState<Record<string, string>>({})
+  const [brand, setBrand] = useState<{ brand_name?: string | null; social_handle?: string | null } | null>(null)
   const demo = useRuntimeDemo()
 
   const clienteId = readClienteId()
+
+  useEffect(() => {
+    fetch('/api/data/brand').then(r => r.ok ? r.json() : null).then(setBrand).catch(() => setBrand(null))
+  }, [clienteId])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -542,6 +547,8 @@ function CalendarioInner() {
                       try { localStorage.setItem(`preview_${c.id_contenuto}`, JSON.stringify({
                         hook: c.hook, caption: c.caption, hashtag: c.hashtag, cta: c.cta,
                         link_media_1: c.link_media_1, nome_prodotto: c.nome_prodotto,
+                        link_prodotto_finale: c.link_prodotto_finale || c.link_prodotto,
+                        brand_name: brand?.brand_name, social_handle: brand?.social_handle,
                       })) } catch {}
                     }}
                     className="btn-secondary py-1.5 px-2 md:px-3 justify-center inline-flex items-center gap-1.5"
@@ -626,7 +633,7 @@ function CalendarioInner() {
               {/* Anteprima visuale post */}
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 -mx-6 -mt-6 px-6 py-6 border-b">
                 <p className="label mb-3">Anteprima {selected.canale}</p>
-                <PostPreview c={selected} />
+                <PostPreview c={selected} brand={brand} />
               </div>
 
               {/* Contenuto */}

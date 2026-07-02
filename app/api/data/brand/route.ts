@@ -8,6 +8,7 @@ const DEMO_BRAND = {
   id: 'demo-brand',
   cliente_id: 'demo-silkincom',
   brand_name: 'SILKinCOM',
+  social_handle: null,
   sito_url: 'https://silkincom.com',
   settore: 'Fashion/Abbigliamento',
   tono_voce: 'elegante',
@@ -28,6 +29,7 @@ const DEMO_BRAND = {
 
 const BRAND_UPDATE_COLUMNS = new Set([
   'brand_name',
+  'social_handle',
   'settore',
   'sito_url',
   'tono_voce',
@@ -70,13 +72,14 @@ export async function PATCH(request: Request) {
 
     if (!existing.length) {
       await q(
-        `INSERT INTO brand (cliente_id, brand_name, settore, sito_url, tono_voce, target, promessa_brand,
+        `INSERT INTO brand (cliente_id, brand_name, social_handle, settore, sito_url, tono_voce, target, promessa_brand,
           colori_brand, parole_da_usare, parole_da_evitare, emoji_policy, hashtag_base, cta_base, note_legali,
           disclaimer_text, gdpr_note, privacy_note, cookie_policy)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
         [
           cid,
           body.brand_name || '',
+          body.social_handle || null,
           body.settore || null,
           body.sito_url || null,
           body.tono_voce || null,

@@ -1,16 +1,18 @@
 'use client'
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play } from 'lucide-react'
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, Link2 } from 'lucide-react'
 import type { Contenuto } from '@/lib/types'
+import { resolveHandle } from '@/lib/social-handle'
 
-const CANALE_HANDLE: Record<string, string> = {
-  instagram: '@brand_official',
-  facebook: 'Brand Official',
-  tiktok: '@brand_official',
-  pinterest: 'Brand Official',
-  youtube_shorts: 'Brand Official',
-  linkedin: 'Brand Official',
-  threads: '@brand_official',
-  x: '@brand_official',
+type BrandHandleInfo = { brand_name?: string | null; social_handle?: string | null; sito_url?: string | null } | null
+
+// Testo sticker link stile IG: dominio nudo maiuscolo ("https://silkincom.com/x" -> "SILKINCOM.COM")
+function domainLabel(url: string): string {
+  try {
+    const host = new URL(url.includes('://') ? url : `https://${url}`).hostname
+    return host.replace(/^www\./, '').toUpperCase()
+  } catch {
+    return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '').toUpperCase()
+  }
 }
 
 const CANALE_ICON: Record<string, string> = {
@@ -39,10 +41,11 @@ const ASPECT: Record<string, string> = {
   'x-video':             'aspect-video',        // 16:9
 }
 
-export default function PostPreview({ c }: { c: Contenuto }) {
+export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandHandleInfo }) {
   const key = `${c.canale}-${c.formato}`
   const aspect = ASPECT[key] ?? 'aspect-square'
-  const handle = CANALE_HANDLE[c.canale] ?? 'Brand'
+  const handle = resolveHandle(c.canale, brand)
+  const linkUrl = c.link_prodotto_finale || c.link_prodotto || brand?.sito_url || ''
 
   // Layout Instagram Story — verticale con progress bar + stickers
   if (c.formato === 'story') {
@@ -77,9 +80,16 @@ export default function PostPreview({ c }: { c: Contenuto }) {
               </div>
             </div>
           )}
-          {/* CTA bottom + arrow swipe up */}
-          {c.cta && (
-            <div className="absolute bottom-6 left-0 right-0 text-center">
+          {/* Sticker link cliccabile (nativo IG, nessuna soglia follower dal 2023) */}
+          {linkUrl ? (
+            <div className="absolute bottom-16 left-0 right-0 flex justify-center">
+              <div className="inline-flex items-center gap-1.5 bg-white text-black text-xs font-bold px-4 py-2 rounded-full shadow-lg">
+                <Link2 className="w-3.5 h-3.5" />
+                {domainLabel(linkUrl)}
+              </div>
+            </div>
+          ) : c.cta && (
+            <div className="absolute bottom-16 left-0 right-0 text-center">
               <div className="inline-flex flex-col items-center text-white">
                 <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center animate-bounce">
                   <span className="text-xs">↑</span>

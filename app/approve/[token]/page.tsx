@@ -109,6 +109,8 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
     link_media_1: c.link_media_1 || null,
     link_media_2: c.link_media_2 || null,
     link_media_3: c.link_media_3 || null,
+    link_prodotto: c.link_prodotto || null,
+    link_prodotto_finale: c.link_prodotto_finale || null,
     nome_prodotto: c.nome_prodotto || '',
     tema: c.tema || '',
     status: 'DA_APPROVARE',
@@ -149,7 +151,7 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
             </div>
           </div>
 
-          <PostPreview c={contenuto} />
+          <PostPreview c={contenuto} brand={{ brand_name: c.cliente_nome, social_handle: c.social_handle, sito_url: c.sito_url }} />
 
           <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
             {c.hook && <div><p className="text-[10px] uppercase text-gray-400 font-semibold">Hook</p><p className="text-sm font-medium text-gray-900">{c.hook}</p></div>}

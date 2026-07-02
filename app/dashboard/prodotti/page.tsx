@@ -1,9 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Prodotto } from '@/lib/types'
 import { demoProdotti } from '@/lib/demo-data'
 import { isDemo } from '@/lib/demo'
+import { readClienteId } from '@/lib/use-data'
+import { Camera, Loader2 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +19,9 @@ export default function ProdottiPage() {
   const demo = isDemo()
   const [prodotti, setProdotti] = useState<Prodotto[] | null>(null)
   const [loading, setLoading] = useState(true)
+  const [uploadingId, setUploadingId] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const load = useCallback(async () => {
     if (demo) {
@@ -32,26 +37,76 @@ export default function ProdottiPage() {
 
   useEffect(() => { load() }, [load])
 
+  async function handleImagePick(prodottoId: string, file: File | undefined) {
+    if (!file || demo) return
+    setUploadError(null)
+    setUploadingId(prodottoId)
+    try {
+      const clienteId = readClienteId()
+      const form = new FormData()
+      form.append('cliente_id', clienteId || '')
+      form.append('files', file)
+      const upRes = await fetch('/api/assets/upload', { method: 'POST', body: form })
+      const upData = await upRes.json()
+      if (!upRes.ok || !upData.assets?.[0]?.url) throw new Error(upData.error || 'Upload fallito')
+
+      const patchRes = await fetch('/api/data/prodotti', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: prodottoId, link_img_1: upData.assets[0].url }),
+      })
+      if (!patchRes.ok) throw new Error('Salvataggio immagine fallito')
+      await load()
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'Errore upload immagine')
+    } finally {
+      setUploadingId(null)
+    }
+  }
+
   return (
     <div className="p-4 md:p-8">
       <div className="mb-4 md:mb-6">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Prodotti</h1>
         <p className="text-xs md:text-sm text-gray-500 mt-0.5">{prodotti?.length ?? 0} prodotti nel catalogo</p>
+        {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
       </div>
 
-      {loading && <div className="card p-4 text-sm text-gray-400">Caricamento prodotti...</div>}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+        {loading && <div className="card p-4 text-sm text-gray-400">Caricamento prodotti...</div>}
         {(prodotti ?? []).map((p: Prodotto) => (
           <div key={p.id} className="card p-4">
             <div className="flex gap-3">
-              <div className="w-14 h-14 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => fileInputs.current[p.id]?.click()}
+                disabled={demo || uploadingId === p.id}
+                title="Carica immagine da questo computer"
+                className="relative w-14 h-14 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden group disabled:cursor-not-allowed"
+              >
                 {p.link_img_1 ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.link_img_1} alt={p.nome_prodotto} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-xl">👕</div>
                 )}
-              </div>
+                {!demo && (
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                    {uploadingId === p.id ? (
+                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                    ) : (
+                      <Camera className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </div>
+                )}
+                <input
+                  ref={el => { fileInputs.current[p.id] = el }}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                  className="hidden"
+                  onChange={e => handleImagePick(p.id, e.target.files?.[0])}
+                />
+              </button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-sm text-gray-900 truncate">{p.nome_prodotto}</p>
@@ -81,7 +136,7 @@ export default function ProdottiPage() {
         ))}
       </div>
 
-      {(!prodotti || prodotti.length === 0) && (
+      {!loading && (!prodotti || prodotti.length === 0) && (
         <div className="card p-12 text-center text-gray-400">
           <p className="text-lg">Nessun prodotto</p>
           <p className="text-sm mt-1">Importa i prodotti dalla migrazione CSV</p>

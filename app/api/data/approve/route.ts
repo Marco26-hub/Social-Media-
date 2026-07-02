@@ -19,11 +19,14 @@ export async function GET(request: Request) {
     const rows = await q(
       `SELECT ct.*, c.canale, c.formato, c.hook, c.caption, c.hashtag, c.cta,
               c.link_media_1, c.link_media_2, c.link_media_3,
+              c.link_prodotto, c.link_prodotto_finale,
               c.data_pubblicazione, c.ora_pubblicazione, c.nome_prodotto, c.tema,
-              cl.nome as cliente_nome, cl.slug as cliente_slug
+              cl.nome as cliente_nome, cl.slug as cliente_slug,
+              b.social_handle, b.sito_url
        FROM approval_tokens ct
        JOIN calendario c ON c.id_contenuto = ct.contenuto_id AND c.cliente_id = ct.cliente_id::uuid
        JOIN clienti cl ON cl.id = ct.cliente_id::uuid
+       LEFT JOIN brand b ON b.cliente_id = ct.cliente_id::uuid
        WHERE ct.token = $1 AND ct.expires_at > now() AND ct.status = 'pending'`,
       [token],
     )

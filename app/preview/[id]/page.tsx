@@ -36,6 +36,9 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
   const [cta, setCta] = useState(DEMO_DATA.cta)
   const [mediaUrl, setMediaUrl] = useState(DEMO_DATA.link_media_1)
   const [excluded, setExcluded] = useState<Set<string>>(new Set())
+  const [brandName, setBrandName] = useState(DEMO_DATA.cliente_nome)
+  const [socialHandle, setSocialHandle] = useState('')
+  const [linkProdotto, setLinkProdotto] = useState('')
 
   useEffect(() => {
     params.then(p => setId(p.id))
@@ -53,6 +56,9 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         if (d.hashtag) setHashtag(d.hashtag)
         if (d.cta) setCta(d.cta)
         if (d.link_media_1) setMediaUrl(d.link_media_1)
+        if (d.brand_name) setBrandName(d.brand_name)
+        if (d.social_handle) setSocialHandle(d.social_handle)
+        if (d.link_prodotto_finale) setLinkProdotto(d.link_prodotto_finale)
       }
       const exRaw = localStorage.getItem(`preview_${id}_excluded`)
       if (exRaw) setExcluded(new Set(JSON.parse(exRaw)))
@@ -81,7 +87,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     link_media_4: null, link_media_5: null, link_media_6: null, link_media_7: null,
     nome_prodotto: DEMO_DATA.nome_prodotto, tema: DEMO_DATA.tema,
     obiettivo: null, product_id: null,
-    link_prodotto: null, link_prodotto_finale: null,
+    link_prodotto: null, link_prodotto_finale: linkProdotto || null,
     status: 'DA_APPROVARE', media_type: 'image', retry_count: 0,
     approvato_da: null, data_approvazione: null,
     blotato_post_id: null, blotato_scheduled_at: null,
@@ -123,6 +129,10 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
             <div>
               <label className="text-[10px] text-gray-400">CTA</label>
               <input value={cta} onChange={e => setCta(e.target.value)} className="input text-xs mt-0.5" />
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-400">Handle social (opzionale, sovrascrive default)</label>
+              <input value={socialHandle} onChange={e => setSocialHandle(e.target.value)} placeholder={`derivato da "${brandName}"`} className="input text-xs mt-0.5" />
             </div>
             <div className="md:col-span-2">
               <label className="text-[10px] text-gray-400">Caption</label>
@@ -218,7 +228,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
                     </span>
                   </label>
                 </div>
-                <PostPreview c={c} />
+                <PostPreview c={c} brand={{ brand_name: brandName, social_handle: socialHandle || null }} />
                 {isExcluded && (
                   <div className="absolute inset-0 bg-red-50/30 rounded-xl pointer-events-none flex items-center justify-center">
                     <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">

@@ -98,7 +98,22 @@ async function insertCalendario(columns: string[], values: unknown[], retryColum
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, gemini_key, opencode_key, periodo, quality, quality_level, post_quality, qualita } = await request.json()
+    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, gemini_key, opencode_key, periodo, quality, quality_level, post_quality, qualita, media_urls } = await request.json()
+    const mediaPool: string[] = Array.isArray(media_urls) ? media_urls.filter((u): u is string => typeof u === 'string' && u.length > 0) : []
+    let mediaCursor = 0
+    let mediaRecycled = false
+    // Consuma in sequenza dal pool caricato: carousel prende 5 slide, gli altri formati 1 immagine. Se il pool finisce, ricomincia dall'inizio (segnalato in risposta).
+    function nextMediaSlots(formato: string): (string | null)[] {
+      if (!mediaPool.length) return [null, null, null, null, null]
+      const count = formato === 'carousel' ? 5 : 1
+      const picked: string[] = []
+      for (let i = 0; i < count; i++) {
+        if (mediaCursor >= mediaPool.length) { mediaCursor = 0; mediaRecycled = true }
+        picked.push(mediaPool[mediaCursor])
+        mediaCursor++
+      }
+      return [...picked, ...Array(5 - picked.length).fill(null)]
+    }
     if (!piattaforme?.length) {
       return NextResponse.json({ error: 'piattaforme richieste' }, { status: 400 })
     }
@@ -165,10 +180,12 @@ ${buildExtendedOutputSchema()}
     for (const item of items) {
       const id_contenuto = `C${Date.now().toString(36).toUpperCase()}_${inseriti.length}`
       const itemQuality = normalizeContentQuality(item.quality_level) ?? contentQuality
+      const [media1, media2, media3, media4, media5] = nextMediaSlots(String(item.formato || 'post'))
       const insertColumns = [
         'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
         'canale', 'formato', 'obiettivo', 'product_id', 'nome_prodotto',
         'tema', 'hook', 'caption', 'hashtag', 'cta', 'status',
+        'link_media_1', 'link_media_2', 'link_media_3', 'link_media_4', 'link_media_5',
         'scenes_json', 'slides_json', 'overlay_text', 'alt_text', 'tags',
         'idea_visual', 'voiceover_script', 'music_mood',
         'quality_level', 'audience_segment', 'funnel_stage', 'angle', 'primary_message',
@@ -195,6 +212,7 @@ ${buildExtendedOutputSchema()}
         item.hashtag || null,
         item.cta || null,
         'BOZZA',
+        media1, media2, media3, media4, media5,
         jsonbParam(pickJson(item, ['scenes', 'scene', 'frames'])),
         jsonbParam(pickJson(item, ['slides', 'immagini'])),
         pickText(item, ['overlay_text', 'overlay_testo']) || null,
@@ -235,6 +253,7 @@ ${buildExtendedOutputSchema()}
         'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
         'canale', 'formato', 'obiettivo', 'product_id', 'nome_prodotto',
         'tema', 'hook', 'caption', 'hashtag', 'cta', 'status',
+        'link_media_1', 'link_media_2', 'link_media_3', 'link_media_4', 'link_media_5',
         'scenes_json', 'slides_json', 'overlay_text', 'alt_text', 'tags',
         'idea_visual', 'voiceover_script', 'music_mood',
       ])
@@ -247,6 +266,8 @@ ${buildExtendedOutputSchema()}
       count: inseriti.length,
       quality_level: contentQuality,
       quality_downgraded: isQualityDowngraded(requestedQuality, contentQuality),
+      images_provided: mediaPool.length,
+      images_recycled: mediaRecycled,
       ...(schemaFallbackUsed && { schema_fallback: true, warning: 'Eseguire npm run migrate per abilitare campi qualità e ottimizzazione' }),
     })
   } catch (e) {
