@@ -67,12 +67,26 @@ function CalendarioInner() {
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
   const [comfyState, setComfyState] = useState<'idle' | 'generating' | 'done' | 'error'>('idle')
   const [comfyMsg, setComfyMsg] = useState<string | null>(null)
+  const [dryRun, setDryRun] = useState<boolean | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const demo = useRuntimeDemo()
 
   const clienteId = readClienteId()
 
   useEffect(() => {
     fetch('/api/data/brand').then(r => r.ok ? r.json() : null).then(setBrand).catch(() => setBrand(null))
+  }, [clienteId])
+
+  // Modalità pubblicazione del cliente (dry_run): REAL = pubblica, DEMO = prova.
+  useEffect(() => {
+    fetch('/api/data/settings')
+      .then(r => r.ok ? r.json() : [])
+      .then((rows: Array<{ chiave?: string; valore?: string }>) => {
+        const dr = Array.isArray(rows) ? rows.find(s => s.chiave === 'dry_run') : null
+        setDryRun(dr ? dr.valore?.toUpperCase() === 'TRUE' : null)
+      })
+      .catch(() => setDryRun(null))
   }, [clienteId])
 
   // Cambio filtro/cliente → azzera la selezione multipla (gli id mostrati cambiano).
@@ -251,6 +265,29 @@ function CalendarioInner() {
     } catch (e) {
       setComfyState('error')
       setComfyMsg((e as Error).message)
+    }
+  }
+
+  // Sincronizza su Blotato i contenuti APPROVATI non ancora inviati (pubblicazione).
+  async function syncBlotato() {
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      const res = await fetch('/api/data/blotato-sync', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.hint || data.error || 'Sincronizzazione fallita')
+      const failNote = data.failed ? ` (${data.failed} falliti)` : ''
+      setSyncMsg({
+        type: data.failed ? 'err' : 'ok',
+        text: data.candidates === 0
+          ? 'Nessun contenuto approvato da sincronizzare.'
+          : `${data.synced} contenuti inviati a Blotato${failNote}.`,
+      })
+      await fetchData()
+    } catch (e) {
+      setSyncMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -515,10 +552,24 @@ function CalendarioInner() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Calendario</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Calendario</h1>
+            {dryRun !== null && (
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${dryRun ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}
+                title={dryRun ? 'Modalità prova: i post approvati NON vengono pubblicati' : 'Live: i post approvati vengono pubblicati sui social'}
+              >
+                {dryRun ? 'DEMO' : 'REAL'}
+              </span>
+            )}
+          </div>
           <p className="text-xs md:text-sm text-gray-500 mt-0.5">{contenuti.length} contenuti</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={syncBlotato} disabled={syncing} className="btn-secondary py-1.5 px-3" title="Invia i contenuti APPROVATI a Blotato per la pubblicazione">
+            {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+            <span className="hidden md:inline">{syncing ? 'Sincronizzo...' : 'Sincronizza Blotato'}</span>
+          </button>
           <button onClick={downloadBackup} disabled={backuping} className="btn-secondary py-1.5 px-3">
             {backuping ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             <span className="hidden md:inline">Backup</span>
@@ -529,6 +580,25 @@ function CalendarioInner() {
           </button>
         </div>
       </div>
+
+      {syncMsg && (
+        <div className={`mb-4 rounded-xl border p-3 text-sm flex items-start gap-2 ${syncMsg.type === 'ok' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
+          {syncMsg.type === 'ok' ? <CheckCircle className="w-4 h-4 mt-0.5" /> : <AlertTriangle className="w-4 h-4 mt-0.5" />}
+          {syncMsg.text}
+        </div>
+      )}
+
+      {/* Banner modalità DEMO: chiarisce che le approvazioni non pubblicano davvero */}
+      {dryRun === true && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <span>
+            Modalità <strong>DEMO</strong> attiva: approvando un contenuto <strong>non</strong> viene pubblicato sui social (solo prova).
+            Per pubblicare davvero, spegni <span className="font-mono">Modalità pubblicazione</span> in{' '}
+            <Link href="/dashboard/settings" className="underline font-medium">Impostazioni</Link> (→ REAL).
+          </span>
+        </div>
+      )}
 
       {(scoreError || adminError) && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">

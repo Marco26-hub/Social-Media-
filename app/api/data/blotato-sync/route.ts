@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireClienteId } from '@/lib/auth-utils'
 import { q } from '@/lib/db'
 import { scheduleOnBlotato } from '@/lib/publish/schedule'
+import { getBlotatoKey } from '@/lib/blotato-key'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,11 +16,13 @@ export async function POST() {
     return NextResponse.json({ error: (e as Error).message || 'Non autorizzato' }, { status: 401 })
   }
 
-  if (!process.env.BLOTATO_API_KEY) {
+  // Key per-cliente (settings del cliente) o env globale dell'agenzia.
+  const blotatoKey = await getBlotatoKey(clienteId)
+  if (!blotatoKey) {
     return NextResponse.json(
       {
-        error: 'BLOTATO_API_KEY non configurata',
-        hint: 'Inserisci la tua API key Blotato in .env.local per abilitare la pubblicazione automatica.',
+        error: 'API key Blotato non configurata per questo cliente',
+        hint: 'Inserisci la API key Blotato del cliente in Impostazioni, oppure la key globale in env.',
         synced: 0,
       },
       { status: 400 },
