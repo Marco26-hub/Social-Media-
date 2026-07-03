@@ -152,9 +152,9 @@ export function getQualityLabel(quality: ContentQuality): string {
 }
 
 export function getQualityTokenBudget(quality: ContentQuality): number {
-  if (quality === 'high') return 6500
-  if (quality === 'medium') return 5200
-  return 4000
+  if (quality === 'high') return 16000
+  if (quality === 'medium') return 12000
+  return 8000
 }
 
 export function buildQualityContext(args: {

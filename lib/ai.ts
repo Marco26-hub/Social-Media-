@@ -554,7 +554,8 @@ async function callGemini(
   const body: Record<string, unknown> = {
     contents: [{ role: 'user', parts: userParts }],
     // maxOutputTokens generoso: con schema JSON ricchi 4000 può troncare (MAX_TOKENS → vuoto).
-    generationConfig: { maxOutputTokens: Math.min(Math.max(maxTokens, 2048), 8192), temperature: 0.8 },
+    // Cap 16384: gemini-2.5-flash supporta 65K output, gemini-2.0-flash usa il suo max 8192.
+    generationConfig: { maxOutputTokens: Math.min(Math.max(maxTokens, 2048), 16384), temperature: 0.8 },
     // Marketing/moda può far scattare filtri safety troppo aggressivi → blocco silenzioso.
     safetySettings: GEMINI_SAFETY,
   }

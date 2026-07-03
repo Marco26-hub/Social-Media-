@@ -176,6 +176,24 @@ ${buildExtendedOutputSchema()}
           images: mediaPool.slice(i * IMAGES_PER_CHUNK, (i + 1) * IMAGES_PER_CHUNK),
         })
       }
+    } else if (contentQuality === 'high') {
+      // High quality: schema esteso con scenes/slides/A/B = output molto grande
+      // per item. 7-10 item in un solo chunk truncano anche a 16000 token.
+      // Split in 2 mezze settimane (4-5 item ciascuna) per restare nei limiti.
+      chunks.push({
+        start: fmtDate(today),
+        end: fmtDate(addDays(today, 3)),
+        label: 'Prima metà piano settimanale (giorni 1-4)',
+        targetMin: 4, targetMax: 5,
+        images: mediaPool.slice(0, 4),
+      })
+      chunks.push({
+        start: fmtDate(addDays(today, 4)),
+        end: fmtDate(addDays(today, 6)),
+        label: 'Seconda metà piano settimanale (giorni 5-7)',
+        targetMin: 3, targetMax: 5,
+        images: mediaPool.slice(4, 8),
+      })
     } else {
       chunks.push({
         start: fmtDate(today),
@@ -218,7 +236,11 @@ Output SOLO JSON array valido:
           // VISION: solo le foto di QUESTO blocco, stesso ordine con cui
           // nextChunkMediaSlots() le assegnerà ai contenuti generati qui.
           images: chunk.images,
-          maxTokens: contentQuality === 'high' ? 8000 : contentQuality === 'medium' ? 6000 : 4000,
+          // Token budget per chunk in base alla qualità:
+          // soft=8000 (campi base, ~600 token/item), medium=12000 (campi estesi,
+          // ~1000 token/item), high=16000 (scenes/slides/A-B, ~1500 token/item).
+          // Prima era 4000/6000/8000 e il JSON si troncava a metà → malformed.
+          maxTokens: contentQuality === 'high' ? 16000 : contentQuality === 'medium' ? 12000 : 8000,
           timeoutMs: 90000,
         })
         const items = extractJSONArray(aiRes) as Record<string, unknown>[]
