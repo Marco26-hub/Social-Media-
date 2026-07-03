@@ -32,8 +32,8 @@ const TASK_LABELS: Record<Task, string> = {
 const TASK_RECOMMENDED: Record<Task, string> = {
   'contenuti-social': 'ollama/gemma3:4b',     // post brevi e tanti → veloce, gratis, privato (locale)
   'piano-editoriale': 'ollama/gemma4:e4b',    // miglior italiano locale, output strutturato medio
-  'seo-audit':        'claude-sonnet-4-6',     // analisi tecnica SEO/GEO → serve qualità cloud
-  'blog-articolo':    'claude-sonnet-4-6',     // articoli lunghi, contesto 200K → cloud
+  'seo-audit':        'claude-sonnet-5',     // analisi tecnica SEO/GEO → serve qualità cloud
+  'blog-articolo':    'claude-sonnet-5',     // articoli lunghi, contesto 200K → cloud
 }
 
 // Default per ambiente CLOUD (Render/Vercel, niente Ollama locale): solo modelli cloud.
@@ -41,8 +41,8 @@ const TASK_RECOMMENDED: Record<Task, string> = {
 const TASK_RECOMMENDED_CLOUD: Record<Task, string> = {
   'contenuti-social': 'meta-llama/llama-3.3-70b-instruct:free',
   'piano-editoriale': 'meta-llama/llama-3.3-70b-instruct:free',
-  'seo-audit':        'claude-sonnet-4-6',
-  'blog-articolo':    'claude-sonnet-4-6',
+  'seo-audit':        'claude-sonnet-5',
+  'blog-articolo':    'claude-sonnet-5',
 }
 
 // "Perché" mostrato in UI: spiega all'utente la logica della raccomandazione per task.
@@ -60,10 +60,10 @@ const MODELS: Model[] = [
   { id: 'ollama/gemma4:e4b',          name: 'Gemma 4 (locale)',      provider: 'ollama', tier: 'local', context: '128K', speed: 'medium', quality: 'top',  badge: '★ Locale · gratis', recommendedFor: ['piano-editoriale', 'contenuti-social'] },
   { id: 'ollama/gemma3:4b',           name: 'Gemma 3 4B (locale)',   provider: 'ollama', tier: 'local', context: '128K', speed: 'fast',   quality: 'high', badge: 'Locale · veloce',   recommendedFor: ['contenuti-social'] },
 
-  // Anthropic Premium
-  { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic', tier: 'default', context: '200K', speed: 'fast',   quality: 'top',  badge: 'Default',        recommendedFor: ['seo-audit', 'blog-articolo', 'piano-editoriale'] },
-  { id: 'claude-opus-4-7',   name: 'Claude Opus 4.7',   provider: 'anthropic', tier: 'default', context: '200K', speed: 'medium', quality: 'top',  badge: 'Premium',        recommendedFor: ['blog-articolo', 'seo-audit'] },
-  { id: 'claude-haiku-4-5',  name: 'Claude Haiku 4.5',  provider: 'anthropic', tier: 'default', context: '200K', speed: 'fast',   quality: 'high', badge: 'Veloce',         recommendedFor: ['contenuti-social'] },
+  // Anthropic Premium — model ID reali dell'API Anthropic (a pagamento)
+  { id: 'claude-sonnet-5',            name: 'Claude Sonnet 5', provider: 'anthropic', tier: 'default', context: '200K', speed: 'fast',   quality: 'top',  badge: 'Default',  recommendedFor: ['seo-audit', 'blog-articolo', 'piano-editoriale'] },
+  { id: 'claude-opus-4-8',            name: 'Claude Opus 4.8', provider: 'anthropic', tier: 'default', context: '200K', speed: 'medium', quality: 'top',  badge: 'Premium',  recommendedFor: ['blog-articolo', 'seo-audit'] },
+  { id: 'claude-haiku-4-5-20251001',  name: 'Claude Haiku 4.5', provider: 'anthropic', tier: 'default', context: '200K', speed: 'fast',   quality: 'high', badge: 'Veloce',   recommendedFor: ['contenuti-social'] },
 
   // OpenRouter Free
   { id: 'nvidia/nemotron-3-super-120b-a12b:free',  name: 'NVIDIA Nemotron 3 Super 120B', provider: 'openrouter', tier: 'free', context: '128K', speed: 'fast',   quality: 'top',  badge: 'Marketing',      recommendedFor: ['contenuti-social'] },

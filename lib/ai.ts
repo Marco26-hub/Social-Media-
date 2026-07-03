@@ -22,7 +22,7 @@ const FALLBACK_MODELS = [
   'openai/gpt-oss-120b:free',
   'qwen/qwen3-next-80b-a3b-instruct:free',
   'google/gemma-4-31b-it:free',
-  'claude-sonnet-4-6',
+  'claude-sonnet-5',
 ]
 
 // Quanti fallback OpenRouter provare al massimo prima di arrendersi.
@@ -374,10 +374,10 @@ export async function callAI(params: {
     }
   }
 
-  // Try 2: Anthropic direct
+  // Try 2: Anthropic direct (Claude vede le immagini → vision ok anche qui)
   if (anthropicKey && isAnthropicModel(model)) {
     try {
-      const res = await callAnthropic(model, systemPrompt, userPrompt, anthropicKey, maxTokens)
+      const res = await callAnthropic(model, systemPrompt, userPrompt, anthropicKey, maxTokens, 30000, images)
       if (!res.trim()) throw new Error('Risposta AI vuota')
       recordAttempt(attempts, { provider: 'anthropic', model, ok: true })
       return res
@@ -387,12 +387,12 @@ export async function callAI(params: {
   } else if (anthropicKey && silentFallback) {
     // Try with Claude fallback on Anthropic
     try {
-      const res = await callAnthropic('claude-sonnet-4-6', systemPrompt, userPrompt, anthropicKey, maxTokens)
+      const res = await callAnthropic('claude-sonnet-5', systemPrompt, userPrompt, anthropicKey, maxTokens, 30000, images)
       if (!res.trim()) throw new Error('Risposta AI vuota')
-      recordAttempt(attempts, { provider: 'anthropic', model: 'claude-sonnet-4-6', ok: true })
+      recordAttempt(attempts, { provider: 'anthropic', model: 'claude-sonnet-5', ok: true })
       return res
     } catch (fallbackError) {
-      recordAttempt(attempts, { provider: 'anthropic', model: 'claude-sonnet-4-6', ok: false, error: sanitizeAIError(fallbackError) })
+      recordAttempt(attempts, { provider: 'anthropic', model: 'claude-sonnet-5', ok: false, error: sanitizeAIError(fallbackError) })
     }
   }
 
@@ -466,13 +466,24 @@ async function callAnthropic(
   key: string,
   maxTokens: number,
   timeout = 30000,
+  images: string[] = [],
 ): Promise<string> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
 
-  const messages: { role: string; content: string }[] = [
-    { role: 'user', content: userPrompt },
-  ]
+  // Vision: Claude accetta blocchi image (base64). Riusa fetchImageInline (già usato
+  // per Gemini) e mappa nel formato Anthropic {type:'image', source:{type:'base64',...}}.
+  const imageParts = images.length
+    ? (await Promise.all(images.slice(0, 4).map(fetchImageInline))).filter(Boolean)
+    : []
+  const userContent: unknown = imageParts.length
+    ? [
+        { type: 'text', text: userPrompt },
+        ...imageParts.map(p => ({ type: 'image', source: { type: 'base64', media_type: p!.inline_data.mime_type, data: p!.inline_data.data } })),
+      ]
+    : userPrompt
+
+  const messages = [{ role: 'user', content: userContent }]
   const body: Record<string, unknown> = { model, max_tokens: maxTokens, messages }
   if (systemPrompt) body.system = systemPrompt
 
