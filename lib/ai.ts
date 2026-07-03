@@ -30,6 +30,20 @@ const FALLBACK_MODELS = [
 // consumano tempo. Cap basso per restare sotto il timeout gateway (evita 502).
 const MAX_OPENROUTER_FALLBACKS = 2
 
+// Modelli OpenRouter che VEDONO le immagini (vision). I modelli testo danno 404
+// "No endpoints found that support image input" se ricevono un'immagine → quando
+// l'utente carica una foto usiamo SOLO questi (a pagamento su OpenRouter).
+const OPENROUTER_VISION_FALLBACKS = [
+  'google/gemini-2.5-flash',
+  'openai/gpt-4o-mini',
+]
+
+// Riconosce un modello capace di vision (per non mandargli immagini a vuoto).
+// Gemini nativo e Ollama-vl li gestiamo a parte; qui i pattern OpenRouter/Anthropic.
+function isVisionModel(model: string): boolean {
+  return /gemini|gpt-4o|gpt-4-vision|claude-3|claude-sonnet|claude-opus|-vl\b|llava|vision|pixtral|llama-3\.2-\d+b-vision/i.test(model)
+}
+
 type AIAttempt = {
   provider: 'openrouter' | 'anthropic' | 'gemini' | 'opencode' | 'ollama'
   model: string
@@ -300,18 +314,23 @@ export async function callAI(params: {
   // richiesto + fallback; se TUTTO è rate-limited, attende il Retry-After e
   // ritenta una volta (le code free upstream si liberano in ~20-30s). Questo
   // converte i 429 "retry shortly" in successi senza alcuna API key a pagamento.
+  const needsVision = images.length > 0
   if (orKey) {
-    const orModels: string[] = []
+    let orModels: string[] = []
     if (canUseRequestedOnOpenRouter) orModels.push(model)
     if (silentFallback) {
+      const pool = needsVision ? OPENROUTER_VISION_FALLBACKS : FALLBACK_MODELS
       let n = 0
-      for (const fb of FALLBACK_MODELS) {
+      for (const fb of pool) {
         if (fb === model || isAnthropicModel(fb)) continue
         if (n >= MAX_OPENROUTER_FALLBACKS) break
         n++
         orModels.push(fb)
       }
     }
+    // Con un'immagine caricata: SOLO modelli vision. I text-only danno 404 su image
+    // input → inutile bruciare tentativi. Se il modello scelto è testo, lo saltiamo.
+    if (needsVision) orModels = orModels.filter(isVisionModel)
 
     // Ondata 1
     for (const m of orModels) {
@@ -377,7 +396,20 @@ export async function callAI(params: {
     }
   }
 
-  // Give up
+  // Give up. Se il fallimento è perché serviva la vision (immagine caricata) ma
+  // nessun modello vision era disponibile, dai un messaggio azionabile invece del
+  // dump tecnico "No endpoints found that support image input".
+  if (needsVision) {
+    const noVisionProvider = !isVisionModel(model) && !(validGemini || (isGeminiModel(model) && geminiKey))
+    if (noVisionProvider || attempts.some(a => /image input|vision|support image/i.test(a.error || ''))) {
+      throw new Error(
+        'Hai caricato un\'immagine, ma il modello selezionato non la "vede" (serve un modello vision). ' +
+        'Opzioni: 1) incolla una key Gemini gratis (inizia con "AIza", da aistudio.google.com/apikey) nel pannello AI — Gemini legge le immagini; ' +
+        '2) scegli un modello vision a pagamento (es. Gemini 2.5 Flash) con credito OpenRouter; ' +
+        '3) genera senza immagine (rimuovila) per avere solo il testo.',
+      )
+    }
+  }
   throw new Error(buildFailureMessage(attempts))
 }
 
