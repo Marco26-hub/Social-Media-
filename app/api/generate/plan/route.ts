@@ -234,7 +234,10 @@ Output SOLO JSON array valido:
 
         try {
           const aiRes = await callAI({
-            model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+            // Default piano = Gemini 2.5 Flash (65K output, 1M contesto): il piano — specie
+            // il mensile — produce JSON grandi che i modelli con 8K output troncano. Se manca
+            // la key Gemini, la cascade ripiega comunque su OpenRouter free.
+            model: model || 'gemini-2.5-flash',
             systemPrompt,
             userPrompt,
             openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,

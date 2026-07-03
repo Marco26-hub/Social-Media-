@@ -31,26 +31,26 @@ const TASK_LABELS: Record<Task, string> = {
 // cloud Claude per i task analitici pesanti (audit/blog lungo) dove un 4B locale è debole.
 const TASK_RECOMMENDED: Record<Task, string> = {
   'contenuti-social': 'ollama/gemma3:4b',     // post brevi e tanti → veloce, gratis, privato (locale)
-  'piano-editoriale': 'ollama/gemma4:e4b',    // miglior italiano locale, output strutturato medio
-  'seo-audit':        'claude-sonnet-5',     // analisi tecnica SEO/GEO → serve qualità cloud
-  'blog-articolo':    'claude-sonnet-5',     // articoli lunghi, contesto 200K → cloud
+  'piano-editoriale': 'gemini-2.5-flash',     // mensile = output grande → 65K gratis, niente troncamento
+  'seo-audit':        'gemini-2.5-flash',     // analisi lunga: 1M contesto + output ampio, gratis
+  'blog-articolo':    'gemini-2.5-flash',     // articoli lunghi: 65K output, gratis
 }
 
 // Default per ambiente CLOUD (Render/Vercel, niente Ollama locale): solo modelli cloud.
 // Evita che il deploy in produzione defaulti a un modello locale che non può girare.
 const TASK_RECOMMENDED_CLOUD: Record<Task, string> = {
-  'contenuti-social': 'meta-llama/llama-3.3-70b-instruct:free',
-  'piano-editoriale': 'meta-llama/llama-3.3-70b-instruct:free',
-  'seo-audit':        'claude-sonnet-5',
-  'blog-articolo':    'claude-sonnet-5',
+  'contenuti-social': 'gemini-2.0-flash',      // post brevi: veloce, gratis, vede le foto
+  'piano-editoriale': 'gemini-2.5-flash',      // mensile = output grande → 65K, gratis, niente troncamento
+  'seo-audit':        'gemini-2.5-flash',      // analisi lunga: contesto 1M + output ampio, gratis
+  'blog-articolo':    'gemini-2.5-flash',      // articoli lunghi: 65K output, gratis (Claude solo se vuoi premium)
 }
 
 // "Perché" mostrato in UI: spiega all'utente la logica della raccomandazione per task.
 const TASK_WHY: Record<Task, string> = {
-  'contenuti-social': 'Post brevi e ad alto volume: meglio veloce, gratis e privato in locale (AIM).',
-  'piano-editoriale': 'Output strutturato in buon italiano: gestibile in locale a costo zero (AIM gemma4).',
-  'seo-audit':        'Analisi tecnica SEO/GEO: serve ragionamento affidabile → Claude cloud, locale come ripiego.',
-  'blog-articolo':    'Articoli lunghi e ben scritti: contesto ampio e qualità → Claude cloud.',
+  'contenuti-social': 'Post brevi e ad alto volume: veloce, gratis, e vede le foto (Gemini) o privato in locale (AIM).',
+  'piano-editoriale': 'Piano mensile = tanti contenuti in un JSON grande: Gemini 2.5 Flash ha 65K di output (gratis), niente troncamento.',
+  'seo-audit':        'Analisi lunga: Gemini 2.5 Flash, contesto 1M + output ampio, gratis.',
+  'blog-articolo':    'Articoli lunghi: Gemini 2.5 Flash 65K output, gratis. Claude solo se vuoi qualità premium a pagamento.',
 }
 
 const MODELS: Model[] = [
@@ -87,7 +87,11 @@ const MODELS: Model[] = [
   { id: 'deepseek/deepseek-chat',             name: 'DeepSeek Chat',        provider: 'openrouter', tier: 'paid', context: '131K', speed: 'medium', quality: 'top',  badge: 'Economico' },
 
   // Google Gemini (free tier, key gratuita su aistudio.google.com)
-  { id: 'gemini-2.0-flash',       name: 'Gemini 2.0 Flash',      provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high', badge: 'Google · Free', recommendedFor: ['contenuti-social', 'piano-editoriale', 'seo-audit', 'blog-articolo'] },
+  // 2.5 Flash: 1M contesto + 65K OUTPUT → ideale per piano mensile e contenuti lunghi
+  // (il 2.0-flash cappa l'output a 8192 e tronca i JSON grandi).
+  { id: 'gemini-2.5-flash',       name: 'Gemini 2.5 Flash',      provider: 'gemini', tier: 'free', context: '1M',   speed: 'medium', quality: 'top',  badge: 'Google · 65K output', recommendedFor: ['piano-editoriale', 'blog-articolo', 'seo-audit'] },
+  { id: 'gemini-2.5-flash-lite',  name: 'Gemini 2.5 Flash Lite', provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high', badge: 'Google · veloce+' },
+  { id: 'gemini-2.0-flash',       name: 'Gemini 2.0 Flash',      provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high', badge: 'Google · Free', recommendedFor: ['contenuti-social'] },
   { id: 'gemini-2.0-flash-lite',  name: 'Gemini 2.0 Flash Lite', provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'medium', badge: 'Google · Veloce' },
   { id: 'gemini-1.5-flash',       name: 'Gemini 1.5 Flash',      provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high', badge: 'Google' },
 
