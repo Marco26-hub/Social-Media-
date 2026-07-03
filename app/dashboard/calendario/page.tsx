@@ -65,6 +65,8 @@ function CalendarioInner() {
   const [visualMsg, setVisualMsg] = useState<Record<string, string>>({})
   const [brand, setBrand] = useState<{ brand_name?: string | null; social_handle?: string | null } | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
+  const [comfyState, setComfyState] = useState<'idle' | 'generating' | 'done' | 'error'>('idle')
+  const [comfyMsg, setComfyMsg] = useState<string | null>(null)
   const demo = useRuntimeDemo()
 
   const clienteId = readClienteId()
@@ -227,6 +229,29 @@ function CalendarioInner() {
       })
     }
     setSaving(null)
+  }
+
+  // Genera un'immagine AI con ComfyUI LOCALE (gratis, sul Mac). Solo in locale.
+  async function generaImmagineComfy(c: Contenuto) {
+    if (!clienteId) return
+    setComfyState('generating')
+    setComfyMsg('Generazione immagine con ComfyUI… (SDXL può richiedere 20-60s)')
+    try {
+      const res = await fetch('/api/generate/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente_id: clienteId, id_contenuto: c.id_contenuto }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Generazione immagine fallita')
+      setComfyState('done')
+      setComfyMsg('Immagine generata e aggiunta al contenuto.')
+      await refreshSelected(c.id_contenuto)
+      setContenuti(prev => prev.map(item => item.id === c.id ? { ...item, ...(data.slot ? { [data.slot]: data.url } : {}) } : item))
+    } catch (e) {
+      setComfyState('error')
+      setComfyMsg((e as Error).message)
+    }
   }
 
   async function downloadBackup() {
@@ -1031,6 +1056,28 @@ function CalendarioInner() {
                   )}
                 </div>
               )}
+
+              {/* Immagine AI locale (ComfyUI) — gratis, gira sul Mac. Solo in locale. */}
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <p className="text-sm font-bold text-emerald-900">Immagine AI locale (ComfyUI)</p>
+                </div>
+                <p className="text-xs text-emerald-700/80 mb-3">
+                  Genera un&apos;immagine dal contenuto con ComfyUI sul tuo Mac (gratis). Richiede ComfyUI avviato e l&apos;app in locale — non funziona sul sito.
+                </p>
+                <button
+                  onClick={() => generaImmagineComfy(selected)}
+                  disabled={comfyState === 'generating'}
+                  className="w-full text-xs font-semibold py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 flex items-center justify-center gap-1.5"
+                >
+                  {comfyState === 'generating' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  {comfyState === 'generating' ? 'Generazione in corso…' : 'Genera immagine (locale)'}
+                </button>
+                {comfyMsg && (
+                  <p className={`text-xs mt-2 ${comfyState === 'error' ? 'text-red-600' : 'text-emerald-700'}`}>{comfyMsg}</p>
+                )}
+              </div>
 
               {/* Immagini del post — ogni slot ha il suo campo carica/sostituisci/rimuovi */}
               {(() => {
