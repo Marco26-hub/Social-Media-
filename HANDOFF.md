@@ -537,7 +537,7 @@ Audit/fix P0 completato il 26/06/2026:
 - [x] **Handle social**: auto-derivato da brand_name + editabile (migration 019).
 - [x] **Blog SEO locale (AIM)**: `/dashboard/blog`, pipeline Ollama multi-step, export CMS, hardened (5 bug fixati: XSS JSON-LD, cross-tenant, cover URL, slug collision, dbReady).
 - [ ] **🔴 `BLOG_PUBLIC_CLIENTE_ID` su Render**: senza, `/blog` pubblico mostra articoli di TUTTI i clienti mischiati (nessun leak di dati privati, solo mix cross-tenant sul blog pubblico). Settare = cliente_id SILKinCOM per deploy mono-brand.
-- [ ] **Dati brand SILKinCOM ancora generici/stale**: `tono_voce`/`hashtag_base`/`target` nel DB non riflettono l'identità reale (Como/seta/heritage, ricercata da silkincom.com in sessione) — verificato che questo produce tono sbagliato e claim inventati nella generazione blog. L'utente ha bloccato l'aggiornamento prodotti (li gestisce lui manualmente con foto proprie) ma NON si è ancora espresso sui soli campi testo del brand — chiedere prima di scrivere.
+- [x] **Dati brand SILKinCOM aggiornati** (solo testo, no prodotti/immagini): `tono_voce` emozionale→elegante, `target`/`colori_brand`/`hashtag_base`/`cta_base` allineati all'identità reale (Como/seta/heritage/lusso autentico) ricercata da silkincom.com, `social_handle`='silkincom.official' esplicito. Update diretto su `brand` (nessuna migration, solo dati).
 - [ ] **🔜 Reel + Caroselli SILKinCOM con Claude Design**: visual HTML/CSS animati generati da AI, preview iframe, export. Ancora da fare.
 - [ ] **🔴 Env R2 su Render**: `R2_ACCOUNT_ID/ACCESS_KEY_ID/SECRET_ACCESS_KEY/BUCKET/PUBLIC_URL` → immagini permanenti (upload attualmente effimero su Render, blocco go-live).
 - [ ] **Pagina Consumi Token**: token disponibili + consumati per generazione e agenti.
