@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, use } from 'react'
-import { PLATFORMS, type PlatformKey, type FormatoConfig } from '@/lib/social-config'
+import { PLATFORMS, PLATFORM_LIST, type PlatformKey, type FormatoConfig } from '@/lib/social-config'
 import { demoContenuti } from '@/lib/demo-data'
 import { Sparkles, Loader2, Check, X, ArrowLeft, Calendar, Eye, ChevronRight, ImagePlus, Link2, Trash2, UploadCloud } from 'lucide-react'
 import Link from 'next/link'
@@ -44,6 +44,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [pending, setPending] = useState<FormatoConfig | null>(null)
   const [selectedFormats, setSelectedFormats] = useState<Set<string>>(new Set())
   const [pendingBatch, setPendingBatch] = useState(false)
+  const [crossCanali, setCrossCanali] = useState<Set<string>>(new Set())
   const [aiModel, setAiModel] = useState('meta-llama/llama-3.3-70b-instruct:free')
   const [quality, setQuality] = useState<QualitySelection>('auto')
   const [assets, setAssets] = useState<UploadedAsset[]>([])
@@ -160,7 +161,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     const endpoint = isBlog ? '/api/generate/blog' : '/api/generate/content'
     const body = isBlog
       ? { cliente_id: clienteId, tema: prodottoNome.trim() || (config.nome + ' - ' + f.nome), nome_prodotto: prodottoNome.trim() || undefined, quality, uploaded_assets: assets, media_urls: assets.map(asset => asset.url), ...aiSettings }
-      : { cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, tema: prodottoNome.trim() || undefined, nome_prodotto: prodottoNome.trim() || undefined, quality, uploaded_assets: assets, media_urls: assets.map(asset => asset.url), ...aiSettings }
+      : { cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, tema: prodottoNome.trim() || undefined, nome_prodotto: prodottoNome.trim() || undefined, quality, uploaded_assets: assets, media_urls: assets.map(asset => asset.url), also_canali: [...crossCanali], ...aiSettings }
 
     // Generazione nel provider globale: continua anche se cambi pagina, con barra di progresso.
     const result = await gen.run({
@@ -361,6 +362,33 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
           AI: {Object.values(errors)[0]}
         </div>
       )}
+
+      {/* Cross-post: pubblica lo stesso contenuto anche su altri social (opt-in) */}
+      <div className="card p-4 mb-6">
+        <p className="text-sm font-semibold text-gray-900 mb-1">Pubblica anche su (opzionale)</p>
+        <p className="text-xs text-gray-500 mb-3">Il contenuto viene creato per <span className="font-medium">{config.nome}</span>. Spunta altri social per creare lo stesso contenuto anche lì (uno per social, ognuno approvabile a parte).</p>
+        <div className="flex flex-wrap gap-2">
+          {PLATFORM_LIST.filter(p => p.key !== 'blog' && p.canaleDb !== config.canaleDb).map(p => {
+            const on = crossCanali.has(p.canaleDb)
+            return (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setCrossCanali(prev => { const n = new Set(prev); if (n.has(p.canaleDb)) n.delete(p.canaleDb); else n.add(p.canaleDb); return n })}
+                className={`text-xs px-3 py-1.5 rounded-full border-2 transition-colors inline-flex items-center gap-1.5 ${
+                  on ? 'border-brand-500 bg-brand-50 text-brand-800' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <span>{p.emoji}</span> {p.nome}
+                {on && <Check className="w-3 h-3" />}
+              </button>
+            )
+          })}
+        </div>
+        {crossCanali.size > 0 && (
+          <p className="text-[11px] text-brand-700 mt-2">Verrà pubblicato anche su {crossCanali.size} altr{crossCanali.size === 1 ? 'o social' : 'i social'}.</p>
+        )}
+      </div>
 
       {/* Format scegliere cosa creare */}
       <div className="mb-8">

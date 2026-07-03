@@ -476,10 +476,15 @@ function buildSystemPrompt(brand: Record<string, unknown> | null, quality: strin
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, canale, formato, model, openrouter_key, gemini_key, opencode_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls } = await request.json()
+    const { cliente_id, canale, formato, model, openrouter_key, gemini_key, opencode_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls, also_canali } = await request.json()
     if (!canale || !formato) {
       return NextResponse.json({ error: 'canale, formato richiesti' }, { status: 400 })
     }
+    // Cross-post opt-in: canali extra su cui pubblicare LO STESSO contenuto (scelti in dashboard).
+    const CANALI_VALIDI = new Set(['instagram','facebook','tiktok','pinterest','linkedin','threads','x','youtube_shorts'])
+    const alsoCanali: string[] = Array.isArray(also_canali)
+      ? [...new Set(also_canali.filter((c): c is string => typeof c === 'string' && CANALI_VALIDI.has(c) && c !== canale))]
+      : []
     const clientContext = await getClientGenerationContext(cliente_id)
     const effectiveClienteId = clientContext.clienteId
     if (!effectiveClienteId) return NextResponse.json({ error: 'Nessun cliente selezionato' }, { status: 400 })
@@ -637,7 +642,7 @@ export async function POST(request: Request) {
       jsonbParam(pickJson(parsed, ['content_checklist', 'checklist'])),
     ]
 
-    const schemaFallback = await insertCalendario(insertColumns, insertValues, [
+    const retryColumns = [
       'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
       'canale', 'formato', 'obiettivo', 'tema', 'product_id', 'nome_prodotto',
       'hook', 'caption', 'hashtag', 'cta', 'note', 'status', 'media_type',
@@ -645,7 +650,24 @@ export async function POST(request: Request) {
       'fonte_media', 'consenso_utilizzo',
       'scenes_json', 'slides_json', 'overlay_text', 'alt_text', 'tags', 'thumbnail_url',
       'idea_visual', 'voiceover_script', 'music_mood',
-    ])
+    ]
+    const schemaFallback = await insertCalendario(insertColumns, insertValues, retryColumns)
+
+    // Cross-post: stesso contenuto duplicato sui canali extra scelti (canale index 4).
+    const canaleIdx = insertColumns.indexOf('canale')
+    const idIdx = insertColumns.indexOf('id_contenuto')
+    const crossPosted: string[] = []
+    for (const altCanale of alsoCanali) {
+      const altValues = [...insertValues]
+      altValues[idIdx] = `${id_contenuto}-${altCanale}`
+      altValues[canaleIdx] = altCanale
+      try {
+        await insertCalendario(insertColumns, altValues, retryColumns)
+        crossPosted.push(altCanale)
+      } catch (e) {
+        console.warn(`[content cross-post] fallito su ${altCanale}:`, (e as Error).message.slice(0, 150))
+      }
+    }
 
     return NextResponse.json({
       ok: true,
@@ -653,6 +675,7 @@ export async function POST(request: Request) {
       tipo: 'calendario',
       quality_level: generatedQuality,
       quality_downgraded: isQualityDowngraded(requestedQuality, generatedQuality),
+      ...(crossPosted.length ? { cross_posted: crossPosted } : {}),
       ...(schemaFallback && { schema_fallback: true, warning: 'Eseguire npm run migrate per abilitare campi qualità e ottimizzazione' }),
     })
   } catch (e) {
