@@ -146,11 +146,11 @@ export async function POST(request: Request) {
 QUALITÀ OPERATIVA:
 ${summarizeQualityForPrompt(contentQuality)}
 
-Per ogni contenuto del piano NON limitarti a idea/caption: includi anche audience_segment, funnel_stage, angle, primary_message, proof_points, hook_variants, cta_variants, creative_brief, template_id, template_style, layout_spec, asset_requirements, production_notes, compliance_notes, risk_flags, platform_best_practices, ab_variants, kpi_target, expected_outcome, missing_inputs, content_checklist.
-Per Reel/Short/Video includi scenes con timing. Per Story includi frames o scenes. Per Carousel includi slides.
+${contentQuality === 'high' ? 'Per ogni contenuto includi TUTTI i campi dello schema: audience_segment, funnel_stage, angle, primary_message, proof_points, hook_variants, cta_variants, creative_brief, template_id, template_style, layout_spec, asset_requirements, scenes/slides, ab_variants, kpi_target, expected_outcome, optimization_cycle, compliance_notes, risk_flags, production_notes, missing_inputs, content_checklist.' : contentQuality === 'medium' ? 'Per ogni contenuto includi: audience_segment, funnel_stage, angle, primary_message, hook_variants, cta_variants, creative_brief, template_id, kpi_target, expected_outcome, production_notes, missing_inputs, content_checklist.' : 'Contenuto essenziale pronto da pubblicare: hook, caption, hashtag, cta, idea_visual, alt_text, tags.'}
+${contentQuality === 'high' ? 'Per Reel/Short/Video includi scenes con timing. Per Story includi frames o scenes. Per Carousel includi slides.' : ''}
 ${buildGenerationOptimizationCyclePrompt(contentQuality)}
-Schema operativo extra per ogni item:
-${buildExtendedOutputSchema()}
+Schema operativo per ogni item:
+${buildExtendedOutputSchema(contentQuality)}
 `
 
     // --- Chunking: 1 blocco per settimanale, 4 per mensile -------------------

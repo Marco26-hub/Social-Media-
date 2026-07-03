@@ -13,6 +13,7 @@ import {
   pickText,
   resolveContentQuality,
   isQualityDowngraded,
+  type ContentQuality,
 } from '@/lib/content-quality'
 import { getClientGenerationContext } from '@/lib/client-context'
 import { normalizeProductionCycleStage } from '@/lib/production-cycle'
@@ -115,7 +116,7 @@ async function insertCalendario(columns: string[], values: unknown[], retryColum
 // Standard professionali/anti-cliché/grammatica e angoli: ora condivisi in
 // lib/prompt-standards.ts (la "bibbia" usata anche da plan/blog/ads).
 
-function build(p: PromptSpec, brand: string, prodotto: string, canale: string, formato: string, tema: string, nomeProdotto: string, qualityContext: string, assetContext: string, angle: string) {
+function build(p: PromptSpec, brand: string, prodotto: string, canale: string, formato: string, tema: string, nomeProdotto: string, qualityContext: string, assetContext: string, angle: string, quality: ContentQuality) {
   return `${p.persona}
 
 ${PRO_COPY_STANDARDS}
@@ -151,7 +152,7 @@ Schema base storico:
 ${p.outputSchema}
 
 Schema operativo obbligatorio da includere o fondere nel JSON:
-${buildExtendedOutputSchema()}`
+${buildExtendedOutputSchema(quality)}`
 }
 
 const PROMPTS: Record<string, PromptSpec> = {
@@ -533,6 +534,7 @@ export async function POST(request: Request) {
       qualityContext,
       assetContext,
       pickAngle(),
+      contentQuality,
     )
 
     // Prepend brand context for richer generation

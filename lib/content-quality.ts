@@ -188,39 +188,73 @@ Regole anti-allucinazione:
 ${buildGenerationOptimizationCyclePrompt(args.quality)}`
 }
 
-export function buildExtendedOutputSchema(): string {
-  return `{
-  "quality_level": "soft|medium|high",
+// Schema operativo esteso, PROGRESSIVO per livello qualità:
+// - soft: campi base pronti da pubblicare (~400 token/item)
+// - medium: + strategia/varianti/KPI (~800 token/item)
+// - high: + scenes/slides/A-B/risk/compliance/optimization cycle (~1300 token/item)
+// Prima restituiva TUTTI i 35 campi per ogni livello → il modello generava
+// campi inutili per soft/medium che mangiavano token e truncavano il JSON.
+export function buildExtendedOutputSchema(quality: ContentQuality = 'medium'): string {
+  const base = `{
+  "quality_level": "${quality}",
+  "data_pubblicazione": "YYYY-MM-DD",
+  "ora_pubblicazione": "HH:MM",
+  "canale": "instagram|facebook|tiktok|...",
+  "formato": "post|carousel|reel|story|...",
+  "obiettivo": "vendita|awareness|community|...",
+  "product_id": "",
+  "nome_prodotto": "",
+  "tema": "tema del contenuto",
+  "hook": "hook principale",
+  "caption": "caption principale pronta da pubblicare",
+  "hashtag": "hashtag già formattati",
+  "cta": "CTA principale",
+  "idea_visual": "visual direction",
+  "alt_text": "alt text accessibile",
+  "tags": ["keyword/tag piattaforma"]`
+
+  if (quality === 'soft') {
+    return base + `,
+  "status": "DA_APPROVARE"
+}`
+  }
+
+  const medium = base + `,
   "audience_segment": "segmento target specifico",
   "funnel_stage": "awareness|consideration|conversion|loyalty|community",
   "angle": "angolo creativo principale",
   "primary_message": "messaggio chiave in una frase",
-  "proof_points": ["beneficio/prova verificabile 1", "beneficio/prova verificabile 2"],
-  "hook": "hook principale",
   "hook_variants": ["hook alternativo 1", "hook alternativo 2"],
-  "caption": "caption principale pronta da pubblicare",
-  "caption_long": "versione estesa se utile",
-  "hashtag": "hashtag già formattati",
-  "cta": "CTA principale",
   "cta_variants": ["CTA alternativa 1", "CTA alternativa 2"],
-  "idea_visual": "visual direction completa",
-  "creative_brief": "brief per designer/creator con mood, inquadratura, asset e priorità",
-  "template_id": "template operativo suggerito, es: ig-reel-hook-proof-cta",
+  "creative_brief": "brief per designer/creator",
+  "template_id": "template operativo suggerito",
+  "kpi_target": "metrica primaria da monitorare",
+  "expected_outcome": "ipotesi di risultato realistica",
+  "production_notes": "cosa serve per produrre/pubblicare bene",
+  "missing_inputs": ["dato mancante se presente"],
+  "content_checklist": ["hook chiaro", "CTA verificata", "asset in formato corretto"]`
+
+  if (quality === 'medium') {
+    return medium + `,
+  "status": "DA_APPROVARE"
+}`
+  }
+
+  // high: schema completo con scenes/slides/A-B/risk/compliance/optimization
+  return medium + `,
+  "proof_points": ["beneficio/prova verificabile 1", "beneficio/prova verificabile 2"],
+  "caption_long": "versione estesa se utile",
   "template_style": "minimal|editorial|ugc|premium|bold|educational",
   "layout_spec": {"aspect_ratio":"","safe_zone":"","grid":"","visual_hierarchy":[""]},
   "asset_requirements": [{"asset":"foto prodotto","required":true,"note":"formato/uso"}],
   "scenes": [{"numero":1,"secondi":"0-3","descrizione":"","overlay_testo":"","voiceover":""}],
   "slides": [{"numero":1,"titolo":"","testo":"","visual":"","obiettivo_slide":""}],
   "overlay_text": "testo overlay principale",
-  "alt_text": "alt text accessibile",
-  "tags": ["keyword/tag piattaforma"],
   "thumbnail_url": "",
   "voiceover_script": "script parlato se formato video",
   "music_mood": "mood audio, non brano inventato",
   "platform_best_practices": ["regola applicata 1", "regola applicata 2"],
   "ab_variants": [{"nome":"A","ipotesi":"","hook":"","cta":"","differenza_creativa":""}],
-  "kpi_target": "metrica primaria da monitorare",
-  "expected_outcome": "ipotesi di risultato realistica, non promessa",
   "production_cycle_stage": "brief|creative|production|review|publish|learn",
   "optimization_cycle": {
     "hypothesis": "ipotesi da validare",
@@ -233,9 +267,6 @@ export function buildExtendedOutputSchema(): string {
   "next_iteration_actions": ["azione concreta 1", "azione concreta 2", "azione concreta 3"],
   "compliance_notes": "note legali/claim/privacy/accessibilità",
   "risk_flags": ["rischio o controllo necessario"],
-  "production_notes": "cosa serve per produrre/pubblicare bene",
-  "missing_inputs": ["dato mancante se presente"],
-  "content_checklist": ["hook chiaro", "CTA verificata", "asset in formato corretto"],
   "status": "DA_APPROVARE"
 }`
 }
