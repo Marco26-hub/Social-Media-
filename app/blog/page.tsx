@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { dbReady, q } from '@/lib/db'
+import { resolveBlogClienteId } from '@/lib/blog-tenant'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,36 +12,32 @@ export const metadata: Metadata = {
 
 type Item = { slug: string; h1: string; meta_description: string | null; tempo_lettura_min: number | null; immagine_cover: string | null }
 
-// Deploy single-brand: BLOG_PUBLIC_CLIENTE_ID limita il blog pubblico al cliente
-// indicato (niente articoli di altri tenant sul dominio). Se non impostato, mostra
-// tutti i pubblicati (namespace condiviso — ok solo per istanza mono-cliente).
-const PUBLIC_CID = process.env.BLOG_PUBLIC_CLIENTE_ID?.trim() || ''
-
-async function loadArticles(): Promise<Item[]> {
-  if (!dbReady()) return []
+async function loadArticles(): Promise<{ items: Item[]; domainMapped: boolean }> {
+  if (!dbReady()) return { items: [], domainMapped: false }
+  const clienteId = await resolveBlogClienteId()
+  if (!clienteId) return { items: [], domainMapped: false }
   try {
-    const rows = PUBLIC_CID
-      ? await q(
-          `SELECT slug, h1, meta_description, tempo_lettura_min, immagine_cover
-           FROM blog_articoli WHERE status = 'PUBBLICATO' AND cliente_id = $1 ORDER BY updated_at DESC LIMIT 50`,
-          [PUBLIC_CID],
-        )
-      : await q(
-          `SELECT slug, h1, meta_description, tempo_lettura_min, immagine_cover
-           FROM blog_articoli WHERE status = 'PUBBLICATO' ORDER BY updated_at DESC LIMIT 50`,
-        )
-    return rows as Item[]
-  } catch { return [] }
+    const rows = await q(
+      `SELECT slug, h1, meta_description, tempo_lettura_min, immagine_cover
+       FROM blog_articoli WHERE status = 'PUBBLICATO' AND cliente_id = $1 ORDER BY updated_at DESC LIMIT 50`,
+      [clienteId],
+    )
+    return { items: rows as Item[], domainMapped: true }
+  } catch {
+    return { items: [], domainMapped: true }
+  }
 }
 
 export default async function BlogIndexPage() {
-  const items = await loadArticles()
+  const { items, domainMapped } = await loadArticles()
   return (
     <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
       <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">Blog</h1>
       <p className="text-gray-500 mb-8">Guide e approfondimenti.</p>
 
-      {items.length === 0 ? (
+      {!domainMapped ? (
+        <p className="text-gray-400">Blog non configurato per questo dominio.</p>
+      ) : items.length === 0 ? (
         <p className="text-gray-400">Nessun articolo pubblicato al momento.</p>
       ) : (
         <div className="space-y-4">

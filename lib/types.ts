@@ -27,6 +27,7 @@ export interface Cliente {
   piano: 'free' | 'pro' | 'agency' | 'enterprise'
   contenuti_mese: number
   attivo: boolean
+  blog_domain: string | null
   note: string | null
   created_at: string
   updated_at: string

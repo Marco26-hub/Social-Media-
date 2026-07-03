@@ -234,6 +234,7 @@ export const demoClienti: Cliente[] = [
     piano: 'pro',
     contenuti_mese: 30,
     attivo: true,
+    blog_domain: null,
     note: null,
     created_at: '2026-05-23T00:00:00Z',
     updated_at: '2026-05-23T00:00:00Z',

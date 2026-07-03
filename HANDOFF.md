@@ -62,9 +62,18 @@ Tutto su `main`, tree pulito, `tsc`+`eslint` verdi.
 
 ## 🆕 Sessione 2026-07-03 (Claude Code) — fix critici auth+Ollama, upload immagini, blog SEO locale, bulk delete, audit fallback
 
-Tutto pushato su `main` (`b9a9674`, `96b946f`, `8a5d074`, `f7ebc1a`, `2d4c7cf`, `fee3fde`), `tsc`+`build`+`lint` verdi ad ogni commit.
+Tutto pushato su `main` (`b9a9674`, `96b946f`, `8a5d074`, `f7ebc1a`, `2d4c7cf`, `fee3fde`, +blog multi-tenant), `tsc`+`build`+`lint` verdi ad ogni commit.
 
-### Eliminazione multipla + storage generico + audit fallback (fine sessione)
+### Blog pubblico multi-tenant reale (fine sessione)
+Il cliente ha 2 clienti reali (SILKinCOM, Pino) — la soluzione precedente (`BLOG_PUBLIC_CLIENTE_ID`, una env unica) supportava un solo blog pubblico alla volta. Sostituita con risoluzione dal dominio:
+- **Migration 020**: `clienti.blog_domain` (text, unique parziale su non-null).
+- **`lib/blog-tenant.ts`**: `resolveBlogClienteId()` legge l'Host header della richiesta (`next/headers`) e cerca il cliente con quel `blog_domain`. Nessun match → `null`, pagina blog vuota con messaggio "Blog non configurato" — **mai** fallback a "mostra tutti i clienti" (era esattamente il bug da evitare).
+- **`app/blog/page.tsx` + `app/blog/[slug]/page.tsx`**: usano `resolveBlogClienteId()` invece dell'env fissa.
+- **`/dashboard/clienti/[id]`**: nuova card "Blog pubblico" — campo dominio + salva (`PATCH /api/data/clienti`, nuovo endpoint con validazione formato dominio + check duplicati cross-cliente).
+- **Testato**: Host header diversi in locale (`blog.silkincom.test` → risolve SILKinCOM; host non mappato → blocca subito). Valore di test ripulito dal DB dopo verifica.
+- **Resta da fare (utente)**: per ogni cliente che vuole il blog pubblico, aggiungere il dominio custom su Render (Settings → Custom Domains) + DNS CNAME, poi settare lo stesso dominio in `/dashboard/clienti/[id]`.
+
+### Eliminazione multipla + storage generico + audit fallback
 - **Bulk delete calendario** (`2d4c7cf`): `DELETE /api/data/calendario` accetta `?ids=` o body `{ids:[]}` oltre a `?id=` singolo — tenant-safe (id di altri clienti ignorati + warning), cap 500, log per-contenuto, cleanup token. UI: checkbox per riga + "seleziona tutti" + barra "Elimina selezionati (N)" + modale. Serve a svuotare un piano editoriale generato non voluto. Contratto testato in demo mode (test distruttivo live saltato: DB condiviso prod).
 - **Storage generico S3** (`f7ebc1a`): `lib/storage.ts` non più legato a R2 — env `STORAGE_*` (endpoint/key/bucket/public_url/region) via firma S3, funziona con **Backblaze B2** (10GB free, no carta di credito) oltre a R2. `render.yaml` aggiornato.
 - **Audit fallback silenziosi** (`2d4c7cf`+`fee3fde`): codebase già solido (0 🔴). Fixati: approvazione con scheduling Blotato fallito ora risponde `scheduled:false`+errore (non `ok` secco); blog step FAQ `ok:false` se 0 domande; fetch calendario mostra errore invece di falso "nessun contenuto"; scrape-contacts espone `enrichment_ok:false`; analytics logga errore DB invece di "0 account". Legittimi confermati: demo mode, cascade AI osservabile, prospect-scraper marcato `simulated`.
@@ -86,7 +95,7 @@ Scrittura articoli SEO/GEO con **AI locale (Ollama)**, gratis, pipeline multi-st
 
 Review con 2 agenti paralleli (security/tenant + correttezza) → **5 bug reali trovati e fixati**, verificati live:
 - 🔴 **XSS stored**: JSON-LD iniettato via `JSON.stringify` senza escape di `<` → un `</script>` nei campi generati da AI/DB spezzava il tag script. Fix: escape `<`→`<` in `app/blog/[slug]/page.tsx` e `lib/blog-render.ts` (anche nell'HTML esportato per CMS terzi).
-- 🔴 **Cross-tenant**: `/blog` pubblico leggeva TUTTI i clienti senza filtro, con rischio slug-hijack (`unique` è `(cliente_id, slug)`, non solo `slug`). Fix: scoping opzionale via env `BLOG_PUBLIC_CLIENTE_ID` — **da settare su Render** per limitare il blog pubblico al cliente giusto.
+- 🔴 **Cross-tenant**: `/blog` pubblico leggeva TUTTI i clienti senza filtro, con rischio slug-hijack (`unique` è `(cliente_id, slug)`, non solo `slug`). Fix iniziale: scoping via env `BLOG_PUBLIC_CLIENTE_ID`. **Sostituito poi** (stessa sessione, vedi sotto) da risoluzione multi-tenant reale via dominio — l'env singola non reggeva con più clienti.
 - 🟡 Cover URL non validato (`javascript:`/`data:`) → `safeImageUrl()` accetta solo http(s), usato in entrambe le route blog.
 - 🟡 `INSERT` senza `ON CONFLICT` → rigenerare lo stesso tema crashava (duplicate key su `unique(cliente_id, slug)`). Fix: `ON CONFLICT DO UPDATE`.
 - 🟡 `/api/data/blog` GET/PATCH senza guardia `dbReady()` → 500 sporco in demo/no-DB.
@@ -544,7 +553,7 @@ Audit/fix P0 completato il 26/06/2026:
 - [x] **Eliminazione multipla contenuti**: bulk delete tenant-safe nel calendario per svuotare piani editoriali generati (checkbox + seleziona tutti + barra azioni).
 - [x] **Storage generico S3-compatible**: `lib/storage.ts` supporta qualsiasi provider (R2/Backblaze B2/no-carta) via env `STORAGE_*`.
 - [x] **Audit fallback silenziosi**: 0 🔴 residui; fixati approvazione-scheduling, blog FAQ ok-flag, fetch calendario, scrape-contacts enrichment, analytics DB error.
-- [ ] **🔴 `BLOG_PUBLIC_CLIENTE_ID` su Render**: senza, `/blog` pubblico mostra articoli di TUTTI i clienti mischiati (nessun leak di dati privati, solo mix cross-tenant sul blog pubblico). Settare = cliente_id SILKinCOM per deploy mono-brand.
+- [x] **Blog pubblico multi-tenant reale**: sostituito `BLOG_PUBLIC_CLIENTE_ID` (env unica, un solo cliente alla volta) con risoluzione dal dominio della richiesta (`lib/blog-tenant.ts`, migration 020 `clienti.blog_domain`). Ogni cliente ha il proprio sottodominio (es. `blog.silkincom.com`), configurabile da `/dashboard/clienti/[id]`. Host non mappato → nessun articolo mostrato (fail-safe, mai "mostra tutti"). Testato con Host header diversi in locale. **Resta da fare (utente)**: aggiungere i domini custom su Render (Settings → Custom Domains) + DNS CNAME verso il servizio, per ogni cliente che vuole il blog pubblico.
 - [x] **Dati brand SILKinCOM aggiornati** (solo testo, no prodotti/immagini): `tono_voce` emozionale→elegante, `target`/`colori_brand`/`hashtag_base`/`cta_base` allineati all'identità reale (Como/seta/heritage/lusso autentico) ricercata da silkincom.com, `social_handle`='silkincom.official' esplicito. Update diretto su `brand` (nessuna migration, solo dati).
 - [ ] **🔜 Reel + Caroselli SILKinCOM con Claude Design**: visual HTML/CSS animati generati da AI, preview iframe, export. Ancora da fare.
 - [ ] **🔴 Env storage su Render** (azione utente, no carta di credito): creare bucket **Backblaze B2** (10GB free, solo email) → settare `STORAGE_ENDPOINT` (`https://s3.<region>.backblazeb2.com`), `STORAGE_ACCESS_KEY_ID`, `STORAGE_SECRET_ACCESS_KEY`, `STORAGE_BUCKET`, `STORAGE_PUBLIC_URL`, `STORAGE_REGION`. Senza, upload effimero su Render (blocco go-live). Codice pronto e generico (`lib/storage.ts`).

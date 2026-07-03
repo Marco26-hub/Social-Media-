@@ -2,27 +2,23 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { dbReady, q } from '@/lib/db'
 import { normalizeArticle, buildJsonLd, type BlogArticleData } from '@/lib/blog-render'
+import { resolveBlogClienteId } from '@/lib/blog-tenant'
 
 export const dynamic = 'force-dynamic'
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || ''
-// Vedi app/blog/page.tsx: se impostato, il blog pubblico è del solo cliente indicato.
-// Con lo scoping niente slug-hijack cross-tenant (unique è (cliente_id, slug)).
-const PUBLIC_CID = process.env.BLOG_PUBLIC_CLIENTE_ID?.trim() || ''
 
-// Carica l'articolo PUBBLICATO con questo slug (il più recente in caso di omonimia multi-brand).
+// Carica l'articolo PUBBLICATO con questo slug, scoping per il cliente del dominio
+// (vedi lib/blog-tenant.ts). Niente slug-hijack cross-tenant (unique è (cliente_id, slug)).
 async function loadArticle(slug: string): Promise<BlogArticleData | null> {
   if (!dbReady()) return null
+  const clienteId = await resolveBlogClienteId()
+  if (!clienteId) return null
   try {
-    const rows = PUBLIC_CID
-      ? await q(
-          `SELECT * FROM blog_articoli WHERE slug = $1 AND status = 'PUBBLICATO' AND cliente_id = $2 LIMIT 1`,
-          [slug, PUBLIC_CID],
-        )
-      : await q(
-          `SELECT * FROM blog_articoli WHERE slug = $1 AND status = 'PUBBLICATO' ORDER BY updated_at DESC LIMIT 1`,
-          [slug],
-        )
+    const rows = await q(
+      `SELECT * FROM blog_articoli WHERE slug = $1 AND status = 'PUBBLICATO' AND cliente_id = $2 LIMIT 1`,
+      [slug, clienteId],
+    )
     return rows[0] ? normalizeArticle(rows[0]) : null
   } catch {
     return null

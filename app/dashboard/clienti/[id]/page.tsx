@@ -8,7 +8,7 @@ import type { Contenuto, Cliente } from '@/lib/types'
 import {
   Building2, Calendar, BarChart3, Target, ShoppingBag, FileText,
   TrendingUp, AlertTriangle, CheckCircle, Clock, ArrowLeft,
-  Loader2,
+  Loader2, Globe, Check, X,
 } from 'lucide-react'
 import Link from 'next/link'
 import { demoContenuti, demoClienti } from '@/lib/demo-data'
@@ -25,6 +25,9 @@ export default function ClienteDetailPage() {
   const [cliente, setCliente] = useState<Cliente | null>(null)
   const [contenuti, setContenuti] = useState<Contenuto[]>([])
   const [loading, setLoading] = useState(true)
+  const [blogDomain, setBlogDomain] = useState('')
+  const [savingDomain, setSavingDomain] = useState(false)
+  const [domainMsg, setDomainMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -44,13 +47,34 @@ export default function ClienteDetailPage() {
         ])
         const clienti = Array.isArray(cRes) ? cRes as Cliente[] : []
         const c = clienti.find(x => x.id === id || x.slug === id)
-        if (c) setCliente(c)
+        if (c) { setCliente(c); setBlogDomain(c.blog_domain || '') }
         setContenuti((Array.isArray(calRes) ? calRes : []).slice(0, 10))
       } catch {}
       setLoading(false)
     }
     load()
   }, [id])
+
+  async function saveBlogDomain() {
+    if (!cliente) return
+    setSavingDomain(true)
+    setDomainMsg(null)
+    try {
+      const res = await fetch('/api/data/clienti', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: cliente.id, blog_domain: blogDomain.trim() }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
+      setCliente(prev => prev ? { ...prev, blog_domain: blogDomain.trim() || null } : prev)
+      setDomainMsg({ type: 'ok', text: 'Dominio salvato.' })
+    } catch (e) {
+      setDomainMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSavingDomain(false)
+    }
+  }
 
   if (loading) return <div className="p-8 flex items-center justify-center py-20"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
   if (!cliente) return (
@@ -123,6 +147,39 @@ export default function ClienteDetailPage() {
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Blog pubblico — dominio dedicato (multi-tenant: ogni cliente il suo) */}
+      <div className="card p-5 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Globe className="w-4 h-4 text-sky-600" />
+          <h2 className="font-bold text-gray-900">Blog pubblico</h2>
+        </div>
+        <p className="text-xs text-gray-500 mb-3">
+          Dominio/sottodominio dedicato per il blog pubblico di questo cliente (es. <span className="font-mono">blog.{cliente.slug}.com</span>). Configura anche il DNS e il dominio custom su Render perché funzioni.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            value={blogDomain}
+            onChange={e => setBlogDomain(e.target.value)}
+            placeholder="blog.tuodominio.com"
+            className="input flex-1 font-mono text-sm"
+          />
+          <button onClick={saveBlogDomain} disabled={savingDomain} className="btn-primary py-2 px-4 justify-center whitespace-nowrap">
+            {savingDomain ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva dominio'}
+          </button>
+        </div>
+        {domainMsg && (
+          <div className={`mt-2 text-xs flex items-center gap-1.5 ${domainMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>
+            {domainMsg.type === 'ok' ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+            {domainMsg.text}
+          </div>
+        )}
+        {cliente.blog_domain && (
+          <p className="text-xs text-gray-400 mt-2">
+            Attivo su: <a href={`https://${cliente.blog_domain}/blog`} target="_blank" rel="noopener" className="text-brand-600 hover:underline">{cliente.blog_domain}/blog</a>
+          </p>
+        )}
       </div>
 
       {/* Recent content */}
