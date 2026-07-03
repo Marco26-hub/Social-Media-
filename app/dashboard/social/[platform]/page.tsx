@@ -51,6 +51,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [assetUrl, setAssetUrl] = useState('')
   const [uploading, setUploading] = useState(false)
   const [prodottoNome, setProdottoNome] = useState('')
+  const [prodotti, setProdotti] = useState<Array<{ id: string; product_id: string; nome_prodotto: string; link_img_1: string | null; link_img_2: string | null; link_img_3: string | null }>>([])
   const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
   const gen = useGeneration()
@@ -75,6 +76,33 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     }
     load()
   }, [demo, config.canaleDb, clienteId, loadingCliente])
+
+  // Catalogo prodotti (per usarne le foto già caricate senza ri-uploadarle).
+  useEffect(() => {
+    if (demo) return
+    fetch('/api/data/prodotti')
+      .then(r => r.ok ? r.json() : [])
+      .then(d => setProdotti(Array.isArray(d) ? d : []))
+      .catch(() => setProdotti([]))
+  }, [demo, clienteId])
+
+  // Usa le foto di un prodotto del catalogo come media del contenuto (+ nome prodotto).
+  function usaProdotto(pid: string) {
+    const p = prodotti.find(x => x.id === pid)
+    if (!p) return
+    const imgs = [p.link_img_1, p.link_img_2, p.link_img_3].filter((u): u is string => Boolean(u))
+    if (!imgs.length) {
+      setErrors(prev => ({ ...prev, prodotto: `"${p.nome_prodotto}" non ha foto caricate — caricale in Prodotti col bottone camera.` }))
+      return
+    }
+    setErrors(prev => { const n = { ...prev }; delete n.prodotto; return n })
+    setProdottoNome(p.nome_prodotto)
+    setAssets(prev => {
+      const existing = new Set(prev.map(a => a.url))
+      const nuovi: UploadedAsset[] = imgs.filter(u => !existing.has(u)).map(u => ({ name: p.nome_prodotto, url: u, source: 'url' as const }))
+      return [...prev, ...nuovi].slice(0, 7)
+    })
+  }
 
   function chiediGenera(f: FormatoConfig) {
     setAiModel(readAISettings().model)
@@ -310,6 +338,25 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
             </div>
           </div>
         </div>
+
+        {/* Usa le foto già caricate su un prodotto del catalogo (niente ri-upload) */}
+        {prodotti.length > 0 && (
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Oppure usa le foto di un prodotto:</label>
+            <select
+              defaultValue=""
+              onChange={e => { if (e.target.value) { usaProdotto(e.target.value); e.target.value = '' } }}
+              className="input text-xs flex-1"
+            >
+              <option value="">Seleziona un prodotto del catalogo…</option>
+              {prodotti.map(p => {
+                const hasImg = Boolean(p.link_img_1 || p.link_img_2 || p.link_img_3)
+                return <option key={p.id} value={p.id}>{p.nome_prodotto}{hasImg ? '' : ' (nessuna foto)'}</option>
+              })}
+            </select>
+          </div>
+        )}
+        {errors.prodotto && <p className="text-xs text-red-600 mt-1">{errors.prodotto}</p>}
 
         {/* Nome prodotto/i caricati: la vision VEDE il prodotto, questo dà i NOMI esatti */}
         <div className="mt-3">
