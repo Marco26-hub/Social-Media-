@@ -1,6 +1,7 @@
 import { readFile, stat } from 'fs/promises'
 import path from 'path'
 import { NextResponse } from 'next/server'
+import { isStorageConfigured, hasPublicStorageUrl, downloadFromStorage } from '@/lib/storage'
 
 export const runtime = 'nodejs'
 
@@ -28,12 +29,30 @@ export async function GET(
     return NextResponse.json({ error: 'asset non valido' }, { status: 400 })
   }
 
+  const ext = path.extname(safeFilename).toLowerCase()
+
+  // Bucket PRIVATO (storage configurato senza URL pubblico): scarica da S3 e streama.
+  // Se il bucket è pubblico gli URL puntano già al provider e questo proxy non è usato.
+  if (isStorageConfigured() && !hasPublicStorageUrl()) {
+    const key = `uploads/${safeClienteId}/${safeFilename}`
+    const obj = await downloadFromStorage(key)
+    if (obj) {
+      return new NextResponse(obj.bytes as unknown as BodyInit, {
+        headers: {
+          'Content-Type': MIME_BY_EXT[ext] || obj.contentType,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      })
+    }
+    return NextResponse.json({ error: 'asset non trovato' }, { status: 404 })
+  }
+
+  // Disco locale (dev).
   const filePath = path.join(process.cwd(), 'public', 'uploads', safeClienteId, safeFilename)
   try {
     const info = await stat(filePath)
     if (!info.isFile()) return NextResponse.json({ error: 'asset non trovato' }, { status: 404 })
     const bytes = await readFile(filePath)
-    const ext = path.extname(safeFilename).toLowerCase()
     return new NextResponse(bytes, {
       headers: {
         'Content-Type': MIME_BY_EXT[ext] || 'application/octet-stream',

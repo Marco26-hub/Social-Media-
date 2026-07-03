@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { getPublicBaseUrl } from '@/lib/base-url'
 import { apiError } from '@/lib/api-error'
-import { isR2Configured, uploadToR2 } from '@/lib/storage'
+import { isStorageConfigured, uploadToStorage } from '@/lib/storage'
 
 export const runtime = 'nodejs'
 
@@ -35,10 +35,11 @@ export async function POST(request: Request) {
     if (!files.length) return NextResponse.json({ error: 'Nessun file ricevuto' }, { status: 400 })
     if (files.length > MAX_FILES) return NextResponse.json({ error: `Massimo ${MAX_FILES} immagini per contenuto` }, { status: 400 })
 
-    // R2 (persistente) se configurato, altrimenti disco locale (effimero, solo dev).
-    const useR2 = isR2Configured()
+    // Storage persistente (S3-compatible) se configurato, altrimenti disco locale
+    // (effimero, solo dev). Il proxy /api/assets/file serve i file dei bucket privati.
+    const useStorage = isStorageConfigured()
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', clienteId)
-    if (!useR2) await mkdir(uploadDir, { recursive: true })
+    if (!useStorage) await mkdir(uploadDir, { recursive: true })
 
     const uploaded = []
     for (const file of files) {
@@ -51,18 +52,26 @@ export async function POST(request: Request) {
 
       const filename = safeFilename(file.name)
       const bytes = Buffer.from(await file.arrayBuffer())
+      const proxyPath = `/api/assets/file/${encodeURIComponent(clienteId)}/${encodeURIComponent(filename)}`
 
       let url: string
       let pathname: string
-      if (useR2) {
-        // URL pubblico permanente su R2: sopravvive ai deploy.
+      if (useStorage) {
+        // Upload su bucket persistente. Se pubblico → URL diretto; se privato → null,
+        // e serviamo via proxy /api/assets/file (che scarica da storage con le credenziali).
         const key = `uploads/${clienteId}/${filename}`
-        url = await uploadToR2(key, bytes, file.type || 'application/octet-stream')
-        pathname = url
+        const directUrl = await uploadToStorage(key, bytes, file.type || 'application/octet-stream')
+        if (directUrl) {
+          url = directUrl
+          pathname = directUrl
+        } else {
+          pathname = proxyPath
+          url = `${getPublicBaseUrl(request)}${pathname}`
+        }
       } else {
         const diskPath = path.join(uploadDir, filename)
         await writeFile(diskPath, bytes)
-        pathname = `/api/assets/file/${encodeURIComponent(clienteId)}/${encodeURIComponent(filename)}`
+        pathname = proxyPath
         url = `${getPublicBaseUrl(request)}${pathname}`
       }
 
@@ -73,11 +82,11 @@ export async function POST(request: Request) {
         mime: file.type,
         size: file.size,
         source: 'upload',
-        storage: useR2 ? 'r2' : 'local',
+        storage: useStorage ? 'storage' : 'local',
       })
     }
 
-    return NextResponse.json({ ok: true, assets: uploaded, storage: useR2 ? 'r2' : 'local' })
+    return NextResponse.json({ ok: true, assets: uploaded, storage: useStorage ? 'storage' : 'local' })
   } catch (e) {
     return apiError(e)
   }

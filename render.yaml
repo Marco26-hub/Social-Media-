@@ -39,6 +39,8 @@ services:
         sync: false
       # Storage immagini PERSISTENTE, qualsiasi provider S3-compatible (Cloudflare R2,
       # Backblaze B2, ecc. — senza, upload effimeri, spariscono ad ogni deploy).
+      # STORAGE_PUBLIC_URL opzionale: se assente → bucket privato servito via proxy app
+      # (usalo con Backblaze B2 privato, che non richiede carta di credito).
       - key: STORAGE_ENDPOINT
         sync: false
       - key: STORAGE_ACCESS_KEY_ID
@@ -47,7 +49,7 @@ services:
         sync: false
       - key: STORAGE_BUCKET
         sync: false
-      - key: STORAGE_PUBLIC_URL
-        sync: false
       - key: STORAGE_REGION
+        sync: false
+      - key: STORAGE_PUBLIC_URL
         sync: false
