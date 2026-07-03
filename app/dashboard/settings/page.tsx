@@ -44,6 +44,25 @@ export default function SettingsPage() {
 
   const boolKeys = ['automation_enabled','dry_run','telegram_notifications','backup_enabled','approval_required','media_validation_required','stock_check_required']
 
+  // Nomi leggibili + descrizione dei toggle (le chiavi tecniche confondono).
+  const KEY_LABEL: Record<string, string> = {
+    dry_run: 'Modalità pubblicazione',
+    automation_enabled: 'Automazione',
+    telegram_notifications: 'Notifiche Telegram',
+    backup_enabled: 'Backup automatico',
+    approval_required: 'Approvazione obbligatoria',
+    media_validation_required: 'Validazione media',
+    stock_check_required: 'Controllo stock',
+  }
+  // dry_run è invertito: TRUE = prova (non pubblica), FALSE = pubblica davvero.
+  // Mostriamo REAL/DEMO come stato esplicito così non si sbaglia mai.
+  function dryRunBadge(val: string) {
+    const isDryRun = val.toUpperCase() === 'TRUE'
+    return isDryRun
+      ? { text: 'DEMO', cls: 'bg-amber-100 text-amber-700', hint: 'Prova: i post NON vengono pubblicati' }
+      : { text: 'REAL', cls: 'bg-green-100 text-green-700', hint: 'Live: i post vengono pubblicati sui social' }
+  }
+
   return (
     <div className="p-4 md:p-8">
       <div className="mb-4 md:mb-6">
@@ -57,23 +76,35 @@ export default function SettingsPage() {
         </div>
       ) : (
         <div className="max-w-2xl space-y-3">
-          {settings.map(s => (
+          {settings.map(s => {
+            const isDry = s.chiave === 'dry_run'
+            // dry_run invertito: lo switch acceso (blu) = REAL/pubblica; il valore TRUE = DEMO.
+            // Quindi lo stato "acceso" dello switch corrisponde a valore FALSE.
+            const toggleOn = isDry ? s.valore.toUpperCase() === 'FALSE' : s.valore.toUpperCase() === 'TRUE'
+            const nextVal = isDry
+              ? (s.valore.toUpperCase() === 'FALSE' ? 'TRUE' : 'FALSE')
+              : (s.valore.toUpperCase() === 'TRUE' ? 'FALSE' : 'TRUE')
+            const badge = isDry ? dryRunBadge(s.valore) : null
+            return (
             <div key={s.id} className="card p-4 flex items-center gap-4">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">{s.chiave}</p>
-                {s.descrizione && <p className="text-xs text-gray-400 mt-0.5">{s.descrizione}</p>}
+                <p className="text-sm font-medium text-gray-900">{KEY_LABEL[s.chiave] || s.chiave}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{badge ? badge.hint : s.descrizione}</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
+                {badge && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badge.cls}`}>{badge.text}</span>
+                )}
                 {boolKeys.includes(s.chiave) ? (
                   <button
-                    onClick={() => updateSetting(s, s.valore.toUpperCase() === 'TRUE' ? 'FALSE' : 'TRUE')}
+                    onClick={() => updateSetting(s, nextVal)}
                     disabled={saving === s.id}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      s.valore.toUpperCase() === 'TRUE' ? 'bg-brand-600' : 'bg-gray-200'
+                      toggleOn ? (isDry ? 'bg-green-600' : 'bg-brand-600') : 'bg-gray-200'
                     }`}
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      s.valore.toUpperCase() === 'TRUE' ? 'translate-x-6' : 'translate-x-1'
+                      toggleOn ? 'translate-x-6' : 'translate-x-1'
                     }`} />
                   </button>
                 ) : (
@@ -94,7 +125,8 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
