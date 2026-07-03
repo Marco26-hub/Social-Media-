@@ -37,14 +37,17 @@ services:
         sync: false
       - key: META_APP_SECRET
         sync: false
-      # Cloudflare R2 — storage immagini PERSISTENTE (senza, upload effimeri).
-      - key: R2_ACCOUNT_ID
+      # Storage immagini PERSISTENTE, qualsiasi provider S3-compatible (Cloudflare R2,
+      # Backblaze B2, ecc. — senza, upload effimeri, spariscono ad ogni deploy).
+      - key: STORAGE_ENDPOINT
         sync: false
-      - key: R2_ACCESS_KEY_ID
+      - key: STORAGE_ACCESS_KEY_ID
         sync: false
-      - key: R2_SECRET_ACCESS_KEY
+      - key: STORAGE_SECRET_ACCESS_KEY
         sync: false
-      - key: R2_BUCKET
+      - key: STORAGE_BUCKET
         sync: false
-      - key: R2_PUBLIC_URL
+      - key: STORAGE_PUBLIC_URL
+        sync: false
+      - key: STORAGE_REGION
         sync: false

@@ -1,44 +1,49 @@
 import { AwsClient } from 'aws4fetch'
 
-// Cloudflare R2 (S3-compatible) per storage immagini PERSISTENTE.
-// Senza queste env il sistema usa il disco locale (effimero, solo dev).
+// Storage immagini PERSISTENTE via qualsiasi provider S3-compatible (Cloudflare R2,
+// Backblaze B2, MinIO, ecc.). Senza queste env il sistema usa il disco locale
+// (effimero, solo dev — sparisce a ogni deploy/restart su Render).
 // Env richieste su Render:
-//   R2_ACCOUNT_ID        — id account Cloudflare
-//   R2_ACCESS_KEY_ID     — token R2 (S3 API)
-//   R2_SECRET_ACCESS_KEY — secret R2
-//   R2_BUCKET            — nome bucket
-//   R2_PUBLIC_URL        — URL pubblico bucket (es. https://pub-xxxx.r2.dev o dominio custom)
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID?.trim()
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID?.trim()
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY?.trim()
-const R2_BUCKET = process.env.R2_BUCKET?.trim()
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL?.trim().replace(/\/$/, '')
+//   STORAGE_ENDPOINT           — endpoint S3 del provider, es:
+//                                R2:  https://<account_id>.r2.cloudflarestorage.com
+//                                B2:  https://s3.<region>.backblazeb2.com
+//   STORAGE_ACCESS_KEY_ID      — access key (R2 token id / B2 applicationKeyId)
+//   STORAGE_SECRET_ACCESS_KEY  — secret key (R2 token secret / B2 applicationKey)
+//   STORAGE_BUCKET             — nome bucket
+//   STORAGE_PUBLIC_URL         — URL pubblico bucket (dominio custom o URL nativo provider)
+//   STORAGE_REGION             — opzionale, default 'auto' (R2). B2 richiede la region esatta (es. us-west-004)
+const STORAGE_ENDPOINT = process.env.STORAGE_ENDPOINT?.trim().replace(/\/$/, '')
+const STORAGE_ACCESS_KEY_ID = process.env.STORAGE_ACCESS_KEY_ID?.trim()
+const STORAGE_SECRET_ACCESS_KEY = process.env.STORAGE_SECRET_ACCESS_KEY?.trim()
+const STORAGE_BUCKET = process.env.STORAGE_BUCKET?.trim()
+const STORAGE_PUBLIC_URL = process.env.STORAGE_PUBLIC_URL?.trim().replace(/\/$/, '')
+const STORAGE_REGION = process.env.STORAGE_REGION?.trim() || 'auto'
 
 export function isR2Configured(): boolean {
   return Boolean(
-    R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_BUCKET && R2_PUBLIC_URL,
+    STORAGE_ENDPOINT && STORAGE_ACCESS_KEY_ID && STORAGE_SECRET_ACCESS_KEY && STORAGE_BUCKET && STORAGE_PUBLIC_URL,
   )
 }
 
 /**
- * Carica i byte su R2 e ritorna l'URL pubblico permanente.
- * Lancia se R2 non è configurato o l'upload fallisce.
+ * Carica i byte sul bucket S3-compatible configurato e ritorna l'URL pubblico permanente.
+ * Lancia se lo storage non è configurato o l'upload fallisce.
  */
 export async function uploadToR2(
   key: string,
   bytes: Buffer | Uint8Array,
   contentType: string,
 ): Promise<string> {
-  if (!isR2Configured()) throw new Error('R2 non configurato')
+  if (!isR2Configured()) throw new Error('Storage immagini non configurato')
 
   const client = new AwsClient({
-    accessKeyId: R2_ACCESS_KEY_ID!,
-    secretAccessKey: R2_SECRET_ACCESS_KEY!,
-    region: 'auto',
+    accessKeyId: STORAGE_ACCESS_KEY_ID!,
+    secretAccessKey: STORAGE_SECRET_ACCESS_KEY!,
+    region: STORAGE_REGION,
     service: 's3',
   })
 
-  const endpoint = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET}/${key}`
+  const endpoint = `${STORAGE_ENDPOINT}/${STORAGE_BUCKET}/${key}`
   const res = await client.fetch(endpoint, {
     method: 'PUT',
     // Uint8Array è un BodyInit valido a runtime (undici); cast per i tipi DOM.
@@ -51,8 +56,8 @@ export async function uploadToR2(
 
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    throw new Error(`R2 upload fallito: ${res.status} ${text.slice(0, 200)}`)
+    throw new Error(`Upload storage fallito: ${res.status} ${text.slice(0, 200)}`)
   }
 
-  return `${R2_PUBLIC_URL}/${key}`
+  return `${STORAGE_PUBLIC_URL}/${key}`
 }

@@ -121,7 +121,7 @@ export async function GET() {
       ...(!checks.siteUrl ? ['Configura NEXT_PUBLIC_SITE_URL per link e referrer OpenRouter'] : []),
       ...(!hasAi ? ['Aggiungi ANTHROPIC_API_KEY o OPENROUTER_API_KEY'] : []),
       ...(!databaseChecks.latestMigrationApplied ? [`Esegui npm run migrate: manca ${LATEST_REQUIRED_MIGRATION}`] : []),
-      ...(!checks.r2Storage ? ['Configura Cloudflare R2 (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_URL): senza, le immagini caricate spariscono a ogni deploy'] : []),
+      ...(!checks.r2Storage ? ['Configura storage S3-compatible (STORAGE_ENDPOINT, STORAGE_ACCESS_KEY_ID, STORAGE_SECRET_ACCESS_KEY, STORAGE_BUCKET, STORAGE_PUBLIC_URL): senza, le immagini caricate spariscono a ogni deploy'] : []),
       ...(!checks.blotatoApiKey ? ['Configura BLOTATO_API_KEY prima di vendere pubblicazione automatica'] : []),
       ...(!checks.blotatoWebhookSecret ? ['Configura BLOTATO_WEBHOOK_SECRET per firmare i callback Blotato'] : []),
       ...(checks.blotatoApiKey ? ['Verifica pubblicazione APPROVATO → Blotato/webhook'] : []),
