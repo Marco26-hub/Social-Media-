@@ -58,8 +58,40 @@ function fallbackAudit(sitoUrl: string, periodo: string, brand: Record<string, u
   }
 }
 
-async function saveAudit(clienteId: string, periodo: string, parsed: Record<string, unknown>, model: string) {
+// Parser score robusto: accetta numero o stringa ("72", "72/100", "72 su 100") →
+// 72. Ritorna null se davvero assente/non interpretabile (così NON salviamo uno 0
+// finto indistinguibile da un punteggio reale che vale 0).
+function toScore(...candidates: unknown[]): number | null {
+  for (const c of candidates) {
+    if (typeof c === 'number' && Number.isFinite(c)) return c
+    if (typeof c === 'string') {
+      const m = c.match(/\d+(?:[.,]\d+)?/)
+      if (m) return Number(m[0].replace(',', '.'))
+    }
+  }
+  return null
+}
+
+// Ritorna l'elenco dei campi score mancanti (per esporli: audit parziale, non finto).
+async function saveAudit(clienteId: string, periodo: string, parsed: Record<string, unknown>, model: string): Promise<string[]> {
   const scores = (parsed.scores || {}) as Record<string, unknown>
+  const scoreFields: Array<[string, unknown, unknown]> = [
+    ['score_globale', parsed.score_globale, scores.globale],
+    ['score_seo_tecnico', parsed.score_seo_tecnico, scores.seo_tecnico],
+    ['score_seo_contenuti', parsed.score_seo_contenuti, scores.seo_contenuti],
+    ['score_geo_ai_search', parsed.score_geo_ai_search, scores.geo_ai_search],
+    ['score_social_coerenza', parsed.score_social_coerenza, scores.social_coerenza],
+    ['score_eeat', parsed.score_eeat, scores.eeat],
+    ['score_performance_social', parsed.score_performance_social, scores.performance_social],
+  ]
+  const values = new Map<string, number | null>()
+  const missing: string[] = []
+  for (const [name, a, b] of scoreFields) {
+    const v = toScore(a, b)
+    if (v === null) missing.push(name)
+    values.set(name, v)
+  }
+
   await q(
     `INSERT INTO seo_audit (
       cliente_id, data_audit, periodo, score_globale,
@@ -75,13 +107,14 @@ async function saveAudit(clienteId: string, periodo: string, parsed: Record<stri
       clienteId,
       (parsed.data_audit as string) || new Date().toISOString().split('T')[0],
       periodo,
-      (parsed.score_globale as number) || 0,
-      (parsed.score_seo_tecnico || scores.seo_tecnico || 0) as number,
-      (parsed.score_seo_contenuti || scores.seo_contenuti || 0) as number,
-      (parsed.score_geo_ai_search || scores.geo_ai_search || 0) as number,
-      (parsed.score_social_coerenza || scores.social_coerenza || 0) as number,
-      (parsed.score_eeat || scores.eeat || 0) as number,
-      (parsed.score_performance_social || scores.performance_social || 0) as number,
+      // null → 0 nel DB, ma il campo è segnalato in `missing` così l'utente sa che è stimato/assente.
+      values.get('score_globale') ?? 0,
+      values.get('score_seo_tecnico') ?? 0,
+      values.get('score_seo_contenuti') ?? 0,
+      values.get('score_geo_ai_search') ?? 0,
+      values.get('score_social_coerenza') ?? 0,
+      values.get('score_eeat') ?? 0,
+      values.get('score_performance_social') ?? 0,
       (parsed.riepilogo as string) || '',
       (parsed.punti_forti || []) as string[],
       (parsed.punti_critici || []) as string[],
@@ -91,6 +124,7 @@ async function saveAudit(clienteId: string, periodo: string, parsed: Record<stri
       model,
     ],
   )
+  return missing
 }
 
 export async function POST(request: Request) {
@@ -139,9 +173,15 @@ export async function POST(request: Request) {
     })
     const parsed = extractJSON(aiRes) as Record<string, unknown>
 
-    await saveAudit(effectiveClienteId, p, parsed, (model as string) || 'ai')
+    const scoreMancanti = await saveAudit(effectiveClienteId, p, parsed, (model as string) || 'ai')
 
-    return NextResponse.json({ ok: true, fallback: false, ...parsed })
+    return NextResponse.json({
+      ok: true,
+      fallback: false,
+      ...parsed,
+      // Score non prodotti dall'AI: salvati come 0 ma segnalati (non spacciarli per reali).
+      ...(scoreMancanti.length ? { score_mancanti: scoreMancanti, warning: `Alcuni punteggi non generati dall'AI (${scoreMancanti.length}): considerali stimati/assenti, non reali.` } : {}),
+    })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Errore audit'
     return NextResponse.json({ error: msg }, { status: 500 })

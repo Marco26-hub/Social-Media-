@@ -293,16 +293,23 @@ Output SOLO JSON array valido:
     const globalStart = chunks[0].start
     const globalEnd = chunks[chunks.length - 1].end
 
+    // Conta le correzioni forzate (canale/data fuori scelta): sono invisibili
+    // all'utente ma possono ammassare i contenuti sul primo canale → va segnalato.
+    let itemsCorrettiCanale = 0
+    let itemsCorrettiData = 0
     function sanitizeItem(raw: Record<string, unknown>, chunk: Chunk): Record<string, unknown> {
       const out = { ...raw }
       const rawDate = typeof out.data_pubblicazione === 'string' ? out.data_pubblicazione : ''
       if (!DATE_RE.test(rawDate) || rawDate < globalStart || rawDate > globalEnd) {
         out.data_pubblicazione = chunk.start
+        itemsCorrettiData++
       }
       const rawTime = typeof out.ora_pubblicazione === 'string' ? out.ora_pubblicazione : ''
       out.ora_pubblicazione = TIME_RE.test(rawTime) ? rawTime : '10:00'
       const rawCanale = typeof out.canale === 'string' ? out.canale.toLowerCase().trim() : ''
-      out.canale = VALID_CANALI.has(rawCanale) && piattaformeSet.has(rawCanale) ? rawCanale : fallbackCanale
+      const canaleOk = VALID_CANALI.has(rawCanale) && piattaformeSet.has(rawCanale)
+      out.canale = canaleOk ? rawCanale : fallbackCanale
+      if (!canaleOk) itemsCorrettiCanale++
       const rawFormato = typeof out.formato === 'string' ? out.formato.toLowerCase().trim() : ''
       out.formato = VALID_FORMATI.has(rawFormato) ? rawFormato : 'post'
       return out
@@ -425,6 +432,9 @@ Output SOLO JSON array valido:
       chunks_failed: failedChunks.length,
       ...(failedChunks.length && { chunks_failed_detail: failedChunks.map(f => f.error) }),
       ...(scartati.length && { items_scartati: scartati.length }),
+      // Correzioni forzate rese visibili: canale riassegnato / data spostata nel range.
+      ...(itemsCorrettiCanale && { items_canale_corretto: itemsCorrettiCanale }),
+      ...(itemsCorrettiData && { items_data_corretta: itemsCorrettiData }),
       quality_level: contentQuality,
       quality_downgraded: isQualityDowngraded(requestedQuality, contentQuality),
       images_provided: mediaPool.length,

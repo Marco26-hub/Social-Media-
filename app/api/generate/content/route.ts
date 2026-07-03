@@ -505,8 +505,14 @@ export async function POST(request: Request) {
       })
     }
 
+    // Avvisi osservabili raccolti durante la generazione (non nascondere ripieghi).
+    const warnings: string[] = []
+
     const key = `${canale}:${formato}`
     const spec = PROMPTS[key] || PROMPTS[`instagram:post`]
+    // Formato non-nativo (es. pinterest:reel): usiamo il template IG generico → l'utente
+    // deve saperlo, il contenuto non segue le regole native di quel canale/formato.
+    if (!PROMPTS[key]) warnings.push(`Formato ${canale}/${formato} non nativo: generato con template generico Instagram post.`)
 
     const [brandRows, products, clientRows] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [effectiveClienteId]),
@@ -516,7 +522,10 @@ export async function POST(request: Request) {
     const brand = (brandRows[0] ?? null) as Record<string, unknown> | null
     const client = (clientRows[0] ?? null) as Record<string, unknown> | null
     const contentQuality = resolveContentQuality({ requestedQuality, piano: client?.piano })
-    const product = (products as Array<Record<string, unknown>>).find(p => p.product_id === product_id) || products[0] || {}
+    const matchedProduct = (products as Array<Record<string, unknown>>).find(p => p.product_id === product_id)
+    // product_id fornito ma inesistente → ripieghiamo sul primo prodotto, MA lo diciamo.
+    if (product_id && !matchedProduct) warnings.push(`product_id "${product_id}" non trovato: usato il primo prodotto del catalogo.`)
+    const product = matchedProduct || products[0] || {}
 
     const brandContext = buildBrandContext(brand)
     const qualityContext = buildQualityContext({ quality: contentQuality, canale, formato, obiettivo })
@@ -659,6 +668,7 @@ export async function POST(request: Request) {
     const canaleIdx = insertColumns.indexOf('canale')
     const idIdx = insertColumns.indexOf('id_contenuto')
     const crossPosted: string[] = []
+    const crossFailed: string[] = []
     for (const altCanale of alsoCanali) {
       const altValues = [...insertValues]
       altValues[idIdx] = `${id_contenuto}-${altCanale}`
@@ -668,8 +678,12 @@ export async function POST(request: Request) {
         crossPosted.push(altCanale)
       } catch (e) {
         console.warn(`[content cross-post] fallito su ${altCanale}:`, (e as Error).message.slice(0, 150))
+        crossFailed.push(altCanale)
       }
     }
+    // Cross-post fallito: l'utente DEVE saperlo (altrimenti scopre il buco solo dal calendario).
+    if (crossFailed.length) warnings.push(`Cross-post non riuscito su: ${crossFailed.join(', ')}.`)
+    if (schemaFallback) warnings.push('Alcuni campi qualità non salvati: eseguire npm run migrate.')
 
     return NextResponse.json({
       ok: true,
@@ -678,7 +692,9 @@ export async function POST(request: Request) {
       quality_level: generatedQuality,
       quality_downgraded: isQualityDowngraded(requestedQuality, generatedQuality),
       ...(crossPosted.length ? { cross_posted: crossPosted } : {}),
-      ...(schemaFallback && { schema_fallback: true, warning: 'Eseguire npm run migrate per abilitare campi qualità e ottimizzazione' }),
+      ...(crossFailed.length ? { cross_post_failed: crossFailed } : {}),
+      ...(schemaFallback ? { schema_fallback: true } : {}),
+      ...(warnings.length ? { warnings } : {}),
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Errore generazione'
