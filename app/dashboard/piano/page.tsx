@@ -195,7 +195,7 @@ export default function PianoPage() {
           <span className="text-xs text-gray-400 ml-auto">{piattaforme.length} selezionate</span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {PLATFORM_LIST.filter(p => p.key !== 'blog').map(p => {
+          {PLATFORM_LIST.map(p => {
             const selected = piattaforme.includes(p.key)
             return (
               <button
