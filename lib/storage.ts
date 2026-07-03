@@ -68,6 +68,9 @@ export async function uploadToStorage(
     headers: {
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=31536000, immutable',
+      // Backblaze B2 lo richiede esplicito (rifiuta con 411 MissingContentLength
+      // senza) — R2 lo calcola da solo, ma impostarlo sempre è innocuo e più corretto.
+      'Content-Length': String(bytes.length),
     },
   })
 
