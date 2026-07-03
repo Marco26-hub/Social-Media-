@@ -177,6 +177,7 @@ export async function PATCH(request: Request) {
     await q(`UPDATE calendario SET ${fields.join(', ')} WHERE id = $1 AND cliente_id = $2`, params)
 
     // Se approvato, schedula su Blotato
+    let schedulingError: string | null = null
     if (body.status === 'APPROVATO') {
       try {
         const content = await q('SELECT * FROM calendario WHERE id = $1 AND cliente_id = $2', [id, cid])
@@ -186,8 +187,9 @@ export async function PATCH(request: Request) {
         }
       } catch (scheduleError) {
         console.error('Blotato scheduling failed:', scheduleError)
+        schedulingError = (scheduleError as Error).message.slice(0, 300)
         await q('UPDATE calendario SET errore_tecnico = $1 WHERE id = $2 AND cliente_id = $3', [
-          `Blotato: ${(scheduleError as Error).message.slice(0, 300)}`,
+          `Blotato: ${schedulingError}`,
           id,
           cid,
         ])
@@ -208,7 +210,12 @@ export async function PATCH(request: Request) {
       }
     }
 
-    return NextResponse.json({ ok: true })
+    // Non nascondere il fallimento di scheduling: l'approvazione è andata (status
+    // salvato) ma la pubblicazione NON è stata programmata → il frontend deve avvisare.
+    if (schedulingError) {
+      return NextResponse.json({ ok: true, scheduled: false, scheduling_error: schedulingError })
+    }
+    return NextResponse.json({ ok: true, ...(body.status === 'APPROVATO' ? { scheduled: true } : {}) })
   } catch (e) {
     return apiError(e)
   }
@@ -218,37 +225,82 @@ export async function DELETE(request: Request) {
   try {
     await requireAdmin()
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    if (!id) return NextResponse.json({ error: 'id richiesto' }, { status: 400 })
+
+    // Supporta sia il delete singolo (?id=) sia il bulk (?ids=id1,id2,... oppure body {ids:[]}).
+    // Il bulk serve a svuotare in un colpo i contenuti-BOZZA di un piano editoriale generato.
+    let ids: string[] = []
+    const singleId = searchParams.get('id')
+    const idsParam = searchParams.get('ids')
+    if (singleId) ids = [singleId]
+    else if (idsParam) ids = idsParam.split(',').map(s => s.trim()).filter(Boolean)
+    else {
+      // Prova dal body JSON (DELETE con body è valido lato fetch).
+      const body = await request.json().catch(() => null) as { ids?: unknown } | null
+      if (Array.isArray(body?.ids)) ids = body.ids.filter((x): x is string => typeof x === 'string' && x.length > 0)
+    }
+
+    if (!ids.length) return NextResponse.json({ error: 'id o ids richiesti' }, { status: 400 })
+    // Cap difensivo: evita richieste giganti accidentali.
+    if (ids.length > 500) return NextResponse.json({ error: 'Massimo 500 contenuti per eliminazione' }, { status: 400 })
 
     if (isDemo() || !dbReady()) {
-      return NextResponse.json({ ok: true, demo: true, deleted_id: id })
+      return NextResponse.json({ ok: true, demo: true, deleted: ids.length, deleted_ids: ids })
     }
 
     const cid = await requireClienteId()
-    const rows = await q('SELECT * FROM calendario WHERE id = $1 AND cliente_id = $2 LIMIT 1', [id, cid])
+    // Seleziona SOLO i contenuti che appartengono davvero al cliente attivo (tenant guard).
+    const placeholders = ids.map((_, i) => `$${i + 2}`).join(',')
+    const rows = await q(
+      `SELECT * FROM calendario WHERE cliente_id = $1 AND id IN (${placeholders})`,
+      [cid, ...ids],
+    ) as Record<string, unknown>[]
+
     if (!rows.length) {
-      return NextResponse.json({ error: 'contenuto non trovato' }, { status: 404 })
+      return NextResponse.json({ error: 'nessun contenuto trovato per gli id richiesti' }, { status: 404 })
     }
 
-    const row = rows[0] as Record<string, unknown>
-    await q('DELETE FROM approval_tokens WHERE cliente_id = $1 AND contenuto_id = $2', [cid, row.id_contenuto])
-    await q('DELETE FROM calendario WHERE id = $1 AND cliente_id = $2', [id, cid])
+    const foundIds = rows.map(r => r.id as string)
+    const foundPlaceholders = foundIds.map((_, i) => `$${i + 2}`).join(',')
+    const contenutoIds = rows.map(r => r.id_contenuto).filter(Boolean) as string[]
+
+    // Elimina i token di approvazione collegati (se presenti).
+    if (contenutoIds.length) {
+      const tokPlaceholders = contenutoIds.map((_, i) => `$${i + 2}`).join(',')
+      await q(
+        `DELETE FROM approval_tokens WHERE cliente_id = $1 AND contenuto_id IN (${tokPlaceholders})`,
+        [cid, ...contenutoIds],
+      )
+    }
     await q(
-      `INSERT INTO log_pubblicazioni (cliente_id, id_contenuto, canale, formato, status_precedente, status_finale, messaggio)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [
-        cid,
-        row.id_contenuto || null,
-        row.canale || null,
-        row.formato || null,
-        row.status || null,
-        'ARCHIVIATO',
-        'Contenuto cancellato da admin',
-      ],
+      `DELETE FROM calendario WHERE cliente_id = $1 AND id IN (${foundPlaceholders})`,
+      [cid, ...foundIds],
     )
 
-    return NextResponse.json({ ok: true, deleted_id: id })
+    // Log per ogni contenuto eliminato (tracciabilità admin).
+    for (const row of rows) {
+      await q(
+        `INSERT INTO log_pubblicazioni (cliente_id, id_contenuto, canale, formato, status_precedente, status_finale, messaggio)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [
+          cid,
+          row.id_contenuto || null,
+          row.canale || null,
+          row.formato || null,
+          row.status || null,
+          'ARCHIVIATO',
+          ids.length > 1 ? 'Contenuto cancellato da admin (eliminazione multipla)' : 'Contenuto cancellato da admin',
+        ],
+      )
+    }
+
+    // Segnala se alcuni id richiesti non erano del cliente / inesistenti (niente silenzio).
+    const skipped = ids.filter(id => !foundIds.includes(id))
+    return NextResponse.json({
+      ok: true,
+      deleted: foundIds.length,
+      deleted_ids: foundIds,
+      ...(skipped.length ? { skipped: skipped.length, warning: `${skipped.length} id ignorati (non trovati o di altro cliente)` } : {}),
+    })
   } catch (e) {
     return apiError(e)
   }

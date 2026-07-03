@@ -57,6 +57,10 @@ function CalendarioInner() {
   const [deleteTarget, setDeleteTarget] = useState<Contenuto | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [visualState, setVisualState] = useState<Record<string, 'idle' | 'generating' | 'done' | 'error'>>({})
   const [visualMsg, setVisualMsg] = useState<Record<string, string>>({})
   const [brand, setBrand] = useState<{ brand_name?: string | null; social_handle?: string | null } | null>(null)
@@ -68,6 +72,11 @@ function CalendarioInner() {
   useEffect(() => {
     fetch('/api/data/brand').then(r => r.ok ? r.json() : null).then(setBrand).catch(() => setBrand(null))
   }, [clienteId])
+
+  // Cambio filtro/cliente → azzera la selezione multipla (gli id mostrati cambiano).
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [filterStatus, filterCanale, clienteId])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -84,16 +93,20 @@ function CalendarioInner() {
     if (filterStatus !== 'tutti') params.set('status', filterStatus)
     if (filterCanale !== 'tutti') params.set('canale', filterCanale)
 
+    setLoadError(null)
     try {
       const res = await fetch(`/api/data/calendario?${params.toString()}`)
       if (res.ok) {
         const data = await res.json()
         setContenuti(data as Contenuto[])
       } else {
+        // NON fingere "nessun contenuto" su un errore server: distingui vuoto da guasto.
         setContenuti([])
+        setLoadError(await readApiError(res, 'Errore nel caricamento dei contenuti'))
       }
-    } catch {
+    } catch (e) {
       setContenuti([])
+      setLoadError((e as Error)?.message || 'Errore di rete nel caricamento dei contenuti')
     }
     setLoading(false)
   }, [filterStatus, filterCanale, demo, demoData, clienteId])
@@ -316,6 +329,52 @@ function CalendarioInner() {
     }
   }
 
+  // Elimina in blocco i contenuti selezionati (svuota velocemente un piano generato).
+  async function bulkDelete() {
+    const ids = [...selectedIds]
+    if (!ids.length) return
+    setBulkDeleting(true)
+    setAdminError(null)
+    try {
+      if (demo) {
+        setDemoData(prev => prev.filter(item => !selectedIds.has(item.id)))
+        setContenuti(prev => prev.filter(item => !selectedIds.has(item.id)))
+      } else {
+        const res = await fetch('/api/data/calendario', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        })
+        if (!res.ok) throw new Error(await readApiError(res, 'Eliminazione multipla fallita'))
+        const data = await res.json() as { deleted_ids?: string[]; warning?: string }
+        // Rimuovi SOLO quelli davvero eliminati dal server (fonte di verità), non l'intera selezione.
+        const removed = new Set(data.deleted_ids ?? ids)
+        setContenuti(prev => prev.filter(item => !removed.has(item.id)))
+        if (data.warning) setAdminError(data.warning)
+      }
+      if (selected && selectedIds.has(selected.id)) setSelected(null)
+      setSelectedIds(new Set())
+      setBulkDeleteOpen(false)
+    } catch (e) {
+      setAdminError((e as Error).message)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
+  function toggleSelectId(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds(prev => prev.size === contenuti.length ? new Set() : new Set(contenuti.map(c => c.id)))
+  }
+
   async function handleScore(c: Contenuto) {
     setScoring(c.id)
     setScoreError(null)
@@ -528,6 +587,15 @@ function CalendarioInner() {
         <div className="flex items-center justify-center py-20">
           <RefreshCw className="w-6 h-6 text-gray-400 animate-spin" />
         </div>
+      ) : loadError ? (
+        <div className="card p-8 text-center border border-red-200 bg-red-50">
+          <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+          <p className="text-sm font-semibold text-red-800">Impossibile caricare i contenuti</p>
+          <p className="text-xs text-red-600 mt-1">{loadError}</p>
+          <button onClick={() => fetchData()} className="btn-secondary text-xs mt-3 inline-flex items-center gap-1.5">
+            <RefreshCw className="w-3.5 h-3.5" /> Riprova
+          </button>
+        </div>
       ) : contenuti.length === 0 ? (
         <div className="card p-12 text-center text-gray-400">
           <p className="text-lg">Nessun contenuto trovato</p>
@@ -535,15 +603,48 @@ function CalendarioInner() {
         </div>
       ) : (
         <div className="space-y-3">
+          {/* Barra selezione multipla — seleziona tutto + elimina in blocco */}
+          <div className="flex items-center justify-between gap-3 px-1 py-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={selectedIds.size > 0 && selectedIds.size === contenuti.length}
+                ref={el => { if (el) el.indeterminate = selectedIds.size > 0 && selectedIds.size < contenuti.length }}
+                onChange={toggleSelectAll}
+                className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+              />
+              <span className="text-xs text-gray-500">
+                {selectedIds.size > 0 ? `${selectedIds.size} selezionati` : 'Seleziona tutti'}
+              </span>
+            </label>
+            {selectedIds.size > 0 && (
+              <button
+                onClick={() => setBulkDeleteOpen(true)}
+                className="btn-danger py-1.5 px-3 text-xs inline-flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Elimina selezionati ({selectedIds.size})
+              </button>
+            )}
+          </div>
           {contenuti.map(c => (
             <div
               key={c.id}
               draggable
               onDragStart={e => { e.dataTransfer.setData('contenuto_id', c.id); setDragItem(c.id) }}
               onDragEnd={() => setDragItem(null)}
-              className={`card p-3 md:p-4 hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing ${dragItem === c.id ? 'opacity-50 scale-95' : ''}`}
+              className={`card p-3 md:p-4 hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing ${dragItem === c.id ? 'opacity-50 scale-95' : ''} ${selectedIds.has(c.id) ? 'ring-2 ring-brand-400' : ''}`}
             >
               <div className="flex items-start gap-3 md:gap-4">
+                {/* Checkbox selezione per eliminazione multipla */}
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(c.id)}
+                  onChange={() => toggleSelectId(c.id)}
+                  onClick={e => e.stopPropagation()}
+                  className="mt-1 w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 flex-shrink-0"
+                  title="Seleziona per eliminazione multipla"
+                />
                 {/* Media thumb — click per caricare/sostituire la foto principale */}
                 <label
                   className="relative w-16 h-16 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden group cursor-pointer"
@@ -1163,6 +1264,44 @@ function CalendarioInner() {
               >
                 {deleting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 {deleting ? 'Cancello...' : 'Cancella'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale conferma eliminazione multipla */}
+      {bulkDeleteOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => !bulkDeleting && setBulkDeleteOpen(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900">Eliminare {selectedIds.size} contenuti?</h2>
+                <p className="text-xs text-gray-500">Eliminazione multipla dal calendario</p>
+              </div>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-sm text-gray-700">
+                Elimina definitivamente <span className="font-semibold">{selectedIds.size} contenuti</span> selezionati e i relativi token di approvazione. Utile per svuotare un piano editoriale generato che non ti serve.
+              </p>
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
+                Azione irreversibile. I contenuti già pubblicati sui social non vengono rimossi dalle piattaforme, solo la copia interna.
+              </div>
+            </div>
+            <div className="p-5 border-t flex gap-3">
+              <button onClick={() => setBulkDeleteOpen(false)} disabled={bulkDeleting} className="btn-secondary flex-1 justify-center">
+                Annulla
+              </button>
+              <button
+                onClick={bulkDelete}
+                disabled={bulkDeleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2"
+              >
+                {bulkDeleting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {bulkDeleting ? 'Elimino...' : `Elimina ${selectedIds.size}`}
               </button>
             </div>
           </div>

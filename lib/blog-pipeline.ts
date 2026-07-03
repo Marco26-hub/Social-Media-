@@ -153,7 +153,8 @@ export async function generateBlogLocal(opts: RunOpts): Promise<{ article: BlogA
   })
   let faq: BlogArticle['faq'] = []
   try { faq = (extractJSONArray(faqRaw) as BlogArticle['faq']).slice(0, 5) } catch { faq = [] }
-  emit({ name: 'faq', label: 'FAQ', ok: true, detail: `${faq.length} domande` })
+  // ok riflette il risultato reale: senza FAQ l'articolo perde citabilità GEO, non fingere "✓".
+  emit({ name: 'faq', label: 'FAQ', ok: faq.length > 0, detail: faq.length ? `${faq.length} domande` : 'FAQ non generate' })
 
   // ───────── STEP 5: Meta + title + slug + CTA ─────────
   const metaRaw = await callAI({
