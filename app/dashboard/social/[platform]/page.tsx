@@ -42,6 +42,8 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [states, setStates]   = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({})
   const [errors, setErrors]   = useState<Record<string, string>>({})
   const [pending, setPending] = useState<FormatoConfig | null>(null)
+  const [selectedFormats, setSelectedFormats] = useState<Set<string>>(new Set())
+  const [pendingBatch, setPendingBatch] = useState(false)
   const [aiModel, setAiModel] = useState('meta-llama/llama-3.3-70b-instruct:free')
   const [quality, setQuality] = useState<QualitySelection>('auto')
   const [assets, setAssets] = useState<UploadedAsset[]>([])
@@ -177,6 +179,26 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       setStates(s => ({ ...s, [f.id]: 'error' }))
     }
     setTimeout(() => setStates(s => ({ ...s, [f.id]: 'idle' })), 4000)
+  }
+
+  function toggleFormat(id: string) {
+    setSelectedFormats(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  // Genera in blocco tutti i formati flaggati (uno alla volta, ognuno = un contenuto).
+  async function generaBatch() {
+    setPendingBatch(false)
+    setAiModel(readAISettings().model)
+    const scelti = config.formati.filter(f => selectedFormats.has(f.id))
+    for (const f of scelti) {
+      await genera(f)
+    }
+    setSelectedFormats(new Set())
   }
 
   return (
@@ -343,15 +365,37 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       {/* Format scegliere cosa creare */}
       <div className="mb-8">
         <h2 className="font-bold text-gray-900 mb-1">Cosa vuoi creare?</h2>
-        <p className="text-xs md:text-sm text-gray-500 mb-4">Scegli il formato. L&apos;AI scriverà hook, caption, hashtag e CTA per te.</p>
+        <p className="text-xs md:text-sm text-gray-500 mb-4">Spunta uno o più formati e genera in blocco, oppure usa il bottone del singolo formato. L&apos;AI scriverà hook, caption, hashtag e CTA.</p>
+
+        {/* Barra generazione multipla */}
+        {selectedFormats.size > 0 && (
+          <div className="sticky top-2 z-10 mb-4 flex items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 shadow-sm">
+            <span className="text-sm text-brand-800 font-medium">{selectedFormats.size} formati selezionati</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setSelectedFormats(new Set())} className="text-xs text-gray-500 hover:text-gray-700">Deseleziona</button>
+              <button onClick={() => setPendingBatch(true)} className="btn-primary py-1.5 px-3 text-xs inline-flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" /> Genera selezionati ({selectedFormats.size})
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 md:gap-4">
           {config.formati.map(f => {
             const Icon = f.icon
             const st = states[f.id] ?? 'idle'
+            const checked = selectedFormats.has(f.id)
             return (
-              <div key={f.id} className="card p-4 md:p-5 hover:shadow-md transition-shadow">
+              <div key={f.id} className={`card p-4 md:p-5 hover:shadow-md transition-shadow ${checked ? 'ring-2 ring-brand-400' : ''}`}>
                 <div className="flex items-start gap-3 mb-3">
+                  <label className="flex-shrink-0 cursor-pointer pt-1" title="Seleziona per generazione multipla">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleFormat(f.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                    />
+                  </label>
                   <div className={`w-10 h-10 rounded-xl ${config.colorBg} flex items-center justify-center flex-shrink-0`}>
                     <Icon className="w-5 h-5 text-white" />
                   </div>
@@ -413,6 +457,33 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
                     aiModel.includes('opus') ? '~$0.03' :
                     aiModel.includes('haiku') ? '~$0.004' :
                     '~$0.012',
+            }}
+            running={false}
+          />
+        )
+      })()}
+
+      {/* Confirm modal batch (generazione multipla) */}
+      {pendingBatch && (() => {
+        const isFree = aiModel.endsWith(':free')
+        const n = selectedFormats.size
+        const nomi = config.formati.filter(f => selectedFormats.has(f.id)).map(f => f.nome).join(', ')
+        return (
+          <ConfirmModal
+            open={true}
+            onClose={() => setPendingBatch(false)}
+            onConfirm={generaBatch}
+            title={`Generare ${n} formati ${config.nome}?`}
+            desc={`L'AI genererà ${n} contenuti (${nomi}), uno per formato, aggiunti al calendario in stato DA_APPROVARE. L'AI verrà chiamata ${n} volte.`}
+            modello={aiModel}
+            isFree={isFree}
+            tokenEstimate={{
+              input: 800 * n,
+              output: 600 * n,
+              cost: isFree ? 'GRATIS (OpenRouter free)' :
+                    aiModel.includes('opus') ? `~$${(0.03 * n).toFixed(2)}` :
+                    aiModel.includes('haiku') ? `~$${(0.004 * n).toFixed(3)}` :
+                    `~$${(0.012 * n).toFixed(2)}`,
             }}
             running={false}
           />
