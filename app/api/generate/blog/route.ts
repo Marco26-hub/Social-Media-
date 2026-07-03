@@ -7,6 +7,7 @@ import { resolveContentQuality, summarizeQualityForPrompt } from '@/lib/content-
 import { getClientGenerationContext } from '@/lib/client-context'
 import { buildGenerationOptimizationCyclePrompt } from '@/lib/production-cycle'
 import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS } from '@/lib/prompt-standards'
+import { safeImageUrl } from '@/lib/blog-render'
 
 const PROMPT = `Sei un content writer SEO senior per brand fashion e-commerce.
 Scrivi articolo blog 800-1200 parole in italiano, ottimizzato per SEO e GEO (AI search).
@@ -152,12 +153,22 @@ export async function POST(request: Request) {
     })
 
     const parsed = extractJSON(aiRes) as Record<string, unknown>
+    // Solo URL http(s): blocca javascript:/data: prima di persistere (XSS su src).
+    const coverUrl = safeImageUrl(parsed.immagine_cover) || safeImageUrl(userAssets[0]?.url)
 
+    // ON CONFLICT: unique(cliente_id, slug) → rigenerare lo stesso tema aggiorna
+    // la bozza esistente invece di crashare con duplicate key.
     await q(
       `INSERT INTO blog_articoli (
         cliente_id, slug, meta_title, meta_description, h1, intro, sezioni, faq,
         cta_finale, keywords_target, prodotti_linkati, tempo_lettura_min, immagine_cover, autore, status
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+      ON CONFLICT (cliente_id, slug) DO UPDATE SET
+        meta_title = EXCLUDED.meta_title, meta_description = EXCLUDED.meta_description,
+        h1 = EXCLUDED.h1, intro = EXCLUDED.intro, sezioni = EXCLUDED.sezioni, faq = EXCLUDED.faq,
+        cta_finale = EXCLUDED.cta_finale, keywords_target = EXCLUDED.keywords_target,
+        prodotti_linkati = EXCLUDED.prodotti_linkati, tempo_lettura_min = EXCLUDED.tempo_lettura_min,
+        immagine_cover = EXCLUDED.immagine_cover, status = EXCLUDED.status, updated_at = now()`,
       [
         effectiveClienteId,
         (parsed.slug as string) || `articolo-${Date.now()}`,
@@ -171,7 +182,7 @@ export async function POST(request: Request) {
         JSON.stringify(parsed.keywords_target || []),
         JSON.stringify(parsed.prodotti_linkati || prodotti_linkati || []),
         (parsed.tempo_lettura_min as number) || null,
-        (parsed.immagine_cover as string) || userAssets[0]?.url || null,
+        coverUrl,
         'Brand Editorial',
         (parsed.status as string) || 'DA_APPROVARE',
       ],
