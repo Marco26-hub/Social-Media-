@@ -1,6 +1,12 @@
-# Pacchetti Vendita Social Automation — v3.0
+# Pacchetti Vendita Social Automation — v3.1
 # Target: €1.000/settimana = €4.300/mese
-# Aggiornato: 2026-06-25
+# Aggiornato: 2026-07-06
+
+> ⚠️ **PREZZI AGGIORNATI 2026-07-06.** I listini live sono quelli qui sotto e su `/servizi`.
+> Per il posizionamento vs concorrenti reali (Doctor Web, Basile) vedi
+> **[ANALISI_CONCORRENZA_2026.md](ANALISI_CONCORRENZA_2026.md)** — fonte autorevole.
+> La vecchia strategia "scendere a €799 per battere sul prezzo" è **abbandonata**:
+> si compete sul valore (6 agenti AI vs solo conteggio post).
 
 ## Obiettivo Commerciale
 
@@ -19,11 +25,13 @@ Target: €1.000/settimana = €4.300/mese
 
 | Pacchetto | Setup | Canone/mese | Contenuti | Canali | **AGENTI INCLUSI** |
 |---|---|---|---|---|---|
-| 🌱 **Starter Social** | €0 | **€299** | 8/mese | 1-2 | ✅ Lead Scraper |
-| 🚀 **Presenza Social** | €290 | **€499** | 12/mese | 2 | ✅ Lead Scraper + SEO |
-| ⭐ **Crescita Business** | €890 | **€799** | 20/mese | 3 | ✅ Lead Scraper + SEO + ADS + Competitor |
-| 🛒 **E-commerce Attivo** | €1.890 | **€1.199** | 30/mese | 4 | ✅ Tutti (Lead + SEO + ADS + Competitor + Report) |
-| 👑 **Dominio Digitale** | €2.890 | **€1.699** | 50+/mese | 5 | ✅ Tutti + Strategic Planner |
+| 🌱 **Starter Social** | incluso | **€390** | 8/mese | 1-2 | ✅ Lead Scraper |
+| 🚀 **Presenza Social** | €290 | **€590** | 12/mese | 2 | ✅ Lead Scraper + SEO |
+| ⭐ **Crescita Business** | €490 | **€1.090** | 20/mese | 3 | ✅ Lead Scraper + SEO + ADS + Competitor |
+| 🛒 **E-commerce Attivo** | €990 | **€1.690** | 30/mese | 4 | ✅ Tutti (Lead + SEO + ADS + Competitor + Report) |
+| 👑 **Dominio Digitale** | €1.490 | **€2.590** | 50+/mese | 5 | ✅ Tutti + Strategic Planner |
+
+**Vs concorrenti reali:** Crescita €1.090 < Basile Premium €1.290 e > Doctor Web Premium €940 → sweet spot sul valore (vedi ANALISI_CONCORRENZA_2026.md).
 
 **Headline:** "Agenti AI inclusi di default. Niente add-on nascosti."
 

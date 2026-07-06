@@ -39,7 +39,7 @@ const packages = [
   {
     name: 'Starter Social',
     eyebrow: 'Per iniziare',
-    setup: '€190 setup',
+    setup: 'Setup incluso',
     monthly: '€390/mese',
     description: 'Per freelance, partite IVA e professionisti che vogliono presenza social senza impegni pesanti.',
     features: ['8 contenuti al mese', '1-2 canali social', 'Brand discovery automatico', 'Preview multi-piattaforma', 'Report mensile semplice'],
@@ -47,7 +47,7 @@ const packages = [
   {
     name: 'Presenza Social',
     eyebrow: 'Per attività locali',
-    setup: '€390 setup',
+    setup: '€290 setup',
     monthly: '€590/mese',
     description: 'Per chi ha già un sito e vuole una gestione social ordinata, costante e professionale con AI.',
     features: ['12 contenuti al mese', '2 canali social', 'AI content scoring', 'Piano editoriale strategico', 'Report KPI + call mensile'],
@@ -55,7 +55,7 @@ const packages = [
   {
     name: 'Crescita Business',
     eyebrow: 'Consigliato',
-    setup: '€1.490 setup',
+    setup: '€490 setup',
     monthly: '€1.090/mese',
     description: 'Il pacchetto più equilibrato per PMI che vogliono struttura, contenuti, lead e crescita misurabile.',
     features: ['20 contenuti/mese su 3 canali', 'Reel/Short premium', 'SEO + GEO audit completo', 'Lead scraping + client analysis', 'Compliance AI (GDPR, Cookie)', 'Report bisettimanale + call'],
@@ -64,7 +64,7 @@ const packages = [
   {
     name: 'E-commerce Attivo',
     eyebrow: 'Per vendere online',
-    setup: '€2.900 setup',
+    setup: '€990 setup',
     monthly: '€1.690/mese',
     description: 'Per negozi e brand che vogliono collegare prodotti, promozioni e social in un sistema unico.',
     features: ['30 contenuti/mese su 4 canali', 'Campagne ADS gestite', 'Product tagging + UTM', 'Lead generation + funnel', 'Report settimanale + call strategica'],
@@ -72,7 +72,7 @@ const packages = [
   {
     name: 'Dominio Digitale',
     eyebrow: 'Per aziende strutturate',
-    setup: '€4.900 setup',
+    setup: '€1.490 setup',
     monthly: '€2.590/mese',
     description: 'Strategia omnichannel completa per aziende che vogliono dominare il mercato digitale.',
     features: ['50+ contenuti/mese su 5 canali', 'Blog SEO/GEO continuativo', 'Video production avanzata', 'Strategia omnichannel', 'Dashboard live + priorità assoluta'],
@@ -99,6 +99,26 @@ const extras = [
   'Landing page dedicate per campagne o promozioni',
   'Blog SEO/GEO e articoli lunghi per autorevolezza',
   'Shooting, reel extra e contenuti premium su richiesta',
+]
+
+// Slug pacchetto → allineato a /register e all'API di registrazione.
+const PACK_SLUG: Record<string, string> = {
+  'Starter Social': 'starter',
+  'Presenza Social': 'presenza',
+  'Crescita Business': 'crescita',
+  'E-commerce Attivo': 'ecommerce',
+  'Dominio Digitale': 'dominio',
+}
+
+const compareRows = [
+  { label: 'Contenuti', trad: '2-12 post al mese', us: 'Contenuti multi-canale + reel', usWin: true },
+  { label: 'Audit SEO + GEO', trad: false, us: 'Incluso da Crescita' },
+  { label: 'Lead generation', trad: false, us: 'Scraping + scoring caldo/tiepido/freddo' },
+  { label: 'Analisi competitor', trad: false, us: 'Monitoraggio continuo' },
+  { label: 'Campagne ADS', trad: 'A volte, a parte', us: 'Struttura + ottimizzazione' },
+  { label: 'Report', trad: 'Manuale, se previsto', us: 'Automatico + storico consultabile' },
+  { label: 'Approvazione contenuti', trad: 'Email / chat sparse', us: '1 click nel pannello' },
+  { label: 'Flagship / mese', trad: '€940 - €1.290 (solo social)', us: '€1.090 (sistema completo)', usWin: true },
 ]
 
 const faqs = [
@@ -256,12 +276,44 @@ export default function ServiziPage() {
                   <li key={feature}><CheckCircle2 size={16} /> {feature}</li>
                 ))}
               </ul>
-              <a href={waLink(`Ciao! Sono interessato al pacchetto "${pack.name}" (${pack.monthly}). Possiamo parlarne?`)} target="_blank" rel="noopener" className={pack.featured ? styles.packageCtaFeatured : styles.packageCta}>
-                Voglio questo
+              <Link href={`/register?piano=${PACK_SLUG[pack.name]}`} className={pack.featured ? styles.packageCtaFeatured : styles.packageCta}>
+                Attiva ora
                 <ChevronRight size={16} />
-              </a>
+              </Link>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className={styles.compareSection}>
+        <div className={styles.sectionIntroNarrow}>
+          <p className={styles.sectionLabel}>Perché noi</p>
+          <h2>Non paghi i post. Paghi un sistema.</h2>
+          <p>La gestione social tradizionale vende un numero di post al mese. Social Automation coordina sei agenti AI e la pubblicazione, con l’approvazione umana al centro.</p>
+        </div>
+        <div className={styles.compareTableWrap}>
+          <table className={styles.compareTable}>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Gestione tradizionale</th>
+                <th className={styles.compareUs}>Social Automation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {compareRows.map(row => (
+                <tr key={row.label}>
+                  <td className={styles.compareLabel}>{row.label}</td>
+                  <td className={styles.compareTrad}>
+                    {row.trad === false ? <span className={styles.compareNo}>✕</span> : row.trad}
+                  </td>
+                  <td className={row.usWin ? `${styles.compareUsCell} ${styles.compareUsWin}` : styles.compareUsCell}>
+                    <CheckCircle2 size={15} /> {row.us}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 

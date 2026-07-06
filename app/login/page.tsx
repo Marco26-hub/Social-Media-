@@ -69,7 +69,14 @@ export default function LoginPage() {
     setError('')
     const res = await signIn('credentials', { email, password, redirect: false })
     if (res?.error) {
-      setError('Credenziali non valide')
+      const err = res.error || ''
+      if (/IN_ATTESA/.test(err)) {
+        setError('Account in attesa di attivazione. Ti avvisiamo via email appena è pronto.')
+      } else if (/RIFIUTATO/.test(err)) {
+        setError('Questo account non è stato attivato. Contattaci per assistenza.')
+      } else {
+        setError('Credenziali non valide')
+      }
       setLoading(false)
     } else {
       router.push('/dashboard/clienti')

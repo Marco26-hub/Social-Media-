@@ -722,6 +722,96 @@
   color: var(--ink);
 }
 
+/* ---------- Confronto valore ---------- */
+.compareSection {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 72px;
+}
+
+.compareTableWrap {
+  overflow-x: auto;
+  border-radius: 30px;
+  border: 1px solid var(--line);
+  background: rgba(255, 250, 240, 0.7);
+  box-shadow: 0 24px 64px rgba(16, 18, 14, 0.1);
+}
+
+.compareTable {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.compareTable th,
+.compareTable td {
+  padding: 18px 22px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.compareTable thead th {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  border-bottom: 1px solid var(--line);
+}
+
+.compareTable thead th.compareUs {
+  color: var(--ink);
+  background: rgba(214, 168, 57, 0.16);
+  border-radius: 20px 20px 0 0;
+}
+
+.compareTable tbody tr + tr td {
+  border-top: 1px solid rgba(16, 18, 14, 0.08);
+}
+
+.compareLabel {
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.compareTrad {
+  color: rgba(16, 18, 14, 0.55);
+}
+
+.compareNo {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(168, 83, 45, 0.12);
+  color: var(--rust);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.compareUsCell {
+  color: var(--forest);
+  font-weight: 600;
+  background: rgba(214, 168, 57, 0.08);
+}
+
+.compareUsCell svg {
+  vertical-align: -2px;
+  margin-right: 6px;
+  color: var(--moss);
+}
+
+.compareUsWin {
+  font-weight: 800;
+  background: rgba(214, 168, 57, 0.16);
+}
+
+.compareTable tbody tr:last-child .compareUsCell {
+  border-radius: 0 0 20px 20px;
+}
+
 /* ============================================================
    PREMIUM POLISH — entrance motion, depth, micro-interactions
    ============================================================ */

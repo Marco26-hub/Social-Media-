@@ -323,10 +323,10 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Link
-                  href="/servizi"
+                  href={`/register?piano=${piano.nome.toLowerCase()}`}
                   className={`${styles.priceCta} ${piano.consigliato ? styles.priceCtaGold : styles.priceCtaGhost}`}
                 >
-                  Vedi i dettagli
+                  Registrati
                   <ChevronRight size={16} />
                 </Link>
               </TiltCard>
