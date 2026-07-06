@@ -494,16 +494,17 @@
 
 .packageGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .packageCard {
   display: flex;
   flex-direction: column;
-  min-height: 520px;
-  padding: 24px;
-  border-radius: 30px;
+  min-width: 0;
+  min-height: 500px;
+  padding: 20px;
+  border-radius: 26px;
 }
 
 .featuredPackage {
@@ -525,7 +526,8 @@
 }
 
 .packageCard h3 {
-  font-size: 34px;
+  font-size: clamp(22px, 1.7vw, 28px);
+  overflow-wrap: break-word;
 }
 
 .priceBlock {
@@ -597,11 +599,12 @@
 
 .methodTimeline {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 }
 
 .methodTimeline article {
+  min-width: 0;
   min-height: 310px;
   padding: 20px;
   border-radius: 26px;
@@ -615,7 +618,10 @@
 }
 
 .methodTimeline h3 {
-  font-size: 26px;
+  font-size: clamp(19px, 1.6vw, 26px);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .approvalSection {
@@ -716,6 +722,182 @@
   color: var(--ink);
 }
 
+/* ============================================================
+   PREMIUM POLISH — entrance motion, depth, micro-interactions
+   ============================================================ */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(26px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(34px, -28px) scale(1.1); }
+}
+
+@keyframes shine {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to   { transform: translateX(220%) skewX(-18deg); }
+}
+
+@keyframes featuredGlow {
+  0%, 100% { box-shadow: 0 34px 90px rgba(168, 83, 45, 0.32), 0 0 0 1px rgba(214, 168, 57, 0.34); }
+  50%      { box-shadow: 0 46px 130px rgba(168, 83, 45, 0.46), 0 0 0 1px rgba(214, 168, 57, 0.62); }
+}
+
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 255, 157, 0.55); }
+  50%      { box-shadow: 0 0 0 11px rgba(139, 255, 157, 0); }
+}
+
+/* Hero entrance + living orb */
+.heroContent { animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.heroPanel {
+  animation: rise 1.05s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease;
+}
+.heroPanel:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 44px 110px rgba(16, 18, 14, 0.34);
+}
+.heroGlow { animation: floatOrb 13s ease-in-out infinite; filter: blur(26px); }
+.liveDot { animation: dotPulse 2.4s ease-in-out infinite; }
+
+/* Stat cards */
+.heroStats div {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.heroStats div:hover {
+  transform: translateY(-5px);
+  border-color: rgba(214, 168, 57, 0.55);
+  box-shadow: 0 22px 46px rgba(16, 18, 14, 0.13);
+}
+
+/* Content cards — refined lift + gold border on hover */
+.problemCards article,
+.outcomeCard,
+.faqGrid article,
+.methodTimeline article {
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.42s ease, border-color 0.42s ease;
+}
+.problemCards article:hover,
+.outcomeCard:hover,
+.faqGrid article:hover,
+.methodTimeline article:hover {
+  transform: translateY(-7px);
+  border-color: rgba(214, 168, 57, 0.5);
+  box-shadow: 0 32px 74px rgba(16, 18, 14, 0.16);
+}
+
+.extrasList div {
+  transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+.extrasList div:hover {
+  transform: translateX(7px);
+  background: rgba(255, 250, 240, 0.96);
+  box-shadow: 0 16px 40px rgba(16, 18, 14, 0.1);
+}
+
+/* Package cards */
+.packageCard {
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.42s ease;
+}
+.packageCard:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 44px 96px rgba(16, 18, 14, 0.34);
+}
+.featuredPackage {
+  animation: featuredGlow 4.6s ease-in-out infinite;
+}
+.featuredPackage:hover {
+  transform: translateY(-28px) scale(1.015);
+}
+
+/* Buttons — lift + gold sheen sweep */
+.primaryButton,
+.secondaryButton,
+.secondaryButtonDark,
+.packageCta,
+.packageCtaFeatured,
+.navCta {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+.primaryButton::after,
+.packageCtaFeatured::after,
+.navCta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+}
+.primaryButton:hover,
+.packageCtaFeatured:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px rgba(168, 83, 45, 0.36);
+}
+.primaryButton:hover::after,
+.packageCtaFeatured:hover::after,
+.navCta:hover::after {
+  animation: shine 0.85s ease;
+}
+.secondaryButton:hover,
+.packageCta:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 18, 14, 0.4);
+  background: rgba(255, 250, 240, 0.85);
+}
+.secondaryButtonDark:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 250, 240, 0.5);
+}
+.navCta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(16, 18, 14, 0.26);
+}
+
+/* Nav link underline reveal */
+.navLinks a {
+  position: relative;
+  transition: color 0.2s ease;
+}
+.navLinks a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -5px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--gold);
+  transition: right 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.navLinks a:hover { color: var(--ink); }
+.navLinks a:hover::after { right: 0; }
+
+/* Footer admin lift */
+.footerAdmin {
+  transition: transform 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+.footerAdmin:hover { transform: translateY(-2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .heroContent,
+  .heroPanel,
+  .heroGlow,
+  .liveDot,
+  .featuredPackage {
+    animation: none;
+  }
+}
+
 @media (max-width: 1100px) {
   .hero,
   .problemSection,
@@ -725,9 +907,9 @@
     grid-template-columns: 1fr;
   }
 
-  .packageGrid,
-  .outcomeGrid {
-    grid-template-columns: repeat(2, 1fr);
+  .outcomeGrid,
+  .packageGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .problemCards,
