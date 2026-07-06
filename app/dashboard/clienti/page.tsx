@@ -49,6 +49,12 @@ export default function ClientiPage() {
     }
 
     const res = await fetch('/api/data/clienti')
+    if (res.status === 401) {
+      // Sessione scaduta/assente (es. pagina in cache da sessione precedente):
+      // manda al login invece di un errore muto.
+      window.location.href = '/login'
+      return
+    }
     if (!res.ok) {
       setError('Errore nel caricamento clienti')
       setLoading(false)
