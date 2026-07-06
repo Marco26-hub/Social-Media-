@@ -38,12 +38,16 @@ export async function POST() {
   )
 
   let synced = 0
+  let dryRun = 0
+  let skipped = 0
   const errors: { id_contenuto: string; canale: string; error: string }[] = []
 
   for (const row of rows) {
     try {
-      const id = await scheduleOnBlotato(clienteId, row)
-      if (id) synced++
+      const outcome = await scheduleOnBlotato(clienteId, row)
+      if (outcome.status === 'scheduled') synced++
+      else if (outcome.status === 'dry_run') dryRun++
+      else skipped++
     } catch (e) {
       errors.push({
         id_contenuto: String(row.id_contenuto ?? row.id ?? '?'),
@@ -57,7 +61,10 @@ export async function POST() {
     ok: errors.length === 0,
     candidates: rows.length,
     synced,
+    dry_run: dryRun,
+    skipped,
     failed: errors.length,
+    ...(dryRun > 0 ? { note: 'Pubblicazione disattivata (PUBLISH_ENABLED=false): contenuti pronti ma NON pubblicati.' } : {}),
     errors: errors.slice(0, 20),
   })
 }

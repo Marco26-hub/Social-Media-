@@ -42,22 +42,29 @@ function toIso(data: unknown, ora: unknown): string {
   return dt.toISOString()
 }
 
+// Esito esplicito della pubblicazione: NIENTE fallback silenzioso.
+// Il chiamante sa sempre se ha davvero programmato, se è dry-run o se è stato saltato.
+export type PublishOutcome =
+  | { status: 'scheduled'; blotatoId: string }
+  | { status: 'dry_run' }
+  | { status: 'skipped'; reason: string }
+
 export async function scheduleOnBlotato(
   clienteId: string,
   row: ContentRow,
-) {
+): Promise<PublishOutcome> {
   // Guardia pubblicazione: se non live (demo o PUBLISH_ENABLED != true) → dry-run.
   // Il contenuto resta APPROVATO senza blotato_post_id: verrà pubblicato quando
   // si abilita PUBLISH_ENABLED e si rilancia la sincronizzazione Blotato.
   if (!isPublishingLive()) {
     console.warn('[Blotato] pubblicazione disabilitata (PUBLISH_ENABLED != true o demo) → dry-run, nessun post reale.')
-    return null
+    return { status: 'dry_run' }
   }
 
   const blotatoKey = await getBlotatoKey(clienteId)
   if (!blotatoKey) {
     console.warn('[Blotato] key non configurata (né per cliente né env)')
-    return null
+    return { status: 'skipped', reason: 'Blotato API key non configurata' }
   }
 
   const canale = row.canale as string
@@ -67,7 +74,7 @@ export async function scheduleOnBlotato(
   const platform = CANALE_TO_BLOTATO[canale]
   if (!platform) {
     console.warn(`[Blotato] canale '${canale}' non pubblicabile via Blotato (es. blog) — saltato`)
-    return null
+    return { status: 'skipped', reason: `Canale '${canale}' non pubblicabile via Blotato` }
   }
 
   // accountId è OBBLIGATORIO per Blotato: identifica SU QUALE account social pubblicare.
@@ -132,8 +139,13 @@ export async function scheduleOnBlotato(
   const result = await res.json()
   const blotatoId = result.id || result.postSubmissionId || result.submissionId || result.scheduled_id
 
+  if (!blotatoId) {
+    console.warn('[Blotato] risposta senza id post — non confermato')
+    return { status: 'skipped', reason: 'Blotato non ha restituito un id post' }
+  }
+
   // Aggiorna status locale
-  if (blotatoId && row.id) {
+  if (row.id) {
     await q(
       `UPDATE calendario
        SET blotato_post_id = $1, blotato_status = 'scheduled', blotato_scheduled_at = $2, blotato_sync_at = now()
@@ -142,7 +154,7 @@ export async function scheduleOnBlotato(
     )
   }
 
-  return blotatoId
+  return { status: 'scheduled', blotatoId: String(blotatoId) }
 }
 
 function buildPlatformContent(canale: string, formato: string, row: ContentRow): string {

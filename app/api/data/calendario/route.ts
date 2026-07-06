@@ -193,12 +193,17 @@ export async function PATCH(request: Request) {
 
     // Se approvato, schedula su Blotato
     let schedulingError: string | null = null
+    let publishStatus: 'scheduled' | 'dry_run' | 'skipped' | null = null
+    let publishNote: string | null = null
     if (body.status === 'APPROVATO') {
       try {
         const content = await q('SELECT * FROM calendario WHERE id = $1 AND cliente_id = $2', [id, cid])
         if (content.length) {
           const row = content[0] as Record<string, unknown>
-          await scheduleOnBlotato(cid, row)
+          const outcome = await scheduleOnBlotato(cid, row)
+          publishStatus = outcome.status
+          if (outcome.status === 'dry_run') publishNote = 'Pubblicazione disattivata (PUBLISH_ENABLED=false): contenuto approvato ma NON pubblicato. Sarà pubblicato quando abiliti la pubblicazione.'
+          else if (outcome.status === 'skipped') publishNote = outcome.reason
         }
       } catch (scheduleError) {
         console.error('Blotato scheduling failed:', scheduleError)
@@ -217,7 +222,8 @@ export async function PATCH(request: Request) {
       if (content.length) {
         const row = content[0] as Record<string, unknown>
         const statusStr = body.status as string
-        if (statusStr === 'APPROVATO') {
+        // Notifica 'pubblicato' SOLO se davvero programmato (non dry-run/skipped).
+        if (statusStr === 'APPROVATO' && publishStatus === 'scheduled') {
           notifyAgency({ type: 'pubblicato', id_contenuto: row.id_contenuto as string, canale: row.canale as string, formato: row.formato as string }).catch(() => {})
         } else if (statusStr === 'ERRORE' || statusStr === 'ERRORE_MANUALE') {
           notifyAgency({ type: 'errore', id_contenuto: row.id_contenuto as string, canale: row.canale as string, errore: (row.errore_tecnico as string) || 'Errore sconosciuto' }).catch(() => {})
@@ -230,7 +236,13 @@ export async function PATCH(request: Request) {
     if (schedulingError) {
       return NextResponse.json({ ok: true, scheduled: false, scheduling_error: schedulingError, ...(skippedSchemaFields.length ? { schema_fallback: true, skipped_fields: skippedSchemaFields } : {}) })
     }
-    return NextResponse.json({ ok: true, ...(body.status === 'APPROVATO' ? { scheduled: true } : {}), ...(skippedSchemaFields.length ? { schema_fallback: true, skipped_fields: skippedSchemaFields } : {}) })
+    return NextResponse.json({
+      ok: true,
+      ...(body.status === 'APPROVATO'
+        ? { scheduled: publishStatus === 'scheduled', publish_status: publishStatus, ...(publishNote ? { publish_note: publishNote } : {}) }
+        : {}),
+      ...(skippedSchemaFields.length ? { schema_fallback: true, skipped_fields: skippedSchemaFields } : {}),
+    })
   } catch (e) {
     return apiError(e)
   }

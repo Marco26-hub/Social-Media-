@@ -146,13 +146,13 @@
   margin: 0;
   font-family: "Fraunces", Georgia, serif;
   font-weight: 900;
-  letter-spacing: -0.065em;
-  line-height: 0.94;
+  letter-spacing: -0.045em;
+  line-height: 1;
 }
 
 .hero h1 {
-  max-width: 790px;
-  font-size: clamp(58px, 8vw, 118px);
+  max-width: 720px;
+  font-size: clamp(40px, 5.2vw, 76px);
 }
 
 .heroLead {
@@ -366,7 +366,7 @@
 .methodIntro h2,
 .extrasSection h2,
 .ctaBox h2 {
-  font-size: clamp(40px, 5vw, 72px);
+  font-size: clamp(30px, 3.6vw, 52px);
 }
 
 .problemCards,
