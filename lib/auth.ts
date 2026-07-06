@@ -5,7 +5,7 @@ import { q, dbReady } from '@/lib/db'
 import { AUTH_SECRET } from '@/lib/auth-secret'
 
 declare module 'next-auth' {
-  interface User { id: string; email: string; name: string }
+  interface User { id: string; email: string; name: string; ruolo?: string }
   interface Session { user: User }
 }
 
@@ -20,19 +20,19 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
         if (!dbReady()) {
-          return { id: 'demo-user', email: credentials.email, name: 'Admin Demo' }
+          return { id: 'demo-user', email: credentials.email, name: 'Admin Demo', ruolo: 'super_admin' }
         }
         try {
-          const rows = await q('SELECT id, email, nome, password_hash, status FROM profiles WHERE email = $1 LIMIT 1', [credentials.email])
+          const rows = await q('SELECT id, email, nome, password_hash, status, ruolo_globale FROM profiles WHERE email = $1 LIMIT 1', [credentials.email])
           if (!rows.length) return null
-          const user = rows[0] as { id: string; email: string; nome: string; password_hash: string; status?: string }
+          const user = rows[0] as { id: string; email: string; nome: string; password_hash: string; status?: string; ruolo_globale?: string }
           const valid = await bcrypt.compare(credentials.password, user.password_hash)
           if (!valid) return null
           // Gate attivazione (fail-closed): entra SOLO chi è 'active'.
           if (user.status === 'pending') throw new Error('IN_ATTESA')
           if (user.status === 'rejected') throw new Error('RIFIUTATO')
           if (user.status && user.status !== 'active') throw new Error('NON_ATTIVO')
-          return { id: user.id, email: user.email, name: user.nome || user.email }
+          return { id: user.id, email: user.email, name: user.nome || user.email, ruolo: user.ruolo_globale || 'user' }
         } catch (error) {
           // Errori di gate espliciti: propaga a NextAuth per mostrare il messaggio.
           if (error instanceof Error && ['IN_ATTESA', 'RIFIUTATO', 'NON_ATTIVO'].includes(error.message)) throw error
@@ -45,11 +45,16 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) { token.id = user.id; token.email = user.email; token.name = user.name }
+      if (user) { token.id = user.id; token.email = user.email; token.name = user.name; token.ruolo = user.ruolo }
       return token
     },
     async session({ session, token }) {
-      if (session.user) { session.user.id = token.id as string; session.user.email = token.email as string; session.user.name = token.name as string }
+      if (session.user) {
+        session.user.id = token.id as string
+        session.user.email = token.email as string
+        session.user.name = token.name as string
+        session.user.ruolo = token.ruolo as string
+      }
       return session
     },
   },

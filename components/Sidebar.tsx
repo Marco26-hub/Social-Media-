@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { PLATFORM_LIST } from '@/lib/social-config'
 import ClienteSelector from '@/components/ClienteSelector'
 import {
@@ -11,7 +11,7 @@ import {
   Users, BarChart3, Sparkles, TrendingUp, FileText, UserPlus, Eye, ShieldCheck, Magnet, Globe, Activity, PenLine, UserCheck
 } from 'lucide-react'
 
-type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string; external?: boolean }
+type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string; external?: boolean; adminOnly?: boolean }
 type NavSection = { title: string; items: NavItem[] }
 
 const SECTIONS: NavSection[] = [
@@ -49,7 +49,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: '/dashboard/brand',       label: 'Profilo Brand',  icon: Sparkles },
       { href: '/dashboard/clienti',     label: 'Clienti',       icon: Users },
-      { href: '/dashboard/registrazioni', label: 'Registrazioni', icon: UserCheck },
+      { href: '/dashboard/registrazioni', label: 'Registrazioni', icon: UserCheck, adminOnly: true },
       { href: '/dashboard/onboarding',  label: 'Onboarding',    icon: UserPlus },
       { href: '/dashboard/prodotti',    label: 'Prodotti',      icon: Package },
       { href: '/dashboard/setup',       label: 'Setup Produzione', icon: ShieldCheck },
@@ -62,6 +62,8 @@ const SECTIONS: NavSection[] = [
 export default function Sidebar() {
   const pathname = usePathname()
   const router   = useRouter()
+  const { data: session } = useSession()
+  const isAdmin = ['admin', 'super_admin'].includes(session?.user?.ruolo ?? '')
   const [open, setOpen] = useState(false)
 
   useEffect(() => { setOpen(false) }, [pathname])
@@ -123,7 +125,7 @@ export default function Sidebar() {
                 </p>
               )}
               <div className="space-y-0.5">
-                {section.items.map(item => {
+                {section.items.filter(item => !item.adminOnly || isAdmin).map(item => {
                   const active = !item.external && (
                     pathname === item.href ||
                     (item.href !== '/dashboard' && item.href !== '/' && pathname.startsWith(item.href))

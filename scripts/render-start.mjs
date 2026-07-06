@@ -25,7 +25,20 @@ function runMigrationsIfNeeded() {
     process.exit(code)
   }
 
-  console.log('[render-start] Migrations completate: avvio Next.js.')
+  console.log('[render-start] Migrations completate.')
+}
+
+function ensureAdminIfNeeded() {
+  if (!hasDatabase) return
+  console.log('[render-start] Bootstrap admin da env (se ADMIN_EMAIL/ADMIN_PASSWORD impostate)...')
+  const result = spawnSync(process.execPath, ['scripts/ensure-admin.mjs'], {
+    stdio: 'inherit',
+    env: process.env,
+  })
+  // Non fatale: un fallimento del bootstrap admin non blocca l'avvio.
+  if (result.status !== 0) {
+    console.warn('[render-start] ensure-admin ha restituito codice non-zero (ignorato).')
+  }
 }
 
 function startNext() {
@@ -57,6 +70,7 @@ if (!isProduction) {
   console.log('[render-start] NODE_ENV non production: avvio Next senza migrations automatiche.')
 } else {
   runMigrationsIfNeeded()
+  ensureAdminIfNeeded()
 }
 
 startNext()
