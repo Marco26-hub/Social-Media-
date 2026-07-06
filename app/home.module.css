@@ -562,7 +562,7 @@
 .pricing .h2, .pricing .lead { color: var(--cream); }
 .pricing .lead { color: rgba(255, 250, 240, 0.72); }
 
-.priceGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+.priceGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; align-items: stretch; }
 
 .priceCard {
   display: flex;
@@ -754,7 +754,6 @@
   .hero { grid-template-columns: 1fr; gap: 40px; padding-top: 48px; }
   .heroVisual { max-width: 560px; }
   .grid3 { grid-template-columns: repeat(2, 1fr); }
-  .priceGrid { grid-template-columns: 1fr; max-width: 460px; margin: 0 auto; }
 }
 
 @media (max-width: 640px) {

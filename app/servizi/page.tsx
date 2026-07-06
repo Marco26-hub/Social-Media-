@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 
 const packages = [
   {
-    name: 'Starter Social',
+    name: 'Starter',
     eyebrow: 'Per iniziare',
     setup: 'Setup incluso',
     monthly: '€390/mese',
@@ -44,7 +44,7 @@ const packages = [
     features: ['8 contenuti al mese', '1-2 canali social', 'Brand discovery automatico', 'Preview multi-piattaforma', 'Report mensile semplice'],
   },
   {
-    name: 'Presenza Social',
+    name: 'Presenza',
     eyebrow: 'Per attività locali',
     setup: '€290 setup',
     monthly: '€590/mese',
@@ -52,7 +52,7 @@ const packages = [
     features: ['12 contenuti al mese', '2 canali social', 'AI content scoring', 'Piano editoriale strategico', 'Report KPI + call mensile'],
   },
   {
-    name: 'Crescita Business',
+    name: 'Crescita',
     eyebrow: 'Consigliato',
     setup: '€490 setup',
     monthly: '€1.090/mese',
@@ -61,7 +61,7 @@ const packages = [
     featured: true,
   },
   {
-    name: 'E-commerce Attivo',
+    name: 'E-commerce',
     eyebrow: 'Per vendere online',
     setup: '€990 setup',
     monthly: '€1.690/mese',
@@ -69,7 +69,7 @@ const packages = [
     features: ['30 contenuti/mese su 4 canali', 'Campagne ADS gestite', 'Product tagging + UTM', 'Lead generation + funnel', 'Report settimanale + call strategica'],
   },
   {
-    name: 'Dominio Digitale',
+    name: 'Dominio',
     eyebrow: 'Per aziende strutturate',
     setup: '€1.490 setup',
     monthly: '€2.590/mese',
@@ -102,11 +102,11 @@ const extras = [
 
 // Slug pacchetto → allineato a /register e all'API di registrazione.
 const PACK_SLUG: Record<string, string> = {
-  'Starter Social': 'starter',
-  'Presenza Social': 'presenza',
-  'Crescita Business': 'crescita',
-  'E-commerce Attivo': 'ecommerce',
-  'Dominio Digitale': 'dominio',
+  'Starter': 'starter',
+  'Presenza': 'presenza',
+  'Crescita': 'crescita',
+  'E-commerce': 'ecommerce',
+  'Dominio': 'dominio',
 }
 
 const compareRows = [

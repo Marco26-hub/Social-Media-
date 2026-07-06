@@ -69,11 +69,25 @@ const PIANI = [
     consigliato: false,
   },
   {
+    nome: 'Presenza',
+    prezzo: '€590',
+    sottotitolo: 'Per attività locali che vogliono costanza.',
+    features: ['12 contenuti al mese', '2 canali social', 'Piano editoriale strategico', 'AI content scoring', 'Report KPI + call'],
+    consigliato: false,
+  },
+  {
     nome: 'Crescita',
     prezzo: '€1.090',
     sottotitolo: 'Il piano più equilibrato per PMI in crescita.',
     features: ['Contenuti su più canali', 'Reel e Short premium', 'Audit SEO + GEO completo', 'Analisi competitor e lead', 'Report ricorrente con call'],
     consigliato: true,
+  },
+  {
+    nome: 'E-commerce',
+    prezzo: '€1.690',
+    sottotitolo: 'Per negozi e brand che vendono online.',
+    features: ['30 contenuti su 4 canali', 'Campagne ADS gestite', 'Product tagging + UTM', 'Lead generation + funnel', 'Report settimanale + call'],
+    consigliato: false,
   },
   {
     nome: 'Dominio',
