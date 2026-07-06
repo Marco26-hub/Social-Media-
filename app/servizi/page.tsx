@@ -21,10 +21,9 @@ import {
 } from 'lucide-react'
 import styles from './servizi.module.css'
 
-// ⚙️ CONFIG CONTATTI — cambia questi 3 valori col tuo numero/email/demo reali
+// ⚙️ CONFIG CONTATTI — cambia questi 2 valori col tuo numero/email reali
 const WHATSAPP_NUMERO = '393477196603' // prefisso 39, no +, no spazi
 const EMAIL_CONTATTO = 'swsdautomation@gmail.com'
-const DEMO_URL = 'https://social-media-manager-zte4.onrender.com/login'
 
 function waLink(messaggio: string) {
   return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(messaggio)}`
@@ -177,8 +176,8 @@ export default function ServiziPage() {
               Scrivici su WhatsApp
               <ArrowRight size={18} />
             </a>
-            <a href={DEMO_URL} target="_blank" rel="noopener" className={styles.secondaryButton}>
-              Vedi la demo live
+            <a href={waLink('Ciao! Vorrei vedere una demo di Social Automation.')} target="_blank" rel="noopener" className={styles.secondaryButton}>
+              Richiedi una demo
             </a>
           </div>
           <p className={styles.heroReassure}>
