@@ -592,36 +592,40 @@
 }
 
 .methodSection {
-  display: grid;
-  grid-template-columns: 0.68fr 1.32fr;
-  gap: 32px;
+  display: block;
+}
+
+.methodSection .methodIntro {
+  max-width: 720px;
+  margin-bottom: 34px;
 }
 
 .methodTimeline {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  gap: 16px;
 }
 
 .methodTimeline article {
   min-width: 0;
-  min-height: 310px;
-  padding: 20px;
+  min-height: 260px;
+  padding: 24px;
   border-radius: 26px;
 }
 
 .methodTimeline span {
   display: block;
-  margin-bottom: 72px;
+  margin-bottom: 40px;
   color: var(--rust);
   font-weight: 900;
 }
 
 .methodTimeline h3 {
-  font-size: clamp(19px, 1.6vw, 26px);
+  font-size: clamp(17px, 1.4vw, 20px);
+  letter-spacing: -0.02em;
   overflow-wrap: break-word;
-  word-break: break-word;
-  hyphens: auto;
+  word-break: normal;
+  hyphens: none;
 }
 
 .approvalSection {
