@@ -170,7 +170,9 @@ export default async function DashboardPage() {
       title: '4. Crea contenuti',
       input: 'Le scelte fatte nei passi prima',
       output: 'Post, reel, storie e articoli scritti',
-      href: '/dashboard/social/instagram',
+      // Piano editoriale: un click genera per TUTTI i social selezionati.
+      // (Prima era hardcodato su Instagram → mandava sempre e solo lì.)
+      href: '/dashboard/piano',
       icon: ImagePlus,
       done: daApprovare > 0 || inCoda > 0 || pubblicati7g > 0,
       cta: 'Crea contenuti',

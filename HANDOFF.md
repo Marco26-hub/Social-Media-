@@ -2,12 +2,53 @@
 
 > Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
-**Data ultimo aggiornamento**: 2026-07-03 sera (sessione lunga: storage B2, Gemini 2.5, cross-post, ComfyUI, interconnessioni UI + molti fix con OpenCode in parallelo)
+**Data ultimo aggiornamento**: 2026-07-06 (Claude CLI: landing premium, prezzi validati, registrazione self-serve + provisioning, security hardening, disaccoppiamento demo/publish, fix mobile + AI error)
 **Progetto**: Social Automation — SaaS social media management per agenzie
 **Stack**: Next.js 15.5.19 + Neon/Postgres + NextAuth + Tailwind + AI (Gemini/OpenRouter/Anthropic/OpenCode/Ollama)
 **Percorso locale**: `/Users/md/Documents/social_automation_v2`
 **Repo**: `https://github.com/Marco26-hub/social-media-manager.git`
 **Deploy live**: `https://social-media-manager-zte4.onrender.com` (Render free, service id `srv-d8up0lvavr4c73fjd1k0`)
+
+---
+
+## 🆕 Sessione 2026-07-06 (Claude CLI) — landing premium, funnel vendita, security, fix mobile
+
+Working tree su `main`, `build` verde ad ogni commit. Deploy live verificato (`health.mode=production`).
+
+### Landing & prezzi
+- **Landing `/` ridisegnata premium** (nuovo `app/home.module.css`): stile editoriale Fraunces + palette cream/forest/gold, hero 3D tilt (`components/TiltCard.tsx`), orbs, motion. Coerente con `/servizi`.
+- **`/servizi`**: fix impaginazione (pricing 5 card `auto-fit`, timeline metodo full-width titoli su 1 riga), scala testi ridotta (hero 118→76px), setup ridotti, blocco confronto valore "Non paghi i post. Paghi un sistema.".
+- **Prezzi validati vs concorrenza reale 2026** (`ANALISI_CONCORRENZA_2026.md`): Doctor Web (€249/490/940), Basile (€590/890/1.290). Canoni **invariati** (390/590/1.090/1.690/2.590), **setup ridotti** (incluso/290/490/990/1.490). Strategia = valore, non prezzo. `PACCHETTI-VENDITA.md` allineato.
+
+### Registrazione self-serve (onboarding con pacchetto)
+- `/register` (`app/register/`) — pacchetto preselezionato da `?piano=`, form, stato `pending`. `POST /api/auth/register` (validazione + bcrypt cost 12 + insert `pending`).
+- **Gate login fail-closed** (`lib/auth.ts`): entra solo `status='active'`; `pending`/`rejected`/altro bloccati con messaggio.
+- **Approvazione admin**: `/dashboard/registrazioni` + `/api/admin/registrazioni` (requireAdmin). All'attivazione **crea il workspace** (`clienti` con piano/contenuti mappati dal pacchetto + `user_client_access` owner) — prima l'utente attivato entrava in pannello vuoto.
+- Migration `022_onboarding_signup.sql`: `status/azienda/telefono/pacchetto/note` su `profiles` (esistenti → `active`).
+- **Ruolo in sessione** (`lib/auth.ts` + `components/AuthProvider.tsx` SessionProvider): voce sidebar "Registrazioni" solo admin.
+- CTA: hero/consulenza → WhatsApp (freddo); card pacchetti → `/register` (caldo). Split voluto (B2B: prima contatto, register per chi è deciso).
+
+### Sicurezza / admin
+- **Admin default**: `scripts/ensure-admin.mjs` (hook in `render-start`) crea admin reale da `ADMIN_EMAIL`/`ADMIN_PASSWORD` e **disabilita** `admin/1234567`. Env aggiunte in `render.yaml`.
+- **Audit sicurezza** (nessun GRAVE): rate-limit su `/api/auth/callback/credentials` + `/api/auth/register` (10/IP/5min, `middleware.ts`); SSRF scraper `redirect:'manual'` + rivalida host (`scrape-contacts`); `apiError` non espone più `Error.message` grezzo sul 500.
+
+### Publish disaccoppiato dal demo + no fallback silenzioso
+- **`PUBLISH_ENABLED`** (default `false`): `isPublishingLive()` in `lib/publish/schedule.ts` = `!isDemo() && PUBLISH_ENABLED==='true'`. Permette produzione reale (registrazione/dati veri) SENZA pubblicare sui social finché non pronto.
+- `scheduleOnBlotato` ritorna `PublishOutcome` tipizzato (`scheduled|dry_run|skipped`): calendario approve/blotato-sync surface lo stato reale (prima ritornava sempre `scheduled:true` → falso "pubblicato").
+
+### Fix mobile + AI (fine sessione)
+- Landing prezzi: rimosso `.priceCardFeatured { order:-1 }` → su mobile i prezzi restavano fuori ordine (1.090 prima di 390).
+- Calendario: icona "Dettagli" era identica a "Preview" (entrambe `Eye`) → ora `Info`. Aggiunti `title` a tutti i pulsanti azione + label "Valuta" al pulsante AI-scoring (✨). Card: `flex-wrap` così le azioni vanno full-width sotto su schermo stretto (prima schiacciavano il testo a 1 parola/riga).
+- Dashboard step "4. Crea contenuti": era hardcodato `/dashboard/social/instagram` → ora `/dashboard/piano` (genera per tutti i social, non solo IG).
+- **`lib/ai.ts`**: (a) se la BYO key ha formato invalido MA esiste una key server, NON mostra più "Key Gemini/OpenRouter non valida" (fuorviante quando usi OpenRouter) — solo log; (b) `formatHttpError` slice 160→260 (tagliava a metà gli URL nei messaggi errore).
+- `apiError`: fa **passare** i messaggi del bridge AI (già sanificati: "modelli sovraccarichi", ecc.) come 502 invece del 500 generico → l'AI-scoring mostra la causa reale.
+- **⚠️ `lib/base-url.ts` — REGRESSIONE mia corretta**: avevo messo env-first (per sicurezza host-header), ma con `NEXTAUTH_URL` = dominio morto `social-automation.onrender.com` gli URL immagine finivano lì → **404 → l'AI non scaricava le foto → generazione falliva**. Ripristinato **host-first** (x-forwarded-host validato, Render lo imposta corretto), env fallback. ⚠️ Le immagini caricate PRIMA del fix hanno l'URL vecchio salvato in DB → vanno ricaricate.
+
+### Ancora da fare (env utente su Render)
+- 🔴 `NEXT_PUBLIC_DEMO_MODE=false` ✅ già fatto (health=production). `PUBLISH_ENABLED=false` (o assente).
+- 🔴 `ADMIN_EMAIL` + `ADMIN_PASSWORD` (non ancora messe → default `admin/1234567` attivo, **non aprire al pubblico**).
+- 🟡 `BLOTATO_API_KEY` (manca), `ANTHROPIC_API_KEY` (opz, hai OpenRouter+Gemini). Piano Render free = cold start.
+- Vedi `GO_LIVE_CHECKLIST.md`.
 
 ---
 

@@ -108,7 +108,10 @@ function formatHttpError(status: number, body: string): string {
   } catch {
     reason = body
   }
-  return `${status} ${reason}`.trim().slice(0, 160)
+  // 160 tagliava a metà URL lunghi (es. "...fetching image from URL: https://...")
+  // rendendoli fuorvianti (sembravano URL rotti/troncati invece che solo un messaggio
+  // accorciato). 260 copre dominio+path tipici senza appesantire troppo il messaggio.
+  return `${status} ${reason}`.trim().slice(0, 260)
 }
 
 function recordAttempt(attempts: AIAttempt[], attempt: AIAttempt) {
@@ -270,14 +273,27 @@ export async function callAI(params: {
   // DIAGNOSTICA: se l'utente ha incollato una key ma il formato è invalido, NON
   // saltarla in silenzio (prima il provider spariva senza spiegazione). Registra
   // un tentativo chiaro così il messaggio d'errore dice cosa correggere.
+  // MA: se esiste comunque una key server di scorta per lo stesso provider, il
+  // sistema riprova più avanti CON QUELLA (vedi Try 1.5/1.6) — la key rotta
+  // dell'utente non blocca nulla. Mostrare qui "key non valida" in quel caso è
+  // fuorviante: sembra la causa del fallimento finale, quando invece il vero
+  // esito arriva dal tentativo successivo con la key server (es. rate-limit,
+  // non "key sbagliata"). Lo logghiamo solo in console per debug, non nella
+  // lista errori che l'utente vede, a meno che non ci sia NESSUNA alternativa.
   if (byoGemini && !validGemini) {
-    recordAttempt(attempts, { provider: 'gemini', model, ok: false, error: 'Key Gemini non valida: deve iniziare con "AIza" (copiala da aistudio.google.com/apikey)' })
+    const msg = 'Key Gemini non valida: deve iniziare con "AIza" (copiala da aistudio.google.com/apikey)'
+    if (process.env.GEMINI_API_KEY?.trim()) console.warn('[AI bridge]', msg, '— uso comunque la key server come fallback')
+    else recordAttempt(attempts, { provider: 'gemini', model, ok: false, error: msg })
   }
   if (byoKey && !validByoKey) {
-    recordAttempt(attempts, { provider: 'openrouter', model, ok: false, error: 'Key OpenRouter non valida: deve iniziare con "sk-or-v1-"' })
+    const msg = 'Key OpenRouter non valida: deve iniziare con "sk-or-v1-"'
+    if (process.env.OPENROUTER_API_KEY?.trim()) console.warn('[AI bridge]', msg, '— uso comunque la key server come fallback')
+    else recordAttempt(attempts, { provider: 'openrouter', model, ok: false, error: msg })
   }
   if (byoOpencode && !validOpencode) {
-    recordAttempt(attempts, { provider: 'opencode', model, ok: false, error: 'Key OpenCode non valida: deve iniziare con "sk-"' })
+    const msg = 'Key OpenCode non valida: deve iniziare con "sk-"'
+    if (process.env.OPENCODE_API_KEY?.trim()) console.warn('[AI bridge]', msg, '— uso comunque la key server come fallback')
+    else recordAttempt(attempts, { provider: 'opencode', model, ok: false, error: msg })
   }
 
   // I modelli Gemini/OpenCode/Anthropic/Ollama non vanno su OpenRouter.

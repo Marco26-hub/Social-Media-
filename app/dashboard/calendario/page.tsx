@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Wand2, Film, Camera, ImagePlus } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Wand2, Film, Camera, ImagePlus } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
@@ -730,7 +730,7 @@ function CalendarioInner() {
               onDragEnd={() => setDragItem(null)}
               className={`card p-3 md:p-4 hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing ${dragItem === c.id ? 'opacity-50 scale-95' : ''} ${selectedIds.has(c.id) ? 'ring-2 ring-brand-400' : ''}`}
             >
-              <div className="flex items-start gap-3 md:gap-4">
+              <div className="flex flex-wrap items-start gap-3 md:gap-4">
                 {/* Checkbox selezione per eliminazione multipla */}
                 <input
                   type="checkbox"
@@ -821,6 +821,7 @@ function CalendarioInner() {
                         brand_name: brand?.brand_name, social_handle: brand?.social_handle,
                       })) } catch {}
                     }}
+                    title="Anteprima del post"
                     className="btn-secondary py-1.5 px-2 md:px-3 justify-center inline-flex items-center gap-1.5"
                   >
                     <Eye className="w-3.5 h-3.5" />
@@ -828,15 +829,17 @@ function CalendarioInner() {
                   </Link>
                   <button
                     onClick={() => setSelected(c)}
+                    title="Dettagli e brief completo"
                     className="btn-secondary py-1.5 px-2 md:px-3 justify-center"
                   >
-                    <Eye className="w-3.5 h-3.5" />
+                    <Info className="w-3.5 h-3.5" />
                     <span className="hidden md:inline text-xs">Dettagli</span>
                   </button>
                   <button
                     onClick={() => handleScore(c)}
                     disabled={scoring === c.id}
-                    className={`py-1.5 px-2 md:px-3 justify-center rounded-lg text-xs font-medium transition-colors ${
+                    title="Valuta con AI (punteggio qualità)"
+                    className={`py-1.5 px-2 md:px-3 justify-center inline-flex items-center gap-1.5 rounded-lg text-xs font-medium transition-colors ${
                       scores[c.id]
                         ? 'bg-violet-50 text-violet-700 border border-violet-200'
                         : 'btn-secondary'
@@ -846,15 +849,15 @@ function CalendarioInner() {
                       ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                       : <Sparkles className="w-3.5 h-3.5" />
                     }
-                    {scores[c.id] && <span className="hidden md:inline ml-1">{(scores[c.id].score_globale as number)}</span>}
+                    <span className="hidden md:inline">{scores[c.id] ? (scores[c.id].score_globale as number) : 'Valuta'}</span>
                   </button>
                   {c.status === 'DA_APPROVARE' && (
                     <>
-                      <button onClick={() => approva(c)} disabled={saving === c.id} className="btn-primary py-1.5 px-2 md:px-3 justify-center">
+                      <button onClick={() => approva(c)} disabled={saving === c.id} title="Approva contenuto" className="btn-primary py-1.5 px-2 md:px-3 justify-center">
                         <CheckCircle className="w-3.5 h-3.5" />
                         <span className="hidden md:inline">{saving === c.id ? '...' : 'Approva'}</span>
                       </button>
-                      <button onClick={() => rifiuta(c)} disabled={saving === c.id} className="btn-danger py-1.5 px-2 md:px-3 justify-center">
+                      <button onClick={() => rifiuta(c)} disabled={saving === c.id} title="Rifiuta / elimina" className="btn-danger py-1.5 px-2 md:px-3 justify-center">
                         <XCircle className="w-3.5 h-3.5" />
                       </button>
                     </>

@@ -19,6 +19,13 @@ export function apiError(e: unknown): NextResponse {
     return NextResponse.json({ error: 'Richiesta non valida (JSON malformato)' }, { status: 400 })
   }
 
+  // Errori del bridge AI: sono GIÀ sanificati (niente segreti) e pensati per
+  // l'utente ("modelli sovraccarichi", "nessun provider configurato", ecc.).
+  // Vanno mostrati, non nascosti dietro il 500 generico. Status 502 = upstream.
+  if (/Generazione AI fallita|Modelli AI|Nessun provider AI|Risposta AI vuota|rate.?limit/i.test(msg)) {
+    return NextResponse.json({ error: msg }, { status: 502 })
+  }
+
   // Fallback: NON esporre il messaggio grezzo al client (può contenere nomi
   // colonne/constraint/dettagli driver). Log dettagliato lato server, messaggio
   // generico al client.
