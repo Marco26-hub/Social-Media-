@@ -310,6 +310,23 @@
 .trustRow span { display: inline-flex; align-items: center; gap: 8px; }
 .trustRow svg { color: var(--moss); }
 
+/* Badge prova gratuita — evidenza forte sotto la CTA */
+.freeTrial {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(97, 124, 69, 0.32);
+  background: rgba(97, 124, 69, 0.12);
+  color: rgba(16, 18, 14, 0.72);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.freeTrial svg { flex-shrink: 0; color: var(--moss); }
+.freeTrial strong { color: var(--ink); }
+
 /* ---------- Hero visual panel ---------- */
 .heroVisual { position: relative; z-index: 1; }
 

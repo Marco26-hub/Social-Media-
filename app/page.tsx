@@ -21,8 +21,16 @@ import {
   ChevronRight,
   Wand2,
   LineChart,
+  Gift,
 } from 'lucide-react'
 import styles from './home.module.css'
+
+// Contatto per la prova gratuita (1 contenuto) — manuale, così il costo AI resta controllato.
+const WHATSAPP_NUMERO = '393477196603'
+const TRIAL_MSG = 'Ciao! Vorrei il contenuto di prova gratuito di Social Automation.'
+function waLink(msg: string) {
+  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`
+}
 
 // Capacità reali del prodotto (niente metriche inventate)
 const CAPACITA = [
@@ -141,14 +149,18 @@ export default function LandingPage() {
             prima di pubblicare.
           </p>
           <div className={styles.heroActions}>
-            <Link href="/dashboard" className={styles.primaryBtn}>
-              Prova il pannello
-              <ArrowRight size={18} />
-            </Link>
+            <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener" className={styles.primaryBtn}>
+              <Gift size={18} />
+              Ricevi 1 contenuto gratis
+            </a>
             <Link href="/servizi#pacchetti" className={styles.secondaryBtn}>
               Pacchetti e prezzi
             </Link>
           </div>
+          <p className={styles.freeTrial}>
+            <Gift size={15} />
+            <span><strong>1 contenuto di prova gratuito</strong> · nessun vincolo · vedi la qualità prima di decidere</span>
+          </p>
           <div className={styles.trustRow}>
             <span><CheckCircle2 size={16} /> Approvazione umana prima di pubblicare</span>
             <span><CheckCircle2 size={16} /> Budget ADS separato dal canone</span>
@@ -368,17 +380,17 @@ export default function LandingPage() {
             <span className={styles.finalIcon}><Rocket size={26} /></span>
           </div>
           <div>
-            <h2 className={styles.h2}>Pronto a iniziare?</h2>
+            <h2 className={styles.h2}>Provalo gratis, poi decidi.</h2>
             <p>
-              Esplora il pannello oppure scopri quale pacchetto è adatto alla tua attività.
-              Ti rispondiamo e ti aiutiamo a partire.
+              Ricevi <strong>1 contenuto di prova gratuito</strong>, pensato per la tua attività.
+              Vedi la qualità con i tuoi occhi — nessun vincolo, nessuna carta.
             </p>
           </div>
           <div className={styles.finalActions}>
-            <Link href="/dashboard" className={styles.primaryBtn}>
-              Prova il pannello
-              <ArrowRight size={18} />
-            </Link>
+            <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener" className={styles.primaryBtn}>
+              <Gift size={18} />
+              Ricevi 1 contenuto gratis
+            </a>
             <Link href="/servizi#pacchetti" className={styles.secondaryBtn} style={{ color: '#fffaf0', borderColor: 'rgba(255,250,240,0.3)', background: 'transparent' }}>
               Pacchetti e prezzi
             </Link>
