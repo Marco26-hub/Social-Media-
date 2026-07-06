@@ -83,9 +83,21 @@ export default function Sidebar() {
           </div>
           <span className="font-semibold text-sm">Social Automation</span>
         </div>
-        <button onClick={() => setOpen(true)} className="p-2 -mr-2" aria-label="Apri menu">
-          <Menu className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener"
+            className="p-2 text-white/80 hover:text-white"
+            aria-label="Apri la landing"
+            title="Vedi la landing"
+          >
+            <Globe className="w-5 h-5" />
+          </Link>
+          <button onClick={() => setOpen(true)} className="p-2 -mr-2" aria-label="Apri menu">
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       {/* Backdrop */}
