@@ -72,8 +72,8 @@ export default function LoginPage() {
       const err = res.error || ''
       if (/IN_ATTESA/.test(err)) {
         setError('Account in attesa di attivazione. Ti avvisiamo via email appena è pronto.')
-      } else if (/RIFIUTATO/.test(err)) {
-        setError('Questo account non è stato attivato. Contattaci per assistenza.')
+      } else if (/RIFIUTATO|NON_ATTIVO/.test(err)) {
+        setError('Questo account non è attivo. Contattaci per assistenza.')
       } else {
         setError('Credenziali non valide')
       }

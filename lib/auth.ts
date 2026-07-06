@@ -28,13 +28,14 @@ export const authOptions: NextAuthOptions = {
           const user = rows[0] as { id: string; email: string; nome: string; password_hash: string; status?: string }
           const valid = await bcrypt.compare(credentials.password, user.password_hash)
           if (!valid) return null
-          // Gate attivazione: registrati ma non ancora approvati non entrano.
+          // Gate attivazione (fail-closed): entra SOLO chi è 'active'.
           if (user.status === 'pending') throw new Error('IN_ATTESA')
           if (user.status === 'rejected') throw new Error('RIFIUTATO')
+          if (user.status && user.status !== 'active') throw new Error('NON_ATTIVO')
           return { id: user.id, email: user.email, name: user.nome || user.email }
         } catch (error) {
           // Errori di gate espliciti: propaga a NextAuth per mostrare il messaggio.
-          if (error instanceof Error && (error.message === 'IN_ATTESA' || error.message === 'RIFIUTATO')) throw error
+          if (error instanceof Error && ['IN_ATTESA', 'RIFIUTATO', 'NON_ATTIVO'].includes(error.message)) throw error
           const message = error instanceof Error ? error.message : String(error)
           console.error('[auth credentials] database lookup failed:', message.slice(0, 500))
           return null
