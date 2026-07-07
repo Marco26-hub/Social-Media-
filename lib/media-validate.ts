@@ -1,3 +1,5 @@
+import { lookup } from 'node:dns/promises'
+
 type MediaCheck = {
   url: string
   index: number
@@ -15,15 +17,17 @@ export type MediaValidationResult = {
 const ALLOWED_IMAGE = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
 const ALLOWED_VIDEO = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
 
-// SICUREZZA (anti-SSRF): blocca host privati/loopback/link-local e l'endpoint
-// metadata cloud. I media legittimi sono sempre su CDN/URL pubblici.
-function isBlockedHost(hostname: string): boolean {
-  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '') // strip brackets IPv6
-  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.internal') || host.endsWith('.local')) return true
-  // IPv6 loopback / link-local / unique-local
-  if (host === '::1' || host === '::' || host.startsWith('fe80:') || host.startsWith('fc') || host.startsWith('fd')) return true
-  // IPv4 letterale: controlla i range privati
-  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+// Controlla se un IP (v4 o v6) è privato/loopback/link-local/metadata.
+function isPrivateIp(ip: string): boolean {
+  const addr = ip.toLowerCase().replace(/^\[|\]$/g, '').replace(/%.*$/, '') // strip brackets + zone id
+  // IPv6
+  if (addr === '::1' || addr === '::') return true
+  if (addr.startsWith('fe80:')) return true          // link-local
+  if (addr.startsWith('fc') || addr.startsWith('fd')) return true // unique-local fc00::/7
+  // IPv4-mapped IPv6 (::ffff:10.0.0.1) → estrai la parte v4
+  const mapped = addr.match(/::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/)
+  const v4 = mapped ? mapped[1] : addr
+  const m = v4.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
   if (m) {
     const [a, b] = [Number(m[1]), Number(m[2])]
     if (a === 0 || a === 10 || a === 127) return true                 // 0/8, 10/8, loopback
@@ -33,6 +37,32 @@ function isBlockedHost(hostname: string): boolean {
     if (a === 100 && b >= 64 && b <= 127) return true                // 100.64/10 CGNAT
   }
   return false
+}
+
+// SICUREZZA (anti-SSRF): blocca host privati/loopback/link-local e l'endpoint
+// metadata cloud. Check LESSICALE veloce (localhost, IP letterali).
+function isBlockedHostLexical(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '') // strip brackets IPv6
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.internal') || host.endsWith('.local')) return true
+  if (isPrivateIp(host)) return true
+  return false
+}
+
+// Check COMPLETO: risolve il DNS del hostname e blocca se un qualsiasi IP risolto è
+// privato. Difende dal "DNS rebinding"/SSRF dove evil.com → 127.0.0.1 (il check
+// lessicale da solo passerebbe). I media legittimi sono su CDN/URL pubblici.
+async function isBlockedHost(hostname: string): Promise<boolean> {
+  if (isBlockedHostLexical(hostname)) return true
+  // Se è già un IP letterale, il lessicale ha già deciso: niente DNS.
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname) || hostname.includes(':')) return false
+  try {
+    const results = await lookup(hostname, { all: true })
+    return results.some(r => isPrivateIp(r.address))
+  } catch {
+    // DNS non risolve → lascia decidere al fetch (fallirà comunque). Non bloccare
+    // per un errore DNS transitorio su un host altrimenti legittimo.
+    return false
+  }
 }
 
 export async function validateMediaUrls(urls: (string | null | undefined)[], timeoutMs = 5000): Promise<MediaValidationResult> {
@@ -49,7 +79,7 @@ export async function validateMediaUrls(urls: (string | null | undefined)[], tim
         if (!['http:', 'https:'].includes(parsed.protocol)) {
           return { url, index, reachable: false, contentType: null, error: `Protocollo non supportato: ${parsed.protocol}` }
         }
-        if (isBlockedHost(parsed.hostname)) {
+        if (await isBlockedHost(parsed.hostname)) {
           return { url, index, reachable: false, contentType: null, error: 'Host non consentito (rete privata/locale)' }
         }
         const controller = new AbortController()
