@@ -27,30 +27,33 @@ const TASK_LABELS: Record<Task, string> = {
   'blog-articolo': 'Blog SEO',
 }
 
-// Matrice locale-first: AIM locale (Ollama) dove basta velocità/italiano a costo zero;
-// cloud Claude per i task analitici pesanti (audit/blog lungo) dove un 4B locale è debole.
+// Matrice QUALITÀ-FIRST: modelli premium via OpenRouter (crediti unici), coerenti
+// tra locale e cloud. Social usa Gemini 2.5 Flash (vision per le foto prodotto,
+// economico ad alto volume); i task analitici/scrittura pesante usano Claude
+// Sonnet 5 (miglior ragionamento e copy IT). Tutto routato su OpenRouter così i
+// costi restano su un solo account con stima chiara.
 const TASK_RECOMMENDED: Record<Task, string> = {
-  'contenuti-social': 'ollama/gemma3:4b',     // post brevi e tanti → veloce, gratis, privato (locale)
-  'piano-editoriale': 'gemini-2.5-flash',     // mensile = output grande → 65K gratis, niente troncamento
-  'seo-audit':        'gemini-2.5-flash',     // analisi lunga: 1M contesto + output ampio, gratis
-  'blog-articolo':    'gemini-2.5-flash',     // articoli lunghi: 65K output, gratis
+  'contenuti-social': 'google/gemini-2.5-flash',   // post + vision foto: economico ad alto volume
+  'piano-editoriale': 'anthropic/claude-sonnet-5', // JSON grande e strutturato: 1M ctx, niente troncamento
+  'seo-audit':        'anthropic/claude-sonnet-5', // analisi lunga: ragionamento top
+  'blog-articolo':    'anthropic/claude-sonnet-5', // long-form: miglior copy premium
 }
 
-// Default per ambiente CLOUD (Render/Vercel, niente Ollama locale): solo modelli cloud.
-// Evita che il deploy in produzione defaulti a un modello locale che non può girare.
+// Default per ambiente CLOUD (Render/Vercel): identico — i modelli premium girano
+// ovunque, non serve differenziare come per Ollama locale.
 const TASK_RECOMMENDED_CLOUD: Record<Task, string> = {
-  'contenuti-social': 'gemini-2.0-flash',      // post brevi: veloce, gratis, vede le foto
-  'piano-editoriale': 'gemini-2.5-flash',      // mensile = output grande → 65K, gratis, niente troncamento
-  'seo-audit':        'gemini-2.5-flash',      // analisi lunga: contesto 1M + output ampio, gratis
-  'blog-articolo':    'gemini-2.5-flash',      // articoli lunghi: 65K output, gratis (Claude solo se vuoi premium)
+  'contenuti-social': 'google/gemini-2.5-flash',
+  'piano-editoriale': 'anthropic/claude-sonnet-5',
+  'seo-audit':        'anthropic/claude-sonnet-5',
+  'blog-articolo':    'anthropic/claude-sonnet-5',
 }
 
 // "Perché" mostrato in UI: spiega all'utente la logica della raccomandazione per task.
 const TASK_WHY: Record<Task, string> = {
-  'contenuti-social': 'Post brevi e ad alto volume: veloce, gratis, e vede le foto (Gemini) o privato in locale (AIM).',
-  'piano-editoriale': 'Piano mensile = tanti contenuti in un JSON grande: Gemini 2.5 Flash ha 65K di output (gratis), niente troncamento.',
-  'seo-audit':        'Analisi lunga: Gemini 2.5 Flash, contesto 1M + output ampio, gratis.',
-  'blog-articolo':    'Articoli lunghi: Gemini 2.5 Flash 65K output, gratis. Claude solo se vuoi qualità premium a pagamento.',
+  'contenuti-social': 'Post brevi ad alto volume + vede le foto prodotto: Gemini 2.5 Flash su OpenRouter, vision, veloce, costo minimo per post.',
+  'piano-editoriale': 'Piano = JSON grande e strutturato: Claude Sonnet 5 (1M contesto, output ampio) non tronca e distribuisce meglio i contenuti.',
+  'seo-audit':        'Analisi lunga e di ragionamento: Claude Sonnet 5, la qualità premium ripaga sull\'audit.',
+  'blog-articolo':    'Articoli long-form: Claude Sonnet 5 è il miglior copy premium in italiano. Costo stimato per articolo.',
 }
 
 const MODELS: Model[] = [
@@ -79,10 +82,14 @@ const MODELS: Model[] = [
   { id: 'nousresearch/hermes-3-llama-3.1-405b:free', name: 'Hermes 3 405B',                provider: 'openrouter', tier: 'free', context: '131K', speed: 'medium', quality: 'top',  badge: '405B' },
 
   // OpenRouter A PAGAMENTO (richiede credito sull'account): NIENTE code/429,
-  // capacità dedicata. Costo irrisorio (~0,001€/post). Servono con la key OpenRouter.
-  { id: 'meta-llama/llama-3.3-70b-instruct',  name: 'Llama 3.3 70B (paid)', provider: 'openrouter', tier: 'paid', context: '131K', speed: 'fast',   quality: 'high', badge: '★ Affidabile · ~0,001€', recommendedFor: ['contenuti-social', 'piano-editoriale', 'seo-audit', 'blog-articolo'] },
+  // capacità dedicata. Servono con la key OpenRouter. I modelli premium (Claude,
+  // Gemini Pro) sono routati via OpenRouter → i tuoi crediti, un solo account.
+  { id: 'anthropic/claude-sonnet-5',          name: 'Claude Sonnet 5 · OpenRouter', provider: 'openrouter', tier: 'paid', context: '1M', speed: 'fast', quality: 'top', badge: '★ Migliore · crediti OR', recommendedFor: ['piano-editoriale', 'seo-audit', 'blog-articolo', 'contenuti-social'] },
+  { id: 'anthropic/claude-opus-4.8',          name: 'Claude Opus 4.8 · OpenRouter', provider: 'openrouter', tier: 'paid', context: '1M', speed: 'medium', quality: 'top', badge: 'Premium · crediti OR', recommendedFor: ['blog-articolo', 'seo-audit'] },
+  { id: 'google/gemini-2.5-pro',              name: 'Gemini 2.5 Pro',       provider: 'openrouter', tier: 'paid', context: '1M', speed: 'medium', quality: 'top', badge: 'Google · reasoning' },
+  { id: 'meta-llama/llama-3.3-70b-instruct',  name: 'Llama 3.3 70B (paid)', provider: 'openrouter', tier: 'paid', context: '131K', speed: 'fast',   quality: 'high', badge: 'Affidabile · economico' },
   { id: 'google/gemini-2.5-flash-lite',       name: 'Gemini 2.5 Flash Lite', provider: 'openrouter', tier: 'paid', context: '1M', speed: 'fast', quality: 'high', badge: 'Google · economico' },
-  { id: 'google/gemini-2.5-flash',            name: 'Gemini 2.5 Flash',      provider: 'openrouter', tier: 'paid', context: '1M', speed: 'fast', quality: 'top',  badge: 'Google' },
+  { id: 'google/gemini-2.5-flash',            name: 'Gemini 2.5 Flash',      provider: 'openrouter', tier: 'paid', context: '1M', speed: 'fast', quality: 'top',  badge: 'Google · vision', recommendedFor: ['contenuti-social'] },
   { id: 'openai/gpt-4o-mini',                 name: 'GPT-4o mini',          provider: 'openrouter', tier: 'paid', context: '128K', speed: 'fast',   quality: 'high', badge: 'OpenAI · affidabile' },
   { id: 'deepseek/deepseek-chat',             name: 'DeepSeek Chat',        provider: 'openrouter', tier: 'paid', context: '131K', speed: 'medium', quality: 'top',  badge: 'Economico' },
 
