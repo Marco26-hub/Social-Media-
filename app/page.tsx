@@ -271,7 +271,7 @@ export default function LandingPage() {
                 <h3 className={styles.serviceGroupTitle}>{group.gruppo}</h3>
                 <p className={styles.serviceGroupIntro}>{group.intro}</p>
               </div>
-              <div className={styles.grid3}>
+              <div className={styles.serviceGrid}>
                 {group.items.map(({ num, icon: Icon, titolo, desc }) => (
                   <TiltCard key={titolo} className={`${styles.card} ${styles.hoverLift} ${styles.serviceCard}`}>
                     <article>

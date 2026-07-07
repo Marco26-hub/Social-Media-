@@ -759,6 +759,14 @@
   font-size: 14px;
 }
 
+/* auto-fit invece di 3 colonne fisse: il gruppo da 2 servizi non lascia una
+   colonna vuota, il gruppo da 3 riempie naturalmente la riga. */
+.serviceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
 .serviceCard { position: relative; padding-top: 30px; }
 
 .serviceNum {
