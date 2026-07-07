@@ -19,6 +19,7 @@ import {
   Wand2,
   Zap,
 } from 'lucide-react'
+import { PACCHETTI } from '@/lib/pacchetti'
 import styles from './servizi.module.css'
 
 // ⚙️ CONFIG CONTATTI — cambia questi 2 valori col tuo numero/email reali
@@ -33,50 +34,6 @@ export const metadata: Metadata = {
   title: 'Social Automation | Gestione social con AI per la tua attività',
   description: 'Sito, e-commerce e social gestiti con AI. Piano editoriale, contenuti, pubblicazione e report. Scrivici su WhatsApp e parti questa settimana.',
 }
-
-const packages = [
-  {
-    name: 'Starter',
-    eyebrow: 'Per iniziare',
-    setup: 'Setup incluso',
-    monthly: '€390/mese',
-    description: 'Per freelance, partite IVA e professionisti che vogliono presenza social senza impegni pesanti.',
-    features: ['8 contenuti al mese', '1-2 canali social', 'Brand discovery automatico', 'Preview multi-piattaforma', 'Report mensile semplice'],
-  },
-  {
-    name: 'Presenza',
-    eyebrow: 'Per attività locali',
-    setup: '€290 setup',
-    monthly: '€590/mese',
-    description: 'Per chi ha già un sito e vuole una gestione social ordinata, costante e professionale con AI.',
-    features: ['12 contenuti al mese', '2 canali social', 'AI content scoring', 'Piano editoriale strategico', 'Report KPI + call mensile'],
-  },
-  {
-    name: 'Crescita',
-    eyebrow: 'Consigliato',
-    setup: '€490 setup',
-    monthly: '€1.090/mese',
-    description: 'Il pacchetto più equilibrato per PMI che vogliono struttura, contenuti, lead e crescita misurabile.',
-    features: ['20 contenuti/mese su 3 canali', 'Reel/Short premium', 'SEO + GEO audit completo', 'Lead scraping + client analysis', 'Compliance AI (GDPR, Cookie)', 'Report bisettimanale + call'],
-    featured: true,
-  },
-  {
-    name: 'E-commerce',
-    eyebrow: 'Per vendere online',
-    setup: '€990 setup',
-    monthly: '€1.690/mese',
-    description: 'Per negozi e brand che vogliono collegare prodotti, promozioni e social in un sistema unico.',
-    features: ['30 contenuti/mese su 4 canali', 'Campagne ADS gestite', 'Product tagging + UTM', 'Lead generation + funnel', 'Report settimanale + call strategica'],
-  },
-  {
-    name: 'Dominio',
-    eyebrow: 'Per aziende strutturate',
-    setup: '€1.490 setup',
-    monthly: '€2.590/mese',
-    description: 'Strategia omnichannel completa per aziende che vogliono dominare il mercato digitale.',
-    features: ['50+ contenuti/mese su 5 canali', 'Blog SEO/GEO continuativo', 'Video production avanzata', 'Strategia omnichannel', 'Dashboard live + priorità assoluta'],
-  },
-]
 
 const outcomes = [
   { icon: Globe2, title: 'Sito che presenta e converte', text: 'Non solo una vetrina: struttura, messaggi, contatti e CTA pensati per far capire subito il valore.' },
@@ -99,15 +56,6 @@ const extras = [
   'Blog SEO/GEO e articoli lunghi per autorevolezza',
   'Shooting, reel extra e contenuti premium su richiesta',
 ]
-
-// Slug pacchetto → allineato a /register e all'API di registrazione.
-const PACK_SLUG: Record<string, string> = {
-  'Starter': 'starter',
-  'Presenza': 'presenza',
-  'Crescita': 'crescita',
-  'E-commerce': 'ecommerce',
-  'Dominio': 'dominio',
-}
 
 const compareRows = [
   { label: 'Contenuti', trad: '2-12 post al mese', us: 'Contenuti multi-canale + reel', usWin: true },
@@ -261,21 +209,21 @@ export default function ServiziPage() {
           <p>Prezzi IVA esclusa. Budget pubblicitario, shooting e abbonamenti esterni sono separati, cosi ogni voce resta trasparente.</p>
         </div>
         <div className={styles.packageGrid}>
-          {packages.map(pack => (
-            <article key={pack.name} className={pack.featured ? `${styles.packageCard} ${styles.featuredPackage}` : styles.packageCard}>
+          {PACCHETTI.map(pack => (
+            <article key={pack.slug} className={pack.consigliato ? `${styles.packageCard} ${styles.featuredPackage}` : styles.packageCard}>
               <div className={styles.packageTopline}>{pack.eyebrow}</div>
-              <h3>{pack.name}</h3>
-              <p>{pack.description}</p>
+              <h3>{pack.nome}</h3>
+              <p>{pack.sottotitolo}</p>
               <div className={styles.priceBlock}>
                 <strong>{pack.setup}</strong>
-                <span>{pack.monthly}</span>
+                <span>{pack.prezzo}/mese</span>
               </div>
               <ul>
                 {pack.features.map(feature => (
                   <li key={feature}><CheckCircle2 size={16} /> {feature}</li>
                 ))}
               </ul>
-              <Link href={`/register?piano=${PACK_SLUG[pack.name]}`} className={pack.featured ? styles.packageCtaFeatured : styles.packageCta}>
+              <Link href={`/register?piano=${pack.slug}`} className={pack.consigliato ? styles.packageCtaFeatured : styles.packageCta}>
                 Attiva ora
                 <ChevronRight size={16} />
               </Link>

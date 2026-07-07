@@ -6,15 +6,8 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { PACCHETTI } from '@/lib/pacchetti'
 import styles from './register.module.css'
-
-const PACCHETTI = [
-  { slug: 'starter', nome: 'Starter', prezzo: '€390/mese' },
-  { slug: 'presenza', nome: 'Presenza', prezzo: '€590/mese' },
-  { slug: 'crescita', nome: 'Crescita', prezzo: '€1.090/mese', reco: true },
-  { slug: 'ecommerce', nome: 'E-commerce', prezzo: '€1.690/mese' },
-  { slug: 'dominio', nome: 'Dominio', prezzo: '€2.590/mese' },
-]
 
 function RegisterForm() {
   const params = useSearchParams()
@@ -98,9 +91,9 @@ function RegisterForm() {
               onClick={() => setPacchetto(p.slug)}
               className={`${styles.pkg} ${pacchetto === p.slug ? styles.pkgActive : ''}`}
             >
-              {p.reco && <span className={styles.pkgReco}>Consigliato</span>}
+              {p.consigliato && <span className={styles.pkgReco}>Consigliato</span>}
               <span className={styles.pkgName}>{p.nome}</span>
-              <span className={styles.pkgPrice}>{p.prezzo}</span>
+              <span className={styles.pkgPrice}>{p.prezzo}/mese</span>
             </button>
           ))}
         </div>

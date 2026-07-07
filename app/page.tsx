@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PLATFORM_LIST } from '@/lib/social-config'
 import TiltCard from '@/components/TiltCard'
+import { PACCHETTI } from '@/lib/pacchetti'
 import {
   ArrowRight,
   Sparkles,
@@ -57,45 +58,6 @@ const FLUSSO = [
   { step: '3', titolo: 'Approvi con 1 click', desc: 'Rivedi la coda editoriale, modifichi se serve e approvi prima della pubblicazione.' },
   { step: '4', titolo: 'Pubblicazione automatica', desc: 'I contenuti approvati vengono pubblicati sui canali tramite Blotato, con tracciamento UTM.' },
   { step: '5', titolo: 'Report e ottimizzazione', desc: 'Leggi i report, misuri i risultati e affini la strategia del periodo successivo.' },
-]
-
-// Prezzi reali, allineati a /servizi. I dettagli vivono su /servizi.
-const PIANI = [
-  {
-    nome: 'Starter',
-    prezzo: '€390',
-    sottotitolo: 'Per iniziare con una presenza social ordinata.',
-    features: ['Contenuti social ricorrenti', '1-2 canali gestiti', 'Brand discovery automatico', 'Anteprima multi-piattaforma', 'Report periodico'],
-    consigliato: false,
-  },
-  {
-    nome: 'Presenza',
-    prezzo: '€590',
-    sottotitolo: 'Per attività locali che vogliono costanza.',
-    features: ['12 contenuti al mese', '2 canali social', 'Piano editoriale strategico', 'AI content scoring', 'Report KPI + call'],
-    consigliato: false,
-  },
-  {
-    nome: 'Crescita',
-    prezzo: '€1.090',
-    sottotitolo: 'Il piano più equilibrato per PMI in crescita.',
-    features: ['Contenuti su più canali', 'Reel e Short premium', 'Audit SEO + GEO completo', 'Analisi competitor e lead', 'Report ricorrente con call'],
-    consigliato: true,
-  },
-  {
-    nome: 'E-commerce',
-    prezzo: '€1.690',
-    sottotitolo: 'Per negozi e brand che vendono online.',
-    features: ['30 contenuti su 4 canali', 'Campagne ADS gestite', 'Product tagging + UTM', 'Lead generation + funnel', 'Report settimanale + call'],
-    consigliato: false,
-  },
-  {
-    nome: 'Dominio',
-    prezzo: '€2.590',
-    sottotitolo: 'Strategia omnichannel per aziende strutturate.',
-    features: ['Contenuti su tutti i canali', 'Blog SEO/GEO continuativo', 'Produzione video avanzata', 'Strategia omnichannel', 'Dashboard live e priorità'],
-    consigliato: false,
-  },
 ]
 
 // FAQ oneste in italiano
@@ -333,9 +295,9 @@ export default function LandingPage() {
             </p>
           </div>
           <div className={styles.priceGrid}>
-            {PIANI.map(piano => (
+            {PACCHETTI.map(piano => (
               <TiltCard
-                key={piano.nome}
+                key={piano.slug}
                 max={piano.consigliato ? 5 : 7}
                 className={`${styles.priceCard} ${styles.hoverLift} ${piano.consigliato ? styles.priceCardFeatured : ''}`}
               >
@@ -349,7 +311,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Link
-                  href={`/register?piano=${piano.nome.toLowerCase()}`}
+                  href={`/register?piano=${piano.slug}`}
                   className={`${styles.priceCta} ${piano.consigliato ? styles.priceCtaGold : styles.priceCtaGhost}`}
                 >
                   Registrati
