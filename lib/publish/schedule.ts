@@ -18,6 +18,24 @@ export function isPublishingLive(): boolean {
   return process.env.PUBLISH_ENABLED === 'true'
 }
 
+// Legge il toggle dry_run per-cliente da settings. Combinato con isPublishingLive():
+// entrambi devono essere OK per pubblicare davvero. Prima il toggle UI era ignorato
+// e un cliente in "prova/dry_run" pubblicava comunque se PUBLISH_ENABLED era true.
+async function isDryRunForCliente(clienteId: string): Promise<boolean> {
+  try {
+    const rows = await q(
+      "SELECT valore FROM settings WHERE cliente_id = $1 AND chiave = 'dry_run' LIMIT 1",
+      [clienteId],
+    )
+    const v = String((rows[0] as { valore?: string } | undefined)?.valore || '').trim().toUpperCase()
+    // Default fail-safe: se il valore manca o non è esplicitamente FALSE, trattalo come dry_run.
+    return v !== 'FALSE' && v !== '0' && v !== 'NO' && v !== 'OFF'
+  } catch {
+    // Su errore DB (es. schema non migrato) tratta come dry_run per evitare pubblicazioni sorpresa.
+    return true
+  }
+}
+
 type ContentRow = Record<string, unknown>
 
 // Mapping canale interno → nome piattaforma atteso da Blotato (schema MCP blotato_create_post).
@@ -59,6 +77,15 @@ export async function scheduleOnBlotato(
   // si abilita PUBLISH_ENABLED e si rilancia la sincronizzazione Blotato.
   if (!isPublishingLive()) {
     console.warn('[Blotato] pubblicazione disabilitata (PUBLISH_ENABLED != true o demo) → dry-run, nessun post reale.')
+    return { status: 'dry_run' }
+  }
+
+  // Doppia guardia: kill-switch PER-CLIENTE via settings.dry_run. Anche con
+  // PUBLISH_ENABLED=true su Render, il singolo cliente resta in dry-run finché
+  // non toglie manualmente il flag. Evita che un cliente in prova/onboarding
+  // pubblichi per errore su account social reali.
+  if (await isDryRunForCliente(clienteId)) {
+    console.warn(`[Blotato] cliente ${clienteId} in dry_run (settings) → nessun post reale.`)
     return { status: 'dry_run' }
   }
 
@@ -188,6 +215,7 @@ function buildPlatformContent(canale: string, formato: string, row: ContentRow):
   const cta = (row.cta || '') as string
   const hashtag = (row.hashtag || '') as string
   const nomeProdotto = (row.nome_prodotto || '') as string
+  const linkProdotto = ((row.link_prodotto_finale || row.link_prodotto || '') as string).trim()
 
   const parts: string[] = []
 
@@ -204,6 +232,13 @@ function buildPlatformContent(canale: string, formato: string, row: ContentRow):
 
   if (cta && !['story'].includes(formato)) {
     parts.push(`\n${cta}`)
+  }
+
+  // Link prodotto: la story lo passa come sticker link (payload separato), non nel testo.
+  // Tutti gli altri formati lo appendono in fondo così è cliccabile su ogni canale
+  // (Instagram post/carousel non ha link cliccabile in caption, ma resta visibile).
+  if (linkProdotto && formato !== 'story' && !parts.some(p => p.includes(linkProdotto))) {
+    parts.push(`\n👉 ${linkProdotto}`)
   }
 
   if (hashtag) {

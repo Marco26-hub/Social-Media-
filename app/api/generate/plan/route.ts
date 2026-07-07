@@ -366,10 +366,15 @@ Output SOLO JSON array valido:
       const id_contenuto = `C${Date.now().toString(36).toUpperCase()}_${inseriti.length}_${scartati.length}`
       const itemQuality = normalizeContentQuality(item.quality_level) ?? contentQuality
       const [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10] = nextChunkMediaSlots(chunk, String(item.formato || 'post'))
+      // Lookup link prodotto per l'item: se il piano riferisce un product_id valido,
+      // persistiamo il link così il publisher può appenderlo al testo Blotato.
+      const itemProduct = (products as Array<Record<string, unknown>>).find(p => p.product_id === item.product_id)
+      const itemLinkProdotto = (itemProduct?.link_prodotto as string) || null
       const insertColumns = [
         'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
         'canale', 'formato', 'obiettivo', 'product_id', 'nome_prodotto',
         'tema', 'hook', 'caption', 'hashtag', 'cta', 'status',
+        'link_prodotto', 'link_prodotto_finale',
         'link_media_1', 'link_media_2', 'link_media_3', 'link_media_4', 'link_media_5',
         'link_media_6', 'link_media_7', 'link_media_8', 'link_media_9', 'link_media_10',
         'scenes_json', 'slides_json', 'overlay_text', 'alt_text', 'tags',
@@ -398,6 +403,8 @@ Output SOLO JSON array valido:
         item.hashtag || null,
         item.cta || null,
         'BOZZA',
+        itemLinkProdotto,
+        itemLinkProdotto,
         media1, media2, media3, media4, media5,
         media6, media7, media8, media9, media10,
         jsonbParam(pickJson(item, ['scenes', 'scene', 'frames'])),
