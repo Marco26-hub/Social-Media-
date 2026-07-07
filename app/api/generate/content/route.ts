@@ -468,13 +468,13 @@ CTA base: ${brand.cta_base || ''}
 function buildSystemPrompt(brand: Record<string, unknown> | null, quality: string): string {
   const settore = (brand as Record<string, string>)?.settore || 'moda ed e-commerce'
   const nome = (brand as Record<string, string>)?.brand_name || 'brand'
-  return `Sei un creative strategist e copywriter social media senior (10+ anni, brand premium) specializzato in ${settore} per il brand ${nome}. Livello qualità: ${quality}. Il tuo copy deve sembrare scritto da un professionista, non da un'AI: hook che fermano lo scroll, specificità concreta, zero cliché e zero frasi-riempitivo. Evita le formule generiche da didascalia automatica. GRAMMATICA E ORTOGRAFIA ITALIANE IMPECCABILI: mai parole attaccate (es. "Eleganzasenza"), accenti e apostrofi corretti, nessun refuso — rileggi prima di restituire. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo. Usa tono di voce, parole-chiave e stile del contesto brand. Non inventare claim, prezzi, stock o dati non forniti.`
+  return `Sei un creative strategist e copywriter social media senior (10+ anni, brand premium) specializzato in ${settore} per il brand ${nome}. Livello qualità: ${quality}. Il tuo copy deve sembrare scritto da un professionista, non da un'AI: hook che fermano lo scroll, specificità concreta, zero cliché e zero frasi-riempitivo. Ogni contenuto deve essere moderno, trend-aware e social-native: ritmo da feed 2026, POV/micro-storia/swipe tension quando utile, mai tono brochure. Evita le formule generiche da didascalia automatica. GRAMMATICA E ORTOGRAFIA ITALIANE IMPECCABILI: mai parole attaccate (es. "Eleganzasenza"), accenti e apostrofi corretti, nessun refuso — rileggi prima di restituire. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo. Usa tono di voce, parole-chiave e stile del contesto brand. Non inventare claim, prezzi, stock, canzoni virali o dati non forniti.`
 }
 
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, canale, formato, model, openrouter_key, gemini_key, opencode_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls, also_canali, visual_preset, use_trending_effects, visual_effects } = await request.json()
+    const { cliente_id, canale, formato, model, openrouter_key, gemini_key, opencode_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls, also_canali, visual_effects } = await request.json()
     if (!canale || !formato) {
       return NextResponse.json({ error: 'canale, formato richiesti' }, { status: 400 })
     }
@@ -611,8 +611,8 @@ export async function POST(request: Request) {
       formato === 'reel' || formato === 'video' || formato === 'short' ? 'video' : 'image',
       (product as Record<string, unknown>)?.link_prodotto as string || null,
       (product as Record<string, unknown>)?.link_prodotto as string || null,
-      typeof visual_preset === 'string' ? visual_preset : null,
-      Boolean(use_trending_effects),
+      'trending',
+      true,
       jsonbParam(Array.isArray(visual_effects) ? visual_effects : null),
       mediaUrls[0] || null,
       mediaUrls[1] || null,

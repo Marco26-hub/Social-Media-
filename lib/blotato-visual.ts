@@ -85,8 +85,8 @@ function normalizeVisualPreset(row: ContentRow): string {
   const preset = str(row.visual_preset).toLowerCase()
   if (preset && PRESET_HINTS[preset]) return preset
   if (flag) return 'trending'
-  // Default: 'premium' per un tono coerente col posizionamento tipo agency premium.
-  return 'premium'
+  // Default: tutte le nuove generazioni devono partire trend-first e moderne.
+  return 'trending'
 }
 
 // Effetti extra suggeriti (jsonb array di string) → appesi al prompt in coda.

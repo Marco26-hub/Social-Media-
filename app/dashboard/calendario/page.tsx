@@ -1,10 +1,10 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState, useCallback, Suspense } from 'react'
+import { Fragment, useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Wand2, Film, Camera, ImagePlus, Search } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Wand2, Film, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
@@ -66,6 +66,28 @@ function formatTimeLabel(time?: string | null) {
 function formatCategoryLabel(value?: string | null) {
   if (!value) return 'Senza categoria'
   return CATEGORIE.find(([id]) => id === value)?.[1] || value.replace(/_/g, ' ')
+}
+
+function formatDayName(date: string) {
+  if (!date) return 'Da programmare'
+  const parsed = new Date(`${date}T12:00:00`)
+  if (Number.isNaN(parsed.getTime())) return date
+  return new Intl.DateTimeFormat('it-IT', { weekday: 'long' }).format(parsed)
+}
+
+function formatShortDate(date: string) {
+  if (!date) return 'Senza data'
+  const parsed = new Date(`${date}T12:00:00`)
+  if (Number.isNaN(parsed.getTime())) return date
+  return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: 'short' }).format(parsed)
+}
+
+function statusTone(status: string) {
+  if (status === 'PUBBLICATO') return 'bg-green-500'
+  if (status === 'APPROVATO' || status === 'IN_PUBBLICAZIONE') return 'bg-blue-500'
+  if (status === 'ERRORE' || status === 'ERRORE_MANUALE') return 'bg-red-500'
+  if (status === 'DA_APPROVARE') return 'bg-amber-500'
+  return 'bg-slate-400'
 }
 
 export default function CalendarioPage() {
@@ -607,38 +629,115 @@ function CalendarioInner() {
     d.setDate(d.getDate() - d.getDay() + 1 + i)
     return d.toISOString().split('T')[0]
   })
+  const todayIso = new Date().toISOString().split('T')[0]
+  const calendarItems = [...contenuti].sort((a, b) => {
+    const left = `${a.data_pubblicazione || '9999-12-31'} ${a.ora_pubblicazione || '99:99'}`
+    const right = `${b.data_pubblicazione || '9999-12-31'} ${b.ora_pubblicazione || '99:99'}`
+    return left.localeCompare(right)
+  })
+  const stats = {
+    total: contenuti.length,
+    daApprovare: contenuti.filter(c => c.status === 'DA_APPROVARE').length,
+    approvati: contenuti.filter(c => c.status === 'APPROVATO' || c.status === 'IN_PUBBLICAZIONE').length,
+    pubblicati: contenuti.filter(c => c.status === 'PUBBLICATO' || c.blotato_status === 'published').length,
+    errori: contenuti.filter(c => c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE' || c.blotato_status === 'failed' || Boolean(c.errore_tecnico)).length,
+    oggi: contenuti.filter(c => c.data_pubblicazione === todayIso).length,
+    video: contenuti.filter(c => c.media_type === 'video' || ['reel', 'video', 'short', 'story'].includes(c.formato)).length,
+    trend: contenuti.filter(c => c.obiettivo === 'trending' || c.template_style || c.creative_brief || c.quality_level === 'high').length,
+  }
+  const nextContent = calendarItems.find(c => c.data_pubblicazione >= todayIso && c.status !== 'PUBBLICATO')
+  const channelEntries = Object.entries(
+    contenuti.reduce<Record<string, number>>((acc, c) => {
+      acc[c.canale] = (acc[c.canale] || 0) + 1
+      return acc
+    }, {}),
+  ).sort((a, b) => b[1] - a[1]).slice(0, 5)
 
   return (
     <div className="p-4 md:p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Calendario</h1>
-            {dryRun !== null && (
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${dryRun ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}
-                title={dryRun ? 'Modalità prova: i post approvati NON vengono pubblicati' : 'Live: i post approvati vengono pubblicati sui social'}
-              >
-                {dryRun ? 'DEMO' : 'REAL'}
-              </span>
-            )}
+      {/* Header premium */}
+      <div className="mb-4 md:mb-6 overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-brand-900 text-white shadow-xl">
+        <div className="p-5 md:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-brand-50 ring-1 ring-white/15">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Regia editoriale
+                </span>
+                {dryRun !== null && (
+                  <span
+                    className={`text-[10px] font-bold px-2 py-1 rounded-full ${dryRun ? 'bg-amber-300 text-amber-950' : 'bg-emerald-300 text-emerald-950'}`}
+                    title={dryRun ? 'Modalità prova: i post approvati NON vengono pubblicati' : 'Live: i post approvati vengono pubblicati sui social'}
+                  >
+                    {dryRun ? 'DEMO' : 'REAL'}
+                  </span>
+                )}
+              </div>
+              <h1 className="mt-3 text-2xl md:text-4xl font-black tracking-tight">Calendario contenuti</h1>
+              <p className="mt-2 text-sm md:text-base text-slate-300">
+                Vista premium per capire subito cosa pubblicare, quando, su quale canale e cosa richiede attenzione.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-200">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10">
+                  <Layers className="h-3.5 w-3.5" /> {stats.total} contenuti filtrati
+                </span>
+                {nextContent && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/10">
+                    <Clock className="h-3.5 w-3.5" /> Prossimo: {formatShortDate(nextContent.data_pubblicazione)} · {formatTimeLabel(nextContent.ora_pubblicazione)}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-fuchsia-400/15 px-3 py-1 text-fuchsia-100 ring-1 ring-fuchsia-300/20">
+                  <Zap className="h-3.5 w-3.5" /> Generazioni trend-first
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={syncBlotato} disabled={syncing} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm hover:bg-slate-100 disabled:opacity-60 inline-flex items-center gap-1.5" title="Invia i contenuti APPROVATI a Blotato per la pubblicazione">
+                {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                <span>{syncing ? 'Sincronizzo...' : 'Sincronizza Blotato'}</span>
+              </button>
+              <button onClick={downloadBackup} disabled={backuping} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 inline-flex items-center gap-1.5">
+                {backuping ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                <span>Backup</span>
+              </button>
+              <button onClick={fetchData} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 inline-flex items-center gap-1.5">
+                <RefreshCw className="w-4 h-4" />
+                <span>Aggiorna</span>
+              </button>
+            </div>
           </div>
-          <p className="text-xs md:text-sm text-gray-500 mt-0.5">{contenuti.length} contenuti</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={syncBlotato} disabled={syncing} className="btn-secondary py-1.5 px-3" title="Invia i contenuti APPROVATI a Blotato per la pubblicazione">
-            {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-            <span className="hidden md:inline">{syncing ? 'Sincronizzo...' : 'Sincronizza Blotato'}</span>
-          </button>
-          <button onClick={downloadBackup} disabled={backuping} className="btn-secondary py-1.5 px-3">
-            {backuping ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            <span className="hidden md:inline">Backup</span>
-          </button>
-          <button onClick={fetchData} className="btn-secondary py-1.5 px-3">
-            <RefreshCw className="w-4 h-4" />
-            <span className="hidden md:inline">Aggiorna</span>
-          </button>
+          <div className="mt-6 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
+            {[
+              { label: 'Da approvare', value: stats.daApprovare, tone: 'text-amber-200' },
+              { label: 'Oggi', value: stats.oggi, tone: 'text-brand-100' },
+              { label: 'Approvati', value: stats.approvati, tone: 'text-blue-200' },
+              { label: 'Pubblicati', value: stats.pubblicati, tone: 'text-emerald-200' },
+              { label: 'Errori', value: stats.errori, tone: 'text-red-200' },
+              { label: 'Reel/Video', value: stats.video, tone: 'text-fuchsia-200' },
+              { label: 'Trend/Premium', value: stats.trend, tone: 'text-violet-200' },
+              { label: 'Canali', value: channelEntries.length, tone: 'text-slate-100' },
+            ].map(item => (
+              <div key={item.label} className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+                <p className={`text-xl font-black ${item.tone}`}>{item.value}</p>
+                <p className="text-[10px] uppercase tracking-wide text-slate-300">{item.label}</p>
+              </div>
+            ))}
+          </div>
+          {channelEntries.length > 0 && (
+            <div className="mt-4 rounded-2xl bg-white/[0.08] p-3 ring-1 ring-white/10">
+              <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-200">
+                <BarChart3 className="h-4 w-4" /> Mix canali visibile
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {channelEntries.map(([canale, count]) => (
+                  <span key={canale} className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-100">
+                    {CANALE_ICON[canale] || '📄'} {canale}: {count}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -804,14 +903,43 @@ function CalendarioInner() {
               </button>
             )}
           </div>
-          {contenuti.map(c => (
-            <div
-              key={c.id}
-              draggable
-              onDragStart={e => { e.dataTransfer.setData('contenuto_id', c.id); setDragItem(c.id) }}
-              onDragEnd={() => setDragItem(null)}
-              className={`card p-3 md:p-4 hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing ${dragItem === c.id ? 'opacity-50 scale-95' : ''} ${selectedIds.has(c.id) ? 'ring-2 ring-brand-400' : ''}`}
-            >
+          {calendarItems.map((c, index) => {
+            const previousDate = calendarItems[index - 1]?.data_pubblicazione
+            const showDateHeader = c.data_pubblicazione !== previousDate
+            const dayItems = calendarItems.filter(item => item.data_pubblicazione === c.data_pubblicazione)
+            const dayStatus = dayItems.reduce<Record<string, number>>((acc, item) => {
+              acc[item.status] = (acc[item.status] || 0) + 1
+              return acc
+            }, {})
+            const scoreLabel = scores[c.id] ? String(scores[c.id].score_globale ?? 'Valuta') : 'Valuta'
+            return (
+            <Fragment key={c.id}>
+              {showDateHeader && (
+                <div className="sticky top-0 z-10 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur md:p-4">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-brand-600">{formatDayName(c.data_pubblicazione)}</p>
+                      <h2 className="text-lg font-black text-slate-900">{formatDateLabel(c.data_pubblicazione)}</h2>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{dayItems.length} contenuti</span>
+                      {Object.entries(dayStatus).map(([status, count]) => (
+                        <span key={status} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                          <span className={`h-2 w-2 rounded-full ${statusTone(status)}`} />
+                          {status.replace('_', ' ')} {count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div
+                draggable
+                onDragStart={e => { e.dataTransfer.setData('contenuto_id', c.id); setDragItem(c.id) }}
+                onDragEnd={() => setDragItem(null)}
+                className={`card overflow-hidden border-slate-200/80 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg md:p-4 cursor-grab active:cursor-grabbing ${dragItem === c.id ? 'opacity-50 scale-95' : ''} ${selectedIds.has(c.id) ? 'ring-2 ring-brand-400' : ''}`}
+              >
+              <div className={`mb-3 h-1 rounded-full ${statusTone(c.status)}`} />
               <div className="flex flex-wrap items-start gap-3 md:gap-4">
                 {/* Checkbox selezione per eliminazione multipla */}
                 <input
@@ -961,7 +1089,7 @@ function CalendarioInner() {
                       ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                       : <Sparkles className="w-3.5 h-3.5" />
                     }
-                    <span className="hidden md:inline">{scores[c.id] ? (scores[c.id].score_globale as number) : 'Valuta'}</span>
+                    <span className="hidden md:inline">{scoreLabel}</span>
                   </button>
                   {c.status === 'DA_APPROVARE' && (
                     <>
@@ -992,7 +1120,9 @@ function CalendarioInner() {
                 </div>
               </div>
             </div>
-          ))}
+            </Fragment>
+            )
+          })}
         </div>
       )}
 

@@ -2,12 +2,26 @@
 
 > Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
-**Data ultimo aggiornamento**: 2026-07-07 tarda notte (Codex: upload MP4 manuale per reel/video + build verde)
+**Data ultimo aggiornamento**: 2026-07-08 (Codex: calendario premium + generazioni trend-first)
 **Progetto**: Social Automation — SaaS social media management per agenzie
 **Stack**: Next.js 15.5.19 + Neon/Postgres + NextAuth + Tailwind + AI (Gemini/OpenRouter/Anthropic/OpenCode/Ollama)
 **Percorso locale**: `/Users/md/Documents/social_automation_v2`
 **Repo**: `https://github.com/Marco26-hub/social-media-manager.git`
 **Deploy live**: `https://social-media-manager-zte4.onrender.com` (Render free, service id `srv-d8up0lvavr4c73fjd1k0`)
+
+---
+
+## 🆕 Sessione 2026-07-08 — calendario premium + default AI trend-first
+
+### ✅ Fatto da Codex
+- **Calendario premium**: `/dashboard/calendario` ora apre con hero "Regia editoriale", KPI rapidi (da approvare, oggi, approvati, pubblicati, errori, reel/video, trend/premium, canali), prossimo contenuto e mix canali.
+- **Timeline più chiara**: lista contenuti ordinata per data/orario, separatori sticky per giorno con conteggio e breakdown status; card mantenute compatibili con upload MP4/foto, preview, dettagli, scoring, approva/rifiuta/elimina.
+- **Generazioni sempre moderne**: `lib/prompt-standards.ts` aggiunge `TREND_MODERN_STANDARDS` dentro la bibbia copy condivisa, quindi content/plan/blog/ads ereditano istruzioni trend-aware e social-native.
+- **Default visual trend-first**: `generate/content`, `generate/plan` e `lib/blotato-visual.ts` salvano/interpretano di default `visual_preset='trending'` e `use_trending_effects=true`; non inventano trend specifici, canzoni o eventi se non forniti.
+
+### 🔎 Validazioni
+- `git diff --check` ✅, `npm run lint` ✅ (0 errori, 7 warning storici), `npm run build` ✅.
+- Non committare salvo richiesta: `daily_content_options_2026-07-04.md` e `daily_content_options_2026-07-04_EMAIL_DRAFT.txt`.
 
 ---
 

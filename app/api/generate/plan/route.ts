@@ -101,7 +101,7 @@ async function insertCalendario(columns: string[], values: unknown[]): Promise<b
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, gemini_key, opencode_key, periodo, quality, quality_level, post_quality, qualita, media_urls, fase, visual_preset, use_trending_effects, visual_effects } = await request.json()
+    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, gemini_key, opencode_key, periodo, quality, quality_level, post_quality, qualita, media_urls, fase, visual_effects } = await request.json()
     const mediaPool: string[] = Array.isArray(media_urls) ? media_urls.filter((u): u is string => typeof u === 'string' && u.length > 0) : []
     // Mensile in 2 fasi (opzionale): fase 1 = settimane 1-2, fase 2 = settimane 3-4.
     // Serve a spezzare una richiesta lunga in due più corte (meno rischio timeout).
@@ -227,7 +227,7 @@ ${buildExtendedOutputSchema(contentQuality)}
       }
     }
 
-    const systemPrompt = `Sei un social media manager, creative strategist e SEO/GEO specialist senior (10+ anni, brand premium). Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Crei piani editoriali dove OGNI contenuto è unico, professionale e strategico: hook diversi, angoli ruotati, funnel bilanciato, keyword SEO/GEO sfruttate, zero cliché, grammatica italiana impeccabile. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock o claim non presenti nei dati.`
+    const systemPrompt = `Sei un social media manager, creative strategist e SEO/GEO specialist senior (10+ anni, brand premium). Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Crei piani editoriali dove OGNI contenuto è unico, professionale, moderno e trend-aware: hook diversi, angoli ruotati, funnel bilanciato, keyword SEO/GEO sfruttate, meccaniche native da feed 2026, zero cliché, grammatica italiana impeccabile. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock, canzoni virali, eventi o claim non presenti nei dati.`
 
     async function generateChunk(chunk: Chunk): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
       async function attempt(targetMin: number, targetMax: number, maxTok: number): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
@@ -244,7 +244,7 @@ ${productsJson}
 Distribuzione: alterna mattina (9-11) e sera (18-21).
 Lunedi/giovedi = inspiration, venerdi = vendita/promo, weekend = community/lifestyle.
 Non concentrare prodotti in pochi giorni.
-Tono moderno fashion coerente con brand.
+Tono moderno fashion coerente con brand. Ogni contenuto deve sembrare attuale e social-native: POV, micro-storia, swipe tension, behind-the-scenes, myth-busting o creator-style voice quando coerente; mai copy statico/corporate.
 
 Output SOLO JSON array valido:
 [{"data_pubblicazione":"YYYY-MM-DD (dentro ${chunk.start}..${chunk.end})","ora_pubblicazione":"HH:MM","canale":"USA SOLO un canale tra quelli in / ${piattaformeStr} / (valori ammessi: instagram|facebook|tiktok|pinterest|linkedin|threads|x|youtube_shorts|blog)","formato":"post|carousel|reel|story|pin|short|video|articolo","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
@@ -414,8 +414,8 @@ Output SOLO JSON array valido:
         'BOZZA',
         itemLinkProdotto,
         itemLinkProdotto,
-        typeof visual_preset === 'string' ? visual_preset : null,
-        Boolean(use_trending_effects),
+        'trending',
+        true,
         jsonbParam(Array.isArray(visual_effects) ? visual_effects : null),
         media1, media2, media3, media4, media5,
         media6, media7, media8, media9, media10,
