@@ -102,9 +102,15 @@ export async function GET() {
   const hasAi = checks.anthropic || checks.openrouter
   const ready = hasDatabase && checks.adminUser && checks.authSecret && checks.nextauthUrl && hasAi
 
+  // Commit SHA del deploy (Render espone RENDER_GIT_COMMIT). Serve a confermare
+  // QUALE build è realmente online (i deploy Render tengono su la vecchia istanza
+  // finché la nuova non passa l'healthcheck, quindi l'endpoint da solo non basta).
+  const version = (process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || '').slice(0, 7) || 'unknown'
+
   return NextResponse.json({
     status: ready ? 'ready' : 'needs_setup',
     mode: demo ? 'demo' : 'production',
+    version,
     database: 'neon-postgres',
     checked_at: new Date().toISOString(),
     checks,
