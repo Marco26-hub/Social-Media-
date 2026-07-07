@@ -2,12 +2,95 @@
 
 > Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
-**Data ultimo aggiornamento**: 2026-07-07 (Codex: dashboard cliente completata, pagamenti Stripe Fase 2, filtri ricerca clienti, fallback silenziosi auditati; pronto per verifica/commit Claude)
+**Data ultimo aggiornamento**: 2026-07-07 sera (Claude CLI: audit go-live 10 scout paralleli, 121/135 blocker confermati, 8 CRITICAL chiusi + effetti visual reel/carosello con preset + roadmap Codex per HIGH residui)
 **Progetto**: Social Automation — SaaS social media management per agenzie
 **Stack**: Next.js 15.5.19 + Neon/Postgres + NextAuth + Tailwind + AI (Gemini/OpenRouter/Anthropic/OpenCode/Ollama)
 **Percorso locale**: `/Users/md/Documents/social_automation_v2`
 **Repo**: `https://github.com/Marco26-hub/social-media-manager.git`
 **Deploy live**: `https://social-media-manager-zte4.onrender.com` (Render free, service id `srv-d8up0lvavr4c73fjd1k0`)
+
+---
+
+## 🆕 Sessione 2026-07-07 sera (Claude CLI) — audit go-live + 8 CRITICAL chiusi + effetti reel/carosello
+
+### 🎯 Contesto
+Audit multi-agente parallelo (10 scout + verify adversariale, ~150 subagenti Opus) su 10 dimensioni: env Render, Stripe, publish Blotato, storage, AI generation, security, content flow, dashboard cliente, onboarding, monitoring. **121/135 blocker confermati**. Piano d'azione ordinato prodotto e allegato qui sotto.
+
+### ✅ CRITICAL chiusi in questa sessione (8/8)
+Commit atomici su `main`, build+lint verdi ad ogni step.
+
+| Commit | CRIT | Fix |
+|--------|------|-----|
+| `2b533ed` | 2 | `BLOTATO_API_URL` allineato a `backend.blotato.com` in `render.yaml` + `.env*.example`. Prima `api.blotato.com` in config vs `backend.blotato.com` nel codice → publish morto silenziosamente in prod. Aggiunta anche `BLOTATO_BACKEND_URL`. |
+| `380b8e0` | 8 | `lib/auth.ts` fail-closed: se `!dbReady() && NODE_ENV=production && !NEXT_PUBLIC_DEMO_MODE` → `return null`. Prima `DATABASE_URL` rimossa/vuota promuoveva chiunque a `super_admin`. |
+| `732cee0` | 1+3 | `isDryRunForCliente(clienteId)` legge `settings.dry_run` in `scheduleOnBlotato` → cliente in dry_run NON pubblica anche con `PUBLISH_ENABLED=true`. Default fail-safe: valore assente/schema assente = dry_run. **Colonne `link_prodotto` + `link_prodotto_finale` persistite** in `insertColumns` di `generate/content` e `generate/plan`. `buildPlatformContent()` appende l'URL prodotto al testo Blotato (escluso `story`). |
+| `6905a6b` | 4+5 | `app/api/admin/registrazioni/route.ts`: aggiunto `slancio: {piano:'agency', contenuti:16}` in `PACCHETTO_PIANO` + `PACCHETTO_LABEL`. Fallback pacchetto ignoto ora `{piano:'pro', contenuti:8}` Starter (prima regalava 30 contenuti E-commerce). |
+| `d55bc30` | 7 | `scripts/render-start.mjs` + `scripts/ensure-admin.mjs`: in produzione (non demo) `ADMIN_EMAIL`+`ADMIN_PASSWORD` (≥8 char) sono FATALI. Verify post-upsert + double-check default `admin` non-attivo. Errore DB in prod → `exit 2`. Prima non-fatale → deploy live con default `admin/1234567`. |
+| `806114d` | 6 | `AGENTS_SCHEDULE.md` marcato come roadmap non-implementata con header WIP esplicito. Nessuna feature venduta promette cron autonomi (le feature sono human-in-the-loop). |
+
+### 🎨 Nuova feature: effetti visual reel/carosello (`ae66f30`... prossimi commit)
+- **Migration `024_visual_effects.sql`**: `calendario.visual_preset` (text: `trending|premium|minimal|classico|null`) + `use_trending_effects` (boolean) + `visual_effects` (jsonb array).
+- **`lib/blotato-visual.ts::enrichPrompt()`**: iniziato `PRESET_HINTS` con descrittori virali/premium/minimal/classico per reel + carosello + immagine. Es. trending reel: "hook visivo aggressivo 0-2s, cuts 0.5-1.5s, whip-pan/zoom-punch, kinetic-typography, beat-drop". Blotato non ha flag "viral" pubblico: il prompt del template AI interpreta i descrittori.
+- **`planVisual(row)`** ora chiama `enrichPrompt(base, row, kind)` per reel + carosello + immagine.
+- **Body params**: `generate/content` e `generate/plan` accettano `visual_preset`, `use_trending_effects`, `visual_effects[]` e li persistono in `calendario`.
+- **Nessuna UI ancora** (solo API-side). Default = `premium` se nessun preset è settato.
+
+### 🛠️ Task per Codex — HIGH residui go-live (28 blocker)
+
+Priorità dall'audit. Ordinare per business impact + accessibilità dei file.
+
+#### Publish pipeline (5 blocker)
+1. **Publish lock atomico**: `publish_lock_id` esiste già nello schema ma non è usato. Aggiungere `UPDATE calendario SET publish_lock_id=<uuid> WHERE id=$1 AND publish_lock_id IS NULL RETURNING id` prima di `POST /v2/posts`; se 0 righe → skip (post già in fly). Elimina race duplicati.
+2. **Sync manuale Blotato non persiste errori**: `app/api/data/blotato-sync/route.ts` catch write `errore_tecnico` + `log_pubblicazioni`. Ora silenzioso in DB.
+3. **Blotato 2xx senza id → skipped**: `lib/publish/schedule.ts` linea 157-160 attualmente `return { status: 'skipped' }`. Cambiare in `throw new Error('Blotato ok senza id: contratto rotto')` + allargare fallback id (`postId`, `data.id`, `submission_id`, `scheduled_id`, `post.id`).
+4. **`resolveBlotatoTarget` parziale su TikTok/Facebook**: rifiutare (throw) se mancano `pageId`/`privacyLevel` invece di ritornare target incompleto. `lib/blotato-accounts.ts`.
+5. **Cross-post per-canale**: `app/api/generate/content/route.ts` copia caption/hashtag verbatim su ogni `alsoCanali`. Tagliare caption a 280 per X, droppare hashtag oltre limite LinkedIn (5-10), short-circuit combo incompatibili (es. IG post→TikTok senza video). Aggiungere `lib/social-adapt.ts` con `adaptForPlatform(row, canale)`.
+
+#### Stripe (7 blocker)
+6. **Idempotency event.id**: migration `025_stripe_events.sql` con `CREATE TABLE stripe_events (event_id text primary key, received_at timestamptz default now())`. In `app/api/stripe/webhook/route.ts` `INSERT ... ON CONFLICT DO NOTHING` come primo step; se 0 righe → return 200 già processato.
+7. **Timestamp tolerance webhook**: `lib/stripe.ts::verifyStripeWebhookSignature` — aggiungere `if (Math.abs(nowSeconds() - t) > 300) return false` per rejectare replay attack.
+8. **ON CONFLICT sovrascrive cliente_id**: nella query upsert `stripe_subscriptions` togliere `cliente_id` dalla `SET` list. Un webhook con `metadata.cliente_id` malformato potrebbe cambiare la subscription di un altro tenant.
+9. **`current_period_end`/`paid_at` sempre null**: valori arrivano da Stripe come stringhe unix. Normalizzare con `new Date(v * 1000).toISOString()` prima di persist. `lib/stripe.ts` + `app/api/stripe/webhook/route.ts`. Rompe UI dashboard cliente `il-mio-piano`.
+10. **`Idempotency-Key` header su Checkout**: `lib/stripe.ts::createStripeCheckoutSession` aggiungere `Idempotency-Key: sha256(cliente_id + timestamp_ora)` per evitare doppio charge se il POST fallisce.
+11. **Timeout/retry stripeRequest**: wrap con `AbortController` timeout 15s + 1 retry su `AbortError`. Ora appende in un fetch senza timeout.
+12. **`livemode` check webhook**: verificare `event.livemode === true` in prod (o `false` in dev). Prefisso `sk_live_` in `STRIPE_SECRET_KEY` in prod. Guardia contro test key in prod.
+
+#### Security (7 blocker)
+13. **`preview_token` opaco**: `id_contenuto` enumerabile (`C{timestamp_b36}_{n}_{n}`) su `/preview/[id]` pubblico. Aggiungere colonna `preview_token uuid` in migration + generare in `generate/content|plan` + rate-limit + sostituire URL preview con token.
+14. **Mask secret keys in `/api/data/settings`**: attualmente `GET` ritorna `blotato_api_key` in chiaro. Mask lato server (`****last4`) tranne quando l'utente sta editando (POST). Considera AES-GCM at-rest.
+15. **`/api/auth/register` rate-limit + captcha**: già rate-limit generico 10/IP/5min, ma serve captcha (hCaptcha/Turnstile) contro botnet. Env `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`.
+16. **SSRF `isPrivateHost` lessicale**: in `lib/media-validate.ts` e `scrape-contacts` — ora blocca solo se hostname *sembra* privato. Fare DNS resolution reale + blocklist IPv4 privati/link-local (10./172.16./192.168./127./169.254.) + IPv6 (::1, fc00::/7, fe80::/10) prima E dopo redirect.
+17. **Preview shared ignora `slides_json`/`scenes_json`**: `app/api/data/preview/route.ts` SELECT non include questi campi → preview reel/carosello perde le scene AI. Aggiungerli al SELECT.
+18. **`consenso_utilizzo` hardcoded `'SI'`**: `app/api/generate/content/route.ts` linea 610 mette `'SI'` in automatico quando ci sono media. Serve checkbox esplicita in UI upload + gate `publish` se `!= 'SI'` per URL esterni (rischio copyright).
+19. **Sync manuale Blotato senza signature**: `app/api/webhook/blotato/route.ts` in demo mode accetta senza firma. Fail-closed se `NODE_ENV=production` anche con demo flag.
+
+#### Health/Monitoring (5 blocker)
+20. **Health torna sempre 200**: `/api/system/health` — cambiare `status: 'needs_setup'` a HTTP 503 se DB down / migration mancante. Split `/api/system/health` (public 200/503 minimale) vs `/api/system/health/full` (admin-only con dettagli).
+21. **Stripe checks in health**: aggiungere `checks.stripeSecret` + `checks.stripeWebhook` + `checks.publishEnabled` (informativo). Ora health verde con Stripe rotto.
+22. **Sentry + logger strutturato**: integrare `@sentry/nextjs` (init con `SENTRY_DSN` env), wrap webhook Stripe/Blotato con `Sentry.captureException`. `lib/logger.ts` JSON con `x-request-id` middleware.
+23. **Email notifica onboarding**: integrare Resend o Postmark. Su `POST /api/auth/register` → email conferma + notifica admin. Su `PATCH activate` → email cliente "attivato + link login".
+24. **Registrazione senza gate Stripe**: implementare uno dei due flow: (a) checkout Stripe pre-activate (cliente paga, poi admin approva), (b) admin activate → auto-genera Stripe Checkout session e invia link email al cliente. Ora clienti attivati senza pagamento.
+
+#### AI generation (4 blocker)
+25. **Carosello 3-5 slide non validato hard**: `app/api/generate/content/route.ts` dopo `extractJSON` — se `formato='carousel'` e `slides.length < 3 || > 5` → retry con prompt "riprova con esattamente N slide". `lib/social-config.ts` ha già i limiti.
+26. **`extractJSON` silenzia troncamento**: `lib/ai.ts` — se il JSON è chiuso a graffe forzate, ritornare `{ data, truncated: true }`. Chiamante fa retry con `maxTokens*1.5` o modello con output maggiore.
+27. **Upload video**: `app/api/assets/upload/route.ts` accetta solo image/*. Aggiungere MIME `video/mp4|webm|mov` + cap 100MB + presigned direct-to-S3 (Render free ha limite request body 100MB). Blocca "reel reali" oggi.
+28. **Dashboard cliente `il-mio-piano` bug date**: `current_period_end`/`paid_at` timestamptz castato a string in `app/api/data/il-mio-piano/route.ts` → sempre `null` in UI. Normalizzare con `instanceof Date ? toISOString() : String(v)`. Correlato al #9.
+
+### ⚠️ Da configurare fuori codice (Render)
+- 🔴 `ADMIN_EMAIL` + `ADMIN_PASSWORD` (≥8 char) — **deploy fallisce senza dopo `d55bc30`**
+- 🔴 `BLOTATO_API_URL=https://backend.blotato.com` (rimuovi `api.blotato.com` se già impostata)
+- 🔴 `NEXT_PUBLIC_DEMO_MODE=false` esplicito
+- 🟡 `STRIPE_SECRET_KEY` (sk_live_) + `STRIPE_WEBHOOK_SECRET` + webhook Stripe → `/api/stripe/webhook` con eventi checkout.session.completed, customer.subscription.*, invoice.*
+- 🟡 `STORAGE_REGION` corretta per B2 (es. `us-west-004`)
+- 🟢 `CRON_SECRET` (per prospect-scraper quando abilitato)
+- 🟢 `SENTRY_DSN` (dopo integrazione #22)
+- 🟢 Migration `024_visual_effects.sql` + `025_stripe_events.sql` da applicare su prod
+
+### 📌 Handoff rapido per Claude/Codex — prossimo passaggio
+- **8 CRITICAL chiusi in questa sessione. Restano 28 HIGH** (elencati sopra numerati 1-28). Ordinare per business impact.
+- **Il DB prod deve ricevere migration 024** (visual effects) prima del prossimo deploy pubblico.
+- **La UI per il flag effetti virali NON esiste ancora**: aggiungere in `/dashboard/piano` un selector "Stile visual: 🔥 Trending / ✨ Premium / ⚪ Minimal / 📰 Classico" + checkbox "Usa effetti virali del momento" che passa `visual_preset` + `use_trending_effects` a POST `/api/generate/{content,plan}`.
 
 ---
 
