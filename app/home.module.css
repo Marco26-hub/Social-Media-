@@ -738,6 +738,40 @@
 }
 .priceCard.hoverLift:hover { box-shadow: 0 44px 96px rgba(16, 18, 14, 0.34); }
 
+/* ---------- Servizi (5 pilastri, raggruppati) ---------- */
+.serviceGroup { margin-bottom: 44px; }
+.serviceGroup:last-child { margin-bottom: 0; }
+
+.serviceGroupHead { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+
+.serviceGroupTitle {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(21px, 2.2vw, 27px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.serviceGroupIntro {
+  margin: 0;
+  color: rgba(16, 18, 14, 0.58);
+  font-size: 14px;
+}
+
+.serviceCard { position: relative; padding-top: 30px; }
+
+.serviceNum {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  color: var(--gold);
+}
+
 /* ---------- Keyframes ---------- */
 @keyframes rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes floatOrb { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30px, -26px) scale(1.09); } }

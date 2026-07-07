@@ -23,6 +23,14 @@ import {
   Wand2,
   LineChart,
   Gift,
+  PhoneCall,
+  Globe2,
+  TrendingUp,
+  PenLine,
+  Compass,
+  Package,
+  ImagePlus,
+  FileCheck2,
 } from 'lucide-react'
 import styles from './home.module.css'
 
@@ -33,15 +41,43 @@ function waLink(msg: string) {
   return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`
 }
 
-// Capacità reali del prodotto (niente metriche inventate)
+// I 5 servizi dell'azienda, raggruppati per logica (stesso gruppo di
+// socialwebautomation.com, tradotti e adattati — brand invariato).
+const SERVIZI = [
+  {
+    gruppo: 'Automazione',
+    intro: "L'AI manda avanti il lavoro operativo, così risparmi tempo ogni giorno.",
+    items: [
+      { num: '01', icon: Bot, titolo: 'Automazione & Agenti AI', desc: 'Agenti AI che si occupano dei compiti ripetitivi del tuo business, giorno e notte, così risparmi tempo prezioso.' },
+      { num: '02', icon: PhoneCall, titolo: 'Voce AI & Reception', desc: 'Un assistente AI che risponde al telefono 24 ore su 24, capisce chi chiama e fissa appuntamenti: non perdi più una chiamata.' },
+    ],
+  },
+  {
+    gruppo: 'Strategia & Crescita',
+    intro: 'Presenza, vendita e visibilità: la parte che ti fa crescere.',
+    items: [
+      { num: '03', icon: Globe2, titolo: 'Siti & E-commerce', desc: 'Realizziamo siti curati che convertono i visitatori in clienti, fino a negozi online gestiti con l’AI.' },
+      { num: '04', icon: Megaphone, titolo: 'Social, automatizzato', desc: 'La tua presenza social sempre attiva, con contenuti pronti da un unico pannello e la tua approvazione prima di ogni pubblicazione.' },
+      { num: '05', icon: TrendingUp, titolo: 'Visibilità & Crescita', desc: 'Ti aiutiamo a farti trovare su Google e dai nuovi assistenti AI (come ChatGPT), trasformando chi ti scopre in contatti reali.' },
+    ],
+  },
+]
+
+// Cosa include la gestione social — tutte le capacità reali della piattaforma,
+// spiegate in modo semplice (niente gergo tecnico, niente metriche inventate).
 const CAPACITA = [
-  { icon: Bot, titolo: 'Generazione contenuti con AI', desc: 'Claude scrive hook, caption, hashtag e CTA su misura per ogni canale e per ogni obiettivo.' },
-  { icon: FileText, titolo: 'Piano editoriale', desc: 'Calendari settimanali e mensili coerenti con il tuo brand, i tuoi prodotti e i tuoi temi.' },
-  { icon: Search, titolo: 'Audit SEO + GEO', desc: 'Analisi per posizionarti sui motori di ricerca e farti citare dagli assistenti AI come ChatGPT e Perplexity.' },
-  { icon: Megaphone, titolo: 'Campagne ADS', desc: 'Struttura e ottimizzazione delle campagne pubblicitarie. Il budget pubblicitario resta separato dal canone.' },
-  { icon: Magnet, titolo: 'Lead generation', desc: 'Trova e qualifica contatti potenziali per settore e zona, con scoring caldo/tiepido/freddo e follow-up commerciale.' },
-  { icon: Eye, titolo: 'Analisi competitor', desc: 'Monitoraggio dei concorrenti: contenuti, posizionamento e spunti per differenziarti.' },
-  { icon: BarChart3, titolo: 'Analytics e report', desc: 'Produzione, pipeline editoriale e performance dei contenuti, con storico consultabile.' },
+  { icon: Bot, titolo: 'Generazione contenuti con AI', desc: 'Scriviamo hook, testo e hashtag per ogni post, pronti da pubblicare su ogni canale.' },
+  { icon: FileText, titolo: 'Piano editoriale', desc: 'Un calendario di contenuti pronto in un click: settimane o mesi di post organizzati.' },
+  { icon: PenLine, titolo: 'Blog aziendale', desc: 'Articoli per il tuo sito, scritti per essere trovati facilmente su Google.' },
+  { icon: Megaphone, titolo: 'Campagne pubblicitarie (ADS)', desc: 'Creiamo annunci pronti per Google, Facebook/Instagram e TikTok. Il budget resta separato dal canone.' },
+  { icon: Search, titolo: 'Audit SEO + GEO', desc: 'Controlliamo il tuo sito e ti diciamo cosa migliorare per farti trovare da Google e dalle AI come ChatGPT.' },
+  { icon: Eye, titolo: 'Analisi competitor', desc: 'Guardiamo cosa fanno i tuoi concorrenti sui social e ti diciamo come distinguerti.' },
+  { icon: Magnet, titolo: 'Lead generation', desc: 'Troviamo contatti potenzialmente interessati alla tua attività, già ordinati per priorità (caldo/tiepido/freddo).' },
+  { icon: Compass, titolo: 'Scoperta automatica del brand', desc: 'Basta l’indirizzo del tuo sito: capiamo da soli tono di voce, stile e pubblico del tuo brand.' },
+  { icon: Package, titolo: 'Catalogo prodotti', desc: 'Carichi le foto dei tuoi prodotti una volta sola, le usiamo in automatico nei contenuti.' },
+  { icon: ImagePlus, titolo: 'Immagini create con AI', desc: 'Generiamo grafiche su misura quando non hai foto pronte da usare.' },
+  { icon: FileCheck2, titolo: 'Documenti legali', desc: 'Prepariamo Privacy Policy, Cookie Policy e informativa GDPR a norma, su misura per te.' },
+  { icon: BarChart3, titolo: 'Analytics e report', desc: 'Report chiari su cosa funziona, senza numeri complicati da interpretare.' },
 ]
 
 // Per chi è (target onesto, niente prova sociale finta)
@@ -94,8 +130,9 @@ export default function LandingPage() {
           <span>Social Automation</span>
         </Link>
         <nav className={styles.navLinks} aria-label="Navigazione landing">
+          <a href="#servizi">Servizi</a>
           <a href="#canali">Canali</a>
-          <a href="#capacita">Cosa fa</a>
+          <a href="#capacita">Cosa include</a>
           <a href="#prezzi">Pacchetti</a>
           <a href="#faq">FAQ</a>
         </nav>
@@ -218,14 +255,49 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Cosa fa */}
-      <section id="capacita" className={styles.sectionAlt}>
+      {/* Servizi — 5 pilastri, raggruppati per logica */}
+      <section id="servizi" className={styles.section} aria-labelledby="servizi-title">
         <div className={styles.wrap}>
           <div className={styles.sectionIntroCenter}>
-            <p className={styles.eyebrow}>Capacità</p>
-            <h2 className={styles.h2}>Cosa fa Social Automation.</h2>
+            <p className={styles.eyebrow}><Sparkles size={13} /> Servizi</p>
+            <h2 id="servizi-title" className={styles.h2}>Tutto ciò che serve, in un unico partner.</h2>
             <p className={styles.lead}>
-              Tutto ciò che serve per una presenza digitale continua, coordinata da una regia unica.
+              Dall&apos;automazione operativa alla crescita: mettiamo l&apos;AI al lavoro sul tuo business.
+            </p>
+          </div>
+          {SERVIZI.map(group => (
+            <div key={group.gruppo} className={styles.serviceGroup}>
+              <div className={styles.serviceGroupHead}>
+                <h3 className={styles.serviceGroupTitle}>{group.gruppo}</h3>
+                <p className={styles.serviceGroupIntro}>{group.intro}</p>
+              </div>
+              <div className={styles.grid3}>
+                {group.items.map(({ num, icon: Icon, titolo, desc }) => (
+                  <TiltCard key={titolo} className={`${styles.card} ${styles.hoverLift} ${styles.serviceCard}`}>
+                    <article>
+                      <span className={styles.serviceNum}>{num}</span>
+                      <span className={group.gruppo === 'Automazione' ? styles.cardIcon : `${styles.cardIcon} ${styles.cardIconForest}`}>
+                        <Icon size={22} />
+                      </span>
+                      <h3>{titolo}</h3>
+                      <p>{desc}</p>
+                    </article>
+                  </TiltCard>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Cosa include la gestione social */}
+      <section id="capacita" className={styles.sectionAlt} aria-labelledby="capacita-title">
+        <div className={styles.wrap}>
+          <div className={styles.sectionIntroCenter}>
+            <p className={styles.eyebrow}>Include</p>
+            <h2 id="capacita-title" className={styles.h2}>Cosa include la gestione social.</h2>
+            <p className={styles.lead}>
+              Tutto quello che ricevi con il servizio, spiegato in modo semplice — senza gergo tecnico.
             </p>
           </div>
           <div className={styles.grid3}>

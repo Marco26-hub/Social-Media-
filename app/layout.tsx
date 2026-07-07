@@ -4,10 +4,14 @@ import JsonLd from '@/components/JsonLd'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://social-media-manager-zte4.onrender.com'),
-  title: 'Social Automation | Social media AI per agenzie e PMI',
+  title: 'Social Automation | Automazione AI, siti e social per agenzie e PMI',
   description:
-    'Servizio gestito di social media management con AI: contenuti, piano editoriale, audit SEO e GEO, pubblicazione con approvazione umana.',
+    'Mettiamo l’AI al lavoro sul tuo business: agenti e automazioni, receptionist AI 24/7, siti ed e-commerce, gestione social con AI e visibilità su Google e sugli assistenti AI (SEO e GEO). Approvazione umana prima di ogni pubblicazione.',
   keywords: [
+    'automazione AI business',
+    'agenti AI',
+    'receptionist AI',
+    'siti web e e-commerce AI',
     'social media management',
     'social media AI',
     'gestione social con intelligenza artificiale',
@@ -22,9 +26,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Social Automation' }],
   openGraph: {
-    title: 'Social Automation | Social media AI per agenzie e PMI',
+    title: 'Social Automation | Automazione AI, siti e social per agenzie e PMI',
     description:
-      'Servizio gestito di social media management con AI: contenuti, piano editoriale, audit SEO e GEO, pubblicazione con approvazione umana.',
+      'Agenti AI, receptionist AI 24/7, siti ed e-commerce, gestione social con AI e visibilità su Google e sugli assistenti AI. Approvazione umana prima di ogni pubblicazione.',
     type: 'website',
     url: 'https://social-media-manager-zte4.onrender.com',
     siteName: 'Social Automation',
@@ -34,15 +38,15 @@ export const metadata: Metadata = {
         url: '/og.png',
         width: 1200,
         height: 630,
-        alt: 'Social Automation — social media management con AI',
+        alt: 'Social Automation — automazione AI, siti e social per agenzie e PMI',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Social Automation | Social media AI per agenzie e PMI',
+    title: 'Social Automation | Automazione AI, siti e social per agenzie e PMI',
     description:
-      'Servizio gestito di social media management con AI: contenuti, piano editoriale, audit SEO e GEO, pubblicazione con approvazione umana.',
+      'Agenti AI, receptionist AI 24/7, siti ed e-commerce, gestione social con AI e visibilità su Google e sugli assistenti AI. Approvazione umana prima di ogni pubblicazione.',
     images: ['/og.png'],
   },
   alternates: {
