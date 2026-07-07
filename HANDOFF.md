@@ -13,7 +13,31 @@
 
 ## 🆕 Sessione 2026-07-06 (Claude CLI) — landing premium, funnel vendita, security, fix mobile
 
-Working tree su `main`, `build` verde ad ogni commit. Deploy live verificato (`health.mode=production`).
+Working tree su `main`, `build` verde ad ogni commit. Deploy live verificato (`health.mode=production`). Ultimi commit chiave: `372ada5` (servizi auto-fit), `7ba0027` (5 servizi + capacità 12), `33ca153` (pacchetti fonte unica), `d1e2ed1`, `bc19e50`, `f9f584f`, `1c0648a`.
+
+### Landing — 5 servizi aziendali + capacità complete (ultimo blocco)
+- **`socialwebautomation.com` ("Aether") = stessa azienda.** La landing ora rappresenta l'INTERA offerta. Nuova sezione **"Servizi"** (`#servizi` in `app/page.tsx`, const `SERVIZI`): 5 pilastri IT, brand invariato "Social Automation", raggruppati **Automazione** (Agenti AI, Voce AI & Reception) + **Strategia & Crescita** (Siti & E-commerce, Social automatizzato, Visibilità & Crescita). Card numerate 01-05, `.serviceGrid` auto-fit (`app/home.module.css`).
+- **Sezione "Cosa include"** (ex "Cosa fa", id `#capacita` invariato): capacità **espansa 7→12** con l'inventario reale del prodotto: + Blog, Campagne ADS, Scoperta brand, Catalogo prodotti, Immagini AI, Documenti legali GDPR. **Lead generation resta** (testo più chiaro). Linguaggio semplice per non esperti, niente gergo/metriche finte.
+- **Onestà**: le 12 capacità sono feature reali collegate a DB/backend TRANNE **Lead generation = SIMULATO** (genera lead con temperatura, non scraping live — vedi memoria `lead-research-rebuild`; da rifare reale con search API). I 5 pilastri sono servizi offerti dall'azienda: Social+Visibilità coperti dall'app, Automazione/Voce AI/Siti erogati come servizio (non schermate del pannello). L'utente conferma: **tutti e 5 i servizi sono offerti davvero**.
+- **SEO/GEO**: `components/JsonLd.tsx` — `OfferCatalog`/5×`Service`, descrizioni Organization/SoftwareApplication allargate, +1 FAQ "Quali servizi offre", **fix `offerCount` 3→5**. `app/layout.tsx` metadata allargati. HTML semantico (`aria-labelledby`, `h2 id`, `<article>`).
+
+### Pacchetti — fonte unica (anti-drift)
+- **`lib/pacchetti.ts`** = 5 pacchetti (slug/nome/eyebrow/prezzo/setup/sottotitolo/features/consigliato) importati da landing + servizi + register + API. Prima 3 fonti separate divergenti (landing 3 vs servizi/register 5, nomi diversi). Ora **stessi 5 ovunque**: Starter €390 · Presenza €590 · Crescita €1.090 ⭐ · E-commerce €1.690 · Dominio €2.590. Setup: incluso/290/490/990/1.490.
+
+### Fix mobile + AI + sicurezza + publish (blocchi precedenti della sessione)
+- **Sicurezza** (audit, nessun GRAVE): rate-limit login+register (`middleware.ts`, 10/IP/5min), SSRF scraper `redirect:manual` (`scrape-contacts`), `apiError` non espone `Error.message` grezzo (ma fa passare i msg AI sanificati come 502). **`lib/base-url.ts` host-first** (x-forwarded-host validato): era env-first e con NEXTAUTH_URL=`social-automation.onrender.com` (dominio MORTO) le immagini davano 404 → generazione fallita. ⚠️ Immagini caricate PRIMA di questo fix hanno URL vecchio in DB → ricaricarle.
+- **`PUBLISH_ENABLED`** (default false) disaccoppia pubblicazione dal demo (`lib/publish/schedule.ts`, `isPublishingLive()`): produzione reale SENZA pubblicare finché non pronto. `scheduleOnBlotato` ritorna `PublishOutcome` tipizzato (no fallback silenzioso).
+- **Admin sicuro**: `scripts/ensure-admin.mjs` (da `ADMIN_EMAIL`/`ADMIN_PASSWORD`, disabilita `admin/1234567`). **Ruolo in sessione** + `AuthProvider` → voce sidebar "Registrazioni" solo admin. Tasto landing nella top-bar mobile.
+- **Mobile/UX**: ordine prezzi, icone azioni calendario (Info vs Eye + title + "Valuta"), card calendario `flex-wrap`, "Crea contenuti"→`/dashboard/piano`, hero "controllo" non più tagliata, "Vedi demo live"→"Come funziona" (demo costi eccessivi), CTA "Ricevi 1 contenuto gratis" (WhatsApp), link "Pacchetti"→`/servizi#pacchetti`, clienti 401→redirect login.
+
+### Registrazione self-serve + provisioning (blocco precedente)
+- `/register` (pacchetto preselezionato) → account `pending` → `/dashboard/registrazioni` (admin, requireAdmin) → **Attiva crea il workspace** (`clienti` + `user_client_access` owner). Gate login fail-closed. Migration `022_onboarding_signup.sql`.
+
+### ⚠️ TODO utente (env Render + azioni)
+- 🔴 `ADMIN_EMAIL`+`ADMIN_PASSWORD` (default `admin/1234567` ancora attivo, non aprire al pubblico).
+- 🔴 Lead reale (search API) — sostituisce il simulato.
+- 🟡 `BLOTATO_API_KEY`, `PUBLISH_ENABLED=true` quando pronti a pubblicare. `NEXT_PUBLIC_DEMO_MODE=false` già fatto. Ricaricare immagini vecchie.
+- Vedi `GO_LIVE_CHECKLIST.md`, `ANALISI_CONCORRENZA_2026.md`.
 
 ### Landing & prezzi
 - **Landing `/` ridisegnata premium** (nuovo `app/home.module.css`): stile editoriale Fraunces + palette cream/forest/gold, hero 3D tilt (`components/TiltCard.tsx`), orbs, motion. Coerente con `/servizi`.
