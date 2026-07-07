@@ -160,14 +160,14 @@ const PROMPTS: Record<string, PromptSpec> = {
   'instagram:carousel': {
     persona: 'Sei un content strategist Instagram carousel per brand fashion e-commerce.',
     goal: 'Educare e ispirare. Il carosello deve creare un mini-racconto che fa scorrere le slide, con CTA finale che porta al prodotto.',
-    dimensione: '1:1 quadrato (1080x1080px). 5-7 slide. Ogni slide = 1 concetto.',
-    struttura: 'Slide 1: Hook visivo + titolo (fa venire voglia di swipe). Slide 2: Problema/dubbio che il prodotto risolve. Slide 3-4: Come usare il prodotto / styling / dettagli. Slide 5: Beneficio emotivo + social proof. Slide finale: CTA + prodotto.',
+    dimensione: '1:1 quadrato (1080x1080px). Da 3 a 5 slide (mai meno di 3, mai più di 5). Ogni slide = 1 concetto.',
+    struttura: 'Slide 1: Hook visivo + titolo (fa venire voglia di swipe). Slide 2-3: problema/dubbio che il prodotto risolve e come usarlo (styling, dettagli, beneficio). Slide finale: CTA + prodotto. Usa da 3 a 5 slide in totale.',
     tono: 'Autorevole, consigliere di stile. "Ecco come", "Prova così", "Il segreto è". Emoji misurate.',
-    limiti: '5-7 slide. Testo per slide max 120 char. Testo sulla prima slide max 60 char.',
+    limiti: 'Esattamente da 3 a 5 slide. Testo per slide max 120 char. Testo sulla prima slide max 60 char.',
     hashtag: '5-6 hashtag. Inserire nella caption (non nelle slide).',
     cta: 'CTA nell\'ultima slide: "Scopri la collezione" / "Provalo ora".',
     effetti: 'Slide coerenti come palette colori. Font leggibile su mobile. Slide 1 bold e minimal.',
-    outputSchema: '{"titolo_carosello":"","numero_slide":6,"slides":[{"numero":1,"testo":"testo sulla slide","visual":"descrizione immagine"}]}',
+    outputSchema: '{"titolo_carosello":"","numero_slide":4,"slides":[{"numero":1,"testo":"testo sulla slide","visual":"descrizione immagine"}]}',
   },
 
   'instagram:reel': {

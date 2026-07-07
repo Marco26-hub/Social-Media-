@@ -6,17 +6,16 @@ import PostPreview from '@/components/PostPreview'
 import type { Contenuto } from '@/lib/types'
 import { Ban, Check, ArrowLeft, LayoutDashboard, ArrowUp } from 'lucide-react'
 
-const ALL_PLATFORMS: { canale: Contenuto['canale']; formato: Contenuto['formato']; label: string }[] = [
-  { canale: 'instagram', formato: 'post', label: 'Instagram Post' },
-  { canale: 'instagram', formato: 'reel', label: 'Instagram Reel' },
-  { canale: 'instagram', formato: 'story', label: 'Instagram Story' },
-  { canale: 'facebook', formato: 'post', label: 'Facebook Post' },
-  { canale: 'tiktok', formato: 'video', label: 'TikTok Video' },
-  { canale: 'pinterest', formato: 'pin', label: 'Pinterest Pin' },
-  { canale: 'linkedin', formato: 'post', label: 'LinkedIn Post' },
-  { canale: 'threads', formato: 'post', label: 'Threads Post' },
-  { canale: 'x', formato: 'post', label: 'X Post' },
-]
+// La preview mostra il contenuto REALE (il suo canale + formato dal DB), non una
+// lista fissa di piattaforme. Così l'anteprima combacia con il calendario.
+const CANALE_LABEL: Record<string, string> = {
+  instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', pinterest: 'Pinterest',
+  linkedin: 'LinkedIn', youtube_shorts: 'YouTube Shorts', threads: 'Threads', x: 'X', blog: 'Blog',
+}
+const FORMATO_LABEL: Record<string, string> = {
+  post: 'Post', carousel: 'Carosello', reel: 'Reel', story: 'Story', video: 'Video',
+  pin: 'Pin', short: 'Short', articolo: 'Articolo', foto: 'Foto',
+}
 
 const DEMO_DATA = {
   cliente_nome: 'SILKinCOM',
@@ -42,6 +41,9 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
   const [brandName, setBrandName] = useState(DEMO_DATA.cliente_nome)
   const [socialHandle, setSocialHandle] = useState('')
   const [linkProdotto, setLinkProdotto] = useState('')
+  const [canale, setCanale] = useState<Contenuto['canale']>('instagram')
+  const [formato, setFormato] = useState<Contenuto['formato']>('post')
+  const [mediaSlots, setMediaSlots] = useState<(string | null)[]>([])
 
   useEffect(() => {
     params.then(p => setId(p.id))
@@ -95,6 +97,9 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setMediaUrl(s(d.link_media_1))
         if (s(d.brand_name)) setBrandName(s(d.brand_name))
         if (s(d.social_handle)) setSocialHandle(s(d.social_handle))
+        if (s(d.canale)) setCanale(s(d.canale) as Contenuto['canale'])
+        if (s(d.formato)) setFormato(s(d.formato) as Contenuto['formato'])
+        setMediaSlots(Array.from({ length: 10 }, (_, i) => s(d[`link_media_${i + 1}`]) || null))
         setLinkProdotto(s(d.link_prodotto_finale) || s(d.link_prodotto))
       })
       .catch(() => {})
@@ -111,17 +116,18 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     })
   }
 
+  const platforms = [{ canale, formato, label: `${CANALE_LABEL[canale] || canale} ${FORMATO_LABEL[formato] || formato}` }]
   const excludedCount = excluded.size
-  const publishableCount = ALL_PLATFORMS.length - excludedCount
+  const publishableCount = platforms.length - excludedCount
 
   const baseContenuto: Contenuto = {
     id, cliente_id: '', id_contenuto: id,
     data_pubblicazione: '', ora_pubblicazione: '',
-    canale: 'instagram', formato: 'post',
+    canale, formato,
     hook, caption, hashtag, cta,
-    link_media_1: mediaUrl, link_media_2: null, link_media_3: null,
-    link_media_4: null, link_media_5: null, link_media_6: null, link_media_7: null,
-    link_media_8: null, link_media_9: null, link_media_10: null,
+    link_media_1: mediaUrl, link_media_2: mediaSlots[1] || null, link_media_3: mediaSlots[2] || null,
+    link_media_4: mediaSlots[3] || null, link_media_5: mediaSlots[4] || null, link_media_6: mediaSlots[5] || null, link_media_7: mediaSlots[6] || null,
+    link_media_8: mediaSlots[7] || null, link_media_9: mediaSlots[8] || null, link_media_10: mediaSlots[9] || null,
     nome_prodotto: DEMO_DATA.nome_prodotto, tema: DEMO_DATA.tema,
     obiettivo: null, product_id: null,
     link_prodotto: null, link_prodotto_finale: linkProdotto || null,
@@ -160,7 +166,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
 
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Anteprima Contenuto</h1>
-          <p className="text-sm text-gray-500 mt-1">Come apparirà su ogni piattaforma social</p>
+          <p className="text-sm text-gray-500 mt-1">{platforms[0]?.label} · come apparirà una volta pubblicato</p>
         </div>
 
         {/* Form inputs per modificare il contenuto in tempo reale */}
@@ -240,9 +246,9 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* Griglia anteprime */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {ALL_PLATFORMS.map(({ canale, formato, label }) => {
+        {/* Anteprima del contenuto reale (canale + formato dal DB) */}
+        <div className={platforms.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'flex justify-center'}>
+          {platforms.map(({ canale, formato, label }) => {
             const key = `${canale}-${formato}`
             const isExcluded = excluded.has(key)
             const c: Contenuto = {
@@ -254,7 +260,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
             return (
               <div
                 key={key}
-                className={`card p-3 transition-all relative ${isExcluded ? 'opacity-40 border-red-300' : ''}`}
+                className={`card p-3 transition-all relative w-full max-w-sm ${isExcluded ? 'opacity-40 border-red-300' : ''}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">{label}</p>

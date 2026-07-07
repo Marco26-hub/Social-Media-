@@ -225,16 +225,28 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
 
       {/* Media */}
       <div className={`${aspect} bg-gray-100 relative`}>
-        {c.link_media_1 ? (
+        {c.formato === 'carousel' ? (() => {
+          const imgs = [c.link_media_1, c.link_media_2, c.link_media_3, c.link_media_4, c.link_media_5, c.link_media_6, c.link_media_7].filter(Boolean) as string[]
+          if (!imgs.length) return <div className="w-full h-full flex items-center justify-center text-5xl">{CANALE_ICON[c.canale]}</div>
+          return (
+            <>
+              {/* Galleria: le diverse foto del carosello, swipe orizzontale */}
+              <div className="flex h-full overflow-x-auto snap-x snap-mandatory">
+                {imgs.map((src, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={i} src={src} alt="" className="w-full h-full object-cover flex-shrink-0 snap-center" />
+                ))}
+              </div>
+              <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
+                {imgs.length} foto
+              </div>
+            </>
+          )
+        })() : c.link_media_1 ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={c.link_media_1} alt="" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl">{CANALE_ICON[c.canale]}</div>
-        )}
-        {c.formato === 'carousel' && (
-          <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
-            1/{[c.link_media_1, c.link_media_2, c.link_media_3, c.link_media_4, c.link_media_5].filter(Boolean).length}
-          </div>
         )}
       </div>
 

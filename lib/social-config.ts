@@ -40,7 +40,7 @@ export const PLATFORMS: Record<PlatformKey, PlatformConfig> = {
     canaleDb: 'instagram',
     formati: [
       { id: 'IG-POST',  nome: 'Post',     desc: 'Foto quadrata 1:1 con caption + hashtag',     icon: Square, formato: 'post',     aspectRatio: '1:1',   esempio: 'Mostra il prodotto in primo piano',     goal: 'Ispirare e convertire via link in bio' },
-      { id: 'IG-CAR',   nome: 'Carosello',desc: '5-7 slide con hook, styling e CTA finale',   icon: Layers, formato: 'carousel', aspectRatio: '1:1',   esempio: '5 modi di abbinare i jeans',            goal: 'Educare e creare swipe con racconto' },
+      { id: 'IG-CAR',   nome: 'Carosello',desc: '3-5 slide con hook, styling e CTA finale',   icon: Layers, formato: 'carousel', aspectRatio: '1:1',   esempio: '5 modi di abbinare i jeans',            goal: 'Educare e creare swipe con racconto' },
       { id: 'IG-REEL',  nome: 'Reel',     desc: 'Video verticale 9:16 da 15-30 secondi',      icon: Film,   formato: 'reel',     aspectRatio: '9:16', esempio: 'Tutorial styling rapido',               goal: 'Viralità e awareness' },
       { id: 'IG-STORY', nome: 'Story',    desc: 'Story 24h con sticker, link e interazioni',  icon: Clock,  formato: 'story',    aspectRatio: '9:16', esempio: 'Dietro le quinte / novità',              goal: 'Engagement quotidiano e traffico al sito' },
     ],

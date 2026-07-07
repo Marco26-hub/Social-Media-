@@ -3,6 +3,7 @@ import DemoBanner from '@/components/DemoBanner'
 import AuthProvider from '@/components/AuthProvider'
 import { GenerationProvider } from '@/components/GenerationProvider'
 import GenerationBar from '@/components/GenerationBar'
+import BackToTop from '@/components/BackToTop'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,6 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </main>
         </div>
         <GenerationBar />
+        <BackToTop />
       </GenerationProvider>
     </AuthProvider>
   )

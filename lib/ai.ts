@@ -720,12 +720,36 @@ async function callOllama(
 }
 
 export function extractJSON(text: string): unknown {
-  const m = text.match(/\{[\s\S]*\}/)
-  if (!m) throw new Error('No JSON object found in AI response')
+  // 1) Togli eventuali code-fence ```json ... ``` che alcuni modelli aggiungono.
+  let t = text.trim()
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  if (fence) t = fence[1].trim()
+
+  const start = t.indexOf('{')
+  if (start === -1) throw new Error('No JSON object found in AI response')
+
+  // 2) Bilancia le graffe (ignorando quelle dentro le stringhe) per isolare
+  //    l'oggetto anche se il modello aggiunge testo prima/dopo il JSON.
+  let depth = 0, end = -1, inStr = false, esc = false
+  for (let i = start; i < t.length; i++) {
+    const c = t[i]
+    if (esc) { esc = false; continue }
+    if (c === '\\') { esc = true; continue }
+    if (c === '"') { inStr = !inStr; continue }
+    if (inStr) continue
+    if (c === '{') depth++
+    else if (c === '}' && --depth === 0) { end = i; break }
+  }
+
+  // 3) Se non ha chiuso (risposta troncata) prova comunque a chiudere le graffe aperte.
+  const candidate = end !== -1 ? t.slice(start, end + 1) : t.slice(start)
   try {
-    return JSON.parse(m[0])
+    return JSON.parse(candidate)
   } catch {
-    throw new Error(`Malformed JSON in AI response: ${m[0].slice(0, 300)}`)
+    if (end === -1 && depth > 0) {
+      try { return JSON.parse(candidate + '}'.repeat(depth)) } catch { /* cade sotto */ }
+    }
+    throw new Error(`Malformed JSON in AI response: ${candidate.slice(0, 300)}`)
   }
 }
 
