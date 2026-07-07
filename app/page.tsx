@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { PLATFORM_LIST } from '@/lib/social-config'
 import TiltCard from '@/components/TiltCard'
+import RevealOnScroll from '@/components/RevealOnScroll'
+import CountUp from '@/components/CountUp'
 import { PACCHETTI } from '@/lib/pacchetti'
 import {
   ArrowRight,
@@ -188,17 +190,17 @@ export default function LandingPage() {
               <div className={styles.panelStats}>
                 <div className={styles.panelStat}>
                   <span><Bot size={18} /></span>
-                  <strong>128</strong>
+                  <strong><CountUp to={128} /></strong>
                   <small>Contenuti generati</small>
                 </div>
                 <div className={styles.panelStat}>
                   <span><FileText size={18} /></span>
-                  <strong>4</strong>
+                  <strong><CountUp to={4} /></strong>
                   <small>Canali attivi</small>
                 </div>
                 <div className={styles.panelStat}>
                   <span><Search size={18} /></span>
-                  <strong>92</strong>
+                  <strong><CountUp to={92} /></strong>
                   <small>Score SEO/GEO</small>
                 </div>
               </div>
@@ -226,14 +228,14 @@ export default function LandingPage() {
       {/* Canali */}
       <section id="canali" className={styles.section}>
         <div className={styles.wrap}>
-          <div className={styles.sectionIntroCenter}>
+          <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}><Sparkles size={13} /> Copertura</p>
             <h2 className={styles.h2}>{PLATFORM_LIST.length} canali, una regia sola.</h2>
             <p className={styles.lead}>
               Contenuti pensati per il formato giusto di ogni piattaforma, dalla creazione alla pubblicazione.
             </p>
           </div>
-          <div className={styles.gridChannels}>
+          <div data-reveal className={styles.gridChannels}>
             {PLATFORM_LIST.map(p => (
               <TiltCard key={p.nome} className={`${styles.card} ${styles.hoverLift}`}>
                 <span className={`${styles.channelEmoji} ${p.colorBg}`}>{p.emoji}</span>
@@ -251,14 +253,14 @@ export default function LandingPage() {
       {/* Servizi — attivi ora */}
       <section id="servizi" className={styles.section} aria-labelledby="servizi-title">
         <div className={styles.wrap}>
-          <div className={styles.sectionIntroCenter}>
+          <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}><Sparkles size={13} /> Servizi</p>
             <h2 id="servizi-title" className={styles.h2}>Tutto ciò che serve, in un unico partner.</h2>
             <p className={styles.lead}>
               Presenza social, siti che vendono e visibilità su Google e sugli assistenti AI: mettiamo l&apos;AI al lavoro sul tuo business.
             </p>
           </div>
-          <div className={styles.serviceGrid}>
+          <div data-reveal className={styles.serviceGrid}>
             {SERVIZI.map(({ num, icon: Icon, titolo, desc }) => (
               <TiltCard key={titolo} className={`${styles.card} ${styles.hoverLift} ${styles.serviceCard}`}>
                 <article>
@@ -276,14 +278,14 @@ export default function LandingPage() {
       {/* In arrivo — accesso anticipato */}
       <section className={styles.section} aria-labelledby="arrivo-title">
         <div className={`${styles.wrap} ${styles.coming}`}>
-          <div className={styles.sectionIntroCenter}>
+          <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}>Accesso anticipato</p>
             <h2 id="arrivo-title" className={styles.h2}>La piattaforma cresce.</h2>
             <p className={styles.lead}>
               Stiamo per attivare i prossimi servizi. Entra in lista d&apos;attesa e sei tra i primi ad averli.
             </p>
           </div>
-          <div className={styles.comingGrid}>
+          <div data-reveal className={styles.comingGrid}>
             {IN_ARRIVO.map(({ icon: Icon, titolo, desc, nota }) => (
               <article key={titolo} className={styles.comingCard}>
                 <div className={styles.comingHead}>
@@ -308,14 +310,14 @@ export default function LandingPage() {
       {/* Cosa include la gestione social */}
       <section id="capacita" className={styles.sectionAlt} aria-labelledby="capacita-title">
         <div className={styles.wrap}>
-          <div className={styles.sectionIntroCenter}>
+          <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}>Include</p>
             <h2 id="capacita-title" className={styles.h2}>Cosa include la gestione social.</h2>
             <p className={styles.lead}>
               Tutto quello che ricevi con il servizio, spiegato in modo semplice — senza gergo tecnico.
             </p>
           </div>
-          <div className={styles.grid3}>
+          <div data-reveal className={styles.grid3}>
             {CAPACITA.map(({ icon: Icon, titolo, desc }) => (
               <TiltCard key={titolo} className={`${styles.card} ${styles.hoverLift}`}>
                 <span className={styles.cardIcon}><Icon size={22} /></span>
@@ -330,12 +332,12 @@ export default function LandingPage() {
       {/* Come funziona */}
       <section className={styles.section}>
         <div className={styles.wrapNarrow}>
-          <div className={styles.sectionIntroCenter}>
+          <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}>Flusso</p>
             <h2 className={styles.h2}>Come funziona.</h2>
             <p className={styles.lead}>Un flusso chiaro, con l&apos;approvazione umana al centro.</p>
           </div>
-          <div className={styles.flow}>
+          <div data-reveal className={styles.flow}>
             {FLUSSO.map(s => (
               <div key={s.step} className={styles.flowStep}>
                 <span className={styles.flowNum}>{s.step}</span>
@@ -352,14 +354,14 @@ export default function LandingPage() {
       {/* Per chi è */}
       <section className={styles.sectionAlt}>
         <div className={styles.wrap}>
-          <div className={styles.sectionIntroCenter}>
+          <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}><Users size={13} /> Per chi è</p>
             <h2 className={styles.h2}>Costruito per agenzie e PMI.</h2>
             <p className={styles.lead}>
               Per chi vuole una presenza social professionale senza appesantire la propria struttura.
             </p>
           </div>
-          <div className={styles.grid3}>
+          <div data-reveal className={styles.grid3}>
             {TARGET.map(({ icon: Icon, titolo, desc }) => (
               <TiltCard key={titolo} className={`${styles.card} ${styles.hoverLift}`}>
                 <span className={`${styles.cardIcon} ${styles.cardIconForest}`}><Icon size={22} /></span>
@@ -374,14 +376,14 @@ export default function LandingPage() {
       {/* Pricing */}
       <section id="prezzi" className={styles.section}>
         <div className={`${styles.wrap} ${styles.pricing}`}>
-          <div className={styles.sectionIntroCenter}>
+          <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}>Pacchetti</p>
             <h2 className={styles.h2}>Prezzi chiari, valore alto.</h2>
             <p className={styles.lead}>
               Prezzi mensili, IVA esclusa. Il budget pubblicitario è sempre separato dal canone.
             </p>
           </div>
-          <div className={styles.priceGrid}>
+          <div data-reveal className={styles.priceGrid}>
             {PACCHETTI.map(piano => (
               <TiltCard
                 key={piano.slug}
@@ -417,12 +419,12 @@ export default function LandingPage() {
       {/* FAQ */}
       <section id="faq" className={styles.section}>
         <div className={styles.wrapNarrow}>
-          <div className={styles.sectionIntroCenter}>
+          <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}>FAQ</p>
             <h2 className={styles.h2}>Domande frequenti.</h2>
             <p className={styles.lead}>Trasparenza prima di iniziare.</p>
           </div>
-          <div className={styles.faqList}>
+          <div data-reveal className={styles.faqList}>
             {FAQ.map((item, i) => (
               <details key={i} className={styles.faqItem}>
                 <summary className={styles.faqSummary}>
@@ -479,6 +481,8 @@ export default function LandingPage() {
           <span><ShieldCheck size={14} /> Costruito con Next.js, Neon/Postgres, Claude e Blotato</span>
         </div>
       </footer>
+
+      <RevealOnScroll />
     </main>
   )
 }

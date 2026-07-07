@@ -24,6 +24,22 @@
   }
 }
 
+/* Scroll-reveal: attivo solo con JS (html[data-reveal-ready]) → senza JS o con
+   reduced-motion tutto resta visibile, niente FOUC. */
+[data-reveal-ready] [data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+[data-reveal-ready] [data-reveal].revealed {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+}
+
 @layer utilities {
   @keyframes orb-float {
     0%, 100% { transform: translate3d(0, 0, 0) scale(1); }

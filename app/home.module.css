@@ -772,12 +772,25 @@
 /* ---------- In arrivo (accesso anticipato) ---------- */
 .coming {
   position: relative;
+  overflow: hidden;
   padding: 60px 32px;
   border-radius: 42px;
   background:
     radial-gradient(circle at 88% 8%, rgba(214, 168, 57, 0.24), transparent 22rem),
     linear-gradient(155deg, rgba(16, 18, 14, 0.96), rgba(34, 63, 44, 0.96));
 }
+/* Aurora rotante di sfondo */
+.coming::before {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  z-index: 0;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(214, 168, 57, 0.12) 55deg, transparent 130deg, rgba(97, 124, 69, 0.12) 215deg, transparent 320deg);
+  animation: auroraSpin 20s linear infinite;
+  pointer-events: none;
+}
+.coming > * { position: relative; z-index: 1; }
+@keyframes auroraSpin { to { transform: rotate(360deg); } }
 .coming .eyebrow { color: var(--gold); justify-content: center; }
 .coming .h2, .coming .lead { color: var(--cream); }
 .coming .lead { color: rgba(255, 250, 240, 0.72); }
@@ -878,4 +891,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .heroContent, .panel, .heroOrb, .floatChip, .priceCardFeatured, .dotLive i { animation: none; }
+  .coming::before { animation: none; }
 }
