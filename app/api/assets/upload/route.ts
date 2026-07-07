@@ -10,8 +10,16 @@ import { isStorageConfigured, uploadToStorage } from '@/lib/storage'
 export const runtime = 'nodejs'
 
 const MAX_FILES = 14
-const MAX_FILE_SIZE = 8 * 1024 * 1024
-const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'])
+const MAX_IMAGE_FILE_SIZE = 8 * 1024 * 1024
+const MAX_VIDEO_FILE_SIZE = 100 * 1024 * 1024
+const ALLOWED_IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'])
+const ALLOWED_VIDEO_MIME = new Set(['video/mp4'])
+
+function mediaKind(mime: string) {
+  if (ALLOWED_VIDEO_MIME.has(mime)) return 'video'
+  if (ALLOWED_IMAGE_MIME.has(mime)) return 'image'
+  return null
+}
 
 function safeFilename(name: string) {
   const ext = path.extname(name).toLowerCase() || '.jpg'
@@ -33,7 +41,7 @@ export async function POST(request: Request) {
 
     const files = form.getAll('files').filter((item): item is File => item instanceof File)
     if (!files.length) return NextResponse.json({ error: 'Nessun file ricevuto' }, { status: 400 })
-    if (files.length > MAX_FILES) return NextResponse.json({ error: `Massimo ${MAX_FILES} immagini per contenuto` }, { status: 400 })
+    if (files.length > MAX_FILES) return NextResponse.json({ error: `Massimo ${MAX_FILES} media per contenuto` }, { status: 400 })
 
     // Storage persistente (S3-compatible) se configurato, altrimenti disco locale
     // (effimero, solo dev). Il proxy /api/assets/file serve i file dei bucket privati.
@@ -43,11 +51,17 @@ export async function POST(request: Request) {
 
     const uploaded = []
     for (const file of files) {
-      if (!ALLOWED_MIME.has(file.type)) {
-        return NextResponse.json({ error: `Formato non supportato: ${file.type || file.name}` }, { status: 400 })
+      const kind = mediaKind(file.type)
+      if (!kind) {
+        return NextResponse.json({ error: `Formato non supportato: ${file.type || file.name}. Usa immagini JPG/PNG/WebP/GIF/AVIF oppure video MP4.` }, { status: 400 })
       }
-      if (file.size > MAX_FILE_SIZE) {
-        return NextResponse.json({ error: `${file.name} supera 8MB` }, { status: 400 })
+      if (kind === 'video' && path.extname(file.name).toLowerCase() !== '.mp4') {
+        return NextResponse.json({ error: `${file.name}: per i video è supportato solo il formato .mp4` }, { status: 400 })
+      }
+      const maxSize = kind === 'video' ? MAX_VIDEO_FILE_SIZE : MAX_IMAGE_FILE_SIZE
+      if (file.size > maxSize) {
+        const maxMb = Math.round(maxSize / 1024 / 1024)
+        return NextResponse.json({ error: `${file.name} supera ${maxMb}MB` }, { status: 400 })
       }
 
       const filename = safeFilename(file.name)
@@ -80,6 +94,7 @@ export async function POST(request: Request) {
         url,
         path: pathname,
         mime: file.type,
+        kind,
         size: file.size,
         source: 'upload',
         storage: useStorage ? 'storage' : 'local',

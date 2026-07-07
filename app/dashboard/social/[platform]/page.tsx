@@ -21,6 +21,12 @@ import { GENERATION_OPTIMIZATION_CYCLE } from '@/lib/production-cycle'
 // Cap asset per singolo post/carosello = max carosello Instagram (10).
 // Altre piattaforme limitano di più in publish (X 4) — vedi warning nel form.
 const MAX_POST_ASSETS = 10
+const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
+
+function isVideoUrl(url?: string | null) {
+  if (!url) return false
+  return url.split('?')[0].toLowerCase().endsWith('.mp4')
+}
 
 type QualitySelection = 'auto' | ContentQuality
 type UploadedAsset = {
@@ -30,6 +36,7 @@ type UploadedAsset = {
   path?: string
   mime?: string
   size?: number
+  kind?: 'image' | 'video'
   source: 'upload' | 'url'
 }
 
@@ -136,7 +143,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       selectedFiles.forEach(file => form.append('files', file))
       const previews = new Map(selectedFiles.map(file => [file.name, URL.createObjectURL(file)]))
       const res = await fetch('/api/assets/upload', { method: 'POST', body: form })
-      if (!res.ok) throw new Error(await readApiError(res, 'Upload immagini fallito'))
+      if (!res.ok) throw new Error(await readApiError(res, 'Upload media fallito'))
       const data = await res.json() as { assets?: UploadedAsset[] }
       // name prefillato dal filename pulito (l'utente può correggerlo).
       const uploaded = (data.assets || []).map(asset => ({ ...asset, previewUrl: previews.get(asset.name) || asset.url, name: prettyName(asset.name) }))
@@ -157,6 +164,8 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       const asset: UploadedAsset = {
         name: prettyName(parsed.pathname.split('/').pop() || '') || 'Immagine',
         url: parsed.toString(),
+        mime: isVideoUrl(parsed.toString()) ? 'video/mp4' : undefined,
+        kind: isVideoUrl(parsed.toString()) ? 'video' : 'image',
         source: 'url',
       }
       setAssets(prev => [...prev, asset].slice(0, MAX_POST_ASSETS))
@@ -301,23 +310,23 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <ImagePlus className="w-5 h-5 text-brand-600" />
-              <p className="text-sm font-bold text-gray-900">Immagini tue per creare il contenuto</p>
+              <p className="text-sm font-bold text-gray-900">Media tuoi per creare il contenuto</p>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Carica foto prodotto/brand o incolla URL pubblici: entrano nel prompt e vengono salvate nel contenuto.
+              Carica foto prodotto/brand o video MP4, oppure incolla URL pubblici: entrano nel prompt e vengono salvati nel contenuto.
             </p>
             <p className="text-[11px] text-amber-700 mt-1">
-              Per autopublishing Blotato usa URL pubblici o immagini caricate qui; max {MAX_POST_ASSETS} asset
+              Per autopublishing Blotato usa URL pubblici o media caricati qui; max {MAX_POST_ASSETS} asset
               (attenzione: Instagram carosello pubblica max 10, X max 4).
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 lg:w-[520px]">
             <label className="btn-secondary justify-center py-2 px-3 cursor-pointer">
               {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-              {uploading ? 'Carico...' : 'Carica immagini'}
+              {uploading ? 'Carico...' : 'Carica foto/MP4'}
               <input
                 type="file"
-                accept="image/*"
+                accept={MEDIA_ACCEPT}
                 multiple
                 className="hidden"
                 disabled={uploading || assets.length >= MAX_POST_ASSETS}
@@ -335,9 +344,9 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
                   }
                 }}
                 className="input text-xs"
-                placeholder="https://... immagine pubblica"
+                placeholder="https://... immagine o video .mp4 pubblico"
               />
-              <button type="button" onClick={addAssetUrl} className="btn-secondary py-2 px-3" aria-label="Aggiungi URL immagine">
+              <button type="button" onClick={addAssetUrl} className="btn-secondary py-2 px-3" aria-label="Aggiungi URL media">
                 <Link2 className="w-4 h-4" />
               </button>
             </div>
@@ -367,7 +376,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
         <div className="mt-3">
           <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
             <ImagePlus className="w-3.5 h-3.5 text-brand-600" />
-            Prodotto/i nell&apos;immagine <span className="font-normal text-gray-400">(nome esatto per un copy preciso)</span>
+            Prodotto/i nel media <span className="font-normal text-gray-400">(nome esatto per un copy preciso)</span>
           </label>
           <input
             value={prodottoNome}
@@ -379,19 +388,25 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
 
         {assets.length > 0 && (
           <>
-            <p className="text-[11px] text-gray-500 mt-4 mb-1.5">Dai un nome a ogni immagine col prodotto che contiene — l&apos;AI lo userà nel copy.</p>
+            <p className="text-[11px] text-gray-500 mt-4 mb-1.5">Dai un nome a ogni media col prodotto che contiene — l&apos;AI lo userà nel copy.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {assets.map((asset, index) => (
                 <div key={`${asset.url}-${index}`} className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                   <div className="relative group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={asset.previewUrl || asset.url} alt={asset.name} className="w-full aspect-square object-cover" />
-                    <span className="absolute top-1 left-1 bg-black/55 text-white text-[9px] px-1.5 py-0.5 rounded-full">{asset.source === 'upload' ? 'Upload' : 'URL'}</span>
+                    {asset.kind === 'video' || asset.mime?.startsWith('video/') || isVideoUrl(asset.previewUrl || asset.url) ? (
+                      <video src={asset.previewUrl || asset.url} className="w-full aspect-square object-cover" muted playsInline preload="metadata" />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={asset.previewUrl || asset.url} alt={asset.name} className="w-full aspect-square object-cover" />
+                    )}
+                    <span className="absolute top-1 left-1 bg-black/55 text-white text-[9px] px-1.5 py-0.5 rounded-full">
+                      {asset.kind === 'video' || asset.mime?.startsWith('video/') || isVideoUrl(asset.previewUrl || asset.url) ? 'MP4' : asset.source === 'upload' ? 'Upload' : 'URL'}
+                    </span>
                     <button
                       type="button"
                       onClick={() => removeAsset(index)}
                       className="absolute top-1 right-1 w-7 h-7 rounded-full bg-white/90 text-red-600 flex items-center justify-center opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label="Rimuovi immagine"
+                      aria-label="Rimuovi media"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -583,7 +598,9 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
             {recenti.map(c => (
               <div key={c.id} className="card p-3 md:p-4 flex items-center gap-3 hover:shadow-sm transition-shadow">
                 <div className="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
-                  {c.link_media_1 ? (
+                  {c.link_media_1 && isVideoUrl(c.link_media_1) ? (
+                    <video src={c.link_media_1} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                  ) : c.link_media_1 ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.link_media_1} alt="" className="w-full h-full object-cover" />
                   ) : (

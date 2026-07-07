@@ -13,8 +13,14 @@ import { useRuntimeDemo } from '@/lib/demo-client'
 import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
 
 type QualitySelection = 'auto' | ContentQuality
-type PlanAsset = { url: string; name: string }
+type PlanAsset = { url: string; name: string; mime?: string; kind?: 'image' | 'video' }
 const MAX_PLAN_IMAGES = 60
+const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
+
+function isVideoUrl(url?: string | null) {
+  if (!url) return false
+  return url.split('?')[0].toLowerCase().endsWith('.mp4')
+}
 
 export default function PianoPage() {
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
@@ -42,7 +48,7 @@ export default function PianoPage() {
     setPiattaforme(p => p.includes(key) ? p.filter(x => x !== key) : [...p, key])
   }
 
-  // Upload in blocchi da 7 (limite server per richiesta) finché tutti i file scelti sono caricati.
+  // Upload in blocchi da 14 (limite server per richiesta) finché tutti i media scelti sono caricati.
   async function uploadPlanImages(files: FileList | null) {
     if (!files?.length || !clienteId) return
     setUploadError(null)
@@ -55,9 +61,9 @@ export default function PianoPage() {
         form.append('cliente_id', clienteId)
         chunk.forEach(file => form.append('files', file))
         const res = await fetch('/api/assets/upload', { method: 'POST', body: form })
-        if (!res.ok) throw new Error(await readApiError(res, 'Upload immagini fallito'))
-        const data = await res.json() as { assets?: { url: string; name: string }[] }
-        const uploaded = (data.assets || []).map(a => ({ url: a.url, name: a.name }))
+        if (!res.ok) throw new Error(await readApiError(res, 'Upload media fallito'))
+        const data = await res.json() as { assets?: PlanAsset[] }
+        const uploaded = (data.assets || []).map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind }))
         setPlanAssets(prev => [...prev, ...uploaded])
       }
     } catch (e) {
@@ -113,10 +119,10 @@ export default function PianoPage() {
     if (result.ok) {
       const data = result.data
       const imgNote = !data?.images_provided
-        ? ' Nessuna immagine caricata: i contenuti sono senza foto, caricale poi dal calendario.'
+        ? ' Nessun media caricato: i contenuti sono senza foto/video, caricali poi dal calendario.'
         : data.images_insufficient
-          ? ` ${data.images_provided} foto usate una per contenuto: sono finite prima dei post, gli ultimi restano senza immagine (caricane altre o assegnale dal calendario).`
-          : ` ${data.images_provided} foto distribuite, una per contenuto (carosello 3-10).`
+          ? ` ${data.images_provided} media usati uno per contenuto: sono finiti prima dei post, gli ultimi restano senza media (caricane altri o assegnali dal calendario).`
+          : ` ${data.images_provided} media distribuiti, uno per contenuto (carosello 3-10).`
       const chunkNote = data?.chunks_failed
         ? ` ⚠️ ${data.chunks_failed} di ${data.chunks_total} blocchi settimanali non ha generato contenuti (riprova per coprire quei giorni).`
         : ''
@@ -282,24 +288,24 @@ export default function PianoPage() {
           </div>
         </div>
 
-        {/* Upload immagini: caricale tutte in un colpo, il piano le distribuisce sui contenuti */}
+        {/* Upload media: caricali tutti in un colpo, il piano li distribuisce sui contenuti */}
         <div className="mb-4 p-3 rounded-xl bg-white/70 border border-violet-100">
           <div className="flex items-start gap-2.5">
             <ImagePlus className="w-4 h-4 text-violet-600 mt-0.5 flex-shrink-0" />
             <div className="text-xs text-gray-700 leading-relaxed flex-1">
-              <p className="font-semibold text-gray-900">Immagini per questo piano</p>
+              <p className="font-semibold text-gray-900">Media per questo piano</p>
               <p className="mt-0.5">
                 Piano <span className="font-semibold capitalize">{periodo}</span> ({numContenuti} contenuti) → servono circa{' '}
-                <span className="font-bold text-violet-700">{periodo === 'mensile' ? '35-60' : '10-20'} immagini</span>.
-                {' '}<span className="font-semibold text-violet-700">{planAssets.length} caricate</span>.
+                <span className="font-bold text-violet-700">{periodo === 'mensile' ? '35-60' : '10-20'} media</span> (foto o MP4).
+                {' '}<span className="font-semibold text-violet-700">{planAssets.length} caricati</span>.
               </p>
               <ul className="mt-1.5 space-y-0.5 text-gray-600">
-                <li>• <span className="font-medium">1 immagine</span> per ogni post e story</li>
-                <li>• <span className="font-medium">5 immagini</span> per ogni carosello</li>
-                <li>• <span className="font-medium">1 clip video</span> (o cover) per ogni reel/video</li>
+                <li>• <span className="font-medium">1 media</span> per ogni post/story/reel/video</li>
+                <li>• <span className="font-medium">5 media</span> per ogni carosello</li>
+                <li>• <span className="font-medium">MP4</span> usato direttamente come video/reel quando assegnato a quel formato</li>
               </ul>
               <p className="mt-1.5 text-gray-500">
-                Carica tutte le foto qui sotto in un colpo solo: verranno assegnate in ordine ai contenuti del piano.
+                Carica tutto qui sotto in un colpo solo: foto e MP4 verranno assegnati in ordine ai contenuti del piano.
               </p>
             </div>
           </div>
@@ -308,11 +314,11 @@ export default function PianoPage() {
             uploadingImages ? 'border-violet-200 text-violet-400' : 'border-violet-300 text-violet-700 hover:bg-violet-50'
           }`}>
             {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
-            {uploadingImages ? 'Caricamento...' : `Scegli foto dal tuo computer (${planAssets.length}/${MAX_PLAN_IMAGES})`}
+            {uploadingImages ? 'Caricamento...' : `Scegli foto/MP4 dal tuo computer (${planAssets.length}/${MAX_PLAN_IMAGES})`}
             <input
               type="file"
               multiple
-              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+              accept={MEDIA_ACCEPT}
               className="hidden"
               disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
               onChange={e => { uploadPlanImages(e.target.files); e.target.value = '' }}
@@ -325,8 +331,12 @@ export default function PianoPage() {
             <div className="mt-3 grid grid-cols-6 sm:grid-cols-8 gap-1.5">
               {planAssets.map((a, i) => (
                 <div key={a.url + i} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
+                  {a.kind === 'video' || a.mime?.startsWith('video/') || isVideoUrl(a.url) ? (
+                    <video src={a.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
+                  )}
                   <button
                     type="button"
                     onClick={() => removePlanImage(i)}

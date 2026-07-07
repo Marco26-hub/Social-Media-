@@ -41,6 +41,14 @@ type UserAsset = {
   source?: string
 }
 
+function isVideoUrl(url: string) {
+  return url.split('?')[0].toLowerCase().endsWith('.mp4')
+}
+
+function isVideoAsset(asset: UserAsset) {
+  return asset.mime?.startsWith('video/') || isVideoUrl(asset.url)
+}
+
 function normalizeAssets(input: unknown, fallbackUrls: unknown): UserAsset[] {
   const rawAssets = Array.isArray(input) ? input : []
   const assets = rawAssets
@@ -70,15 +78,16 @@ function normalizeAssets(input: unknown, fallbackUrls: unknown): UserAsset[] {
 
 function buildAssetContext(assets: UserAsset[]) {
   if (!assets.length) return 'ASSET FORNITI: nessun asset caricato. Genera anche asset_requirements chiari.'
-  return `ASSET FORNITI DALL'UTENTE (USALI COME BASE VISIVA, SENZA INVENTARE IMMAGINI NON PRESENTI):
+  return `ASSET FORNITI DALL'UTENTE (USALI COME BASE VISIVA, SENZA INVENTARE MEDIA NON PRESENTI):
 ${assets.map((asset, index) => `${index + 1}. ${asset.name || 'asset'} — ${asset.url} — tipo: ${asset.mime || 'image'} — fonte: ${asset.source || 'utente'}`).join('\n')}
 
-⚠️ PRODOTTO REALE = QUELLO NELLE IMMAGINI CARICATE (le vedi in allegato):
-- GUARDA le immagini e scrivi il contenuto SUL PRODOTTO EFFETTIVAMENTE MOSTRATO (es. il capo, il colore, il materiale, lo stile, l'ambientazione che VEDI).
-- NON scrivere su altri prodotti del catalogo (es. un blazer) se NON sono quelli nell'immagine. L'immagine vince sempre sui dati del catalogo.
-- Descrivi dettagli concreti che osservi: tipo di capo, colore, vestibilità, accessori, contesto/luogo.
-- Usa il NOME indicato accanto a ogni immagine come nome ufficiale del prodotto (l'immagine dice com'è, il nome dice come si chiama).
-- PIÙ PRODOTTI: se ci sono più immagini con prodotti/nomi diversi, in carosello/album dedica UNA slide a ciascun prodotto (nome corretto + descrizione dall'immagine corrispondente). In post singolo, scegli il prodotto principale o raccontali come look coordinato.
+⚠️ PRODOTTO REALE = QUELLO NEI MEDIA CARICATI:
+- Le immagini caricate vengono allegate alla vision: guardale e scrivi il contenuto sul prodotto effettivamente mostrato.
+- Gli MP4 caricati sono media finali già pronti per reel/video: usali come video principale, non inventare un altro video.
+- NON scrivere su altri prodotti del catalogo (es. un blazer) se NON sono quelli nel media. Il media caricato vince sempre sui dati del catalogo.
+- Descrivi dettagli concreti che osservi nelle immagini: tipo di capo, colore, vestibilità, accessori, contesto/luogo.
+- Usa il NOME indicato accanto a ogni media come nome ufficiale del prodotto.
+- PIÙ PRODOTTI: se ci sono più media con prodotti/nomi diversi, in carosello/album dedica UNA slide a ciascun prodotto (nome corretto + descrizione dall'asset corrispondente). In post singolo, scegli il prodotto principale o raccontali come look coordinato.
 
 Regole asset:
 - Il contenuto deve indicare quale asset usare in ogni post/slide/frame/scena.
@@ -519,6 +528,7 @@ export async function POST(request: Request) {
     const qualityContext = buildQualityContext({ quality: contentQuality, canale, formato, obiettivo })
     const userAssets = normalizeAssets(uploaded_assets, media_urls)
     const mediaUrls = userAssets.map(asset => asset.url)
+    const visionUrls = userAssets.filter(asset => !isVideoAsset(asset)).map(asset => asset.url)
     const assetContext = buildAssetContext(userAssets)
 
     const basePrompt = build(
@@ -546,7 +556,7 @@ export async function POST(request: Request) {
       // VISION: passa le immagini caricate così il modello GUARDA il prodotto reale
       // e scrive su quello (non sul blazer del catalogo). Serve un modello vision
       // (Gemini 2.5 Flash, GPT-4o mini). I modelli text-only le ignorano.
-      images: mediaUrls,
+      images: visionUrls,
     })
 
     const parsed = extractJSON(aiRes) as Record<string, unknown>

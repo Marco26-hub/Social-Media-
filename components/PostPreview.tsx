@@ -259,8 +259,12 @@ function CarouselGallery({ imgs, canale }: { imgs: string[]; canale: string }) {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {imgs.map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={src} alt="" className="w-full h-full object-cover flex-shrink-0 snap-center" />
+          isVideoUrl(src) ? (
+            <video key={i} src={src} className="w-full h-full object-cover flex-shrink-0 snap-center" muted controls playsInline preload="metadata" />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={src} alt="" className="w-full h-full object-cover flex-shrink-0 snap-center" />
+          )
         ))}
       </div>
 
@@ -399,7 +403,9 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
     return (
       <div className="max-w-[260px] mx-auto">
         <div className="relative aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-xl">
-          {c.link_media_1 ? (
+          {c.link_media_1 && isVideoUrl(c.link_media_1) ? (
+            <video src={c.link_media_1} className="w-full h-full object-cover" muted controls playsInline preload="metadata" />
+          ) : c.link_media_1 ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={c.link_media_1} alt="" className="w-full h-full object-cover" />
           ) : sceneItems[0] || slideItems[0] ? (
@@ -470,7 +476,9 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
     const articleAccent = c.canale === 'linkedin' ? 'text-blue-700 bg-blue-50' : 'text-amber-700 bg-amber-50'
     return (
       <div className="max-w-[380px] mx-auto bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg">
-        {c.link_media_1 ? (
+        {c.link_media_1 && isVideoUrl(c.link_media_1) ? (
+          <video src={c.link_media_1} className="w-full aspect-[16/9] object-cover" muted controls playsInline preload="metadata" />
+        ) : c.link_media_1 ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={c.link_media_1} alt="" className="w-full aspect-[16/9] object-cover" />
         ) : (
@@ -535,7 +543,9 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
     return (
       <div className="max-w-[260px] mx-auto">
         <div className={`${aspect} bg-gray-100 rounded-2xl overflow-hidden shadow-lg relative`}>
-          {c.link_media_1 ? (
+          {c.link_media_1 && isVideoUrl(c.link_media_1) ? (
+            <video src={c.link_media_1} className="w-full h-full object-cover" muted controls playsInline preload="metadata" />
+          ) : c.link_media_1 ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={c.link_media_1} alt="" className="w-full h-full object-cover" />
           ) : (
@@ -580,7 +590,9 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
           if (!media.length) return <VisualBriefCard icon={CANALE_ICON[c.canale] || '📸'} title={fallbackVisualTitle} description={fallbackVisualDescription} />
           const imgs = media
           return <CarouselGallery imgs={imgs} canale={c.canale} />
-        })() : c.link_media_1 ? (
+        })() : c.link_media_1 && isVideoUrl(c.link_media_1) ? (
+          <video src={c.link_media_1} className="w-full h-full object-cover" muted controls playsInline preload="metadata" />
+        ) : c.link_media_1 ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={c.link_media_1} alt="" className="w-full h-full object-cover" />
         ) : (

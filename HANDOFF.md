@@ -2,7 +2,7 @@
 
 > Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
-**Data ultimo aggiornamento**: 2026-07-07 tarda notte (Codex: preview tutti formati post + fallback scene/slide, build verde)
+**Data ultimo aggiornamento**: 2026-07-07 tarda notte (Codex: upload MP4 manuale per reel/video + build verde)
 **Progetto**: Social Automation — SaaS social media management per agenzie
 **Stack**: Next.js 15.5.19 + Neon/Postgres + NextAuth + Tailwind + AI (Gemini/OpenRouter/Anthropic/OpenCode/Ollama)
 **Percorso locale**: `/Users/md/Documents/social_automation_v2`
@@ -54,9 +54,16 @@ Commit atomici su `main`, build+lint verdi ad ogni step.
 - **Renderer tutti formati**: `PostPreview` copre post, carousel, reel, story, video, pin, short e articolo per Instagram/Facebook/TikTok/Pinterest/LinkedIn/YouTube Shorts/Blog/Threads/X; video Facebook/X passano nel player video, caroselli senza immagini mostrano le slide AI, reel/story senza video mostrano storyboard da `scenes_json`.
 - **Validazioni**: `git diff --check` ✅, `npm run lint` ✅ (0 errori, 7 warning storici), `npm run build` ✅, `npm run migrate:dry` ✅.
 
+### ✅ Feature 2026-07-07 tarda notte — upload MP4 manuale reel/video
+- **Backend upload**: `/api/assets/upload` accetta immagini già supportate + `video/mp4` (`.mp4`) fino a 100MB; ritorna `kind: 'video'` e mantiene il limite immagini a 8MB.
+- **Playback proxy**: `/api/assets/file/[clienteId]/[filename]` serve `.mp4` con `Content-Type: video/mp4`, `Accept-Ranges` e risposte `206` per anteprime HTML video affidabili.
+- **UI Social/Piano/Calendario**: input file accettano foto + MP4; le griglie mostrano `<video>` per MP4; il calendario può sostituire `link_media_1..10` con MP4 e marca `media_type='video'` quando carichi un video.
+- **AI bridge sicuro**: gli MP4 restano salvati/assegnati come media finali, ma non vengono inviati ai provider come `image input`; la vision riceve solo immagini compatibili.
+- **Validazioni**: `npm run lint` ✅ (0 errori, 7 warning storici), `npm run build` ✅.
+
 ### 🔴 HIGH ancora aperti dopo questa continuation
 - **Publish #4 da riverificare**: `resolveBlotatoTarget()` già rifiuta Facebook senza Page e imposta privacy TikTok, ma va verificato contro contratto reale Blotato.
-- **Security #13-#16/#18/#19**, **Health/Monitoring #20/#22/#23/#24**, **AI #25/#26/#27** restano aperti.
+- **Security #13-#16/#18/#19**, **Health/Monitoring #20/#22/#23/#24**, **AI #25/#26 + #27 parziale** restano aperti.
 - **Nota working tree**: `app/page.tsx` + `app/home.module.css` contengono modifiche landing/pacchetti di Claude; non mischiarle con commit Stripe/Blotato se si vogliono commit atomici.
 
 ### 🛠️ Task per Codex — HIGH residui go-live (28 blocker)
@@ -98,7 +105,7 @@ Priorità dall'audit. Ordinare per business impact + accessibilità dei file.
 #### AI generation (4 blocker)
 25. **Carosello 3-5 slide non validato hard**: `app/api/generate/content/route.ts` dopo `extractJSON` — se `formato='carousel'` e `slides.length < 3 || > 5` → retry con prompt "riprova con esattamente N slide". `lib/social-config.ts` ha già i limiti.
 26. **`extractJSON` silenzia troncamento**: `lib/ai.ts` — se il JSON è chiuso a graffe forzate, ritornare `{ data, truncated: true }`. Chiamante fa retry con `maxTokens*1.5` o modello con output maggiore.
-27. **Upload video**: `app/api/assets/upload/route.ts` accetta solo image/*. Aggiungere MIME `video/mp4|webm|mov` + cap 100MB + presigned direct-to-S3 (Render free ha limite request body 100MB). Blocca "reel reali" oggi.
+27. 🟡 **PARZIALE — Upload video**: MP4 manuale implementato (`video/mp4`, `.mp4`, cap 100MB) su upload route + UI Social/Piano/Calendario + preview video. Restano eventuali estensioni future: `webm/mov` e presigned direct-to-S3 per upload molto grandi.
 28. **Dashboard cliente `il-mio-piano` bug date**: `current_period_end`/`paid_at` timestamptz castato a string in `app/api/data/il-mio-piano/route.ts` → sempre `null` in UI. Normalizzare con `instanceof Date ? toISOString() : String(v)`. Correlato al #9.
 
 ### ⚠️ Da configurare fuori codice (Render)

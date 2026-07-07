@@ -41,16 +41,19 @@ Non inventare prezzi, stock, sconti o claim non presenti nei dati brand/prodotti
 // di restare generici.
 function buildPlanAssetContext(shown: string[]) {
   if (!shown.length) return ''
+  const imageUrls = shown.filter(url => !isVideoUrl(url))
+  const videoUrls = shown.filter(isVideoUrl)
   return `
 
-FOTO CARICATE DALL'UTENTE PER QUESTO BLOCCO (le vedi in allegato, in ordine):
+MEDIA CARICATI DALL'UTENTE PER QUESTO BLOCCO (in ordine):
 ${shown.map((url, index) => `${index + 1}. ${url}`).join('\n')}
 
 ⚠️ VISION — istruzioni vincolanti:
-- GUARDA ogni foto allegata e scrivi il contenuto (hook/caption/tema) SU QUELLO CHE VEDI DAVVERO: capo, colore, materiale, ambientazione, mood.
-- Assegna la foto N al contenuto N-esimo che generi in questo blocco, nello stesso ordine (foto 1 → primo contenuto, foto 2 → secondo, ecc.) — verranno allegate esattamente in questo ordine.
-- Per i contenuti oltre le ${shown.length} foto mostrate, resta comunque coerente con lo stile/prodotti visti finora + i dati brand/prodotti sopra.
-- Non inventare dettagli visivi non presenti nelle foto.`
+- Le immagini (${imageUrls.length}) sono visibili in allegato: guardale e scrivi hook/caption/tema su quello che vedi davvero.
+- Gli MP4 (${videoUrls.length}) sono video finali già caricati: assegnali preferibilmente a formati reel/video/short e non inventare un video alternativo.
+- Assegna il media N al contenuto N-esimo che generi in questo blocco, nello stesso ordine — verranno allegati esattamente in questo ordine.
+- Per i contenuti oltre i ${shown.length} media mostrati, resta comunque coerente con lo stile/prodotti visti finora + i dati brand/prodotti sopra.
+- Non inventare dettagli visivi non presenti nei media.`
 }
 
 // --- Date helpers -----------------------------------------------------------
@@ -73,6 +76,10 @@ const VALID_CANALI = new Set(['instagram', 'facebook', 'tiktok', 'pinterest', 'l
 const VALID_FORMATI = new Set(['post', 'carousel', 'reel', 'story', 'pin', 'short', 'video', 'articolo'])
 
 type Chunk = { start: string; end: string; label: string; targetMin: number; targetMax: number; images: string[] }
+
+function isVideoUrl(url: string) {
+  return url.split('?')[0].toLowerCase().endsWith('.mp4')
+}
 
 // --- Schema DB: introspection dinamica invece di due liste hardcoded --------
 // Prima c'erano DUE elenchi di colonne mantenuti a mano (insertColumns completo +
@@ -243,6 +250,7 @@ Output SOLO JSON array valido:
 [{"data_pubblicazione":"YYYY-MM-DD (dentro ${chunk.start}..${chunk.end})","ora_pubblicazione":"HH:MM","canale":"USA SOLO un canale tra quelli in / ${piattaformeStr} / (valori ammessi: instagram|facebook|tiktok|pinterest|linkedin|threads|x|youtube_shorts|blog)","formato":"post|carousel|reel|story|pin|short|video|articolo","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
           + '\n' + PLAN_STANDARDS + '\n' + qualityPrompt
           + buildPlanAssetContext(chunk.images)
+        const visionImages = chunk.images.filter(url => !isVideoUrl(url))
 
         try {
           const aiRes = await callAI({
@@ -253,7 +261,7 @@ Output SOLO JSON array valido:
             systemPrompt,
             userPrompt,
             openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
-            images: chunk.images,
+            images: visionImages,
             maxTokens: maxTok,
             timeoutMs: 90000,
           })

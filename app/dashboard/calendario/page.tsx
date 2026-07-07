@@ -29,6 +29,12 @@ const STATI: Status[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','IN_PUBBLICAZ
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', linkedin: '💼', threads: '🧵', x: '✖️', youtube_shorts: '▶️', blog: '📝'
 }
+const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
+
+function isVideoUrl(url?: string | null) {
+  if (!url) return false
+  return url.split('?')[0].toLowerCase().endsWith('.mp4')
+}
 
 function asText(value: unknown) {
   if (typeof value === 'string') return value
@@ -367,9 +373,9 @@ function CalendarioInner() {
     }
   }
 
-  // Carica/sostituisce la foto in uno specifico slot (link_media_1..10) del contenuto:
+  // Carica/sostituisce un media in uno specifico slot (link_media_1..10) del contenuto:
   // upload su /api/assets/upload (stesso endpoint del piano) + PATCH calendario.
-  // slot 1 = foto principale (thumb riga + preview), 2..10 = slide carosello.
+  // slot 1 = media principale (thumb riga + preview), 2..10 = slide carosello/scene.
   async function attachPhoto(c: Contenuto, file: File, slot = 1) {
     if (!clienteId) return
     const col = `link_media_${slot}`
@@ -380,11 +386,15 @@ function CalendarioInner() {
       form.append('cliente_id', clienteId)
       form.append('files', file)
       const uploadRes = await fetch('/api/assets/upload', { method: 'POST', body: form })
-      if (!uploadRes.ok) throw new Error(await readApiError(uploadRes, 'Caricamento foto fallito'))
-      const uploadData = await uploadRes.json() as { assets?: { url: string }[] }
-      const url = uploadData.assets?.[0]?.url
+      if (!uploadRes.ok) throw new Error(await readApiError(uploadRes, 'Caricamento media fallito'))
+      const uploadData = await uploadRes.json() as { assets?: { url: string; mime?: string; kind?: string }[] }
+      const uploaded = uploadData.assets?.[0]
+      const url = uploaded?.url
       if (!url) throw new Error('Upload riuscito ma nessun URL restituito')
-      await saveMediaSlot(c, col, url)
+      const extraPatch: Partial<Contenuto> = uploaded.kind === 'video' || uploaded.mime?.startsWith('video/')
+        ? { media_type: 'video' }
+        : {}
+      await saveMediaSlot(c, col, url, extraPatch)
     } catch (e) {
       setAdminError((e as Error).message)
     } finally {
@@ -392,7 +402,7 @@ function CalendarioInner() {
     }
   }
 
-  // Rimuove la foto da uno slot (mette la colonna a null).
+  // Rimuove il media da uno slot (mette la colonna a null).
   async function removePhoto(c: Contenuto, slot = 1) {
     const col = `link_media_${slot}`
     setUploadingPhoto(`${c.id}:${slot}`)
@@ -407,19 +417,19 @@ function CalendarioInner() {
   }
 
   // Persiste un valore (url o null) in una colonna link_media_* e allinea lo stato locale.
-  async function saveMediaSlot(c: Contenuto, col: string, value: string | null) {
+  async function saveMediaSlot(c: Contenuto, col: string, value: string | null, extraPatch: Partial<Contenuto> = {}) {
     if (demo) {
-      setDemoData(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value } : item))
+      setDemoData(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...extraPatch } : item))
     } else {
       const patchRes = await fetch('/api/data/calendario', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: c.id, [col]: value }),
+        body: JSON.stringify({ id: c.id, [col]: value, ...extraPatch }),
       })
-      if (!patchRes.ok) throw new Error(await readApiError(patchRes, 'Salvataggio foto fallito'))
+      if (!patchRes.ok) throw new Error(await readApiError(patchRes, 'Salvataggio media fallito'))
     }
-    setContenuti(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value } : item))
-    setSelected(prev => prev && prev.id === c.id ? { ...prev, [col]: value } : prev)
+    setContenuti(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...extraPatch } : item))
+    setSelected(prev => prev && prev.id === c.id ? { ...prev, [col]: value, ...extraPatch } : prev)
   }
 
   async function deleteContent(c: Contenuto) {
@@ -812,14 +822,16 @@ function CalendarioInner() {
                   className="mt-1 w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 flex-shrink-0"
                   title="Seleziona per eliminazione multipla"
                 />
-                {/* Media thumb — click per caricare/sostituire la foto principale */}
+                {/* Media thumb — click per caricare/sostituire media principale */}
                 <label
                   className="relative w-16 h-16 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden group cursor-pointer"
-                  title="Carica o sostituisci la foto principale"
+                  title="Carica o sostituisci foto/video principale"
                   onClick={e => e.stopPropagation()}
                   draggable={false}
                 >
-                  {c.link_media_1 ? (
+                  {c.link_media_1 && isVideoUrl(c.link_media_1) ? (
+                    <video src={c.link_media_1} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                  ) : c.link_media_1 ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.link_media_1} alt="" className="w-full h-full object-cover"
                       onError={e => { (e.target as HTMLImageElement).style.display='none' }} />
@@ -837,7 +849,7 @@ function CalendarioInner() {
                   </div>
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                    accept={MEDIA_ACCEPT}
                     className="hidden"
                     onChange={e => { const f = e.target.files?.[0]; if (f) attachPhoto(c, f, 1); e.target.value = '' }}
                   />
@@ -1280,7 +1292,7 @@ function CalendarioInner() {
                       </span>
                     </div>
                     <p className="text-xs text-sky-700/80 mb-3">
-                      Carica le tue foto dal computer. Ogni immagine ha il suo campo: puoi sostituirla o rimuoverla singolarmente.
+                      Carica foto o MP4 dal computer. Ogni media ha il suo campo: puoi sostituirlo o rimuoverlo singolarmente.
                     </p>
                     <div className={`grid gap-2 ${isCarousel ? 'grid-cols-3 sm:grid-cols-4' : 'grid-cols-1 max-w-[200px]'}`}>
                       {Array.from({ length: visibleSlots }).map((_, i) => {
@@ -1291,9 +1303,11 @@ function CalendarioInner() {
                           <div key={slot} className="relative">
                             <label
                               className={`relative block ${isCarousel ? 'aspect-square' : 'aspect-[4/5]'} rounded-lg overflow-hidden border-2 ${url ? 'border-sky-200' : 'border-dashed border-sky-300'} bg-white cursor-pointer group`}
-                              title={url ? 'Sostituisci immagine' : 'Carica immagine'}
+                              title={url ? 'Sostituisci media' : 'Carica foto o MP4'}
                             >
-                              {url ? (
+                              {url && isVideoUrl(url) ? (
+                                <video src={url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                              ) : url ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={url} alt={`Slide ${slot}`} className="w-full h-full object-cover" />
                               ) : (
@@ -1312,7 +1326,7 @@ function CalendarioInner() {
                               <span className="absolute top-1 left-1 text-[9px] font-bold bg-black/50 text-white rounded px-1">{slot}</span>
                               <input
                                 type="file"
-                                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                                accept={MEDIA_ACCEPT}
                                 className="hidden"
                                 disabled={busy}
                                 onChange={e => { const f = e.target.files?.[0]; if (f) attachPhoto(selected, f, slot); e.target.value = '' }}
@@ -1322,7 +1336,7 @@ function CalendarioInner() {
                               <button
                                 type="button"
                                 onClick={() => removePhoto(selected, slot)}
-                                title="Rimuovi immagine"
+                                title="Rimuovi media"
                                 className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center text-gray-500 hover:text-red-600 hover:border-red-200"
                               >
                                 <XCircle className="w-3.5 h-3.5" />
