@@ -48,9 +48,9 @@ function waLink(msg: string) {
 // Servizi ATTIVI ora (erogati davvero: social via app, siti/e-commerce come
 // servizio, visibilità SEO/GEO nel backend).
 const SERVIZI = [
-  { num: '01', icon: Megaphone, titolo: 'Social, automatizzato', desc: 'La tua presenza social sempre attiva su più canali: contenuti pronti in un unico pannello e la tua approvazione prima di ogni pubblicazione. Il controllo resta tuo.' },
-  { num: '02', icon: Globe2, titolo: 'Siti & E-commerce', desc: 'Realizziamo siti curati che trasformano i visitatori in clienti, fino al negozio online con pannello per gestire prodotti, ordini e promozioni collegate ai social.' },
-  { num: '03', icon: TrendingUp, titolo: 'Visibilità & Crescita', desc: 'Ti aiutiamo a farti trovare su Google e dai nuovi assistenti AI come ChatGPT e Perplexity, con SEO e GEO, trasformando chi ti scopre in contatti reali.' },
+  { num: '01', icon: Megaphone, titolo: 'Social, automatizzato', desc: 'La tua presenza social attiva su più canali: contenuti pronti in un unico pannello e la tua approvazione prima di ogni pubblicazione.' },
+  { num: '02', icon: Globe2, titolo: 'Siti & E-commerce', desc: 'Realizziamo siti con percorsi chiari verso contatto e acquisto, fino al negozio online con pannello per gestire prodotti, ordini e promozioni collegate ai social.' },
+  { num: '03', icon: TrendingUp, titolo: 'Visibilità & Crescita', desc: 'Ti aiutiamo a farti trovare su Google e dai nuovi assistenti AI come ChatGPT e Perplexity, con SEO e GEO, e a trasformare chi ti scopre in contatti reali.' },
 ]
 
 // In arrivo — accesso anticipato (lista d'attesa). NON dichiarati come Offer
@@ -63,24 +63,24 @@ const IN_ARRIVO = [
 // Cosa include la gestione social — tutte le capacità reali della piattaforma,
 // spiegate in modo semplice (niente gergo tecnico, niente metriche inventate).
 const CAPACITA = [
-  { icon: Bot, titolo: 'Generazione contenuti con AI', desc: 'Hook, testo e hashtag scritti per ogni post e adattati al formato di ogni canale, pronti da approvare e pubblicare.' },
+  { icon: Bot, titolo: 'Generazione contenuti con AI', desc: 'Hook, testo e hashtag per ogni post, adattati al formato di ogni canale, pronti da approvare e pubblicare.' },
   { icon: FileText, titolo: 'Piano editoriale', desc: 'Un calendario di post organizzato in un click: temi e contenuti di settimane o mesi, con una direzione chiara.' },
   { icon: PenLine, titolo: 'Blog aziendale', desc: 'Articoli per il tuo sito, scritti per farti trovare su Google e per essere citati dalle AI come ChatGPT.' },
-  { icon: Megaphone, titolo: 'Campagne pubblicitarie (ADS)', desc: 'Annunci pronti per Google, Facebook, Instagram e TikTok. Il budget pubblicitario resta sempre separato dal canone.' },
-  { icon: Search, titolo: 'Audit SEO + GEO', desc: 'Controlliamo il sito e ti diciamo cosa migliorare per farti trovare su Google e dalle AI come ChatGPT e Perplexity.' },
-  { icon: Eye, titolo: 'Analisi competitor', desc: 'Guardiamo cosa pubblicano i tuoi concorrenti sui social e ti indichiamo dove e come puoi distinguerti davvero.' },
-  { icon: Magnet, titolo: 'Lead generation', desc: 'Troviamo contatti potenzialmente interessati alla tua attività, già ordinati per priorità: caldo, tiepido o freddo.' },
+  { icon: Megaphone, titolo: 'Campagne pubblicitarie (ADS)', desc: 'Annunci pronti per Google, Facebook, Instagram e TikTok. Il budget pubblicitario resta separato dal canone.' },
+  { icon: Search, titolo: 'Audit SEO + GEO', desc: 'Controlliamo il sito e ti diciamo cosa migliorare per farti trovare su Google e dagli assistenti AI.' },
+  { icon: Eye, titolo: 'Analisi competitor', desc: 'I tuoi concorrenti sotto la lente: cosa pubblicano sui social e dove puoi distinguerti.' },
+  { icon: Magnet, titolo: 'Lead generation', desc: 'Troviamo contatti potenzialmente interessati alla tua attività, già ordinati per priorità: dai più caldi ai più freddi.' },
   { icon: Compass, titolo: 'Scoperta automatica del brand', desc: 'Basta l’indirizzo del tuo sito: capiamo da soli tono di voce, stile, colori e pubblico del tuo brand.' },
   { icon: Package, titolo: 'Catalogo prodotti', desc: 'Carichi le foto dei tuoi prodotti una volta sola: le riusiamo in automatico nei contenuti e nei post promozionali.' },
   { icon: ImagePlus, titolo: 'Immagini create con AI', desc: 'Generiamo grafiche e visual su misura per il tuo brand quando non hai già foto pronte da usare.' },
-  { icon: FileCheck2, titolo: 'Documenti legali', desc: 'Prepariamo Privacy Policy, Cookie Policy e informativa GDPR a norma, su misura per la tua attività.' },
-  { icon: BarChart3, titolo: 'Analytics e report', desc: 'Report chiari su cosa sta funzionando davvero, con le indicazioni per il mese dopo e senza numeri complicati.' },
+  { icon: FileCheck2, titolo: 'Documenti legali', desc: 'Privacy Policy, Cookie Policy e informativa GDPR a norma, su misura per la tua attività.' },
+  { icon: BarChart3, titolo: 'Analytics e report', desc: 'Report chiari su cosa sta funzionando, con le indicazioni per il mese dopo e senza numeri complicati.' },
 ]
 
 // Per chi è (target onesto, niente prova sociale finta)
 const TARGET = [
-  { icon: Building2, titolo: 'Agenzie', desc: 'Gestisci più clienti e più canali da un unico pannello, con flusso di approvazione ordinato.' },
-  { icon: Store, titolo: 'PMI e attività locali', desc: 'Una presenza social costante e professionale, senza dover assumere un team interno.' },
+  { icon: Building2, titolo: 'Agenzie', desc: 'Gestisci più clienti e più canali da un unico pannello, con un flusso di approvazione ordinato.' },
+  { icon: Store, titolo: 'PMI e attività locali', desc: 'Una presenza social costante e professionale, senza assumere un team interno.' },
   { icon: Briefcase, titolo: 'Liberi professionisti', desc: 'Contenuti curati e pubblicati con continuità, mentre tu ti concentri sul tuo lavoro.' },
 ]
 
@@ -88,8 +88,8 @@ const TARGET = [
 const FLUSSO = [
   { step: '1', titolo: 'Configuri il brand', desc: 'Imposti azienda, prodotti, tono di voce e canali da gestire.' },
   { step: '2', titolo: "L'AI prepara i contenuti", desc: 'Claude genera piano editoriale, testi, hashtag e CTA per ogni piattaforma.' },
-  { step: '3', titolo: 'Approvi con 1 click', desc: 'Rivedi la coda editoriale, modifichi se serve e approvi prima della pubblicazione.' },
-  { step: '4', titolo: 'Pubblicazione automatica', desc: 'I contenuti approvati vengono pubblicati sui canali tramite Blotato, con tracciamento UTM.' },
+  { step: '3', titolo: 'Approvi con 1 click', desc: 'Rivedi la coda editoriale, modifichi se serve e dai l’ok.' },
+  { step: '4', titolo: 'Pubblicazione automatica', desc: 'I contenuti approvati vanno sui canali tramite Blotato, con tracciamento UTM.' },
   { step: '5', titolo: 'Report e ottimizzazione', desc: 'Leggi i report, misuri i risultati e affini la strategia del periodo successivo.' },
 ]
 
@@ -97,23 +97,23 @@ const FLUSSO = [
 const FAQ = [
   {
     q: 'Devo saper usare un software o gestire le automazioni?',
-    a: 'No. Social Automation è un servizio gestito: noi ci occupiamo di strategia, contenuti, pubblicazione e report. A te resta solo la decisione finale, con un’approvazione semplice quando prevista dagli accordi.',
+    a: 'No. Social Automation è un servizio gestito: ci occupiamo noi di strategia, contenuti, pubblicazione e report. A te resta la decisione finale, con un’approvazione semplice quando prevista dagli accordi.',
   },
   {
     q: 'Quanto tempo serve per vedere risultati?',
-    a: 'Essendo un prodotto in early access, siamo onesti: la continuità è ciò che conta. I primi segnali arrivano di norma nei primi mesi, mentre una crescita solida e dati affidabili richiedono lavoro costante nel tempo. Non promettiamo cifre o tempi miracolosi.',
+    a: 'Quello che conta è la continuità. I primi segnali arrivano di norma nei primi mesi, mentre una crescita solida e dati affidabili richiedono lavoro costante nel tempo. Niente cifre o tempi miracolosi.',
   },
   {
     q: 'Il budget pubblicitario è incluso nel prezzo?',
-    a: 'No. Il budget delle campagne ADS è sempre separato dal canone mensile. In questo modo i costi restano chiari e ogni voce è misurabile in modo trasparente.',
+    a: 'No. Il budget delle campagne ADS resta separato dal canone mensile. Così i costi restano chiari e ogni voce si misura in modo trasparente.',
   },
   {
     q: 'Posso approvare i contenuti prima che vengano pubblicati?',
-    a: 'Sì. Prima di ogni pubblicazione c’è un passaggio di approvazione umana: rivedi la coda editoriale, puoi modificare i contenuti e approvarli con un click. Ogni piano prevede un numero chiaro di revisioni.',
+    a: 'Sì. Prima di ogni pubblicazione c’è un passaggio di approvazione umana: rivedi la coda editoriale, modifichi i contenuti e li approvi con un click. Ogni piano prevede un numero chiaro di revisioni.',
   },
   {
     q: 'A chi è rivolto Social Automation?',
-    a: 'A agenzie che gestiscono più clienti, a PMI e attività locali che vogliono una presenza costante senza un team interno, e a liberi professionisti che vogliono delegare la parte social mantenendo il controllo.',
+    a: 'Ad agenzie che gestiscono più clienti, a PMI e attività locali che vogliono una presenza costante senza un team interno, e a liberi professionisti che vogliono delegare la parte social mantenendo il controllo.',
   },
 ]
 
@@ -123,56 +123,56 @@ const SOCIAL_KEYS = ['instagram', 'facebook', 'tiktok', 'pinterest', 'linkedin',
 // Caption arricchite per la landing. Le descrizioni tecniche in social-config
 // restano invariate per la dashboard.
 const CHANNEL_COPY: Record<string, string> = {
-  instagram: 'Ti facciamo trovare dai clienti con foto 1:1, caroselli swipe, Reel 9:16 e Storie che durano 24h. Pensato per attività locali e negozi che vogliono mostrare prodotti e portare traffico al sito.',
-  facebook: 'Presidiamo la tua pagina aziendale con post landscape, album, video nativi 16:9 e reel. Ideale per attività locali e PMI che vogliono farsi conoscere nel territorio e raccogliere contatti.',
-  tiktok: 'Creiamo video verticali 9:16 con audio del momento e un gancio nei primi 2 secondi. Per brand e attività che vogliono farsi scoprire da un pubblico nuovo, senza dover girare nulla da soli.',
-  pinterest: 'Prepariamo pin verticali 2:3 ottimizzati per la ricerca, con testo SEO e link al prodotto. Fanno trovare le tue idee da chi cerca ispirazione e portano traffico che dura nel tempo.',
-  linkedin: 'Scriviamo post professionali e articoli lunghi con tono autorevole per un pubblico business. Adatto a liberi professionisti e aziende B2B che vogliono costruire autorità e nuove relazioni.',
-  youtube_shorts: 'Realizziamo short verticali 9:16 fino a 60 secondi con titolo e descrizione ottimizzati SEO. Ti fanno scoprire nella ricerca di YouTube da chi cerca proprio quello che offri.',
-  threads: 'Pubblichiamo post conversazionali foto-first dal tono casual, in cross-post naturale da Instagram. Perfetti per attività e professionisti che vogliono creare community e dialogo autentico.',
-  x: 'Scriviamo post brevi e diretti fino a 280 caratteri e thread con un gancio nel primo. Per chi vuole intervenire con tempestività sui temi del proprio settore e alimentare la conversazione.',
+  instagram: 'Foto 1:1, caroselli swipe, Reel 9:16 e Storie che durano 24h mostrano i tuoi prodotti a chi ti cerca in zona. Pensato per attività locali e negozi che vogliono portare traffico al sito.',
+  facebook: 'Presidiamo la tua pagina aziendale con post landscape, album, video nativi 16:9 e reel. Adatto ad attività locali e PMI che vogliono farsi conoscere sul territorio e raccogliere contatti.',
+  tiktok: 'Video verticali 9:16 con audio del momento e un gancio nei primi 2 secondi. Per brand e attività che vogliono farsi scoprire da un pubblico nuovo, senza girare nulla da soli.',
+  pinterest: 'Pin verticali 2:3 ottimizzati per la ricerca, con testo SEO e link al prodotto. Raggiungono chi cerca ispirazione e portano visite anche a distanza di mesi.',
+  linkedin: 'Post professionali e articoli lunghi con tono autorevole per un pubblico business. Adatto a liberi professionisti e aziende B2B che vogliono costruire autorità e nuove relazioni.',
+  youtube_shorts: 'Short verticali 9:16 fino a 60 secondi, con titolo e descrizione ottimizzati SEO. Ti intercettano nella ricerca di YouTube da chi cerca proprio quello che offri.',
+  threads: 'Post conversazionali foto-first dal tono casual, in cross-post da Instagram. Perfetti per attività e professionisti che vogliono creare community e far partire conversazioni.',
+  x: 'Post brevi e diretti fino a 280 caratteri e thread con un gancio nel primo. Per chi vuole intervenire in fretta sui temi del proprio settore e alimentare la conversazione.',
 }
 
 // Storia / perché esistiamo (narrativa onesta, nessun dato inventato).
 const STORY = {
   eyebrow: 'Perché esistiamo',
   h2: 'Il sistema che avremmo voluto trovare',
-  highlight: 'L’AI prepara, tu approvi con un click: il controllo resta sempre tuo.',
+  highlight: 'L’AI prepara, tu approvi con un click: il controllo resta tuo.',
   paragraphs: [
-    'Prima di costruire Social Automation siamo stati clienti. Abbiamo cambiato diverse agenzie di marketing e social media, e ogni volta ci siamo scontrati con le stesse cose: post pubblicati un po’ a caso, revisioni infinite prima di arrivare a qualcosa di decente, promesse che non trovavano riscontro e la sensazione di non sapere davvero cosa stesse succedendo al nostro budget.',
-    'Da quella frustrazione è nata un’idea semplice: se il sistema giusto non esisteva, lo avremmo costruito noi. Abbiamo unito l’AI, che prepara piano editoriale e contenuti, all’approvazione umana, perché nulla venga pubblicato senza che tu l’abbia visto e approvato con un click. E abbiamo messo la trasparenza al centro, senza numeri gonfiati né scorciatoie.',
-    'Siamo in early access e lo diciamo apertamente: preferiamo essere onesti su dove siamo oggi piuttosto che promettere miracoli. Quello che non cambia è il principio che ci ha fatto partire: tu resti al comando del tuo brand, sempre. Noi facciamo il lavoro pesante, tu tieni il controllo.',
+    'Prima di costruire Social Automation siamo stati clienti. Abbiamo cambiato diverse agenzie di social media e ogni volta ci siamo scontrati con gli stessi problemi: post a caso e revisioni infinite, con la sensazione di non sapere dove finisse il nostro budget.',
+    'Da quella frustrazione è nata un’idea: costruire il sistema che non trovavamo. Abbiamo unito l’AI, che prepara piano editoriale e contenuti, all’approvazione umana, così nulla va online senza che tu l’abbia visto e approvato. La trasparenza sta al centro, senza follower comprati né scorciatoie.',
+    'Siamo in early access e lo diciamo senza giri: preferiamo essere onesti su dove siamo oggi piuttosto che promettere miracoli. Il principio che ci ha fatto partire non cambia: tu resti al comando del tuo brand. Noi facciamo il lavoro pesante.',
   ],
 }
 
 // Blog: servizio separato dai social, con spiegazione dettagliata (SEO + GEO).
 const BLOG = {
   eyebrow: 'Blog SEO + GEO',
-  h2: 'Il Blog: la voce che ti fa trovare, oggi su Google e domani dalle AI.',
-  lead: 'Il Blog non è un social: è la parte del tuo sito dove pubblichi articoli utili che rispondono alle domande dei tuoi clienti. A differenza di un post, che dopo poche ore sparisce dal feed, un articolo continua a portarti visite per mesi. E oltre a farti trovare su Google, ti prepara per il GEO: farti citare quando qualcuno chiede consigli a un assistente AI come ChatGPT o Perplexity. In parole semplici, GEO vuol dire scrivere in modo che le AI capiscano cosa fai e possano suggerirti come risposta a chi ti cerca.',
+  h2: 'Il Blog: articoli che ti fanno trovare su Google e citare dalle AI.',
+  lead: 'Il Blog è la parte del tuo sito dove pubblichi articoli utili, quelli che rispondono alle domande dei tuoi clienti. Un post dopo poche ore sparisce dal feed; un articolo continua a portarti visite per mesi. Ti fa trovare su Google e ti prepara al GEO, cioè a farti citare quando qualcuno chiede consigli a un assistente AI come ChatGPT o Perplexity.',
   bullets: [
     { title: 'Articoli SEO + GEO, 800-1200 parole', desc: 'Scriviamo noi ogni articolo, con parole chiave e struttura chiara, così ti trovi su Google e ti capiscono le AI.' },
-    { title: 'FAQ integrate (schema)', desc: 'Aggiungiamo le domande e risposte più comuni in un formato strutturato che aiuta Google e le AI a capire e riutilizzare le tue risposte.' },
+    { title: 'FAQ integrate (schema)', desc: 'Aggiungiamo le domande e risposte più comuni in un formato strutturato che aiuta Google e le AI a riutilizzare le tue risposte.' },
     { title: 'Link ai tuoi prodotti', desc: 'Ogni articolo rimanda al prodotto o servizio giusto, così chi legge trova subito come contattarti o acquistare.' },
-    { title: 'Traffico che dura nel tempo', desc: 'Un post social sparisce in ore; un articolo continua a portarti visite e contatti mese dopo mese.' },
+    { title: 'Traffico che dura mese dopo mese', desc: 'Un articolo scritto bene continua a portare visite e contatti anche a mesi di distanza.' },
   ],
-  footnote: 'Ogni articolo è pronto da esportare verso il tuo sito, Shopify o un altro CMS: lo pubblichi con un click, il controllo resta sempre tuo.',
+  footnote: 'Ogni articolo è pronto da esportare verso il tuo sito, Shopify o un altro CMS. Lo pubblichi tu, quando vuoi.',
 }
 
 // Glossario: i termini tecnici dei pacchetti spiegati in parole semplici.
 const GLOSSARIO = {
   eyebrow: 'Glossario pacchetti',
   h2: 'I termini, spiegati semplici',
-  lead: 'Nelle feature dei pacchetti trovi alcuni termini tecnici. Qui te li spieghiamo in parole chiare, senza gergo: cosa significano davvero e a cosa servono per la tua attività.',
+  lead: 'Nelle feature dei pacchetti trovi qualche termine tecnico. Qui te li spieghiamo in parole chiare: cosa significano e a cosa servono per la tua attività.',
   terms: [
-    { term: 'SEO', plain: 'Gli accorgimenti che ti fanno trovare più in alto tra i risultati dei motori di ricerca, Google in primis.' },
+    { term: 'SEO', plain: 'Gli accorgimenti che ti fanno salire tra i risultati dei motori di ricerca, Google in primis.' },
     { term: 'GEO', plain: 'Come la SEO, ma per gli assistenti AI: farti citare da ChatGPT e Perplexity quando rispondono.' },
     { term: 'Strategia omnichannel', plain: 'Un piano in cui tutti i canali sono collegati e lavorano insieme attorno al cliente, senza salti tra loro.' },
     { term: 'Cross-post', plain: 'Pubblicare uno stesso contenuto su più canali; noi lo adattiamo al formato di ciascuno.' },
     { term: 'Content scoring', plain: 'L’AI dà un voto a ogni contenuto prima di pubblicarlo, così esce solo il migliore.' },
     { term: 'Lead scoring', plain: 'Ordinare i potenziali clienti per interesse: caldo pronto a comprare, freddo appena arrivato.' },
     { term: 'Funnel', plain: 'Il percorso che porta uno sconosciuto a diventare cliente, passo dopo passo.' },
-    { term: 'Product tagging + UTM', plain: 'Tag prodotto nei post più link con etichette invisibili: sai da quale canale arriva chi ti visita.' },
+    { term: 'Product tagging + UTM', plain: 'Tag prodotto nei post più link con etichette invisibili, i codici UTM: ti dicono da quale canale arriva chi ti visita.' },
   ],
 }
 
@@ -213,9 +213,9 @@ export default function LandingPage() {
             <span className={styles.accent}>Il controllo resta tuo.</span>
           </h1>
           <p className={styles.heroLead}>
-            Un unico partner italiano per i tuoi social su 8 canali, il sito e il negozio online che
-            convertono, e la visibilità su Google e sugli assistenti AI. L&apos;AI prepara ogni contenuto,
-            tu approvi con un click prima di pubblicare.
+            Un solo partner italiano per i tuoi social su 8 canali, il sito e il negozio online, e la
+            visibilità su Google e sugli assistenti AI. L&apos;AI prepara ogni contenuto, tu dai
+            l&apos;ok prima che vada online.
           </p>
           <div className={styles.heroActions}>
             <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener" className={styles.primaryBtn}>
@@ -291,10 +291,10 @@ export default function LandingPage() {
         <div className={styles.wrap}>
           <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}><Sparkles size={13} /> Copertura</p>
-            <h2 className={styles.h2}>I tuoi {SOCIAL_KEYS.length} canali social, una regia sola.</h2>
+            <h2 className={styles.h2}>Gestiamo i tuoi {SOCIAL_KEYS.length} canali social da un unico pannello.</h2>
             <p className={styles.lead}>
-              Ogni canale ha il suo pubblico, il suo formato e il suo linguaggio: prepariamo contenuti pensati
-              per ciascuno e tu approvi con un click prima che vadano online.
+              Ogni canale ha il suo pubblico, il suo formato e il suo linguaggio. Prepariamo contenuti su misura
+              per ciascuno e l&apos;ultima parola prima della pubblicazione è la tua.
             </p>
           </div>
           <div data-reveal className={styles.gridChannels}>
@@ -498,6 +498,9 @@ export default function LandingPage() {
                 <h3 className={styles.priceName}>{piano.nome}</h3>
                 <div className={styles.priceAmount}>{piano.prezzo}<small>/mese</small></div>
                 <p className={styles.priceSub}>{piano.sottotitolo}</p>
+                {piano.includeDa && (
+                  <p className={styles.priceInclude}>Tutto di <strong>{piano.includeDa}</strong>, più:</p>
+                )}
                 <ul className={styles.priceList}>
                   {piano.features.map(f => (
                     <li key={f}><CheckCircle2 size={16} /> {f}</li>

@@ -611,7 +611,21 @@
 .pricing .h2, .pricing .lead { color: var(--cream); }
 .pricing .lead { color: rgba(255, 250, 240, 0.72); }
 
-.priceGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; align-items: stretch; }
+.priceGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+
+/* Badge scala cumulativa "Tutto di X, più:" */
+.priceInclude {
+  margin: 0 0 16px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(16, 18, 14, 0.1);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(16, 18, 14, 0.6);
+}
+.priceInclude strong { color: var(--ink); font-weight: 800; }
+.priceInclude + .priceList { margin-top: 0; padding-top: 0; border-top: none; }
+.priceCardFeatured .priceInclude { color: rgba(255, 250, 240, 0.78); border-color: rgba(255, 250, 240, 0.2); }
+.priceCardFeatured .priceInclude strong { color: var(--cream); }
 
 .priceCard {
   display: flex;
@@ -1064,6 +1078,7 @@
   .heroVisual { max-width: 560px; }
   .grid3 { grid-template-columns: repeat(2, 1fr); }
   .blogFeature { grid-template-columns: 1fr; gap: 24px; }
+  .priceGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 640px) {
@@ -1074,6 +1089,7 @@
   .grid3 { grid-template-columns: 1fr; }
   .flowStep { grid-template-columns: auto 1fr; padding: 18px; gap: 14px; }
   .pricing, .finalCta { padding: 40px 22px; border-radius: 30px; }
+  .priceGrid { grid-template-columns: 1fr; }
   .floatChip { display: none; }
   .panelStats { grid-template-columns: 1fr; }
   .section, .sectionAlt { padding: 52px 0; }

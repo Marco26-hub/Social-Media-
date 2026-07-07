@@ -218,6 +218,9 @@ export default function ServiziPage() {
                 <strong>{pack.setup}</strong>
                 <span>{pack.prezzo}/mese</span>
               </div>
+              {pack.includeDa && (
+                <p className={styles.packageInclude}>Tutto di <strong>{pack.includeDa}</strong>, più:</p>
+              )}
               <ul>
                 {pack.features.map(feature => (
                   <li key={feature}><CheckCircle2 size={16} /> {feature}</li>
