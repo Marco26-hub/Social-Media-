@@ -3,6 +3,7 @@ import { apiError } from '@/lib/api-error'
 import { dbReady, q, q1 } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
+import { sendAccountActivated } from '@/lib/email'
 
 const PACCHETTO_LABEL: Record<string, string> = {
   starter: 'Starter', presenza: 'Presenza', slancio: 'Slancio', crescita: 'Crescita', ecommerce: 'E-commerce', dominio: 'Dominio',
@@ -109,6 +110,13 @@ export async function PATCH(request: Request) {
     }
 
     await q(`UPDATE profiles SET status = 'active', updated_at = now() WHERE id = $1`, [id])
+
+    // Email di attivazione al cliente (no-op se RESEND_API_KEY non configurata).
+    if (prof.email) {
+      const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://social-media-manager-zte4.onrender.com').replace(/\/$/, '')
+      await sendAccountActivated(prof.email, prof.nome || 'Cliente', `${base}/login`).catch(() => {})
+    }
+
     return NextResponse.json({ ok: true, status: 'active', cliente_id: clienteId })
   } catch (e) {
     return apiError(e)

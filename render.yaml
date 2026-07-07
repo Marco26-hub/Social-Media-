@@ -37,6 +37,13 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
+      # Email transazionali (Resend). Senza, le email onboarding sono no-op.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: AGENCY_NOTIFY_EMAIL
+        sync: false
       - key: SHOW_LOGIN_HINT
         value: "false"
       # Pubblicazione social REALE (disaccoppiata dal demo mode). Default OFF:

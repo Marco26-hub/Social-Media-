@@ -4,6 +4,7 @@ import { apiError } from '@/lib/api-error'
 import { dbReady, q, q1 } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 import { PACCHETTO_SLUGS } from '@/lib/pacchetti'
+import { notifyNewRegistration, sendRegistrationReceived } from '@/lib/email'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -45,6 +46,13 @@ export async function POST(request: Request) {
        VALUES ($1, $2, $3, 'user', 'pending', $4, $5, $6)`,
       [email, nome, passwordHash, azienda, telefono || null, pacchetto || null],
     )
+
+    // Notifiche email (no-op se RESEND_API_KEY non configurata): conferma al
+    // cliente + avviso interno all'agenzia. Non bloccano la registrazione.
+    await Promise.allSettled([
+      sendRegistrationReceived(email, nome),
+      notifyNewRegistration({ nome, email, azienda, pacchetto: pacchetto || null }),
+    ])
 
     return NextResponse.json({
       ok: true,
