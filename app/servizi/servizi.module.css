@@ -567,7 +567,7 @@
 
 .packageCard h3 {
   font-size: clamp(22px, 1.7vw, 28px);
-  overflow-wrap: break-word;
+  white-space: nowrap;
 }
 
 .priceBlock {

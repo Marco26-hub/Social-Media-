@@ -663,7 +663,7 @@
   box-shadow: 0 10px 24px rgba(214, 168, 57, 0.4);
 }
 
-.priceName { margin: 0 0 6px; font-family: "Fraunces", Georgia, serif; font-optical-sizing: auto; font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
+.priceName { margin: 0 0 6px; font-family: "Fraunces", Georgia, serif; font-optical-sizing: auto; font-size: 26px; font-weight: 900; letter-spacing: -0.02em; white-space: nowrap; }
 .priceAmount {
   display: flex;
   align-items: baseline;

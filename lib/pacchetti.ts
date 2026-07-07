@@ -24,7 +24,7 @@ export const PACCHETTI: Pacchetto[] = [
     prezzo: '€390',
     setup: 'Setup incluso',
     sottotitolo: 'Per freelance, partite IVA e professionisti che vogliono presenza social senza impegni pesanti.',
-    features: ['8 contenuti al mese', '1-2 canali social', 'Analisi automatica del tuo brand', 'Anteprima su ogni piattaforma', 'Report mensile'],
+    features: ['8 contenuti al mese', '1-2 canali social', 'Analisi automatica del tuo brand', 'Immagini AI incluse', 'Anteprima su ogni piattaforma', 'Report mensile'],
     consigliato: false,
   },
   {
@@ -57,7 +57,7 @@ export const PACCHETTI: Pacchetto[] = [
     setup: '€490 setup',
     sottotitolo: 'Il pacchetto più equilibrato per PMI che vogliono struttura, contenuti, lead e crescita misurabile.',
     includeDa: 'Slancio',
-    features: ['20 contenuti al mese', 'Audit Google + AI (SEO + GEO)', 'Contatti ordinati per priorità', 'Reel e Short premium', 'Report bisettimanale con call'],
+    features: ['20 contenuti al mese', 'Audit SEO + GEO completo', 'Contatti ordinati per priorità (caldo/tiepido/freddo)', 'Reel e Short premium', 'Report bisettimanale con call'],
     consigliato: true,
   },
   {
@@ -68,7 +68,7 @@ export const PACCHETTI: Pacchetto[] = [
     setup: '€990 setup',
     sottotitolo: 'Per negozi e brand che vogliono collegare prodotti, promozioni e social in un sistema unico.',
     includeDa: 'Crescita',
-    features: ['30 contenuti/mese su 4 canali', 'Sito e negozio online collegato', 'Campagne pubblicitarie gestite', 'Prodotti taggati e traffico tracciato', 'Percorso di vendita (funnel)'],
+    features: ['30 contenuti/mese su 4 canali', 'Sito e negozio online collegato', 'Catalogo prodotti sincronizzato', 'Campagne pubblicitarie gestite', 'Prodotti taggati e traffico tracciato', 'Percorso di vendita (funnel)'],
     consigliato: false,
   },
   {
