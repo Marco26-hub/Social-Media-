@@ -487,6 +487,10 @@ export default function LandingPage() {
               Prezzi mensili, IVA esclusa. Il budget pubblicitario è sempre separato dal canone.
             </p>
           </div>
+          <p data-reveal className={styles.priceScaleNote}>
+            <Sparkles size={14} />
+            <span>Ogni pacchetto include <strong>tutto</strong> quello del precedente e aggiunge nuovi servizi: più sali, più ottieni.</span>
+          </p>
           <div data-reveal className={styles.priceGrid}>
             {PACCHETTI.map(piano => (
               <TiltCard
@@ -499,7 +503,10 @@ export default function LandingPage() {
                 <div className={styles.priceAmount}>{piano.prezzo}<small>/mese</small></div>
                 <p className={styles.priceSub}>{piano.sottotitolo}</p>
                 {piano.includeDa && (
-                  <p className={styles.priceInclude}>Tutto di <strong>{piano.includeDa}</strong>, più:</p>
+                  <p className={styles.priceInclude}>
+                    <CheckCircle2 size={15} />
+                    <span>Include tutto di <strong>{piano.includeDa}</strong>, e aggiunge:</span>
+                  </p>
                 )}
                 <ul className={styles.priceList}>
                   {piano.features.map(f => (

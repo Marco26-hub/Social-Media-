@@ -655,18 +655,52 @@
 
 .priceGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
 
-/* Badge scala cumulativa "Tutto di X, più:" */
-.priceInclude {
-  margin: 0 0 16px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(16, 18, 14, 0.1);
-  font-size: 13px;
+/* Nota una-tantum sopra la griglia: spiega la scala cumulativa */
+.priceScaleNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  max-width: 660px;
+  margin: 0 auto clamp(28px, 3vw, 40px);
+  padding: 11px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 168, 57, 0.32);
+  background: rgba(214, 168, 57, 0.12);
+  color: rgba(255, 250, 240, 0.9);
+  font-size: 14px;
   font-weight: 600;
-  color: rgba(16, 18, 14, 0.6);
+  line-height: 1.4;
+  text-align: center;
+  text-wrap: balance;
 }
-.priceInclude strong { color: var(--ink); font-weight: 800; }
+.priceScaleNote svg { flex-shrink: 0; color: var(--gold); }
+.priceScaleNote strong { color: var(--gold); font-weight: 800; }
+
+/* Badge scala cumulativa nella card: box con spunta "Include tutto di X" */
+.priceInclude {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(97, 124, 69, 0.28);
+  background: rgba(97, 124, 69, 0.1);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--forest);
+}
+.priceInclude svg { flex-shrink: 0; color: var(--moss); }
+.priceInclude strong { color: var(--ink); font-weight: 900; }
 .priceInclude + .priceList { margin-top: 0; padding-top: 0; border-top: none; }
-.priceCardFeatured .priceInclude { color: rgba(255, 250, 240, 0.78); border-color: rgba(255, 250, 240, 0.2); }
+.priceCardFeatured .priceInclude {
+  border-color: rgba(214, 168, 57, 0.45);
+  background: rgba(255, 250, 240, 0.12);
+  color: var(--cream);
+}
+.priceCardFeatured .priceInclude svg { color: var(--gold); }
 .priceCardFeatured .priceInclude strong { color: var(--cream); }
 
 .priceCard {
