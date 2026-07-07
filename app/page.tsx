@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PLATFORM_LIST } from '@/lib/social-config'
+import { PLATFORMS } from '@/lib/social-config'
 import TiltCard from '@/components/TiltCard'
 import RevealOnScroll from '@/components/RevealOnScroll'
 import CountUp from '@/components/CountUp'
@@ -34,6 +34,7 @@ import {
   Package,
   ImagePlus,
   FileCheck2,
+  BookOpen,
 } from 'lucide-react'
 import styles from './home.module.css'
 
@@ -47,9 +48,9 @@ function waLink(msg: string) {
 // Servizi ATTIVI ora (erogati davvero: social via app, siti/e-commerce come
 // servizio, visibilità SEO/GEO nel backend).
 const SERVIZI = [
-  { num: '01', icon: Megaphone, titolo: 'Social, automatizzato', desc: 'La tua presenza social sempre attiva, con contenuti pronti da un unico pannello e la tua approvazione prima di ogni pubblicazione.' },
-  { num: '02', icon: Globe2, titolo: 'Siti & E-commerce', desc: 'Realizziamo siti curati che convertono i visitatori in clienti, fino a negozi online con pannello di gestione.' },
-  { num: '03', icon: TrendingUp, titolo: 'Visibilità & Crescita', desc: 'Ti aiutiamo a farti trovare su Google e dai nuovi assistenti AI (come ChatGPT), trasformando chi ti scopre in contatti reali.' },
+  { num: '01', icon: Megaphone, titolo: 'Social, automatizzato', desc: 'La tua presenza social sempre attiva su più canali: contenuti pronti in un unico pannello e la tua approvazione prima di ogni pubblicazione. Il controllo resta tuo.' },
+  { num: '02', icon: Globe2, titolo: 'Siti & E-commerce', desc: 'Realizziamo siti curati che trasformano i visitatori in clienti, fino al negozio online con pannello per gestire prodotti, ordini e promozioni collegate ai social.' },
+  { num: '03', icon: TrendingUp, titolo: 'Visibilità & Crescita', desc: 'Ti aiutiamo a farti trovare su Google e dai nuovi assistenti AI come ChatGPT e Perplexity, con SEO e GEO, trasformando chi ti scopre in contatti reali.' },
 ]
 
 // In arrivo — accesso anticipato (lista d'attesa). NON dichiarati come Offer
@@ -62,18 +63,18 @@ const IN_ARRIVO = [
 // Cosa include la gestione social — tutte le capacità reali della piattaforma,
 // spiegate in modo semplice (niente gergo tecnico, niente metriche inventate).
 const CAPACITA = [
-  { icon: Bot, titolo: 'Generazione contenuti con AI', desc: 'Scriviamo hook, testo e hashtag per ogni post, pronti da pubblicare su ogni canale.' },
-  { icon: FileText, titolo: 'Piano editoriale', desc: 'Un calendario di contenuti pronto in un click: settimane o mesi di post organizzati.' },
-  { icon: PenLine, titolo: 'Blog aziendale', desc: 'Articoli per il tuo sito, scritti per essere trovati facilmente su Google.' },
-  { icon: Megaphone, titolo: 'Campagne pubblicitarie (ADS)', desc: 'Creiamo annunci pronti per Google, Facebook/Instagram e TikTok. Il budget resta separato dal canone.' },
-  { icon: Search, titolo: 'Audit SEO + GEO', desc: 'Controlliamo il tuo sito e ti diciamo cosa migliorare per farti trovare da Google e dalle AI come ChatGPT.' },
-  { icon: Eye, titolo: 'Analisi competitor', desc: 'Guardiamo cosa fanno i tuoi concorrenti sui social e ti diciamo come distinguerti.' },
-  { icon: Magnet, titolo: 'Lead generation', desc: 'Troviamo contatti potenzialmente interessati alla tua attività, già ordinati per priorità (caldo/tiepido/freddo).' },
-  { icon: Compass, titolo: 'Scoperta automatica del brand', desc: 'Basta l’indirizzo del tuo sito: capiamo da soli tono di voce, stile e pubblico del tuo brand.' },
-  { icon: Package, titolo: 'Catalogo prodotti', desc: 'Carichi le foto dei tuoi prodotti una volta sola, le usiamo in automatico nei contenuti.' },
-  { icon: ImagePlus, titolo: 'Immagini create con AI', desc: 'Generiamo grafiche su misura quando non hai foto pronte da usare.' },
-  { icon: FileCheck2, titolo: 'Documenti legali', desc: 'Prepariamo Privacy Policy, Cookie Policy e informativa GDPR a norma, su misura per te.' },
-  { icon: BarChart3, titolo: 'Analytics e report', desc: 'Report chiari su cosa funziona, senza numeri complicati da interpretare.' },
+  { icon: Bot, titolo: 'Generazione contenuti con AI', desc: 'Hook, testo e hashtag scritti per ogni post e adattati al formato di ogni canale, pronti da approvare e pubblicare.' },
+  { icon: FileText, titolo: 'Piano editoriale', desc: 'Un calendario di post organizzato in un click: temi e contenuti di settimane o mesi, con una direzione chiara.' },
+  { icon: PenLine, titolo: 'Blog aziendale', desc: 'Articoli per il tuo sito, scritti per farti trovare su Google e per essere citati dalle AI come ChatGPT.' },
+  { icon: Megaphone, titolo: 'Campagne pubblicitarie (ADS)', desc: 'Annunci pronti per Google, Facebook, Instagram e TikTok. Il budget pubblicitario resta sempre separato dal canone.' },
+  { icon: Search, titolo: 'Audit SEO + GEO', desc: 'Controlliamo il sito e ti diciamo cosa migliorare per farti trovare su Google e dalle AI come ChatGPT e Perplexity.' },
+  { icon: Eye, titolo: 'Analisi competitor', desc: 'Guardiamo cosa pubblicano i tuoi concorrenti sui social e ti indichiamo dove e come puoi distinguerti davvero.' },
+  { icon: Magnet, titolo: 'Lead generation', desc: 'Troviamo contatti potenzialmente interessati alla tua attività, già ordinati per priorità: caldo, tiepido o freddo.' },
+  { icon: Compass, titolo: 'Scoperta automatica del brand', desc: 'Basta l’indirizzo del tuo sito: capiamo da soli tono di voce, stile, colori e pubblico del tuo brand.' },
+  { icon: Package, titolo: 'Catalogo prodotti', desc: 'Carichi le foto dei tuoi prodotti una volta sola: le riusiamo in automatico nei contenuti e nei post promozionali.' },
+  { icon: ImagePlus, titolo: 'Immagini create con AI', desc: 'Generiamo grafiche e visual su misura per il tuo brand quando non hai già foto pronte da usare.' },
+  { icon: FileCheck2, titolo: 'Documenti legali', desc: 'Prepariamo Privacy Policy, Cookie Policy e informativa GDPR a norma, su misura per la tua attività.' },
+  { icon: BarChart3, titolo: 'Analytics e report', desc: 'Report chiari su cosa sta funzionando davvero, con le indicazioni per il mese dopo e senza numeri complicati.' },
 ]
 
 // Per chi è (target onesto, niente prova sociale finta)
@@ -116,6 +117,65 @@ const FAQ = [
   },
 ]
 
+// I canali social sono 8. Il Blog NON è un social: ha una sezione dedicata sotto.
+const SOCIAL_KEYS = ['instagram', 'facebook', 'tiktok', 'pinterest', 'linkedin', 'youtube_shorts', 'threads', 'x'] as const
+
+// Caption arricchite per la landing. Le descrizioni tecniche in social-config
+// restano invariate per la dashboard.
+const CHANNEL_COPY: Record<string, string> = {
+  instagram: 'Ti facciamo trovare dai clienti con foto 1:1, caroselli swipe, Reel 9:16 e Storie che durano 24h. Pensato per attività locali e negozi che vogliono mostrare prodotti e portare traffico al sito.',
+  facebook: 'Presidiamo la tua pagina aziendale con post landscape, album, video nativi 16:9 e reel. Ideale per attività locali e PMI che vogliono farsi conoscere nel territorio e raccogliere contatti.',
+  tiktok: 'Creiamo video verticali 9:16 con audio del momento e un gancio nei primi 2 secondi. Per brand e attività che vogliono farsi scoprire da un pubblico nuovo, senza dover girare nulla da soli.',
+  pinterest: 'Prepariamo pin verticali 2:3 ottimizzati per la ricerca, con testo SEO e link al prodotto. Fanno trovare le tue idee da chi cerca ispirazione e portano traffico che dura nel tempo.',
+  linkedin: 'Scriviamo post professionali e articoli lunghi con tono autorevole per un pubblico business. Adatto a liberi professionisti e aziende B2B che vogliono costruire autorità e nuove relazioni.',
+  youtube_shorts: 'Realizziamo short verticali 9:16 fino a 60 secondi con titolo e descrizione ottimizzati SEO. Ti fanno scoprire nella ricerca di YouTube da chi cerca proprio quello che offri.',
+  threads: 'Pubblichiamo post conversazionali foto-first dal tono casual, in cross-post naturale da Instagram. Perfetti per attività e professionisti che vogliono creare community e dialogo autentico.',
+  x: 'Scriviamo post brevi e diretti fino a 280 caratteri e thread con un gancio nel primo. Per chi vuole intervenire con tempestività sui temi del proprio settore e alimentare la conversazione.',
+}
+
+// Storia / perché esistiamo (narrativa onesta, nessun dato inventato).
+const STORY = {
+  eyebrow: 'Perché esistiamo',
+  h2: 'Il sistema che avremmo voluto trovare',
+  highlight: 'L’AI prepara, tu approvi con un click: il controllo resta sempre tuo.',
+  paragraphs: [
+    'Prima di costruire Social Automation siamo stati clienti. Abbiamo cambiato diverse agenzie di marketing e social media, e ogni volta ci siamo scontrati con le stesse cose: post pubblicati un po’ a caso, revisioni infinite prima di arrivare a qualcosa di decente, promesse che non trovavano riscontro e la sensazione di non sapere davvero cosa stesse succedendo al nostro budget.',
+    'Da quella frustrazione è nata un’idea semplice: se il sistema giusto non esisteva, lo avremmo costruito noi. Abbiamo unito l’AI, che prepara piano editoriale e contenuti, all’approvazione umana, perché nulla venga pubblicato senza che tu l’abbia visto e approvato con un click. E abbiamo messo la trasparenza al centro, senza numeri gonfiati né scorciatoie.',
+    'Siamo in early access e lo diciamo apertamente: preferiamo essere onesti su dove siamo oggi piuttosto che promettere miracoli. Quello che non cambia è il principio che ci ha fatto partire: tu resti al comando del tuo brand, sempre. Noi facciamo il lavoro pesante, tu tieni il controllo.',
+  ],
+}
+
+// Blog: servizio separato dai social, con spiegazione dettagliata (SEO + GEO).
+const BLOG = {
+  eyebrow: 'Blog SEO + GEO',
+  h2: 'Il Blog: la voce che ti fa trovare, oggi su Google e domani dalle AI.',
+  lead: 'Il Blog non è un social: è la parte del tuo sito dove pubblichi articoli utili che rispondono alle domande dei tuoi clienti. A differenza di un post, che dopo poche ore sparisce dal feed, un articolo continua a portarti visite per mesi. E oltre a farti trovare su Google, ti prepara per il GEO: farti citare quando qualcuno chiede consigli a un assistente AI come ChatGPT o Perplexity. In parole semplici, GEO vuol dire scrivere in modo che le AI capiscano cosa fai e possano suggerirti come risposta a chi ti cerca.',
+  bullets: [
+    { title: 'Articoli SEO + GEO, 800-1200 parole', desc: 'Scriviamo noi ogni articolo, con parole chiave e struttura chiara, così ti trovi su Google e ti capiscono le AI.' },
+    { title: 'FAQ integrate (schema)', desc: 'Aggiungiamo le domande e risposte più comuni in un formato strutturato che aiuta Google e le AI a capire e riutilizzare le tue risposte.' },
+    { title: 'Link ai tuoi prodotti', desc: 'Ogni articolo rimanda al prodotto o servizio giusto, così chi legge trova subito come contattarti o acquistare.' },
+    { title: 'Traffico che dura nel tempo', desc: 'Un post social sparisce in ore; un articolo continua a portarti visite e contatti mese dopo mese.' },
+  ],
+  footnote: 'Ogni articolo è pronto da esportare verso il tuo sito, Shopify o un altro CMS: lo pubblichi con un click, il controllo resta sempre tuo.',
+}
+
+// Glossario: i termini tecnici dei pacchetti spiegati in parole semplici.
+const GLOSSARIO = {
+  eyebrow: 'Glossario pacchetti',
+  h2: 'I termini, spiegati semplici',
+  lead: 'Nelle feature dei pacchetti trovi alcuni termini tecnici. Qui te li spieghiamo in parole chiare, senza gergo: cosa significano davvero e a cosa servono per la tua attività.',
+  terms: [
+    { term: 'SEO', plain: 'Gli accorgimenti che ti fanno trovare più in alto tra i risultati dei motori di ricerca, Google in primis.' },
+    { term: 'GEO', plain: 'Come la SEO, ma per gli assistenti AI: farti citare da ChatGPT e Perplexity quando rispondono.' },
+    { term: 'Strategia omnichannel', plain: 'Un piano in cui tutti i canali sono collegati e lavorano insieme attorno al cliente, senza salti tra loro.' },
+    { term: 'Cross-post', plain: 'Pubblicare uno stesso contenuto su più canali; noi lo adattiamo al formato di ciascuno.' },
+    { term: 'Content scoring', plain: 'L’AI dà un voto a ogni contenuto prima di pubblicarlo, così esce solo il migliore.' },
+    { term: 'Lead scoring', plain: 'Ordinare i potenziali clienti per interesse: caldo pronto a comprare, freddo appena arrivato.' },
+    { term: 'Funnel', plain: 'Il percorso che porta uno sconosciuto a diventare cliente, passo dopo passo.' },
+    { term: 'Product tagging + UTM', plain: 'Tag prodotto nei post più link con etichette invisibili: sai da quale canale arriva chi ti visita.' },
+  ],
+}
+
 export default function LandingPage() {
   return (
     <main className={styles.shell}>
@@ -149,13 +209,13 @@ export default function LandingPage() {
             Prodotto in early access
           </div>
           <h1 className={styles.heroTitle}>
-            Gestione social con AI,{' '}
-            <span className={styles.accent}>controllo sempre tuo.</span>
+            Social, siti ed e-commerce gestiti dall&apos;AI.{' '}
+            <span className={styles.accent}>Il controllo resta tuo.</span>
           </h1>
           <p className={styles.heroLead}>
-            Il servizio gestito che crea contenuti, piano editoriale, audit SEO e GEO, campagne ADS,
-            lead generation e report per agenzie e PMI italiane. L&apos;AI prepara, tu approvi con un click
-            prima di pubblicare.
+            Un unico partner italiano per i tuoi social su 8 canali, il sito e il negozio online che
+            convertono, e la visibilità su Google e sugli assistenti AI. L&apos;AI prepara ogni contenuto,
+            tu approvi con un click prima di pubblicare.
           </p>
           <div className={styles.heroActions}>
             <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener" className={styles.primaryBtn}>
@@ -226,27 +286,56 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Canali */}
+      {/* Canali — 8 social (il Blog è trattato a parte, sezione dedicata sotto) */}
       <section id="canali" className={styles.section}>
         <div className={styles.wrap}>
           <div data-reveal className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}><Sparkles size={13} /> Copertura</p>
-            <h2 className={styles.h2}>{PLATFORM_LIST.length} canali, una regia sola.</h2>
+            <h2 className={styles.h2}>I tuoi {SOCIAL_KEYS.length} canali social, una regia sola.</h2>
             <p className={styles.lead}>
-              Contenuti pensati per il formato giusto di ogni piattaforma, dalla creazione alla pubblicazione.
+              Ogni canale ha il suo pubblico, il suo formato e il suo linguaggio: prepariamo contenuti pensati
+              per ciascuno e tu approvi con un click prima che vadano online.
             </p>
           </div>
           <div data-reveal className={styles.gridChannels}>
-            {PLATFORM_LIST.map(p => (
-              <TiltCard key={p.nome} className={`${styles.card} ${styles.hoverLift}`}>
-                <span className={`${styles.channelEmoji} ${p.colorBg}`}>{p.emoji}</span>
-                <h3>{p.nome}</h3>
-                <p>{p.descrizione}</p>
-                <div className={styles.channelTags}>
-                  {p.formati.map(f => <span key={f.id}>{f.nome}</span>)}
+            {SOCIAL_KEYS.map(key => {
+              const p = PLATFORMS[key]
+              return (
+                <TiltCard key={key} className={`${styles.card} ${styles.hoverLift}`}>
+                  <span className={`${styles.channelEmoji} ${p.colorBg}`}>{p.emoji}</span>
+                  <h3>{p.nome}</h3>
+                  <p>{CHANNEL_COPY[key]}</p>
+                  <div className={styles.channelTags}>
+                    {p.formati.map(f => <span key={f.id}>{f.nome}</span>)}
+                  </div>
+                </TiltCard>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Blog — servizio separato dai social, con spiegazione dettagliata */}
+      <section className={styles.section} aria-labelledby="blog-title">
+        <div className={styles.wrap}>
+          <div data-reveal className={styles.blogFeature}>
+            <div>
+              <div className={styles.blogHead}>
+                <span className={styles.blogIcon}><BookOpen size={24} /></span>
+                <span className={styles.blogBadge}>{BLOG.eyebrow}</span>
+              </div>
+              <h2 id="blog-title">{BLOG.h2}</h2>
+              <p className={styles.blogLead}>{BLOG.lead}</p>
+              <p className={styles.blogFoot}>{BLOG.footnote}</p>
+            </div>
+            <div className={styles.blogBullets}>
+              {BLOG.bullets.map(b => (
+                <div key={b.title} className={styles.blogBullet}>
+                  <strong><CheckCircle2 size={16} /> {b.title}</strong>
+                  <p>{b.desc}</p>
                 </div>
-              </TiltCard>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -272,6 +361,20 @@ export default function LandingPage() {
                 </article>
               </TiltCard>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Storia — perché esistiamo (narrativa origine) */}
+      <section className={styles.section}>
+        <div className={`${styles.wrapNarrow} ${styles.story}`}>
+          <div data-reveal className={styles.sectionIntroCenter}>
+            <p className={styles.eyebrow}>{STORY.eyebrow}</p>
+            <h2 className={styles.h2}>{STORY.h2}</h2>
+          </div>
+          <div data-reveal className={styles.storyBody}>
+            {STORY.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+            <p className={styles.storyHighlight}>{STORY.highlight}</p>
           </div>
         </div>
       </section>
@@ -414,6 +517,25 @@ export default function LandingPage() {
             Setup iniziale e moduli extra variano per pacchetto.{' '}
             <Link href="/servizi#pacchetti">Confronta tutti i pacchetti su /servizi</Link>
           </p>
+        </div>
+      </section>
+
+      {/* Glossario — termini dei pacchetti spiegati semplici */}
+      <section id="glossario" className={styles.sectionAlt} aria-labelledby="glossario-title">
+        <div className={styles.wrap}>
+          <div data-reveal className={styles.sectionIntroCenter}>
+            <p className={styles.eyebrow}>{GLOSSARIO.eyebrow}</p>
+            <h2 id="glossario-title" className={styles.h2}>{GLOSSARIO.h2}</h2>
+            <p className={styles.lead}>{GLOSSARIO.lead}</p>
+          </div>
+          <div data-reveal className={styles.glossaryGrid}>
+            {GLOSSARIO.terms.map(t => (
+              <div key={t.term} className={styles.glossaryItem}>
+                <h3 className={styles.glossaryTerm}>{t.term}</h3>
+                <p>{t.plain}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

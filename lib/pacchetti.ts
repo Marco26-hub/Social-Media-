@@ -21,7 +21,7 @@ export const PACCHETTI: Pacchetto[] = [
     prezzo: '€390',
     setup: 'Setup incluso',
     sottotitolo: 'Per freelance, partite IVA e professionisti che vogliono presenza social senza impegni pesanti.',
-    features: ['8 contenuti al mese', '1-2 canali social', 'Brand discovery automatico', 'Anteprima multi-piattaforma', 'Report mensile semplice'],
+    features: ['8 contenuti al mese', '1-2 canali social', 'Analisi automatica del tuo brand', 'Anteprima su ogni piattaforma', 'Report mensile semplice'],
     consigliato: false,
   },
   {
@@ -31,7 +31,7 @@ export const PACCHETTI: Pacchetto[] = [
     prezzo: '€590',
     setup: '€290 setup',
     sottotitolo: 'Per chi ha già un sito e vuole una gestione social ordinata, costante e professionale con AI.',
-    features: ['12 contenuti al mese', '2 canali social', 'AI content scoring', 'Piano editoriale strategico', 'Report KPI + call mensile'],
+    features: ['12 contenuti al mese', '2 canali social', 'Contenuti valutati prima di pubblicare', 'Piano editoriale strategico', 'Report risultati + call mensile'],
     consigliato: false,
   },
   {
@@ -41,7 +41,7 @@ export const PACCHETTI: Pacchetto[] = [
     prezzo: '€1.090',
     setup: '€490 setup',
     sottotitolo: 'Il pacchetto più equilibrato per PMI che vogliono struttura, contenuti, lead e crescita misurabile.',
-    features: ['20 contenuti/mese su 3 canali', 'Reel e Short premium', 'Audit SEO + GEO completo', 'Analisi competitor e lead', 'Report bisettimanale con call'],
+    features: ['20 contenuti/mese su 3 canali', 'Reel e Short premium', 'Audit Google + AI completo', 'Analisi concorrenti e contatti', 'Report bisettimanale con call'],
     consigliato: true,
   },
   {
@@ -51,7 +51,7 @@ export const PACCHETTI: Pacchetto[] = [
     prezzo: '€1.690',
     setup: '€990 setup',
     sottotitolo: 'Per negozi e brand che vogliono collegare prodotti, promozioni e social in un sistema unico.',
-    features: ['30 contenuti/mese su 4 canali', 'Campagne ADS gestite', 'Product tagging + UTM', 'Lead generation + funnel', 'Report settimanale + call'],
+    features: ['30 contenuti/mese su 4 canali', 'Campagne pubblicitarie gestite', 'Prodotti taggati e traffico tracciato', 'Contatti e percorso di vendita', 'Report settimanale + call'],
     consigliato: false,
   },
   {
@@ -61,7 +61,7 @@ export const PACCHETTI: Pacchetto[] = [
     prezzo: '€2.590',
     setup: '€1.490 setup',
     sottotitolo: 'Strategia omnichannel completa per aziende che vogliono dominare il mercato digitale.',
-    features: ['50+ contenuti/mese su 5 canali', 'Blog SEO/GEO continuativo', 'Produzione video avanzata', 'Strategia omnichannel', 'Dashboard live e priorità'],
+    features: ['50+ contenuti/mese su 5 canali', 'Blog SEO e AI continuativo', 'Produzione video avanzata', 'Strategia su tutti i canali', 'Cruscotto live e priorità'],
     consigliato: false,
   },
 ]
