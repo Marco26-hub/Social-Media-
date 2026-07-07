@@ -30,6 +30,11 @@ services:
         value: https://api.blotato.com
       - key: BLOTATO_WEBHOOK_SECRET
         generateValue: true
+      # Stripe pagamenti: checkout, customer portal e webhook fatture.
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
       - key: SHOW_LOGIN_HINT
         value: "false"
       # Pubblicazione social REALE (disaccoppiata dal demo mode). Default OFF:

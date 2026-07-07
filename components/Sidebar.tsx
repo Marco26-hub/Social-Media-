@@ -51,6 +51,7 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboard/brand',       label: 'Profilo Brand',  icon: Sparkles },
       { href: '/dashboard/clienti',     label: 'Clienti',       icon: Users },
       { href: '/dashboard/registrazioni', label: 'Registrazioni', icon: UserCheck, adminOnly: true },
+      { href: '/dashboard/pagamenti',   label: 'Pagamenti',     icon: CreditCard, adminOnly: true },
       { href: '/dashboard/onboarding',  label: 'Onboarding',    icon: UserPlus },
       { href: '/dashboard/prodotti',    label: 'Prodotti',      icon: Package },
       { href: '/dashboard/setup',       label: 'Setup Produzione', icon: ShieldCheck },
