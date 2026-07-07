@@ -4,9 +4,9 @@ import JsonLd from '@/components/JsonLd'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://social-media-manager-zte4.onrender.com'),
-  title: 'Social Automation | Automazione AI, siti e social per agenzie e PMI',
+  title: 'Social Automation | Social, siti e visibilità AI per agenzie e PMI',
   description:
-    'Mettiamo l’AI al lavoro sul tuo business: agenti e automazioni, receptionist AI 24/7, siti ed e-commerce, gestione social con AI e visibilità su Google e sugli assistenti AI (SEO e GEO). Approvazione umana prima di ogni pubblicazione.',
+    'Gestione social con AI, siti ed e-commerce e visibilità su Google e sugli assistenti AI (SEO e GEO) per agenzie e PMI italiane. Approvazione umana prima di ogni pubblicazione. In arrivo: receptionist AI 24/7 e automazione aziendale.',
   keywords: [
     'automazione AI business',
     'agenti AI',
@@ -26,9 +26,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Social Automation' }],
   openGraph: {
-    title: 'Social Automation | Automazione AI, siti e social per agenzie e PMI',
+    title: 'Social Automation | Social, siti e visibilità AI per agenzie e PMI',
     description:
-      'Agenti AI, receptionist AI 24/7, siti ed e-commerce, gestione social con AI e visibilità su Google e sugli assistenti AI. Approvazione umana prima di ogni pubblicazione.',
+      'Gestione social con AI, siti ed e-commerce e visibilità su Google e sugli assistenti AI (SEO e GEO). Approvazione umana prima di ogni pubblicazione.',
     type: 'website',
     url: 'https://social-media-manager-zte4.onrender.com',
     siteName: 'Social Automation',
@@ -44,9 +44,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Social Automation | Automazione AI, siti e social per agenzie e PMI',
+    title: 'Social Automation | Social, siti e visibilità AI per agenzie e PMI',
     description:
-      'Agenti AI, receptionist AI 24/7, siti ed e-commerce, gestione social con AI e visibilità su Google e sugli assistenti AI. Approvazione umana prima di ogni pubblicazione.',
+      'Gestione social con AI, siti ed e-commerce e visibilità su Google e sugli assistenti AI (SEO e GEO). Approvazione umana prima di ogni pubblicazione.',
     images: ['/og.png'],
   },
   alternates: {

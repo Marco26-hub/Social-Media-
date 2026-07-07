@@ -41,26 +41,19 @@ function waLink(msg: string) {
   return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`
 }
 
-// I 5 servizi dell'azienda, raggruppati per logica (stesso gruppo di
-// socialwebautomation.com, tradotti e adattati — brand invariato).
+// Servizi ATTIVI ora (erogati davvero: social via app, siti/e-commerce come
+// servizio, visibilità SEO/GEO nel backend).
 const SERVIZI = [
-  {
-    gruppo: 'Automazione',
-    intro: "L'AI manda avanti il lavoro operativo, così risparmi tempo ogni giorno.",
-    items: [
-      { num: '01', icon: Bot, titolo: 'Automazione & Agenti AI', desc: 'Agenti AI che si occupano dei compiti ripetitivi del tuo business, giorno e notte, così risparmi tempo prezioso.' },
-      { num: '02', icon: PhoneCall, titolo: 'Voce AI & Reception', desc: 'Un assistente AI che risponde al telefono 24 ore su 24, capisce chi chiama e fissa appuntamenti: non perdi più una chiamata.' },
-    ],
-  },
-  {
-    gruppo: 'Strategia & Crescita',
-    intro: 'Presenza, vendita e visibilità: la parte che ti fa crescere.',
-    items: [
-      { num: '03', icon: Globe2, titolo: 'Siti & E-commerce', desc: 'Realizziamo siti curati che convertono i visitatori in clienti, fino a negozi online gestiti con l’AI.' },
-      { num: '04', icon: Megaphone, titolo: 'Social, automatizzato', desc: 'La tua presenza social sempre attiva, con contenuti pronti da un unico pannello e la tua approvazione prima di ogni pubblicazione.' },
-      { num: '05', icon: TrendingUp, titolo: 'Visibilità & Crescita', desc: 'Ti aiutiamo a farti trovare su Google e dai nuovi assistenti AI (come ChatGPT), trasformando chi ti scopre in contatti reali.' },
-    ],
-  },
+  { num: '01', icon: Megaphone, titolo: 'Social, automatizzato', desc: 'La tua presenza social sempre attiva, con contenuti pronti da un unico pannello e la tua approvazione prima di ogni pubblicazione.' },
+  { num: '02', icon: Globe2, titolo: 'Siti & E-commerce', desc: 'Realizziamo siti curati che convertono i visitatori in clienti, fino a negozi online con pannello di gestione.' },
+  { num: '03', icon: TrendingUp, titolo: 'Visibilità & Crescita', desc: 'Ti aiutiamo a farti trovare su Google e dai nuovi assistenti AI (come ChatGPT), trasformando chi ti scopre in contatti reali.' },
+]
+
+// In arrivo — accesso anticipato (lista d'attesa). NON dichiarati come Offer
+// attivi nello structured data finché non sono pienamente erogati.
+const IN_ARRIVO = [
+  { icon: PhoneCall, titolo: 'Voce AI & Reception', desc: 'Un assistente AI che risponde al telefono 24 ore su 24, capisce chi chiama e fissa appuntamenti: non perdi più una chiamata.', nota: 'Già attivabile su richiesta con i nostri partner.' },
+  { icon: Bot, titolo: 'Automazione & Agenti AI', desc: 'Agenti AI che gestiranno i processi ripetitivi della tua azienda — non solo i contenuti, ma i flussi operativi quotidiani.' },
 ]
 
 // Cosa include la gestione social — tutte le capacità reali della piattaforma,
@@ -255,38 +248,60 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Servizi — 5 pilastri, raggruppati per logica */}
+      {/* Servizi — attivi ora */}
       <section id="servizi" className={styles.section} aria-labelledby="servizi-title">
         <div className={styles.wrap}>
           <div className={styles.sectionIntroCenter}>
             <p className={styles.eyebrow}><Sparkles size={13} /> Servizi</p>
             <h2 id="servizi-title" className={styles.h2}>Tutto ciò che serve, in un unico partner.</h2>
             <p className={styles.lead}>
-              Dall&apos;automazione operativa alla crescita: mettiamo l&apos;AI al lavoro sul tuo business.
+              Presenza social, siti che vendono e visibilità su Google e sugli assistenti AI: mettiamo l&apos;AI al lavoro sul tuo business.
             </p>
           </div>
-          {SERVIZI.map(group => (
-            <div key={group.gruppo} className={styles.serviceGroup}>
-              <div className={styles.serviceGroupHead}>
-                <h3 className={styles.serviceGroupTitle}>{group.gruppo}</h3>
-                <p className={styles.serviceGroupIntro}>{group.intro}</p>
-              </div>
-              <div className={styles.serviceGrid}>
-                {group.items.map(({ num, icon: Icon, titolo, desc }) => (
-                  <TiltCard key={titolo} className={`${styles.card} ${styles.hoverLift} ${styles.serviceCard}`}>
-                    <article>
-                      <span className={styles.serviceNum}>{num}</span>
-                      <span className={group.gruppo === 'Automazione' ? styles.cardIcon : `${styles.cardIcon} ${styles.cardIconForest}`}>
-                        <Icon size={22} />
-                      </span>
-                      <h3>{titolo}</h3>
-                      <p>{desc}</p>
-                    </article>
-                  </TiltCard>
-                ))}
-              </div>
-            </div>
-          ))}
+          <div className={styles.serviceGrid}>
+            {SERVIZI.map(({ num, icon: Icon, titolo, desc }) => (
+              <TiltCard key={titolo} className={`${styles.card} ${styles.hoverLift} ${styles.serviceCard}`}>
+                <article>
+                  <span className={styles.serviceNum}>{num}</span>
+                  <span className={`${styles.cardIcon} ${styles.cardIconForest}`}><Icon size={22} /></span>
+                  <h3>{titolo}</h3>
+                  <p>{desc}</p>
+                </article>
+              </TiltCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* In arrivo — accesso anticipato */}
+      <section className={styles.section} aria-labelledby="arrivo-title">
+        <div className={`${styles.wrap} ${styles.coming}`}>
+          <div className={styles.sectionIntroCenter}>
+            <p className={styles.eyebrow}>Accesso anticipato</p>
+            <h2 id="arrivo-title" className={styles.h2}>La piattaforma cresce.</h2>
+            <p className={styles.lead}>
+              Stiamo per attivare i prossimi servizi. Entra in lista d&apos;attesa e sei tra i primi ad averli.
+            </p>
+          </div>
+          <div className={styles.comingGrid}>
+            {IN_ARRIVO.map(({ icon: Icon, titolo, desc, nota }) => (
+              <article key={titolo} className={styles.comingCard}>
+                <div className={styles.comingHead}>
+                  <span className={styles.comingIcon}><Icon size={22} /></span>
+                  <span className={styles.comingBadge}>Accesso anticipato</span>
+                </div>
+                <h3>{titolo}</h3>
+                <p>{desc}</p>
+                {nota && <p className={styles.comingNota}>{nota}</p>}
+              </article>
+            ))}
+          </div>
+          <div className={styles.comingCta}>
+            <a href={waLink('Ciao! Vorrei entrare in lista d’attesa per i prossimi servizi (Voce AI / Automazione).')} target="_blank" rel="noopener" className={styles.primaryBtn}>
+              <Sparkles size={18} />
+              Entra in lista d&apos;attesa
+            </a>
+          </div>
         </div>
       </section>
 

@@ -11,7 +11,7 @@ const jsonLd = {
       logo: `${SITE_URL}/og.png`,
       sameAs: [],
       description:
-        'Social Automation è il partner unico per l’automazione con AI del business: agenti AI e automazioni, receptionist AI 24/7, siti ed e-commerce, gestione social con AI e visibilità su Google e sugli assistenti AI (SEO e GEO) per agenzie e PMI italiane.',
+        'Social Automation è il partner per la crescita digitale di agenzie e PMI italiane: gestione social con AI, siti ed e-commerce e visibilità su Google e sugli assistenti AI (SEO e GEO). In arrivo: receptionist AI 24/7 e agenti di automazione aziendale.',
       makesOffer: {
         '@type': 'OfferCatalog',
         name: 'Servizi Social Automation',
@@ -20,16 +20,8 @@ const jsonLd = {
             '@type': 'Offer',
             itemOffered: {
               '@type': 'Service',
-              name: 'Automazione & Agenti AI',
-              description: 'Agenti e automazioni AI che gestiscono i compiti ripetitivi del business, giorno e notte.',
-            },
-          },
-          {
-            '@type': 'Offer',
-            itemOffered: {
-              '@type': 'Service',
-              name: 'Voce AI & Reception',
-              description: 'Un assistente AI che risponde al telefono 24/7, qualifica il chiamante e fissa appuntamenti.',
+              name: 'Social, automatizzato',
+              description: 'Presenza social gestita con AI da un unico pannello, con approvazione umana prima della pubblicazione.',
             },
           },
           {
@@ -37,15 +29,7 @@ const jsonLd = {
             itemOffered: {
               '@type': 'Service',
               name: 'Siti & E-commerce',
-              description: 'Siti che convertono i visitatori in clienti, fino a negozi online gestiti con l’AI.',
-            },
-          },
-          {
-            '@type': 'Offer',
-            itemOffered: {
-              '@type': 'Service',
-              name: 'Social, automatizzato',
-              description: 'Presenza social gestita con AI da un unico pannello, con approvazione umana prima della pubblicazione.',
+              description: 'Siti che convertono i visitatori in clienti, fino a negozi online con pannello di gestione.',
             },
           },
           {
@@ -104,7 +88,7 @@ const jsonLd = {
           name: 'Quali servizi offre Social Automation?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Cinque aree: Automazione & Agenti AI (compiti ripetitivi gestiti dall’AI), Voce AI & Reception (receptionist AI 24/7 che risponde alle chiamate e fissa appuntamenti), Siti & E-commerce (siti e negozi online che convertono), Social automatizzato (contenuti e pubblicazione con approvazione umana) e Visibilità & Crescita (posizionamento su Google e sugli assistenti AI).',
+            text: 'Tre servizi attivi: Social automatizzato (contenuti e pubblicazione con approvazione umana), Siti & E-commerce (siti e negozi online che convertono, con pannello di gestione) e Visibilità & Crescita (posizionamento su Google e sugli assistenti AI, SEO e GEO). In arrivo con accesso anticipato: Voce AI & Reception (receptionist AI 24/7) e Automazione & Agenti AI.',
           },
         },
         {

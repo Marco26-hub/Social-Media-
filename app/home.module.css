@@ -769,6 +769,70 @@
 
 .serviceCard { position: relative; padding-top: 30px; }
 
+/* ---------- In arrivo (accesso anticipato) ---------- */
+.coming {
+  position: relative;
+  padding: 60px 32px;
+  border-radius: 42px;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(214, 168, 57, 0.24), transparent 22rem),
+    linear-gradient(155deg, rgba(16, 18, 14, 0.96), rgba(34, 63, 44, 0.96));
+}
+.coming .eyebrow { color: var(--gold); justify-content: center; }
+.coming .h2, .coming .lead { color: var(--cream); }
+.coming .lead { color: rgba(255, 250, 240, 0.72); }
+
+.comingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.comingCard {
+  padding: 26px;
+  border: 1px solid rgba(255, 250, 240, 0.14);
+  border-radius: 26px;
+  background: rgba(255, 250, 240, 0.06);
+  color: var(--cream);
+}
+
+.comingHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+
+.comingIcon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  color: var(--ink);
+  background: var(--gold);
+}
+
+.comingBadge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 168, 57, 0.45);
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.comingCard h3 {
+  margin: 0 0 8px;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  font-size: 23px;
+}
+.comingCard p { margin: 0; color: rgba(255, 250, 240, 0.74); font-size: 15px; line-height: 1.55; }
+.comingNota { margin-top: 10px !important; color: var(--gold) !important; font-size: 13px !important; font-weight: 600; }
+
+.comingCta { display: flex; justify-content: center; margin-top: 30px; }
+
 .serviceNum {
   position: absolute;
   top: 22px;
