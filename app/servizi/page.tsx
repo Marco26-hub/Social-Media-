@@ -107,6 +107,7 @@ export default function ServiziPage() {
         </Link>
         <nav className={styles.navLinks} aria-label="Navigazione landing servizi">
           <a href="#pacchetti">Pacchetti</a>
+          <a href="#consulenze-legali">Legale &amp; AI</a>
           <a href="#metodo">Metodo</a>
           <a href="#faq">FAQ</a>
         </nav>
@@ -317,7 +318,7 @@ export default function ServiziPage() {
         </div>
       </section>
 
-      <section className={styles.outcomesSection} aria-labelledby="consulenze-legali-title">
+      <section id="consulenze-legali" className={styles.outcomesSection} aria-labelledby="consulenze-legali-title">
         <div className={styles.sectionIntro}>
           <p className={styles.sectionLabel}>Consulenze Legali e AI Compliance</p>
           <h2 id="consulenze-legali-title">La tua attività, a norma anche con l’AI.</h2>

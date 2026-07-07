@@ -199,6 +199,7 @@ export default function LandingPage() {
         </Link>
         <nav className={styles.navLinks} aria-label="Navigazione landing">
           <a href="#servizi">Servizi</a>
+          <a href="#consulenze-legali">Legale &amp; AI</a>
           <a href="#canali">Canali</a>
           <a href="#capacita">Cosa include</a>
           <a href="#prezzi">Pacchetti</a>
