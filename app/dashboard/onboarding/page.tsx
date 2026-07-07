@@ -26,6 +26,7 @@ export default function OnboardingPage() {
   const gen = useGeneration()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [errore, setErrore] = useState<string | null>(null)
 
   // Step 1
   const [nomeCliente, setNomeCliente] = useState('')
@@ -55,6 +56,7 @@ export default function OnboardingPage() {
   async function creaCliente() {
     if (!nomeCliente.trim()) return
     setLoading(true)
+    setErrore(null)
     if (demo) {
       await new Promise(r => setTimeout(r, 600))
       setClienteId('demo-onboard')
@@ -65,12 +67,21 @@ export default function OnboardingPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nome: nomeCliente, email: emailCliente || null, settore: null }),
         })
-        const data = await res.json()
-        if (data.id) {
-          setClienteId(data.id)
-          document.cookie = `active_cliente_id=${data.id};path=/`
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data.id) {
+          // NIENTE fallback muto: senza cliente_id i passi successivi (brand/prodotti/
+          // contenuti) salvano su un workspace inesistente. L'utente deve vedere l'errore.
+          setErrore(`Creazione cliente fallita: ${data.error || res.status}. Riprova prima di continuare.`)
+          setLoading(false)
+          return
         }
-      } catch (e) { console.error(e) }
+        setClienteId(data.id)
+        document.cookie = `active_cliente_id=${data.id};path=/`
+      } catch (e) {
+        setErrore(`Creazione cliente fallita (rete): ${(e as Error).message}. Riprova prima di continuare.`)
+        setLoading(false)
+        return
+      }
     }
     setLoading(false)
     setStep(2)
@@ -80,6 +91,7 @@ export default function OnboardingPage() {
   async function scopriBrand() {
     if (!urlSito.trim() && !demo) return
     setLoading(true)
+    setErrore(null)
 
     const result = await gen.run<BrandProfile>({
       key: 'onboarding-brand-discovery',
@@ -92,6 +104,10 @@ export default function OnboardingPage() {
     if (result.ok && result.data?.settore) {
       setBrandProfile(result.data)
       setBrandEdited(null)
+    } else {
+      // NIENTE fallback muto: se la discovery fallisce (sito illeggibile, profilo
+      // fantasma, AI down) l'utente DEVE saperlo, altrimenti prosegue senza brand.
+      setErrore(result.error || 'Brand discovery non riuscita: controlla l\'URL del sito oppure inserisci i dati del brand manualmente.')
     }
     setLoading(false)
   }
@@ -101,14 +117,22 @@ export default function OnboardingPage() {
     const bp = brandEdited || brandProfile
     if (!bp) return
     setLoading(true)
+    setErrore(null)
     if (!demo) {
       try {
-        await fetch('/api/data/brand', {
+        const res = await fetch('/api/data/brand', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cliente_id: clienteId, ...bp }),
         })
-      } catch (e) { console.error(e) }
+        if (!res.ok) {
+          // Brand non salvato: l'utente lo sa, può riprovare o proseguire consapevole.
+          const data = await res.json().catch(() => ({}))
+          setErrore(`Salvataggio brand fallito: ${data.error || res.status}. Puoi riprovare o proseguire.`)
+        }
+      } catch (e) {
+        setErrore(`Salvataggio brand fallito (rete): ${(e as Error).message}. Puoi riprovare o proseguire.`)
+      }
     }
     setLoading(false)
     setStep(3)
@@ -119,15 +143,23 @@ export default function OnboardingPage() {
     const validi = prodotti.filter(p => p.nome.trim())
     if (validi.length === 0) { setStep(4); return }
     setLoading(true)
+    setErrore(null)
     if (!demo) {
+      const falliti: string[] = []
       for (const p of validi) {
         try {
-          await fetch('/api/data/prodotti', {
+          const res = await fetch('/api/data/prodotti', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nome_prodotto: p.nome, categoria: p.categoria || null, prezzo: p.prezzo || null }),
           })
-        } catch (e) { console.error(e) }
+          if (!res.ok) falliti.push(p.nome)
+        } catch {
+          falliti.push(p.nome)
+        }
+      }
+      if (falliti.length) {
+        setErrore(`Salvataggio prodotti fallito per: ${falliti.join(', ')}. Puoi riprovare o proseguire.`)
       }
     }
     setLoading(false)
@@ -208,6 +240,15 @@ export default function OnboardingPage() {
           </div>
         ))}
       </div>
+
+      {/* Errore surfaced (no fallback silenzioso) */}
+      {errore && (
+        <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2">
+          <span className="text-red-500 mt-0.5">⚠</span>
+          <span>{errore}</span>
+          <button onClick={() => setErrore(null)} className="ml-auto text-red-400 hover:text-red-600" aria-label="Chiudi">✕</button>
+        </div>
+      )}
 
       {/* Step 1: Cliente */}
       {step === 1 && (
