@@ -10,7 +10,7 @@ export async function GET() {
   const showInProduction = process.env.SHOW_LOGIN_HINT === 'true'
 
   if (!demo && !showInProduction) {
-    return NextResponse.json({ enabled: false }, { status: 404 })
+    return NextResponse.json({ enabled: false })
   }
 
   // SICUREZZA: la password viene esposta SOLO in demo puro, dove il login

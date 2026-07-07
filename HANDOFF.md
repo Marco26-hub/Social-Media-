@@ -2,7 +2,7 @@
 
 > Documento per AI agent multipli (Claude CLI, Cursor/Cline, Codex). Lavoriamo come un team unificato.
 
-**Data ultimo aggiornamento**: 2026-07-07 (Claude CLI: copy landing italiano pro anti-slop, pacchetti scala cumulativa + tier Slancio €790, fix generazione carosello 3-5 / story, preview reale, back-to-top dashboard; TASK dashboard cliente per OpenCode/Codex)
+**Data ultimo aggiornamento**: 2026-07-07 (Codex: dashboard cliente completata, pagamenti Stripe Fase 2, filtri ricerca clienti, fallback silenziosi auditati; pronto per verifica/commit Claude)
 **Progetto**: Social Automation — SaaS social media management per agenzie
 **Stack**: Next.js 15.5.19 + Neon/Postgres + NextAuth + Tailwind + AI (Gemini/OpenRouter/Anthropic/OpenCode/Ollama)
 **Percorso locale**: `/Users/md/Documents/social_automation_v2`
@@ -12,6 +12,14 @@
 ---
 
 ## 🆕 Sessione 2026-07-07 (Claude CLI) — copy pro, pacchetti cumulativi, fix generazione/preview
+
+### 📌 Handoff rapido per Claude — prossimo passaggio
+- **Non rifare da zero**: dashboard cliente e pagamenti Stripe sono già implementati in working tree. Verificare e committare in modo atomico.
+- **Prima del commit**: controllare `git diff` e NON includere modifiche preesistenti/non correlate se non volute (`app/home.module.css`, `app/page.tsx`, `daily_content_options_2026-07-04*` risultavano già sporchi).
+- **Validazioni già passate da Codex**: `npm run lint` ✅ (0 errori, 7 warning storici), `npm run build` ✅, `npm run migrate:dry` ✅, smoke headless su `/dashboard/il-mio-piano` e `/dashboard/pagamenti` ✅.
+- **DB locale Neon**: migration `023_stripe_payments.sql` già applicata nel DB usato da questa sessione; su Render/produzione va applicata se non presente.
+- **Credenziali test**: admin `admin` / `1234567`; cliente non-admin `cliente` / `1234567`, associato solo a `Pino` come viewer per test multi-tenant.
+- **Da configurare fuori codice**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, webhook Stripe verso `/api/stripe/webhook`, più env AI/R2/Blotato indicati da `/api/system/health`.
 
 ### Landing (commit `05ce34a` + modifiche working tree non ancora committate)
 - **Copy in italiano professionale (anti-slop)**: hero full-stack "Social, siti ed e-commerce gestiti dall'AI. Il controllo resta tuo"; sezione storia "Perché esistiamo"; blog dedicato (sotto i canali); glossario termini (SEO/GEO/UTM/omnichannel/funnel/cross-post…); canali = **8 social** (Blog separato); incipit dei canali variati.
@@ -33,6 +41,27 @@ Costruire una **vista cliente** dove il cliente finale vede in un unico posto:
 
 **Riusabile**: `user_client_access` (ruoli owner/admin/editor/viewer) + `requireClienteAccess()` (`lib/auth-utils.ts`) + `ACTIVE_CLIENTE_COOKIE`; `app/dashboard/layout.tsx`; `lib/pacchetti.ts`. **Da creare**: pagina vista cliente (es. `app/dashboard/il-mio-piano/`), endpoint quota, mapping piano→pacchetto, (fase 2) tabella pagamenti.
 **Vincoli**: no metriche finte; multi-tenant sicuro; demo mode funzionante (`isDemo()` → dati finti); `npm run build` verde.
+
+### ✅ Dashboard cliente — completata da Codex (2026-07-07)
+- **Pagina client-facing**: `app/dashboard/il-mio-piano/page.tsx`, voce sidebar "Il mio piano" in `components/Sidebar.tsx`.
+- **Endpoint tenant-safe**: `app/api/data/il-mio-piano/route.ts` usa `requireAuth()` + `requireClienteId()` (cookie cliente attivo + `requireClienteAccess`) e solo `q()` Neon. Demo mode funziona senza DB con dati finti coerenti.
+- **Quota contenuti mese**: calcolata runtime da `calendario` nel mese corrente con `status NOT IN ('BOZZA','ERRORE')`; quota inclusa da `clienti.contenuti_mese`.
+- **Mapping scelto (opzione b, no migration)**: aggiunto in `lib/pacchetti.ts` (`free→starter`, `pro→crescita`, `agency→ecommerce`, `enterprise→dominio`; se `clienti.piano` è già uno slug reale viene usato direttamente). La quota resta sempre quella reale del DB, quindi eventuali override contrattuali via `contenuti_mese` vincono sul testo marketing.
+- **Report live**: la pagina chiama `/api/data/report` e mostra KPI/sintesi, con CTA a `/dashboard/analytics` per i dettagli; nessuna metrica inventata.
+- **Pagamenti**: la card mostra dati reali Stripe/fatture quando presenti; degrada a stato vuoto leggibile se non ci sono pagamenti.
+- **Validazioni**: `npm run lint` ✅ (0 errori, 7 warning storici), `npm run build` ✅, `npm run migrate:dry` ✅.
+
+### ✅ Pagamenti Stripe — Fase 2 completata da Codex (2026-07-07)
+- **Schema DB**: `db/migrations/023_stripe_payments.sql` aggiunge `clienti.stripe_customer_id`, `clienti.stripe_subscription_id`, tabella `stripe_subscriptions` e tabella `pagamenti` per fatture/storico.
+- **Backend Stripe senza SDK extra**: `lib/stripe.ts` usa REST Stripe con `STRIPE_SECRET_KEY`, crea Checkout subscription mensile, Customer Portal e verifica webhook HMAC con `STRIPE_WEBHOOK_SECRET`.
+- **Admin dashboard**: `app/dashboard/pagamenti/page.tsx` + voce sidebar admin-only. Lista clienti con ricerca/filtri (testo, stato cliente, subscription, pagamento), stato Stripe/schema, abbonamento, ultimo pagamento, link fattura/PDF, azioni Checkout/Portal.
+- **API admin**: `app/api/admin/pagamenti/route.ts` protetta da `requireAdmin()`. Demo mode coerente; se schema non migrato risponde `needs_migration:true`.
+- **Webhook Stripe**: `app/api/stripe/webhook/route.ts` gestisce `checkout.session.completed`, `customer.subscription.*`, `invoice.*` e upserta subscription/pagamenti tenant-scoped.
+- **Vista cliente aggiornata**: `app/api/data/il-mio-piano/route.ts` e `app/dashboard/il-mio-piano/page.tsx` mostrano stato subscription, rinnovo, ultimo pagamento e link fattura/PDF quando presenti; fallback "In arrivo" se migration non applicata.
+- **Env documentate**: `.env.example`, `.env.local.example`, `render.yaml` con `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`.
+- **Debug finale fallback silenziosi**: `app/api/stripe/webhook/route.ts` ora risponde 422 se un evento supportato non risolve `cliente_id` (niente ignore muto); eventi non supportati tornano `ignored:true` con `event_type`. `app/api/data/il-mio-piano/route.ts` espone `needs_migration:true` se lo schema pagamenti manca e la UI lo mostra chiaramente. `app/api/system/access` torna `{enabled:false}` 200 quando il login hint è disattivo, evitando 404 rumorosi in console.
+- **Validazioni**: `npm run lint` ✅ (0 errori, 7 warning storici), `npm run build` ✅, `npm run migrate:dry` ✅ (vede `023_stripe_payments.sql`), smoke Playwright headless ✅ (`/dashboard/il-mio-piano`, `/dashboard/pagamenti`, zero console error/404), webhook Stripe test ✅ (firma invalida 400, evento supportato senza cliente 422).
+- **Da fare su Render/Stripe**: configurare env Stripe, applicare migration, creare webhook Stripe verso `/api/stripe/webhook` con eventi checkout/session, subscription e invoice.
 
 ---
 
