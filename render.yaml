@@ -27,7 +27,9 @@ services:
       - key: BLOTATO_API_KEY
         sync: false
       - key: BLOTATO_API_URL
-        value: https://api.blotato.com
+        value: https://backend.blotato.com
+      - key: BLOTATO_BACKEND_URL
+        value: https://backend.blotato.com
       - key: BLOTATO_WEBHOOK_SECRET
         generateValue: true
       # Stripe pagamenti: checkout, customer portal e webhook fatture.
