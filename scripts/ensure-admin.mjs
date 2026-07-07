@@ -3,9 +3,10 @@
 // crea/aggiorna l'admin reale (super_admin, attivo) e DISABILITA l'admin di
 // default 'admin' (seed migration 011, password nota 1234567).
 // La password arriva SOLO da env: non è mai hardcoded nel repo.
-// FATALE in produzione: exit code >0 se le env mancano o l'upsert non ha
-// disabilitato il default. render-start.mjs blocca l'avvio → nessun deploy
-// live con default 'admin' attivo.
+// FATALE al go-live reale (PUBLISH_ENABLED=true): exit code >0 se le env mancano
+// o l'upsert non ha disabilitato il default → render-start blocca l'avvio così
+// nessun deploy con clienti reali gira col default 'admin' attivo. In setup/test
+// (PUBLISH_ENABLED!=true) è solo un warning: il default resta per configurare.
 
 import { neon } from '@neondatabase/serverless'
 import bcrypt from 'bcryptjs'
@@ -15,6 +16,9 @@ const email = process.env.ADMIN_EMAIL?.trim().toLowerCase()
 const password = process.env.ADMIN_PASSWORD ?? ''
 const isProduction = process.env.NODE_ENV === 'production'
 const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+const isPublishingLive = process.env.PUBLISH_ENABLED === 'true'
+// Hardening obbligatorio solo al go-live reale (clienti veri + pubblicazione).
+const requireAdminHardening = isProduction && !isDemoMode && isPublishingLive
 
 async function main() {
   if (!url) {
@@ -23,11 +27,11 @@ async function main() {
   }
   if (!email || password.length < 8) {
     const msg = '[ensure-admin] ADMIN_EMAIL/ADMIN_PASSWORD non impostate (o password < 8).'
-    if (isProduction && !isDemoMode) {
-      console.error(`${msg} FATAL: rifiuto di lasciare attivo il default 'admin'/'1234567'.`)
+    if (requireAdminHardening) {
+      console.error(`${msg} FATAL: PUBLISH_ENABLED=true, rifiuto di lasciare attivo il default 'admin'/'1234567'.`)
       process.exit(2)
     }
-    console.warn(`${msg} L'admin di default 'admin'/'1234567' resta attivo. CAMBIALO prima del go-live.`)
+    console.warn(`${msg} L'admin di default 'admin'/'1234567' resta attivo per il setup. CAMBIALO prima di PUBLISH_ENABLED=true.`)
     return
   }
 
@@ -62,8 +66,8 @@ async function main() {
   )
   const verify = Array.isArray(verifyRows) ? verifyRows[0] : verifyRows?.rows?.[0]
   if (!verify || verify.ruolo_globale !== 'super_admin' || verify.status !== 'active') {
-    console.error(`[ensure-admin] FATAL: verify post-upsert fallita per '${email}'. Riga: ${JSON.stringify(verify)}`)
-    process.exit(2)
+    console.error(`[ensure-admin] verify post-upsert fallita per '${email}'. Riga: ${JSON.stringify(verify)}`)
+    if (requireAdminHardening) process.exit(2)
   }
 
   // Disabilita l'admin di default se è diverso da quello reale.
@@ -81,8 +85,8 @@ async function main() {
     )
     const stillActive = Array.isArray(stillActiveRows) ? stillActiveRows.length : stillActiveRows?.rows?.length
     if (stillActive) {
-      console.error(`[ensure-admin] FATAL: default 'admin' ancora attivo dopo UPDATE.`)
-      process.exit(2)
+      console.error(`[ensure-admin] default 'admin' ancora attivo dopo UPDATE.`)
+      if (requireAdminHardening) process.exit(2)
     }
   } else {
     console.log(`[ensure-admin] admin '${email}' aggiornato con la password da env.`)
@@ -91,6 +95,6 @@ async function main() {
 
 main().catch((e) => {
   console.error('[ensure-admin] errore:', e instanceof Error ? e.message : String(e))
-  // Errore DB in produzione = fatale (non lasciare default attivo).
-  if (isProduction && !isDemoMode) process.exit(2)
+  // Errore DB fatale solo al go-live reale (non bloccare setup/test).
+  if (requireAdminHardening) process.exit(2)
 })
