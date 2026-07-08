@@ -204,11 +204,12 @@ export default function LandingPage() {
           <a href="#capacita">Cosa include</a>
           <a href="#prezzi">Pacchetti</a>
           <a href="#faq">FAQ</a>
+          <Link href="/login">Accedi</Link>
         </nav>
-        <Link href="/dashboard" className={styles.navCta}>
-          Vai al pannello
-          <ArrowRight size={16} />
-        </Link>
+        <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener" className={styles.navCta}>
+          <Gift size={16} />
+          Prova gratis
+        </a>
       </header>
 
       {/* Hero */}
@@ -235,9 +236,9 @@ export default function LandingPage() {
               <Gift size={18} />
               Ricevi 1 contenuto gratis
             </a>
-            <Link href="/servizi#pacchetti" className={styles.secondaryBtn}>
+            <a href="#prezzi" className={styles.secondaryBtn}>
               Pacchetti e prezzi
-            </Link>
+            </a>
           </div>
           <p className={styles.freeTrial}>
             <Gift size={15} />
@@ -251,7 +252,7 @@ export default function LandingPage() {
         </div>
 
         {/* 3D visual */}
-        <div className={styles.heroVisual}>
+        <div className={styles.heroVisual} aria-hidden="true">
           <TiltCard max={8}>
             <div className={styles.panel}>
               <div className={styles.panelBar}>
@@ -367,7 +368,7 @@ export default function LandingPage() {
             {SERVIZI.map(({ num, icon: Icon, titolo, desc }) => (
               <TiltCard key={titolo} className={`${styles.card} ${styles.hoverLift} ${styles.serviceCard}`}>
                 <article>
-                  <span className={styles.serviceNum}>{num}</span>
+                  <span className={styles.serviceNum} aria-hidden="true">{num}</span>
                   <span className={`${styles.cardIcon} ${styles.cardIconForest}`}><Icon size={22} /></span>
                   <h3>{titolo}</h3>
                   <p>{desc}</p>
@@ -522,6 +523,12 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+          <div data-reveal className={styles.comingCta}>
+            <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener" className={styles.primaryBtn}>
+              <Gift size={18} />
+              Inizia dal contenuto gratis
+            </a>
+          </div>
         </div>
       </section>
 
@@ -571,6 +578,7 @@ export default function LandingPage() {
                 {piano.consigliato && <span className={styles.priceBadge}>Consigliato</span>}
                 <h3 className={styles.priceName}>{piano.nome}</h3>
                 <div className={styles.priceAmount}>{piano.prezzo}<small>/mese</small></div>
+                <p className={styles.priceSetup}>{piano.setup === 'Setup incluso' ? piano.setup : `${piano.setup} una tantum`}</p>
                 <p className={styles.priceSub}>{piano.sottotitolo}</p>
                 {piano.includeDa && (
                   <p className={styles.priceInclude}>
@@ -587,14 +595,19 @@ export default function LandingPage() {
                   href={`/register?piano=${piano.slug}`}
                   className={`${styles.priceCta} ${piano.consigliato ? styles.priceCtaGold : styles.priceCtaGhost}`}
                 >
-                  Registrati
+                  Inizia con {piano.nome}
                   <ChevronRight size={16} />
                 </Link>
               </TiltCard>
             ))}
           </div>
           <p className={styles.priceFootnote}>
-            Setup iniziale e moduli extra variano per pacchetto.{' '}
+            <Gift size={14} /> Non sei pronto?{' '}
+            <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener">Richiedi prima 1 contenuto di prova gratuito</a>
+            {' '}— nessuna carta, nessun vincolo.
+          </p>
+          <p className={styles.priceFootnote}>
+            Prezzi mensili IVA esclusa · il setup indicato è una tantum.{' '}
             <Link href="/servizi#pacchetti">Confronta tutti i pacchetti su /servizi</Link>
           </p>
         </div>
