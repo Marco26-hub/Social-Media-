@@ -44,6 +44,12 @@ services:
         sync: false
       - key: AGENCY_NOTIFY_EMAIL
         sync: false
+      # Cloudflare Turnstile (captcha anti-bot su /register). Senza, il captcha è
+      # saltato (resta il rate-limit). SITE_KEY è NEXT_PUBLIC_ → richiede rebuild.
+      - key: NEXT_PUBLIC_TURNSTILE_SITE_KEY
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
       - key: SHOW_LOGIN_HINT
         value: "false"
       # Pubblicazione social REALE (disaccoppiata dal demo mode). Default OFF:

@@ -5,6 +5,7 @@ import { dbReady, q, q1 } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 import { PACCHETTO_SLUGS } from '@/lib/pacchetti'
 import { notifyNewRegistration, sendRegistrationReceived } from '@/lib/email'
+import { verifyTurnstile } from '@/lib/turnstile'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -17,6 +18,13 @@ export async function POST(request: Request) {
     const telefono = String(body.telefono || '').trim()
     const password = String(body.password || '')
     const pacchetto = String(body.pacchetto || '').trim().toLowerCase()
+    const turnstileToken = typeof body.turnstile_token === 'string' ? body.turnstile_token : ''
+
+    // Captcha anti-bot (no-op se TURNSTILE_SECRET_KEY non configurata).
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || undefined
+    if (!(await verifyTurnstile(turnstileToken, ip))) {
+      return NextResponse.json({ error: 'Verifica anti-bot fallita. Riprova.' }, { status: 400 })
+    }
 
     // Validazione input
     if (!nome) return NextResponse.json({ error: 'Nome richiesto' }, { status: 400 })

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
+import TurnstileWidget from '@/components/TurnstileWidget'
 import styles from './register.module.css'
 
 function RegisterForm() {
@@ -24,6 +25,7 @@ function RegisterForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -33,7 +35,7 @@ function RegisterForm() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, azienda, email, telefono, password, pacchetto }),
+        body: JSON.stringify({ nome, azienda, email, telefono, password, pacchetto, turnstile_token: turnstileToken }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -123,6 +125,8 @@ function RegisterForm() {
           <span className={styles.label}>Password</span>
           <input className={styles.input} type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" placeholder="Almeno 8 caratteri" />
         </div>
+
+        <TurnstileWidget onToken={setTurnstileToken} />
 
         <button className={styles.submit} type="submit" disabled={loading}>
           {loading ? 'Invio…' : <>Registrati <ArrowRight size={17} /></>}
