@@ -415,10 +415,22 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+          {/* Pricing consulenza — premium, prezzo chiaro */}
+          <div data-reveal className={styles.legalPrice}>
+            <div className={styles.legalPriceMain}>
+              <span className={styles.legalPriceLabel}>Consulenza legale AI &amp; GDPR</span>
+              <span className={styles.legalPriceAmount}>€150<small>/30 min</small></span>
+            </div>
+            <ul className={styles.legalPriceList}>
+              <li><CheckCircle2 size={15} /> Con Avvocato Cassazionista dello Studio BCS</li>
+              <li><CheckCircle2 size={15} /> Parere scritto sintetico incluso</li>
+              <li><CheckCircle2 size={15} /> Audit AI Act e adeguamenti su preventivo dedicato</li>
+            </ul>
+          </div>
           <div data-reveal className={styles.comingCta}>
-            <a href={waLink('Ciao! Vorrei un preventivo per le consulenze legali e AI compliance con lo Studio Legale BCS.')} target="_blank" rel="noopener" className={styles.primaryBtn}>
+            <a href={waLink('Ciao! Vorrei prenotare la consulenza legale AI & GDPR (30 min, €150) con lo Studio Legale BCS.')} target="_blank" rel="noopener" className={styles.primaryBtn}>
               <Scale size={18} />
-              Richiedi preventivo
+              Prenota la consulenza · €150
             </a>
           </div>
         </div>

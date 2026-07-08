@@ -362,10 +362,29 @@ export default function ServiziPage() {
             </a>
           </div>
         </div>
-        <div className={styles.ctaActions} style={{ justifyContent: 'center', marginTop: '1.75rem' }}>
-          <a href={waLink('Ciao! Vorrei un preventivo per le consulenze legali e AI compliance con lo Studio Legale BCS.')} target="_blank" rel="noopener" className={styles.primaryButton}>
+        {/* Pricing consulenza — premium, prezzo chiaro */}
+        <div style={{
+          maxWidth: 520, margin: '2rem auto 0', padding: '1.5rem 1.75rem', borderRadius: 20,
+          border: '1px solid rgba(214,168,57,0.4)',
+          background: 'linear-gradient(180deg, rgba(34,63,44,0.06), rgba(255,250,240,0.4))',
+          boxShadow: '0 16px 40px rgba(16,18,14,0.08)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', paddingBottom: 14, borderBottom: '1px solid rgba(16,18,14,0.1)' }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#223f2c', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Consulenza legale AI &amp; GDPR</span>
+            <span style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 700, fontSize: 36, lineHeight: 1, color: '#10120e' }}>€150<small style={{ fontSize: 15, fontWeight: 600, color: 'rgba(16,18,14,0.55)', marginLeft: 4 }}>/30 min</small></span>
+          </div>
+          <ul style={{ listStyle: 'none', margin: '14px 0 0', padding: 0, display: 'grid', gap: 8 }}>
+            {['Con Avvocato Cassazionista dello Studio BCS', 'Parere scritto sintetico incluso', 'Audit AI Act e adeguamenti su preventivo dedicato'].map(t => (
+              <li key={t} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, lineHeight: 1.4, color: 'rgba(16,18,14,0.82)' }}>
+                <CheckCircle2 size={15} style={{ flexShrink: 0, marginTop: 2, color: '#617c45' }} /> {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className={styles.ctaActions} style={{ justifyContent: 'center', marginTop: '1.5rem' }}>
+          <a href={waLink('Ciao! Vorrei prenotare la consulenza legale AI & GDPR (30 min, €150) con lo Studio Legale BCS.')} target="_blank" rel="noopener" className={styles.primaryButton}>
             <Scale size={18} />
-            Richiedi preventivo su WhatsApp
+            Prenota la consulenza · €150
           </a>
         </div>
       </section>
