@@ -53,6 +53,11 @@ function RegisterForm() {
         setLoading(false)
         return
       }
+      // Flow paga-prima: reindirizza a Stripe Checkout.
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url
+        return
+      }
       setDone(true)
     } catch {
       setError('Errore di rete. Riprova.')

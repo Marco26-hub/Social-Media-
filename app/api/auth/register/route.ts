@@ -3,9 +3,14 @@ import bcrypt from 'bcryptjs'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q, q1 } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
-import { PACCHETTO_SLUGS } from '@/lib/pacchetti'
+import { PACCHETTO_SLUGS, pacchettoBySlug } from '@/lib/pacchetti'
 import { notifyNewRegistration, sendRegistrationReceived } from '@/lib/email'
 import { verifyTurnstile } from '@/lib/turnstile'
+import { stripeConfigured, createStripeCheckoutSession, euroStringToCents } from '@/lib/stripe'
+
+function baseUrl(): string {
+  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://social-media-manager-zte4.onrender.com').replace(/\/$/, '')
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -61,22 +66,68 @@ export async function POST(request: Request) {
       )
     }
 
-    // Email già usata?
-    const existing = await q1('SELECT id FROM profiles WHERE email = $1 LIMIT 1', [email])
+    // Email già usata? Se il profilo è già ATTIVO/rifiutato → 409. Se è PENDING
+    // (registrato ma checkout non completato) → riusa il profilo e rigenera un
+    // checkout, così chi ha abbandonato il pagamento può riprovare senza bloccarsi.
+    const existing = await q1('SELECT id, status FROM profiles WHERE email = $1 LIMIT 1', [email]) as
+      { id: string; status: string } | null
+    let profileId: string
     if (existing) {
-      return NextResponse.json({ error: 'Esiste già un account con questa email' }, { status: 409 })
+      if (existing.status !== 'pending') {
+        return NextResponse.json({ error: 'Esiste già un account con questa email. Accedi.' }, { status: 409 })
+      }
+      // Aggiorna i dati e la password del profilo pending, riusandolo.
+      const passwordHash = await bcrypt.hash(password, 12)
+      await q(
+        `UPDATE profiles SET nome = $2, azienda = $3, telefono = $4, pacchetto = $5, password_hash = $6, updated_at = now()
+         WHERE id = $1`,
+        [existing.id, nome, azienda, telefono || null, pacchetto || null, passwordHash],
+      )
+      profileId = String(existing.id)
+    } else {
+      const passwordHash = await bcrypt.hash(password, 12)
+      const inserted = await q1(
+        `INSERT INTO profiles (email, nome, password_hash, ruolo_globale, status, azienda, telefono, pacchetto)
+         VALUES ($1, $2, $3, 'user', 'pending', $4, $5, $6)
+         RETURNING id`,
+        [email, nome, passwordHash, azienda, telefono || null, pacchetto || null],
+      )
+      profileId = String((inserted as { id: string }).id)
     }
 
-    const passwordHash = await bcrypt.hash(password, 12)
+    // FLOW A — paga-prima: se Stripe è configurato e il pacchetto ha un prezzo
+    // valido, crea subito una Checkout Session. Il cliente viene reindirizzato a
+    // Stripe; ad avvenuto pagamento il webhook checkout.session.completed attiva
+    // automaticamente l'account (crea il workspace). client_reference_id +
+    // metadata[profile_id] legano il pagamento alla registrazione pending.
+    const pkg = pacchettoBySlug(pacchetto)
+    const amountCents = pkg ? euroStringToCents(pkg.prezzo) : 0
+    if (stripeConfigured() && pkg && amountCents > 0) {
+      try {
+        const session = await createStripeCheckoutSession({
+          clienteId: profileId, // qui è il profile_id (workspace non ancora creato)
+          profileId,
+          clienteNome: azienda || nome,
+          clienteEmail: email,
+          pacchettoSlug: pacchetto,
+          pacchettoNome: pkg.nome,
+          amountCents,
+          successUrl: `${baseUrl()}/login?attivato=1`,
+          cancelUrl: `${baseUrl()}/register?annullato=1&piano=${encodeURIComponent(pacchetto)}`,
+        })
+        // Notifica interna (il cliente riceverà la conferma dopo il pagamento).
+        await notifyNewRegistration({ nome, email, azienda, pacchetto }).catch(() => {})
+        if (session.url) {
+          return NextResponse.json({ ok: true, status: 'checkout', checkout_url: session.url })
+        }
+      } catch (e) {
+        // Stripe fallito: NON bloccare la registrazione, degrada al flusso pending
+        // (attivazione manuale admin). Logga per debug.
+        console.error('[register] creazione checkout Stripe fallita, degrado a pending:', e instanceof Error ? e.message : e)
+      }
+    }
 
-    await q(
-      `INSERT INTO profiles (email, nome, password_hash, ruolo_globale, status, azienda, telefono, pacchetto)
-       VALUES ($1, $2, $3, 'user', 'pending', $4, $5, $6)`,
-      [email, nome, passwordHash, azienda, telefono || null, pacchetto || null],
-    )
-
-    // Notifiche email (no-op se RESEND_API_KEY non configurata): conferma al
-    // cliente + avviso interno all'agenzia. Non bloccano la registrazione.
+    // Fallback (Stripe non configurato o checkout fallito): pending + notifiche.
     await Promise.allSettled([
       sendRegistrationReceived(email, nome),
       notifyNewRegistration({ nome, email, azienda, pacchetto: pacchetto || null }),

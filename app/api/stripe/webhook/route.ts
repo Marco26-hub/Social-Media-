@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { dbReady, q, q1 } from '@/lib/db'
 import { stripeSecretLivemode, verifyStripeWebhookSignature } from '@/lib/stripe'
+import { activateRegistration } from '@/lib/provisioning'
+import { sendAccountActivated } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,8 +43,24 @@ async function resolveClienteId(obj: StripeObject): Promise<string | null> {
   const metaCliente = str(meta.cliente_id)
   if (metaCliente) return metaCliente
 
+  // Flow-A (paga-prima): gli eventi portano profile_id, non cliente_id. Il
+  // workspace, se già creato dal checkout, è collegato al profilo via
+  // user_client_access. Se non ancora creato → null → 422 → Stripe ritenta.
+  const profileId = str(meta.profile_id)
+  if (profileId) {
+    const row = await q1('SELECT cliente_id FROM user_client_access WHERE user_id = $1 LIMIT 1', [profileId])
+    if (row?.cliente_id) return String(row.cliente_id)
+  }
+
   const clientReferenceId = str(obj.client_reference_id)
-  if (clientReferenceId) return clientReferenceId
+  // client_reference_id nel flow-A è il profile_id: risolvilo via workspace, NON
+  // usarlo direttamente come cliente_id (sarebbe l'id sbagliato).
+  if (clientReferenceId) {
+    const viaProfile = await q1('SELECT cliente_id FROM user_client_access WHERE user_id = $1 LIMIT 1', [clientReferenceId])
+    if (viaProfile?.cliente_id) return String(viaProfile.cliente_id)
+    const asCliente = await q1('SELECT id FROM clienti WHERE id = $1 LIMIT 1', [clientReferenceId])
+    if (asCliente?.id) return String(asCliente.id)
+  }
 
   const customerId = str(obj.customer)
   if (customerId) {
@@ -62,9 +80,33 @@ async function requireStripeClienteId(obj: StripeObject, eventType: string): Pro
 }
 
 async function handleCheckoutCompleted(obj: StripeObject) {
-  const clienteId = await requireStripeClienteId(obj, 'checkout.session.completed')
   const customerId = str(obj.customer)
   const subscriptionId = str(obj.subscription)
+  const meta = metadata(obj)
+  const profileId = str(meta.profile_id)
+
+  // FLOW A (paga-prima): il checkout è nato da una registrazione self-serve. Il
+  // workspace non esiste ancora — lo creiamo ORA che il pagamento è confermato,
+  // attivando il profilo pending e collegando gli id Stripe.
+  if (profileId) {
+    const result = await activateRegistration({
+      profileId,
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscriptionId,
+    })
+    // Email di benvenuto (no-op senza RESEND_API_KEY).
+    if (!result.alreadyActive) {
+      const prof = await q1('SELECT email, nome FROM profiles WHERE id = $1', [profileId])
+      if (prof?.email) {
+        const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://social-media-manager-zte4.onrender.com').replace(/\/$/, '')
+        await sendAccountActivated(String(prof.email), String(prof.nome || 'Cliente'), `${base}/login`).catch(() => {})
+      }
+    }
+    return
+  }
+
+  // Percorso classico: workspace già esistente (es. checkout dall'admin).
+  const clienteId = await requireStripeClienteId(obj, 'checkout.session.completed')
   const rows = await q(
     `UPDATE clienti
      SET stripe_customer_id = COALESCE($1, stripe_customer_id),

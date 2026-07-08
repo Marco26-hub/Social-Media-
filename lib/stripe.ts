@@ -111,6 +111,10 @@ export async function createStripeCheckoutSession(args: {
   successUrl: string
   cancelUrl: string
   stripeCustomerId?: string | null
+  // Presente SOLO nel flusso "paga-prima" della registrazione self-serve: identifica
+  // il profilo pending da attivare quando il pagamento va a buon fine. In quel caso
+  // clienteId è ancora il profile_id (il workspace non esiste finché non si paga).
+  profileId?: string | null
 }): Promise<StripeCheckoutSession> {
   if (args.amountCents <= 0) throw new Error('Importo pacchetto non valido')
 
@@ -121,10 +125,12 @@ export async function createStripeCheckoutSession(args: {
   appendForm(params, 'client_reference_id', args.clienteId)
   appendForm(params, 'customer', args.stripeCustomerId || null)
   if (!args.stripeCustomerId) appendForm(params, 'customer_email', args.clienteEmail || null)
-  appendForm(params, 'metadata[cliente_id]', args.clienteId)
+  if (!args.profileId) appendForm(params, 'metadata[cliente_id]', args.clienteId)
   appendForm(params, 'metadata[pacchetto_slug]', args.pacchettoSlug)
-  appendForm(params, 'subscription_data[metadata][cliente_id]', args.clienteId)
+  appendForm(params, 'metadata[profile_id]', args.profileId || null)
+  if (!args.profileId) appendForm(params, 'subscription_data[metadata][cliente_id]', args.clienteId)
   appendForm(params, 'subscription_data[metadata][pacchetto_slug]', args.pacchettoSlug)
+  appendForm(params, 'subscription_data[metadata][profile_id]', args.profileId || null)
   appendForm(params, 'line_items[0][quantity]', 1)
   appendForm(params, 'line_items[0][price_data][currency]', 'eur')
   appendForm(params, 'line_items[0][price_data][unit_amount]', args.amountCents)
