@@ -4,6 +4,7 @@ import type { ChangeEvent } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { AlertTriangle, CheckCircle2, CreditCard, ExternalLink, Filter, Loader2, RefreshCw, Search, ShieldCheck, X } from 'lucide-react'
 import { readApiError } from '@/lib/ai-client'
+import ConsulenzeAdmin from '@/components/ConsulenzeAdmin'
 
 type PaymentClient = {
   id: string
@@ -241,6 +242,8 @@ export default function PagamentiAdminPage() {
           <p className="mt-2 text-3xl font-bold text-gray-900">{paidInvoices}</p>
         </div>
       </div>
+
+      <ConsulenzeAdmin />
 
       <div className="card overflow-hidden">
         <div className="border-b border-gray-100 p-4">
