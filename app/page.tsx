@@ -427,14 +427,11 @@ export default function LandingPage() {
               <li><CheckCircle2 size={15} /> Audit AI Act e adeguamenti su preventivo dedicato</li>
             </ul>
           </div>
-          <div data-reveal className={styles.comingCta} style={{ gap: 12, flexWrap: 'wrap' }}>
+          <div data-reveal className={styles.comingCta}>
             <Link href="/consulenza" className={styles.primaryBtn}>
               <Scale size={18} />
               Prenota e paga · €150
             </Link>
-            <a href={waLink('Ciao! Vorrei informazioni sulla consulenza legale AI & GDPR (30 min, €150) con lo Studio Legale BCS.')} target="_blank" rel="noopener" className={styles.secondaryBtn}>
-              Prima parlane su WhatsApp
-            </a>
           </div>
         </div>
       </section>
