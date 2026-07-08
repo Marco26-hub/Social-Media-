@@ -18,6 +18,8 @@ function str(value: unknown): string {
 function demoPayload() {
   return {
     stripe_configured: false,
+    stripe_webhook_configured: false,
+    webhook_url: 'https://social-media-manager-zte4.onrender.com/api/stripe/webhook',
     needs_migration: false,
     clienti: [
       {
@@ -51,7 +53,7 @@ function isMissingPaymentsSchema(error: unknown): boolean {
     && /does not exist/i.test(message)
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await requireAdmin()
     if (isDemo() || !dbReady()) return NextResponse.json(demoPayload())
@@ -87,6 +89,8 @@ export async function GET() {
 
       return NextResponse.json({
         stripe_configured: stripeConfigured(),
+        stripe_webhook_configured: Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim()),
+        webhook_url: `${getPublicBaseUrl(request).replace(/\/$/, '')}/api/stripe/webhook`,
         needs_migration: false,
         clienti: rows.map(row => {
           const piano = str(row.piano) || 'free'
@@ -103,6 +107,8 @@ export async function GET() {
       if (isMissingPaymentsSchema(error)) {
         return NextResponse.json({
           stripe_configured: stripeConfigured(),
+          stripe_webhook_configured: Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim()),
+          webhook_url: `${getPublicBaseUrl(request).replace(/\/$/, '')}/api/stripe/webhook`,
           needs_migration: true,
           clienti: [],
           error: 'Schema pagamenti non applicato: esegui npm run migrate.',

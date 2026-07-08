@@ -30,6 +30,8 @@ type PaymentClient = {
 
 type PaymentsPayload = {
   stripe_configured: boolean
+  stripe_webhook_configured?: boolean
+  webhook_url?: string
   needs_migration: boolean
   error?: string
   clienti: PaymentClient[]
@@ -203,6 +205,43 @@ export default function PagamentiAdminPage() {
           Aggiorna
         </button>
       </div>
+
+      {data && (() => {
+        const secretOk = Boolean(data.stripe_configured)
+        const webhookOk = Boolean(data.stripe_webhook_configured)
+        const ready = secretOk && webhookOk
+        return (
+          <div className={`mb-5 rounded-2xl border p-4 ${ready ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}`}>
+            <div className="flex items-center gap-2">
+              {ready ? <CheckCircle2 className="h-5 w-5 text-green-600" /> : <AlertTriangle className="h-5 w-5 text-amber-600" />}
+              <p className={`font-semibold ${ready ? 'text-green-900' : 'text-amber-900'}`}>
+                {ready ? 'Stripe connesso — pagamenti attivi' : 'Stripe NON ancora attivo'}
+              </p>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold ${secretOk ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {secretOk ? <CheckCircle2 className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />} STRIPE_SECRET_KEY
+              </span>
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold ${webhookOk ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {webhookOk ? <CheckCircle2 className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />} STRIPE_WEBHOOK_SECRET
+              </span>
+            </div>
+            {!ready && (
+              <div className="mt-3 space-y-1.5 text-xs text-amber-800">
+                <p>Per attivare pagamenti pacchetti <strong>e</strong> consulenze €150:</p>
+                <ol className="ml-4 list-decimal space-y-1">
+                  <li>Su Render aggiungi <code className="rounded bg-amber-100 px-1">STRIPE_SECRET_KEY</code> (sk_live_…) {secretOk && '✓'}</li>
+                  <li>Su Stripe → Webhooks crea un endpoint verso:<br />
+                    <code className="mt-1 inline-block break-all rounded bg-amber-100 px-1.5 py-0.5">{data.webhook_url || '/api/stripe/webhook'}</code><br />
+                    eventi: checkout.session.completed, customer.subscription.*, invoice.*
+                  </li>
+                  <li>Copia il signing secret in <code className="rounded bg-amber-100 px-1">STRIPE_WEBHOOK_SECRET</code> {webhookOk && '✓'}</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {(error || data?.error) && (
         <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
