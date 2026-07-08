@@ -30,6 +30,8 @@ export default function PianoPage() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [aiModel, setAiModel] = useState('meta-llama/llama-3.3-70b-instruct:free')
   const [quality, setQuality] = useState<QualitySelection>('auto')
+  const [visualPreset, setVisualPreset] = useState<'' | 'trending' | 'premium' | 'minimal' | 'classico'>('')
+  const [useTrendingEffects, setUseTrendingEffects] = useState(false)
   const [planAssets, setPlanAssets] = useState<PlanAsset[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -110,7 +112,7 @@ export default function PianoPage() {
       key: fase ? `piano-fase-${fase}` : 'piano',
       label: `Piano editoriale ${periodo}${faseLabel}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.map(a => a.url), ...(fase ? { fase } : {}), ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.map(a => a.url), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, ...(fase ? { fase } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 50000 : 25000,
       timeoutMs: periodo === 'mensile' ? 130000 : 95000,
@@ -177,6 +179,48 @@ export default function PianoPage() {
         </select>
         <p className="text-xs text-gray-500 mt-2">
           High/Elite aggiunge per ogni contenuto: audience, funnel, KPI, angle, brief creativo, A/B test, rischi e checklist.
+        </p>
+      </div>
+
+      {/* Stile visual (template Blotato per reel/carosello) */}
+      <div className="card p-5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 font-bold text-xs flex items-center justify-center">V</div>
+          <h2 className="font-semibold text-gray-900">Stile visual</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          {([
+            { value: '' as const, label: 'Auto', desc: 'Sceglie l’AI' },
+            { value: 'trending' as const, label: '🔥 Trending', desc: 'Cuts rapidi, hook forte' },
+            { value: 'premium' as const, label: '✨ Premium', desc: 'Elegante, curato' },
+            { value: 'minimal' as const, label: '⚪ Minimal', desc: 'Pulito, essenziale' },
+            { value: 'classico' as const, label: '📰 Classico', desc: 'Sobrio, informativo' },
+          ]).map(p => (
+            <button
+              key={p.value || 'auto'}
+              onClick={() => setVisualPreset(p.value)}
+              className={`p-3 rounded-xl border-2 text-left transition-all ${
+                visualPreset === p.value
+                  ? 'border-brand-500 bg-brand-50'
+                  : 'border-gray-100 hover:border-gray-200 bg-white'
+              }`}
+            >
+              <p className="font-semibold text-xs text-gray-900">{p.label}</p>
+              <p className="text-[11px] text-gray-500 mt-0.5">{p.desc}</p>
+            </button>
+          ))}
+        </div>
+        <label className="flex items-center gap-2 mt-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={useTrendingEffects}
+            onChange={e => setUseTrendingEffects(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          <span className="text-sm text-gray-700">Effetti virali su reel e video (transizioni rapide, hook aggressivo)</span>
+        </label>
+        <p className="text-xs text-gray-500 mt-2">
+          Vale per i template visual di reel e caroselli. Con Auto decide l’AI in base al brand.
         </p>
       </div>
 
