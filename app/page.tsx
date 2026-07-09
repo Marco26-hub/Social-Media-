@@ -204,12 +204,15 @@ export default function LandingPage() {
           <a href="#capacita">Cosa include</a>
           <a href="#prezzi">Pacchetti</a>
           <a href="#faq">FAQ</a>
-          <Link href="/login">Accedi</Link>
         </nav>
-        <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener" className={styles.navCta}>
-          <Gift size={16} />
-          Prova gratis
-        </a>
+        <div className={styles.navAccess}>
+          <Link href="/dashboard" className={styles.navGhost}>Admin</Link>
+          <Link href="/portale" className={styles.navGhost}>Cliente</Link>
+          <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener" className={styles.navCta}>
+            <Gift size={16} />
+            Prova gratis
+          </a>
+        </div>
       </header>
 
       {/* Hero */}
@@ -687,9 +690,9 @@ export default function LandingPage() {
             <span>Social Automation</span>
           </Link>
           <div className={styles.footerLinks}>
-            <Link href="/dashboard">Pannello</Link>
             <Link href="/servizi#pacchetti">Pacchetti e prezzi</Link>
-            <Link href="/login">Accedi</Link>
+            <Link href="/dashboard">Area Admin</Link>
+            <Link href="/portale">Area Cliente</Link>
           </div>
         </div>
         <div className={styles.footerLegal}>

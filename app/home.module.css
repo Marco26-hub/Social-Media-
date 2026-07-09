@@ -148,6 +148,24 @@
 
 .navCta:hover::after { animation: shine 0.85s ease; }
 
+/* Accessi rapidi: Admin (dashboard operatore) + Cliente (portale) + Prova gratis */
+.navAccess { display: inline-flex; align-items: center; gap: 8px; }
+.navGhost {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 18, 14, 0.16);
+  background: rgba(255, 250, 240, 0.5);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.navGhost:hover { transform: translateY(-2px); border-color: rgba(16, 18, 14, 0.4); background: rgba(255, 250, 240, 0.85); }
+
 /* ---------- Section width helper ---------- */
 .wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
 .wrapNarrow { width: min(880px, calc(100% - 32px)); margin: 0 auto; }
@@ -1350,7 +1368,10 @@
   .navbar { top: 8px; padding: 10px 12px; }
   .navLinks { display: none; }
   .brand span:last-child { display: none; }
-  .navCta { padding: 10px 16px; font-size: 13px; white-space: nowrap; }
+  /* Mobile: nav = brand + accessi Admin/Cliente. Il "Prova gratis" resta nell'hero. */
+  .navAccess { gap: 6px; }
+  .navGhost { padding: 8px 13px; font-size: 13px; }
+  .navCta { display: none; }
   .hero { padding-top: 24px; }
   .heroTitle { font-size: clamp(32px, 9vw, 44px); }
   .h2 { font-size: clamp(29px, 7.4vw, 42px); }
