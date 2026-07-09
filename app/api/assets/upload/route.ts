@@ -50,18 +50,23 @@ export async function POST(request: Request) {
     if (!useStorage) await mkdir(uploadDir, { recursive: true })
 
     const uploaded = []
+    const skipped: { name: string; motivo: string }[] = []
     for (const file of files) {
       const kind = mediaKind(file.type)
       if (!kind) {
-        return NextResponse.json({ error: `Formato non supportato: ${file.type || file.name}. Usa immagini JPG/PNG/WebP/GIF/AVIF oppure video MP4.` }, { status: 400 })
+        const isHeic = /heic|heif/i.test(`${file.type} ${file.name}`)
+        skipped.push({ name: file.name, motivo: isHeic ? 'formato HEIC iPhone non supportato — converti in JPG' : `formato non supportato (${file.type || 'sconosciuto'})` })
+        continue
       }
       if (kind === 'video' && path.extname(file.name).toLowerCase() !== '.mp4') {
-        return NextResponse.json({ error: `${file.name}: per i video è supportato solo il formato .mp4` }, { status: 400 })
+        skipped.push({ name: file.name, motivo: 'video: supportato solo .mp4' })
+        continue
       }
       const maxSize = kind === 'video' ? MAX_VIDEO_FILE_SIZE : MAX_IMAGE_FILE_SIZE
       if (file.size > maxSize) {
         const maxMb = Math.round(maxSize / 1024 / 1024)
-        return NextResponse.json({ error: `${file.name} supera ${maxMb}MB` }, { status: 400 })
+        skipped.push({ name: file.name, motivo: `supera ${maxMb}MB` })
+        continue
       }
 
       const filename = safeFilename(file.name)
@@ -101,7 +106,16 @@ export async function POST(request: Request) {
       })
     }
 
-    return NextResponse.json({ ok: true, assets: uploaded, storage: useStorage ? 'storage' : 'local' })
+    // Successo parziale: i file validi vengono caricati, quelli scartati sono
+    // riportati in `skipped`. Prima un solo file HEIC / troppo grande faceva
+    // fallire TUTTO il caricamento multiplo → sembrava "il multi-upload non funziona".
+    if (!uploaded.length) {
+      return NextResponse.json(
+        { error: `Nessun file caricato. ${skipped.map(s => `${s.name}: ${s.motivo}`).join(' · ')}`, skipped },
+        { status: 400 },
+      )
+    }
+    return NextResponse.json({ ok: true, assets: uploaded, skipped, storage: useStorage ? 'storage' : 'local' })
   } catch (e) {
     return apiError(e)
   }

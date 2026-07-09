@@ -144,10 +144,17 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       const previews = new Map(selectedFiles.map(file => [file.name, URL.createObjectURL(file)]))
       const res = await fetch('/api/assets/upload', { method: 'POST', body: form })
       if (!res.ok) throw new Error(await readApiError(res, 'Upload media fallito'))
-      const data = await res.json() as { assets?: UploadedAsset[] }
+      const data = await res.json() as { assets?: UploadedAsset[]; skipped?: { name: string; motivo: string }[] }
       // name prefillato dal filename pulito (l'utente può correggerlo).
       const uploaded = (data.assets || []).map(asset => ({ ...asset, previewUrl: previews.get(asset.name) || asset.url, name: prettyName(asset.name) }))
       setAssets(prev => [...prev, ...uploaded].slice(0, MAX_POST_ASSETS))
+      // Successo parziale: alcuni file possono essere stati scartati (HEIC, troppo
+      // grandi). I validi sono caricati; segnaliamo gli altri senza bloccare.
+      if (data.skipped?.length) {
+        setErrors(prev => ({ ...prev, asset_upload: `${data.skipped!.length} file saltati — ${data.skipped!.map(s => `${s.name}: ${s.motivo}`).join(' · ')}` }))
+      } else {
+        setErrors(prev => { const next = { ...prev }; delete next.asset_upload; return next })
+      }
     } catch (e) {
       setErrors(prev => ({ ...prev, asset_upload: (e as Error).message }))
     } finally {
@@ -330,7 +337,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
                 multiple
                 className="hidden"
                 disabled={uploading || assets.length >= MAX_POST_ASSETS}
-                onChange={event => uploadAssets(event.target.files)}
+                onChange={event => { const el = event.currentTarget; uploadAssets(el.files).finally(() => { el.value = '' }) }}
               />
             </label>
             <div className="flex flex-1 gap-2">
