@@ -49,8 +49,22 @@
 4. **Analytics social VERE cross-canale** — reali solo Meta (IG/FB via `lib/meta-insights.ts`); altri canali = conteggi interni. È il "gap #1 vs concorrenza" al rinnovo. Replicare il pattern OAuth+sync o cablare `get_post_analytics` di Blotato.
 - Altri: fattura elettronica SDI (obbligo B2B IT), team/inviti, ticketing, DAM/brand kit, A/B test, contratti/firma.
 
-### 🔐 TEST DI SICUREZZA — LANCIATO, risultati DA RACCOGLIERE (rieseguire in nuova sessione)
-- Avviato audit a 6 dimensioni (IDOR/multi-tenant, SQL injection, SSRF, secret/info-leak, auth/session/webhook/rate-limit, XSS/headers/route-pubbliche/upload) ma la sessione si è chiusa prima del consolidamento. **NON ci sono ancora conclusioni verificate.** Vedi il prompt "nuova conversazione" per rilanciarlo pulito, verificare i finding gravi in modo adversariale, e fixare i CRITICAL/HIGH.
+### 🔐 TEST DI SICUREZZA COMPLETO (6 dimensioni) — 3 HIGH corretti (`b087080`)
+Audit multi-agente (IDOR/multi-tenant, SQL injection, SSRF, secret/info-leak, auth/session/webhook/rate-limit, XSS/headers/route-pubbliche/upload). **Nessuna chiave committata, nessuna SQL injection**, core auth/webhook/upload/XSS solido.
+
+**HIGH corretti:**
+- **SSRF Vision AI** — `fetchImageInline` (`lib/ai.ts`) faceva `fetch()` grezzo su URL utente (`media_urls`) → SSRF cieco (rete interna/metadata cloud). Ora `isBlockedHost` (DNS, esportato da `lib/media-validate.ts`) + `redirect:'manual'`.
+- **Leak Blotato key ai provider AI** — `mergeBrandIdentity` (`lib/client-context.ts`) metteva le `settings` RAW (incl. `blotato_api_key`) nei prompt inviati a OpenRouter/Gemini/Anthropic. Ora filtra le chiavi segrete.
+- **IDOR preview** — `/api/data/preview?id=id_contenuto` (timestamp-based, enumerabile) era pubblico → lettura cross-tenant. Ora il path `id` richiede login+scoping cliente; la condivisione pubblica usa SOLO il `preview_token` opaco (cablato nel link share di `app/preview/[id]/page.tsx`).
+
+**Hardening minori corretti:** `/api/admin` nel gate middleware; `safeSegment` rifiuta segmenti solo-punti; approve PATCH monouso (`status='pending'`).
+
+**Raccomandazioni APERTE (non ancora fixate, serve decisione):**
+- MEDIUM rate-limit **XFF spoofing** (`middleware.ts:17`, prende il 1° X-Forwarded-For) — fix dipende dal comportamento proxy Render (rischio rompere il rate-limit).
+- MEDIUM **`/api/assets/file` senza auth** — serve anche il bucket privato; probabile by-design (media pubblici per Blotato/social, URL con UUID). Alternativa: URL firmate.
+- MEDIUM **CSP** `unsafe-inline`/`unsafe-eval` (`next.config.mjs:6`) → nonce.
+- MEDIUM **scraper DNS-rebinding** (scrape-contacts, brand-scrape: check lessicale ma non DNS — riusare `isBlockedHost`).
+- LOW: policy password (solo ≥8), `profiles.status` default `active`, `/api/system/{access,health}` info-disclosure, captcha fail-open, `/api/consulenza` non throttled, `Content-Disposition` proxy asset, pin base-URL in prod.
 
 ---
 
