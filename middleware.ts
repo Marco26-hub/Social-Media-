@@ -87,35 +87,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  const ruolo = (token?.ruolo as string | undefined) || 'user'
+  const isAdmin = ruolo === 'admin' || ruolo === 'super_admin'
+  const isPortale = pathname.startsWith('/portale')
+
+  // Area cliente /portale: spazio del cliente finale (risultati, piano, scadenze,
+  // pagamenti), separato dalla dashboard operatore/admin. Richiede login.
+  if (isPortale && !token) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
   if (isDashboard && !token) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Role-based dashboard protection: il cliente non-admin vede SOLO i risultati
-  // e i pagamenti (overview, il-mio-piano, calendario, analytics, report).
-  // Le pagine generative/gestione (social, piano, blog, ads, seo, competitor,
-  // brand, clienti, prodotti, setup, settings, onboarding, log, registrazioni,
-  // pagamenti admin) sono riservate all'admin — sono i servizi che vendiamo.
-  if (isDashboard && token) {
-    const ruolo = (token.ruolo as string | undefined) || 'user'
-    const isAdmin = ruolo === 'admin' || ruolo === 'super_admin'
-    if (!isAdmin) {
-      const CLIENTE_ALLOWED = [
-        '/dashboard/il-mio-piano',
-        '/dashboard/calendario',
-        '/dashboard/analytics',
-        '/dashboard/report',
-      ]
-      const isOverview = pathname === '/dashboard'
-      const isAllowed = CLIENTE_ALLOWED.some(p => pathname.startsWith(p))
-      if (!isOverview && !isAllowed) {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-      }
-    }
+  // Il cliente non-admin NON entra nella dashboard operatore: viene sempre
+  // portato nella sua area /portale. Contenuti, clienti e pubblicazione (i
+  // servizi che vendiamo e che approviamo noi) restano solo all'admin.
+  if (isDashboard && token && !isAdmin) {
+    return NextResponse.redirect(new URL('/portale', request.url))
   }
 
+  // Dopo il login: admin → gestione clienti; cliente → la sua area.
   if (isAuthPage && token) {
-    return NextResponse.redirect(new URL('/dashboard/clienti', request.url))
+    return NextResponse.redirect(new URL(isAdmin ? '/dashboard/clienti' : '/portale', request.url))
   }
 
   return NextResponse.next()
