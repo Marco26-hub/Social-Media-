@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { readApiError } from '@/lib/ai-client'
+import styles from './portale.module.css'
 
 type PlanData = {
   cliente: { nome: string; attivo: boolean }
@@ -51,40 +52,26 @@ function statusLabel(s: string | null | undefined) {
   const map: Record<string, string> = { active: 'Attivo', trialing: 'In prova', paid: 'Pagato', past_due: 'Pagamento in sospeso', canceled: 'Disdetto', unpaid: 'Non saldato' }
   return (s && map[s]) || s || 'In arrivo'
 }
-function statusTone(s: string | null | undefined) {
-  if (['active', 'trialing', 'paid'].includes(s || '')) return 'bg-green-100 text-green-700'
-  if (['past_due', 'unpaid', 'open'].includes(s || '')) return 'bg-amber-100 text-amber-800'
-  if (['canceled', 'failed'].includes(s || '')) return 'bg-red-100 text-red-700'
-  return 'bg-gray-100 text-gray-600'
+function statusClass(s: string | null | undefined) {
+  if (['active', 'trialing', 'paid'].includes(s || '')) return styles.badgeOk
+  if (['past_due', 'unpaid', 'open'].includes(s || '')) return styles.badgeWarn
+  if (['canceled', 'failed'].includes(s || '')) return styles.badgeBad
+  return styles.badgeOk
 }
 
-function ResultTile({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-gray-900">{value}</p>
-    </div>
-  )
-}
-
-function TopList({ title, items }: { title: string; items: { label: string; value: number }[] }) {
+function VizList({ title, items }: { title: string; items: { label: string; value: number }[] }) {
   const max = Math.max(1, ...items.map(i => i.value))
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</p>
+    <div className={styles.vizCard}>
+      <p className={styles.vizTitle}>{title}</p>
       {items.length === 0 ? (
-        <p className="mt-3 text-sm text-gray-400">Nessun dato ancora</p>
+        <p className={styles.empty}>Nessun dato ancora</p>
       ) : (
-        <div className="mt-4 space-y-3">
+        <div className={styles.rows}>
           {items.map(i => (
             <div key={i.label}>
-              <div className="mb-1 flex items-center justify-between gap-3 text-sm">
-                <span className="truncate capitalize text-gray-700">{i.label}</span>
-                <span className="font-semibold text-gray-900">{i.value}</span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-                <div className="h-full rounded-full bg-amber-500" style={{ width: `${(i.value / max) * 100}%` }} />
-              </div>
+              <div className={styles.rowTop}><span>{i.label}</span><b>{i.value}</b></div>
+              <div className={styles.rowBar}><div className={styles.rowBarFill} style={{ width: `${(i.value / max) * 100}%` }} /></div>
             </div>
           ))}
         </div>
@@ -134,18 +121,13 @@ export default function PortaleClientePage() {
   }
 
   if (loading) {
-    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-gray-400" /></div>
+    return <div className={styles.loading}><Loader2 className="h-7 w-7 animate-spin" style={{ color: 'rgba(16,18,14,0.35)' }} /></div>
   }
   if (error || !plan) {
     return (
-      <div className="mx-auto max-w-2xl">
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-6">
-          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
-          <div>
-            <p className="font-semibold text-red-950">Spazio non disponibile</p>
-            <p className="mt-1 text-sm text-red-700">{error || 'Dati mancanti'}</p>
-          </div>
-        </div>
+      <div className={styles.err}>
+        <AlertTriangle size={20} />
+        <div><b>Spazio non disponibile</b><p>{error || 'Dati mancanti'}</p></div>
       </div>
     )
   }
@@ -156,107 +138,96 @@ export default function PortaleClientePage() {
   const inLavorazione = (stats.daApprovare || 0) + (stats.approvati || 0)
   const canali = Object.entries(stats.perCanale || {}).map(([label, value]) => ({ label, value }))
   const formati = Object.entries(stats.perFormato || {}).map(([label, value]) => ({ label, value }))
-  const summary = report?.executive?.executiveSummary || []
+  // Sintesi client-facing: fuori le righe tecniche grezze (es. "funnel non_classificato").
+  const summary = (report?.executive?.executiveSummary || []).filter(s => !/non[_ ]?classificato/i.test(s))
   const payStatus = pay.subscription_status || pay.stato
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Ciao, {p.cliente.nome} 👋</h1>
-        <p className="mt-1 text-sm text-gray-500">Qui trovi i risultati, il tuo piano e i pagamenti. Ai contenuti pensiamo noi.</p>
-      </div>
+      <h1 className={`${styles.display} ${styles.hello}`}>Ciao, {p.cliente.nome} 👋</h1>
+      <p className={styles.helloSub}>Qui trovi i risultati, il tuo piano e i pagamenti. Ai contenuti pensiamo noi.</p>
 
-      {/* Piano + quota */}
-      <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <section className="overflow-hidden rounded-3xl border border-amber-100 bg-gradient-to-br from-white to-amber-50/60 p-6">
-          <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
-            <PackageCheck className="h-5 w-5" /> Il tuo piano
+      <div className={styles.grid2}>
+        {/* Piano */}
+        <section className={styles.card}>
+          <span className={styles.cardLabel}><PackageCheck size={18} /> Il tuo piano</span>
+          <div className={styles.planTop}>
+            <h2 className={`${styles.display} ${styles.planName}`}>{p.pacchetto.nome}</h2>
+            <p className={`${styles.display} ${styles.planPrice}`}>{p.pacchetto.prezzo}<small>/mese</small></p>
           </div>
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-3xl font-bold">{p.pacchetto.nome}</h2>
-            <p className="whitespace-nowrap text-2xl font-bold">{p.pacchetto.prezzo}<span className="text-base font-medium text-gray-500">/mese</span></p>
-          </div>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-gray-600">{p.pacchetto.sottotitolo}</p>
-          <div className="mt-5 grid gap-2 sm:grid-cols-2">
+          <p className={styles.planSub}>{p.pacchetto.sottotitolo}</p>
+          <div className={styles.featGrid}>
             {p.pacchetto.features.map(f => (
-              <div key={f} className="flex items-start gap-2 text-sm text-gray-700">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" /><span>{f}</span>
-              </div>
+              <span key={f} className={styles.feat}><CheckCircle2 size={16} /> {f}</span>
             ))}
           </div>
         </section>
 
-        <section className="rounded-3xl border border-gray-100 bg-white p-6">
-          <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
-            <CalendarDays className="h-5 w-5" /> Contenuti del mese
-          </div>
-          <h2 className="mt-3 text-3xl font-bold">{p.quota.usati}<span className="text-xl text-gray-400">/{p.quota.inclusi}</span></h2>
-          <p className="text-sm text-gray-500">{p.quota.rimanenti} ancora inclusi in {p.mese.label}</p>
-          <div className="mt-5 h-3 overflow-hidden rounded-full bg-gray-100">
-            <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-500" style={{ width: `${p.quota.percentuale}%` }} />
-          </div>
+        {/* Quota */}
+        <section className={styles.card}>
+          <span className={styles.cardLabel}><CalendarDays size={18} /> Contenuti del mese</span>
+          <p className={`${styles.display} ${styles.quotaNum}`}>{p.quota.usati}<small>/{p.quota.inclusi}</small></p>
+          <p className={styles.quotaMeta}>{p.quota.rimanenti} ancora inclusi in {p.mese.label}</p>
+          <div className={styles.bar}><div className={styles.barFill} style={{ width: `${p.quota.percentuale}%` }} /></div>
         </section>
       </div>
 
-      {/* Abbonamento + pagamento */}
-      <section className="mt-5 rounded-3xl border border-gray-100 bg-white p-6">
-        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+      {/* Abbonamento */}
+      <section className={styles.card} style={{ marginTop: 18 }}>
+        <div className={styles.subCard}>
           <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
-              <CreditCard className="h-5 w-5" /> Abbonamento
+            <span className={styles.cardLabel}><CreditCard size={18} /> Abbonamento</span>
+            <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              <span className={`${styles.badge} ${statusClass(payStatus)}`}>{statusLabel(payStatus)}</span>
+              {pay.cancel_at_period_end && <span className={`${styles.badge} ${styles.badgeWarn}`}>Disdetta a fine periodo</span>}
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className={`rounded-full px-3 py-1 text-sm font-semibold ${statusTone(payStatus)}`}>{statusLabel(payStatus)}</span>
-              {pay.cancel_at_period_end && <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">Disdetta a fine periodo</span>}
+            <div className={styles.subMeta}>
+              <span>Prossimo rinnovo: <strong>{formatDate(pay.current_period_end)}</strong></span>
+              {pay.ultimo_pagamento && <span>Ultimo pagamento: <strong>{formatMoney(pay.ultimo_pagamento.amount_paid, pay.ultimo_pagamento.currency)}</strong></span>}
             </div>
-            <div className="mt-3 flex flex-wrap gap-x-8 gap-y-2 text-sm text-gray-600">
-              <span>Prossimo rinnovo: <strong className="text-gray-900">{formatDate(pay.current_period_end)}</strong></span>
-              {pay.ultimo_pagamento && <span>Ultimo pagamento: <strong className="text-gray-900">{formatMoney(pay.ultimo_pagamento.amount_paid, pay.ultimo_pagamento.currency)}</strong></span>}
-            </div>
-            <p className="mt-2 text-xs text-gray-500">Il canone si rinnova ogni mese in automatico. Da qui puoi aggiornare la carta, scaricare le fatture o disdire.</p>
+            <p className={styles.subNote}>Il canone si rinnova ogni mese in automatico. Da qui puoi aggiornare la carta, scaricare le fatture o disdire.</p>
           </div>
-          <div className="flex flex-col items-stretch gap-2">
-            <button
-              onClick={openPortal}
-              disabled={portalLoading}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gray-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-gray-800 disabled:opacity-60"
-            >
-              {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <button onClick={openPortal} disabled={portalLoading} className={styles.payBtn}>
+              {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink size={16} />}
               Paga e gestisci
             </button>
-            {portalError && <p className="max-w-[220px] text-right text-xs text-red-600">{portalError}</p>}
+            {portalError && <p className={styles.payErr}>{portalError}</p>}
           </div>
         </div>
       </section>
 
       {/* Risultati */}
-      <section className="mt-8">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
-            <BarChart3 className="h-5 w-5" /> I tuoi risultati
+      <div className={styles.sectionHead}>
+        <span className={styles.cardLabel}><BarChart3 size={18} /> I tuoi risultati</span>
+        <button onClick={load} className={styles.refresh}><RefreshCw size={14} /> Aggiorna</button>
+      </div>
+      <div className={styles.tiles}>
+        <div className={styles.tile}>
+          <p className={styles.tileLabel}>Pubblicati</p>
+          <p className={`${styles.display} ${styles.tileVal} ${styles.tileValForest}`}>{stats.pubblicati || 0}</p>
+        </div>
+        <div className={styles.tile}>
+          <p className={styles.tileLabel}>In lavorazione</p>
+          <p className={`${styles.display} ${styles.tileVal} ${styles.tileValGold}`}>{inLavorazione}</p>
+        </div>
+        <div className={styles.tile}>
+          <p className={styles.tileLabel}>Totale nel mese</p>
+          <p className={`${styles.display} ${styles.tileVal}`}>{stats.totale || 0}</p>
+        </div>
+      </div>
+      <div className={styles.viz}>
+        <VizList title="Canali principali" items={canali} />
+        <VizList title="Formati principali" items={formati} />
+        <div className={styles.vizCard}>
+          <p className={styles.vizTitle}>In sintesi</p>
+          <div className={styles.summary}>
+            {(summary.length ? summary : ['Appena pubblichiamo i primi contenuti troverai qui la sintesi dei risultati.']).slice(0, 4).map(s => (
+              <p key={s}>{s}</p>
+            ))}
           </div>
-          <button onClick={load} className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50">
-            <RefreshCw className="h-3.5 w-3.5" /> Aggiorna
-          </button>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <ResultTile label="Pubblicati" value={stats.pubblicati || 0} />
-          <ResultTile label="In lavorazione" value={inLavorazione} />
-          <ResultTile label="Totale nel mese" value={stats.totale || 0} />
-        </div>
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_1fr_1.3fr]">
-          <TopList title="Canali principali" items={canali} />
-          <TopList title="Formati principali" items={formati} />
-          <div className="rounded-2xl border border-gray-100 bg-white p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">In sintesi</p>
-            <div className="mt-3 space-y-2">
-              {(summary.length ? summary : ['Appena pubblichiamo i primi contenuti troverai qui la sintesi dei risultati.']).slice(0, 4).map(s => (
-                <p key={s} className="text-sm leading-relaxed text-gray-600">{s}</p>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
     </div>
   )
 }
