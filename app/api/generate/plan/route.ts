@@ -101,8 +101,11 @@ async function insertCalendario(columns: string[], values: unknown[]): Promise<b
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, gemini_key, opencode_key, periodo, quality, quality_level, post_quality, qualita, media_urls, fase, visual_effects, visual_preset, use_trending_effects } = await request.json()
+    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, gemini_key, opencode_key, periodo, quality, quality_level, post_quality, qualita, media_urls, fase, visual_effects, visual_preset, use_trending_effects, include_weekend } = await request.json()
     const mediaPool: string[] = Array.isArray(media_urls) ? media_urls.filter((u): u is string => typeof u === 'string' && u.length > 0) : []
+    // Weekend nel piano: default INCLUSO. Se false, il piano usa solo lun-ven
+    // (prompt esplicito + enforcement deterministico in sanitizeItem).
+    const includeWeekend = include_weekend !== false
     // Mensile in 2 fasi (opzionale): fase 1 = settimane 1-2, fase 2 = settimane 3-4.
     // Serve a spezzare una richiesta lunga in due più corte (meno rischio timeout).
     // Senza `fase` genera tutte e 4 le settimane come prima (retrocompatibile).
@@ -242,7 +245,9 @@ PRODOTTI:
 ${productsJson}
 
 Distribuzione: alterna mattina (9-11) e sera (18-21).
-Lunedi/giovedi = inspiration, venerdi = vendita/promo, weekend = community/lifestyle.
+${includeWeekend
+  ? 'Distribuisci i contenuti su TUTTI i 7 giorni, weekend (sabato e domenica) COMPRESI: lun/gio = inspiration, ven = vendita/promo, sab/dom = community/lifestyle.'
+  : 'Pubblica SOLO da lunedi a venerdi: NIENTE contenuti sabato e domenica. Lun/gio = inspiration, ven = vendita/promo.'}
 Non concentrare prodotti in pochi giorni.
 Tono moderno fashion coerente con brand. Ogni contenuto deve sembrare attuale e social-native: POV, micro-storia, swipe tension, behind-the-scenes, myth-busting o creator-style voice quando coerente; mai copy statico/corporate.
 
@@ -323,6 +328,21 @@ Output SOLO JSON array valido:
       if (!DATE_RE.test(rawDate) || rawDate < globalStart || rawDate > globalEnd) {
         out.data_pubblicazione = chunk.start
         itemsCorrettiData++
+      }
+      // Enforcement weekend deterministico: se il cliente esclude il weekend,
+      // sposta sabato→venerdì e domenica→lunedì (il prompt "soft" non garantisce).
+      // getUTCDay perché 'YYYY-MM-DD' è interpretata come UTC.
+      if (!includeWeekend && typeof out.data_pubblicazione === 'string' && DATE_RE.test(out.data_pubblicazione)) {
+        const d = new Date(`${out.data_pubblicazione}T00:00:00Z`)
+        const day = d.getUTCDay()
+        if (day === 6 || day === 0) {
+          d.setUTCDate(d.getUTCDate() + (day === 6 ? -1 : 1))
+          const shifted = d.toISOString().slice(0, 10)
+          if (shifted >= globalStart && shifted <= globalEnd) {
+            out.data_pubblicazione = shifted
+            itemsCorrettiData++
+          }
+        }
       }
       const rawTime = typeof out.ora_pubblicazione === 'string' ? out.ora_pubblicazione : ''
       out.ora_pubblicazione = TIME_RE.test(rawTime) ? rawTime : '10:00'
