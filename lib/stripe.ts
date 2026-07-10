@@ -108,6 +108,9 @@ export async function createStripeCheckoutSession(args: {
   pacchettoSlug: string
   pacchettoNome: string
   amountCents: number
+  // Setup una-tantum (in cents) addebitato SOLO sulla prima fattura. 0/undefined =
+  // nessun addebito setup (es. pacchetto Starter con 'Setup incluso').
+  setupCents?: number
   successUrl: string
   cancelUrl: string
   stripeCustomerId?: string | null
@@ -138,6 +141,20 @@ export async function createStripeCheckoutSession(args: {
   appendForm(params, 'line_items[0][price_data][product_data][name]', `Social Automation — ${args.pacchettoNome}`)
   appendForm(params, 'line_items[0][price_data][product_data][metadata][cliente_id]', args.clienteId)
   appendForm(params, 'line_items[0][price_data][product_data][metadata][pacchetto_slug]', args.pacchettoSlug)
+
+  // Setup una-tantum: secondo line_item SENZA 'recurring' → in un Checkout
+  // mode=subscription Stripe lo addebita sulla PRIMA fattura (pattern setup-fee).
+  // Gate esplicito > 0: appendForm non salta lo 0, e un pacchetto 'Setup incluso'
+  // (setupCents=0) NON deve generare un addebito a zero.
+  const setupCents = args.setupCents ?? 0
+  if (setupCents > 0) {
+    appendForm(params, 'line_items[1][quantity]', 1)
+    appendForm(params, 'line_items[1][price_data][currency]', 'eur')
+    appendForm(params, 'line_items[1][price_data][unit_amount]', setupCents)
+    appendForm(params, 'line_items[1][price_data][product_data][name]', `Setup una tantum — ${args.pacchettoNome}`)
+    appendForm(params, 'line_items[1][price_data][product_data][metadata][cliente_id]', args.clienteId)
+    appendForm(params, 'line_items[1][price_data][product_data][metadata][tipo]', 'setup')
+  }
 
   const hourBucket = new Date().toISOString().slice(0, 13)
   const idempotencyKey = crypto

@@ -115,6 +115,7 @@ export async function POST(request: Request) {
           pacchettoSlug: pacchetto,
           pacchettoNome: pkg.nome,
           amountCents,
+          setupCents: euroStringToCents(pkg.setup), // 'Setup incluso' → 0 → nessun addebito
           successUrl: `${baseUrl()}/login?attivato=1`,
           cancelUrl: `${baseUrl()}/register?annullato=1&piano=${encodeURIComponent(pacchetto)}`,
         })

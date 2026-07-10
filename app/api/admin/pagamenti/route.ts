@@ -166,6 +166,7 @@ export async function POST(request: Request) {
       pacchettoSlug: pacchettoSlugFromPiano(piano),
       pacchettoNome: pacchetto.nome,
       amountCents: euroStringToCents(pacchetto.prezzo),
+      setupCents: euroStringToCents(pacchetto.setup), // 'Setup incluso' → 0 → nessun addebito
       successUrl: `${baseUrl}/dashboard/pagamenti?stripe=success`,
       cancelUrl: `${baseUrl}/dashboard/pagamenti?stripe=cancel`,
       stripeCustomerId: str(cliente.stripe_customer_id) || null,
