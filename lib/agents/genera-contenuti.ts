@@ -13,13 +13,26 @@ export type AiKeys = { model?: string; openrouterKey?: string; geminiKey?: strin
 // autenticato via CRON_SECRET e il clienteId arriva già validato dalla query dei
 // clienti AUTO. Non riusa getClientGenerationContext perché quella passa da
 // requireClienteAccess (che richiede una sessione utente).
-async function loadContext(clienteId: string): Promise<{ cliente: Row | null; brand: Row | null; prodotti: Row[] }> {
-  const [cli, br, prod] = await Promise.all([
+async function loadContext(clienteId: string): Promise<{ cliente: Row | null; brand: Row | null; prodotti: Row[]; canali: string[] }> {
+  const [cli, br, prod, acc] = await Promise.all([
     q('SELECT * FROM clienti WHERE id = $1 LIMIT 1', [clienteId]),
     q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [clienteId]),
     q("SELECT * FROM prodotti WHERE cliente_id = $1 AND prodotto_attivo = 'SI' ORDER BY priorita NULLS LAST, created_at DESC LIMIT 12", [clienteId]),
+    // Canali REALMENTE collegati e attivi del cliente (non un default a caso).
+    q("SELECT canale FROM account_social WHERE cliente_id = $1 AND attivo = 'SI'", [clienteId]),
   ])
-  return { cliente: (cli[0] as Row) || null, brand: (br[0] as Row) || null, prodotti: prod as Row[] }
+  const canali = [...new Set((acc as Row[]).map(r => String(r.canale || '').trim().toLowerCase()).filter(Boolean))]
+  return { cliente: (cli[0] as Row) || null, brand: (br[0] as Row) || null, prodotti: prod as Row[], canali }
+}
+
+// Formato/tipo media coerenti col canale (stessa logica dell'onboarding manuale).
+function formatoPerCanale(canale: string): string {
+  if (canale === 'tiktok' || canale === 'youtube') return 'video'
+  if (canale === 'pinterest') return 'pin'
+  return 'post'
+}
+function mediaTypePerFormato(formato: string): string {
+  return ['video', 'reel', 'short'].includes(formato) ? 'video' : 'image'
 }
 
 function pickStr(obj: Row, keys: string[]): string {
@@ -36,7 +49,7 @@ function tomorrow(): string {
 }
 
 function buildUserPrompt(p: {
-  canale: string; nomeBrand: string; settore: string; tono: string; tema: string
+  canale: string; formato: string; nomeBrand: string; settore: string; tono: string; tema: string
   prodotto?: Row; angle: string
 }): string {
   const prodInfo = p.prodotto
@@ -45,7 +58,7 @@ function buildUserPrompt(p: {
   return `Genera UN post social pronto per l'approvazione umana.
 
 Brand: ${p.nomeBrand} — settore: ${p.settore} — tono di voce: ${p.tono}.
-Canale: ${p.canale}. ${prodInfo}
+Canale: ${p.canale} (formato: ${p.formato}). ${prodInfo}
 Angolo creativo da usare: ${p.angle}.
 
 ${PRO_COPY_STANDARDS}
@@ -70,13 +83,19 @@ export async function generaContenutiPerCliente(
   opts: { count?: number; canali?: string[]; aiKeys?: AiKeys } = {},
 ): Promise<AgentResult> {
   const count = Math.max(1, Math.min(opts.count ?? 2, 5))
-  const canali = opts.canali?.length ? opts.canali : ['instagram']
-  const { cliente, brand, prodotti } = await loadContext(clienteId)
+  const { cliente, brand, prodotti, canali: canaliCollegati } = await loadContext(clienteId)
   // Anti-contenuto-generico (coerente con la linea anti-allucinazione del prodotto):
   // senza un brand configurato NON generiamo — produrremmo copy off-brand. Skippa e
   // segnala esplicitamente invece di fingere un risultato con fallback generici.
   if (!brand) {
     return { clienteId, generati: 0, errori: ['Brand non configurato: generazione automatica saltata per evitare contenuti generici. Completa il brand del cliente.'] }
+  }
+  // Genera solo per i canali REALMENTE collegati del cliente (o quelli richiesti
+  // esplicitamente). Nessun canale collegato → non inventare un canale a caso
+  // (es. 'instagram' se il cliente non c'è): salta e segnala.
+  const canali = opts.canali?.length ? opts.canali : canaliCollegati
+  if (!canali.length) {
+    return { clienteId, generati: 0, errori: ['Nessun canale social collegato: generazione automatica saltata. Collega almeno un account social del cliente.'] }
   }
   const brandObj: Row = brand
   const cliObj: Row = cliente || {}
@@ -89,11 +108,12 @@ export async function generaContenutiPerCliente(
 
   for (let i = 0; i < count; i++) {
     const canale = canali[i % canali.length]
+    const formato = formatoPerCanale(canale)
     const prodotto = prodotti.length ? prodotti[i % prodotti.length] : undefined
     const tema = (prodotto?.nome_prodotto as string) || nomeBrand
     try {
       const systemPrompt = proSystemPrompt('social media manager senior', { settore, brand: nomeBrand, quality: 'alta' })
-      const userPrompt = buildUserPrompt({ canale, nomeBrand, settore, tono, tema, prodotto, angle: pickAngle() })
+      const userPrompt = buildUserPrompt({ canale, formato, nomeBrand, settore, tono, tema, prodotto, angle: pickAngle() })
       const raw = await callAI({
         model: opts.aiKeys?.model || 'gemini-2.5-flash',
         systemPrompt,
@@ -111,10 +131,10 @@ export async function generaContenutiPerCliente(
         ['cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione', 'canale', 'formato',
           'tema', 'hook', 'caption', 'hashtag', 'cta', 'note', 'status', 'media_type',
           'production_cycle_stage', 'angle', 'fonte_generazione'],
-        [clienteId, id, tomorrow(), '10:00', canale, 'post',
+        [clienteId, id, tomorrow(), '10:00', canale, formato,
           tema, pickStr(parsed, ['hook', 'gancio']) || null, caption,
           pickStr(parsed, ['hashtag', 'hashtags']) || null, pickStr(parsed, ['cta']) || null,
-          JSON.stringify(parsed).slice(0, 3000), 'DA_APPROVARE', 'image',
+          JSON.stringify(parsed).slice(0, 3000), 'DA_APPROVARE', mediaTypePerFormato(formato),
           'review', pickStr(parsed, ['angle', 'angolo']) || null, 'agente_auto'],
       )
       generati++
