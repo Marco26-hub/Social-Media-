@@ -14,9 +14,40 @@ const AUTH_WINDOW_MS = 5 * 60_000
 const AUTH_MAX = 10 // tentativi login/register per IP ogni 5 min
 const authHits = new Map<string, number[]>()
 
+// Form pubblici non autenticati (es. prenotazione consulenza): ogni POST crea una
+// riga DB + sessione Stripe, quindi va limitato per IP contro spam/abuso.
+const FORM_WINDOW_MS = 10 * 60_000
+const FORM_MAX = 5 // invii form pubblici per IP ogni 10 min
+const formHits = new Map<string, number[]>()
+
+// Numero di proxy FIDATI davanti all'app (default 1: Render single-LB). Se il
+// deploy ha più hop (es. CDN + LB), impostare TRUSTED_PROXY_HOPS di conseguenza.
+const TRUSTED_PROXY_HOPS = Math.max(1, Math.floor(Number(process.env.TRUSTED_PROXY_HOPS)) || 1)
+
+// Scarta valori non-IP (anti memory-exhaustion: la mappa rate-limit è per-IP; un
+// XFF con stringhe arbitrarie/enormi la farebbe crescere a dismisura).
+function isIpish(s: string): boolean {
+  if (!s || s.length > 45) return false
+  return /^[0-9a-fA-F:.]+$/.test(s) && (s.includes('.') || s.includes(':'))
+}
+
+// IP client per il rate-limit. SICUREZZA anti-spoofing: NON usare il valore più a
+// SINISTRA di X-Forwarded-For — è aggiunto dal client ed è falsificabile (un
+// attaccante ruoterebbe l'IP a ogni richiesta, bypassando il limite). Ci si fida
+// solo dell'IP che il NOSTRO proxy più interno ha aggiunto: si conta da DESTRA
+// saltando i proxy fidati (rightmost quando TRUSTED_PROXY_HOPS=1).
 function clientIp(request: NextRequest): string {
-  return request.headers.get('x-forwarded-for')?.split(',')[0].trim()
-    || request.headers.get('x-real-ip') || 'unknown'
+  const xff = request.headers.get('x-forwarded-for')
+  if (xff) {
+    const parts = xff.split(',').map(p => p.trim()).filter(Boolean)
+    if (parts.length) {
+      const cand = parts[Math.max(0, parts.length - TRUSTED_PROXY_HOPS)]
+      if (isIpish(cand)) return cand
+    }
+  }
+  const real = request.headers.get('x-real-ip')?.trim()
+  if (real && isIpish(real)) return real
+  return 'unknown'
 }
 
 function rateLimit(store: Map<string, number[]>, ip: string, windowMs: number, max: number): { ok: boolean; retryAfter: number } {
@@ -56,6 +87,12 @@ export async function middleware(request: NextRequest) {
   const isRegisterPost = pathname === '/api/auth/register' && request.method === 'POST'
   if (isLoginPost || isRegisterPost) {
     const rl = rateLimit(authHits, clientIp(request), AUTH_WINDOW_MS, AUTH_MAX)
+    if (!rl.ok) return tooMany(rl.retryAfter)
+  }
+
+  // Anti-spam sui form pubblici (consulenza): crea riga DB + Checkout Stripe.
+  if (pathname === '/api/consulenza' && request.method === 'POST') {
+    const rl = rateLimit(formHits, clientIp(request), FORM_WINDOW_MS, FORM_MAX)
     if (!rl.ok) return tooMany(rl.retryAfter)
   }
 
