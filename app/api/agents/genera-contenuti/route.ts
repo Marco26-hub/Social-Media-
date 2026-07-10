@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import { cronDenied } from '@/lib/cron-auth'
+import { requireAdmin } from '@/lib/auth-utils'
 import { generaContenutiPerCliente, type AgentResult } from '@/lib/agents/genera-contenuti'
 import { notifyAgency } from '@/lib/notifications'
 
@@ -12,8 +13,17 @@ export const dynamic = 'force-dynamic'
 // generation_mode=AUTO in impostazioni. Chi è MANUALE (o senza la chiave) NON viene
 // toccato: "gli agenti li attivi tu". Non pubblica nulla — l'approvazione umana resta.
 export async function POST(request: Request) {
+  // Auth a due vie: bearer CRON_SECRET (scheduler esterno) OPPURE sessione admin
+  // (trigger manuale "Genera ora" dal dashboard). Così l'admin può lanciare la
+  // generazione AUTO anche prima di aver configurato CRON_SECRET su Render.
   const denied = cronDenied(request)
-  if (denied) return denied
+  if (denied) {
+    try {
+      await requireAdmin()
+    } catch {
+      return denied
+    }
+  }
 
   try {
     if (!dbReady()) return NextResponse.json({ error: 'DB non pronto' }, { status: 503 })

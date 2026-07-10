@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import type { Setting } from '@/lib/types'
-import { Save, RefreshCw, KeyRound, Check } from 'lucide-react'
+import { Save, RefreshCw, KeyRound, Check, Sparkles } from 'lucide-react'
 import { demoSettings } from '@/lib/demo-data'
 
 import { isDemo } from '@/lib/demo'
@@ -27,6 +27,8 @@ export default function SettingsPage() {
   const [savedBlotato, setSavedBlotato] = useState(false)
   const [genMode, setGenMode] = useState<'MANUAL' | 'AUTO'>('MANUAL')
   const [savingGen, setSavingGen] = useState(false)
+  const [runningAuto, setRunningAuto] = useState(false)
+  const [autoResult, setAutoResult] = useState<string | null>(null)
   const demo = isDemo()
 
   useEffect(() => {
@@ -68,6 +70,31 @@ export default function SettingsPage() {
       setGenMode(prev)
     } finally {
       setSavingGen(false)
+    }
+  }
+
+  // Lancia SUBITO la generazione automatica per TUTTI i clienti in AUTO (azione
+  // admin). Funziona via sessione admin: non serve CRON_SECRET/scheduler esterno.
+  // Utile per testare o per un run manuale. Genera bozze DA_APPROVARE nel calendario.
+  async function runAutoNow() {
+    setRunningAuto(true)
+    setAutoResult(null)
+    try {
+      if (demo) {
+        setAutoResult('Demo: nessuna generazione reale.')
+        return
+      }
+      const res = await fetch('/api/agents/genera-contenuti', { method: 'POST' })
+      const data = await res.json().catch(() => ({})) as { generati?: number; clienti_auto?: number; error?: string }
+      if (!res.ok) {
+        setAutoResult(`Errore: ${data.error || res.status}`)
+        return
+      }
+      setAutoResult(`${data.generati ?? 0} bozze generate su ${data.clienti_auto ?? 0} clienti in AUTO. Nel calendario come DA_APPROVARE.`)
+    } catch (e) {
+      setAutoResult(`Errore di rete: ${(e as Error).message}`)
+    } finally {
+      setRunningAuto(false)
     }
   }
 
@@ -162,30 +189,45 @@ export default function SettingsPage() {
 
           {/* Generazione contenuti: MANUALE (default) / AUTOMATICO (attivato dall'admin
               per questo cliente). In AUTO un job schedulato genererà bozze DA_APPROVARE. */}
-          <div className="card p-4 flex items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-gray-900">Generazione contenuti</p>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${genMode === 'AUTO' ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-600'}`}>
-                  {genMode === 'AUTO' ? 'AUTO' : 'MANUALE'}
-                </span>
+          <div className="card p-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-gray-900">Generazione contenuti</p>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${genMode === 'AUTO' ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {genMode === 'AUTO' ? 'AUTO' : 'MANUALE'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {genMode === 'AUTO'
+                    ? 'Automatico: l’agente genera bozze DA APPROVARE per questo cliente. Approvi comunque prima di pubblicare.'
+                    : 'Manuale: generi tu con il pulsante Genera. Nessuna generazione automatica.'}
+                </p>
               </div>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {genMode === 'AUTO'
-                  ? 'Automatico: l’agente genera bozze DA APPROVARE per questo cliente. Approvi comunque prima di pubblicare.'
-                  : 'Manuale: generi tu con il pulsante Genera. Nessuna generazione automatica.'}
-              </p>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => saveGenMode(genMode === 'AUTO' ? 'MANUAL' : 'AUTO')}
+                  disabled={savingGen}
+                  aria-label="Attiva o disattiva la generazione automatica"
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${genMode === 'AUTO' ? 'bg-brand-600' : 'bg-gray-200'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${genMode === 'AUTO' ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+                {savingGen && <RefreshCw className="w-4 h-4 text-gray-400 animate-spin" />}
+              </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Trigger manuale admin: genera SUBITO per tutti i clienti in AUTO,
+                senza scheduler esterno/CRON_SECRET (usa la sessione admin). */}
+            <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3 flex-wrap">
               <button
-                onClick={() => saveGenMode(genMode === 'AUTO' ? 'MANUAL' : 'AUTO')}
-                disabled={savingGen}
-                aria-label="Attiva o disattiva la generazione automatica"
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${genMode === 'AUTO' ? 'bg-brand-600' : 'bg-gray-200'}`}
+                onClick={runAutoNow}
+                disabled={runningAuto}
+                className="py-1.5 px-3 text-xs inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-60"
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${genMode === 'AUTO' ? 'translate-x-6' : 'translate-x-1'}`} />
+                {runningAuto ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                {runningAuto ? 'Genero…' : 'Genera ora (clienti in AUTO)'}
               </button>
-              {savingGen && <RefreshCw className="w-4 h-4 text-gray-400 animate-spin" />}
+              {autoResult && <span className="text-xs text-gray-500">{autoResult}</span>}
             </div>
           </div>
 
