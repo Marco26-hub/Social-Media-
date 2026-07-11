@@ -6,6 +6,7 @@ import { Building2, ChevronDown } from 'lucide-react'
 import {
   readActiveClienteId,
   writeActiveClienteId,
+  pickDefaultClienteId,
   type ClienteAccessRow,
 } from '@/lib/tenant/client'
 
@@ -34,7 +35,7 @@ export default function ClienteSelector() {
       const cookieId = readActiveClienteId()
       const nextId = cookieId && access.some(row => row.cliente_id === cookieId)
         ? cookieId
-        : access[0]?.cliente_id ?? null
+        : pickDefaultClienteId(access.map(row => row.clienti).filter(Boolean) as { id: string; slug?: unknown; nome?: unknown }[])
 
       if (nextId) writeActiveClienteId(nextId)
       setRows(access)

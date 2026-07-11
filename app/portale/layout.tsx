@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { LogOut } from 'lucide-react'
 import styles from './portale.module.css'
+import PortaleLogout from './PortaleLogout'
 
 // Area CLIENTE — separata dalla dashboard operatore/admin. Look premium
 // (cream/forest/gold, Fraunces) coerente con la landing. Nessuna sidebar di
@@ -17,10 +17,7 @@ export default function PortaleLayout({ children }: { children: React.ReactNode 
               <span>Area cliente</span>
             </span>
           </Link>
-          <Link href="/api/auth/signout?callbackUrl=/" className={styles.exit}>
-            <LogOut size={16} />
-            Esci
-          </Link>
+          <PortaleLogout />
         </div>
       </header>
       <div className={styles.wrap}>{children}</div>
