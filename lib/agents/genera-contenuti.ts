@@ -1,6 +1,7 @@
 import { q } from '@/lib/db'
-import { callAI, extractJSON } from '@/lib/ai'
+import { callAI, extractJSONChecked } from '@/lib/ai'
 import { brandField } from '@/lib/client-context'
+import { normalizeProductionCycleStage } from '@/lib/production-cycle'
 import {
   TREND_MODERN_STANDARDS, PRO_COPY_STANDARDS, SEO_GEO_STANDARDS,
   DIVERSITY_STANDARDS, FUNNEL_STANDARDS, pickAngle, proSystemPrompt,
@@ -193,28 +194,40 @@ export async function generaContenutiPerCliente(
         opencodeKey: opts.aiKeys?.opencodeKey,
         maxTokens,
       })
-      const parsed = (extractJSON(raw) as Row) || {}
+      const { data, truncated } = extractJSONChecked(raw)
+      const parsed = (data as Row) || {}
       const caption = pickStr(parsed, ['caption', 'caption_adattata', 'testo', 'didascalia', 'descrizione'])
       if (!caption) { errori.push(`${canale}: caption vuota dall'AI`); continue }
+      // JSON troncato (budget token esaurito): salviamo comunque ma NON fingiamo che
+      // sia completo — lo segnaliamo così l'output parziale resta visibile.
+      if (truncated) errori.push(`${canale}: output AI troncato, contenuto parziale salvato (alza livello/token)`)
       const id = `auto-${clienteId.slice(0, 8)}-${Date.now()}-${i}`
+      const prod = prodotto as Row | undefined
+      // Persistenza allineata alla generazione MANUALE: tutti i campi ricchi che lo
+      // schema esteso (per livello) produce vengono salvati, non buttati.
       await insertCalendarioRow(
         [
-          'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione', 'canale', 'formato',
-          'tema', 'hook', 'caption', 'hashtag', 'cta', 'note', 'status', 'media_type',
-          'idea_visual', 'scenes_json', 'slides_json', 'overlay_text', 'voiceover_script', 'music_mood',
-          'quality_level', 'audience_segment', 'funnel_stage', 'angle', 'primary_message',
-          'proof_points', 'hook_variants', 'caption_long', 'cta_variants', 'creative_brief',
-          'production_cycle_stage', 'fonte_generazione',
+          'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione', 'canale', 'formato', 'obiettivo', 'tema',
+          'product_id', 'nome_prodotto', 'link_prodotto', 'link_prodotto_finale',
+          'hook', 'caption', 'hashtag', 'cta', 'note', 'status', 'media_type',
+          'idea_visual', 'scenes_json', 'slides_json', 'overlay_text', 'alt_text', 'tags', 'thumbnail_url', 'voiceover_script', 'music_mood',
+          'quality_level', 'audience_segment', 'funnel_stage', 'angle', 'primary_message', 'proof_points', 'hook_variants', 'caption_long', 'cta_variants', 'creative_brief',
+          'template_id', 'template_style', 'layout_spec_json', 'asset_requirements_json', 'production_notes', 'compliance_notes', 'risk_flags', 'platform_best_practices', 'ab_variants_json', 'kpi_target', 'expected_outcome',
+          'production_cycle_stage', 'optimization_cycle_json', 'performance_hypothesis', 'next_iteration_actions', 'missing_inputs', 'content_checklist', 'fonte_generazione',
         ],
         [
-          clienteId, id, tomorrow(), '10:00', canale, formato,
-          tema, pickStr(parsed, ['hook', 'hook_0_2_sec', 'gancio', 'titolo_video', 'titolo_carosello']) || null,
+          clienteId, id, tomorrow(), '10:00', canale, formato, pickText(parsed, ['obiettivo', 'goal']) || null, tema,
+          (prod?.id as string) || null, (prod?.nome_prodotto as string) || null, (prod?.link_prodotto as string) || null, (prod?.link_prodotto as string) || null,
+          pickStr(parsed, ['hook', 'hook_0_2_sec', 'gancio', 'titolo_video', 'titolo_carosello']) || null,
           caption, pickStr(parsed, ['hashtag', 'hashtags']) || null, pickStr(parsed, ['cta', 'cta_finale']) || null,
           JSON.stringify(parsed).slice(0, 3000), 'DA_APPROVARE', mediaTypePerFormato(formato),
           pickStr(parsed, ['idea_visual', 'descrizione_visiva']) || null,
           jsonbParam(pickJson(parsed, ['scene', 'scenes', 'scenes_json'])),
           jsonbParam(pickJson(parsed, ['slides', 'immagini', 'frames', 'slides_json'])),
           pickStr(parsed, ['overlay_testo', 'overlay_text']) || null,
+          pickText(parsed, ['alt_text', 'alt']) || null,
+          jsonbParam(pickJson(parsed, ['tags'])),
+          pickStr(parsed, ['thumbnail_url', 'thumbnail']) || null,
           pickStr(parsed, ['voiceover', 'voiceover_script']) || null,
           pickStr(parsed, ['musica_mood', 'music_mood']) || null,
           quality,
@@ -227,7 +240,24 @@ export async function generaContenutiPerCliente(
           pickText(parsed, ['caption_long', 'caption_estesa', 'corpo']) || null,
           jsonbParam(pickJson(parsed, ['cta_variants', 'cta_alternative'])),
           pickText(parsed, ['creative_brief', 'brief_creativo']) || null,
-          'review', 'agente_auto',
+          pickText(parsed, ['template_id', 'template', 'template_operativo']) || null,
+          pickText(parsed, ['template_style', 'stile_template', 'visual_style']) || null,
+          jsonbParam(pickJson(parsed, ['layout_spec', 'layout_spec_json', 'layout'])),
+          jsonbParam(pickJson(parsed, ['asset_requirements', 'asset_requirements_json', 'asset_richiesti'])),
+          pickText(parsed, ['production_notes', 'note_produzione']) || null,
+          pickText(parsed, ['compliance_notes', 'note_compliance']) || null,
+          jsonbParam(pickJson(parsed, ['risk_flags', 'rischi'])),
+          jsonbParam(pickJson(parsed, ['platform_best_practices', 'best_practices_applicate'])),
+          jsonbParam(pickJson(parsed, ['ab_variants', 'ab_variants_json', 'varianti_ab'])),
+          pickText(parsed, ['kpi_target', 'kpi_primario']) || null,
+          pickText(parsed, ['expected_outcome', 'risultato_atteso']) || null,
+          normalizeProductionCycleStage(pickText(parsed, ['production_cycle_stage', 'cycle_stage', 'fase_ciclo']), 'review'),
+          jsonbParam(pickJson(parsed, ['optimization_cycle', 'optimization_cycle_json', 'ciclo_ottimizzazione'])),
+          pickText(parsed, ['performance_hypothesis', 'ipotesi_performance', 'hypothesis']) || null,
+          jsonbParam(pickJson(parsed, ['next_iteration_actions', 'azioni_prossima_iterazione', 'next_actions'])),
+          jsonbParam(pickJson(parsed, ['missing_inputs', 'input_mancanti'])),
+          jsonbParam(pickJson(parsed, ['content_checklist', 'checklist'])),
+          'agente_auto',
         ],
       )
       generati++

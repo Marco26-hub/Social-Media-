@@ -48,6 +48,9 @@ export async function POST(request: Request) {
 
     const totale = risultati.reduce((n, r) => n + r.generati, 0)
     const conErrori = risultati.filter(r => r.errori.length > 0)
+    // "Falliti" = clienti che NON hanno prodotto ALCUNA bozza (non chi ha 1 successo
+    // + 1 warning): conteggio onesto per il riepilogo.
+    const clientiSenzaBozze = risultati.filter(r => r.generati === 0).length
     // Fallimento reale: c'erano clienti in AUTO ma NON è stata generata alcuna bozza.
     // Niente successo finto (HTTP 200 ok:true cieco): torna 502 + notifica errore,
     // così lo scheduler esterno segna il run come fallito e l'agenzia se ne accorge.
@@ -74,7 +77,7 @@ export async function POST(request: Request) {
       ok: !failedRun,
       clienti_auto: clienti.length,
       generati: totale,
-      falliti: conErrori.length,
+      falliti: clientiSenzaBozze,
       error: failedRun ? `Nessuna bozza generata su ${clienti.length} clienti AUTO. Primo errore: ${conErrori[0]?.errori[0] || 'sconosciuto'}` : undefined,
       dettaglio: risultati,
     }, { status: failedRun ? 502 : 200 })
