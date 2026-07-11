@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Eye, Plus, Trash2, Sparkles, Loader2, TrendingUp, TrendingDown,
   Target, Hash, Lightbulb, Zap, BarChart3, AlertTriangle
@@ -28,6 +28,8 @@ type CompetitorAnalysis = {
   contenuti_suggeriti: { tema: string; formato: string; canale: string; perche: string }[]
 }
 
+type SavedCompetitor = { id: string; nome: string; sito?: string | null; social?: string[] | null }
+
 export default function CompetitorPage() {
   const demo = useRuntimeDemo()
   const { clienteId } = useActiveClienteId()
@@ -38,6 +40,50 @@ export default function CompetitorPage() {
   const [analyses, setAnalyses] = useState<CompetitorAnalysis[]>([])
   const [selected, setSelected] = useState<CompetitorAnalysis | null>(null)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [saved, setSaved] = useState<SavedCompetitor[]>([])
+  const [savingComp, setSavingComp] = useState(false)
+
+  // Carica la lista competitor salvata (per l'agente auto) + lo storico analisi.
+  useEffect(() => {
+    if (demo) return
+    fetch('/api/data/competitor').then(r => r.ok ? r.json() : []).then(d => setSaved(Array.isArray(d) ? d : [])).catch(() => {})
+    fetch('/api/data/competitor-analysis').then(r => r.ok ? r.json() : []).then((rows: { analisi: CompetitorAnalysis }[]) => {
+      if (Array.isArray(rows)) setAnalyses(rows.map(r => r.analisi).filter(Boolean))
+    }).catch(() => {})
+  }, [demo])
+
+  async function saveCompetitor() {
+    if (!competitorNome.trim() || demo) return
+    setSavingComp(true)
+    try {
+      const res = await fetch('/api/data/competitor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: competitorNome.trim(), sito: competitorSito || undefined, social: competitorSocial.filter(s => s.trim()) }),
+      })
+      if (res.ok) {
+        const row = await res.json() as SavedCompetitor
+        setSaved(prev => [row, ...prev])
+        setMsg({ type: 'ok', text: 'Competitor salvato: l’agente automatico lo analizzerà.' })
+      } else {
+        setMsg({ type: 'err', text: 'Salvataggio competitor non riuscito.' })
+      }
+    } finally {
+      setSavingComp(false)
+    }
+  }
+
+  async function deleteSaved(id: string) {
+    if (demo) return
+    setSaved(prev => prev.filter(c => c.id !== id))
+    await fetch(`/api/data/competitor?id=${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {})
+  }
+
+  function riusaCompetitor(c: SavedCompetitor) {
+    setCompetitorNome(c.nome || '')
+    setCompetitorSito(c.sito || '')
+    setCompetitorSocial(Array.isArray(c.social) && c.social.length ? c.social : [''])
+  }
 
   function updateSocial(i: number, val: string) {
     setCompetitorSocial(prev => prev.map((s, j) => j === i ? val : s))
@@ -120,6 +166,25 @@ export default function CompetitorPage() {
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {loading ? 'Analisi AI in corso...' : 'Analizza competitor'}
             </button>
+
+            <button onClick={saveCompetitor} disabled={savingComp || !competitorNome.trim()} className="w-full justify-center py-2 text-sm inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-60">
+              {savingComp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              Salva in lista (per l’agente automatico)
+            </button>
+
+            {saved.length > 0 && (
+              <div className="pt-3 border-t">
+                <p className="text-xs text-gray-400 font-medium mb-2">COMPETITOR SALVATI (agente auto)</p>
+                <div className="space-y-1">
+                  {saved.map(c => (
+                    <div key={c.id} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                      <button onClick={() => riusaCompetitor(c)} className="flex-1 text-left truncate" title="Usa nel form">{c.nome}</button>
+                      <button onClick={() => deleteSaved(c.id)} className="text-red-400 hover:text-red-600 px-1" title="Rimuovi"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {msg && (
               <div className={`p-3 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
