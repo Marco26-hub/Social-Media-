@@ -22,12 +22,27 @@ export default function AgentiPage() {
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState<AgentKey | null>(null)
   const [results, setResults] = useState<Record<string, { ok: boolean; text: string }>>({})
+  const [clienti, setClienti] = useState<{ id: string; nome: string; mode: string }[]>([])
 
   useEffect(() => {
     fetch('/api/agents/config').then(r => r.ok ? r.json() : null).then(d => {
       if (d && typeof d === 'object') setConfig(prev => ({ ...prev, ...d }))
     }).catch(() => {}).finally(() => setLoading(false))
+    fetch('/api/agents/clienti-auto').then(r => r.ok ? r.json() : []).then(d => {
+      if (Array.isArray(d)) setClienti(d)
+    }).catch(() => {})
   }, [])
+
+  async function toggleCliente(id: string, mode: string) {
+    const next = mode === 'AUTO' ? 'MANUAL' : 'AUTO'
+    setClienti(prev => prev.map(c => c.id === id ? { ...c, mode: next } : c))
+    if (demo) return
+    const res = await fetch('/api/agents/clienti-auto', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cliente_id: id, mode: next }),
+    }).catch(() => null)
+    if (!res || !res.ok) setClienti(prev => prev.map(c => c.id === id ? { ...c, mode } : c)) // rollback
+  }
 
   async function toggle(key: AgentKey) {
     const next = !config[key]
@@ -118,6 +133,30 @@ export default function AgentiPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {!loading && clienti.length > 0 && (
+        <div className="mt-8 max-w-4xl">
+          <h2 className="text-sm font-semibold text-gray-900 mb-1">Clienti in automatico</h2>
+          <p className="text-xs text-gray-500 mb-3">Chi è su AUTO riceve il lavoro degli agenti abilitati; chi è MANUALE no.</p>
+          <div className="card divide-y divide-gray-100">
+            {clienti.map(c => (
+              <div key={c.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                <span className="text-sm text-gray-800 truncate">{c.nome}</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${c.mode === 'AUTO' ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-600'}`}>{c.mode === 'AUTO' ? 'AUTO' : 'MANUALE'}</span>
+                  <button
+                    onClick={() => toggleCliente(c.id, c.mode)}
+                    aria-label={`Modo generazione per ${c.nome}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${c.mode === 'AUTO' ? 'bg-brand-600' : 'bg-gray-200'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${c.mode === 'AUTO' ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
