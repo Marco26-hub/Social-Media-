@@ -8,7 +8,7 @@ import ClienteSelector from '@/components/ClienteSelector'
 import {
   LayoutDashboard, Calendar, Settings,
   Package, LogOut, Zap, Menu, X, Search, Target,
-  Users, BarChart3, Sparkles, TrendingUp, FileText, UserPlus, Eye, ShieldCheck, Magnet, Globe, Activity, PenLine, UserCheck, CreditCard
+  Users, BarChart3, Sparkles, TrendingUp, FileText, UserPlus, Eye, ShieldCheck, Magnet, Globe, Activity, PenLine, UserCheck, CreditCard, Coins
 } from 'lucide-react'
 
 type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string; external?: boolean; adminOnly?: boolean }
@@ -42,6 +42,7 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboard/leads',  label: 'Leads',            icon: Magnet, adminOnly: true },
       { href: '/dashboard/seo',    label: 'SEO + GEO Audit',  icon: Search, adminOnly: true },
       { href: '/dashboard/analytics', label: 'Analytics',   icon: Activity },
+      { href: '/dashboard/consumi', label: 'Consumi Token', icon: Coins, adminOnly: true },
       { href: '/dashboard/report', label: 'Report',        icon: BarChart3 },
       { href: '/dashboard/log',    label: 'Log + Report',  icon: FileText, adminOnly: true },
       { href: '/dashboard/competitor', label: 'Competitor',   icon: Eye, adminOnly: true },

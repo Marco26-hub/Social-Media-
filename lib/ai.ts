@@ -1,3 +1,5 @@
+import { logTokenUsage } from '@/lib/token-usage'
+
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
@@ -473,6 +475,7 @@ async function callOpenRouter(
     })
     if (res.ok) {
       const data = await res.json()
+      void logTokenUsage({ provider: 'openrouter', model, usage: data.usage })
       return data.choices?.[0]?.message?.content || ''
     }
 
@@ -537,6 +540,7 @@ async function callAnthropic(
     })
     if (!res.ok) throw new Error(formatHttpError(res.status, await res.text().catch(() => '')))
     const data = await res.json()
+    void logTokenUsage({ provider: 'anthropic', model, usage: { prompt_tokens: data.usage?.input_tokens, completion_tokens: data.usage?.output_tokens } })
     return data.content?.[0]?.text || ''
   } finally {
     clearTimeout(timer)
@@ -627,6 +631,7 @@ async function callGemini(
       if (finish && finish !== 'STOP') throw new Error(`Gemini interrotto: ${finish}`)
       throw new Error('Gemini ha restituito una risposta vuota')
     }
+    void logTokenUsage({ provider: 'gemini', model, usage: { prompt_tokens: data.usageMetadata?.promptTokenCount, completion_tokens: data.usageMetadata?.candidatesTokenCount, total_tokens: data.usageMetadata?.totalTokenCount } })
     return text
   } finally {
     clearTimeout(timer)
@@ -659,6 +664,7 @@ async function callOpenCode(
     })
     if (!res.ok) throw new Error(formatHttpError(res.status, await res.text().catch(() => '')))
     const data = await res.json()
+    void logTokenUsage({ provider: 'opencode', model, usage: data.usage })
     return data.choices?.[0]?.message?.content || ''
   } finally {
     clearTimeout(timer)
