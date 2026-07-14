@@ -3,9 +3,10 @@
 #
 # SETUP (una volta):
 # 1) Su GitHub: Settings → Secrets and variables → Actions → New repository secret
-#    Nome: CRON_SECRET   Valore: lo stesso segreto impostato su Render.
-# 2) Su Render: Environment → aggiungi CRON_SECRET con lo stesso valore.
-# 3) (Opz.) Variables → APP_BASE_URL se il dominio cambia (default sotto).
+#    Nome: CRON_SECRET   Valore: lo stesso segreto impostato nelle env Vercel.
+# 2) Su Vercel: Project → Settings → Environment Variables → CRON_SECRET (stesso valore).
+# 3) Su GitHub: Settings → Secrets and variables → Actions → Variables → APP_BASE_URL
+#    = dominio Vercel (es. https://<progetto>.vercel.app). Obbligatorio (nessun default).
 # Trigger: automatico ogni lunedì mattina + manuale (tab Actions → Run workflow).
 name: Agenti automatici
 
@@ -23,13 +24,17 @@ jobs:
   run-agents:
     runs-on: ubuntu-latest
     env:
-      BASE_URL: ${{ vars.APP_BASE_URL || 'https://social-media-manager-zte4.onrender.com' }}
+      BASE_URL: ${{ vars.APP_BASE_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
-      - name: Verifica CRON_SECRET
+      - name: Verifica CRON_SECRET e APP_BASE_URL
         run: |
           if [ -z "$CRON_SECRET" ]; then
             echo "::error::CRON_SECRET mancante. Aggiungilo in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          if [ -z "$BASE_URL" ]; then
+            echo "::error::APP_BASE_URL mancante. Impostala in Settings → Secrets and variables → Actions → Variables (dominio Vercel)."
             exit 1
           fi
       - name: Esegui gli agenti (solo clienti AUTO + agenti abilitati)

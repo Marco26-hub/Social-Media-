@@ -106,10 +106,9 @@ export async function GET(request: NextRequest) {
   const hasAi = checks.anthropic || checks.openrouter
   const ready = hasDatabase && checks.adminUser && checks.authSecret && checks.nextauthUrl && hasAi
 
-  // Commit SHA del deploy (Render espone RENDER_GIT_COMMIT). Serve a confermare
-  // QUALE build è realmente online (i deploy Render tengono su la vecchia istanza
-  // finché la nuova non passa l'healthcheck, quindi l'endpoint da solo non basta).
-  const version = (process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || '').slice(0, 7) || 'unknown'
+  // Commit SHA del deploy (Vercel espone VERCEL_GIT_COMMIT_SHA). Serve a confermare
+  // QUALE build è realmente online. RENDER_GIT_COMMIT resta come fallback storico.
+  const version = (process.env.VERCEL_GIT_COMMIT_SHA || process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || '').slice(0, 7) || 'unknown'
 
   // Liveness vs readiness: torniamo 503 SOLO su fallimento CRITICO (in produzione
   // con DATABASE_URL ma DB irraggiungibile o schema mancante) così Render rileva

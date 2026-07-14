@@ -8,6 +8,9 @@ import { notifyAgency } from '@/lib/notifications'
 import { isAgentEnabled } from '@/lib/agent-config'
 
 export const dynamic = 'force-dynamic'
+// Loop sincrono su N clienti × chiamate AI: può superare i 60s. Vercel Pro consente
+// fino a 300s (il cron esterno dà 5 min per endpoint). Vedi piano migrazione, Parte C1.
+export const maxDuration = 300
 
 // Agente Ads schedulato. Auth a due vie: bearer CRON_SECRET (scheduler esterno)
 // OPPURE sessione admin (trigger manuale). Genera campagne SOLO per i clienti che

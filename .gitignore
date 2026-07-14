@@ -11,3 +11,9 @@ public/uploads/
 
 # demo walkthrough output
 demo/
+
+# graphify knowledge-graph output (local tooling)
+graphify-out/
+
+# stray local env dumps — never commit
+env.download

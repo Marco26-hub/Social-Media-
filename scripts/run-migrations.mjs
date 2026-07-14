@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { neon } from '@neondatabase/serverless'
+import pg from 'pg'
 import { createHash } from 'node:crypto'
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -23,82 +23,26 @@ function checksum(content) {
   return createHash('sha256').update(content).digest('hex')
 }
 
+// Normalizza la connection string per Supabase: rimuove sslmode (pg lo tratta come
+// verify-full e rifiuta il cert chain del pooler) e imposta ssl esplicito. Traffico
+// comunque cifrato (TLS). sslmode=disable → nessun SSL (Postgres locale).
+function pgConfig(url) {
+  try {
+    const u = new URL(url)
+    const disable = u.searchParams.get('sslmode') === 'disable'
+    u.searchParams.delete('sslmode')
+    return { connectionString: u.toString(), ssl: disable ? false : { rejectUnauthorized: false } }
+  } catch {
+    return { connectionString: url, ssl: { rejectUnauthorized: false } }
+  }
+}
+
 function explainTarget(files) {
   const suffix = onlyFile ? ` solo ${onlyFile}` : ''
   console.log(`Migrazioni trovate${suffix}:`)
   for (const file of files) {
     console.log(`- ${file}`)
   }
-}
-
-function stripSqlComments(content) {
-  return content
-    .split('\n')
-    .map((line) => line.replace(/--.*$/g, ''))
-    .join('\n')
-}
-
-function splitSqlStatements(content) {
-  const sql = stripSqlComments(content)
-  const statements = []
-  let current = ''
-  let inSingleQuote = false
-  let inDoubleQuote = false
-  let dollarQuoteTag = null
-
-  for (let index = 0; index < sql.length; index += 1) {
-    const char = sql[index]
-    const next = sql[index + 1]
-
-    if (!inSingleQuote && !inDoubleQuote) {
-      if (!dollarQuoteTag && char === '$') {
-        const rest = sql.slice(index)
-        const match = rest.match(/^\$[A-Za-z0-9_]*\$/)
-        if (match) {
-          dollarQuoteTag = match[0]
-          current += dollarQuoteTag
-          index += dollarQuoteTag.length - 1
-          continue
-        }
-      } else if (dollarQuoteTag && sql.startsWith(dollarQuoteTag, index)) {
-        current += dollarQuoteTag
-        index += dollarQuoteTag.length - 1
-        dollarQuoteTag = null
-        continue
-      }
-    }
-
-    if (!dollarQuoteTag && !inDoubleQuote && char === "'" && next === "'") {
-      current += char + next
-      index += 1
-      continue
-    }
-
-    if (!dollarQuoteTag && !inDoubleQuote && char === "'") {
-      inSingleQuote = !inSingleQuote
-      current += char
-      continue
-    }
-
-    if (!dollarQuoteTag && !inSingleQuote && char === '"') {
-      inDoubleQuote = !inDoubleQuote
-      current += char
-      continue
-    }
-
-    if (!dollarQuoteTag && !inSingleQuote && !inDoubleQuote && char === ';') {
-      const statement = current.trim()
-      if (statement) statements.push(statement)
-      current = ''
-      continue
-    }
-
-    current += char
-  }
-
-  const tail = current.trim()
-  if (tail) statements.push(tail)
-  return statements
 }
 
 async function main() {
@@ -119,62 +63,74 @@ async function main() {
     return
   }
 
-  const databaseUrl = process.env.DATABASE_URL?.trim()
+  // Le migrazioni girano sulla connessione DIRETTA (Supabase: pooler session :5432,
+  // IPv4). NON usare il pooler transaction :6543 qui: serve multi-statement/DDL.
+  // Fallback a DATABASE_URL per il locale dove ce n'è una sola.
+  const databaseUrl = (process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL)?.trim()
   if (!databaseUrl) {
-    console.error('DATABASE_URL mancante. Impostala prima di eseguire le migrazioni Neon.')
+    console.error('DIRECT_DATABASE_URL/DATABASE_URL mancante. Impostala prima di eseguire le migrazioni.')
     process.exit(1)
   }
 
-  const sql = neon(databaseUrl)
+  // Supabase pooler: rimuovi sslmode dalla stringa (pg lo tratta come verify-full e
+  // rifiuta il cert chain) e imposta ssl esplicito. Traffico comunque cifrato (TLS).
+  const { connectionString, ssl } = pgConfig(databaseUrl)
+  const client = new pg.Client({ connectionString, ssl })
+  await client.connect()
 
-  await sql.query(`
-    create table if not exists schema_migrations (
-      filename text primary key,
-      checksum text not null,
-      applied_at timestamptz not null default now()
-    )
-  `)
+  try {
+    await client.query(`
+      create table if not exists schema_migrations (
+        filename text primary key,
+        checksum text not null,
+        applied_at timestamptz not null default now()
+      )
+    `)
 
-  const appliedRows = await sql`select filename, checksum from schema_migrations`
-  const applied = new Map(appliedRows.map((row) => [row.filename, row.checksum]))
+    const appliedRows = (await client.query('select filename, checksum from schema_migrations')).rows
+    const applied = new Map(appliedRows.map((row) => [row.filename, row.checksum]))
 
-  explainTarget(files)
+    explainTarget(files)
 
-  for (const filename of files) {
-    const fullPath = path.join(migrationsDir, filename)
-    const content = await readFile(fullPath, 'utf8')
-    const hash = checksum(content)
-    const existingHash = applied.get(filename)
+    for (const filename of files) {
+      const fullPath = path.join(migrationsDir, filename)
+      const content = await readFile(fullPath, 'utf8')
+      const hash = checksum(content)
+      const existingHash = applied.get(filename)
 
-    if (existingHash) {
-      if (existingHash !== hash) {
-        throw new Error(
-          `Checksum diversa per ${filename}. Non modificare migration già applicate: crea una nuova migration.`
-        )
+      if (existingHash) {
+        if (existingHash !== hash) {
+          throw new Error(
+            `Checksum diversa per ${filename}. Non modificare migration già applicate: crea una nuova migration.`
+          )
+        }
+
+        console.log(`✓ skip ${filename}`)
+        continue
       }
 
-      console.log(`✓ skip ${filename}`)
-      continue
-    }
-
-    const statements = splitSqlStatements(content)
-    console.log(`→ apply ${filename} (${statements.length} statement)`)
-    for (const [statementIndex, statement] of statements.entries()) {
+      console.log(`→ apply ${filename}`)
       try {
-        await sql.query(statement)
+        // Invia il file INTERO: è Postgres a fare il parsing (commenti, dollar-quote,
+        // `;` nelle stringhe, CRLF). Niente splitter hand-rolled fragile. Tutti gli
+        // statement del file girano in un'unica transazione implicita: se uno fallisce,
+        // rollback dell'intero file (il record in schema_migrations avviene solo dopo).
+        await client.query(content)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-        throw new Error(`${filename} statement ${statementIndex + 1}/${statements.length}: ${message}`)
+        throw new Error(`${filename}: ${message}`)
       }
+      await client.query(
+        'insert into schema_migrations (filename, checksum) values ($1, $2)',
+        [filename, hash],
+      )
+      console.log(`✓ applied ${filename}`)
     }
-    await sql`
-      insert into schema_migrations (filename, checksum)
-      values (${filename}, ${hash})
-    `
-    console.log(`✓ applied ${filename}`)
-  }
 
-  console.log('Migrazioni completate.')
+    console.log('Migrazioni completate.')
+  } finally {
+    await client.end()
+  }
 }
 
 main().catch((error) => {
