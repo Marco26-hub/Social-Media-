@@ -1,6 +1,6 @@
 import { dbReady, q } from '@/lib/db'
 
-export const AGENT_KEYS = ['content', 'seo', 'ads', 'report', 'competitor'] as const
+export const AGENT_KEYS = ['content', 'seo', 'geo', 'ads', 'email', 'report', 'competitor'] as const
 export type AgentKey = typeof AGENT_KEYS[number]
 
 // Abilitazione GLOBALE (agenzia) di un agente. Riga assente o DB non pronto =

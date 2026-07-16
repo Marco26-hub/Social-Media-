@@ -40,7 +40,7 @@ jobs:
       - name: Esegui gli agenti (solo clienti AUTO + agenti abilitati)
         run: |
           fail=0
-          for path in genera-contenuti seo-audit ads report competitor-analysis; do
+          for path in genera-contenuti seo-audit geo-audit ads email-sequence report competitor-analysis; do
             echo "▶ $path"
             code=$(curl -s -o /tmp/out.json -w '%{http_code}' --max-time 300 -X POST \
               -H "Authorization: Bearer $CRON_SECRET" \

@@ -2,23 +2,25 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
-import { Sparkles, Search, Megaphone, FileText, Eye, Play, Loader2, RefreshCw, Settings } from 'lucide-react'
+import { Sparkles, Search, Megaphone, FileText, Eye, Play, Loader2, RefreshCw, Settings, Radar, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { isDemo } from '@/lib/demo'
 
-type AgentKey = 'content' | 'seo' | 'ads' | 'report' | 'competitor'
+type AgentKey = 'content' | 'seo' | 'geo' | 'ads' | 'email' | 'report' | 'competitor'
 
 const AGENTS: { key: AgentKey; nome: string; desc: string; endpoint: string; icon: typeof Sparkles; resultKey: string; unit: string }[] = [
   { key: 'content', nome: 'Contenuti', desc: 'Genera bozze contenuti (DA_APPROVARE) per i clienti in AUTO.', endpoint: '/api/agents/genera-contenuti', icon: Sparkles, resultKey: 'generati', unit: 'bozze' },
   { key: 'seo', nome: 'SEO / GEO', desc: 'Audit SEO e visibilità AI, con score e miglioramenti.', endpoint: '/api/agents/seo-audit', icon: Search, resultKey: 'audit_fatti', unit: 'audit' },
+  { key: 'geo', nome: 'GEO Citabilità', desc: 'Punteggio di citabilità AI calcolato sugli articoli blog pubblicati.', endpoint: '/api/agents/geo-audit', icon: Radar, resultKey: 'audit_fatti', unit: 'audit' },
   { key: 'ads', nome: 'Ads', desc: 'Campagne pubblicitarie sulle piattaforme del cliente.', endpoint: '/api/agents/ads', icon: Megaphone, resultKey: 'campagne', unit: 'campagne' },
+  { key: 'email', nome: 'Email', desc: 'Crea le sequenze email essenziali (welcome, recupero carrello) se mancanti.', endpoint: '/api/agents/email-sequence', icon: Mail, resultKey: 'sequenze_create', unit: 'sequenze' },
   { key: 'report', nome: 'Report cliente', desc: 'Report esecutivo periodico (cosa fatto, risultati, prossimi passi).', endpoint: '/api/agents/report', icon: FileText, resultKey: 'report_fatti', unit: 'report' },
   { key: 'competitor', nome: 'Competitor', desc: 'Analisi dei competitor salvati del cliente.', endpoint: '/api/agents/competitor-analysis', icon: Eye, resultKey: 'analisi', unit: 'analisi' },
 ]
 
 export default function AgentiPage() {
   const demo = isDemo()
-  const [config, setConfig] = useState<Record<AgentKey, boolean>>({ content: true, seo: true, ads: true, report: true, competitor: true })
+  const [config, setConfig] = useState<Record<AgentKey, boolean>>({ content: true, seo: true, geo: true, ads: true, email: true, report: true, competitor: true })
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState<AgentKey | null>(null)
   const [results, setResults] = useState<Record<string, { ok: boolean; text: string }>>({})
