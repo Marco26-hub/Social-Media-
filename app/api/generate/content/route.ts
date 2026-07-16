@@ -17,7 +17,7 @@ import {
 } from '@/lib/content-quality'
 import { getClientGenerationContext } from '@/lib/client-context'
 import { normalizeProductionCycleStage } from '@/lib/production-cycle'
-import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS, pickAngle } from '@/lib/prompt-standards'
+import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS, COPY_FRAMEWORKS, HOOK_FORMULAS, pickAngle } from '@/lib/prompt-standards'
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
 import { adaptRowForPlatform } from '@/lib/social-adapt'
 
@@ -117,6 +117,10 @@ function build(p: PromptSpec, brand: string, prodotto: string, canale: string, f
   return `${p.persona}
 
 ${PRO_COPY_STANDARDS}
+
+${COPY_FRAMEWORKS}
+
+${HOOK_FORMULAS}
 
 ${SEO_GEO_STANDARDS}
 

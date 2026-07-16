@@ -61,6 +61,75 @@ export function pickAngle(): string {
   return COPY_ANGLES[Math.floor(Math.random() * COPY_ANGLES.length)]
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// FRAMEWORK DI COPYWRITING (skill "market-copy" harvestata). Danno all'AI una
+// struttura persuasiva provata invece di prosa a caso. Il modello SCEGLIE il
+// framework giusto per obiettivo/canale e lo dichiara.
+// ─────────────────────────────────────────────────────────────────────────
+export const COPY_FRAMEWORKS = `FRAMEWORK PERSUASIVI (scegli quello giusto per obiettivo/formato, non mescolarli a caso):
+- AIDA (Attention→Interest→Desire→Action): awareness e post di vendita classici. Aggancia, incuriosisci, fai desiderare, chiedi l'azione.
+- PAS (Problem→Agitate→Solve): quando c'è un dolore reale del target. Nomina il problema, alza la posta ("ogni giorno che aspetti..."), risolvi col prodotto.
+- BAB (Before→After→Bridge): trasformazioni e prima/dopo. Stato attuale → stato desiderato → il prodotto è il ponte.
+- FAB (Feature→Advantage→Benefit): quando il prodotto ha caratteristiche concrete. Ogni feature si traduce in vantaggio e poi in beneficio emotivo per il cliente.
+- PASTOR (Problem→Amplify→Story→Transformation→Offer→Response): copy lunghi/email/landing. Aggiunge storia e prova sociale.
+- 4U (Useful, Urgent, Unique, Ultra-specific): per headline e hook. Ogni titolo forte è utile, urgente, unico e ultra-specifico.
+Regola: dichiara il framework usato nel campo strategico (se previsto) e mantieni UNA sola linea persuasiva coerente dall'hook alla CTA.`
+
+// Formule di HOOK ad alta ritenzione, per piattaforma (prime 1-2 righe / 0-2s).
+// L'hook è il 90% della resa: qui format concreti, non "sii accattivante".
+export const HOOK_FORMULAS = `FORMULE DI HOOK (il primo secondo decide tutto — usa UN format, mai generico):
+- Curiosity gap: "Nessuno ti dice questo su [tema]..." (apri un anello che si chiude solo continuando).
+- Numero/lista: "3 errori che rovinano [risultato]" (specifico, scannabile).
+- Contrarian: "Smetti di [pratica comune]. Ecco perché." (sfida una convinzione diffusa).
+- POV / micro-storia: "POV: hai appena [situazione reale del target]".
+- Risultato-first: mostra l'esito prima del processo ("Da X a Y in [tempo]").
+- Callout diretto: "Se [target specifico], questo è per te."
+- Domanda ad alta tensione: una domanda precisa che il target si fa davvero.
+- Pattern interrupt: un'affermazione inattesa che ferma lo scroll ("Avevo torto su [tema]").
+Vietato l'hook decorativo o riassuntivo ("Scopri il nostro nuovo..."). L'hook promette un payoff e il contenuto lo mantiene.`
+
+// Formule di HEADLINE/TITLE (blog, articoli, landing, pin, YouTube).
+export const HEADLINE_FORMULAS = `FORMULE DI HEADLINE (titoli che si cliccano e si citano):
+- How-to: "Come [ottenere risultato] senza [ostacolo]".
+- Listicle: "[N] modi per [risultato] nel 2026".
+- Domanda (ottima per SEO/GEO): "Cosa/Come/Perché [query reale dell'utente]?" — matcha la ricerca su Google e AI.
+- Beneficio ultra-specifico: numero + tempo + risultato ("Riduci [X] del 40% in 30 giorni").
+- 4U check: ogni titolo deve essere Utile, Urgente, Unico, Ultra-specifico.
+Test dei 5 secondi: un nuovo visitatore capisce cosa offri e per chi entro 5 secondi dal titolo? Se no, riscrivi.`
+
+// E-E-A-T: segnali di Esperienza/Competenza/Autorevolezza/Affidabilità che
+// Google e gli AI-search premiano. Chiave per blog e contenuti "people-first".
+export const EEAT_STANDARDS = `E-E-A-T (Experience, Expertise, Authoritativeness, Trust — obbligatorio per blog/contenuti informativi):
+- Esperienza: parla in prima persona quando reale ("nella nostra esperienza con [N] clienti/prodotti..."), dettagli di prima mano, non teoria generica.
+- Competenza: precisione tecnica del settore, terminologia corretta, distinzioni che solo un esperto fa.
+- Autorevolezza: cita fonti reali quando disponibili, dati con anno, riferimenti verificabili (mai fonti inventate).
+- Affidabilità: nessun claim non verificabile, nessuna promessa garantita, trasparenza su limiti/eccezioni.
+- Anti-allucinazione: se un dato/statistica non è fornito nel contesto, NON inventarlo — usa un'affermazione qualitativa onesta o segnalalo come da verificare.`
+
+// Citabilità GEO: come farsi ESTRARRE e citare da ChatGPT/Perplexity/Gemini/Google AI.
+// Deriva dalla skill "geo-citability" (ricerca Princeton/Georgia Tech/IIT Delhi).
+export const GEO_CITABILITY_STANDARDS = `CITABILITÀ AI / GEO (per essere citati da ChatGPT, Perplexity, Google AI Overviews):
+- Risposta-prima: ogni sezione apre con 1-2 frasi che rispondono DIRETTAMENTE alla domanda (pattern "X è...", "X significa..."). I primi 40-60 caratteri-parola devono reggersi da soli come risposta completa.
+- Passaggi auto-contenuti: ogni paragrafo nomina esplicitamente il soggetto (mai iniziare con "esso/questo/ma/tuttavia"), comprensibile fuori contesto, lunghezza ideale 40-70 parole (ottimo per estrazione: ~130-160 parole per blocco denso).
+- Densità di fatti: numeri specifici, percentuali, date, entità nominate (mai "molti", "diversi", "un sacco"). Se il dato non è fornito, non inventarlo.
+- Struttura scannabile: heading a domanda ("Cos'è...?", "Come funziona...?"), paragrafi brevi (2-4 frasi), liste per elenchi, tabelle per confronti di 3+ elementi, termini chiave in grassetto alla prima occorrenza.
+- Unicità: prospettiva, esempi o dati originali del brand ("dalla nostra esperienza con...") che un'AI non trova altrove — è ciò che rende la pagina una fonte necessaria.`
+
+// Stack completo "elite": tutti i moduli persuasivi+SEO/GEO in un colpo solo, per
+// i generatori che vogliono il massimo (blog high, landing, contenuti premium).
+export function eliteCopyStack(): string {
+  return [COPY_FRAMEWORKS, HOOK_FORMULAS, HEADLINE_FORMULAS, EEAT_STANDARDS, GEO_CITABILITY_STANDARDS].join('\n\n')
+}
+
+// Sceglie un framework persuasivo coerente col formato (per generazioni singole).
+export function pickFramework(formato?: string): string {
+  const f = (formato || '').toLowerCase()
+  if (['blog', 'articolo', 'landing', 'email'].some(x => f.includes(x))) return 'PASTOR'
+  if (['reel', 'video', 'short', 'story', 'tiktok'].some(x => f.includes(x))) return 'BAB'
+  if (['carousel', 'carosello', 'pin'].some(x => f.includes(x))) return 'AIDA'
+  return 'PAS'
+}
+
 // Builder di system prompt coerente per i generatori di copy.
 export function proSystemPrompt(role: string, opts: { settore?: string; brand?: string; quality?: string } = {}): string {
   const ctx = [

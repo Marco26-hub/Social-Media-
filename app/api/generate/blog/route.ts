@@ -6,7 +6,7 @@ import { isDemo } from '@/lib/demo'
 import { resolveContentQuality, summarizeQualityForPrompt } from '@/lib/content-quality'
 import { getClientGenerationContext } from '@/lib/client-context'
 import { buildGenerationOptimizationCyclePrompt } from '@/lib/production-cycle'
-import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS } from '@/lib/prompt-standards'
+import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS, EEAT_STANDARDS, GEO_CITABILITY_STANDARDS, HEADLINE_FORMULAS } from '@/lib/prompt-standards'
 import { safeImageUrl } from '@/lib/blog-render'
 import { upsertBlogCalendarEntry } from '@/lib/blog-calendar'
 
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
       .replace('{{ASSET_CONTEXT}}', assetContext)
       .replace('{{QUALITY_CONTEXT}}', summarizeQualityForPrompt(contentQuality))
       .replace('{{OPTIMIZATION_CYCLE}}', buildGenerationOptimizationCyclePrompt(contentQuality))
-      + '\n\n' + PRO_COPY_STANDARDS + '\n\n' + SEO_GEO_STANDARDS
+      + '\n\n' + PRO_COPY_STANDARDS + '\n\n' + HEADLINE_FORMULAS + '\n\n' + SEO_GEO_STANDARDS + '\n\n' + EEAT_STANDARDS + '\n\n' + GEO_CITABILITY_STANDARDS
 
     const aiRes = await callAI({
       model: model || 'gemini-2.5-flash',

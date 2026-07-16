@@ -111,7 +111,7 @@ export async function generateBlogLocal(opts: RunOpts): Promise<{ article: BlogA
     systemPrompt: 'Sei un copywriter SEO/GEO senior. Italiano impeccabile, mai parole attaccate. Rispondi SOLO con JSON valido.',
     userPrompt:
       `Articolo su "${tema}" per ${brandName(brand)}. H1: "${h1}". Angolo: ${angle}. Keyword: ${primaria}.\n` +
-      `Scrivi l'INTRODUZIONE (60-90 parole) che risponde SUBITO all'intento di ricerca (ottimo per AI search/GEO). JSON: {"intro":"..."}`,
+      `Scrivi l'INTRODUZIONE (60-90 parole) che risponde SUBITO all'intento di ricerca (ottimo per AI search/GEO): prima frase = risposta diretta con il soggetto esplicito (mai "questo/esso"), un dato concreto se disponibile. JSON: {"intro":"..."}`,
     maxTokens: 600,
     ...keys,
   })
@@ -127,7 +127,7 @@ export async function generateBlogLocal(opts: RunOpts): Promise<{ article: BlogA
       userPrompt:
         `Articolo: "${h1}" (${brandName(brand)}). Keyword: ${primaria}, ${secondarie.join(', ')}.\n` +
         `Scrivi SOLO questa sezione.\nH2: "${sez.h2}"\nPunti da coprire: ${(sez.punti || []).join('; ')}\n\n` +
-        `2-3 paragrafi (40-70 parole l'uno), chiari e utili. Includi 1 lista puntata se sensato. ` +
+        `2-3 paragrafi (40-70 parole l'uno), chiari e utili, auto-contenuti (nomina sempre il soggetto, mai iniziare con un pronome). Includi 1 lista puntata se sensato. ` +
         `JSON: {"h2":"${sez.h2}","paragrafi":["..."],"lista_punti":["..."]}`,
       maxTokens: 1100,
       ...keys,

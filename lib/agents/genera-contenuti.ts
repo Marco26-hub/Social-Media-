@@ -4,7 +4,8 @@ import { brandField } from '@/lib/client-context'
 import { normalizeProductionCycleStage } from '@/lib/production-cycle'
 import {
   TREND_MODERN_STANDARDS, PRO_COPY_STANDARDS, SEO_GEO_STANDARDS,
-  DIVERSITY_STANDARDS, FUNNEL_STANDARDS, pickAngle, proSystemPrompt,
+  DIVERSITY_STANDARDS, FUNNEL_STANDARDS, COPY_FRAMEWORKS, HOOK_FORMULAS,
+  pickAngle, proSystemPrompt,
 } from '@/lib/prompt-standards'
 import {
   buildExtendedOutputSchema, resolveContentQuality, getQualityTokenBudget,
@@ -98,6 +99,8 @@ function buildSystemPrompt(settore: string, nomeBrand: string, quality: string):
     proSystemPrompt('social media manager senior e copywriter fashion', { settore, brand: nomeBrand, quality }),
     TREND_MODERN_STANDARDS,
     PRO_COPY_STANDARDS,
+    COPY_FRAMEWORKS,
+    HOOK_FORMULAS,
     SEO_GEO_STANDARDS,
     FUNNEL_STANDARDS,
     DIVERSITY_STANDARDS,
