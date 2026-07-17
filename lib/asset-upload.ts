@@ -57,7 +57,15 @@ export async function uploadAssets(form: FormData): Promise<UploadResult> {
         body: file,
         headers: { 'Content-Type': item.mime || file.type || 'application/octet-stream' },
       })
-      if (!put.ok) { skipped.push({ name: item.name, motivo: `upload storage fallito (HTTP ${put.status})` }); return }
+      if (!put.ok) {
+        // 413 dallo STORAGE (non da Vercel): il file supera il limite del bucket
+        // Supabase (default 50MB). Messaggio azionabile invece di un HTTP 413 nudo.
+        const motivo = put.status === 413
+          ? `supera il limite del bucket (${Math.round(file.size / 1024 / 1024)}MB): aumenta "File size limit" del bucket su Supabase Storage`
+          : `upload storage fallito (HTTP ${put.status})`
+        skipped.push({ name: item.name, motivo })
+        return
+      }
       assets.push({ name: item.name, url: item.url, path: item.path, mime: item.mime, kind: item.kind, size: file?.size, source: 'upload', storage: 'storage' })
     } catch (e) {
       skipped.push({ name: item.name, motivo: `upload interrotto: ${(e as Error).message}` })
