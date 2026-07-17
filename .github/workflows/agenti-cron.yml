@@ -1,18 +1,25 @@
-# Scheduler automatico degli agenti (gratis, dentro GitHub — nessun servizio esterno).
+# Runner degli agenti (gratis, dentro GitHub — nessun servizio esterno).
 # Chiama gli endpoint /api/agents/* con l'header Authorization: Bearer CRON_SECRET.
 #
-# SETUP (una volta):
-# 1) Su GitHub: Settings → Secrets and variables → Actions → New repository secret
-#    Nome: CRON_SECRET   Valore: lo stesso segreto impostato nelle env Vercel.
-# 2) Su Vercel: Project → Settings → Environment Variables → CRON_SECRET (stesso valore).
-# 3) Su GitHub: Settings → Secrets and variables → Actions → Variables → APP_BASE_URL
-#    = dominio Vercel (es. https://<progetto>.vercel.app). Obbligatorio (nessun default).
-# Trigger: automatico ogni lunedì mattina + manuale (tab Actions → Run workflow).
+# STATO: esecuzione AUTOMATICA A CALENDARIO DISATTIVATA (scelta: 2026-07-17).
+# Gli agenti si lanciano a mano, in due modi:
+#   - dal prodotto: /dashboard/agenti → "Esegui ora" (usa la sessione admin,
+#     NON serve CRON_SECRET né APP_BASE_URL) — è il modo consigliato per l'admin;
+#   - da qui: tab Actions → questo workflow → "Run workflow" (manuale). Per questa
+#     via servono i due valori sotto.
+#
+# Per RIATTIVARE il cron automatico: togli il commento al blocco `schedule:`.
+# Setup necessario SOLO per il "Run workflow" da GitHub (o per il cron):
+# 1) GitHub: Settings → Secrets and variables → Actions → Secrets → CRON_SECRET
+#    = stesso valore della env CRON_SECRET su Vercel.
+# 2) GitHub: Settings → Secrets and variables → Actions → Variables → APP_BASE_URL
+#    = dominio prod SENZA slash finale (es. https://www.socialautomation.app).
 name: Agenti automatici
 
 on:
-  schedule:
-    - cron: '0 7 * * 1'   # ogni lunedì 07:00 UTC (~09:00 in Italia)
+  # Esecuzione automatica a calendario DISATTIVATA: scommenta per riattivarla.
+  # schedule:
+  #   - cron: '0 7 * * 1'   # ogni lunedì 07:00 UTC (~09:00 in Italia)
   workflow_dispatch: {}
 
 # Un solo run alla volta (evita sovrapposizioni se un run è lento).
