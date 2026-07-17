@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-utils'
+import { apiError } from '@/lib/api-error'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,9 +30,14 @@ function fmtContext(n: unknown): string {
 }
 
 export async function GET() {
+  // Auth fuori dal try: un utente non autenticato deve ricevere 401 (via apiError),
+  // non un 502 "OpenRouter giù" che maschererebbe il vero motivo.
   try {
     await requireAuth()
-
+  } catch (e) {
+    return apiError(e)
+  }
+  try {
     if (cache && Date.now() - cache.at < TTL_MS) {
       return NextResponse.json({ ok: true, cached: true, models: cache.models })
     }
