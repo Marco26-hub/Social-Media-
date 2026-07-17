@@ -7,7 +7,8 @@ import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, Ima
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
-import { readAISettings, readApiError } from '@/lib/ai-client'
+import { readAISettings } from '@/lib/ai-client'
+import { uploadAssets } from '@/lib/asset-upload'
 import { useGeneration } from '@/components/GenerationProvider'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
@@ -63,9 +64,7 @@ export default function PianoPage() {
         const form = new FormData()
         form.append('cliente_id', clienteId)
         chunk.forEach(file => form.append('files', file))
-        const res = await fetch('/api/assets/upload', { method: 'POST', body: form })
-        if (!res.ok) throw new Error(await readApiError(res, 'Upload media fallito'))
-        const data = await res.json() as { assets?: PlanAsset[] }
+        const data = await uploadAssets(form)
         const uploaded = (data.assets || []).map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind }))
         setPlanAssets(prev => [...prev, ...uploaded])
       }

@@ -83,6 +83,30 @@ export async function uploadToStorage(
 }
 
 /**
+ * Genera un URL PRESIGNED per un PUT diretto dal browser sul bucket (SigV4 in
+ * query string). Serve per aggirare il limite ~4.5MB del body delle serverless
+ * function di Vercel: il file NON passa dal nostro server, il browser lo carica
+ * dritto su S3/Storage. Firma solo host+metodo+path+query (Content-Type resta
+ * header non firmato: il browser lo manda comunque e lo storage lo memorizza).
+ * `expiresIn` in secondi (default 10 min).
+ */
+export async function presignPutUrl(key: string, expiresIn = 600): Promise<string> {
+  if (!isStorageConfigured()) throw new Error('Storage non configurato')
+  const url = new URL(`${STORAGE_ENDPOINT}/${STORAGE_BUCKET}/${key}`)
+  url.searchParams.set('X-Amz-Expires', String(expiresIn))
+  const signed = await storageClient().sign(url.toString(), { method: 'PUT', aws: { signQuery: true } })
+  return signed.url
+}
+
+/**
+ * URL pubblico diretto di una key se il bucket è pubblico (STORAGE_PUBLIC_URL),
+ * altrimenti null (il chiamante userà il proxy /api/assets/file).
+ */
+export function publicUrlForKey(key: string): string | null {
+  return STORAGE_PUBLIC_URL ? `${STORAGE_PUBLIC_URL}/${key}` : null
+}
+
+/**
  * Scarica un oggetto dal bucket privato (per il proxy /api/assets/file).
  * Ritorna byte + content-type, o null se non trovato/errore.
  */

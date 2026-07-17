@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { PenLine, Search, ListTree, FileText, HelpCircle, Tag, Loader2, CheckCircle2, Sparkles, AlertCircle, Clock, Cloud, Image as ImageIcon, X } from 'lucide-react'
 import { readClienteId } from '@/lib/use-data'
 import { readApiError } from '@/lib/ai-client'
+import { uploadAssets } from '@/lib/asset-upload'
 import BlogArticlesList from '@/components/BlogArticlesList'
 
 type Step = { name: string; label: string; ok: boolean; detail?: string }
@@ -43,11 +44,9 @@ export default function BlogPage() {
       const fd = new FormData()
       fd.append('cliente_id', readClienteId() || '')
       fd.append('files', file)
-      const r = await fetch('/api/assets/upload', { method: 'POST', body: fd })
-      const d = await r.json()
-      if (!r.ok) { setError(d.error || 'Upload immagine fallito'); return }
+      const d = await uploadAssets(fd)
       setCover(d.assets?.[0]?.url || '')
-    } catch { setError('Errore upload immagine') }
+    } catch (e) { setError((e as Error).message || 'Errore upload immagine') }
     finally { setUploadingCover(false) }
   }
 

@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto'
 import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'
 import { NextResponse } from 'next/server'
@@ -6,6 +5,7 @@ import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { getPublicBaseUrl } from '@/lib/base-url'
 import { apiError } from '@/lib/api-error'
 import { isStorageConfigured, uploadToStorage } from '@/lib/storage'
+import { safeFilename } from '@/lib/asset-name'
 
 export const runtime = 'nodejs'
 
@@ -19,21 +19,6 @@ function mediaKind(mime: string) {
   if (ALLOWED_VIDEO_MIME.has(mime)) return 'video'
   if (ALLOWED_IMAGE_MIME.has(mime)) return 'image'
   return null
-}
-
-function safeFilename(name: string) {
-  const ext = path.extname(name).toLowerCase() || '.jpg'
-  const base = path.basename(name, ext)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 48) || 'asset'
-  // Suffisso random ad alta entropia (80 bit): il nome file è parte della
-  // "capability URL" con cui /api/assets/file serve l'asset senza login (Blotato e
-  // i link preview pubblici devono poterlo leggere). Un suffisso corto sarebbe
-  // indovinabile; qui + il clienteId (UUID) rendono l'URL di fatto non enumerabile.
-  const token = randomUUID().replace(/-/g, '').slice(0, 20)
-  return `${base}-${token}${ext}`
 }
 
 export async function POST(request: Request) {

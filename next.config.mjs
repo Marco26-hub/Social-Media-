@@ -17,7 +17,13 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://drive.google.com https://lh3.googleusercontent.com https://images.unsplash.com https://*.supabase.co",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  // connect-src: 'self' per le chiamate AI (proxate dal server) + host Supabase per
+  // l'UPLOAD DIRETTO browser→Storage (presigned PUT). Necessario perché Vercel
+  // limita il body delle serverless function a ~4.5MB: i media (soprattutto MP4)
+  // NON possono passare da /api/assets/upload, vanno caricati diretti sul bucket.
+  // Il wildcard copre sia l'host API (<ref>.supabase.co) sia lo storage S3
+  // (<ref>.storage.supabase.co).
+  "connect-src 'self' https://*.supabase.co",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

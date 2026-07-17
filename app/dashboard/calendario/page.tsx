@@ -11,6 +11,7 @@ import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
 import { readClienteId } from '@/lib/use-data'
 import { readAISettings, readApiError } from '@/lib/ai-client'
+import { uploadAssets } from '@/lib/asset-upload'
 import { useRuntimeDemo } from '@/lib/demo-client'
 
 const CANALI = ['tutti','instagram','facebook','tiktok','pinterest','linkedin','threads','x','youtube_shorts','blog']
@@ -407,9 +408,7 @@ function CalendarioInner() {
       const form = new FormData()
       form.append('cliente_id', clienteId)
       form.append('files', file)
-      const uploadRes = await fetch('/api/assets/upload', { method: 'POST', body: form })
-      if (!uploadRes.ok) throw new Error(await readApiError(uploadRes, 'Caricamento media fallito'))
-      const uploadData = await uploadRes.json() as { assets?: { url: string; mime?: string; kind?: string }[] }
+      const uploadData = await uploadAssets(form)
       const uploaded = uploadData.assets?.[0]
       const url = uploaded?.url
       if (!url) throw new Error('Upload riuscito ma nessun URL restituito')

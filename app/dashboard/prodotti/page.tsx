@@ -5,6 +5,7 @@ import type { Prodotto } from '@/lib/types'
 import { demoProdotti } from '@/lib/demo-data'
 import { isDemo } from '@/lib/demo'
 import { readClienteId } from '@/lib/use-data'
+import { uploadAssets } from '@/lib/asset-upload'
 import { Camera, Loader2 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -46,9 +47,8 @@ export default function ProdottiPage() {
       const form = new FormData()
       form.append('cliente_id', clienteId || '')
       form.append('files', file)
-      const upRes = await fetch('/api/assets/upload', { method: 'POST', body: form })
-      const upData = await upRes.json()
-      if (!upRes.ok || !upData.assets?.[0]?.url) throw new Error(upData.error || 'Upload fallito')
+      const upData = await uploadAssets(form)
+      if (!upData.assets?.[0]?.url) throw new Error('Upload fallito')
 
       const patchRes = await fetch('/api/data/prodotti', {
         method: 'PATCH',

@@ -12,7 +12,8 @@ import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import type { Contenuto } from '@/lib/types'
 import { useActiveClienteId } from '@/lib/tenant/client'
-import { DEFAULT_AI_MODEL, readAISettings, readApiError } from '@/lib/ai-client'
+import { DEFAULT_AI_MODEL, readAISettings } from '@/lib/ai-client'
+import { uploadAssets as uploadAssetsToStorage } from '@/lib/asset-upload'
 import { useGeneration } from '@/components/GenerationProvider'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
@@ -142,9 +143,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       const selectedFiles = Array.from(files).slice(0, MAX_POST_ASSETS - assets.length)
       selectedFiles.forEach(file => form.append('files', file))
       const previews = new Map(selectedFiles.map(file => [file.name, URL.createObjectURL(file)]))
-      const res = await fetch('/api/assets/upload', { method: 'POST', body: form })
-      if (!res.ok) throw new Error(await readApiError(res, 'Upload media fallito'))
-      const data = await res.json() as { assets?: UploadedAsset[]; skipped?: { name: string; motivo: string }[] }
+      const data = await uploadAssetsToStorage(form)
       // name prefillato dal filename pulito (l'utente può correggerlo).
       const uploaded = (data.assets || []).map(asset => ({ ...asset, previewUrl: previews.get(asset.name) || asset.url, name: prettyName(asset.name) }))
       setAssets(prev => [...prev, ...uploaded].slice(0, MAX_POST_ASSETS))
