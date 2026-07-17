@@ -77,7 +77,7 @@ function fill(template: string, ctx: Record<string, string>): string {
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { url, model, openrouter_key, gemini_key, opencode_key } = await request.json()
+    const { url, model, openrouter_key, gemini_key, opencode_key, agnes_key } = await request.json()
     if (!url) {
       return NextResponse.json({ error: 'url richiesto' }, { status: 400 })
     }
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
       model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: 'Sei un brand strategist senior. Analisi SOLO sul contenuto reale fornito. È severamente vietato inventare dati: se un’informazione non è nel contenuto, scrivi "non rilevabile". Rispondi SOLO con JSON valido.',
       userPrompt,
-      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key || undefined,
+      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key || undefined, agnesKey: agnes_key || undefined,
       maxTokens: 2000,
     })
 

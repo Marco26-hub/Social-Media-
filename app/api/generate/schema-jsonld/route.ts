@@ -30,6 +30,7 @@ async function extractFaqFromContent(content: string, keys: Row): Promise<FaqIte
     openrouterKey: keys.openrouterKey as string | undefined,
     geminiKey: keys.geminiKey as string | undefined,
     opencodeKey: keys.opencodeKey as string | undefined,
+    agnesKey: keys.agnesKey as string | undefined,
     maxTokens: 1600,
     meta: { tipo: 'schema_faq', agentName: 'seo' },
   })
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const {
       cliente_id, tipo, url, image, headline, description, date_published, keywords,
-      product_id, faq, steps, items, content, model, openrouter_key, gemini_key, opencode_key,
+      product_id, faq, steps, items, content, model, openrouter_key, gemini_key, opencode_key, agnes_key,
     } = body
     const tipoNorm = String(tipo || 'auto').toLowerCase()
 
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
     const base = siteBase(brand, cliente)
     const nomeBrand = brand ? brandField(brand, 'brand_name', brandField(brand, 'nome', 'Brand')) : 'Brand'
     const logo = (brand?.logo_url as string) || (brand?.logo as string) || ''
-    const keys = { model, openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key }
+    const keys = { model, openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key }
 
     const warnings: string[] = []
     const schemas: JsonLd[] = []

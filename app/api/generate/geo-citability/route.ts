@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   try {
     await requireAuth()
     const body = await request.json()
-    const { cliente_id, content, slug, rewrite_weak, model, openrouter_key, gemini_key, opencode_key } = body
+    const { cliente_id, content, slug, rewrite_weak, model, openrouter_key, gemini_key, opencode_key, agnes_key } = body
 
     let blocks: ContentBlock[] = []
     let sourceLabel = 'contenuto fornito'
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
             model: model || 'gemini-2.5-flash',
             systemPrompt: 'Sei un editor GEO/SEO senior. Rispondi SOLO con JSON valido, italiano impeccabile.',
             userPrompt: rewriteWeakBlockPrompt(w, original),
-            openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
+            openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
             maxTokens: 800,
             meta: { tipo: 'geo_rewrite', agentName: 'geo' },
           })

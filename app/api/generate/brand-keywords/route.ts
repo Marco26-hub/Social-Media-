@@ -51,7 +51,7 @@ Output SOLO JSON valido:
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, brand, settore, target, tono, model, openrouter_key, gemini_key, opencode_key } = await request.json()
+    const { cliente_id, brand, settore, target, tono, model, openrouter_key, gemini_key, opencode_key, agnes_key } = await request.json()
     const clientContext = await getClientGenerationContext(cliente_id)
     const brandIdentity = mergeBrandIdentity(clientContext, brand)
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: 'Sei un SEO/GEO strategist senior. Generi keyword e hashtag ottimizzati per search engines e AI. Rispondi SOLO con JSON valido.',
       userPrompt,
-      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key || undefined,
+      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key || undefined, agnesKey: agnes_key || undefined,
       maxTokens: 3000,
     })
 

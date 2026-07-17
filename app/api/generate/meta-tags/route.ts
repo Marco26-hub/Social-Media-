@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const {
       cliente_id, content, title, description, url, image_url, primary_keyword,
-      secondary_keywords, generate_variants, model, openrouter_key, gemini_key, opencode_key,
+      secondary_keywords, generate_variants, model, openrouter_key, gemini_key, opencode_key, agnes_key,
     } = body
 
     if (!content && !(title && description)) {
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
           secondaryKeywords: Array.isArray(secondary_keywords) ? secondary_keywords : undefined,
           url,
         }),
-        openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
+        openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
         maxTokens: 1600,
         meta: { clienteId: ctx?.clienteId || undefined, tipo: 'meta_tags', agentName: 'seo' },
       })

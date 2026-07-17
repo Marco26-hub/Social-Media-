@@ -8,6 +8,11 @@ const GEMINI_DEFAULT_MODEL = 'gemini-2.0-flash'
 const OPENCODE_API_URL = 'https://opencode.ai/zen/v1/chat/completions'
 const OPENCODE_PREFIX = 'opencode/'
 const OPENCODE_DEFAULT_MODEL = 'deepseek-v4-flash-free'
+// Agnes AI: gateway OpenAI-compatible (apihub.agnes-ai.com). I model id nativi
+// iniziano tutti con "agnes-" (agnes-2.0-flash, agnes-1.5-flash, agnes-image-*,
+// agnes-video-*) → nessun prefisso artificiale necessario per riconoscerli.
+const AGNES_API_URL = process.env.AGNES_API_URL || 'https://apihub.agnes-ai.com/v1/chat/completions'
+const AGNES_DEFAULT_MODEL = 'agnes-2.0-flash'
 // Ollama: server LLM LOCALE su localhost:11434. NIENTE key.
 // "Porta il tuo modello": gira sul Mac, zero costi, 100% privato, nessun rate-limit.
 // API nativa (/api/chat), non OpenAI-compatible (/v1/...): serve per poter alzare num_ctx —
@@ -47,7 +52,7 @@ function isVisionModel(model: string): boolean {
 }
 
 type AIAttempt = {
-  provider: 'openrouter' | 'anthropic' | 'gemini' | 'opencode' | 'ollama'
+  provider: 'openrouter' | 'anthropic' | 'gemini' | 'opencode' | 'ollama' | 'agnes'
   model: string
   ok: boolean
   error?: string
@@ -68,6 +73,11 @@ function isOpenCodeModel(model: string) {
 }
 function stripOpenCodePrefix(model: string) {
   return model.startsWith(OPENCODE_PREFIX) ? model.slice(OPENCODE_PREFIX.length) : model
+}
+
+// Modello Agnes AI: id nativi "agnes-*" (agnes-2.0-flash, agnes-image-2.1-flash...).
+function isAgnesModel(model: string) {
+  return model.startsWith('agnes-')
 }
 
 // Modello Ollama locale, marcato col prefisso 'ollama/' nella UI (es. ollama/gemma4:e4b).
@@ -222,6 +232,27 @@ async function tryOpenCodeModel(
   }
 }
 
+async function tryAgnesModel(
+  model: string,
+  systemPrompt: string | undefined,
+  userPrompt: string,
+  key: string,
+  maxTokens: number,
+  attempts: AIAttempt[],
+  images: string[] = [],
+  timeoutMs = 30000,
+): Promise<string | null> {
+  try {
+    const res = await callAgnes(model, systemPrompt, userPrompt, key, maxTokens, timeoutMs, images)
+    if (!res.trim()) throw new Error('Risposta AI vuota')
+    recordAttempt(attempts, { provider: 'agnes', model, ok: true })
+    return res
+  } catch (e) {
+    recordAttempt(attempts, { provider: 'agnes', model, ok: false, error: sanitizeAIError(e) })
+    return null
+  }
+}
+
 async function tryOllamaModel(
   model: string,
   systemPrompt: string | undefined,
@@ -257,6 +288,7 @@ async function callAIImpl(params: {
   openrouterKey?: string
   geminiKey?: string
   opencodeKey?: string
+  agnesKey?: string
   maxTokens?: number
   silentFallback?: boolean
   images?: string[]
@@ -277,6 +309,9 @@ async function callAIImpl(params: {
   const byoOpencode = (params.opencodeKey || '').trim()
   const validOpencode = /^sk-[A-Za-z0-9_-]{16,}$/.test(byoOpencode) ? byoOpencode : ''
   const opencodeKey = (validOpencode || process.env.OPENCODE_API_KEY || '').trim()
+  const byoAgnes = (params.agnesKey || '').trim()
+  const validAgnes = /^sk-[A-Za-z0-9_-]{16,}$/.test(byoAgnes) ? byoAgnes : ''
+  const agnesKey = (validAgnes || process.env.AGNES_API_KEY || '').trim()
 
   const attempts: AIAttempt[] = []
 
@@ -305,9 +340,14 @@ async function callAIImpl(params: {
     if (process.env.OPENCODE_API_KEY?.trim()) console.warn('[AI bridge]', msg, '— uso comunque la key server come fallback')
     else recordAttempt(attempts, { provider: 'opencode', model, ok: false, error: msg })
   }
+  if (byoAgnes && !validAgnes) {
+    const msg = 'Key Agnes AI non valida: deve iniziare con "sk-"'
+    if (process.env.AGNES_API_KEY?.trim()) console.warn('[AI bridge]', msg, '— uso comunque la key server come fallback')
+    else recordAttempt(attempts, { provider: 'agnes', model, ok: false, error: msg })
+  }
 
-  // I modelli Gemini/OpenCode/Anthropic/Ollama non vanno su OpenRouter.
-  const canUseRequestedOnOpenRouter = !isAnthropicModel(model) && !isGeminiModel(model) && !isOpenCodeModel(model) && !isOllamaModel(model)
+  // I modelli Gemini/OpenCode/Agnes/Anthropic/Ollama non vanno su OpenRouter.
+  const canUseRequestedOnOpenRouter = !isAnthropicModel(model) && !isGeminiModel(model) && !isOpenCodeModel(model) && !isAgnesModel(model) && !isOllamaModel(model)
 
   // Try 0: Ollama LOCALE, se l'utente ha scelto ollama/*. Nessuna key, gira sul Mac.
   // Se il server è spento fallisce subito → con silentFallback passa ai provider cloud.
@@ -337,6 +377,12 @@ async function callAIImpl(params: {
   // Try 0b: OpenCode come provider primario, se l'utente ha scelto un modello opencode/*.
   if (opencodeKey && isOpenCodeModel(model)) {
     const res = await tryOpenCodeModel(model, systemPrompt, userPrompt, opencodeKey, maxTokens, attempts, images, timeoutMs)
+    if (res) return res
+  }
+
+  // Try 0c: Agnes AI come provider primario, se l'utente ha scelto un modello agnes-*.
+  if (agnesKey && isAgnesModel(model)) {
+    const res = await tryAgnesModel(model, systemPrompt, userPrompt, agnesKey, maxTokens, attempts, images, timeoutMs)
     if (res) return res
   }
 
@@ -372,7 +418,7 @@ async function callAIImpl(params: {
     // opzione. Se c'è una key affidabile (Gemini/OpenCode/Anthropic), salta
     // l'attesa e passa direttamente a quella.
     const orFailures = attempts.filter(a => a.provider === 'openrouter' && !a.ok)
-    if (!geminiKey && !opencodeKey && !anthropicKey && orModels.length && orFailures.length && orFailures.every(a => isRateLimit(a.error))) {
+    if (!geminiKey && !opencodeKey && !agnesKey && !anthropicKey && orModels.length && orFailures.length && orFailures.every(a => isRateLimit(a.error))) {
       const waitMs = rateLimitWaitMs(orFailures)
       if (waitMs > 0) {
         console.warn('[AI bridge]', `modelli free rate-limited, attendo ${Math.round(waitMs / 1000)}s e ritento`)
@@ -400,6 +446,16 @@ async function callAIImpl(params: {
     const fbModel = isOpenCodeModel(model) ? model : OPENCODE_PREFIX + OPENCODE_DEFAULT_MODEL
     if (!triedOpencode.has(fbModel)) {
       const res = await tryOpenCodeModel(fbModel, systemPrompt, userPrompt, opencodeKey, maxTokens, attempts, images, timeoutMs)
+      if (res) return res
+    }
+  }
+
+  // Try 1.65: Agnes AI come fallback affidabile (agnes-2.0-flash).
+  if (agnesKey && silentFallback) {
+    const triedAgnes = new Set(attempts.filter(a => a.provider === 'agnes').map(a => a.model))
+    const fbModel = isAgnesModel(model) ? model : AGNES_DEFAULT_MODEL
+    if (!triedAgnes.has(fbModel)) {
+      const res = await tryAgnesModel(fbModel, systemPrompt, userPrompt, agnesKey, maxTokens, attempts, images, timeoutMs)
       if (res) return res
     }
   }
@@ -673,6 +729,39 @@ async function callOpenCode(
     if (!res.ok) throw new Error(formatHttpError(res.status, await res.text().catch(() => '')))
     const data = await res.json()
     void logTokenUsage({ provider: 'opencode', model, usage: data.usage })
+    return data.choices?.[0]?.message?.content || ''
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// Agnes AI è OpenAI-compatible: stesso shape di OpenCode, base URL diverso.
+async function callAgnes(
+  model: string,
+  systemPrompt: string | undefined,
+  userPrompt: string,
+  key: string,
+  maxTokens: number,
+  timeout = 30000,
+  images: string[] = [],
+): Promise<string> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeout)
+
+  const messages: { role: string; content: unknown }[] = []
+  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt })
+  messages.push({ role: 'user', content: buildOpenAIUserContent(userPrompt, images) })
+
+  try {
+    const res = await fetch(AGNES_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      signal: controller.signal,
+      body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: 0.85 }),
+    })
+    if (!res.ok) throw new Error(formatHttpError(res.status, await res.text().catch(() => '')))
+    const data = await res.json()
+    void logTokenUsage({ provider: 'agnes', model, usage: data.usage })
     return data.choices?.[0]?.message?.content || ''
   } finally {
     clearTimeout(timer)

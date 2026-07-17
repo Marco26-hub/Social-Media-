@@ -1,15 +1,26 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
-import { Sparkles, Check, ChevronDown, Key, Zap, AlertCircle, Search, ThumbsUp } from 'lucide-react'
+import { Sparkles, Check, ChevronDown, Key, Zap, AlertCircle, Search, ThumbsUp, Eye } from 'lucide-react'
+
+// Selettore modello RISTRETTO a tre provider:
+// - Google Gemini: famiglia Flash del free tier (key gratuita su AI Studio).
+// - Agnes AI: gateway apihub.agnes-ai.com — modelli flash testo (2.0/1.5); la
+//   stessa key abilita anche generazione immagini (agnes-image-2.1-flash) e video.
+// - OpenRouter: catalogo caricato LIVE dall'API (/api/system/openrouter-models),
+//   così la lista è quella reale e non una hardcoded che invecchia. Se l'API non
+//   risponde si usa un fallback curato (gli stessi id della cascade backend).
+// Anthropic diretto / OpenCode / Ollama restano supportati dal backend (lib/ai.ts)
+// ma NON sono più offerti dalla UI: troppa superficie di scelta e key diverse.
+
+type Provider = 'openrouter' | 'gemini' | 'agnes'
 
 type Model = {
   id: string
   name: string
-  provider: 'anthropic' | 'openrouter' | 'gemini' | 'opencode' | 'ollama'
-  tier: 'default' | 'free' | 'paid' | 'local'
+  provider: Provider
+  free: boolean
   context: string
-  speed: 'fast' | 'medium' | 'slow'
-  quality: 'top' | 'high' | 'medium'
+  vision?: boolean
   badge?: string
   recommendedFor?: string[]
 }
@@ -27,9 +38,8 @@ const TASK_LABELS: Record<Task, string> = {
   'blog-articolo': 'Blog SEO',
 }
 
-// Default qualità-first senza inciampare su OpenRouter: Gemini nativo usa la key
-// Google AI Studio (gratis) e vede le immagini prodotto. OpenRouter resta in
-// lista per chi ha crediti, ma non è più il default obbligato.
+// Default qualità-first: Gemini 2.5 Flash nativo (key Google gratuita, vede le
+// immagini prodotto, 65K output). OpenRouter è l'alternativa per chi ha key/crediti.
 const GEMINI_25 = 'gemini-2.5-flash'
 
 const TASK_RECOMMENDED: Record<Task, string> = {
@@ -39,84 +49,56 @@ const TASK_RECOMMENDED: Record<Task, string> = {
   'blog-articolo':    GEMINI_25,
 }
 
-// Default per ambiente CLOUD (Render/Vercel): identico — Gemini 2.5 Flash gira ovunque.
-const TASK_RECOMMENDED_CLOUD: Record<Task, string> = {
-  'contenuti-social': GEMINI_25,
-  'piano-editoriale': GEMINI_25,
-  'seo-audit':        GEMINI_25,
-  'blog-articolo':    GEMINI_25,
-}
-
-// "Perché" mostrato in UI: spiega all'utente la logica della raccomandazione per task.
+// "Perché" mostrato in UI: spiega la logica della raccomandazione per task.
 const TASK_WHY: Record<Task, string> = {
   'contenuti-social': 'Gemini 2.5 Flash nativo: vede le foto prodotto (vision), veloce, key Google gratuita. OpenRouter resta opzionale.',
   'piano-editoriale': 'Gemini 2.5 Flash: 1M contesto + 65K output → il JSON del piano non tronca. Key Google gratuita.',
-  'seo-audit':        'Gemini 2.5 Flash: contesto 1M + output ampio per analisi lunghe. Per premium extra puoi scegliere Claude/OpenRouter.',
-  'blog-articolo':    'Gemini 2.5 Flash: 65K output per articoli long-form senza troncamento. Per copy premium extra, Claude Sonnet 5 resta in lista.',
+  'seo-audit':        'Gemini 2.5 Flash: contesto 1M + output ampio per analisi lunghe. In alternativa un modello OpenRouter con la tua key.',
+  'blog-articolo':    'Gemini 2.5 Flash: 65K output per articoli long-form senza troncamento. In alternativa un modello OpenRouter con la tua key.',
 }
 
-const MODELS: Model[] = [
-  // Ollama LOCALE (gira sul Mac, zero costi, 100% privato, nessun rate-limit, nessuna key).
-  // Richiede "ollama serve" attivo + il modello scaricato con "ollama pull <nome>".
-  // Solo modelli che producono italiano pulito per copy luxury (testati).
-  { id: 'ollama/gemma4:e4b',          name: 'Gemma 4 (locale)',      provider: 'ollama', tier: 'local', context: '128K', speed: 'medium', quality: 'top',  badge: '★ Locale · gratis', recommendedFor: ['piano-editoriale', 'contenuti-social'] },
-  { id: 'ollama/gemma3:4b',           name: 'Gemma 3 4B (locale)',   provider: 'ollama', tier: 'local', context: '128K', speed: 'fast',   quality: 'high', badge: 'Locale · veloce',   recommendedFor: ['contenuti-social'] },
-
-  // Anthropic Premium — model ID reali dell'API Anthropic (a pagamento)
-  { id: 'claude-sonnet-5',            name: 'Claude Sonnet 5', provider: 'anthropic', tier: 'default', context: '200K', speed: 'fast',   quality: 'top',  badge: 'Default',  recommendedFor: ['seo-audit', 'blog-articolo', 'piano-editoriale'] },
-  { id: 'claude-opus-4-8',            name: 'Claude Opus 4.8', provider: 'anthropic', tier: 'default', context: '200K', speed: 'medium', quality: 'top',  badge: 'Premium',  recommendedFor: ['blog-articolo', 'seo-audit'] },
-  { id: 'claude-haiku-4-5-20251001',  name: 'Claude Haiku 4.5', provider: 'anthropic', tier: 'default', context: '200K', speed: 'fast',   quality: 'high', badge: 'Veloce',   recommendedFor: ['contenuti-social'] },
-
-  // OpenRouter Free
-  { id: 'nvidia/nemotron-3-super-120b-a12b:free',  name: 'NVIDIA Nemotron 3 Super 120B', provider: 'openrouter', tier: 'free', context: '128K', speed: 'fast',   quality: 'top',  badge: 'Marketing',      recommendedFor: ['contenuti-social'] },
-  { id: 'nvidia/nemotron-3-ultra-550b-a55b:free',   name: 'NVIDIA Nemotron 3 Ultra',       provider: 'openrouter', tier: 'free', context: '1M',   speed: 'slow',   quality: 'top',  badge: '1M contesto · lento' },
-  { id: 'nvidia/nemotron-3.5-content-safety:free',  name: 'NVIDIA Nemotron 3.5 Safety',    provider: 'openrouter', tier: 'free', context: '131K', speed: 'fast',   quality: 'high', badge: 'Content Safety', recommendedFor: ['contenuti-social'] },
-  { id: 'openrouter/free',                          name: 'OpenRouter Free Router',        provider: 'openrouter', tier: 'free', context: '200K', speed: 'fast',   quality: 'high', badge: 'Auto' },
-  { id: 'openai/gpt-oss-120b:free',                 name: 'OpenAI gpt-oss-120b',           provider: 'openrouter', tier: 'free', context: '131K', speed: 'medium', quality: 'high' },
-  { id: 'openai/gpt-oss-20b:free',                  name: 'OpenAI gpt-oss-20b',            provider: 'openrouter', tier: 'free', context: '131K', speed: 'fast',   quality: 'medium' },
-  { id: 'google/gemma-4-31b-it:free',               name: 'Google Gemma 4 31B',            provider: 'openrouter', tier: 'free', context: '262K', speed: 'fast',   quality: 'high' },
-  { id: 'google/gemma-4-26b-a4b-it:free',           name: 'Google Gemma 4 26B',            provider: 'openrouter', tier: 'free', context: '262K', speed: 'fast',   quality: 'high' },
-  { id: 'qwen/qwen3-next-80b-a3b-instruct:free',    name: 'Qwen3 Next 80B',                provider: 'openrouter', tier: 'free', context: '262K', speed: 'medium', quality: 'high' },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free',   name: 'Llama 3.3 70B',                 provider: 'openrouter', tier: 'free', context: '128K', speed: 'fast',   quality: 'high', badge: 'Consigliato',    recommendedFor: ['piano-editoriale', 'seo-audit', 'blog-articolo', 'contenuti-social'] },
-  { id: 'nousresearch/hermes-3-llama-3.1-405b:free', name: 'Hermes 3 405B',                provider: 'openrouter', tier: 'free', context: '131K', speed: 'medium', quality: 'top',  badge: '405B' },
-
-  // OpenRouter A PAGAMENTO (richiede credito sull'account): NIENTE code/429,
-  // capacità dedicata. Servono con la key OpenRouter. I modelli premium (Claude,
-  // Gemini Pro) sono routati via OpenRouter → i tuoi crediti, un solo account.
-  { id: 'anthropic/claude-sonnet-5',          name: 'Claude Sonnet 5 · OpenRouter', provider: 'openrouter', tier: 'paid', context: '1M', speed: 'fast', quality: 'top', badge: 'Premium · crediti OR', recommendedFor: ['blog-articolo', 'seo-audit'] },
-  { id: 'anthropic/claude-opus-4.8',          name: 'Claude Opus 4.8 · OpenRouter', provider: 'openrouter', tier: 'paid', context: '1M', speed: 'medium', quality: 'top', badge: 'Premium · crediti OR', recommendedFor: ['blog-articolo', 'seo-audit'] },
-  { id: 'google/gemini-2.5-pro',              name: 'Gemini 2.5 Pro',       provider: 'openrouter', tier: 'paid', context: '1M', speed: 'medium', quality: 'top', badge: 'Google · reasoning' },
-  { id: 'meta-llama/llama-3.3-70b-instruct',  name: 'Llama 3.3 70B (paid)', provider: 'openrouter', tier: 'paid', context: '131K', speed: 'fast',   quality: 'high', badge: 'Affidabile · economico' },
-  { id: 'google/gemini-2.5-flash-lite',       name: 'Gemini 2.5 Flash Lite', provider: 'openrouter', tier: 'paid', context: '1M', speed: 'fast', quality: 'high', badge: 'Google · economico' },
-  { id: 'google/gemini-2.5-flash',            name: 'Gemini 2.5 Flash',      provider: 'openrouter', tier: 'paid', context: '1M', speed: 'fast', quality: 'top',  badge: '★ Consigliato · vision', recommendedFor: ['contenuti-social', 'piano-editoriale', 'seo-audit', 'blog-articolo'] },
-  { id: 'openai/gpt-4o-mini',                 name: 'GPT-4o mini',          provider: 'openrouter', tier: 'paid', context: '128K', speed: 'fast',   quality: 'high', badge: 'OpenAI · affidabile' },
-  { id: 'deepseek/deepseek-chat',             name: 'DeepSeek Chat',        provider: 'openrouter', tier: 'paid', context: '131K', speed: 'medium', quality: 'top',  badge: 'Economico' },
-
-  // Google Gemini (free tier, key gratuita su aistudio.google.com)
-  // 2.5 Flash: 1M contesto + 65K OUTPUT → ideale per piano mensile e contenuti lunghi
-  // (il 2.0-flash cappa l'output a 8192 e tronca i JSON grandi).
-  { id: 'gemini-2.5-flash',       name: 'Gemini 2.5 Flash',      provider: 'gemini', tier: 'free', context: '1M',   speed: 'medium', quality: 'top',  badge: 'Google · 65K output', recommendedFor: ['piano-editoriale', 'blog-articolo', 'seo-audit'] },
-  { id: 'gemini-2.5-flash-lite',  name: 'Gemini 2.5 Flash Lite', provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high', badge: 'Google · veloce+' },
-  { id: 'gemini-2.0-flash',       name: 'Gemini 2.0 Flash',      provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high', badge: 'Google · Free', recommendedFor: ['contenuti-social'] },
-  { id: 'gemini-2.0-flash-lite',  name: 'Gemini 2.0 Flash Lite', provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'medium', badge: 'Google · Veloce' },
-  { id: 'gemini-1.5-flash',       name: 'Gemini 1.5 Flash',      provider: 'gemini', tier: 'free', context: '1M',   speed: 'fast',   quality: 'high', badge: 'Google' },
-
-  // OpenCode Zen/Go (gateway, key sk- su opencode.ai/auth). RICHIEDE account a pagamento/credito.
-  { id: 'opencode/deepseek-v4-flash-free', name: 'DeepSeek V4 Flash',  provider: 'opencode', tier: 'paid', context: '1M',   speed: 'fast',   quality: 'high', badge: 'OpenCode · a pagamento' },
-  { id: 'opencode/nemotron-3-ultra-free',  name: 'Nemotron 3 Ultra',   provider: 'opencode', tier: 'paid', context: '1M',   speed: 'medium', quality: 'top',  badge: 'OpenCode · a pagamento' },
-  { id: 'opencode/deepseek-v4-pro',        name: 'DeepSeek V4 Pro',    provider: 'opencode', tier: 'paid', context: '1M',   speed: 'medium', quality: 'top',  badge: 'OpenCode' },
-  { id: 'opencode/glm-5.2',                name: 'GLM-5.2',            provider: 'opencode', tier: 'paid', context: '1M',   speed: 'fast',   quality: 'top',  badge: 'OpenCode' },
-  { id: 'opencode/kimi-k2.6',              name: 'Kimi K2.6',          provider: 'opencode', tier: 'paid', context: '256K', speed: 'fast',   quality: 'top',  badge: 'OpenCode' },
+// Google Gemini — SOLO famiglia Flash disponibile nel free tier di AI Studio.
+const GEMINI_MODELS: Model[] = [
+  { id: 'gemini-2.5-flash',      name: 'Gemini 2.5 Flash',      provider: 'gemini', free: true, context: '1M', vision: true, badge: '★ Consigliato · 65K output', recommendedFor: ['contenuti-social', 'piano-editoriale', 'seo-audit', 'blog-articolo'] },
+  { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite', provider: 'gemini', free: true, context: '1M', vision: true, badge: 'Veloce+' },
+  { id: 'gemini-2.0-flash',      name: 'Gemini 2.0 Flash',      provider: 'gemini', free: true, context: '1M', vision: true, badge: 'Stabile', recommendedFor: ['contenuti-social'] },
+  { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', provider: 'gemini', free: true, context: '1M', vision: true, badge: 'Economico' },
+  { id: 'gemini-1.5-flash',      name: 'Gemini 1.5 Flash',      provider: 'gemini', free: true, context: '1M', vision: true },
 ]
 
-const QUALITY_DOT: Record<string, string> = {
-  top:    'bg-violet-500',
-  high:   'bg-blue-500',
-  medium: 'bg-gray-400',
+// Agnes AI — modelli TESTO del catalogo reale della key (GET /v1/models). I modelli
+// media della stessa key (agnes-image-2.1-flash, agnes-video-v2.0) non stanno qui:
+// li usa la generazione immagini/video, non il copy.
+const AGNES_MODELS: Model[] = [
+  { id: 'agnes-2.0-flash', name: 'Agnes 2.0 Flash', provider: 'agnes', free: false, context: 'n/d', badge: '★ Testo · stessa key per immagini/video', recommendedFor: ['contenuti-social', 'piano-editoriale'] },
+  { id: 'agnes-1.5-flash', name: 'Agnes 1.5 Flash', provider: 'agnes', free: false, context: 'n/d', badge: 'Veloce' },
+]
+
+// Fallback OpenRouter se il catalogo live non è raggiungibile: gli stessi modelli
+// free della cascade backend (lib/ai.ts FALLBACK_MODELS) — id verificati, non inventati.
+const OPENROUTER_FALLBACK: Model[] = [
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B',    provider: 'openrouter', free: true, context: '128K', badge: 'Affidabile', recommendedFor: ['contenuti-social', 'piano-editoriale', 'seo-audit', 'blog-articolo'] },
+  { id: 'openai/gpt-oss-120b:free',               name: 'OpenAI gpt-oss-120b', provider: 'openrouter', free: true, context: '131K' },
+  { id: 'qwen/qwen3-next-80b-a3b-instruct:free',  name: 'Qwen3 Next 80B',   provider: 'openrouter', free: true, context: '262K' },
+  { id: 'google/gemma-4-31b-it:free',             name: 'Google Gemma 4 31B', provider: 'openrouter', free: true, context: '262K' },
+  { id: 'google/gemini-2.5-flash',                name: 'Gemini 2.5 Flash · OpenRouter', provider: 'openrouter', free: false, context: '1M', vision: true, badge: 'Vision · crediti OR' },
+]
+
+// Quanti modelli A PAGAMENTO mostrare senza ricerca attiva (il catalogo completo
+// supera i 300: si trovano tutti con la ricerca, la lista base resta leggibile).
+const PAID_VISIBLE_DEFAULT = 40
+
+function providerOf(id: string): Provider {
+  if (id.startsWith('gemini-')) return 'gemini'
+  if (id.startsWith('agnes-')) return 'agnes'
+  return 'openrouter'
 }
 
-function modelNeedsOpenRouterKey(model: string) {
-  return !model.startsWith('gemini-') && !model.startsWith('opencode/') && !model.startsWith('ollama/') && !model.startsWith('claude-')
+// Modello legacy (Anthropic/OpenCode/Ollama) salvato da versioni precedenti della
+// UI: non più offerto → si torna al default. Il backend li accetterebbe ancora, ma
+// la UI non deve rimandare l'utente su provider senza key input.
+function isLegacyModel(id: string): boolean {
+  return id.startsWith('claude-') || id.startsWith('opencode/') || id.startsWith('ollama/')
 }
 
 export default function AIModelSelector({ task }: { task?: Task }) {
@@ -128,33 +110,55 @@ export default function AIModelSelector({ task }: { task?: Task }) {
   const [showGemInput, setShowGemInput] = useState(false)
   const [gemKey, setGemKey] = useState('')
   const [savedGemKey, setSavedGemKey] = useState('')
-  const [showOpcInput, setShowOpcInput] = useState(false)
-  const [opcKey, setOpcKey] = useState('')
-  const [savedOpcKey, setSavedOpcKey] = useState('')
+  const [showAgnesInput, setShowAgnesInput] = useState(false)
+  const [agnesKey, setAgnesKey] = useState('')
+  const [savedAgnesKey, setSavedAgnesKey] = useState('')
   const [search, setSearch] = useState('')
-  const [ollama, setOllama] = useState<{ running: boolean; models: string[] } | null>(null)
-  const [localEnv, setLocalEnv] = useState<boolean | null>(null)
-  const [startingOllama, setStartingOllama] = useState(false)
+  const [orModels, setOrModels] = useState<Model[] | null>(null)
+  const [orCatalogError, setOrCatalogError] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    // Default cloud-safe iniziale; il default locale-first si applica solo se siamo in locale
-    // (gestito dall'effetto su localEnv più sotto), così il deploy cloud non parte rotto.
     const key = localStorage.getItem('openrouter_key') || ''
     setSavedKey(key)
     setOrKey(key)
     const gk = localStorage.getItem('gemini_key') || ''
     setSavedGemKey(gk)
     setGemKey(gk)
-    const ok = localStorage.getItem('opencode_key') || ''
-    setSavedOpcKey(ok)
-    setOpcKey(ok)
+    const ak = localStorage.getItem('agnes_key') || ''
+    setSavedAgnesKey(ak)
+    setAgnesKey(ak)
     const storedModel = localStorage.getItem('ai_model') || ''
-    const safeModel = storedModel && modelNeedsOpenRouterKey(storedModel) && !key ? GEMINI_25 : (storedModel || GEMINI_25)
+    // Migrazione: modello legacy o modello OpenRouter senza key → default Gemini.
+    const invalid = !storedModel || isLegacyModel(storedModel) || (providerOf(storedModel) === 'openrouter' && !key)
+    const safeModel = invalid ? GEMINI_25 : storedModel
     if (safeModel !== storedModel) localStorage.setItem('ai_model', safeModel)
     setSelectedId(safeModel)
   }, [task])
+
+  // Catalogo OpenRouter LIVE (proxy con cache 1h lato server). In errore si resta
+  // sul fallback curato e si mostra il perché — niente lista finta spacciata per live.
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/system/openrouter-models')
+      .then(r => r.json())
+      .then(d => {
+        if (cancelled) return
+        if (d?.ok && Array.isArray(d.models) && d.models.length) {
+          setOrModels((d.models as Array<{ id: string; name: string; context: string; free: boolean; vision: boolean }>).map(m => ({
+            id: m.id, name: m.name, provider: 'openrouter' as const,
+            free: m.free, context: m.context, vision: m.vision,
+          })))
+          setOrCatalogError('')
+        } else {
+          setOrModels(null)
+          setOrCatalogError(String(d?.error || 'catalogo non disponibile'))
+        }
+      })
+      .catch(e => { if (!cancelled) { setOrModels(null); setOrCatalogError(e instanceof Error ? e.message : 'rete') } })
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -166,55 +170,13 @@ export default function AIModelSelector({ task }: { task?: Task }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
 
-  const selected = MODELS.find(m => m.id === selectedId) ?? MODELS[0]
-
-  // Probe al mount: rileva se siamo in ambiente LOCALE (Ollama disponibile) o CLOUD,
-  // e lo stato di Ollama. Su cloud i modelli locali non possono girare.
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/system/local/ollama')
-      .then(r => r.json())
-      .then(d => {
-        if (cancelled) return
-        setOllama({ running: !!d.running, models: d.models || [] })
-        setLocalEnv(d.localEnv === true)
-      })
-      .catch(() => { if (!cancelled) { setOllama({ running: false, models: [] }); setLocalEnv(false) } })
-    return () => { cancelled = true }
-  }, [])
-
-  // Riconciliazione default in base all'ambiente, una volta noto localEnv.
-  useEffect(() => {
-    if (localEnv === null || typeof window === 'undefined') return
-    const stored = localStorage.getItem('ai_model')
-    if (stored) {
-      // Rispetta la scelta utente, MA un modello locale su cloud non funziona → fallback cloud.
-      if (!localEnv && stored.startsWith('ollama/')) {
-        setSelectedId(task ? TASK_RECOMMENDED_CLOUD[task] : 'meta-llama/llama-3.3-70b-instruct:free')
-      }
-      return
-    }
-    // Nessuna preferenza salvata: consigliato per ambiente (locale-first in locale, cloud su cloud).
-    if (task) setSelectedId(localEnv ? TASK_RECOMMENDED[task] : TASK_RECOMMENDED_CLOUD[task])
-  }, [localEnv, task])
-
-  async function startOllama() {
-    setStartingOllama(true)
-    try {
-      await fetch('/api/system/local/ollama', { method: 'POST' })
-      const r = await fetch('/api/system/local/ollama')
-      const d = await r.json()
-      setOllama({ running: !!d.running, models: d.models || [] })
-    } catch { /* lascia lo stato precedente */ }
-    finally { setStartingOllama(false) }
+  const openRouterList = orModels ?? OPENROUTER_FALLBACK
+  const allModels: Model[] = [...GEMINI_MODELS, ...AGNES_MODELS, ...openRouterList]
+  const selected: Model = allModels.find(m => m.id === selectedId) ?? {
+    // Modello salvato non (più) nel catalogo: lo mostriamo comunque com'è invece di
+    // fingere che sia un altro — la generazione lo passa al backend tal quale.
+    id: selectedId, name: selectedId, provider: providerOf(selectedId), free: selectedId.endsWith(':free'), context: 'n/d',
   }
-
-  // Nome modello senza prefisso 'ollama/' per confronto con i tag installati.
-  const ollamaTag = selected.provider === 'ollama' ? selected.id.replace(/^ollama\//, '') : ''
-  // Avvisi solo pertinenti all'ambiente: "Ollama spento" SOLO in locale; "richiede locale" su cloud.
-  const ollamaOnCloud = selected.provider === 'ollama' && localEnv === false
-  const ollamaOff = selected.provider === 'ollama' && localEnv === true && ollama !== null && !ollama.running
-  const ollamaModelMissing = selected.provider === 'ollama' && localEnv === true && ollama?.running === true && !ollama.models.includes(ollamaTag)
 
   function selectModel(id: string) {
     setSelectedId(id)
@@ -235,57 +197,61 @@ export default function AIModelSelector({ task }: { task?: Task }) {
     setShowGemInput(false)
   }
 
-  function saveOpcKey() {
-    localStorage.setItem('opencode_key', opcKey.trim())
-    setSavedOpcKey(opcKey.trim())
-    setShowOpcInput(false)
-  }
-
   function removeKey() {
     localStorage.removeItem('openrouter_key')
     setOrKey(''); setSavedKey(''); setShowKeyInput(false)
+    // Senza key i modelli OpenRouter non girano: se ne era selezionato uno, default Gemini.
+    if (providerOf(selectedId) === 'openrouter') selectModel(GEMINI_25)
   }
   function removeGemKey() {
     localStorage.removeItem('gemini_key')
     setGemKey(''); setSavedGemKey(''); setShowGemInput(false)
   }
-  function removeOpcKey() {
-    localStorage.removeItem('opencode_key')
-    setOpcKey(''); setSavedOpcKey(''); setShowOpcInput(false)
+  function saveAgnesKey() {
+    localStorage.setItem('agnes_key', agnesKey.trim())
+    setSavedAgnesKey(agnesKey.trim())
+    setShowAgnesInput(false)
+  }
+  function removeAgnesKey() {
+    localStorage.removeItem('agnes_key')
+    setAgnesKey(''); setSavedAgnesKey(''); setShowAgnesInput(false)
+    // Senza key i modelli Agnes non girano dal client: torna al default Gemini.
+    if (providerOf(selectedId) === 'agnes') selectModel(GEMINI_25)
   }
 
-  const filtered = MODELS.filter(m =>
-    !search || m.name.toLowerCase().includes(search.toLowerCase()) || m.id.toLowerCase().includes(search.toLowerCase())
-  )
-  // Su cloud (localEnv false) nascondi i modelli locali: non possono girare lì.
-  const ollamaModels = localEnv === false ? [] : filtered.filter(m => m.provider === 'ollama')
-  const anthropicModels = filtered.filter(m => m.provider === 'anthropic')
-  const geminiModels = filtered.filter(m => m.provider === 'gemini')
-  const opencodeModels = filtered.filter(m => m.provider === 'opencode')
-  const freeModels = filtered.filter(m => m.provider === 'openrouter' && m.tier === 'free')
-  const paidOpenRouterModels = filtered.filter(m => m.provider === 'openrouter' && m.tier === 'paid')
+  const q = search.trim().toLowerCase()
+  const match = (m: Model) => !q || m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)
+  const geminiModels = GEMINI_MODELS.filter(match)
+  const agnesModels = AGNES_MODELS.filter(match)
+  const orFree = openRouterList.filter(m => m.free).filter(match)
+  const orPaidAll = openRouterList.filter(m => !m.free).filter(match)
+  // Senza ricerca: primi N a pagamento (i più recenti, l'API li ordina così) per
+  // non esplodere la dropdown; la ricerca copre l'intero catalogo.
+  const orPaid = q ? orPaidAll : orPaidAll.slice(0, PAID_VISIBLE_DEFAULT)
+  const orPaidHidden = q ? 0 : Math.max(0, orPaidAll.length - orPaid.length)
+
   const needsOrKey = selected.provider === 'openrouter' && !savedKey
   const needsGemKey = selected.provider === 'gemini' && !savedGemKey
-  const needsOpcKey = selected.provider === 'opencode' && !savedOpcKey
+  const needsAgnesKey = selected.provider === 'agnes' && !savedAgnesKey
 
-  const recommendedId = task
-    ? (localEnv === false ? TASK_RECOMMENDED_CLOUD[task] : TASK_RECOMMENDED[task])
-    : null
+  const recommendedId = task ? TASK_RECOMMENDED[task] : null
   const isOnRecommended = recommendedId === selectedId
 
   const taskModels = task
-    ? MODELS.filter(m => m.recommendedFor?.includes(task)).slice(0, 3)
+    ? [...GEMINI_MODELS, ...OPENROUTER_FALLBACK].filter(m => m.recommendedFor?.includes(task)).slice(0, 3)
     : []
+
+  const totalShown = geminiModels.length + agnesModels.length + orFree.length + orPaid.length
 
   return (
     <div className="card p-4 md:p-5 mb-6 bg-gradient-to-br from-white to-gray-50 border-gray-100 overflow-visible">
       <div className="flex flex-col lg:flex-row lg:items-start lg:flex-wrap lg:justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0 flex-1 lg:min-w-[260px]">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-            selected.provider === 'anthropic' ? 'bg-gradient-to-br from-violet-500 to-purple-600'
-              : selected.provider === 'gemini' ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
-              : selected.provider === 'opencode' ? 'bg-gradient-to-br from-orange-500 to-amber-600'
-              : selected.provider === 'ollama' ? 'bg-gradient-to-br from-slate-700 to-gray-900'
+            selected.provider === 'gemini'
+              ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
+              : selected.provider === 'agnes'
+              ? 'bg-gradient-to-br from-fuchsia-500 to-purple-600'
               : 'bg-gradient-to-br from-emerald-500 to-teal-600'
           }`}>
             <Sparkles className="w-5 h-5 text-white" />
@@ -293,14 +259,16 @@ export default function AIModelSelector({ task }: { task?: Task }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Modello AI</p>
-              {selected.badge && !(selected.badge === 'Consigliato' && isOnRecommended) && (
+              {selected.badge && !(selected.badge.includes('Consigliato') && isOnRecommended) && (
                 <span className="text-[10px] px-1.5 py-0.5 bg-brand-100 text-brand-700 rounded-full font-medium">{selected.badge}</span>
               )}
-              {selected.tier === 'free' && (
+              {selected.free && (
                 <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">FREE</span>
               )}
-              {selected.tier === 'local' && (
-                <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-100 rounded-full font-medium">LOCALE · GRATIS</span>
+              {selected.vision && (
+                <span className="text-[10px] px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full font-medium flex items-center gap-0.5">
+                  <Eye className="w-3 h-3" /> vision
+                </span>
               )}
               {isOnRecommended && (
                 <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium flex items-center gap-1">
@@ -310,7 +278,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
             </div>
             <p className="font-semibold text-gray-900 truncate">{selected.name}</p>
             <p className="text-xs text-gray-500 mt-0.5 truncate">
-              {selected.provider === 'anthropic' ? 'Anthropic' : selected.provider === 'gemini' ? 'Google Gemini' : selected.provider === 'opencode' ? 'OpenCode' : selected.provider === 'ollama' ? 'Ollama · Mac locale' : 'OpenRouter'} · {selected.context} · {selected.speed} · {selected.quality}
+              {selected.provider === 'gemini' ? 'Google Gemini · key gratuita' : selected.provider === 'agnes' ? 'Agnes AI · apihub.agnes-ai.com' : 'OpenRouter · via API'} · contesto {selected.context}
             </p>
             {task && (
               <p className="text-[11px] text-amber-700 mt-1 leading-snug">{TASK_WHY[task]}</p>
@@ -341,14 +309,14 @@ export default function AIModelSelector({ task }: { task?: Task }) {
             </button>
           )}
 
-          {!savedOpcKey ? (
-            <button onClick={() => setShowOpcInput(s => !s)} className="btn-secondary text-xs py-2 px-3 justify-center">
+          {!savedAgnesKey ? (
+            <button onClick={() => setShowAgnesInput(s => !s)} className="btn-secondary text-xs py-2 px-3 justify-center">
               <Key className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">OpenCode</span>
+              <span className="hidden sm:inline">Agnes AI</span>
             </button>
           ) : (
-            <button onClick={() => setShowOpcInput(s => !s)} title="Cambia o rimuovi key OpenCode" className="text-xs text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-orange-100 whitespace-nowrap">
-              <Check className="w-3 h-3" /> OpenCode <span className="text-orange-400">· modifica</span>
+            <button onClick={() => setShowAgnesInput(s => !s)} title="Cambia o rimuovi key Agnes AI" className="text-xs text-fuchsia-700 bg-fuchsia-50 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-fuchsia-100 whitespace-nowrap">
+              <Check className="w-3 h-3" /> Agnes AI <span className="text-fuchsia-400">· modifica</span>
             </button>
           )}
 
@@ -371,15 +339,15 @@ export default function AIModelSelector({ task }: { task?: Task }) {
                     <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text" value={search} onChange={e => setSearch(e.target.value)}
-                      placeholder="Cerca modello..." autoFocus
+                      placeholder={`Cerca tra ${GEMINI_MODELS.length + AGNES_MODELS.length + openRouterList.length} modelli...`} autoFocus
                       className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                   </div>
                 </div>
 
                 <div className="max-h-[calc(100vh-12rem)] sm:max-h-[460px] overflow-y-auto overscroll-contain">
-                  {/* Task recommendation banner */}
-                  {task && taskModels.length > 0 && !search && (
+                  {/* Consigliati per task */}
+                  {task && taskModels.length > 0 && !q && (
                     <div className="px-3 py-2.5 border-b border-gray-100">
                       <p className="text-[10px] uppercase tracking-wide text-amber-700 font-bold mb-1">
                         Consigliati per {TASK_LABELS[task]}
@@ -399,47 +367,18 @@ export default function AIModelSelector({ task }: { task?: Task }) {
                             }`}
                           >
                             <span className="block font-semibold">{m.name}</span>
-                            <span className="block text-[9px] text-gray-400">{m.context} · {m.speed} · {m.quality}</span>
+                            <span className="block text-[9px] text-gray-400">{m.provider === 'gemini' ? 'Gemini' : 'OpenRouter'} · {m.context}</span>
                           </button>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {ollamaModels.length > 0 && (
-                    <>
-                      <div className="px-3 py-2 bg-slate-100 sticky top-0 z-10 flex items-center gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-800">Ollama · Mac locale</p>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-slate-800 text-slate-100 rounded-full font-bold tracking-normal">gratis · privato · no key</span>
-                      </div>
-                      {ollamaModels.map(m => (
-                        <ModelOption
-                          key={m.id} m={m} selected={m.id === selectedId}
-                          recommended={m.id === recommendedId}
-                          onClick={() => selectModel(m.id)}
-                        />
-                      ))}
-                    </>
-                  )}
-                  {anthropicModels.length > 0 && (
-                    <>
-                      <div className="px-3 py-2 bg-gray-50 sticky top-0 z-10">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-violet-700">Anthropic · Premium</p>
-                      </div>
-                      {anthropicModels.map(m => (
-                        <ModelOption
-                          key={m.id} m={m} selected={m.id === selectedId}
-                          recommended={m.id === recommendedId}
-                          onClick={() => selectModel(m.id)}
-                        />
-                      ))}
-                    </>
-                  )}
                   {geminiModels.length > 0 && (
                     <>
                       <div className="px-3 py-2 bg-gray-50 sticky top-0 z-10 flex items-center gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Google Gemini · Gratis</p>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold tracking-normal">free key</span>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Google Gemini · Flash</p>
+                        <span className="text-[9px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold tracking-normal">free · key gratuita</span>
                       </div>
                       {geminiModels.map(m => (
                         <ModelOption
@@ -450,43 +389,35 @@ export default function AIModelSelector({ task }: { task?: Task }) {
                       ))}
                     </>
                   )}
-                  {opencodeModels.length > 0 && (
+
+                  {agnesModels.length > 0 && (
                     <>
                       <div className="px-3 py-2 bg-gray-50 sticky top-0 z-10 flex items-center gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-orange-700">OpenCode Zen/Go</p>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full font-bold tracking-normal">a pagamento</span>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-fuchsia-700">Agnes AI · Flash</p>
+                        <span className="text-[9px] px-1.5 py-0.5 bg-fuchsia-100 text-fuchsia-700 rounded-full font-bold tracking-normal">testo + immagini + video</span>
                       </div>
-                      {opencodeModels.map(m => (
+                      {agnesModels.map(m => (
                         <ModelOption
                           key={m.id} m={m} selected={m.id === selectedId}
                           recommended={m.id === recommendedId}
                           onClick={() => selectModel(m.id)}
                         />
                       ))}
+                      <p className="px-3 py-1.5 text-[10px] text-gray-400 border-b border-gray-50">
+                        La key Agnes abilita anche <span className="font-mono">agnes-image-2.1-flash</span> (immagini contenuti) e <span className="font-mono">agnes-video-v2.0</span>.
+                      </p>
                     </>
                   )}
-                  {paidOpenRouterModels.length > 0 && (
-                    <>
-                      <div className="px-3 py-2 bg-emerald-50 sticky top-0 z-10 flex items-center gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">OpenRouter · a pagamento</p>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold tracking-normal">no code · serve credito</span>
-                      </div>
-                      {paidOpenRouterModels.map(m => (
-                        <ModelOption
-                          key={m.id} m={m} selected={m.id === selectedId}
-                          recommended={m.id === recommendedId}
-                          onClick={() => selectModel(m.id)}
-                        />
-                      ))}
-                    </>
-                  )}
-                  {freeModels.length > 0 && (
+
+                  {orFree.length > 0 && (
                     <>
                       <div className="px-3 py-2 bg-gray-50 sticky top-0 z-10 flex items-center gap-2">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-green-700">OpenRouter · Gratis</p>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-bold tracking-normal">{freeModels.length} modelli</span>
+                        <span className="text-[9px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-bold tracking-normal">
+                          {orModels ? `${orFree.length} dal catalogo live` : `${orFree.length} · lista base`}
+                        </span>
                       </div>
-                      {freeModels.map(m => (
+                      {orFree.map(m => (
                         <ModelOption
                           key={m.id} m={m} selected={m.id === selectedId}
                           recommended={m.id === recommendedId}
@@ -495,7 +426,29 @@ export default function AIModelSelector({ task }: { task?: Task }) {
                       ))}
                     </>
                   )}
-                  {filtered.length === 0 && (
+
+                  {orPaid.length > 0 && (
+                    <>
+                      <div className="px-3 py-2 bg-emerald-50 sticky top-0 z-10 flex items-center gap-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">OpenRouter · A pagamento</p>
+                        <span className="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold tracking-normal">serve credito</span>
+                      </div>
+                      {orPaid.map(m => (
+                        <ModelOption
+                          key={m.id} m={m} selected={m.id === selectedId}
+                          recommended={m.id === recommendedId}
+                          onClick={() => selectModel(m.id)}
+                        />
+                      ))}
+                      {orPaidHidden > 0 && (
+                        <p className="px-3 py-2 text-[10px] text-gray-400">
+                          + altri {orPaidHidden} modelli a pagamento — usa la ricerca per trovarli.
+                        </p>
+                      )}
+                    </>
+                  )}
+
+                  {totalShown === 0 && (
                     <div className="p-6 text-center text-xs text-gray-400">Nessun modello trovato per &ldquo;{search}&rdquo;</div>
                   )}
                 </div>
@@ -505,38 +458,17 @@ export default function AIModelSelector({ task }: { task?: Task }) {
         </div>
       </div>
 
-      {ollamaOnCloud && (
-        <div className="mt-3 flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-amber-900">
+      {orCatalogError && (
+        <div className="mt-3 flex items-start gap-2 text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-gray-600">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>Questo è un modello <strong>locale (AIM)</strong>: gira solo sulla tua installazione sul Mac, non su questo server cloud. Scegli un modello cloud qui sopra.</span>
-        </div>
-      )}
-
-      {ollamaOff && (
-        <div className="mt-3 flex items-start gap-2 text-xs bg-red-50 border border-red-200 rounded-lg p-2.5 text-red-900">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span className="flex-1">Modello locale (AIM) selezionato ma <strong>Ollama è spento</strong> — la generazione fallirà. Avvialo o scegli un modello cloud.</span>
-          <button
-            onClick={startOllama}
-            disabled={startingOllama}
-            className="btn-primary text-[11px] py-1 px-2.5 flex-shrink-0 disabled:opacity-50"
-          >
-            {startingOllama ? 'Avvio…' : 'Avvia Ollama'}
-          </button>
-        </div>
-      )}
-
-      {ollamaModelMissing && (
-        <div className="mt-3 flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-amber-900">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>Ollama è attivo ma il modello <strong>{ollamaTag}</strong> non è scaricato — esegui <code className="bg-amber-100 px-1 rounded">ollama pull {ollamaTag}</code> nel terminale.</span>
+          <span>Catalogo OpenRouter live non raggiungibile ({orCatalogError}): mostro la lista base. I modelli restano utilizzabili.</span>
         </div>
       )}
 
       {needsOrKey && (
         <div className="mt-3 flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-amber-900">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>Modello OpenRouter selezionato — aggiungi API key per usarlo</span>
+          <span>Modello OpenRouter selezionato — aggiungi la API key per usarlo</span>
         </div>
       )}
 
@@ -547,10 +479,10 @@ export default function AIModelSelector({ task }: { task?: Task }) {
         </div>
       )}
 
-      {needsOpcKey && (
-        <div className="mt-3 flex items-start gap-2 text-xs bg-orange-50 border border-orange-200 rounded-lg p-2.5 text-orange-900">
+      {needsAgnesKey && (
+        <div className="mt-3 flex items-start gap-2 text-xs bg-fuchsia-50 border border-fuchsia-200 rounded-lg p-2.5 text-fuchsia-900">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>Modello OpenCode selezionato — aggiungi la API key OpenCode (sk-...) per usarlo</span>
+          <span>Modello Agnes AI selezionato — aggiungi la API key (sk-...) per usarlo</span>
         </div>
       )}
 
@@ -563,7 +495,7 @@ export default function AIModelSelector({ task }: { task?: Task }) {
             {savedKey && <button onClick={removeKey} className="btn-secondary text-xs justify-center text-red-600">Rimuovi</button>}
           </div>
           <p className="text-[10px] text-gray-400 mt-1.5">
-            Crea key gratis su <a href="https://openrouter.ai/keys" target="_blank" rel="noopener" className="text-brand-600 hover:underline">openrouter.ai/keys</a>
+            Crea key gratis su <a href="https://openrouter.ai/keys" target="_blank" rel="noopener" className="text-brand-600 hover:underline">openrouter.ai/keys</a> — i modelli :free non consumano credito.
           </p>
         </div>
       )}
@@ -582,16 +514,16 @@ export default function AIModelSelector({ task }: { task?: Task }) {
         </div>
       )}
 
-      {showOpcInput && (
+      {showAgnesInput && (
         <div className="mt-4 pt-4 border-t border-gray-100">
-          <label className="label">OpenCode API Key</label>
+          <label className="label">Agnes AI API Key</label>
           <div className="flex flex-col sm:flex-row gap-2">
-            <input type="password" value={opcKey} onChange={e => setOpcKey(e.target.value)} placeholder="sk-..." className="input flex-1" />
-            <button onClick={saveOpcKey} className="btn-primary text-xs justify-center">Salva</button>
-            {savedOpcKey && <button onClick={removeOpcKey} className="btn-secondary text-xs justify-center text-red-600">Rimuovi</button>}
+            <input type="password" value={agnesKey} onChange={e => setAgnesKey(e.target.value)} placeholder="sk-..." className="input flex-1" />
+            <button onClick={saveAgnesKey} className="btn-primary text-xs justify-center">Salva</button>
+            {savedAgnesKey && <button onClick={removeAgnesKey} className="btn-secondary text-xs justify-center text-red-600">Rimuovi</button>}
           </div>
           <p className="text-[10px] text-gray-400 mt-1.5">
-            <a href="https://opencode.ai/auth" target="_blank" rel="noopener" className="text-brand-600 hover:underline">opencode.ai/auth</a> (Zen/Go) — richiede account a pagamento/credito. Per gratis affidabile usa Gemini.
+            Endpoint <span className="font-mono">apihub.agnes-ai.com</span> — la stessa key abilita testo (agnes-2.0-flash), immagini (agnes-image-2.1-flash) e video (agnes-video-v2.0).
           </p>
         </div>
       )}
@@ -607,19 +539,22 @@ function ModelOption({ m, selected, recommended, onClick }: { m: Model; selected
         selected ? 'bg-brand-50' : recommended ? 'bg-amber-50/50' : ''
       }`}
     >
-      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${QUALITY_DOT[m.quality]}`} />
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${m.provider === 'gemini' ? 'bg-blue-500' : m.provider === 'agnes' ? 'bg-fuchsia-500' : m.free ? 'bg-green-500' : 'bg-emerald-600'}`} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="text-sm font-semibold text-gray-900 truncate">{m.name}</p>
           {m.badge && (
             <span className="text-[9px] px-1 py-0.5 bg-brand-100 text-brand-700 rounded-full font-medium flex-shrink-0">{m.badge}</span>
           )}
+          {m.vision && (
+            <Eye className="w-3 h-3 text-indigo-400 flex-shrink-0" />
+          )}
           {recommended && (
             <ThumbsUp className="w-3 h-3 text-amber-500 flex-shrink-0" />
           )}
         </div>
         <p className="text-[10px] text-gray-400 truncate">
-          {m.context} · {m.speed} · qualità {m.quality}
+          {m.id} · {m.context}
           {m.recommendedFor?.length ? ` · ${m.recommendedFor.map(t => TASK_LABELS[t as Task] || t).join(', ')}` : ''}
         </p>
       </div>

@@ -478,7 +478,7 @@ function buildSystemPrompt(brand: Record<string, unknown> | null, quality: strin
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, canale, formato, model, openrouter_key, gemini_key, opencode_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls, also_canali, visual_effects, visual_preset, use_trending_effects, consenso_utilizzo } = await request.json()
+    const { cliente_id, canale, formato, model, openrouter_key, gemini_key, opencode_key, agnes_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls, also_canali, visual_effects, visual_preset, use_trending_effects, consenso_utilizzo } = await request.json()
     if (!canale || !formato) {
       return NextResponse.json({ error: 'canale, formato richiesti' }, { status: 400 })
     }
@@ -555,7 +555,7 @@ export async function POST(request: Request) {
       model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: buildSystemPrompt(brand, contentQuality),
       userPrompt,
-      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
+      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
       maxTokens: getQualityTokenBudget(contentQuality),
       // VISION: passa le immagini caricate così il modello GUARDA il prodotto reale
       // e scrive su quello (non sul blazer del catalogo). Serve un modello vision
@@ -582,7 +582,7 @@ export async function POST(request: Request) {
             model: model || 'meta-llama/llama-3.3-70b-instruct:free',
             systemPrompt: buildSystemPrompt(brand, contentQuality),
             userPrompt: `${userPrompt}\n\nVINCOLO ASSOLUTO: il carosello deve avere ESATTAMENTE da 3 a 5 slide nel campo "slides" (mai meno di 3, mai più di 5). La generazione precedente ne aveva ${n}. Rigenera rispettando il vincolo.`,
-            openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
+            openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
             maxTokens: getQualityTokenBudget(contentQuality),
             images: visionUrls,
           })

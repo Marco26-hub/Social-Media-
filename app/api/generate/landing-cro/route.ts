@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, url, content, page_type, model, openrouter_key, gemini_key, opencode_key } = await request.json()
+    const { cliente_id, url, content, page_type, model, openrouter_key, gemini_key, opencode_key, agnes_key } = await request.json()
 
     let pageContent = typeof content === 'string' ? content : ''
     let sourceUrl: string | undefined = typeof url === 'string' ? url : undefined
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       model: model || 'gemini-2.5-flash',
       systemPrompt: 'Sei un CRO specialist senior. Rispondi SOLO con JSON valido, italiano impeccabile. Applica SOLO la rubrica fornita, non inventare criteri diversi.',
       userPrompt,
-      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
+      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
       maxTokens: 4500,
       meta: { clienteId: ctx?.clienteId || undefined, tipo: 'landing_cro', agentName: 'landing' },
     })

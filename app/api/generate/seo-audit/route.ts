@@ -130,7 +130,7 @@ async function saveAudit(clienteId: string, periodo: string, parsed: Record<stri
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, sito_url, periodo, model, openrouter_key, gemini_key, opencode_key } = await request.json()
+    const { cliente_id, sito_url, periodo, model, openrouter_key, gemini_key, opencode_key, agnes_key } = await request.json()
     if (!sito_url) {
       return NextResponse.json({ error: 'sito_url richiesto' }, { status: 400 })
     }
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
       model: model || 'gemini-2.5-flash',
       systemPrompt: 'Sei un auditor SEO/GEO senior. Rispondi con JSON valido, nessun altro testo.',
       userPrompt,
-      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key,
+      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
       maxTokens: 4000,
     })
     const parsed = extractJSON(aiRes) as Record<string, unknown>
