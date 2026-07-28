@@ -15,5 +15,8 @@ demo/
 # graphify knowledge-graph output (local tooling)
 graphify-out/
 
+# analisi commerciale riservata, conservata solo in locale
+COMPETITOR-REPORT.md
+
 # stray local env dumps — never commit
 env.download
