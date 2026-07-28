@@ -15,7 +15,10 @@ export function tabRedirect(target: string, tab: string) {
       if (Array.isArray(value)) value.forEach(v => qs.append(key, v))
       else if (value !== undefined) qs.set(key, value)
     }
-    qs.set('tab', tab)
+    // Un `?tab=` già presente vince: le URL degli hub intermedi (es.
+    // /dashboard/risultati?tab=report) devono atterrare sul tab che chiedono,
+    // non sul default della vecchia pagina.
+    if (!qs.has('tab')) qs.set('tab', tab)
     redirect(`${target}?${qs.toString()}`)
   }
 }
