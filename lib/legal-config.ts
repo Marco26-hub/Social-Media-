@@ -24,8 +24,7 @@ export const TITOLARE = {
   telefono: '+39 347 719 6603',
   // Nessuna iscrizione REA comunicata dal titolare.
   rea: null as string | null,
-  // DPO (Responsabile Protezione Dati): obbligatorio solo in certi casi.
-  // Se non nominato, lascia null.
+  // DPO non nominato, come confermato dal partner legale BCS.
   dpo: null as null | { nome: string; email: string },
   // Partner legale (erogazione consulenze)
   partnerLegale: 'Studio Legale BCS — Avv. Vincenzo Sapone (Cassazionista)',

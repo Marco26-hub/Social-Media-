@@ -37,7 +37,11 @@ export default function PrivacyPage() {
       {TITOLARE.dpo ? (
         <p>Responsabile della Protezione dei Dati (DPO): {TITOLARE.dpo.nome} — <a href={`mailto:${TITOLARE.dpo.email}`}>{TITOLARE.dpo.email}</a>.</p>
       ) : (
-        <p>Il Titolare non ha nominato un DPO in quanto non ricorrono i presupposti obbligatori dell&apos;art. 37 GDPR. <PH>Verificare con lo Studio Legale se necessario.</PH></p>
+        <p>
+          Il Titolare non ha nominato un Responsabile della Protezione dei Dati (DPO).
+          Per richieste relative alla privacy è possibile contattare direttamente il Titolare
+          all&apos;indirizzo <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>.
+        </p>
       )}
 
       <h2>2. Quali dati trattiamo</h2>
