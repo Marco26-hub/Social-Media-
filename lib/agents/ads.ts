@@ -129,7 +129,7 @@ export async function eseguiAdsPerCliente(
         .replace('{{BUDGET}}', () => budget)
         .replace('{{QUALITY_CONTEXT}}', () => qualityContext)
         + '\n\n' + PRO_COPY_STANDARDS + '\n\n' + FUNNEL_STANDARDS
-      const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
+      const model = opts.aiKeys?.model || 'google/gemma-4-31b-it:free'
       const raw = await callAI({
         model,
         systemPrompt: `${SYSTEM[platform]} Livello qualità: ${quality}. Grammatica e ortografia italiane impeccabili. Non inventare dati non forniti; formula ipotesi misurabili. Rispondi SOLO con JSON valido.`,

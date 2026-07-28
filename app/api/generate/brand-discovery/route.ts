@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     })
 
     const aiRes = await callAI({
-      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+      model: model || 'google/gemma-4-31b-it:free',
       systemPrompt: 'Sei un brand strategist senior. Analisi SOLO sul contenuto reale fornito. È severamente vietato inventare dati: se un’informazione non è nel contenuto, scrivi "non rilevabile". Rispondi SOLO con JSON valido.',
       userPrompt,
       openrouterKey: openrouter_key,

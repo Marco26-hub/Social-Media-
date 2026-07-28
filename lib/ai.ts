@@ -12,15 +12,14 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // Modello testo di DEFAULT quando la route/il client non ne specifica uno.
 // Free tier OpenRouter (nessun costo, richiede solo la key). L'admin può scegliere
 // qualsiasi altro modello dalla lista del selettore.
-export const DEFAULT_TEXT_MODEL = 'meta-llama/llama-3.3-70b-instruct:free'
+export const DEFAULT_TEXT_MODEL = 'google/gemma-4-31b-it:free'
 
 // Rete di sicurezza: se il modello scelto fallisce (rate-limit/errore), prova
 // questi (free) prima di arrendersi. Cap basso per restare sotto il timeout gateway.
 const FALLBACK_MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'openai/gpt-oss-120b:free',
-  'qwen/qwen3-next-80b-a3b-instruct:free',
   'google/gemma-4-31b-it:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'openai/gpt-oss-20b:free',
 ]
 const MAX_OPENROUTER_FALLBACKS = 2
 

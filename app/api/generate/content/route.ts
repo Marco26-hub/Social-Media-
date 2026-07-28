@@ -552,7 +552,7 @@ export async function POST(request: Request) {
     const userPrompt = brandContext ? `${brandContext}\n---\n${basePrompt}` : basePrompt
 
     const aiRes = await callAI({
-      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+      model: model || 'google/gemma-4-31b-it:free',
       systemPrompt: buildSystemPrompt(brand, contentQuality),
       userPrompt,
       openrouterKey: openrouter_key,
@@ -579,7 +579,7 @@ export async function POST(request: Request) {
         warnings.push(`Carosello con ${n} slide fuori range 3-5: rigenerato.`)
         try {
           const retryRes = await callAI({
-            model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+            model: model || 'google/gemma-4-31b-it:free',
             systemPrompt: buildSystemPrompt(brand, contentQuality),
             userPrompt: `${userPrompt}\n\nVINCOLO ASSOLUTO: il carosello deve avere ESATTAMENTE da 3 a 5 slide nel campo "slides" (mai meno di 3, mai più di 5). La generazione precedente ne aveva ${n}. Rigenera rispettando il vincolo.`,
             openrouterKey: openrouter_key,

@@ -14,7 +14,7 @@ const DEMO = {
   ],
   per_model: [
     { model: 'gemini-2.5-flash', total_tokens: 150200, chiamate: 61 },
-    { model: 'meta-llama/llama-3.3-70b-instruct:free', total_tokens: 74400, chiamate: 23 },
+    { model: 'google/gemma-4-31b-it:free', total_tokens: 74400, chiamate: 23 },
   ],
   per_agente: [
     { agent_name: 'agente_auto', total_tokens: 88000, chiamate: 30 },

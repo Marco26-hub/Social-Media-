@@ -29,7 +29,7 @@ export default function PianoPage() {
   const [obiettivo, setObiettivo] = useState('mix')
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [aiModel, setAiModel] = useState('meta-llama/llama-3.3-70b-instruct:free')
+  const [aiModel, setAiModel] = useState('google/gemma-4-31b-it:free')
   const [quality, setQuality] = useState<QualitySelection>('auto')
   const [visualPreset, setVisualPreset] = useState<'' | 'trending' | 'premium' | 'minimal' | 'classico'>('')
   const [useTrendingEffects, setUseTrendingEffects] = useState(false)
@@ -44,7 +44,7 @@ export default function PianoPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setAiModel(localStorage.getItem('ai_model') ?? 'meta-llama/llama-3.3-70b-instruct:free')
+      setAiModel(localStorage.getItem('ai_model') ?? 'google/gemma-4-31b-it:free')
     }
   }, [])
 

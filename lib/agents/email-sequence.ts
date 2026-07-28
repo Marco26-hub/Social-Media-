@@ -56,7 +56,7 @@ export async function eseguiEmailSequencePerCliente(
 
   const quality = resolveContentQuality({ piano: cliente.piano })
   const maxTokens = getQualityTokenBudget(quality)
-  const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
+  const model = opts.aiKeys?.model || 'google/gemma-4-31b-it:free'
   const brandStr = brandBlock(brand)
   const prodStr = prodottiBlock(prodotti as Row[])
 

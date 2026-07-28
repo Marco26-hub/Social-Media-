@@ -98,7 +98,7 @@ export default function OnboardingPage() {
       key: 'onboarding-brand-discovery',
       label: `Brand Discovery · ${urlSito || 'demo'}`,
       url: '/api/generate/brand-discovery',
-      body: { url: urlSito, cliente_id: clienteId, model: 'meta-llama/llama-3.3-70b-instruct:free' },
+      body: { url: urlSito, cliente_id: clienteId, model: 'google/gemma-4-31b-it:free' },
       estMs: 25000,
     })
 

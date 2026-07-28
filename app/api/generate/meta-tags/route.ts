@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     if ((!finalTitle || !finalDescription || generate_variants) && content) {
       const identity = ctx ? mergeBrandIdentity(ctx) : {}
       const raw = await callAI({
-        model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+        model: model || 'google/gemma-4-31b-it:free',
         systemPrompt: 'Sei un SEO copywriter senior. Rispondi SOLO con JSON valido, italiano impeccabile, rispetta ESATTAMENTE i limiti di caratteri richiesti.',
         userPrompt: metaOptimizePrompt({
           brandBlock: JSON.stringify(identity, null, 2),

@@ -35,7 +35,7 @@ const TASK_LABELS: Record<Task, string> = {
 }
 
 // Default: modello testo free di OpenRouter (nessun costo, serve solo la key).
-const DEFAULT_MODEL = 'meta-llama/llama-3.3-70b-instruct:free'
+const DEFAULT_MODEL = 'google/gemma-4-31b-it:free'
 
 const TASK_RECOMMENDED: Record<Task, string> = {
   'contenuti-social': DEFAULT_MODEL,
@@ -54,10 +54,9 @@ const TASK_WHY: Record<Task, string> = {
 // Fallback se il catalogo live non è raggiungibile: id verificati (stessi della
 // cascade backend) + un modello immagini di default.
 const OPENROUTER_FALLBACK: Model[] = [
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', free: true, context: '128K', category: 'text', badge: 'Affidabile', recommendedFor: ['contenuti-social', 'piano-editoriale', 'seo-audit', 'blog-articolo'] },
-  { id: 'openai/gpt-oss-120b:free', name: 'OpenAI gpt-oss-120b', free: true, context: '131K', category: 'text' },
-  { id: 'qwen/qwen3-next-80b-a3b-instruct:free', name: 'Qwen3 Next 80B', free: true, context: '262K', category: 'text' },
-  { id: 'google/gemma-4-31b-it:free', name: 'Google Gemma 4 31B', free: true, context: '262K', category: 'text' },
+  { id: 'google/gemma-4-31b-it:free', name: 'Google Gemma 4 31B', free: true, context: '262K', category: 'text', badge: 'Affidabile', recommendedFor: ['contenuti-social', 'piano-editoriale', 'seo-audit', 'blog-articolo'] },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free', name: 'NVIDIA Nemotron 3 Super 120B', free: true, context: '1M', category: 'text' },
+  { id: 'openai/gpt-oss-20b:free', name: 'OpenAI gpt-oss-20b', free: true, context: '131K', category: 'text' },
   { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', free: false, context: '1M', vision: true, category: 'text', badge: 'Vision · crediti' },
   { id: 'google/gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image', free: false, context: '—', category: 'image', badge: 'Genera immagini' },
 ]

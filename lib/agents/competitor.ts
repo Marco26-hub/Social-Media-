@@ -51,7 +51,7 @@ export async function eseguiCompetitorPerCliente(
   }
 
   const brandJson = JSON.stringify(brand, null, 2)
-  const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
+  const model = opts.aiKeys?.model || 'google/gemma-4-31b-it:free'
   const errori: string[] = []
   let analisi = 0
 

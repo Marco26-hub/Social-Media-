@@ -24,7 +24,7 @@ function siteBase(brand: Row | null, cliente: Row | null): string {
 // fornite. Anti-invenzione: le risposte devono derivare dal contenuto dato.
 async function extractFaqFromContent(content: string, keys: Row): Promise<FaqItem[]> {
   const raw = await callAI({
-    model: (keys.model as string) || 'meta-llama/llama-3.3-70b-instruct:free',
+    model: (keys.model as string) || 'google/gemma-4-31b-it:free',
     systemPrompt: 'Sei un SEO specialist. Estrai FAQ reali dal contenuto fornito, senza inventare. Rispondi SOLO con JSON array valido.',
     userPrompt: `Dal contenuto qui sotto estrai 3-6 coppie domanda/risposta utili per una FAQPage. Le risposte devono essere fondate SOLO sul contenuto (niente invenzioni), 30-55 parole, dirette e citabili.\n\nCONTENUTO:\n${content.slice(0, 6000)}\n\nJSON array: [{"domanda":"","risposta":""}]`,
     openrouterKey: keys.openrouterKey as string | undefined,

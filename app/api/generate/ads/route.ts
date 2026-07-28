@@ -132,7 +132,7 @@ export async function POST(request: Request) {
     }
 
     const aiRes = await callAI({
-      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+      model: model || 'google/gemma-4-31b-it:free',
       systemPrompt: `${systemPrompts[platform] || 'Sei un ads specialist. Rispondi SOLO con JSON valido.'} Livello qualità: ${contentQuality}. GRAMMATICA E ORTOGRAFIA ITALIANE IMPECCABILI: mai parole attaccate, accenti e apostrofi corretti, nessun refuso. Non inventare dati non forniti; formula ipotesi misurabili.`,
       userPrompt,
       openrouterKey: openrouter_key,

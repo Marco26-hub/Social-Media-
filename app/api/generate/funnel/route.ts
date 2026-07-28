@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     })
 
     const aiRes = await callAI({
-      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+      model: model || 'google/gemma-4-31b-it:free',
       systemPrompt: 'Sei un funnel strategist senior. Rispondi SOLO con JSON valido, italiano impeccabile. Usa SOLO i lift attesi forniti nel prompt, non inventarne altri.',
       userPrompt,
       openrouterKey: openrouter_key,

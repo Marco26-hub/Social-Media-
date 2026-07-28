@@ -262,7 +262,7 @@ Output SOLO JSON array valido:
             // Default piano = Gemini 2.5 Flash (65K output, 1M contesto): il piano — specie
             // il mensile — produce JSON grandi che i modelli con 8K output troncano. Se manca
             // la key Gemini, la cascade ripiega comunque su OpenRouter free.
-            model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+            model: model || 'google/gemma-4-31b-it:free',
             systemPrompt,
             userPrompt,
             openrouterKey: openrouter_key,

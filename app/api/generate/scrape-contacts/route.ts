@@ -206,7 +206,7 @@ export async function POST(request: Request) {
           .replace('{{TEL}}', extracted.telefono.join(', ') || 'nessuno')
 
         const aiRes = await callAI({
-          model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+          model: model || 'google/gemma-4-31b-it:free',
           systemPrompt: 'Estrai dati strutturati da testo web. Rispondi SOLO con JSON valido.',
           userPrompt: enrichPrompt,
           openrouterKey: openrouter_key,

@@ -1,7 +1,7 @@
 'use client'
 
 // Default: modello testo free di OpenRouter (nessun costo, serve solo la key).
-export const DEFAULT_AI_MODEL = 'meta-llama/llama-3.3-70b-instruct:free'
+export const DEFAULT_AI_MODEL = 'google/gemma-4-31b-it:free'
 
 // Modello salvato da versioni precedenti della UI (provider rimossi:
 // Gemini-nativo/Agnes/Anthropic/OpenCode/Ollama) → si migra al default OpenRouter.

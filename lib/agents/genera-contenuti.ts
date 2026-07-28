@@ -189,7 +189,7 @@ export async function generaContenutiPerCliente(
       const qualityContext = buildQualityContext({ quality, canale, formato })
       const userPrompt = buildUserPrompt({ canale, formato, nomeBrand, settore, tono, tema, prodotto, brandDesc, angle: pickAngle(), qualityContext, extendedSchema })
       const raw = await callAI({
-        model: opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free',
+        model: opts.aiKeys?.model || 'google/gemma-4-31b-it:free',
         systemPrompt,
         userPrompt,
         openrouterKey: opts.aiKeys?.openrouterKey,

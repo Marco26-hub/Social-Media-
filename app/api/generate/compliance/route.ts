@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       .replace('{{TARGET}}', target || brandField(brandIdentity, 'target'))
 
     const aiRes = await callAI({
-      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+      model: model || 'google/gemma-4-31b-it:free',
       systemPrompt: 'Sei un legal compliance specialist italiano. Generi documenti legali conformi a GDPR, Cookie Law e normative italiane. Rispondi SOLO con JSON valido. Non dare consulenza legale personalizzata senza revisione.',
       userPrompt,
       openrouterKey: openrouter_key,

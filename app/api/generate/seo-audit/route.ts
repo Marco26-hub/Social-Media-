@@ -165,7 +165,7 @@ export async function POST(request: Request) {
     // Un audit SEO con score inventati salvato nel DB inquina la cronologia e
     // viola "tutto reale". L'utente riprova o aggiunge una key affidabile.
     const aiRes = await callAI({
-      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+      model: model || 'google/gemma-4-31b-it:free',
       systemPrompt: 'Sei un auditor SEO/GEO senior. Rispondi con JSON valido, nessun altro testo.',
       userPrompt,
       openrouterKey: openrouter_key,

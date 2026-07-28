@@ -120,7 +120,7 @@ export async function POST(request: Request) {
       .replace('{{OPS_NOTES}}', [production_notes, compliance_notes].filter(Boolean).join('\n') || '(non indicate)')
 
     const aiRes = await callAI({
-      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+      model: model || 'google/gemma-4-31b-it:free',
       systemPrompt: 'Sei un social media quality auditor. Valuta contenuti in modo oggettivo. Rispondi SOLO con JSON valido.',
       userPrompt,
       openrouterKey: openrouter_key,

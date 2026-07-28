@@ -128,7 +128,7 @@ export async function eseguiSeoAuditPerCliente(
     .replace('{{CONTENUTI}}', () => JSON.stringify(calendario || [], null, 2))
     .replace('{{LOG}}', () => JSON.stringify(logs || [], null, 2))
 
-  const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
+  const model = opts.aiKeys?.model || 'google/gemma-4-31b-it:free'
   // Niente score finti: se l'AI fallisce, l'errore si propaga (catturato dall'endpoint).
   const raw = await callAI({
     model,

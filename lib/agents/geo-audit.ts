@@ -87,7 +87,7 @@ export async function eseguiGeoAuditPerCliente(
   }))
 
   const nomeBrand = brand ? brandField(brand, 'nome', 'il cliente') : 'il cliente'
-  const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
+  const model = opts.aiKeys?.model || 'google/gemma-4-31b-it:free'
   let raccomandazioni: unknown[] = []
   try {
     const raw = await callAI({

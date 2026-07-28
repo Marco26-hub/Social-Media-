@@ -69,7 +69,7 @@ export async function POST(request: Request) {
         if (!original) continue
         try {
           const raw = await callAI({
-            model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+            model: model || 'google/gemma-4-31b-it:free',
             systemPrompt: 'Sei un editor GEO/SEO senior. Rispondi SOLO con JSON valido, italiano impeccabile.',
             userPrompt: rewriteWeakBlockPrompt(w, original),
             openrouterKey: openrouter_key,

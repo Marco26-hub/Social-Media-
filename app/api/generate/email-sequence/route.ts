@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     })
 
     const aiRes = await callAI({
-      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+      model: model || 'google/gemma-4-31b-it:free',
       systemPrompt: 'Sei un email marketing strategist senior. Italiano impeccabile: mai parole attaccate, accenti/apostrofi corretti. Rispondi SOLO con JSON valido. Non inventare sconti/codici/prezzi non forniti.',
       userPrompt,
       openrouterKey: openrouter_key,
