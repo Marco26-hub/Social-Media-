@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
 
   // INFO-DISCLOSURE: il dettaglio infra (quali provider/segreti sono configurati,
   // SHA del deploy, stato migrazioni, next_actions) è utile SOLO all'admin nella
-  // pagina /dashboard/setup. A un anonimo rivela la composizione dell'infrastruttura
+  // pagina /dashboard/settings?tab=setup. A un anonimo rivela la composizione dell'infrastruttura
   // e cosa manca. Mostra il dettaglio solo ad admin (o in demo, dove è tutto finto);
   // agli altri restituisci il minimo che login page e demo-client consumano
   // (mode + checks.databaseUrl). Lo status HTTP 200/503 resta invariato: l'healthcheck

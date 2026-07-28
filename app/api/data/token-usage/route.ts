@@ -25,7 +25,7 @@ const DEMO = {
 }
 
 // Consumo token AI aggregato (ultimi 30 giorni). Solo admin. Fase 1: globale
-// (cliente_id/agent_name possono essere NULL). Consumato da /dashboard/consumi.
+// (cliente_id/agent_name possono essere NULL). Consumato da /dashboard/risultati?tab=consumi.
 export async function GET() {
   try {
     await requireAdmin()

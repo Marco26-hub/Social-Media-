@@ -6,8 +6,8 @@ import { signOut, useSession } from 'next-auth/react'
 import ClienteSelector from '@/components/ClienteSelector'
 import {
   LayoutDashboard, Calendar, Settings,
-  Package, LogOut, Zap, Menu, X, Search, Target,
-  Users, BarChart3, Sparkles, TrendingUp, FileText, UserPlus, Eye, ShieldCheck, Magnet, Globe, Activity, PenLine, UserCheck, CreditCard, Coins
+  LogOut, Zap, Menu, X, Search, Target,
+  Users, BarChart3, Sparkles, TrendingUp, Magnet, Globe, PenLine, CreditCard
 } from 'lucide-react'
 
 type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string; external?: boolean; adminOnly?: boolean }
@@ -30,32 +30,26 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
+    // Ex 10 voci: Analytics/Report/Log/Consumi confluiti in "Risultati" (tab),
+    // Leads/Competitor in "Leads e Competitor" (tab). Vecchie URL redirette.
     title: 'STRUMENTI',
     items: [
       { href: '/dashboard/piano',  label: 'Piano editoriale', icon: Target, adminOnly: true },
       { href: '/dashboard/blog',   label: 'Blog SEO', icon: PenLine, adminOnly: true },
       { href: '/dashboard/ads',    label: 'Campagne Ads',     icon: TrendingUp, adminOnly: true },
-      { href: '/dashboard/leads',  label: 'Leads',            icon: Magnet, adminOnly: true },
       { href: '/dashboard/seo',    label: 'SEO + GEO Audit',  icon: Search, adminOnly: true },
-      { href: '/dashboard/analytics', label: 'Analytics',   icon: Activity },
-      { href: '/dashboard/consumi', label: 'Consumi Token', icon: Coins, adminOnly: true },
-      { href: '/dashboard/report', label: 'Report',        icon: BarChart3 },
-      { href: '/dashboard/log',    label: 'Log + Report',  icon: FileText, adminOnly: true },
-      { href: '/dashboard/competitor', label: 'Competitor',   icon: Eye, adminOnly: true },
+      { href: '/dashboard/mercato', label: 'Leads e Competitor', icon: Magnet, adminOnly: true },
+      { href: '/dashboard/risultati', label: 'Risultati',     icon: BarChart3 },
     ],
   },
   {
+    // Ex 9 voci: area agenzia (Clienti/Registrazioni/Pagamenti/Onboarding) sotto
+    // "Clienti", e config (Impostazioni/Brand/Prodotti/Setup) sotto "Configurazione".
     title: 'GESTIONE',
     items: [
-      { href: '/dashboard/brand',       label: 'Profilo Brand',  icon: Sparkles, adminOnly: true },
-      { href: '/dashboard/clienti',     label: 'Clienti',       icon: Users, adminOnly: true },
-      { href: '/dashboard/registrazioni', label: 'Registrazioni', icon: UserCheck, adminOnly: true },
-      { href: '/dashboard/pagamenti',   label: 'Pagamenti',     icon: CreditCard, adminOnly: true },
-      { href: '/dashboard/onboarding',  label: 'Onboarding',    icon: UserPlus, adminOnly: true },
-      { href: '/dashboard/prodotti',    label: 'Prodotti',      icon: Package, adminOnly: true },
-      { href: '/dashboard/setup',       label: 'Setup Produzione', icon: ShieldCheck, adminOnly: true },
-      { href: '/dashboard/settings', label: 'Impostazioni',  icon: Settings, adminOnly: true },
-      { href: '/',                   label: 'Vedi landing',  icon: Globe, external: true },
+      { href: '/dashboard/clienti',  label: 'Clienti',        icon: Users, adminOnly: true },
+      { href: '/dashboard/settings', label: 'Configurazione', icon: Settings, adminOnly: true },
+      { href: '/',                   label: 'Vedi landing',   icon: Globe, external: true },
     ],
   },
 ]

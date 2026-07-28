@@ -119,7 +119,7 @@ export default async function DashboardPage() {
 
   const stats = [
     { label: 'Da approvare',          value: daApprovare ?? 0, icon: Clock,         color: 'text-yellow-600', bg: 'bg-yellow-50', href: '/dashboard/calendario?filter=DA_APPROVARE' },
-    { label: 'Pubblicati (7 giorni)', value: pubblicati7g ?? 0,icon: TrendingUp,    color: 'text-green-600',  bg: 'bg-green-50',  href: '/dashboard/log' },
+    { label: 'Pubblicati (7 giorni)', value: pubblicati7g ?? 0,icon: TrendingUp,    color: 'text-green-600',  bg: 'bg-green-50',  href: '/dashboard/risultati?tab=log' },
     { label: 'Pronti da pubblicare',  value: inCoda ?? 0,      icon: Send,          color: 'text-blue-600',   bg: 'bg-blue-50',   href: '/dashboard/calendario?filter=APPROVATO' },
     { label: 'Da sistemare',          value: errori ?? 0,      icon: AlertCircle,   color: 'text-red-600',    bg: 'bg-red-50',    href: '/dashboard/calendario?filter=ERRORE' },
   ]
@@ -148,7 +148,7 @@ export default async function DashboardPage() {
       title: '2. Brand e stile',
       input: 'Sito, stile e tono della tua attività',
       output: 'Le regole che l\'AI seguirà sempre',
-      href: '/dashboard/brand',
+      href: '/dashboard/settings?tab=brand',
       icon: Sparkles,
       done: brandConfigurato,
       cta: brandConfigurato ? 'Rivedi brand' : 'Completa brand',
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
       title: '3. Prodotti e foto',
       input: 'Foto e info dei tuoi prodotti',
       output: 'Materiale pronto per i contenuti',
-      href: '/dashboard/prodotti',
+      href: '/dashboard/settings?tab=prodotti',
       icon: Package,
       done: prodotti > 0,
       cta: prodotti > 0 ? `${prodotti} prodotti` : 'Carica prodotti',
@@ -191,7 +191,7 @@ export default async function DashboardPage() {
       title: '6. Pubblica',
       input: 'I contenuti approvati',
       output: 'Post pubblicati sui social',
-      href: '/dashboard/log',
+      href: '/dashboard/risultati?tab=log',
       icon: Megaphone,
       done: pubblicati7g > 0,
       attention: errori > 0,
@@ -202,7 +202,7 @@ export default async function DashboardPage() {
       title: '7. Report cliente',
       input: 'I risultati del mese',
       output: 'Un report chiaro da consegnare',
-      href: '/dashboard/report',
+      href: '/dashboard/risultati?tab=report',
       icon: BarChart3,
       done: pubblicati7g > 0,
       cta: 'Crea report',
@@ -288,7 +288,7 @@ export default async function DashboardPage() {
               7 step collegati: ogni passo usa l&apos;output del precedente. Le card in giallo richiedono la tua azione.
             </p>
           </div>
-          <Link href="/dashboard/setup" className="btn-secondary text-xs py-2 px-3 self-start md:self-auto">
+          <Link href="/dashboard/settings?tab=setup" className="btn-secondary text-xs py-2 px-3 self-start md:self-auto">
             <ShieldCheck className="w-4 h-4" />
             Setup produzione
           </Link>
@@ -366,7 +366,7 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2 card p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">Ultime attività</h2>
-            <Link href="/dashboard/log" className="text-sm text-brand-600 hover:underline">Vedi tutti →</Link>
+            <Link href="/dashboard/risultati?tab=log" className="text-sm text-brand-600 hover:underline">Vedi tutti →</Link>
           </div>
           {ultimi.length === 0 ? (
             <p className="text-sm text-gray-400">Nessuna attività ancora.</p>

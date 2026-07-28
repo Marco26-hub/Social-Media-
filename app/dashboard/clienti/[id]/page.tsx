@@ -128,14 +128,14 @@ export default function ClienteDetailPage() {
       {/* Quick actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         {[
-          { href: '/dashboard/brand', label: 'Profilo Brand', icon: Building2, color: 'bg-violet-500' },
+          { href: '/dashboard/settings?tab=brand', label: 'Profilo Brand', icon: Building2, color: 'bg-violet-500' },
           { href: '/dashboard/calendario', label: 'Calendario', icon: Calendar, color: 'bg-blue-500' },
           { href: '/dashboard/piano', label: 'Piano editoriale', icon: Target, color: 'bg-purple-500' },
           { href: '/dashboard/ads', label: 'Campagne Ads', icon: TrendingUp, color: 'bg-orange-500' },
           { href: '/dashboard/seo', label: 'SEO + GEO', icon: FileText, color: 'bg-teal-500' },
-          { href: '/dashboard/report', label: 'Report', icon: BarChart3, color: 'bg-emerald-500' },
-          { href: '/dashboard/prodotti', label: 'Prodotti', icon: ShoppingBag, color: 'bg-pink-500' },
-          { href: '/dashboard/log', label: 'Log attività', icon: Clock, color: 'bg-gray-500' },
+          { href: '/dashboard/risultati?tab=report', label: 'Report', icon: BarChart3, color: 'bg-emerald-500' },
+          { href: '/dashboard/settings?tab=prodotti', label: 'Prodotti', icon: ShoppingBag, color: 'bg-pink-500' },
+          { href: '/dashboard/risultati?tab=log', label: 'Log attività', icon: Clock, color: 'bg-gray-500' },
         ].map(({ href, label, icon: Icon, color }) => (
           <Link key={href} href={href} className="card p-3 md:p-4 hover:shadow-md transition-all flex items-center gap-3 group">
             <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>

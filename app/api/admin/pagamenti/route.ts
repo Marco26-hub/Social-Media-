@@ -150,7 +150,7 @@ export async function POST(request: Request) {
       if (!customerId) return NextResponse.json({ error: 'Cliente senza Stripe customer: crea prima un checkout.' }, { status: 400 })
       const portal = await createStripePortalSession({
         stripeCustomerId: customerId,
-        returnUrl: `${baseUrl}/dashboard/pagamenti`,
+        returnUrl: `${baseUrl}/dashboard/clienti?tab=pagamenti`,
       })
       return NextResponse.json({ ok: true, url: portal.url, id: portal.id })
     }
@@ -167,8 +167,8 @@ export async function POST(request: Request) {
       pacchettoNome: pacchetto.nome,
       amountCents: euroStringToCents(pacchetto.prezzo),
       setupCents: euroStringToCents(pacchetto.setup), // 'Setup incluso' → 0 → nessun addebito
-      successUrl: `${baseUrl}/dashboard/pagamenti?stripe=success`,
-      cancelUrl: `${baseUrl}/dashboard/pagamenti?stripe=cancel`,
+      successUrl: `${baseUrl}/dashboard/clienti?tab=pagamenti&stripe=success`,
+      cancelUrl: `${baseUrl}/dashboard/clienti?tab=pagamenti&stripe=cancel`,
       stripeCustomerId: str(cliente.stripe_customer_id) || null,
     })
 

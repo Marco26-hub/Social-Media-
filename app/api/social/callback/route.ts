@@ -13,8 +13,8 @@ export async function GET(request: Request) {
     const code = searchParams.get('code')
     const state = searchParams.get('state')
     const fbError = searchParams.get('error_description') || searchParams.get('error')
-    if (fbError) return NextResponse.redirect(`${base}/dashboard/analytics?connect=error&msg=${encodeURIComponent(fbError)}`)
-    if (!code || !state) return NextResponse.redirect(`${base}/dashboard/analytics?connect=error&msg=parametri_mancanti`)
+    if (fbError) return NextResponse.redirect(`${base}/dashboard/risultati?tab=performance&connect=error&msg=${encodeURIComponent(fbError)}`)
+    if (!code || !state) return NextResponse.redirect(`${base}/dashboard/risultati?tab=performance&connect=error&msg=parametri_mancanti`)
 
     const clienteId = await requireClienteAccess(decodeURIComponent(state))
     const redirectUri = `${base}/api/social/callback`
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const igAccounts = await getInstagramAccounts(userToken)
 
     if (!igAccounts.length) {
-      return NextResponse.redirect(`${base}/dashboard/analytics?connect=no_ig`)
+      return NextResponse.redirect(`${base}/dashboard/risultati?tab=performance&connect=no_ig`)
     }
 
     if (dbReady()) {
@@ -43,9 +43,9 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.redirect(`${base}/dashboard/analytics?connect=ok&accounts=${igAccounts.length}`)
+    return NextResponse.redirect(`${base}/dashboard/risultati?tab=performance&connect=ok&accounts=${igAccounts.length}`)
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'errore'
-    return NextResponse.redirect(`${base}/dashboard/analytics?connect=error&msg=${encodeURIComponent(msg.slice(0, 120))}`)
+    return NextResponse.redirect(`${base}/dashboard/risultati?tab=performance&connect=error&msg=${encodeURIComponent(msg.slice(0, 120))}`)
   }
 }

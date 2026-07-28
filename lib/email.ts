@@ -56,7 +56,7 @@ export async function notifyNewRegistration(p: { nome: string; email: string; az
   return sendEmail({
     to,
     subject: `Nuova registrazione: ${p.azienda} (${p.pacchetto || 'nessun pacchetto'})`,
-    text: `Nuova richiesta di registrazione da approvare:\n\nNome: ${p.nome}\nEmail: ${p.email}\nAzienda: ${p.azienda}\nPacchetto: ${p.pacchetto || '—'}\n\nApprova da /dashboard/registrazioni.`,
+    text: `Nuova richiesta di registrazione da approvare:\n\nNome: ${p.nome}\nEmail: ${p.email}\nAzienda: ${p.azienda}\nPacchetto: ${p.pacchetto || '—'}\n\nApprova da /dashboard/clienti?tab=registrazioni.`,
   })
 }
 
