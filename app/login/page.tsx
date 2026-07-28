@@ -1,29 +1,33 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { ArrowLeft, Eye, EyeOff, LockKeyhole, LogIn, ShieldCheck } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
+import styles from './login.module.css'
 
 type AccessHint = {
   enabled: boolean
   mode: 'demo' | 'production-hint'
-  // Presenti SOLO in demo: in production-hint l'API non rivela le credenziali admin.
   username?: string
   password?: string
   note?: string
 }
 
 export default function LoginPage() {
-  const [email, setEmail]       = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [isDemo, setIsDemo]     = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [isDemo, setIsDemo] = useState(false)
   const [accessHint, setAccessHint] = useState<AccessHint | null>(null)
   const router = useRouter()
 
-  // Check demo mode and auto-login
   useEffect(() => {
     async function checkDemo() {
       try {
@@ -31,12 +35,13 @@ export default function LoginPage() {
         const data = await res.json()
         const hintRes = await fetch('/api/system/access')
         const hint = hintRes.ok ? await hintRes.json() as AccessHint : null
+
         if (hint?.enabled) {
           setAccessHint(hint)
-          // In production-hint username/password sono assenti: non pre-compilare.
           if (hint.username) setEmail(hint.username)
           if (hint.password) setPassword(hint.password)
         }
+
         if (data.mode === 'demo') {
           setIsDemo(true)
           setLoading(true)
@@ -52,9 +57,10 @@ export default function LoginPage() {
           }
         }
       } catch {
-        // Not in demo mode, show login form
+        // In modalità normale viene mostrato il form di accesso.
       }
     }
+
     checkDemo()
   }, [router])
 
@@ -65,99 +71,159 @@ export default function LoginPage() {
     setError('')
   }
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleLogin(event: React.FormEvent) {
+    event.preventDefault()
     setLoading(true)
     setError('')
-    const res = await signIn('credentials', { email, password, redirect: false })
-    if (res?.error) {
-      const err = res.error || ''
-      if (/IN_ATTESA/.test(err)) {
+    const response = await signIn('credentials', { email, password, redirect: false })
+
+    if (response?.error) {
+      const loginError = response.error || ''
+      if (/IN_ATTESA/.test(loginError)) {
         setError('Account in attesa di attivazione. Ti avvisiamo via email appena è pronto.')
-      } else if (/RIFIUTATO|NON_ATTIVO/.test(err)) {
+      } else if (/RIFIUTATO|NON_ATTIVO/.test(loginError)) {
         setError('Questo account non è attivo. Contattaci per assistenza.')
       } else {
         setError('Credenziali non valide')
       }
       setLoading(false)
-    } else {
-      router.push('/dashboard/clienti')
+      return
     }
+
+    router.push('/dashboard/clienti')
   }
 
   if (isDemo && loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-sidebar">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-600 rounded-2xl mb-4 animate-pulse">
-            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Social Automation</h1>
-          <p className="text-gray-400 text-sm">Accesso demo in corso...</p>
-          <div className="mt-4 rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-left text-xs text-gray-200">
-            <p className="font-semibold text-white">Accesso Admin Demo</p>
-            <p className="mt-1">Utente: <span className="font-mono">{accessHint?.username || 'admin'}</span></p>
-            <p>Password: <span className="font-mono">{accessHint?.password || '1234567'}</span></p>
+      <main className={styles.page}>
+        <div className={styles.loadingState}>
+          <span className={styles.logoShell}>
+            <Image src="/brand/swa-logo-official.png" alt="SWA" width={118} height={55} priority />
+          </span>
+          <span className={styles.loader} aria-hidden="true" />
+          <h1>Accesso demo in corso</h1>
+          <p>Stiamo preparando l’area operativa Social Automation.</p>
+          <div className={styles.demoCredentials}>
+            <strong>Accesso Admin Demo</strong>
+            <span>Utente: <b>{accessHint?.username || 'admin'}</b></span>
+            <span>Password: <b>{accessHint?.password || '1234567'}</b></span>
           </div>
         </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sidebar">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-600 rounded-2xl mb-4">
-            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-white">Social Automation</h1>
-          <p className="text-gray-400 text-sm mt-1">Automazione contenuti</p>
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <Link href="/" className={styles.brand} aria-label="Social Automation, torna alla home">
+          <span className={styles.logoShell}>
+            <Image src="/brand/swa-logo-official.png" alt="SWA" width={118} height={55} priority />
+          </span>
+          <span>
+            <strong>Social Automation</strong>
+            <small>Area riservata</small>
+          </span>
+        </Link>
+        <div className={styles.headerActions}>
+          <ThemeToggle />
+          <Link href="/" className={styles.backLink}>
+            <ArrowLeft size={16} aria-hidden="true" />
+            Torna al sito
+          </Link>
         </div>
-        <div className="card p-6">
+      </header>
+
+      <section className={styles.accessLayout} aria-labelledby="login-title">
+        <div className={styles.intro}>
+          <p className={styles.eyebrow}><LockKeyhole size={16} aria-hidden="true" /> Accesso protetto</p>
+          <h1>Il tuo lavoro digitale, in un unico spazio.</h1>
+          <p>Entra nell’area operativa per consultare attività, contenuti e risultati del tuo piano.</p>
+          <div className={styles.securityNote}>
+            <ShieldCheck size={20} aria-hidden="true" />
+            <span>
+              <strong>Connessione riservata</strong>
+              <small>Le credenziali sono gestite tramite accesso autenticato.</small>
+            </span>
+          </div>
+        </div>
+
+        <div className={styles.formPanel}>
+          <div className={styles.formHeading}>
+            <span className={styles.formIcon}><LogIn size={20} aria-hidden="true" /></span>
+            <div>
+              <h2 id="login-title">Accedi all’area cliente</h2>
+              <p>Inserisci le credenziali associate al tuo account.</p>
+            </div>
+          </div>
+
           {(isDemo || accessHint) && (
-            <div className="mb-4 p-3 bg-brand-50 rounded-lg border border-brand-200">
-              <div className="flex items-start justify-between gap-3">
+            <div className={styles.accessHint}>
+              <div>
                 <div>
-                  <p className="text-sm text-brand-700 font-medium">Accesso Admin</p>
-                  {/* Credenziali mostrate SOLO in demo (non segrete). In production-hint
-                      l'API non le rivela: mostriamo solo la nota. */}
+                  <strong>Accesso Admin</strong>
                   {accessHint?.username && accessHint?.password && (
-                    <p className="text-xs text-brand-600 mt-1">
-                      Utente: <span className="font-mono font-semibold">{accessHint.username}</span>
-                      {' '}· Password: <span className="font-mono font-semibold">{accessHint.password}</span>
+                    <p>
+                      Utente: <b>{accessHint.username}</b>
+                      {' '}· Password: <b>{accessHint.password}</b>
                     </p>
                   )}
-                  {accessHint?.note && <p className="text-[11px] text-brand-500 mt-1">{accessHint.note}</p>}
+                  {accessHint?.note && <p>{accessHint.note}</p>}
                 </div>
                 {accessHint?.username && accessHint?.password && (
-                  <button type="button" onClick={fillAccessHint} className="text-xs px-2 py-1 rounded-md bg-white text-brand-700 border border-brand-200 hover:bg-brand-100">
-                    Compila
-                  </button>
+                  <button type="button" onClick={fillAccessHint}>Compila</button>
                 )}
               </div>
             </div>
           )}
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="label">Email</label>
-              <input type="text" value={email} onChange={e => setEmail(e.target.value)} className="input" placeholder="admin" required autoComplete="username" />
+
+          <form onSubmit={handleLogin} className={styles.form}>
+            <div className={styles.field}>
+              <label htmlFor="login-email">Email o nome utente</label>
+              <input
+                id="login-email"
+                type="text"
+                value={email}
+                onChange={event => setEmail(event.target.value)}
+                placeholder="nome@azienda.it"
+                required
+                autoComplete="username"
+              />
             </div>
-            <div>
-              <label className="label">Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="input" placeholder="••••••••" required autoComplete="current-password" />
+            <div className={styles.field}>
+              <label htmlFor="login-password">Password</label>
+              <span className={styles.passwordField}>
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={event => setPassword(event.target.value)}
+                  placeholder="Inserisci la password"
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+                  title={showPassword ? 'Nascondi password' : 'Mostra password'}
+                  onClick={() => setShowPassword(value => !value)}
+                >
+                  {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                </button>
+              </span>
             </div>
-            {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
-            <button type="submit" className="btn-primary w-full justify-center" disabled={loading}>{loading ? 'Accesso...' : 'Accedi'}</button>
+            {error && <p className={styles.error} role="alert">{error}</p>}
+            <button type="submit" className={styles.submit} disabled={loading}>
+              <LogIn size={18} aria-hidden="true" />
+              {loading ? 'Accesso in corso...' : 'Accedi'}
+            </button>
           </form>
+
+          <p className={styles.support}>
+            Problemi con l’accesso? <a href="mailto:swsdautomation@gmail.com">Contatta l’assistenza</a>
+          </p>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }

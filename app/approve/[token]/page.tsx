@@ -1,10 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { CheckCircle, XCircle, Loader2, Clock } from 'lucide-react'
 import PostPreview from '@/components/PostPreview'
 
 type ApprovalData = Record<string, unknown>
+
+function ApprovalBrand() {
+  return (
+    <span className="inline-flex h-10 w-[86px] items-center justify-center rounded bg-[#0f6b4f]">
+      <Image src="/brand/swa-logo-official.png" alt="SWA" width={74} height={34} className="h-[34px] w-[74px] object-contain" priority />
+    </span>
+  )
+}
 
 export default function ApprovePage({ params }: { params: Promise<{ token: string }> }) {
   const [data, setData] = useState<ApprovalData | null>(null)
@@ -71,19 +80,20 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center"><Loader2 className="w-8 h-8 text-brand-600 animate-spin mx-auto mb-3" /><p className="text-sm text-gray-500">Caricamento contenuto...</p></div>
+      <div className="text-center"><ApprovalBrand /><Loader2 className="w-8 h-8 text-brand-600 animate-spin mx-auto mb-3 mt-5" /><p className="text-sm text-gray-500">Caricamento contenuto...</p></div>
     </div>
   )
 
   if (error) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="card max-w-md w-full p-8 text-center"><XCircle className="w-12 h-12 text-red-400 mx-auto mb-3" /><h1 className="text-lg font-bold text-gray-900 mb-2">Link non valido</h1><p className="text-sm text-gray-500">{error}</p></div>
+      <div className="card max-w-md w-full p-8 text-center"><ApprovalBrand /><XCircle className="w-12 h-12 text-red-400 mx-auto mb-3 mt-5" /><h1 className="text-lg font-bold text-gray-900 mb-2">Link non valido</h1><p className="text-sm text-gray-500">{error}</p></div>
     </div>
   )
 
   if (done) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="card max-w-md w-full p-8 text-center">
+        <ApprovalBrand />
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
         <h1 className="text-xl font-bold text-gray-900 mb-2">Grazie!</h1>
         <p className="text-sm text-gray-500">La tua risposta è stata registrata. Riceverai aggiornamenti dal team.</p>
@@ -133,6 +143,7 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
+          <div className="mb-4"><ApprovalBrand /></div>
           <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-3 ${
             isFeedback ? 'bg-amber-100 text-amber-800' : 'bg-brand-600 text-white'
           }">

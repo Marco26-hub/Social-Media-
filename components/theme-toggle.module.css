@@ -1,0 +1,53 @@
+.toggle {
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #cfd8d4;
+  border-radius: 4px;
+  background: #f6f9f7;
+  color: #25352f;
+  cursor: pointer;
+  transition: border-color .18s ease, background-color .18s ease, color .18s ease;
+}
+
+.toggle:hover {
+  border-color: #0f6b4f;
+  background: white;
+  color: #0f6b4f;
+}
+
+.toggle:focus-visible {
+  outline: 3px solid #d8aa35;
+  outline-offset: 2px;
+}
+
+.withLabel {
+  width: 100%;
+  min-height: 46px;
+  display: inline-flex;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+:global(html[data-theme='dark']) .toggle {
+  border-color: #354740;
+  background: #151d19;
+  color: #edf4f1;
+}
+
+:global(html[data-theme='dark']) .toggle:hover {
+  border-color: #49d6a0;
+  background: #1b2823;
+  color: #49d6a0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle {
+    transition: none;
+  }
+}

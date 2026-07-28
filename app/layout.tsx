@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   creator: 'Social Automation',
   publisher: 'Social Automation',
   applicationName: 'Social Automation',
+  icons: {
+    icon: '/brand/swa-logo-official.png',
+    shortcut: '/brand/swa-logo-official.png',
+    apple: '/brand/swa-logo-official.png',
+  },
   openGraph: {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
@@ -50,7 +55,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="it">
+    <html lang="it" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('swa-theme');var t=s==='dark'||s==='light'?s:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body>
         <JsonLd />
         {children}

@@ -10,7 +10,8 @@
   --sa-paper: #f7f8f5;
   --sa-white: #fff;
   min-height: 100vh;
-  overflow-x: hidden;
+  padding-top: 68px;
+  overflow-x: visible;
   background: var(--sa-white);
   color: var(--sa-ink);
   font-family: Arial, Helvetica, sans-serif;
@@ -41,9 +42,11 @@
 .skipLink:focus { transform: translateY(0); }
 
 .navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 40;
+  right: 0;
+  left: 0;
+  z-index: 60;
   min-height: 68px;
   display: flex;
   align-items: center;
@@ -51,6 +54,7 @@
   padding: 0 max(22px, calc((100vw - 1180px) / 2));
   border-bottom: 1px solid rgba(21, 35, 31, .1);
   background: rgba(255, 255, 255, .94);
+  box-shadow: 0 8px 26px rgba(21, 35, 31, .06);
   backdrop-filter: blur(14px);
 }
 
@@ -81,17 +85,23 @@
   object-fit: contain;
 }
 
-.navLinks { display: flex; align-items: center; gap: 24px; margin-left: auto; }
-.navLinks a,
 .loginLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   color: #34423d;
   font-size: 14px;
   font-weight: 650;
   text-decoration: none;
 }
-.navLinks a:hover,
 .loginLink:hover { color: var(--sa-green); }
-.navActions { display: flex; align-items: center; gap: 18px; }
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding-left: 20px;
+  border-left: 1px solid var(--sa-line);
+}
 .navCta {
   min-height: 42px;
   display: inline-flex;
@@ -715,8 +725,180 @@
 .page a:focus-visible,
 .page summary:focus-visible { outline: 3px solid var(--sa-gold); outline-offset: 3px; }
 
-@media (max-width: 960px) {
-  .navLinks { display: none; }
+:global(html[data-theme='dark']) .page {
+  --sa-ink: #edf4f1;
+  --sa-muted: #aab8b2;
+  --sa-green: #49d6a0;
+  --sa-green-dark: #25b67f;
+  --sa-mint: #17372d;
+  --sa-line: #293b35;
+  --sa-paper: #111713;
+  --sa-white: #080b09;
+  background: #080b09;
+  color: #edf4f1;
+}
+
+:global(html[data-theme='dark']) .skipLink,
+:global(html[data-theme='dark']) .signalBand,
+:global(html[data-theme='dark']) .compliance,
+:global(html[data-theme='dark']) .legalPartner,
+:global(html[data-theme='dark']) .footer {
+  background: #0d1814;
+}
+
+:global(html[data-theme='dark']) .navbar {
+  border-color: rgba(238, 244, 241, .12);
+  background: rgba(8, 12, 10, .94);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .34);
+}
+
+:global(html[data-theme='dark']) .brandLogoShell,
+:global(html[data-theme='dark']) .navCta,
+:global(html[data-theme='dark']) .primaryButton {
+  background: #0f6b4f;
+}
+
+:global(html[data-theme='dark']) .loginLink,
+:global(html[data-theme='dark']) .trustList li,
+:global(html[data-theme='dark']) .serviceList li {
+  color: #c2cec9;
+}
+
+:global(html[data-theme='dark']) .secondaryButton,
+:global(html[data-theme='dark']) .outlineButton {
+  border-color: #4b5d56;
+  color: #edf4f1;
+}
+
+:global(html[data-theme='dark']) .microcopy,
+:global(html[data-theme='dark']) .visualLabel,
+:global(html[data-theme='dark']) .visualStats small,
+:global(html[data-theme='dark']) .visualStats span,
+:global(html[data-theme='dark']) .previewCopy p,
+:global(html[data-theme='dark']) .price span,
+:global(html[data-theme='dark']) .setup,
+:global(html[data-theme='dark']) .ctaNote {
+  color: #8f9e98;
+}
+
+:global(html[data-theme='dark']) .productVisual,
+:global(html[data-theme='dark']) .visualStats div,
+:global(html[data-theme='dark']) .contentPreview,
+:global(html[data-theme='dark']) .benefit,
+:global(html[data-theme='dark']) .service,
+:global(html[data-theme='dark']) .legalGrid article,
+:global(html[data-theme='dark']) .priceCard {
+  border-color: #2d3d37;
+  background: #121a17;
+}
+
+:global(html[data-theme='dark']) .productVisual {
+  box-shadow: 18px 22px 0 #102c24;
+}
+
+:global(html[data-theme='dark']) .productVisual::after {
+  background: rgba(255, 255, 255, .12);
+}
+
+:global(html[data-theme='dark']) .liveStatus {
+  background: #17372d;
+  color: #77e2ba;
+}
+
+:global(html[data-theme='dark']) .previewMedia,
+:global(html[data-theme='dark']) .finalCta {
+  background: #0f6b4f;
+}
+
+:global(html[data-theme='dark']) .visualFlow span {
+  border-color: #34443e;
+  color: #82908b;
+}
+
+:global(html[data-theme='dark']) .benefit::after {
+  color: #33413c;
+}
+
+:global(html[data-theme='dark']) .service:nth-child(2) > span,
+:global(html[data-theme='dark']) .legalGrid svg {
+  background: #3b211c;
+  color: #ff9b82;
+}
+
+:global(html[data-theme='dark']) .service:nth-child(3) > span {
+  background: #3a311a;
+  color: #f2c85b;
+}
+
+:global(html[data-theme='dark']) .processList li > span {
+  border-color: #70473c;
+}
+
+:global(html[data-theme='dark']) .complianceItems article {
+  background: #15251f;
+}
+
+:global(html[data-theme='dark']) .complianceItems article:hover {
+  background: #1d342b;
+}
+
+:global(html[data-theme='dark']) .legalSection {
+  background: #100d0c;
+}
+
+:global(html[data-theme='dark']) .legalGrid article:hover {
+  background: #17201c;
+}
+
+:global(html[data-theme='dark']) .legalPartner {
+  box-shadow: 0 18px 38px rgba(0, 0, 0, .34);
+}
+
+:global(html[data-theme='dark']) .legalPartnerCta {
+  color: #15231f;
+}
+
+:global(html[data-theme='dark']) .legalDisclaimer {
+  color: #9f8f89;
+}
+
+:global(html[data-theme='dark']) .pricingSection {
+  background: #0d110f;
+}
+
+:global(html[data-theme='dark']) .planFit {
+  background: #17201c;
+}
+
+:global(html[data-theme='dark']) .planFit p,
+:global(html[data-theme='dark']) .priceCard li,
+:global(html[data-theme='dark']) .pricingAssurance > div {
+  color: #c0cbc7;
+}
+
+:global(html[data-theme='dark']) .pricingAssurance {
+  border-color: #2f4a40;
+  background: #11241d;
+}
+
+:global(html[data-theme='dark']) .darkButton {
+  background: #090d0b;
+  color: white;
+}
+
+:global(html[data-theme='dark']) .lightButton {
+  color: #094c39;
+}
+
+@media (min-width: 1281px) and (max-width: 1500px) {
+  .brand > span:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 1280px) {
+  .navActions { display: none; }
+  .navbar > :last-child { margin-left: auto; }
   .hero { min-height: auto; grid-template-columns: 1fr; gap: 55px; padding-top: 58px; }
   .productVisual { max-width: 650px; }
   .processLayout,
@@ -730,6 +912,8 @@
 }
 
 @media (max-width: 700px) {
+  .page { padding-top: 60px; }
+
   .section,
   .compliance,
   .legalSection,

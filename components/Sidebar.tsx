@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { signOut, useSession } from 'next-auth/react'
@@ -70,12 +71,12 @@ export default function Sidebar() {
     <>
       {/* Mobile top bar */}
       <header className="md:hidden sticky top-0 z-30 bg-sidebar text-white flex items-center justify-between px-4 py-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-brand-600 rounded-lg flex items-center justify-center">
-            <Zap className="w-3.5 h-3.5 text-white" />
-          </div>
+        <Link href="/" className="flex items-center gap-2" aria-label="Social Automation, home">
+          <span className="w-[76px] h-9 bg-[#0f6b4f] rounded flex items-center justify-center flex-shrink-0">
+            <Image src="/brand/swa-logo-official.png" alt="SWA" width={66} height={30} className="w-[66px] h-[30px] object-contain" priority />
+          </span>
           <span className="font-semibold text-sm">Social Automation</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-1">
           <Link
             href="/"
@@ -107,12 +108,12 @@ export default function Sidebar() {
       `}>
         {/* Logo */}
         <div className="flex items-center justify-between gap-3 px-5 py-5 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
+          <Link href="/" className="flex items-center gap-2.5 min-w-0" aria-label="Social Automation, home">
+            <span className="w-[76px] h-9 bg-[#0f6b4f] rounded flex items-center justify-center flex-shrink-0">
+              <Image src="/brand/swa-logo-official.png" alt="SWA" width={66} height={30} className="w-[66px] h-[30px] object-contain" priority />
+            </span>
             <span className="text-white font-semibold text-sm">Social Automation</span>
-          </div>
+          </Link>
           <button onClick={() => setOpen(false)} className="md:hidden text-white/60 hover:text-white p-1">
             <X className="w-5 h-5" />
           </button>

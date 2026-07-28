@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Scale, ShieldCheck, CheckCircle2, Clock } from 'lucide-react'
 
@@ -126,7 +127,13 @@ function ConsulenzaForm() {
 export default function ConsulenzaPage() {
   return (
     <main style={{ minHeight: '100vh', background: 'linear-gradient(180deg,#f3ede0,#fffaf0)', padding: '24px 18px 70px' }}>
-      <div style={{ maxWidth: 560, margin: '0 auto 20px' }}>
+      <div style={{ maxWidth: 560, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
+        <Link href="/" aria-label="Social Automation, home" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, color: C.ink, fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>
+          <span style={{ width: 86, height: 40, display: 'grid', placeItems: 'center', borderRadius: 4, background: '#0f6b4f' }}>
+            <Image src="/brand/swa-logo-official.png" alt="SWA" width={74} height={34} priority style={{ width: 74, height: 34, objectFit: 'contain' }} />
+          </span>
+          <span>Social Automation</span>
+        </Link>
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#223f2c', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
           <ArrowLeft size={16} /> Torna al sito
         </Link>

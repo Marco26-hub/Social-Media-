@@ -56,15 +56,17 @@
 .brandMark {
   display: inline-grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  color: var(--ink);
-  background: var(--grad-gold);
-  font-family: "Fraunces", Georgia, serif;
-  font-size: 22px;
-  font-weight: 900;
-  box-shadow: 4px 4px 0 rgba(16, 18, 14, 0.12), var(--sheen);
+  width: 96px;
+  height: 46px;
+  border-radius: 4px;
+  background: var(--forest);
+  box-shadow: 4px 4px 0 rgba(16, 18, 14, 0.12);
+}
+
+.brandMark img {
+  width: 82px;
+  height: 38px;
+  object-fit: contain;
 }
 
 .title {

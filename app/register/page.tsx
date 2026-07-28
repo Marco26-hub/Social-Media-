@@ -4,11 +4,23 @@ export const dynamic = 'force-dynamic'
 
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
 import TurnstileWidget from '@/components/TurnstileWidget'
 import styles from './register.module.css'
+
+function RegisterBrand() {
+  return (
+    <Link href="/" className={styles.brand} aria-label="Social Automation, home">
+      <span className={styles.brandMark}>
+        <Image src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
+      </span>
+      <span>Social Automation</span>
+    </Link>
+  )
+}
 
 function RegisterForm() {
   const params = useSearchParams()
@@ -68,6 +80,7 @@ function RegisterForm() {
   if (done) {
     return (
       <div className={styles.card}>
+        <RegisterBrand />
         <div className={styles.success}>
           <span className={styles.successIcon}><CheckCircle2 size={34} /></span>
           <h1>Richiesta ricevuta</h1>
@@ -81,10 +94,7 @@ function RegisterForm() {
 
   return (
     <div className={styles.card}>
-      <Link href="/" className={styles.brand}>
-        <span className={styles.brandMark}>SA</span>
-        <span>Social Automation</span>
-      </Link>
+      <RegisterBrand />
 
       <h1 className={styles.title}>Crea il tuo account</h1>
       <p className={styles.subtitle}>

@@ -12,6 +12,7 @@ import {
   FileSearch,
   Globe2,
   Layers3,
+  LogIn,
   LockKeyhole,
   Megaphone,
   ScanSearch,
@@ -21,8 +22,12 @@ import {
   Target,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { TITOLARE } from '@/lib/legal-config'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
+import MobileMenu from '@/components/MobileMenu'
+import DesktopMenu from '@/components/DesktopMenu'
+import ThemeToggle from '@/components/ThemeToggle'
 import styles from './landing.module.css'
 
 export const metadata: Metadata = {
@@ -151,19 +156,33 @@ export default function LandingPage() {
           </span>
           <span>Social Automation</span>
         </Link>
-        <nav className={styles.navLinks} aria-label="Navigazione principale">
-          <a href="#servizi">Servizi</a>
-          <a href="#metodo">Come funziona</a>
-          <a href="#prezzi">Pacchetti</a>
-          <a href="#legale">Legale &amp; AI</a>
-          <a href="#faq">FAQ</a>
-        </nav>
+        <DesktopMenu
+          links={[
+            { href: '#servizi', label: 'Servizi' },
+            { href: '#metodo', label: 'Come funziona' },
+            { href: '#prezzi', label: 'Pacchetti' },
+            { href: '#legale', label: 'Consulenza legale AI' },
+            { href: '#faq', label: 'FAQ' },
+          ]}
+        />
         <div className={styles.navActions}>
-          <Link href="/portale" className={styles.loginLink}>Area cliente</Link>
+          <ThemeToggle />
+          <Link href="/portale" className={styles.loginLink}><LogIn size={15} aria-hidden="true" /> Area cliente</Link>
           <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.navCta}>
-            Richiedi una prova
+            Richiedi una prova <ArrowRight size={15} aria-hidden="true" />
           </a>
         </div>
+        <MobileMenu
+          links={[
+            { href: '#servizi', label: 'Servizi' },
+            { href: '#metodo', label: 'Come funziona' },
+            { href: '#prezzi', label: 'Pacchetti' },
+            { href: '#legale', label: 'Consulenza legale AI' },
+            { href: '#faq', label: 'FAQ' },
+          ]}
+          ctaHref={waLink(TRIAL_MSG)}
+          ctaLabel="Richiedi una prova"
+        />
       </header>
 
       <section className={styles.hero} aria-labelledby="hero-title">
@@ -309,7 +328,7 @@ export default function LandingPage() {
       <section id="legale" className={styles.legalSection} aria-labelledby="legal-title">
         <div className={styles.legalHeading}>
           <div>
-            <p className={styles.eyebrow}>Consulenza legale &amp; AI Compliance</p>
+            <p className={styles.eyebrow}>Consulenza legale AI &amp; Compliance</p>
             <h2 id="legal-title">Innovare con regole, responsabilità e processi chiari.</h2>
           </div>
           <div>
@@ -435,7 +454,7 @@ export default function LandingPage() {
           <span>Social Automation</span>
         </Link>
         <div><Link href="/privacy">Privacy</Link><Link href="/termini">Termini</Link><Link href="/login">Accesso</Link></div>
-        <p>© 2026 Social Automation</p>
+        <p>© 2026 {TITOLARE.brand}<br />{TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}</p>
       </footer>
 
       <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.mobileCta}>

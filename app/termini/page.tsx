@@ -74,7 +74,7 @@ export default function TerminiPage() {
 
       <h2>9. Legge applicabile e foro</h2>
       <p>Le presenti condizioni sono regolate dalla legge italiana. Per le controversie con consumatori è competente il foro di
-        residenza del consumatore; negli altri casi il foro di <PH>[DA COMPILARE — città sede legale]</PH>.</p>
+        residenza del consumatore; negli altri casi il foro di {TITOLARE.foroCompetente}.</p>
 
       <h2>10. Modifiche</h2>
       <p>Ci riserviamo di modificare i presenti termini. Le modifiche saranno comunicate e si intendono accettate proseguendo nell&apos;uso del servizio.</p>

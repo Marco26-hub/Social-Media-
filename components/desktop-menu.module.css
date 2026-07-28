@@ -1,0 +1,96 @@
+.desktopMenu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 4px;
+  border: 1px solid #e1e7e4;
+  border-radius: 6px;
+  background: #f6f9f7;
+}
+
+.desktopMenu a {
+  position: relative;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border-radius: 4px;
+  color: #3b4944;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+
+.desktopMenu a::after {
+  position: absolute;
+  right: 10px;
+  bottom: 3px;
+  left: 10px;
+  height: 2px;
+  border-radius: 2px;
+  background: #0f6b4f;
+  content: '';
+  opacity: 0;
+  transform: scaleX(.35);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.desktopMenu a:hover,
+.desktopMenu a:focus-visible,
+.desktopMenu .active {
+  color: #0f6b4f;
+  background: white;
+}
+
+.desktopMenu .active {
+  box-shadow: 0 2px 8px rgba(21, 35, 31, .08);
+}
+
+.desktopMenu a:hover::after,
+.desktopMenu a:focus-visible::after,
+.desktopMenu .active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.desktopMenu a:focus-visible {
+  outline: 3px solid #d8aa35;
+  outline-offset: 2px;
+}
+
+@media (max-width: 1280px) {
+  .desktopMenu {
+    display: none;
+  }
+}
+
+:global(html[data-theme='dark']) .desktopMenu {
+  border-color: #293b35;
+  background: #111713;
+}
+
+:global(html[data-theme='dark']) .desktopMenu a {
+  color: #b8c5c0;
+}
+
+:global(html[data-theme='dark']) .desktopMenu a:hover,
+:global(html[data-theme='dark']) .desktopMenu a:focus-visible,
+:global(html[data-theme='dark']) .desktopMenu .active {
+  color: #49d6a0;
+  background: #1a241f;
+}
+
+:global(html[data-theme='dark']) .desktopMenu .active {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .32);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktopMenu a,
+  .desktopMenu a::after {
+    transition: none;
+  }
+}

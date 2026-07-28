@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import styles from './legal.module.css'
 import { TITOLARE } from '@/lib/legal-config'
@@ -28,8 +29,11 @@ export default function LegalShell({
     <div className={styles.page}>
       <header className={styles.header}>
         <Link href="/" className={styles.back}><ArrowLeft size={16} /> Torna al sito</Link>
-        <Link href="/" className={styles.headerBrand}>
-          <span className={styles.headerMark}>SA</span> {TITOLARE.brand}
+        <Link href="/" className={styles.headerBrand} aria-label={`${TITOLARE.brand}, home`}>
+          <span className={styles.headerMark}>
+            <Image src="/brand/swa-logo-official.png" alt="SWA" width={68} height={30} priority />
+          </span>
+          {TITOLARE.brand}
         </Link>
       </header>
 

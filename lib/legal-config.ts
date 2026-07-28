@@ -7,23 +7,25 @@
 
 export const TITOLARE = {
   // Ragione sociale completa (o nome e cognome se ditta individuale/freelance)
-  ragioneSociale: '[DA COMPILARE — Ragione sociale / Nome Cognome]',
+  ragioneSociale: 'Social Automation di Marco Dibenedetto',
   // Nome commerciale mostrato al pubblico
   brand: 'Social Automation',
   // Partita IVA
-  partitaIva: '[DA COMPILARE — P.IVA]',
+  partitaIva: '03786790133',
   // Codice fiscale (se diverso dalla P.IVA)
-  codiceFiscale: '[DA COMPILARE — Codice Fiscale]',
+  codiceFiscale: 'DBNMRC80E04C933Q',
   // Sede legale completa
-  sedeLegale: '[DA COMPILARE — Via, n. civico, CAP, Città (Provincia)]',
+  sedeLegale: 'Via Giuseppe Verdi 2B, 22072 Cermenate (CO)',
+  // Foro concordato per i rapporti non soggetti al foro inderogabile del consumatore
+  foroCompetente: 'Como',
   // Email di contatto ordinaria
   email: 'swsdautomation@gmail.com',
   // PEC (posta certificata) — consigliata per le comunicazioni formali
-  pec: '[DA COMPILARE — PEC]',
+  pec: 'dibenedetto.80@pec.it',
   // Telefono / WhatsApp business
-  telefono: '[DA COMPILARE — Telefono]',
-  // REA (Repertorio Economico Amministrativo), se iscritto
-  rea: '[DA COMPILARE — REA, se applicabile]',
+  telefono: '+39 347 719 6603',
+  // Nessuna iscrizione REA comunicata dal titolare.
+  rea: null as string | null,
   // DPO (Responsabile Protezione Dati): obbligatorio solo in certi casi.
   // Se non nominato, lascia null.
   dpo: null as null | { nome: string; email: string },
@@ -32,7 +34,7 @@ export const TITOLARE = {
   // URL pubblico del sito (per riferimenti nei documenti)
   sitoUrl: 'https://socialautomation.app',
   // Data ultimo aggiornamento dei documenti legali (aggiornare a ogni modifica)
-  ultimoAggiornamento: '8 luglio 2026',
+  ultimoAggiornamento: '28 luglio 2026',
 }
 
 // Fornitori/sub-responsabili del trattamento realmente usati dalla piattaforma.

@@ -380,6 +380,120 @@
 .finalCta > div:last-child { flex: none; display: grid; justify-items: center; }
 .emailLink { margin-top: 12px; color: white; font-size: 12px; }
 
+:global(html[data-theme='dark']) .page {
+  --ink: #edf4f1;
+  --muted: #aab8b2;
+  --green: #49d6a0;
+  --green-dark: #25b67f;
+  --mint: #17372d;
+  --line: #293b35;
+  --paper: #111713;
+}
+
+:global(html[data-theme='dark']) .heroProof li,
+:global(html[data-theme='dark']) .serviceBody li,
+:global(html[data-theme='dark']) .priceCard li,
+:global(html[data-theme='dark']) .planFit p,
+:global(html[data-theme='dark']) .pricingAssurance > div {
+  color: #c0cbc7;
+}
+
+:global(html[data-theme='dark']) .serviceMap,
+:global(html[data-theme='dark']) .mapCore,
+:global(html[data-theme='dark']) .mapNode,
+:global(html[data-theme='dark']) .serviceRow,
+:global(html[data-theme='dark']) .methodGrid li,
+:global(html[data-theme='dark']) .priceCard {
+  border-color: #2d3d37;
+  background: #121a17;
+}
+
+:global(html[data-theme='dark']) .serviceMap {
+  box-shadow: 18px 22px 0 #102c24;
+}
+
+:global(html[data-theme='dark']) .serviceMap::before,
+:global(html[data-theme='dark']) .serviceMap::after {
+  background: #34443e;
+}
+
+:global(html[data-theme='dark']) .mapCore {
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .34);
+}
+
+:global(html[data-theme='dark']) .mapCore > span {
+  background: #0f6b4f;
+}
+
+:global(html[data-theme='dark']) .mapCore small,
+:global(html[data-theme='dark']) .price span,
+:global(html[data-theme='dark']) .setup,
+:global(html[data-theme='dark']) .ctaNote {
+  color: #8f9e98;
+}
+
+:global(html[data-theme='dark']) .valueBand,
+:global(html[data-theme='dark']) .legalSection {
+  background: #0d1814;
+}
+
+:global(html[data-theme='dark']) .serviceIdentity {
+  background: #111713;
+}
+
+:global(html[data-theme='dark']) .serviceIdentity > span {
+  color: #33413c;
+}
+
+:global(html[data-theme='dark']) .serviceRow:nth-child(2) .serviceIdentity svg {
+  background: #3b211c;
+  color: #ff9b82;
+}
+
+:global(html[data-theme='dark']) .serviceRow:nth-child(3) .serviceIdentity svg {
+  background: #3a311a;
+  color: #f2c85b;
+}
+
+:global(html[data-theme='dark']) .outcome {
+  background: #271816;
+  color: #d8c5bf;
+}
+
+:global(html[data-theme='dark']) .methodGrid span {
+  border-color: #70473c;
+}
+
+:global(html[data-theme='dark']) .legalGrid article {
+  background: #15251f;
+}
+
+:global(html[data-theme='dark']) .partnerMark,
+:global(html[data-theme='dark']) .customPlan {
+  color: #15231f;
+}
+
+:global(html[data-theme='dark']) .pricingSection {
+  background: #0d110f;
+}
+
+:global(html[data-theme='dark']) .planFit {
+  background: #17201c;
+}
+
+:global(html[data-theme='dark']) .pricingAssurance {
+  border-color: #2f4a40;
+  background: #11241d;
+}
+
+:global(html[data-theme='dark']) .customPlan > a {
+  background: #090d0b;
+}
+
+:global(html[data-theme='dark']) .finalCta {
+  background: #0f6b4f;
+}
+
 @keyframes nodeFloat {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }

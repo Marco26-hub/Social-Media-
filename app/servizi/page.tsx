@@ -9,6 +9,7 @@ import {
   FileSearch,
   Globe2,
   Layers3,
+  LogIn,
   LockKeyhole,
   Megaphone,
   MessageCircle,
@@ -20,8 +21,12 @@ import {
   Target,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
+import MobileMenu from '@/components/MobileMenu'
+import DesktopMenu from '@/components/DesktopMenu'
+import ThemeToggle from '@/components/ThemeToggle'
 import site from '../landing.module.css'
 import styles from './servizi-v2.module.css'
 
@@ -169,23 +174,38 @@ export default function ServiziPage() {
           </span>
           <span>Social Automation</span>
         </Link>
-        <nav className={site.navLinks} aria-label="Navigazione principale">
-          <a href="#servizi">Servizi</a>
-          <a href="#metodo">Metodo</a>
-          <a href="#legale">Legale &amp; AI</a>
-          <a href="#pacchetti">Soluzioni</a>
-        </nav>
+        <DesktopMenu
+          links={[
+            { href: '#servizi', label: 'Servizi' },
+            { href: '#metodo', label: 'Come funziona' },
+            { href: '#pacchetti', label: 'Pacchetti' },
+            { href: '#legale', label: 'Consulenza legale AI' },
+            { href: '#faq', label: 'FAQ' },
+          ]}
+        />
         <div className={site.navActions}>
-          <Link href="/portale" className={site.loginLink}>Area cliente</Link>
+          <ThemeToggle />
+          <Link href="/portale" className={site.loginLink}><LogIn size={15} aria-hidden="true" /> Area cliente</Link>
           <a
             href={waLink('Ciao! Vorrei capire quale servizio Social Automation è adatto alla mia azienda.')}
             target="_blank"
             rel="noopener noreferrer"
             className={site.navCta}
           >
-            Richiedi una consulenza
+            Richiedi una consulenza <ArrowRight size={15} aria-hidden="true" />
           </a>
         </div>
+        <MobileMenu
+          links={[
+            { href: '#servizi', label: 'Servizi' },
+            { href: '#metodo', label: 'Come funziona' },
+            { href: '#pacchetti', label: 'Pacchetti' },
+            { href: '#legale', label: 'Consulenza legale AI' },
+            { href: '#faq', label: 'FAQ' },
+          ]}
+          ctaHref={waLink('Ciao! Vorrei capire quale servizio Social Automation è adatto alla mia azienda.')}
+          ctaLabel="Richiedi una consulenza"
+        />
       </header>
 
       <section className={styles.hero} aria-labelledby="services-hero-title">
@@ -292,7 +312,7 @@ export default function ServiziPage() {
       <section id="legale" className={styles.legalSection} aria-labelledby="legal-title">
         <div className={styles.legalIntro}>
           <div>
-            <p className={site.eyebrow}>Consulenza legale &amp; AI Compliance</p>
+            <p className={site.eyebrow}>Consulenza legale AI &amp; Compliance</p>
             <h2 id="legal-title">Tecnologia e responsabilità nello stesso progetto.</h2>
           </div>
           <p>
@@ -385,7 +405,7 @@ export default function ServiziPage() {
         </div>
       </section>
 
-      <section className={styles.faqSection} aria-labelledby="faq-title">
+      <section id="faq" className={styles.faqSection} aria-labelledby="faq-title">
         <div className={styles.sectionHeading}>
           <p className={site.eyebrow}>Domande frequenti</p>
           <h2 id="faq-title">Chiarezza prima di iniziare.</h2>
@@ -427,7 +447,7 @@ export default function ServiziPage() {
           <span>Social Automation</span>
         </Link>
         <div><Link href="/privacy">Privacy</Link><Link href="/termini">Termini</Link><Link href="/login">Accesso</Link></div>
-        <p>© 2026 Social Automation</p>
+        <p>© 2026 {TITOLARE.brand}<br />{TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}</p>
       </footer>
 
       <a

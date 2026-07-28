@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import PostPreview from '@/components/PostPreview'
 import type { Contenuto } from '@/lib/types'
@@ -246,13 +248,18 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     <div className="min-h-screen bg-gray-50 py-6 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Navigazione: indietro + calendario */}
-        <div className="flex items-center gap-2 mb-4">
-          <button onClick={() => router.back()} className="btn-secondary py-1.5 px-3 text-sm inline-flex items-center gap-1.5">
-            <ArrowLeft className="w-4 h-4" /> Indietro
-          </button>
-          <button onClick={() => router.push('/dashboard/calendario')} className="btn-secondary py-1.5 px-3 text-sm inline-flex items-center gap-1.5">
-            <LayoutDashboard className="w-4 h-4" /> Calendario
-          </button>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <Link href="/" className="inline-flex h-10 w-[86px] items-center justify-center rounded bg-[#0f6b4f]" aria-label="Social Automation, home">
+            <Image src="/brand/swa-logo-official.png" alt="SWA" width={74} height={34} className="h-[34px] w-[74px] object-contain" priority />
+          </Link>
+          <div className="flex items-center gap-2">
+            <button onClick={() => router.back()} className="btn-secondary py-1.5 px-3 text-sm inline-flex items-center gap-1.5">
+              <ArrowLeft className="w-4 h-4" /> Indietro
+            </button>
+            <button onClick={() => router.push('/dashboard/calendario')} className="btn-secondary py-1.5 px-3 text-sm inline-flex items-center gap-1.5">
+              <LayoutDashboard className="w-4 h-4" /> Calendario
+            </button>
+          </div>
         </div>
 
         <div className="text-center mb-8">
