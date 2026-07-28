@@ -10,7 +10,7 @@ const jsonLd = {
       url: SITE_URL,
       logo: `${SITE_URL}/og.png`,
       description:
-        'Social Automation è il partner per la crescita digitale di agenzie e PMI italiane: gestione social con AI, siti ed e-commerce e visibilità su Google e sugli assistenti AI (SEO e GEO). Consulenze legali e AI compliance (GDPR e AI Act) in collaborazione con Studio Legale BCS. In arrivo: receptionist AI 24/7 e agenti di automazione aziendale.',
+        'Social Automation è un servizio digitale gestito per PMI e professionisti: strategia, contenuti, pubblicazione multicanale, siti ed e-commerce, SEO e GEO con controllo umano.',
       sameAs: ['https://studiodigitale.eu/'],
       makesOffer: {
         '@type': 'OfferCatalog',
@@ -79,13 +79,13 @@ const jsonLd = {
       inLanguage: 'it-IT',
       publisher: { '@id': `${SITE_URL}/#organization` },
       description:
-        'Piattaforma e servizio gestito che mette l’AI al lavoro sul business: genera contenuti social (hook, caption, hashtag, CTA), piano editoriale, blog SEO, campagne ADS, audit SEO e GEO, analisi competitor, lead generation, catalogo prodotti, immagini con AI e documenti legali (Privacy, Cookie, GDPR). Pubblicazione multi-canale con approvazione umana 1-click.',
+        'Piattaforma e servizio gestito per piano editoriale, contenuti social, blog SEO e GEO, analisi competitor, pubblicazione multicanale, approvazione umana e report.',
       offers: {
         '@type': 'AggregateOffer',
         priceCurrency: 'EUR',
-        lowPrice: 390,
-        highPrice: 2590,
-        offerCount: 5,
+        lowPrice: 490,
+        highPrice: 890,
+        offerCount: 2,
       },
     },
     {
@@ -106,7 +106,7 @@ const jsonLd = {
           name: 'Quali servizi offre Social Automation?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Quattro servizi attivi: Social automatizzato (contenuti e pubblicazione con approvazione umana), Siti & E-commerce (siti e negozi online che convertono, con pannello di gestione), Visibilità & Crescita (posizionamento su Google e sugli assistenti AI, SEO e GEO) e Consulenze Legali e AI Compliance (GDPR e AI Act, in collaborazione con Studio Legale BCS). In arrivo con accesso anticipato: Voce AI & Reception (receptionist AI 24/7) e Automazione & Agenti AI.',
+            text: 'Social Automation offre gestione social multicanale, siti ed e-commerce, contenuti SEO e GEO, analisi competitor, approvazione nel portale e report. Le configurazioni complesse e la consulenza AI compliance sono disponibili su preventivo.',
           },
         },
         {
@@ -138,7 +138,7 @@ const jsonLd = {
           name: 'Quanto costa Social Automation?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'I piani partono dal pacchetto Starter a 390€/mese, passano per Crescita a 1.090€/mese fino al pacchetto Dominio a 2.590€/mese. Il dettaglio aggiornato è nella pagina Servizi.',
+            text: 'Il piano Presenza costa 490 euro al mese e il piano Crescita 890 euro al mese, IVA esclusa. I progetti per e-commerce, agenzie e organizzazioni sono configurati su preventivo.',
           },
         },
       ],

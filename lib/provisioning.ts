@@ -7,21 +7,18 @@
 import { q, q1 } from '@/lib/db'
 
 export const PACCHETTO_LABEL: Record<string, string> = {
-  starter: 'Starter', presenza: 'Presenza', slancio: 'Slancio', crescita: 'Crescita', ecommerce: 'E-commerce', dominio: 'Dominio',
+  presenza: 'Presenza',
+  crescita: 'Crescita',
 }
 
 // Pacchetto vendita → piano DB (enum free/pro/agency/enterprise) + contenuti/mese.
 export const PACCHETTO_PIANO: Record<string, { piano: string; contenuti: number }> = {
-  starter:   { piano: 'pro',        contenuti: 8 },
   presenza:  { piano: 'pro',        contenuti: 12 },
-  slancio:   { piano: 'agency',     contenuti: 16 },
   crescita:  { piano: 'agency',     contenuti: 20 },
-  ecommerce: { piano: 'agency',     contenuti: 30 },
-  dominio:   { piano: 'enterprise', contenuti: 50 },
 }
 
-// Fallback sicuro: pacchetto ignoto → Starter (8), non regala quote alte.
-export const PACCHETTO_FALLBACK = { piano: 'pro', contenuti: 8 }
+// Fallback sicuro: pacchetto ignoto → Presenza.
+export const PACCHETTO_FALLBACK = { piano: 'pro', contenuti: 12 }
 
 export function slugify(value: string): string {
   return value

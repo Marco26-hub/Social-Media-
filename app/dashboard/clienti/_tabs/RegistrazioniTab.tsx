@@ -14,7 +14,7 @@ type Registrazione = {
 }
 
 const PACCHETTO_LABEL: Record<string, string> = {
-  starter: 'Starter', presenza: 'Presenza', crescita: 'Crescita', ecommerce: 'E-commerce', dominio: 'Dominio',
+  presenza: 'Presenza', crescita: 'Crescita',
 }
 
 export default function RegistrazioniPage() {

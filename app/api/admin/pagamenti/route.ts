@@ -29,7 +29,7 @@ function demoPayload() {
         piano: 'pro',
         pacchetto_slug: 'crescita',
         pacchetto_nome: 'Crescita',
-        canone: '€1.090',
+        canone: '€890',
         attivo: true,
         stripe_customer_id: null,
         stripe_subscription_id: null,

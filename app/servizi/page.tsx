@@ -61,21 +61,21 @@ const extras = [
 ]
 
 const legalCards = [
-  { icon: Scale, title: 'Audit AI Act', text: 'Verifichiamo se e come i sistemi AI che usi rientrano nelle categorie di rischio del Regolamento UE 2024/1689, e ti diciamo cosa devi fare per essere a norma entro le scadenze.' },
-  { icon: ShieldCheck, title: 'Privacy & GDPR con l’AI', text: 'Ti aiutiamo a usare l’AI rispettando la privacy: dai dati che alimentano i modelli al diritto di spiegazione, con informativa e consensi in regola.' },
-  { icon: FileCheck2, title: 'Trasparenza contenuti AI', text: 'Quando un contenuto è generato dall’AI, va dichiarato. Ti diciamo quando è obbligatorio e mettiamo le etichette giuste su post, immagini e articoli, come chiede la legge.' },
-  { icon: LockKeyhole, title: 'Copyright e contratti AI', text: 'Chiariamo a chi appartengono i contenuti e le immagini creati dall’AI e scriviamo i contratti giusti con clienti, fornitori e piattaforme, così sai cosa puoi usare e pubblicare.' },
+  { icon: Scale, title: 'Valutazione AI Act', text: 'Con professionisti qualificati analizziamo ruolo, finalità e livello di rischio dei sistemi AI utilizzati, individuando gli adempimenti applicabili al caso concreto.' },
+  { icon: ShieldCheck, title: 'Privacy e protezione dei dati', text: 'Valutiamo flussi di dati, basi giuridiche, informative, fornitori e misure organizzative collegate all’impiego dell’intelligenza artificiale.' },
+  { icon: FileCheck2, title: 'Trasparenza dei contenuti AI', text: 'Definiamo criteri di revisione, responsabilità editoriale ed eventuale identificazione dei contenuti generati o manipolati, quando richiesta dalla normativa applicabile.' },
+  { icon: LockKeyhole, title: 'Copyright e contratti', text: 'Esaminiamo licenze, diritti di utilizzo, responsabilità e clausole contrattuali relative a contenuti, modelli e piattaforme AI.' },
 ]
 
 const compareRows = [
   { label: 'Contenuti', trad: '2-12 post al mese', us: 'Contenuti multi-canale + reel', usWin: true },
   { label: 'Audit SEO + GEO', trad: false, us: 'Incluso da Crescita' },
-  { label: 'Lead generation', trad: false, us: 'Scraping + scoring caldo/tiepido/freddo' },
-  { label: 'Analisi competitor', trad: false, us: 'Monitoraggio continuo' },
+  { label: 'Lead generation', trad: false, us: 'Disponibile su progetto' },
+  { label: 'Analisi competitor', trad: false, us: 'Inclusa in Crescita' },
   { label: 'Campagne ADS', trad: 'A volte, a parte', us: 'Struttura + ottimizzazione' },
   { label: 'Report', trad: 'Manuale, se previsto', us: 'Automatico + storico consultabile' },
   { label: 'Approvazione contenuti', trad: 'Email / chat sparse', us: '1 click nel pannello' },
-  { label: 'Flagship / mese', trad: '€940 - €1.290 (solo social)', us: '€1.090 (sistema completo)', usWin: true },
+  { label: 'Piano Crescita / mese', trad: 'Preventivo variabile', us: '€890, perimetro dichiarato', usWin: true },
 ]
 
 const faqs = [
