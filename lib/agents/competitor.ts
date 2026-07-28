@@ -45,7 +45,7 @@ export async function eseguiCompetitorPerCliente(
   const brand = (brandRows[0] as Row) || {}
   const competitors = competitorRows as Row[]
   // Niente lista competitor → nulla da analizzare: salta e segnala (l'admin aggiunge
-  // competitor dalla dashboard /dashboard/mercato?tab=competitor).
+  // competitor dalla dashboard /dashboard/marketing?tab=competitor).
   if (!competitors.length) {
     return { clienteId, analisi: 0, errori: ['Nessun competitor salvato: analisi saltata. Aggiungi competitor dalla dashboard.'] }
   }

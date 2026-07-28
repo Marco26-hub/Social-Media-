@@ -1,4 +1,4 @@
 import { tabRedirect } from '@/lib/tab-redirect'
 
-// Vecchia URL: questa pagina è ora il tab "competitor" di /dashboard/mercato.
-export default tabRedirect('/dashboard/mercato', 'competitor')
+// Vecchia URL: questa pagina è ora il tab "competitor" di /dashboard/marketing.
+export default tabRedirect('/dashboard/marketing', 'competitor')

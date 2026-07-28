@@ -119,7 +119,7 @@ export default async function DashboardPage() {
 
   const stats = [
     { label: 'Da approvare',          value: daApprovare ?? 0, icon: Clock,         color: 'text-yellow-600', bg: 'bg-yellow-50', href: '/dashboard/calendario?filter=DA_APPROVARE' },
-    { label: 'Pubblicati (7 giorni)', value: pubblicati7g ?? 0,icon: TrendingUp,    color: 'text-green-600',  bg: 'bg-green-50',  href: '/dashboard/risultati?tab=log' },
+    { label: 'Pubblicati (7 giorni)', value: pubblicati7g ?? 0,icon: TrendingUp,    color: 'text-green-600',  bg: 'bg-green-50',  href: '/dashboard/marketing?tab=log' },
     { label: 'Pronti da pubblicare',  value: inCoda ?? 0,      icon: Send,          color: 'text-blue-600',   bg: 'bg-blue-50',   href: '/dashboard/calendario?filter=APPROVATO' },
     { label: 'Da sistemare',          value: errori ?? 0,      icon: AlertCircle,   color: 'text-red-600',    bg: 'bg-red-50',    href: '/dashboard/calendario?filter=ERRORE' },
   ]
@@ -191,7 +191,7 @@ export default async function DashboardPage() {
       title: '6. Pubblica',
       input: 'I contenuti approvati',
       output: 'Post pubblicati sui social',
-      href: '/dashboard/risultati?tab=log',
+      href: '/dashboard/marketing?tab=log',
       icon: Megaphone,
       done: pubblicati7g > 0,
       attention: errori > 0,
@@ -202,7 +202,7 @@ export default async function DashboardPage() {
       title: '7. Report cliente',
       input: 'I risultati del mese',
       output: 'Un report chiaro da consegnare',
-      href: '/dashboard/risultati?tab=report',
+      href: '/dashboard/marketing?tab=report',
       icon: BarChart3,
       done: pubblicati7g > 0,
       cta: 'Crea report',
@@ -366,7 +366,7 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2 card p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">Ultime attività</h2>
-            <Link href="/dashboard/risultati?tab=log" className="text-sm text-brand-600 hover:underline">Vedi tutti →</Link>
+            <Link href="/dashboard/marketing?tab=log" className="text-sm text-brand-600 hover:underline">Vedi tutti →</Link>
           </div>
           {ultimi.length === 0 ? (
             <p className="text-sm text-gray-400">Nessuna attività ancora.</p>

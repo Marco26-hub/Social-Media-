@@ -6,8 +6,8 @@ import { signOut, useSession } from 'next-auth/react'
 import ClienteSelector from '@/components/ClienteSelector'
 import {
   LayoutDashboard, Calendar, Settings,
-  LogOut, Zap, Menu, X, Search, Target,
-  Users, BarChart3, Sparkles, TrendingUp, Magnet, Globe, PenLine, CreditCard
+  LogOut, Zap, Menu, X, Target,
+  Users, Sparkles, TrendingUp, Globe, CreditCard
 } from 'lucide-react'
 
 type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string; external?: boolean; adminOnly?: boolean }
@@ -30,16 +30,13 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
-    // Ex 10 voci: Analytics/Report/Log/Consumi confluiti in "Risultati" (tab),
-    // Leads/Competitor in "Leads e Competitor" (tab). Vecchie URL redirette.
+    // Ex 10 voci: Blog SEO, Campagne Ads, SEO + GEO, Leads, Competitor,
+    // Analytics, Report, Log e Consumi sono tutti tab di /dashboard/marketing.
+    // Vecchie URL vive via redirect stub.
     title: 'STRUMENTI',
     items: [
-      { href: '/dashboard/piano',  label: 'Piano editoriale', icon: Target, adminOnly: true },
-      { href: '/dashboard/blog',   label: 'Blog SEO', icon: PenLine, adminOnly: true },
-      { href: '/dashboard/ads',    label: 'Campagne Ads',     icon: TrendingUp, adminOnly: true },
-      { href: '/dashboard/seo',    label: 'SEO + GEO Audit',  icon: Search, adminOnly: true },
-      { href: '/dashboard/mercato', label: 'Leads e Competitor', icon: Magnet, adminOnly: true },
-      { href: '/dashboard/risultati', label: 'Risultati',     icon: BarChart3 },
+      { href: '/dashboard/piano',     label: 'Piano editoriale',      icon: Target, adminOnly: true },
+      { href: '/dashboard/marketing', label: 'Marketing e risultati', icon: TrendingUp },
     ],
   },
   {

@@ -321,7 +321,7 @@ export default function IlMioPianoPage() {
             </div>
             <p className="mt-1 text-sm text-gray-500">Dati reali da /api/data/report · {formatPeriodo(report)}</p>
           </div>
-          <Link href="/dashboard/risultati?tab=performance" className="btn-secondary w-full justify-center text-sm md:w-auto">
+          <Link href="/dashboard/marketing?tab=performance" className="btn-secondary w-full justify-center text-sm md:w-auto">
             Apri analytics dettagliate
             <ArrowRight className="h-4 w-4" />
           </Link>

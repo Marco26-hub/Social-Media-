@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation'
 type SearchParams = Record<string, string | string[] | undefined>
 
 // Le pagine che erano voci di menu separate sono diventate tab delle pagine
-// contenitore (/dashboard/risultati, /dashboard/mercato, /dashboard/clienti,
-// /dashboard/settings). Questo helper genera lo stub che tiene vive le vecchie
+// contenitore (/dashboard/marketing, /dashboard/clienti, /dashboard/settings).
+// Questo helper genera lo stub che tiene vive le vecchie
 // URL: conserva la query originale — serve ai callback che rimandano lì
 // (OAuth Meta `?connect=`, Stripe `?stripe=`) — e aggiunge il tab di destinazione.
 export function tabRedirect(target: string, tab: string) {
