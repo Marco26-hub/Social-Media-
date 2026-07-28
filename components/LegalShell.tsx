@@ -1,12 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, AlertTriangle } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import styles from './legal.module.css'
 import { TITOLARE } from '@/lib/legal-config'
 
 // Layout condiviso per le pagine legali (Privacy, Cookie, Termini, Trasparenza AI).
-// Header sticky con back, titolo, data aggiornamento, disclaimer "bozza da validare",
-// e link alle altre pagine legali in fondo.
+// Header sticky con navigazione, titolo, data di aggiornamento e documenti correlati.
 export default function LegalShell({
   eyebrow,
   title,
@@ -41,14 +40,6 @@ export default function LegalShell({
         <p className={styles.eyebrow}>{eyebrow}</p>
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.updated}>Ultimo aggiornamento: {TITOLARE.ultimoAggiornamento}</p>
-
-        <div className={styles.disclaimer}>
-          <AlertTriangle size={17} />
-          <span>
-            Documento in <strong>bozza</strong>, da validare con lo Studio Legale BCS prima della pubblicazione ufficiale.
-            I campi evidenziati in rosso vanno compilati con i dati reali dell&apos;azienda.
-          </span>
-        </div>
 
         <div className={styles.body}>{children}</div>
 

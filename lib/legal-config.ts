@@ -1,9 +1,7 @@
 // FONTE UNICA dei dati del Titolare del trattamento, usata da tutte le pagine
 // legali (Privacy, Cookie, Termini, Trasparenza AI) e dal footer.
 //
-// ⚠️ COMPILARE con i dati reali dell'azienda PRIMA del go-live pubblico.
-// I campi [DA COMPILARE] sono obbligatori per legge (GDPR art. 13, D.Lgs 70/2003).
-// Le pagine legali sono BOZZE da far validare allo Studio Legale BCS.
+// I campi [DA COMPILARE] devono essere sostituiti con i dati reali dell'azienda.
 
 export const TITOLARE = {
   // Ragione sociale completa (o nome e cognome se ditta individuale/freelance)

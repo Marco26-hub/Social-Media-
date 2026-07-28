@@ -55,18 +55,6 @@
   margin: 0 0 12px;
 }
 .updated { font-size: 13px; color: rgba(16, 18, 14, 0.55); margin: 0 0 8px; }
-.disclaimer {
-  display: flex; align-items: flex-start; gap: 10px;
-  margin: 24px 0 8px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(214, 168, 57, 0.4);
-  background: rgba(214, 168, 57, 0.1);
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: rgba(16, 18, 14, 0.8);
-}
-.disclaimer svg { flex-shrink: 0; margin-top: 2px; color: #c39528; }
 
 .body h2 {
   font-family: "Fraunces", Georgia, serif;

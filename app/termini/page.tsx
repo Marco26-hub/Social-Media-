@@ -23,7 +23,9 @@ export default function TerminiPage() {
     <LegalShell eyebrow="Termini e Condizioni" title="Termini e Condizioni d'uso" currentPath="/termini">
       <p>
         Le presenti Condizioni Generali regolano l&apos;utilizzo dei servizi di {TITOLARE.brand}, forniti da {val(TITOLARE.ragioneSociale)},
-        P.IVA {val(TITOLARE.partitaIva)}. Utilizzando il servizio accetti integralmente questi termini.
+        con sede in {val(TITOLARE.sedeLegale)}, P.IVA {val(TITOLARE.partitaIva)}, C.F. {val(TITOLARE.codiceFiscale)} e
+        PEC <a href={`mailto:${TITOLARE.pec}`}>{TITOLARE.pec}</a>. La registrazione, l&apos;acquisto o l&apos;utilizzo dei servizi
+        comportano l&apos;accettazione delle presenti condizioni.
       </p>
 
       <h2>1. Oggetto del servizio</h2>
@@ -40,15 +42,15 @@ export default function TerminiPage() {
 
       <h2>3. Piani, prezzi e pagamenti</h2>
       <ul>
-        <li>I canoni e i setup sono indicati nella pagina <a href="/servizi#pacchetti">Pacchetti</a>. I prezzi sono mensili, IVA esclusa salvo diversa indicazione.</li>
+        <li>I canoni e gli eventuali costi iniziali sono indicati nella pagina <a href="/servizi#pacchetti">Pacchetti</a>. I prezzi sono mensili e IVA esclusa, salvo diversa indicazione.</li>
         <li>La fatturazione degli abbonamenti è gestita tramite Stripe, con rinnovo automatico mensile salvo disdetta.</li>
-        <li>Il budget pubblicitario (ADS) è sempre separato dal canone.</li>
+        <li>Il budget destinato alle campagne pubblicitarie è sempre separato dal canone del servizio.</li>
         <li>Le consulenze legali (€150/30 min) sono erogate dallo Studio Legale BCS e regolate anche dalle condizioni dello Studio.</li>
       </ul>
 
       <h2>4. Contenuti generati dall&apos;AI</h2>
       <ul>
-        <li>I contenuti sono generati da sistemi AI e <strong>rivisti/approvati dal cliente</strong> prima della pubblicazione: l&apos;approvazione finale è tua.</li>
+        <li>I contenuti sono generati con il supporto di sistemi di intelligenza artificiale e <strong>rivisti o approvati dal cliente</strong> prima della pubblicazione. L&apos;approvazione finale spetta al cliente.</li>
         <li>Non garantiamo che i contenuti siano privi di errori: sei tenuto a verificarne accuratezza, veridicità e conformità prima di pubblicarli.</li>
         <li>Sei responsabile dei diritti sui materiali che carichi (immagini, marchi, testi) e delle autorizzazioni necessarie.</li>
       </ul>
@@ -77,7 +79,7 @@ export default function TerminiPage() {
         residenza del consumatore; negli altri casi il foro di {TITOLARE.foroCompetente}.</p>
 
       <h2>10. Modifiche</h2>
-      <p>Ci riserviamo di modificare i presenti termini. Le modifiche saranno comunicate e si intendono accettate proseguendo nell&apos;uso del servizio.</p>
+      <p>Il Titolare può aggiornare i presenti termini. Le modifiche rilevanti saranno comunicate con modalità adeguate e si applicheranno dalla data indicata nella comunicazione, nel rispetto della normativa vigente.</p>
     </LegalShell>
   )
 }
