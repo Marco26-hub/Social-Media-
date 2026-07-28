@@ -26,10 +26,50 @@ export async function getActiveClienteId(): Promise<string | null> {
   return cookieStore.get(ACTIVE_CLIENTE_COOKIE)?.value || null
 }
 
+// Primo cliente attivo a cui l'utente ha accesso. Serve come ripiego quando il
+// cookie del cliente attivo non è utilizzabile.
+async function firstAccessibleClienteId(userId: string): Promise<string | null> {
+  const rows = await q(
+    `SELECT c.id
+     FROM user_client_access uca
+     JOIN clienti c ON c.id = uca.cliente_id
+     WHERE uca.user_id = $1
+       AND uca.attivo = true
+       AND c.attivo = true
+     ORDER BY (uca.ruolo = 'owner') DESC, c.nome
+     LIMIT 1`,
+    [userId],
+  )
+  return typeof rows[0]?.id === 'string' ? rows[0].id as string : null
+}
+
 export async function requireClienteId(): Promise<string> {
+  const user = await requireAuth()
   const id = await getActiveClienteId()
-  if (!id) throw new Error('Nessun cliente selezionato')
-  return requireClienteAccess(id)
+
+  if (isDemo() || !dbReady()) {
+    if (!id) throw new Error('Nessun cliente selezionato')
+    return id
+  }
+
+  // Il cookie `active_cliente_id` dura un anno e non si azzera al logout: dopo
+  // un cambio account può puntare al cliente di QUALCUN ALTRO. Prima negava e
+  // basta — l'area /portale del cliente moriva su "Accesso negato". Ora il
+  // cookie non valido viene ignorato e si usa un cliente dell'utente (mai uno
+  // a cui non ha accesso: il ripiego legge solo i suoi user_client_access).
+  if (id) {
+    try {
+      return await requireClienteAccess(id)
+    } catch {
+      const fallback = await firstAccessibleClienteId(user.id)
+      if (fallback) return fallback
+      throw new Error('Accesso cliente negato')
+    }
+  }
+
+  const fallback = await firstAccessibleClienteId(user.id)
+  if (fallback) return fallback
+  throw new Error('Nessun cliente selezionato')
 }
 
 export async function requireClienteAccess(clienteId?: string): Promise<string> {
