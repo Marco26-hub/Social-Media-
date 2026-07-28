@@ -25,9 +25,9 @@
 
 ## Prezzi
 
-- Starter: 390€/mese
-- Crescita: 1.090€/mese (consigliato)
-- Dominio: 2.590€/mese
+- Presenza: 390€/mese
+- Crescita: 790€/mese (consigliato)
+- Soluzione su misura: preventivo personalizzato
 
 Il budget delle campagne ADS è sempre separato dal canone mensile. Dettaglio aggiornato dei pacchetti nella pagina Servizi.
 
@@ -37,5 +37,5 @@ Prodotto nuovo, attualmente in beta. Non sono ancora disponibili clienti, metric
 
 ## Contatti e link
 
-- Sito: https://social-media-manager-zte4.onrender.com
-- Servizi e pacchetti: https://social-media-manager-zte4.onrender.com/servizi
+- Sito: https://socialautomation.app
+- Servizi e pacchetti: https://socialautomation.app/servizi

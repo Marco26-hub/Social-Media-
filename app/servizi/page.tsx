@@ -1,438 +1,444 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import {
   ArrowRight,
-  BarChart3,
-  CalendarCheck,
-  CheckCircle2,
-  ChevronRight,
+  Check,
+  CircleCheck,
+  FileCheck2,
+  FileSearch,
   Globe2,
   Layers3,
-  LineChart,
   LockKeyhole,
+  Megaphone,
   MessageCircle,
-  PlayCircle,
   Scale,
+  ScanSearch,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Target,
-  Wand2,
-  Zap,
-  FileCheck2,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
-import styles from './servizi.module.css'
+import { SITE_URL } from '@/lib/site-config'
+import FloatingNavigation from '@/components/FloatingNavigation'
+import site from '../landing.module.css'
+import styles from './servizi-v2.module.css'
 
-// ⚙️ CONFIG CONTATTI — cambia questi 2 valori col tuo numero/email reali
-const WHATSAPP_NUMERO = '393477196603' // prefisso 39, no +, no spazi
+const META_TITLE = 'Gestione Social, SEO e Siti per PMI | Social Automation'
+const META_DESCRIPTION =
+  'Scopri i pacchetti SWA da 390 €/mese: gestione di 2 o 3 social, contenuti, pubblicazione, SEO, GEO, siti, e-commerce e consulenza AI compliance.'
+
+const WHATSAPP_NUMERO = '393477196603'
 const EMAIL_CONTATTO = 'swsdautomation@gmail.com'
 
-function waLink(messaggio: string) {
-  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(messaggio)}`
+function waLink(message: string) {
+  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(message)}`
 }
 
 export const metadata: Metadata = {
-  title: 'Social Automation | Gestione social con AI per la tua attività',
-  description: 'Sito, e-commerce e social gestiti con AI. Piano editoriale, contenuti, pubblicazione e report. Scrivici su WhatsApp e parti questa settimana.',
+  title: META_TITLE,
+  description: META_DESCRIPTION,
+  alternates: { canonical: `${SITE_URL}/servizi` },
+  openGraph: {
+    title: META_TITLE,
+    description: META_DESCRIPTION,
+    url: `${SITE_URL}/servizi`,
+  },
+  twitter: {
+    title: META_TITLE,
+    description: META_DESCRIPTION,
+  },
 }
 
-const outcomes = [
-  { icon: Globe2, title: 'Sito che presenta e converte', text: 'Non solo una vetrina: struttura, messaggi, contatti e CTA pensati per far capire subito il valore.' },
-  { icon: ShoppingBag, title: 'E-commerce pronto alla vendita', text: 'Catalogo, prodotti, promozioni e contenuti social collegati per sostenere il traffico commerciale.' },
-  { icon: CalendarCheck, title: 'Calendario editoriale continuo', text: 'Ogni mese una direzione chiara: temi, contenuti, canali, pubblicazione e controllo qualita.' },
-  { icon: BarChart3, title: 'Report e miglioramento', text: 'Non ci fermiamo alla pubblicazione: leggiamo i dati e ottimizziamo il mese successivo.' },
-]
-
-const method = [
-  { step: '01', title: 'Analisi', text: 'Studiamo brand, pubblico, offerta, canali attuali e obiettivi commerciali.' },
-  { step: '02', title: 'Architettura', text: 'Definiamo sito, e-commerce, canali social, contenuti e priorita operative.' },
-  { step: '03', title: 'Produzione', text: 'Creiamo calendario, copy, format, grafiche, video brevi e contenuti collegati ai prodotti.' },
-  { step: '04', title: 'Pubblicazione', text: 'Programmiamo e controlliamo i contenuti con approvazione cliente solo quando serve.' },
-  { step: '05', title: 'Ottimizzazione', text: 'Misuriamo, correggiamo e rendiamo il sistema piu efficace mese dopo mese.' },
-]
-
-const extras = [
-  'Gestione ADS separata dal budget pubblicitario',
-  'Landing page dedicate per campagne o promozioni',
-  'Blog SEO/GEO e articoli lunghi per autorevolezza',
-  'Shooting, reel extra e contenuti premium su richiesta',
-  'Consulenze legali e AI compliance su richiesta (AI Act, GDPR, trasparenza contenuti AI)',
-]
-
-const legalCards = [
-  { icon: Scale, title: 'Valutazione AI Act', text: 'Con professionisti qualificati analizziamo ruolo, finalità e livello di rischio dei sistemi AI utilizzati, individuando gli adempimenti applicabili al caso concreto.' },
-  { icon: ShieldCheck, title: 'Privacy e protezione dei dati', text: 'Valutiamo flussi di dati, basi giuridiche, informative, fornitori e misure organizzative collegate all’impiego dell’intelligenza artificiale.' },
-  { icon: FileCheck2, title: 'Trasparenza dei contenuti AI', text: 'Definiamo criteri di revisione, responsabilità editoriale ed eventuale identificazione dei contenuti generati o manipolati, quando richiesta dalla normativa applicabile.' },
-  { icon: LockKeyhole, title: 'Copyright e contratti', text: 'Esaminiamo licenze, diritti di utilizzo, responsabilità e clausole contrattuali relative a contenuti, modelli e piattaforme AI.' },
-]
-
-const compareRows = [
-  { label: 'Contenuti', trad: '2-12 post al mese', us: 'Contenuti multi-canale + reel', usWin: true },
-  { label: 'Audit SEO + GEO', trad: false, us: 'Incluso da Crescita' },
-  { label: 'Lead generation', trad: false, us: 'Disponibile su progetto' },
-  { label: 'Analisi competitor', trad: false, us: 'Inclusa in Crescita' },
-  { label: 'Campagne ADS', trad: 'A volte, a parte', us: 'Struttura + ottimizzazione' },
-  { label: 'Report', trad: 'Manuale, se previsto', us: 'Automatico + storico consultabile' },
-  { label: 'Approvazione contenuti', trad: 'Email / chat sparse', us: '1 click nel pannello' },
-  { label: 'Piano Crescita / mese', trad: 'Preventivo variabile', us: '€890, perimetro dichiarato', usWin: true },
-]
-
-const faqs = [
+const SERVICES = [
   {
-    question: 'Il cliente deve usare un software?',
-    answer: 'No. Il cliente compra un servizio gestito. Social Automation segue strategia, contenuti, pubblicazione e report.',
+    id: 'social',
+    number: '01',
+    icon: Megaphone,
+    label: 'Gestione social multicanale',
+    title: 'Una presenza costante, coordinata e sotto controllo.',
+    description:
+      'Gestiamo l’intero ciclo editoriale: dalla strategia alla produzione, fino all’approvazione e alla pubblicazione. Ogni canale mantiene il proprio linguaggio senza perdere coerenza con il brand.',
+    included: [
+      'Audit del brand, pubblico e posizionamento',
+      'Piano editoriale mensile e rubriche',
+      'Copy, caroselli, grafiche, Reel e Short',
+      'Adattamento per ogni piattaforma',
+      'Portale di approvazione e revisioni tracciate',
+      'Programmazione, pubblicazione e report',
+    ],
+    outcome: 'Meno attività operative interne e una comunicazione riconoscibile ogni settimana.',
   },
   {
-    question: 'Posso approvare i contenuti prima della pubblicazione?',
-    answer: 'Si, se previsto dagli accordi. L’approvazione e controllata, con un numero chiaro di revisioni incluse.',
+    id: 'seo-geo',
+    number: '02',
+    icon: ScanSearch,
+    label: 'SEO e GEO',
+    title: 'Contenuti progettati per essere trovati e compresi.',
+    description:
+      'Miglioriamo struttura, contenuti e segnali di autorevolezza per aiutare motori di ricerca e sistemi di risposta AI a comprendere correttamente azienda, servizi e competenze.',
+    included: [
+      'Audit tecnico ed editoriale del sito',
+      'Architettura dei contenuti e keyword intent',
+      'Articoli, FAQ e dati strutturati',
+      'Entità, fonti e segnali di autorevolezza',
+      'Analisi della citabilità nei sistemi AI',
+      'Monitoraggio e priorità di miglioramento',
+    ],
+    outcome: 'Una base organica più solida, utile nel tempo e misurabile senza promesse di ranking.',
   },
   {
-    question: 'Il budget pubblicitario e incluso?',
-    answer: 'No. Il budget ADS resta sempre separato dal canone, cosi i costi sono chiari e misurabili.',
+    id: 'web',
+    number: '03',
+    icon: Globe2,
+    label: 'Siti ed e-commerce',
+    title: 'Un’esperienza digitale costruita per il contatto e la vendita.',
+    description:
+      'Progettiamo siti e negozi online coerenti con campagne e contenuti social. La struttura accompagna l’utente dalla scoperta all’azione, con percorsi semplici su ogni dispositivo.',
+    included: [
+      'Architettura informativa e messaggi',
+      'Design responsive e mobile-first',
+      'Landing page e percorsi di conversione',
+      'Catalogo, prodotti, pagamenti e ordini',
+      'Analytics, eventi e tracciamento',
+      'Integrazione con social, ADS e CRM',
+    ],
+    outcome: 'Un punto di arrivo credibile per trasformare attenzione, traffico e campagne in opportunità.',
+  },
+]
+
+const LEGAL_SERVICES = [
+  {
+    icon: Scale,
+    title: 'Valutazione AI Act',
+    text: 'Analisi di ruolo, finalità e rischio dei sistemi AI per individuare gli obblighi applicabili.',
   },
   {
-    question: 'Quanto tempo serve per vedere risultati?',
-    answer: 'La continuita conta: i primi segnali arrivano spesso nei primi mesi, mentre crescita solida e dati affidabili richiedono lavoro costante.',
+    icon: ShieldCheck,
+    title: 'Privacy e GDPR',
+    text: 'Flussi di dati, basi giuridiche, informative, fornitori e misure organizzative.',
+  },
+  {
+    icon: FileCheck2,
+    title: 'Trasparenza AI',
+    text: 'Revisione, responsabilità editoriale ed eventuale identificazione dei contenuti artificiali.',
+  },
+  {
+    icon: LockKeyhole,
+    title: 'Copyright e contratti',
+    text: 'Licenze, diritti di utilizzo, responsabilità e clausole per modelli, contenuti e piattaforme.',
+  },
+]
+
+const METHOD = [
+  ['01', 'Analisi', 'Obiettivi, offerta, pubblico, canali e capacità operative.'],
+  ['02', 'Direzione', 'Priorità, posizionamento, calendario e indicatori da misurare.'],
+  ['03', 'Produzione', 'Contenuti, visual, pagine e campagne coordinati.'],
+  ['04', 'Controllo', 'Approvazione, pubblicazione, report e ottimizzazione.'],
+]
+
+const FAQ = [
+  {
+    q: 'Il cliente deve gestire il software?',
+    a: 'No. Acquisti un servizio gestito. Il portale serve a rendere semplici approvazioni e risultati; il lavoro operativo resta a nostro carico.',
+  },
+  {
+    q: 'I contenuti vengono pubblicati senza controllo?',
+    a: 'No. Il flusso prevede approvazione e revisioni tracciate prima della pubblicazione, secondo il perimetro del pacchetto.',
+  },
+  {
+    q: 'Il budget pubblicitario è compreso?',
+    a: 'No. La gestione prevista dal piano è inclusa, mentre il budget versato alle piattaforme pubblicitarie resta separato.',
+  },
+  {
+    q: 'SEO e GEO garantiscono risultati o citazioni?',
+    a: 'No. Miglioriamo struttura, qualità e reperibilità, ma nessun fornitore può garantire ranking o citazioni da parte dei sistemi AI.',
   },
 ]
 
 export default function ServiziPage() {
   return (
-    <main className={styles.pageShell}>
-      <header className={styles.navbar}>
-        <Link href="/servizi" className={styles.brand} aria-label="Social Automation servizi">
-          <span className={styles.brandMark}>SA</span>
+    <main id="main-content" className={`${site.page} ${styles.page}`}>
+      <a className={site.skipLink} href="#main-content">Vai al contenuto</a>
+
+      <header className={site.navbar}>
+        <Link href="/" className={site.brand} aria-label="Social Automation, home">
+          <span className={site.brandLogoShell}>
+            <Image className={site.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
+          </span>
           <span>Social Automation</span>
         </Link>
-        <nav className={styles.navLinks} aria-label="Navigazione landing servizi">
-          <a href="#pacchetti">Pacchetti</a>
-          <a href="#consulenze-legali">Legale &amp; AI</a>
+        <nav className={site.navLinks} aria-label="Navigazione principale">
+          <a href="#servizi">Servizi</a>
           <a href="#metodo">Metodo</a>
-          <a href="#faq">FAQ</a>
+          <a href="#legale">Legale &amp; AI</a>
+          <a href="#pacchetti">Soluzioni</a>
         </nav>
-        <a href="#contatto" className={styles.navCta}>Richiedi consulenza</a>
+        <div className={site.navActions}>
+          <Link href="/portale" className={site.loginLink}>Area cliente</Link>
+          <a
+            href={waLink('Ciao! Vorrei capire quale servizio Social Automation è adatto alla mia azienda.')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={site.navCta}
+          >
+            Richiedi una consulenza
+          </a>
+        </div>
       </header>
 
-      <a href={waLink('Ciao! Vorrei informazioni sui pacchetti Social Automation.')} target="_blank" rel="noopener" className={styles.mobileStickyCta}>
-        Scrivici su WhatsApp
-        <ArrowRight size={17} />
-      </a>
-
-      <section className={styles.hero}>
-        <div className={styles.heroGlow} />
-        <div className={styles.heroContent}>
-          <div className={styles.kicker}>
-            <Sparkles size={16} />
-            Sito, e-commerce e social gestiti in un unico sistema
-          </div>
-          <h1>Trasforma la tua presenza digitale in una macchina commerciale continua.</h1>
-          <p className={styles.heroLead}>
-            Social Automation crea e gestisce il tuo ecosistema digitale: sito, e-commerce, piano editoriale, contenuti social, pubblicazione controllata e report. Tu guidi l’azienda, noi teniamo acceso il motore digitale.
+      <section className={styles.hero} aria-labelledby="services-hero-title">
+        <div className={styles.heroCopy}>
+          <p className={site.kicker}><Sparkles size={16} aria-hidden="true" /> Servizi digitali integrati</p>
+          <h1 id="services-hero-title">Una sola direzione per tutta la presenza digitale.</h1>
+          <p>
+            Social, contenuti organici, sito ed e-commerce lavorano nello stesso
+            sistema. Coordiniamo strategia, produzione e misurazione, così ogni
+            punto di contatto sostiene lo stesso obiettivo.
           </p>
-          <div className={styles.heroActions}>
-            <a href={waLink('Ciao! Ho visto Social Automation e vorrei capire quale pacchetto fa per la mia attività.')} target="_blank" rel="noopener" className={styles.primaryButton}>
-              Scrivici su WhatsApp
-              <ArrowRight size={18} />
+          <div className={site.heroActions}>
+            <a
+              href={waLink('Ciao! Vorrei una consulenza sui servizi Social Automation.')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={site.primaryButton}
+            >
+              Parliamo del progetto <ArrowRight size={18} aria-hidden="true" />
             </a>
-            <a href="#metodo" className={styles.secondaryButton}>
-              Come funziona
-            </a>
+            <a href="#servizi" className={site.secondaryButton}>Esplora i servizi</a>
           </div>
-          <p className={styles.heroReassure}>
-            <ShieldCheck size={15} /> Primo contenuto di prova gratuito · Nessun vincolo · Stop quando vuoi
-          </p>
-          <div className={styles.heroStats}>
-            <div><strong>5</strong><span>pacchetti scalabili</span></div>
-            <div><strong>3-4</strong><span>canali gestibili</span></div>
-            <div><strong>60</strong><span>contenuti/mese nei piani avanzati</span></div>
-          </div>
-        </div>
-
-        <aside className={styles.heroPanel} aria-label="Anteprima sistema Social Automation">
-          <div className={styles.panelHeader}>
-            <span className={styles.liveDot} />
-            Sistema operativo mensile
-          </div>
-          <div className={styles.panelCardLarge}>
-            <span className={styles.panelIcon}><Wand2 size={24} /></span>
-            <div>
-              <strong>Piano editoriale pronto</strong>
-              <p>Strategia, canali, contenuti, promo e pubblicazioni coordinati.</p>
-            </div>
-          </div>
-          <div className={styles.pipelineMini}>
-            {['Analisi', 'Contenuti', 'Controllo', 'Pubblicazione'].map(item => <span key={item}>{item}</span>)}
-          </div>
-          <div className={styles.panelRows}>
-            <div><CheckCircle2 size={16} /> 18 contenuti approvati</div>
-            <div><ShieldCheck size={16} /> revisioni sotto controllo</div>
-            <div><LineChart size={16} /> report mensile leggibile</div>
-          </div>
-        </aside>
-      </section>
-
-      <section className={styles.problemSection}>
-        <div className={styles.problemText}>
-          <p className={styles.sectionLabel}>Il problema</p>
-          <h2>Molte aziende hanno strumenti. Poche hanno un sistema.</h2>
-        </div>
-        <div className={styles.problemCards}>
-          <article>
-            <span><Zap size={20} /></span>
-            <h3>Pubblicazione casuale</h3>
-            <p>Si posta quando c’e tempo, senza continuita e senza una linea editoriale chiara.</p>
-          </article>
-          <article>
-            <span><Layers3 size={20} /></span>
-            <h3>Sito scollegato dai social</h3>
-            <p>Il sito dice una cosa, i social un’altra, le promozioni non hanno una direzione unica.</p>
-          </article>
-          <article>
-            <span><MessageCircle size={20} /></span>
-            <h3>Revisioni infinite</h3>
-            <p>Il lavoro si blocca per commenti sparsi, approvazioni lente e decisioni non ordinate.</p>
-          </article>
-        </div>
-      </section>
-
-      <section className={styles.outcomesSection}>
-        <div className={styles.sectionIntro}>
-          <p className={styles.sectionLabel}>Cosa ottieni</p>
-          <h2>Un servizio gestito, non un altro pannello da imparare.</h2>
-          <p>Social Automation coordina strategia, produzione e pubblicazione, lasciando al cliente solo le decisioni importanti.</p>
-        </div>
-        <div className={styles.outcomeGrid}>
-          {outcomes.map(({ icon: Icon, title, text }) => (
-            <article key={title} className={styles.outcomeCard}>
-              <span><Icon size={24} /></span>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="pacchetti" className={styles.packagesSection}>
-        <div className={styles.sectionIntroNarrow}>
-          <p className={styles.sectionLabel}>Offerte</p>
-          <h2>Pacchetti semplici, chiari e profittevoli.</h2>
-          <p>Prezzi IVA esclusa. Budget pubblicitario, shooting e abbonamenti esterni sono separati, cosi ogni voce resta trasparente.</p>
-        </div>
-        <div className={styles.packageGrid}>
-          {PACCHETTI.map(pack => (
-            <article key={pack.slug} className={pack.consigliato ? `${styles.packageCard} ${styles.featuredPackage}` : styles.packageCard}>
-              <div className={styles.packageTopline}>{pack.eyebrow}</div>
-              <h3>{pack.nome}</h3>
-              <p>{pack.sottotitolo}</p>
-              <div className={styles.priceBlock}>
-                <strong>{pack.setup}</strong>
-                <span>{pack.prezzo}/mese</span>
-              </div>
-              {pack.includeDa && (
-                <p className={styles.packageInclude}>Tutto di <strong>{pack.includeDa}</strong>, più:</p>
-              )}
-              <ul>
-                {pack.features.map(feature => (
-                  <li key={feature}><CheckCircle2 size={16} /> {feature}</li>
-                ))}
-              </ul>
-              <Link href={`/register?piano=${pack.slug}`} className={pack.consigliato ? styles.packageCtaFeatured : styles.packageCta}>
-                Attiva ora
-                <ChevronRight size={16} />
-              </Link>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.compareSection}>
-        <div className={styles.sectionIntroNarrow}>
-          <p className={styles.sectionLabel}>Perché noi</p>
-          <h2>Non paghi i post. Paghi un sistema.</h2>
-          <p>La gestione social tradizionale vende un numero di post al mese. Social Automation coordina sei agenti AI e la pubblicazione, con l’approvazione umana al centro.</p>
-        </div>
-        <div className={styles.compareTableWrap}>
-          <table className={styles.compareTable}>
-            <thead>
-              <tr>
-                <th></th>
-                <th>Gestione tradizionale</th>
-                <th className={styles.compareUs}>Social Automation</th>
-              </tr>
-            </thead>
-            <tbody>
-              {compareRows.map(row => (
-                <tr key={row.label}>
-                  <td className={styles.compareLabel}>{row.label}</td>
-                  <td className={styles.compareTrad}>
-                    {row.trad === false ? <span className={styles.compareNo}>✕</span> : row.trad}
-                  </td>
-                  <td className={row.usWin ? `${styles.compareUsCell} ${styles.compareUsWin}` : styles.compareUsCell}>
-                    <CheckCircle2 size={15} /> {row.us}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="metodo" className={styles.methodSection}>
-        <div className={styles.methodIntro}>
-          <p className={styles.sectionLabel}>Metodo Social Automation</p>
-          <h2>Una direzione unica, mese dopo mese.</h2>
-          <p>Il lavoro digitale diventa un ritmo: strategia, contenuti, approvazione controllata, pubblicazione e miglioramento.</p>
-        </div>
-        <div className={styles.methodTimeline}>
-          {method.map(item => (
-            <article key={item.step}>
-              <span>{item.step}</span>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.approvalSection}>
-        <div className={styles.approvalCardDark}>
-          <LockKeyhole size={28} />
-          <h2>La strategia resta guidata da noi.</h2>
-          <p>Il cliente puo approvare quando serve, ma non trasformiamo ogni contenuto in una trattativa infinita. Ogni pacchetto ha revisioni chiare, tempi chiari e responsabilita chiare.</p>
-        </div>
-        <div className={styles.approvalCardLight}>
-          <Target size={28} />
-          <h2>Il risultato e continuita.</h2>
-          <p>Non vendiamo “post con AI”. Vendiamo presenza digitale costante, coordinata e controllata da una regia unica.</p>
-        </div>
-      </section>
-
-      <section className={styles.extrasSection}>
-        <div>
-          <p className={styles.sectionLabel}>Extra</p>
-          <h2>Quando serve piu spinta, aggiungiamo moduli mirati.</h2>
-        </div>
-        <div className={styles.extrasList}>
-          {extras.map(extra => <div key={extra}><PlayCircle size={18} /> {extra}</div>)}
-        </div>
-      </section>
-
-      <section id="consulenze-legali" className={styles.outcomesSection} aria-labelledby="consulenze-legali-title">
-        <div className={styles.sectionIntro}>
-          <p className={styles.sectionLabel}>Consulenze Legali e AI Compliance</p>
-          <h2 id="consulenze-legali-title">La tua attività, a norma anche con l’AI.</h2>
-          <p>L’AI lavora per te, ma la responsabilita resta tua. Ti affianchiamo per restare in regola con GDPR e AI Act, senza fermare il business. Modulo extra su preventivo.</p>
-        </div>
-        <div className={styles.outcomeGrid}>
-          {legalCards.map(({ icon: Icon, title, text }) => (
-            <article key={title} className={styles.outcomeCard}>
-              <span><Icon size={24} /></span>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </article>
-          ))}
-        </div>
-        {/* Partner legale — blocco autorevolezza (inline: servizi ha un module diverso) */}
-        <div style={{
-          position: 'relative', maxWidth: 820, margin: '2.5rem auto 0', padding: '1.75rem 1.75rem 1.5rem',
-          borderRadius: 22, border: '1px solid rgba(34,63,44,0.18)',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,250,240,0.7))',
-          boxShadow: '0 20px 50px rgba(16,18,14,0.1)',
-          display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap',
-        }}>
-          <span style={{
-            position: 'absolute', top: -12, left: 28, display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '5px 12px', borderRadius: 999, background: 'linear-gradient(135deg,#223f2c,#617c45)',
-            color: '#fffaf0', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase',
-          }}><ShieldCheck size={12} /> Partner legale verificato</span>
-          <div style={{
-            flexShrink: 0, width: 84, height: 84, display: 'grid', placeItems: 'center', borderRadius: 18,
-            background: 'linear-gradient(155deg,#10120e,#223f2c)', color: '#e7bf57',
-            fontFamily: 'Fraunces, Georgia, serif', fontWeight: 700, fontSize: 27, letterSpacing: '0.06em',
-          }} aria-hidden="true">BCS</div>
-          <div style={{ flex: '1 1 320px', minWidth: 0 }}>
-            <h3 style={{ margin: '0 0 2px', fontFamily: 'Fraunces, Georgia, serif', fontSize: 24, lineHeight: 1.1, color: '#10120e' }}>Studio Legale BCS</h3>
-            <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: '#223f2c' }}>Avv. Vincenzo Sapone — Cassazionista</p>
-            <p style={{ margin: '0 0 12px', fontSize: 14, lineHeight: 1.55, color: 'rgba(16,18,14,0.72)' }}>
-              Specializzato in Diritto Penale, GDPR, AI Act e diritto delle nuove tecnologie. Le consulenze legali sono erogate direttamente dallo Studio: un professionista abilitato al tuo fianco.
-            </p>
-            <a href="https://studiodigitale.eu/" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 800, color: '#c39528', textDecoration: 'none' }}>
-              Scopri lo Studio <ArrowRight size={14} />
-            </a>
-          </div>
-        </div>
-        {/* Pricing consulenza — premium, prezzo chiaro */}
-        <div style={{
-          maxWidth: 520, margin: '2rem auto 0', padding: '1.5rem 1.75rem', borderRadius: 20,
-          border: '1px solid rgba(214,168,57,0.4)',
-          background: 'linear-gradient(180deg, rgba(34,63,44,0.06), rgba(255,250,240,0.4))',
-          boxShadow: '0 16px 40px rgba(16,18,14,0.08)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', paddingBottom: 14, borderBottom: '1px solid rgba(16,18,14,0.1)' }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#223f2c', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Consulenza legale AI &amp; GDPR</span>
-            <span style={{ fontFamily: 'Fraunces, Georgia, serif', fontWeight: 700, fontSize: 36, lineHeight: 1, color: '#10120e' }}>€150<small style={{ fontSize: 15, fontWeight: 600, color: 'rgba(16,18,14,0.55)', marginLeft: 4 }}>/30 min</small></span>
-          </div>
-          <ul style={{ listStyle: 'none', margin: '14px 0 0', padding: 0, display: 'grid', gap: 8 }}>
-            {['Con Avvocato Cassazionista dello Studio BCS', 'Parere scritto sintetico incluso', 'Audit AI Act e adeguamenti su preventivo dedicato'].map(t => (
-              <li key={t} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, lineHeight: 1.4, color: 'rgba(16,18,14,0.82)' }}>
-                <CheckCircle2 size={15} style={{ flexShrink: 0, marginTop: 2, color: '#617c45' }} /> {t}
-              </li>
-            ))}
+          <ul className={styles.heroProof}>
+            <li><Check size={16} aria-hidden="true" /> Servizio gestito</li>
+            <li><Check size={16} aria-hidden="true" /> Approvazione umana</li>
+            <li><Check size={16} aria-hidden="true" /> Perimetro e costi dichiarati</li>
           </ul>
         </div>
-        <div className={styles.ctaActions} style={{ justifyContent: 'center', marginTop: '1.5rem' }}>
-          <Link href="/consulenza" className={styles.primaryButton}>
-            <Scale size={18} />
-            Prenota e paga · €150
-          </Link>
+
+        <div className={styles.serviceMap} aria-label="Ecosistema dei servizi Social Automation">
+          <div className={styles.mapCore}>
+            <span>SWA</span>
+            <strong>Regia digitale</strong>
+            <small>Strategia e controllo</small>
+          </div>
+          <div className={`${styles.mapNode} ${styles.mapNodeSocial}`}>
+            <Megaphone size={19} aria-hidden="true" />
+            <span>Social</span>
+          </div>
+          <div className={`${styles.mapNode} ${styles.mapNodeSeo}`}>
+            <FileSearch size={19} aria-hidden="true" />
+            <span>SEO + GEO</span>
+          </div>
+          <div className={`${styles.mapNode} ${styles.mapNodeWeb}`}>
+            <ShoppingBag size={19} aria-hidden="true" />
+            <span>Web + Shop</span>
+          </div>
+          <div className={styles.mapStatus}><i /> Sistema operativo mensile</div>
         </div>
       </section>
 
-      <section id="faq" className={styles.faqSection}>
-        <div className={styles.sectionIntroNarrow}>
-          <p className={styles.sectionLabel}>Domande frequenti</p>
-          <h2>Chiarezza prima di partire.</h2>
+      <section className={styles.valueBand} aria-label="Valore del servizio">
+        <span>Strategia condivisa</span>
+        <span>Produzione coordinata</span>
+        <span>Controllo centralizzato</span>
+        <span>Risultati leggibili</span>
+      </section>
+
+      <section id="servizi" className={styles.servicesSection} aria-labelledby="services-title">
+        <div className={styles.sectionHeading}>
+          <p className={site.eyebrow}>Servizi</p>
+          <h2 id="services-title">Competenze distinte, coordinate da un’unica regia.</h2>
+          <p>Puoi attivare un’area specifica o costruire un sistema completo in base agli obiettivi.</p>
         </div>
-        <div className={styles.faqGrid}>
-          {faqs.map(faq => (
-            <article key={faq.question}>
-              <h3>{faq.question}</h3>
-              <p>{faq.answer}</p>
+
+        <div className={styles.serviceRows}>
+          {SERVICES.map(({ id, number, icon: Icon, label, title, description, included, outcome }) => (
+            <article key={id} id={id} className={styles.serviceRow}>
+              <div className={styles.serviceIdentity}>
+                <span>{number}</span>
+                <Icon size={25} aria-hidden="true" />
+                <p>{label}</p>
+              </div>
+              <div className={styles.serviceBody}>
+                <h3>{title}</h3>
+                <p>{description}</p>
+                <ul>
+                  {included.map(item => <li key={item}><Check size={15} aria-hidden="true" /> {item}</li>)}
+                </ul>
+                <div className={styles.outcome}><Target size={17} aria-hidden="true" /><span><strong>Risultato atteso:</strong> {outcome}</span></div>
+              </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section id="contatto" className={styles.ctaSection}>
-        <div className={styles.ctaBox}>
+      <section id="metodo" className={styles.methodSection} aria-labelledby="method-title">
+        <div className={styles.sectionHeading}>
+          <p className={site.eyebrow}>Metodo operativo</p>
+          <h2 id="method-title">Un ciclo chiaro, ogni mese.</h2>
+          <p>Le responsabilità restano definite e ogni passaggio produce un risultato verificabile.</p>
+        </div>
+        <ol className={styles.methodGrid}>
+          {METHOD.map(([number, title, text]) => (
+            <li key={number}>
+              <span>{number}</span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section id="legale" className={styles.legalSection} aria-labelledby="legal-title">
+        <div className={styles.legalIntro}>
           <div>
-            <p className={styles.sectionLabel}>Consulenza iniziale</p>
-            <h2>Vediamo qual e il pacchetto giusto per la tua azienda.</h2>
-            <p>Analizziamo presenza attuale, obiettivi, canali e possibilita operative. Poi proponiamo una strada semplice, sostenibile e misurabile.</p>
+            <p className={site.eyebrow}>Consulenza legale &amp; AI Compliance</p>
+            <h2 id="legal-title">Tecnologia e responsabilità nello stesso progetto.</h2>
           </div>
-          <div className={styles.ctaActions}>
-            <a href={waLink('Ciao! Vorrei una consulenza gratuita per la mia presenza social.')} target="_blank" rel="noopener" className={styles.primaryButton}>
-              <MessageCircle size={18} />
-              Consulenza gratuita su WhatsApp
-            </a>
-            <a href={`mailto:${EMAIL_CONTATTO}?subject=Consulenza%20Social%20Automation`} className={styles.secondaryButtonDark}>
-              Scrivici via email
-            </a>
+          <p>
+            Le attività legali vengono svolte con professionisti abilitati e
+            definite sul caso concreto. Affianchiamo l’adozione dell’AI senza
+            trasformare la compliance in un documento generico.
+          </p>
+        </div>
+
+        <div className={styles.legalGrid}>
+          {LEGAL_SERVICES.map(({ icon: Icon, title, text }) => (
+            <article key={title}>
+              <Icon size={21} aria-hidden="true" />
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className={styles.legalPartner}>
+          <div className={styles.partnerMark} aria-hidden="true">BCS</div>
+          <div>
+            <span>Partner legale</span>
+            <h3>Studio Legale BCS</h3>
+            <p>Avv. Vincenzo Sapone, Cassazionista. Diritto delle nuove tecnologie, GDPR e AI Act.</p>
           </div>
+          <div className={styles.legalPrice}>
+            <span>Consulenza</span>
+            <strong>€150<small>/30 min</small></strong>
+          </div>
+          <Link href="/consulenza" className={styles.partnerCta}>
+            Prenota la consulenza <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+        </div>
+        <p className={styles.disclaimer}>Le informazioni pubblicate non sostituiscono una consulenza legale individuale.</p>
+      </section>
+
+      <section id="pacchetti" className={styles.pricingSection} aria-labelledby="pricing-title">
+        <div className={styles.sectionHeading}>
+          <p className={site.eyebrow}>Soluzioni mensili</p>
+          <h2 id="pricing-title">Scegli il risultato. Il sistema è già completo.</h2>
+          <p>Setup incluso in entrambi i piani. Il budget pubblicitario versato alle piattaforme resta separato e sotto il tuo controllo.</p>
+        </div>
+        <div className={styles.pricingGrid}>
+          {PACCHETTI.map(plan => (
+            <article key={plan.slug} className={`${styles.priceCard} ${plan.consigliato ? styles.featuredPlan : ''}`}>
+              <div className={styles.priceHeader}>
+                <div><span>{plan.eyebrow}</span><h3>{plan.nome}</h3></div>
+                {plan.consigliato && <b>Più scelto</b>}
+              </div>
+              <p className={styles.planResult}>{plan.risultato}</p>
+              <p className={styles.price}><strong>{plan.prezzo}</strong><span>/mese</span></p>
+              <p className={styles.setup}>{plan.setup}</p>
+              <p className={styles.planDescription}>{plan.sottotitolo}</p>
+              <div className={styles.planFit}>
+                <strong>È adatto a te se</strong>
+                <p>{plan.idealePer}</p>
+              </div>
+              {plan.includeDa && <p className={styles.includes}>Include tutto di {plan.includeDa}, più:</p>}
+              <p className={styles.listLabel}>Nel canone trovi</p>
+                  <ul>
+                {plan.features.map(feature => <li key={feature}><CircleCheck size={16} aria-hidden="true" /> {feature}</li>)}
+              </ul>
+              <Link href={`/register?piano=${plan.slug}`} className={plan.consigliato ? site.primaryButton : site.outlineButton}>
+                {plan.cta} <ArrowRight size={17} aria-hidden="true" />
+              </Link>
+              <small className={styles.ctaNote}>Setup incluso · IVA esclusa · rinnovo mensile</small>
+            </article>
+          ))}
+        </div>
+        <div className={styles.pricingAssurance}>
+          <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Valuta prima di acquistare.</strong> Richiedi un contenuto di prova gratuito e verifica metodo e qualità.</span></div>
+          <a
+            href={waLink('Ciao! Vorrei ricevere un contenuto di prova gratuito di Social Automation.')}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Richiedi la prova <ArrowRight size={16} aria-hidden="true" />
+          </a>
+        </div>
+        <div className={styles.customPlan}>
+          <div><Layers3 size={24} aria-hidden="true" /><span><strong>Configurazione su misura</strong> per e-commerce, agenzie, più brand, automazioni e integrazioni.</span></div>
+          <a
+            href={waLink('Ciao! Vorrei progettare una configurazione Social Automation su misura.')}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Progettiamo la soluzione <ArrowRight size={17} aria-hidden="true" />
+          </a>
         </div>
       </section>
 
-      <footer className={styles.footer}>
-        <div className={styles.brand}>
-          <span className={styles.brandMark}>SA</span>
-          <span>Social Automation</span>
+      <section className={styles.faqSection} aria-labelledby="faq-title">
+        <div className={styles.sectionHeading}>
+          <p className={site.eyebrow}>Domande frequenti</p>
+          <h2 id="faq-title">Chiarezza prima di iniziare.</h2>
         </div>
-        <span>Servizio gestito per sito, e-commerce e social automation.</span>
-        <Link href="/login" className={styles.footerAdmin} aria-label="Apri area admin">
-          <LockKeyhole size={15} /> Apri admin
+        <div className={styles.faqList}>
+          {FAQ.map(item => (
+            <details key={item.q}>
+              <summary>{item.q}<span aria-hidden="true">+</span></summary>
+              <p>{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.finalCta}>
+        <div>
+          <p className={site.eyebrow}>Consulenza iniziale</p>
+          <h2>Costruiamo il perimetro giusto per la tua azienda.</h2>
+          <p>Partiamo da obiettivi, canali e capacità interne. Poi definiamo attività, responsabilità e costi.</p>
+        </div>
+        <div>
+          <a
+            href={waLink('Ciao! Vorrei una consulenza iniziale per Social Automation.')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={site.lightButton}
+          >
+            <MessageCircle size={18} aria-hidden="true" /> Scrivici su WhatsApp
+          </a>
+          <a href={`mailto:${EMAIL_CONTATTO}?subject=Consulenza%20Social%20Automation`} className={styles.emailLink}>
+            Oppure invia un’email
+          </a>
+        </div>
+      </section>
+
+      <footer className={site.footer}>
+        <Link href="/" className={site.brand}>
+          <Image className={site.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} />
+          <span>Social Automation</span>
         </Link>
+        <div><Link href="/privacy">Privacy</Link><Link href="/termini">Termini</Link><Link href="/login">Accesso</Link></div>
+        <p>© 2026 Social Automation</p>
       </footer>
+
+      <a
+        href={waLink('Ciao! Vorrei informazioni sui servizi Social Automation.')}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={site.mobileCta}
+      >
+        Richiedi una consulenza <ArrowRight size={17} aria-hidden="true" />
+      </a>
+      <FloatingNavigation />
     </main>
   )
 }

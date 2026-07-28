@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
+import type { Metadata } from 'next'
 import {
   ArrowRight,
   BarChart3,
@@ -6,18 +8,37 @@ import {
   Check,
   ChevronRight,
   CircleCheck,
+  FileCheck2,
   FileSearch,
   Globe2,
   Layers3,
   LockKeyhole,
   Megaphone,
   ScanSearch,
+  Scale,
   ShieldCheck,
   Sparkles,
   Target,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
+import FloatingNavigation from '@/components/FloatingNavigation'
 import styles from './landing.module.css'
+
+export const metadata: Metadata = {
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+  },
+  twitter: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+}
 
 const WHATSAPP_NUMERO = '393477196603'
 const TRIAL_MSG = 'Ciao! Vorrei richiedere un contenuto di prova gratuito di Social Automation.'
@@ -50,16 +71,42 @@ const SERVICES = [
     icon: Megaphone,
     title: 'Gestione social multicanale',
     text: 'Piano editoriale, contenuti, adattamento ai formati, approvazione e pubblicazione in un unico flusso.',
+    items: ['Strategia e calendario mensile', 'Copy, grafiche, Reel e Short', 'Adattamento per ogni canale', 'Approvazione, pubblicazione e report'],
   },
   {
     icon: ScanSearch,
     title: 'Visibilità SEO + GEO',
     text: 'Contenuti strutturati per essere compresi dai motori di ricerca e dai sistemi di risposta basati sull’AI.',
+    items: ['Audit tecnico ed editoriale', 'Articoli, FAQ e dati strutturati', 'Analisi di entità, fonti e autorevolezza', 'Monitoraggio e piano di miglioramento'],
   },
   {
     icon: Globe2,
     title: 'Siti ed e-commerce',
     text: 'Esperienze digitali orientate al contatto e alla vendita, integrate con contenuti, prodotti e campagne.',
+    items: ['Architettura e messaggi di conversione', 'Sviluppo responsive e mobile-first', 'Catalogo, pagamenti e tracciamento', 'Integrazione con social, ADS e contenuti'],
+  },
+]
+
+const LEGAL_SERVICES = [
+  {
+    icon: Scale,
+    title: 'Valutazione AI Act',
+    text: 'Analisi del ruolo dell’azienda, delle finalità d’uso e del livello di rischio dei sistemi AI per individuare gli obblighi applicabili.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Privacy e GDPR',
+    text: 'Verifica dei flussi di dati, delle basi giuridiche, delle informative, dei fornitori e delle misure organizzative collegate all’AI.',
+  },
+  {
+    icon: FileCheck2,
+    title: 'Trasparenza dei contenuti',
+    text: 'Criteri di revisione, responsabilità editoriale ed eventuale identificazione dei contenuti generati o manipolati artificialmente.',
+  },
+  {
+    icon: LockKeyhole,
+    title: 'Copyright e contratti',
+    text: 'Valutazione di licenze, diritti di utilizzo, responsabilità e clausole contrattuali relative a modelli, piattaforme e contenuti.',
   },
 ]
 
@@ -99,14 +146,17 @@ export default function LandingPage() {
 
       <header className={styles.navbar}>
         <Link href="/" className={styles.brand} aria-label="Social Automation, home">
-          <span className={styles.brandMark}>SA</span>
+          <span className={styles.brandLogoShell}>
+            <Image className={styles.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
+          </span>
           <span>Social Automation</span>
         </Link>
         <nav className={styles.navLinks} aria-label="Navigazione principale">
           <a href="#servizi">Servizi</a>
-          <a href="#metodo">Metodo</a>
-          <a href="#compliance">SEO, GEO &amp; Compliance</a>
-          <a href="#prezzi">Soluzioni</a>
+          <a href="#metodo">Come funziona</a>
+          <a href="#prezzi">Pacchetti</a>
+          <a href="#legale">Legale &amp; AI</a>
+          <a href="#faq">FAQ</a>
         </nav>
         <div className={styles.navActions}>
           <Link href="/portale" className={styles.loginLink}>Area cliente</Link>
@@ -206,11 +256,14 @@ export default function LandingPage() {
           <p>Riduciamo frammentazione, passaggi tra fornitori e attività operative interne.</p>
         </div>
         <div className={styles.serviceGrid}>
-          {SERVICES.map(({ icon: Icon, title, text }) => (
+          {SERVICES.map(({ icon: Icon, title, text, items }) => (
             <article key={title} className={styles.service}>
               <span><Icon size={22} aria-hidden="true" /></span>
               <h3>{title}</h3>
               <p>{text}</p>
+              <ul className={styles.serviceList}>
+                {items.map(item => <li key={item}><Check size={15} aria-hidden="true" /> {item}</li>)}
+              </ul>
               <Link href="/servizi">Approfondisci <ChevronRight size={16} aria-hidden="true" /></Link>
             </article>
           ))}
@@ -237,27 +290,74 @@ export default function LandingPage() {
 
       <section id="compliance" className={styles.compliance} aria-labelledby="compliance-title">
         <div className={styles.complianceIntro}>
-          <p className={styles.eyebrow}>SEO, GEO &amp; AI Compliance</p>
-          <h2 id="compliance-title">Visibilità digitale e utilizzo responsabile dell’AI.</h2>
+          <p className={styles.eyebrow}>SEO &amp; GEO</p>
+          <h2 id="compliance-title">Contenuti progettati per essere trovati e compresi.</h2>
           <p>
             Rendiamo i contenuti più chiari per persone, motori di ricerca e sistemi
-            di risposta AI. Quando il progetto lo richiede, integriamo controllo
-            editoriale, tracciabilità e valutazione normativa con professionisti qualificati.
+            di risposta AI, intervenendo su struttura, autorevolezza, fonti e qualità
+            editoriale. L’obiettivo è costruire visibilità organica duratura e misurabile.
           </p>
         </div>
         <div className={styles.complianceItems}>
           <article><FileSearch size={21} aria-hidden="true" /><div><h3>SEO</h3><p>Struttura tecnica, contenuti e dati organizzati per favorire comprensione e indicizzazione.</p></div></article>
           <article><Layers3 size={21} aria-hidden="true" /><div><h3>GEO</h3><p>Fonti, FAQ ed entità chiare per aumentare l’utilizzabilità nei sistemi di risposta AI, senza promesse di citazione.</p></div></article>
-          <article><ShieldCheck size={21} aria-hidden="true" /><div><h3>AI Compliance</h3><p>Processi di revisione, trasparenza e responsabilità definiti in base all’utilizzo concreto dell’intelligenza artificiale.</p></div></article>
+          <article><BarChart3 size={21} aria-hidden="true" /><div><h3>Monitoraggio</h3><p>Analisi periodica di copertura, contenuti, query e opportunità per definire le priorità successive.</p></div></article>
         </div>
-        <p className={styles.complianceNote}><LockKeyhole size={15} aria-hidden="true" /> La valutazione legale viene svolta, quando necessaria, con consulenti abilitati.</p>
+        <p className={styles.complianceNote}><FileSearch size={15} aria-hidden="true" /> SEO e GEO migliorano comprensione e reperibilità, senza garantire ranking o citazioni.</p>
+      </section>
+
+      <section id="legale" className={styles.legalSection} aria-labelledby="legal-title">
+        <div className={styles.legalHeading}>
+          <div>
+            <p className={styles.eyebrow}>Consulenza legale &amp; AI Compliance</p>
+            <h2 id="legal-title">Innovare con regole, responsabilità e processi chiari.</h2>
+          </div>
+          <div>
+            <p>
+              Affianchiamo imprese e professionisti nell’adozione responsabile
+              dell’intelligenza artificiale. Le attività legali vengono svolte
+              con professionisti abilitati e definite in base al caso concreto.
+            </p>
+          </div>
+        </div>
+        <div className={styles.legalGrid}>
+          {LEGAL_SERVICES.map(({ icon: Icon, title, text }) => (
+            <article key={title}>
+              <Icon size={22} aria-hidden="true" />
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+        <div className={styles.legalPartner}>
+          <div className={styles.legalPartnerMark} aria-hidden="true">BCS</div>
+          <div className={styles.legalPartnerCopy}>
+            <span>Partner legale</span>
+            <h3>Studio Legale BCS</h3>
+            <p>Avv. Vincenzo Sapone, Cassazionista · Diritto delle nuove tecnologie, GDPR e AI Act</p>
+            <ul>
+              <li><Check size={14} aria-hidden="true" /> Analisi del caso durante la call</li>
+            </ul>
+          </div>
+          <div className={styles.legalPrice}>
+            <span>Consulenza individuale</span>
+            <strong>€150<small>/30 min</small></strong>
+          </div>
+          <Link href="/consulenza" className={styles.legalPartnerCta}>
+            Prenota la consulenza <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+        </div>
+        <p className={styles.legalDisclaimer}>
+          La sezione ha finalità informativa e non sostituisce una consulenza legale.
+          Ambito, documenti e adempimenti vengono definiti dopo una valutazione professionale.
+        </p>
       </section>
 
       <section id="prezzi" className={styles.pricingSection} aria-labelledby="pricing-title">
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Soluzioni</p>
-          <h2 id="pricing-title">Due livelli chiari. Un servizio che lavora ogni mese.</h2>
-          <p>Prezzi mensili IVA esclusa. Il budget pubblicitario non è incluso.</p>
+          <h2 id="pricing-title">Scegli il risultato. Al resto pensiamo noi.</h2>
+          <p>Due pacchetti completi, senza costi di setup. Parti dalla continuità oppure collega social, traffico e campagne.</p>
         </div>
         <div className={styles.pricingGrid}>
           {PACCHETTI.map(plan => (
@@ -269,18 +369,29 @@ export default function LandingPage() {
                 </div>
                 {plan.consigliato && <span className={styles.planBadge}>Più scelto</span>}
               </div>
+              <p className={styles.planResult}>{plan.risultato}</p>
               <p className={styles.price}><strong>{plan.prezzo}</strong><span>/mese</span></p>
-              <p className={styles.setup}>{plan.setup} una tantum</p>
+              <p className={styles.setup}>{plan.setup === 'Setup incluso' ? plan.setup : `${plan.setup} una tantum`}</p>
               <p className={styles.planDescription}>{plan.sottotitolo}</p>
+              <div className={styles.planFit}>
+                <strong>È adatto a te se</strong>
+                <p>{plan.idealePer}</p>
+              </div>
               {plan.includeDa && <p className={styles.includes}>Include tutto di {plan.includeDa}, più:</p>}
+              <p className={styles.listLabel}>Nel canone trovi</p>
               <ul>
                 {plan.features.map(feature => <li key={feature}><Check size={16} aria-hidden="true" /> {feature}</li>)}
               </ul>
               <Link href={`/register?piano=${plan.slug}`} className={plan.consigliato ? styles.primaryButton : styles.outlineButton}>
-                {plan.consigliato ? 'Scegli Crescita' : 'Inizia con Presenza'} <ArrowRight size={17} aria-hidden="true" />
+                {plan.cta} <ArrowRight size={17} aria-hidden="true" />
               </Link>
+              <small className={styles.ctaNote}>Setup incluso · IVA esclusa · rinnovo mensile</small>
             </article>
           ))}
+        </div>
+        <div className={styles.pricingAssurance}>
+          <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Prima vuoi verificare la qualità?</strong> Richiedi un contenuto di prova gratuito.</span></div>
+          <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer">Richiedi la prova <ArrowRight size={16} aria-hidden="true" /></a>
         </div>
         <div className={styles.customPlan}>
           <div>
@@ -319,7 +430,10 @@ export default function LandingPage() {
       </section>
 
       <footer className={styles.footer}>
-        <Link href="/" className={styles.brand}><span className={styles.brandMark}>SA</span><span>Social Automation</span></Link>
+        <Link href="/" className={styles.brand}>
+          <Image className={styles.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} />
+          <span>Social Automation</span>
+        </Link>
         <div><Link href="/privacy">Privacy</Link><Link href="/termini">Termini</Link><Link href="/login">Accesso</Link></div>
         <p>© 2026 Social Automation</p>
       </footer>
@@ -327,6 +441,7 @@ export default function LandingPage() {
       <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.mobileCta}>
         Richiedi una prova <ArrowRight size={17} aria-hidden="true" />
       </a>
+      <FloatingNavigation />
     </main>
   )
 }

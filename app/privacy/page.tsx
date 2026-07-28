@@ -1,11 +1,17 @@
 import type { Metadata } from 'next'
 import LegalShell, { PH } from '@/components/LegalShell'
 import { TITOLARE, SUB_RESPONSABILI } from '@/lib/legal-config'
+import { SITE_URL } from '@/lib/site-config'
 import styles from '@/components/legal.module.css'
 
+const META_TITLE = 'Privacy Policy — Social Automation'
+const META_DESCRIPTION = 'Informativa sul trattamento dei dati personali ai sensi del Regolamento UE 2016/679 (GDPR).'
+
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Social Automation',
-  description: 'Informativa sul trattamento dei dati personali ai sensi del Regolamento UE 2016/679 (GDPR).',
+  title: META_TITLE,
+  description: META_DESCRIPTION,
+  alternates: { canonical: `${SITE_URL}/privacy` },
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/privacy` },
   robots: { index: true, follow: true },
 }
 

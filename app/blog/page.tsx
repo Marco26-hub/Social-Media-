@@ -2,12 +2,19 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { dbReady, q } from '@/lib/db'
 import { resolveBlogClienteId } from '@/lib/blog-tenant'
+import { SITE_URL } from '@/lib/site-config'
 
 export const dynamic = 'force-dynamic'
 
+const META_TITLE = 'Guide su Social, SEO, GEO e AI per le PMI | SWA'
+const META_DESCRIPTION =
+  'Guide operative su gestione social, contenuti, SEO, GEO, siti, e-commerce e uso responsabile dell’AI per PMI e professionisti.'
+
 export const metadata: Metadata = {
-  title: 'Blog',
-  description: 'Articoli, guide e approfondimenti.',
+  title: META_TITLE,
+  description: META_DESCRIPTION,
+  alternates: { canonical: `${SITE_URL}/blog` },
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/blog` },
 }
 
 type Item = { slug: string; h1: string; meta_description: string | null; tempo_lettura_min: number | null; immagine_cover: string | null }

@@ -1,11 +1,17 @@
 import type { Metadata } from 'next'
 import LegalShell from '@/components/LegalShell'
 import { TITOLARE } from '@/lib/legal-config'
+import { SITE_URL } from '@/lib/site-config'
 import styles from '@/components/legal.module.css'
 
+const META_TITLE = 'Cookie Policy — Social Automation'
+const META_DESCRIPTION = 'Informativa estesa sull’uso dei cookie ai sensi delle Linee Guida del Garante Privacy (2021).'
+
 export const metadata: Metadata = {
-  title: 'Cookie Policy — Social Automation',
-  description: 'Informativa estesa sull\'uso dei cookie ai sensi delle Linee Guida del Garante Privacy (2021).',
+  title: META_TITLE,
+  description: META_DESCRIPTION,
+  alternates: { canonical: `${SITE_URL}/cookie-policy` },
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/cookie-policy` },
   robots: { index: true, follow: true },
 }
 

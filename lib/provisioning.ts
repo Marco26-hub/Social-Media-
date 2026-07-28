@@ -13,12 +13,12 @@ export const PACCHETTO_LABEL: Record<string, string> = {
 
 // Pacchetto vendita → piano DB (enum free/pro/agency/enterprise) + contenuti/mese.
 export const PACCHETTO_PIANO: Record<string, { piano: string; contenuti: number }> = {
-  presenza:  { piano: 'pro',        contenuti: 12 },
-  crescita:  { piano: 'agency',     contenuti: 20 },
+  presenza:  { piano: 'pro',        contenuti: 16 },
+  crescita:  { piano: 'agency',     contenuti: 24 },
 }
 
 // Fallback sicuro: pacchetto ignoto → Presenza.
-export const PACCHETTO_FALLBACK = { piano: 'pro', contenuti: 12 }
+export const PACCHETTO_FALLBACK = { piano: 'pro', contenuti: 16 }
 
 export function slugify(value: string): string {
   return value

@@ -8,6 +8,9 @@ export type Pacchetto = {
   prezzo: string
   setup: string
   sottotitolo: string
+  idealePer: string
+  risultato: string
+  cta: string
   includeDa?: string
   features: string[]
   consigliato: boolean
@@ -18,17 +21,20 @@ export const PACCHETTI: Pacchetto[] = [
     slug: 'presenza',
     nome: 'Presenza',
     eyebrow: 'Professionisti e piccole attività',
-    prezzo: '€490',
-    setup: '€290 setup',
-    sottotitolo: 'Per delegare la gestione social con continuità, mantenendo il controllo su ogni pubblicazione.',
+    prezzo: '€390',
+    setup: 'Setup incluso',
+    sottotitolo: 'Una gestione completa per comunicare con continuità senza sottrarre tempo al tuo lavoro.',
+    idealePer: 'Hai bisogno di essere presente ogni settimana su 2 social, con un’immagine professionale e un processo semplice.',
+    risultato: 'Presenza costante su 2 social',
+    cta: 'Attiva Presenza',
     features: [
-      '12 contenuti al mese',
-      'Fino a 2 canali social',
-      'Piano editoriale mensile',
-      'Copy, hashtag e immagini coordinate',
-      'Approvazione e 1 ciclo di revisione',
-      'Pubblicazione programmata',
-      'Report mensile essenziale',
+      '16 contenuti pronti e pubblicati ogni mese',
+      '12 post/caroselli + 4 Reel o Stories',
+      '2 social coordinati con un unico calendario',
+      'Audit del brand e ottimizzazione dei profili',
+      'Copy, grafiche, approvazione e 2 revisioni',
+      '1 campagna promozionale organica coordinata al mese',
+      'Report mensile e call strategica di 30 minuti',
     ],
     consigliato: false,
   },
@@ -36,17 +42,20 @@ export const PACCHETTI: Pacchetto[] = [
     slug: 'crescita',
     nome: 'Crescita',
     eyebrow: 'PMI orientate ai risultati',
-    prezzo: '€890',
-    setup: '€490 setup',
-    sottotitolo: 'Per collegare presenza social, contenuti organici e analisi in un processo di crescita misurabile.',
+    prezzo: '€790',
+    setup: 'Setup incluso',
+    sottotitolo: 'Un sistema integrato per aumentare copertura, traffico e opportunità commerciali.',
+    idealePer: 'Vuoi far lavorare insieme social, contenuti organici e campagne su 3 canali, con una direzione strategica mensile.',
+    risultato: 'Social, visibilità e campagne coordinati',
+    cta: 'Scegli Crescita',
     includeDa: 'Presenza',
     features: [
-      '20 contenuti su 3 canali',
-      'Reel e Short da materiali forniti',
-      '1 articolo blog SEO + GEO al mese',
-      'Analisi competitor mensile',
-      '2 cicli di revisione',
-      'Report strategico e call mensile',
+      '24 contenuti pubblicati su 3 social',
+      '18 post/caroselli + 6 Reel o Short',
+      '1 articolo SEO + GEO e analisi competitor',
+      'Gestione di 1 campagna ADS, budget escluso',
+      '2 creatività ADS e 2 varianti copy al mese',
+      'Report avanzato e call strategica di 45 minuti',
       'Supporto prioritario',
     ],
     consigliato: true,

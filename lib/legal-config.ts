@@ -30,7 +30,7 @@ export const TITOLARE = {
   // Partner legale (erogazione consulenze)
   partnerLegale: 'Studio Legale BCS — Avv. Vincenzo Sapone (Cassazionista)',
   // URL pubblico del sito (per riferimenti nei documenti)
-  sitoUrl: 'https://social-media-manager-zte4.onrender.com',
+  sitoUrl: 'https://socialautomation.app',
   // Data ultimo aggiornamento dei documenti legali (aggiornare a ogni modifica)
   ultimoAggiornamento: '8 luglio 2026',
 }

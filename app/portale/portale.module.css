@@ -44,15 +44,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
+  min-height: 70px;
+  padding: 10px 0;
 }
 .brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; color: var(--ink); }
-.brandMark {
-  display: grid; place-items: center;
-  width: 40px; height: 40px; border-radius: 13px;
-  background: linear-gradient(145deg, var(--gold-soft), var(--gold) 60%, #c39528);
-  box-shadow: var(--sheen), 0 6px 16px rgba(214, 168, 57, 0.32);
-  font-family: "Fraunces", Georgia, serif; font-weight: 900; font-size: 18px; color: var(--ink);
+.brandLogoShell {
+  width: 96px;
+  height: 46px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 4px;
+  background: #153b32;
+}
+.brandLogo {
+  width: 82px;
+  height: 38px;
+  object-fit: contain;
 }
 .brandName { display: flex; flex-direction: column; line-height: 1.15; }
 .brandName b { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; }
@@ -163,6 +171,14 @@
   .viz { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
+  .topInner { width: min(100% - 24px, 1120px); min-height: 62px; }
+  .brand { gap: 8px; }
+  .brandLogoShell { width: 76px; height: 38px; }
+  .brandLogo { width: 66px; height: 30px; }
+  .brandName b { font-size: 12px; }
+  .brandName span { font-size: 10px; }
+  .exit { min-width: 40px; min-height: 40px; padding: 0; justify-content: center; }
+  .exit span { display: none; }
   .tiles { grid-template-columns: 1fr; }
   .featGrid { grid-template-columns: 1fr; }
   .subCard { flex-direction: column; align-items: stretch; }

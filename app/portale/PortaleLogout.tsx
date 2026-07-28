@@ -11,7 +11,7 @@ export default function PortaleLogout() {
   return (
     <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className={styles.exit}>
       <LogOut size={16} />
-      Esci
+      <span>Esci</span>
     </button>
   )
 }

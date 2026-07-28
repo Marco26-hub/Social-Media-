@@ -1,10 +1,17 @@
 import type { Metadata } from 'next'
 import LegalShell from '@/components/LegalShell'
 import { TITOLARE } from '@/lib/legal-config'
+import { SITE_URL } from '@/lib/site-config'
+
+const META_TITLE = 'Trasparenza AI — Social Automation'
+const META_DESCRIPTION =
+  'Nota di trasparenza sull’uso dell’intelligenza artificiale ai sensi del Regolamento UE 2024/1689 (AI Act).'
 
 export const metadata: Metadata = {
-  title: 'Trasparenza AI — Social Automation',
-  description: 'Nota di trasparenza sull\'uso dell\'intelligenza artificiale ai sensi del Regolamento UE 2024/1689 (AI Act).',
+  title: META_TITLE,
+  description: META_DESCRIPTION,
+  alternates: { canonical: `${SITE_URL}/trasparenza-ai` },
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/trasparenza-ai` },
   robots: { index: true, follow: true },
 }
 
@@ -60,7 +67,7 @@ export default function TrasparenzaAiPage() {
       <h2>7. Consulenza dedicata</h2>
       <p>
         Se vuoi verificare come l&apos;AI Act e il GDPR impattano la tua specifica attività, offriamo una consulenza legale con
-        l&apos;Avvocato Cassazionista dello {TITOLARE.partnerLegale.split('—')[0].trim()} (€150 / 30 min, parere scritto incluso).
+        l&apos;Avvocato Cassazionista dello {TITOLARE.partnerLegale.split('—')[0].trim()} (€150 / 30 min).
         Contatti: <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>.
       </p>
     </LegalShell>

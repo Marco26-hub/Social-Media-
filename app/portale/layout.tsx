@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import styles from './portale.module.css'
 import PortaleLogout from './PortaleLogout'
 
@@ -11,7 +12,16 @@ export default function PortaleLayout({ children }: { children: React.ReactNode 
       <header className={styles.topbar}>
         <div className={styles.topInner}>
           <Link href="/portale" className={styles.brand}>
-            <span className={styles.brandMark}>SA</span>
+            <span className={styles.brandLogoShell}>
+              <Image
+                className={styles.brandLogo}
+                src="/brand/swa-logo-official.png"
+                alt="SWA"
+                width={82}
+                height={38}
+                priority
+              />
+            </span>
             <span className={styles.brandName}>
               <b>Social Automation</b>
               <span>Area cliente</span>

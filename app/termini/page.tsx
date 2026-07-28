@@ -1,10 +1,16 @@
 import type { Metadata } from 'next'
 import LegalShell, { PH } from '@/components/LegalShell'
 import { TITOLARE } from '@/lib/legal-config'
+import { SITE_URL } from '@/lib/site-config'
+
+const META_TITLE = 'Termini e Condizioni — Social Automation'
+const META_DESCRIPTION = 'Condizioni generali di utilizzo del servizio Social Automation.'
 
 export const metadata: Metadata = {
-  title: 'Termini e Condizioni — Social Automation',
-  description: 'Condizioni generali di utilizzo del servizio Social Automation.',
+  title: META_TITLE,
+  description: META_DESCRIPTION,
+  alternates: { canonical: `${SITE_URL}/termini` },
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/termini` },
   robots: { index: true, follow: true },
 }
 

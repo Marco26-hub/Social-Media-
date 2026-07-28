@@ -144,7 +144,7 @@ export default function PortaleClientePage() {
 
   return (
     <div>
-      <h1 className={`${styles.display} ${styles.hello}`}>Ciao, {p.cliente.nome} 👋</h1>
+      <h1 className={`${styles.display} ${styles.hello}`}>Ciao, {p.cliente.nome}</h1>
       <p className={styles.helloSub}>Qui trovi i risultati, il tuo piano e i pagamenti. Ai contenuti pensiamo noi.</p>
 
       <div className={styles.grid2}>

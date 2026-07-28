@@ -183,8 +183,8 @@ export async function GET() {
       return NextResponse.json(buildPayload({
         id: 'demo-silkincom',
         nome: 'SILKinCOM Demo',
-        piano: 'pro',
-        contenuti_mese: 20,
+        piano: 'presenza',
+        contenuti_mese: 16,
         attivo: true,
       }, 8, {
         enabled: true,
@@ -196,7 +196,7 @@ export async function GET() {
         cancel_at_period_end: false,
         ultimo_pagamento: {
           status: 'paid',
-          amount_paid: 109000,
+          amount_paid: 39000,
           currency: 'eur',
           hosted_invoice_url: null,
           invoice_pdf: null,

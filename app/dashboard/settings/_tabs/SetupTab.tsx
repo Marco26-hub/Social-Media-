@@ -107,7 +107,7 @@ function buildChecks(health: HealthResponse | null): CheckItem[] {
       desc: 'URL canonico login/sessione NextAuth.',
       ok: Boolean(checks.nextauthUrl),
       required: true,
-      action: 'Deve essere https://social-media-manager-zte4.onrender.com o dominio custom.',
+      action: 'Deve essere https://socialautomation.app.',
     },
     {
       key: 'siteUrl',

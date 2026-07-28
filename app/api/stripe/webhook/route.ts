@@ -124,7 +124,7 @@ async function handleCheckoutCompleted(obj: StripeObject) {
     if (!result.alreadyActive) {
       const prof = await q1('SELECT email, nome FROM profiles WHERE id = $1', [profileId])
       if (prof?.email) {
-        const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://social-media-manager-zte4.onrender.com').replace(/\/$/, '')
+        const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://socialautomation.app').replace(/\/$/, '')
         await sendAccountActivated(String(prof.email), String(prof.nome || 'Cliente'), `${base}/login`).catch(() => {})
       }
     }

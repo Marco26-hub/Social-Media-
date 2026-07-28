@@ -3,10 +3,11 @@ import type { Metadata } from 'next'
 import { dbReady, q } from '@/lib/db'
 import { normalizeArticle, buildJsonLd, type BlogArticleData } from '@/lib/blog-render'
 import { resolveBlogClienteId } from '@/lib/blog-tenant'
+import { SITE_URL } from '@/lib/site-config'
 
 export const dynamic = 'force-dynamic'
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || ''
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || SITE_URL
 
 // Carica l'articolo PUBBLICATO con questo slug, scoping per il cliente del dominio
 // (vedi lib/blog-tenant.ts). Niente slug-hijack cross-tenant (unique è (cliente_id, slug)).

@@ -1,4 +1,4 @@
-const SITE_URL = 'https://social-media-manager-zte4.onrender.com'
+import { SITE_URL } from '@/lib/site-config'
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -8,7 +8,12 @@ const jsonLd = {
       '@id': `${SITE_URL}/#organization`,
       name: 'Social Automation',
       url: SITE_URL,
-      logo: `${SITE_URL}/og.png`,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/brand/swa-logo-official.png`,
+        width: 958,
+        height: 438,
+      },
       description:
         'Social Automation è un servizio digitale gestito per PMI e professionisti: strategia, contenuti, pubblicazione multicanale, siti ed e-commerce, SEO e GEO con controllo umano.',
       sameAs: ['https://studiodigitale.eu/'],
@@ -83,8 +88,8 @@ const jsonLd = {
       offers: {
         '@type': 'AggregateOffer',
         priceCurrency: 'EUR',
-        lowPrice: 490,
-        highPrice: 890,
+        lowPrice: 390,
+        highPrice: 790,
         offerCount: 2,
       },
     },
@@ -138,7 +143,7 @@ const jsonLd = {
           name: 'Quanto costa Social Automation?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Il piano Presenza costa 490 euro al mese e il piano Crescita 890 euro al mese, IVA esclusa. I progetti per e-commerce, agenzie e organizzazioni sono configurati su preventivo.',
+            text: 'Il piano Presenza costa 390 euro al mese e il piano Crescita 790 euro al mese, IVA esclusa. Entrambi includono il setup. I progetti per e-commerce, agenzie e organizzazioni sono configurati su preventivo.',
           },
         },
       ],

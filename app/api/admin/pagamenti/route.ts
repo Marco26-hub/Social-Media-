@@ -19,7 +19,7 @@ function demoPayload() {
   return {
     stripe_configured: false,
     stripe_webhook_configured: false,
-    webhook_url: 'https://social-media-manager-zte4.onrender.com/api/stripe/webhook',
+    webhook_url: 'https://socialautomation.app/api/stripe/webhook',
     needs_migration: false,
     clienti: [
       {
@@ -29,7 +29,7 @@ function demoPayload() {
         piano: 'pro',
         pacchetto_slug: 'crescita',
         pacchetto_nome: 'Crescita',
-        canone: '€890',
+        canone: '€790',
         attivo: true,
         stripe_customer_id: null,
         stripe_subscription_id: null,

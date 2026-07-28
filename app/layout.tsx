@@ -2,60 +2,49 @@ import type { Metadata } from 'next'
 import './globals.css'
 import JsonLd from '@/components/JsonLd'
 import CookieBanner from '@/components/CookieBanner'
+import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://social-media-manager-zte4.onrender.com'),
-  title: 'Social Automation | Social, siti e visibilità AI per agenzie e PMI',
-  description:
-    'Gestione social con AI, siti ed e-commerce e visibilità su Google e sugli assistenti AI (SEO e GEO) per agenzie e PMI italiane. Approvazione umana prima di ogni pubblicazione. In arrivo: receptionist AI 24/7 e automazione aziendale.',
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   keywords: [
-    'automazione AI business',
-    'agenti AI',
-    'receptionist AI',
-    'siti web e e-commerce AI',
+    'gestione social per PMI',
+    'social media manager per aziende',
     'social media management',
-    'social media AI',
-    'gestione social con intelligenza artificiale',
-    'automazione social',
+    'gestione Instagram e Facebook',
     'piano editoriale',
     'creazione contenuti social',
-    'audit SEO',
-    'GEO',
-    'lead generation',
-    'agenzie',
-    'PMI',
+    'SEO e GEO',
+    'siti ed e-commerce',
+    'consulenza AI Act',
   ],
   authors: [{ name: 'Social Automation' }],
+  creator: 'Social Automation',
+  publisher: 'Social Automation',
+  applicationName: 'Social Automation',
   openGraph: {
-    title: 'Social Automation | Social, siti e visibilità AI per agenzie e PMI',
-    description:
-      'Gestione social con AI, siti ed e-commerce e visibilità su Google e sugli assistenti AI (SEO e GEO). Approvazione umana prima di ogni pubblicazione.',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     type: 'website',
-    url: 'https://social-media-manager-zte4.onrender.com',
     siteName: 'Social Automation',
     locale: 'it_IT',
-    images: [
-      {
-        url: '/og.png',
-        width: 1200,
-        height: 630,
-        alt: 'Social Automation — automazione AI, siti e social per agenzie e PMI',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Social Automation | Social, siti e visibilità AI per agenzie e PMI',
-    description:
-      'Gestione social con AI, siti ed e-commerce e visibilità su Google e sugli assistenti AI (SEO e GEO). Approvazione umana prima di ogni pubblicazione.',
-    images: ['/og.png'],
-  },
-  alternates: {
-    canonical: 'https://social-media-manager-zte4.onrender.com',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
 }
 

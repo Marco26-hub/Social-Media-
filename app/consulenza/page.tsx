@@ -83,7 +83,7 @@ function ConsulenzaForm() {
         <span style={{ fontSize: 14, color: 'rgba(16,18,14,0.6)', display: 'inline-flex', alignItems: 'center', gap: 5 }}><Clock size={14} /> 30 minuti</span>
       </div>
       <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 20px', display: 'grid', gap: 7 }}>
-        {['Avvocato Cassazionista Studio BCS', 'Parere scritto sintetico incluso', 'Pagamento sicuro con Stripe'].map(t => (
+        {['Avvocato Cassazionista Studio BCS', 'Analisi del caso durante la call', 'Pagamento sicuro con Stripe'].map(t => (
           <li key={t} style={{ display: 'flex', gap: 8, fontSize: 14, color: 'rgba(16,18,14,0.8)' }}><CheckCircle2 size={15} style={{ color: C.moss, flexShrink: 0, marginTop: 2 }} /> {t}</li>
         ))}
       </ul>

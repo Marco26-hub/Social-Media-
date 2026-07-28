@@ -10,7 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const IMPORTO_CENTS = 15000 // €150
 
 function baseUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://social-media-manager-zte4.onrender.com').replace(/\/$/, '')
+  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://socialautomation.app').replace(/\/$/, '')
 }
 
 // Prenotazione consulenza legale one-off: crea la riga pending e avvia il

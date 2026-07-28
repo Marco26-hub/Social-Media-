@@ -109,7 +109,7 @@ export async function createStripeCheckoutSession(args: {
   pacchettoNome: string
   amountCents: number
   // Setup una-tantum (in cents) addebitato SOLO sulla prima fattura. 0/undefined =
-  // nessun addebito setup (es. pacchetto Starter con 'Setup incluso').
+  // Nessun addebito setup per i pacchetti che lo includono.
   setupCents?: number
   successUrl: string
   cancelUrl: string
