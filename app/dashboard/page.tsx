@@ -348,7 +348,7 @@ export default async function DashboardPage() {
           {PLATFORM_LIST.map(p => (
             <Link
               key={p.key}
-              href={`/dashboard/social/${p.key}`}
+              href={`/dashboard/social?platform=${p.key}`}
               className="card p-4 hover:shadow-md hover:-translate-y-0.5 transition-all text-center group"
             >
               <div className={`w-12 h-12 mx-auto rounded-2xl ${p.colorBg} flex items-center justify-center text-2xl mb-2 shadow-sm group-hover:scale-110 transition-transform`}>

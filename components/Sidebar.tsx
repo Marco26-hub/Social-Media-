@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { signOut, useSession } from 'next-auth/react'
-import { PLATFORM_LIST } from '@/lib/social-config'
 import ClienteSelector from '@/components/ClienteSelector'
 import {
   LayoutDashboard, Calendar, Settings,
@@ -26,12 +25,9 @@ const SECTIONS: NavSection[] = [
   },
   {
     title: 'SOCIAL',
-    items: PLATFORM_LIST.map(p => ({
-      href: `/dashboard/social/${p.key}`,
-      label: p.nome,
-      emoji: p.emoji,
-      adminOnly: true,
-    })),
+    items: [
+      { href: '/dashboard/social', label: 'Crea contenuti', icon: Sparkles, adminOnly: true },
+    ],
   },
   {
     title: 'STRUMENTI',
