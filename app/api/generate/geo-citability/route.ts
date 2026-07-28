@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   try {
     await requireAuth()
     const body = await request.json()
-    const { cliente_id, content, slug, rewrite_weak, model, openrouter_key, gemini_key, opencode_key, agnes_key } = body
+    const { cliente_id, content, slug, rewrite_weak, model, openrouter_key } = body
 
     let blocks: ContentBlock[] = []
     let sourceLabel = 'contenuto fornito'
@@ -69,10 +69,10 @@ export async function POST(request: Request) {
         if (!original) continue
         try {
           const raw = await callAI({
-            model: model || 'gemini-2.5-flash',
+            model: model || 'meta-llama/llama-3.3-70b-instruct:free',
             systemPrompt: 'Sei un editor GEO/SEO senior. Rispondi SOLO con JSON valido, italiano impeccabile.',
             userPrompt: rewriteWeakBlockPrompt(w, original),
-            openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
+            openrouterKey: openrouter_key,
             maxTokens: 800,
             meta: { tipo: 'geo_rewrite', agentName: 'geo' },
           })

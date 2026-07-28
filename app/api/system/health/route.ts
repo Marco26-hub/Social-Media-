@@ -90,7 +90,6 @@ export async function GET(request: NextRequest) {
     authSecret: hasEnv('AUTH_SECRET') || hasEnv('NEXTAUTH_SECRET'),
     nextauthUrl: hasEnv('NEXTAUTH_URL'),
     siteUrl: hasEnv('NEXT_PUBLIC_SITE_URL'),
-    anthropic: hasEnv('ANTHROPIC_API_KEY'),
     openrouter: hasEnv('OPENROUTER_API_KEY'),
     blotatoApiKey: hasEnv('BLOTATO_API_KEY'),
     blotatoWebhookSecret: hasEnv('BLOTATO_WEBHOOK_SECRET'),
@@ -103,7 +102,7 @@ export async function GET(request: NextRequest) {
   }
 
   const hasDatabase = demo || (checks.databaseUrl && checks.dbConnection && checks.profilesTable)
-  const hasAi = checks.anthropic || checks.openrouter
+  const hasAi = checks.openrouter
   const ready = hasDatabase && checks.adminUser && checks.authSecret && checks.nextauthUrl && hasAi
 
   // Commit SHA del deploy (Vercel espone VERCEL_GIT_COMMIT_SHA). Serve a confermare
@@ -163,7 +162,7 @@ export async function GET(request: NextRequest) {
       ...(!checks.authSecret ? ['Configura AUTH_SECRET o NEXTAUTH_SECRET'] : []),
       ...(!checks.nextauthUrl ? ['Configura NEXTAUTH_URL con URL Render o dominio custom'] : []),
       ...(!checks.siteUrl ? ['Configura NEXT_PUBLIC_SITE_URL per link e referrer OpenRouter'] : []),
-      ...(!hasAi ? ['Aggiungi ANTHROPIC_API_KEY o OPENROUTER_API_KEY'] : []),
+      ...(!hasAi ? ['Aggiungi OPENROUTER_API_KEY (o una key OpenRouter per-browser)'] : []),
       ...(!databaseChecks.latestMigrationApplied ? [`Esegui npm run migrate: manca ${LATEST_REQUIRED_MIGRATION}`] : []),
       ...(!checks.r2Storage ? ['Configura storage S3-compatible (STORAGE_ENDPOINT, STORAGE_ACCESS_KEY_ID, STORAGE_SECRET_ACCESS_KEY, STORAGE_BUCKET, STORAGE_PUBLIC_URL): senza, le immagini caricate spariscono a ogni deploy'] : []),
       ...(!checks.blotatoApiKey ? ['Configura BLOTATO_API_KEY prima di vendere pubblicazione automatica'] : []),

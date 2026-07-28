@@ -126,7 +126,7 @@ Rispondi SOLO con JSON:
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { url, model, openrouter_key, gemini_key, opencode_key, agnes_key } = await request.json()
+    const { url, model, openrouter_key } = await request.json()
     if (!url) {
       return NextResponse.json({ error: 'url richiesto' }, { status: 400 })
     }
@@ -210,8 +210,6 @@ export async function POST(request: Request) {
           systemPrompt: 'Estrai dati strutturati da testo web. Rispondi SOLO con JSON valido.',
           userPrompt: enrichPrompt,
           openrouterKey: openrouter_key,
-          geminiKey: gemini_key,
-          opencodeKey: opencode_key || undefined, agnesKey: agnes_key || undefined,
           maxTokens: 500,
         })
         aiEnrich = (extractJSON(aiRes) as Record<string, unknown>) || {}

@@ -5,7 +5,7 @@ import { SEO_GEO_STANDARDS } from '@/lib/prompt-standards'
 type Row = Record<string, unknown>
 
 export type SeoAuditResult = { clienteId: string; ok: boolean; scoreMancanti: string[]; errore?: string }
-export type AiKeys = { model?: string; openrouterKey?: string; geminiKey?: string; opencodeKey?: string }
+export type AiKeys = { model?: string; openrouterKey?: string }
 
 // SKILL dell'agente: auditor SEO + GEO senior. Analizza brand + contenuti reali +
 // log pubblicazioni e produce un audit con score e miglioramenti concreti, salvato
@@ -128,15 +128,13 @@ export async function eseguiSeoAuditPerCliente(
     .replace('{{CONTENUTI}}', () => JSON.stringify(calendario || [], null, 2))
     .replace('{{LOG}}', () => JSON.stringify(logs || [], null, 2))
 
-  const model = opts.aiKeys?.model || 'gemini-2.5-flash'
+  const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
   // Niente score finti: se l'AI fallisce, l'errore si propaga (catturato dall'endpoint).
   const raw = await callAI({
     model,
     systemPrompt: 'Sei un auditor SEO/GEO senior. Rispondi con JSON valido, nessun altro testo.',
     userPrompt,
     openrouterKey: opts.aiKeys?.openrouterKey,
-    geminiKey: opts.aiKeys?.geminiKey,
-    opencodeKey: opts.aiKeys?.opencodeKey,
     maxTokens: 5000,
     meta: { clienteId, tipo: 'seo_audit', agentName: 'seo' },
   })

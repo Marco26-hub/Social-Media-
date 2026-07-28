@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, obiettivo, dati_funnel, model, openrouter_key, gemini_key, opencode_key, agnes_key } = await request.json()
+    const { cliente_id, obiettivo, dati_funnel, model, openrouter_key } = await request.json()
 
     const ctx = await getClientGenerationContext(cliente_id)
     const identity = mergeBrandIdentity(ctx)
@@ -24,10 +24,10 @@ export async function POST(request: Request) {
     })
 
     const aiRes = await callAI({
-      model: model || 'gemini-2.5-flash',
+      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: 'Sei un funnel strategist senior. Rispondi SOLO con JSON valido, italiano impeccabile. Usa SOLO i lift attesi forniti nel prompt, non inventarne altri.',
       userPrompt,
-      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
+      openrouterKey: openrouter_key,
       maxTokens: 4000,
       meta: { clienteId: ctx.clienteId || undefined, tipo: 'funnel_plan', agentName: 'funnel' },
     })

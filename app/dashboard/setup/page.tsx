@@ -121,10 +121,10 @@ function buildChecks(health: HealthResponse | null): CheckItem[] {
     {
       key: 'ai',
       label: 'AI Provider',
-      desc: 'Almeno una chiave tra OpenRouter e Anthropic.',
-      ok: Boolean(checks.openrouter || checks.anthropic),
+      desc: 'Chiave OpenRouter (server o per-browser).',
+      ok: Boolean(checks.openrouter),
       required: true,
-      action: 'Configura OPENROUTER_API_KEY o ANTHROPIC_API_KEY.',
+      action: 'Configura OPENROUTER_API_KEY (o incolla una key OpenRouter nel pannello modello).',
     },
     {
       key: 'blotatoApiKey',

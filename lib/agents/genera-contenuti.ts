@@ -16,7 +16,7 @@ import { insertCalendarioRow } from '@/lib/calendario-insert'
 type Row = Record<string, unknown>
 
 export type AgentResult = { clienteId: string; generati: number; errori: string[] }
-export type AiKeys = { model?: string; openrouterKey?: string; geminiKey?: string; opencodeKey?: string }
+export type AiKeys = { model?: string; openrouterKey?: string }
 
 // Carica il contesto cliente SENZA guardia di sessione: il chiamante è un job
 // autenticato via CRON_SECRET e il clienteId arriva già validato dalla query dei
@@ -189,12 +189,10 @@ export async function generaContenutiPerCliente(
       const qualityContext = buildQualityContext({ quality, canale, formato })
       const userPrompt = buildUserPrompt({ canale, formato, nomeBrand, settore, tono, tema, prodotto, brandDesc, angle: pickAngle(), qualityContext, extendedSchema })
       const raw = await callAI({
-        model: opts.aiKeys?.model || 'gemini-2.5-flash',
+        model: opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free',
         systemPrompt,
         userPrompt,
         openrouterKey: opts.aiKeys?.openrouterKey,
-        geminiKey: opts.aiKeys?.geminiKey,
-        opencodeKey: opts.aiKeys?.opencodeKey,
         maxTokens,
         meta: { clienteId, tipo: 'content', agentName: 'contenuti' },
       })

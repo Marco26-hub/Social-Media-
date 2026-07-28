@@ -65,9 +65,9 @@ export default function PrivacyPage() {
 
       <h2>4. Uso dell&apos;intelligenza artificiale</h2>
       <p>
-        La piattaforma utilizza sistemi di AI di terze parti (es. Anthropic Claude, Google Gemini, OpenRouter) per generare
-        testi, immagini e piani editoriali. I dati che inserisci (brand, prodotti, immagini) possono essere inviati a questi
-        fornitori esclusivamente per generare i contenuti richiesti. <strong>Non usiamo i tuoi dati per addestrare modelli AI</strong> e
+        La piattaforma utilizza <strong>OpenRouter</strong>, che instrada modelli di AI di terze parti (Google, OpenAI, Anthropic,
+        Meta e altri) per generare testi e immagini. I dati che inserisci (brand, prodotti, immagini) possono essere inviati a
+        questi fornitori esclusivamente per generare i contenuti richiesti. <strong>Non usiamo i tuoi dati per addestrare modelli AI</strong> e
         selezioniamo fornitori che offrono garanzie contrattuali in tal senso. Vedi anche la <a href="/trasparenza-ai">nota di trasparenza AI</a> (art. 50 Regolamento UE 2024/1689).
       </p>
 

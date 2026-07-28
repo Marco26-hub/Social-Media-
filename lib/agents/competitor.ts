@@ -5,7 +5,7 @@ import { PRO_COPY_STANDARDS } from '@/lib/prompt-standards'
 type Row = Record<string, unknown>
 
 export type CompetitorResult = { clienteId: string; analisi: number; errori: string[] }
-export type AiKeys = { model?: string; openrouterKey?: string; geminiKey?: string; opencodeKey?: string }
+export type AiKeys = { model?: string; openrouterKey?: string }
 
 // SKILL: social media analyst senior. Analizza i competitor SALVATI del cliente e
 // produce report azionabili (strategia, engagement, punti forza/debolezza, azioni per
@@ -51,7 +51,7 @@ export async function eseguiCompetitorPerCliente(
   }
 
   const brandJson = JSON.stringify(brand, null, 2)
-  const model = opts.aiKeys?.model || 'gemini-2.5-flash'
+  const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
   const errori: string[] = []
   let analisi = 0
 
@@ -71,8 +71,6 @@ export async function eseguiCompetitorPerCliente(
         systemPrompt: 'Sei un social media analyst senior. Rispondi SOLO con JSON valido.',
         userPrompt,
         openrouterKey: opts.aiKeys?.openrouterKey,
-        geminiKey: opts.aiKeys?.geminiKey,
-        opencodeKey: opts.aiKeys?.opencodeKey,
         maxTokens: 4000,
         meta: { clienteId, tipo: 'competitor', agentName: 'competitor' },
       })

@@ -1,53 +1,25 @@
 'use client'
 
-export const DEFAULT_AI_MODEL = 'gemini-2.5-flash'
-export const DEFAULT_OPENROUTER_MODEL = 'google/gemini-2.5-flash'
+// Default: modello testo free di OpenRouter (nessun costo, serve solo la key).
+export const DEFAULT_AI_MODEL = 'meta-llama/llama-3.3-70b-instruct:free'
 
-export const DEFAULT_AGNES_MODEL = 'agnes-2.0-flash'
-
-// La UI offre Gemini nativo (gemini-*), Agnes AI (agnes-*) e OpenRouter: tutto
-// ciò che non è gemini-*/agnes-* passa per OpenRouter e richiede la sua key.
-function needsOpenRouterKey(model: string) {
-  return !model.startsWith('gemini-') && !model.startsWith('agnes-')
-}
-
-// Modello salvato da versioni precedenti della UI (Anthropic/OpenCode/Ollama):
-// provider non più offerti dal selettore → si migra al default Gemini.
+// Modello salvato da versioni precedenti della UI (provider rimossi:
+// Gemini-nativo/Agnes/Anthropic/OpenCode/Ollama) → si migra al default OpenRouter.
 function isLegacyModel(model: string) {
-  return model.startsWith('claude-') || model.startsWith('opencode/') || model.startsWith('ollama/')
+  return /^(gemini[-.]|agnes-|claude-|opencode\/|ollama\/)/i.test(model)
 }
 
+// Impostazioni AI lato client: SOLO OpenRouter (chiave per-browser). Il modello e la
+// key vivono in localStorage; la chiamata li invia al server, che le valida.
 export function readAISettings() {
   if (typeof window === 'undefined') {
-    return {
-      model: DEFAULT_AI_MODEL,
-      openrouter_key: undefined as string | undefined,
-      gemini_key: undefined as string | undefined,
-      agnes_key: undefined as string | undefined,
-    }
+    return { model: DEFAULT_AI_MODEL, openrouter_key: undefined as string | undefined }
   }
-
   const savedModel = localStorage.getItem('ai_model') || ''
   const openrouterKey = localStorage.getItem('openrouter_key')?.trim()
-  const geminiKey = localStorage.getItem('gemini_key')?.trim()
-  const agnesKey = localStorage.getItem('agnes_key')?.trim()
-  let model = savedModel || (geminiKey ? DEFAULT_AI_MODEL : agnesKey ? DEFAULT_AGNES_MODEL : (openrouterKey ? DEFAULT_OPENROUTER_MODEL : DEFAULT_AI_MODEL))
-
-  if (isLegacyModel(model)) model = DEFAULT_AI_MODEL
-  // Modello Agnes salvato ma key rimossa (e nessuna env server garantita): il
-  // backend proverebbe comunque AGNES_API_KEY server — ma dal client non lo
-  // sappiamo, quindi restiamo sul modello scelto SOLO se la key c'è.
-  if (model.startsWith('agnes-') && !agnesKey) model = geminiKey ? DEFAULT_AI_MODEL : model
-  // Modello OpenRouter salvato ma key rimossa: non far fallire la generazione sul
-  // provider sbagliato — torna al default Gemini (free tier).
-  if (needsOpenRouterKey(model) && !openrouterKey) model = DEFAULT_AI_MODEL
-
-  return {
-    model,
-    openrouter_key: openrouterKey || undefined,
-    gemini_key: geminiKey || undefined,
-    agnes_key: agnesKey || undefined,
-  }
+  const model = (!savedModel || isLegacyModel(savedModel)) ? DEFAULT_AI_MODEL : savedModel
+  if (model !== savedModel) localStorage.setItem('ai_model', model)
+  return { model, openrouter_key: openrouterKey || undefined }
 }
 
 export async function readApiError(response: Response, fallback: string) {

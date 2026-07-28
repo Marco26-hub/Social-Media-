@@ -101,7 +101,7 @@ async function insertCalendario(columns: string[], values: unknown[]): Promise<b
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, gemini_key, opencode_key, agnes_key, periodo, quality, quality_level, post_quality, qualita, media_urls, fase, visual_effects, visual_preset, use_trending_effects, include_weekend } = await request.json()
+    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita, media_urls, fase, visual_effects, visual_preset, use_trending_effects, include_weekend } = await request.json()
     const mediaPool: string[] = Array.isArray(media_urls) ? media_urls.filter((u): u is string => typeof u === 'string' && u.length > 0) : []
     // Weekend nel piano: default INCLUSO. Se false, il piano usa solo lun-ven
     // (prompt esplicito + enforcement deterministico in sanitizeItem).
@@ -262,10 +262,10 @@ Output SOLO JSON array valido:
             // Default piano = Gemini 2.5 Flash (65K output, 1M contesto): il piano — specie
             // il mensile — produce JSON grandi che i modelli con 8K output troncano. Se manca
             // la key Gemini, la cascade ripiega comunque su OpenRouter free.
-            model: model || 'gemini-2.5-flash',
+            model: model || 'meta-llama/llama-3.3-70b-instruct:free',
             systemPrompt,
             userPrompt,
-            openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
+            openrouterKey: openrouter_key,
             images: visionImages,
             maxTokens: maxTok,
             timeoutMs: 90000,

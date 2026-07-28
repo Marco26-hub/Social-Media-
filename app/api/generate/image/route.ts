@@ -1,14 +1,13 @@
-import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'
+import { NextResponse } from 'next/server'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { apiError } from '@/lib/api-error'
 import { getPublicBaseUrl } from '@/lib/base-url'
 import { isStorageConfigured, uploadToStorage } from '@/lib/storage'
-import { generateImageComfy, sizeForFormato, comfyReachable } from '@/lib/comfy'
-import { generateImageAgnes, fetchAgnesImageBytes, agnesMediaKey } from '@/lib/agnes-media'
+import { generateImageOpenRouter, openrouterImageConfigured, aspectForFormato } from '@/lib/openrouter-image'
 import { getTableColumns, mediaSlotColumns } from '@/lib/db-schema'
 
 export const runtime = 'nodejs'
@@ -17,36 +16,22 @@ export const dynamic = 'force-dynamic'
 type Row = Record<string, unknown>
 const str = (v: unknown) => (typeof v === 'string' ? v : '')
 
-// Dimensioni Agnes (formato "WxH" stile OpenAI) coerenti con l'aspect del formato social.
-function agnesSizeForFormato(formato: string): string {
-  const f = formato.toLowerCase()
-  if (['reel', 'story', 'video', 'short', 'tiktok'].includes(f)) return '1024x1792' // 9:16
-  if (f === 'pin') return '1024x1536' // 2:3
-  return '1024x1024' // post/carousel quadrato
-}
-
-// Genera un'immagine AI per un contenuto e la salva come media (primo slot
-// link_media_* libero). Due motori:
-// - ComfyUI LOCALE (gratis) quando raggiungibile (app in locale sul Mac);
-// - Agnes AI (agnes-image-2.1-flash) come motore CLOUD — funziona anche su
-//   Vercel, serve la key (env AGNES_API_KEY o body agnes_key dal client).
+// Genera un'immagine AI per un contenuto tramite OPENROUTER (/api/v1/images) e la
+// salva nel primo slot media libero. Se il contenuto ha già una foto prodotto
+// (link_media_1), la usa come riferimento image-to-image così l'immagine generata
+// resta coerente col prodotto reale. Usa la key OpenRouter (BYO dal client o env).
 export async function POST(request: Request) {
   try {
     await requireAuth()
     if (!dbReady()) return NextResponse.json({ error: 'DB non disponibile' }, { status: 503 })
-    const body = await request.json() as { cliente_id?: string; id_contenuto?: string; prompt?: string; agnes_key?: string; engine?: string }
+    const body = await request.json() as { cliente_id?: string; id_contenuto?: string; prompt?: string; model?: string; openrouter_key?: string; use_product_photo?: boolean }
     const cid = await requireClienteAccess(typeof body.cliente_id === 'string' ? body.cliente_id : undefined)
     const idContenuto = str(body.id_contenuto)
     if (!idContenuto) return NextResponse.json({ error: 'id_contenuto richiesto' }, { status: 400 })
 
-    // Scelta motore: esplicita (body.engine) o automatica — Comfy se raggiungibile,
-    // altrimenti Agnes se c'è una key. Nessuno dei due → errore azionabile.
-    const comfyOk = await comfyReachable()
-    const agnesOk = Boolean(agnesMediaKey(body.agnes_key))
-    const engine = body.engine === 'agnes' ? 'agnes' : body.engine === 'comfy' ? 'comfy' : (comfyOk ? 'comfy' : agnesOk ? 'agnes' : '')
-    if (!engine || (engine === 'comfy' && !comfyOk) || (engine === 'agnes' && !agnesOk)) {
+    if (!openrouterImageConfigured(body.openrouter_key)) {
       return NextResponse.json(
-        { error: 'Nessun motore immagini disponibile: avvia ComfyUI sul Mac (porta 8188) oppure configura la key Agnes AI (env AGNES_API_KEY o dal selettore modelli).' },
+        { error: 'Generazione immagini non disponibile: serve una API key OpenRouter con credito (i modelli-immagine sono a pagamento). Impostala nel pannello modello.' },
         { status: 503 },
       )
     }
@@ -63,25 +48,22 @@ export async function POST(request: Request) {
     const brand = brandRows[0] || {}
     const prompt = str(body.prompt).trim() || buildPrompt(row, brand)
 
-    let bytes: Buffer
-    let mime: string
-    if (engine === 'agnes') {
-      const generated = await generateImageAgnes({ prompt, size: agnesSizeForFormato(str(row.formato)), apiKey: body.agnes_key })
-      // Ri-hosting obbligatorio: l'URL di output Agnes può scadere, il media del
-      // contenuto deve vivere sul nostro storage.
-      const img = await fetchAgnesImageBytes(generated.url)
-      bytes = img.bytes
-      mime = img.mime
-    } else {
-      const { width, height } = sizeForFormato(str(row.formato))
-      const comfy = await generateImageComfy({ prompt, width, height })
-      bytes = comfy.bytes
-      mime = comfy.mime
-    }
+    // Image-to-image opzionale: se il contenuto ha già una foto (slot 1) e non è
+    // stato disattivato, la passiamo come riferimento per restare on-brand.
+    const existingPhoto = str(row.link_media_1)
+    const inputImageUrls = body.use_product_photo !== false && /^https?:\/\//.test(existingPhoto) ? [existingPhoto] : []
+
+    const { bytes, mime, model } = await generateImageOpenRouter({
+      prompt,
+      model: body.model,
+      openrouterKey: body.openrouter_key,
+      aspectRatio: aspectForFormato(str(row.formato)),
+      inputImageUrls,
+    })
 
     // Salva: storage persistente se configurato, altrimenti disco locale (dev).
     const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg'
-    const filename = `${engine}-${idContenuto.toLowerCase()}-${randomUUID().slice(0, 8)}.${ext}`
+    const filename = `openrouter-${idContenuto.toLowerCase()}-${randomUUID().slice(0, 8)}.${ext}`
     const proxyPath = `/api/assets/file/${encodeURIComponent(cid)}/${encodeURIComponent(filename)}`
     let url: string
     if (isStorageConfigured()) {
@@ -94,18 +76,18 @@ export async function POST(request: Request) {
       url = `${getPublicBaseUrl(request)}${proxyPath}`
     }
 
-    // Salva nel primo slot media libero (non sovrascrive foto già caricate).
+    // Salva nel primo slot media libero (non sovrascrive foto già presenti).
     const calendarioColumns = await getTableColumns('calendario')
     const slots = mediaSlotColumns().filter(column => calendarioColumns.has(column))
     const freeSlot = slots.find(s => !str(row[s]))
     if (freeSlot) {
       await q(
-        `UPDATE calendario SET ${freeSlot} = $1, fonte_media = COALESCE(fonte_media, $4) WHERE cliente_id = $2 AND id_contenuto = $3`,
-        [url, cid, idContenuto, engine === 'agnes' ? 'agnes_ai' : 'comfy_ai'],
+        `UPDATE calendario SET ${freeSlot} = $1, fonte_media = COALESCE(fonte_media, 'openrouter_ai') WHERE cliente_id = $2 AND id_contenuto = $3`,
+        [url, cid, idContenuto],
       )
     }
 
-    return NextResponse.json({ ok: true, url, slot: freeSlot || null, prompt, engine })
+    return NextResponse.json({ ok: true, url, slot: freeSlot || null, prompt, model })
   } catch (e) {
     return apiError(e)
   }

@@ -37,7 +37,7 @@ const SECTIONS: NavSection[] = [
     title: 'STRUMENTI',
     items: [
       { href: '/dashboard/piano',  label: 'Piano editoriale', icon: Target, adminOnly: true },
-      { href: '/dashboard/blog',   label: 'Blog SEO (locale)', icon: PenLine, adminOnly: true },
+      { href: '/dashboard/blog',   label: 'Blog SEO', icon: PenLine, adminOnly: true },
       { href: '/dashboard/ads',    label: 'Campagne Ads',     icon: TrendingUp, adminOnly: true },
       { href: '/dashboard/leads',  label: 'Leads',            icon: Magnet, adminOnly: true },
       { href: '/dashboard/seo',    label: 'SEO + GEO Audit',  icon: Search, adminOnly: true },

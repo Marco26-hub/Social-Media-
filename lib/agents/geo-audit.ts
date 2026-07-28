@@ -7,7 +7,7 @@ import { validateLlmsTxt, buildLlmsTxt } from '@/lib/geo/llms-txt'
 type Row = Record<string, unknown>
 
 export type GeoAuditResult = { clienteId: string; ok: boolean; articoliAnalizzati: number; errore?: string }
-export type AiKeys = { model?: string; openrouterKey?: string; geminiKey?: string; opencodeKey?: string }
+export type AiKeys = { model?: string; openrouterKey?: string }
 
 function blocksFromArticle(article: Row): ContentBlock[] {
   const blocks: ContentBlock[] = []
@@ -87,7 +87,7 @@ export async function eseguiGeoAuditPerCliente(
   }))
 
   const nomeBrand = brand ? brandField(brand, 'nome', 'il cliente') : 'il cliente'
-  const model = opts.aiKeys?.model || 'gemini-2.5-flash'
+  const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
   let raccomandazioni: unknown[] = []
   try {
     const raw = await callAI({
@@ -97,8 +97,6 @@ export async function eseguiGeoAuditPerCliente(
         .replace('{{BRAND}}', () => JSON.stringify({ nome: nomeBrand }, null, 2))
         .replace('{{DETTAGLIO}}', () => JSON.stringify(dettaglio.filter(d => d.blocchi_deboli.length), null, 2)),
       openrouterKey: opts.aiKeys?.openrouterKey,
-      geminiKey: opts.aiKeys?.geminiKey,
-      opencodeKey: opts.aiKeys?.opencodeKey,
       maxTokens: 2000,
       meta: { clienteId, tipo: 'geo_audit', agentName: 'geo' },
     })

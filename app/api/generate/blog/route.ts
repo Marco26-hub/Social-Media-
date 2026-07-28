@@ -108,7 +108,7 @@ Regole asset blog:
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, model, openrouter_key, gemini_key, opencode_key, agnes_key, tema, prodotti_linkati, quality, quality_level, post_quality, qualita, uploaded_assets, media_urls } = await request.json()
+    const { cliente_id, model, openrouter_key, tema, prodotti_linkati, quality, quality_level, post_quality, qualita, uploaded_assets, media_urls } = await request.json()
     const clientContext = await getClientGenerationContext(cliente_id)
     const effectiveClienteId = clientContext.clienteId
     if (!effectiveClienteId) return NextResponse.json({ error: 'Nessun cliente selezionato' }, { status: 400 })
@@ -145,10 +145,10 @@ export async function POST(request: Request) {
       + '\n\n' + PRO_COPY_STANDARDS + '\n\n' + HEADLINE_FORMULAS + '\n\n' + SEO_GEO_STANDARDS + '\n\n' + EEAT_STANDARDS + '\n\n' + GEO_CITABILITY_STANDARDS
 
     const aiRes = await callAI({
-      model: model || 'gemini-2.5-flash',
+      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: `Sei un content writer SEO/GEO senior. Livello qualità: ${contentQuality}. GRAMMATICA E ORTOGRAFIA ITALIANE IMPECCABILI: mai parole attaccate, accenti e apostrofi corretti, nessun refuso — rileggi prima di restituire. Rispondi SOLO con JSON valido. Non inventare dati o fonti esterne: segnala missing_inputs quando servono prove.`,
       userPrompt,
-      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
+      openrouterKey: openrouter_key,
       maxTokens: contentQuality === 'high' ? 6500 : contentQuality === 'medium' ? 5200 : 4000,
       images: userAssets.map((a) => a.url), // vision: scrivi sul prodotto mostrato
     })

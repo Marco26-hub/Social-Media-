@@ -6,7 +6,7 @@ import { buildEmailSequencePrompt, type EmailSequenceType } from '@/lib/marketin
 type Row = Record<string, unknown>
 
 export type EmailSequenceResult = { clienteId: string; sequenzeCreate: number; errori: string[] }
-export type AiKeys = { model?: string; openrouterKey?: string; geminiKey?: string; opencodeKey?: string }
+export type AiKeys = { model?: string; openrouterKey?: string }
 
 // Le due sequenze universalmente utili per un e-commerce fashion (il verticale di
 // questo prodotto): welcome (ogni nuovo iscritto) e cart_abandonment (recupero
@@ -56,7 +56,7 @@ export async function eseguiEmailSequencePerCliente(
 
   const quality = resolveContentQuality({ piano: cliente.piano })
   const maxTokens = getQualityTokenBudget(quality)
-  const model = opts.aiKeys?.model || 'gemini-2.5-flash'
+  const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
   const brandStr = brandBlock(brand)
   const prodStr = prodottiBlock(prodotti as Row[])
 
@@ -70,8 +70,6 @@ export async function eseguiEmailSequencePerCliente(
         systemPrompt: 'Sei un email marketing strategist senior. Italiano impeccabile. Rispondi SOLO con JSON valido. Non inventare sconti/codici/prezzi non forniti.',
         userPrompt: buildEmailSequencePrompt({ tipo, brandBlock: brandStr, prodottiBlock: prodStr }),
         openrouterKey: opts.aiKeys?.openrouterKey,
-        geminiKey: opts.aiKeys?.geminiKey,
-        opencodeKey: opts.aiKeys?.opencodeKey,
         maxTokens,
         meta: { clienteId, tipo: 'email_sequence', agentName: 'email' },
       })

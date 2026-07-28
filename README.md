@@ -15,7 +15,7 @@ Next.js 15 + Neon/Postgres. Sostituisce Google Sheets con dashboard web full.
 - `AUTH_SECRET` — generato automaticamente da Render
 - `NEXTAUTH_URL` — URL Render o dominio custom
 - `NEXT_PUBLIC_SITE_URL` — stesso URL pubblico
-- `OPENROUTER_API_KEY` o `ANTHROPIC_API_KEY` — almeno una chiave AI
+- `OPENROUTER_API_KEY` — chiave AI (OpenRouter; anche per-browser dal pannello modello)
 - `BLOTATO_API_KEY` / `BLOTATO_WEBHOOK_SECRET` — da Blotato quando vendi autopubblicazione
 
 Guida completa: `RENDER_PRODUCTION.md`.
@@ -75,8 +75,7 @@ npm run dev
 ### 5. Chiavi AI
 
 Aggiungi almeno una chiave AI in `.env.local`:
-- `ANTHROPIC_API_KEY` per modelli Claude (default)
-- `OPENROUTER_API_KEY` per modelli free/esterni (opzionale)
+- `OPENROUTER_API_KEY` — unico provider AI: testo (modelli :free o a pagamento) e immagini (/api/v1/images)
 
 ### 6. Deploy (Vercel)
 

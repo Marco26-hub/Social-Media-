@@ -15,7 +15,8 @@ export type ORModel = {
   name: string
   context: string
   free: boolean
-  vision: boolean
+  vision: boolean          // accetta immagini in INPUT (per leggere le foto)
+  category: 'image' | 'text' // per SCOPO: image = genera immagini in output; text = tutto il resto
   created: number
 }
 
@@ -65,7 +66,8 @@ export async function GET() {
         const id = String(m.id || '')
         const pricing = (m.pricing || {}) as Record<string, unknown>
         const arch = (m.architecture || {}) as Record<string, unknown>
-        const modalities = Array.isArray(arch.input_modalities) ? (arch.input_modalities as string[]) : []
+        const inMods = Array.isArray(arch.input_modalities) ? (arch.input_modalities as string[]) : []
+        const outMods = Array.isArray(arch.output_modalities) ? (arch.output_modalities as string[]) : []
         // "free" affidabile: prompt E completion a costo zero (il suffisso :free da
         // solo non basta, alcuni free non lo portano).
         const free = Number(pricing.prompt ?? 1) === 0 && Number(pricing.completion ?? 1) === 0
@@ -74,7 +76,9 @@ export async function GET() {
           name: String(m.name || id),
           context: fmtContext(m.context_length),
           free,
-          vision: modalities.includes('image'),
+          vision: inMods.includes('image'),
+          // Categoria per SCOPO: se genera immagini in output → "image", altrimenti "text".
+          category: (outMods.includes('image') ? 'image' : 'text') as 'image' | 'text',
           created: typeof m.created === 'number' ? m.created : 0,
         }
       })

@@ -20,8 +20,8 @@ const required = [
     hint: 'URL pubblico Render o dominio custom, es. https://social-automation.onrender.com',
   },
   {
-    name: 'OPENROUTER_API_KEY oppure ANTHROPIC_API_KEY',
-    ok: Boolean(env.OPENROUTER_API_KEY?.trim() || env.ANTHROPIC_API_KEY?.trim()),
+    name: 'OPENROUTER_API_KEY',
+    ok: Boolean(env.OPENROUTER_API_KEY?.trim()),
     hint: 'Almeno una chiave AI reale per generazione contenuti',
   },
 ]

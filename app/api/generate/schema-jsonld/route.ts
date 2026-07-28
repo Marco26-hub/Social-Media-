@@ -24,13 +24,10 @@ function siteBase(brand: Row | null, cliente: Row | null): string {
 // fornite. Anti-invenzione: le risposte devono derivare dal contenuto dato.
 async function extractFaqFromContent(content: string, keys: Row): Promise<FaqItem[]> {
   const raw = await callAI({
-    model: (keys.model as string) || 'gemini-2.5-flash',
+    model: (keys.model as string) || 'meta-llama/llama-3.3-70b-instruct:free',
     systemPrompt: 'Sei un SEO specialist. Estrai FAQ reali dal contenuto fornito, senza inventare. Rispondi SOLO con JSON array valido.',
     userPrompt: `Dal contenuto qui sotto estrai 3-6 coppie domanda/risposta utili per una FAQPage. Le risposte devono essere fondate SOLO sul contenuto (niente invenzioni), 30-55 parole, dirette e citabili.\n\nCONTENUTO:\n${content.slice(0, 6000)}\n\nJSON array: [{"domanda":"","risposta":""}]`,
     openrouterKey: keys.openrouterKey as string | undefined,
-    geminiKey: keys.geminiKey as string | undefined,
-    opencodeKey: keys.opencodeKey as string | undefined,
-    agnesKey: keys.agnesKey as string | undefined,
     maxTokens: 1600,
     meta: { tipo: 'schema_faq', agentName: 'seo' },
   })
@@ -48,7 +45,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const {
       cliente_id, tipo, url, image, headline, description, date_published, keywords,
-      product_id, faq, steps, items, content, model, openrouter_key, gemini_key, opencode_key, agnes_key,
+      product_id, faq, steps, items, content, model, openrouter_key,
     } = body
     const tipoNorm = String(tipo || 'auto').toLowerCase()
 
@@ -58,7 +55,7 @@ export async function POST(request: Request) {
     const base = siteBase(brand, cliente)
     const nomeBrand = brand ? brandField(brand, 'brand_name', brandField(brand, 'nome', 'Brand')) : 'Brand'
     const logo = (brand?.logo_url as string) || (brand?.logo as string) || ''
-    const keys = { model, openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key }
+    const keys = { model, openrouterKey: openrouter_key }
 
     const warnings: string[] = []
     const schemas: JsonLd[] = []

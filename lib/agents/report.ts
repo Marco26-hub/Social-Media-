@@ -6,7 +6,7 @@ import { PRO_COPY_STANDARDS, proSystemPrompt } from '@/lib/prompt-standards'
 type Row = Record<string, unknown>
 
 export type ReportResult = { clienteId: string; ok: boolean; errore?: string }
-export type AiKeys = { model?: string; openrouterKey?: string; geminiKey?: string; opencodeKey?: string }
+export type AiKeys = { model?: string; openrouterKey?: string }
 
 function n(v: unknown): number {
   const x = typeof v === 'number' ? v : Number(v)
@@ -94,15 +94,13 @@ export async function eseguiReportPerCliente(
     .replace('{{A}}', () => aISO)
     .replace('{{DATI}}', () => JSON.stringify(dati, null, 2))
 
-  const model = opts.aiKeys?.model || 'gemini-2.5-flash'
+  const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
   // Niente prosa finta su dati inventati: se l'AI fallisce l'errore si propaga.
   const raw = await callAI({
     model,
     systemPrompt: proSystemPrompt('consulente social senior che scrive un report chiaro al cliente', { settore, brand: nomeBrand, quality: 'alta' }) + '\nRispondi SOLO con JSON valido.',
     userPrompt,
     openrouterKey: opts.aiKeys?.openrouterKey,
-    geminiKey: opts.aiKeys?.geminiKey,
-    opencodeKey: opts.aiKeys?.opencodeKey,
     maxTokens: 3000,
     meta: { clienteId, tipo: 'report', agentName: 'report' },
   })

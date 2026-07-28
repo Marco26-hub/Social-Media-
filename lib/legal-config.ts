@@ -40,7 +40,7 @@ export const TITOLARE = {
 export const SUB_RESPONSABILI = [
   { nome: 'Neon (database Postgres)', ruolo: 'Hosting database e dati account', extraUe: 'Possibile (USA) — SCC/Data Privacy Framework' },
   { nome: 'Render', ruolo: 'Hosting applicazione', extraUe: 'Possibile (USA) — SCC' },
-  { nome: 'Anthropic / OpenRouter / Google (Gemini)', ruolo: 'Generazione contenuti con AI', extraUe: 'Sì (USA) — SCC/DPF' },
+  { nome: 'OpenRouter (instrada modelli di Google, OpenAI, Anthropic, Meta, ecc.)', ruolo: 'Generazione contenuti con AI', extraUe: 'Sì (USA) — SCC/DPF' },
   { nome: 'Blotato', ruolo: 'Pubblicazione programmata sui social', extraUe: 'Possibile — SCC' },
   { nome: 'Stripe', ruolo: 'Pagamenti e fatturazione abbonamenti', extraUe: 'Possibile (USA) — SCC/DPF, PCI-DSS' },
   { nome: 'Cloudflare R2 / Backblaze B2', ruolo: 'Archiviazione immagini', extraUe: 'Possibile — SCC' },

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { Fragment, useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Wand2, Film, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
@@ -126,8 +126,6 @@ function CalendarioInner() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
   const [bulkDeleting, setBulkDeleting] = useState(false)
-  const [visualState, setVisualState] = useState<Record<string, 'idle' | 'generating' | 'done' | 'error'>>({})
-  const [visualMsg, setVisualMsg] = useState<Record<string, string>>({})
   const [brand, setBrand] = useState<{ brand_name?: string | null; social_handle?: string | null } | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
   const [comfyState, setComfyState] = useState<'idle' | 'generating' | 'done' | 'error'>('idle')
@@ -217,49 +215,6 @@ function CalendarioInner() {
     } catch { /* noop */ }
   }
 
-  // Genera la GRAFICA AI (immagine/carosello/video) per il contenuto, via Blotato.
-  // Asincrono: avvia il job e fa polling finché è pronta, poi aggiorna i media.
-  async function generaVisual(c: Contenuto) {
-    const id = c.id_contenuto
-    setVisualMsg(m => ({ ...m, [id]: '' }))
-    setVisualState(s => ({ ...s, [id]: 'generating' }))
-    try {
-      const res = await fetch('/api/generate/visual', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, id_contenuto: id }),
-      })
-      if (!res.ok) throw new Error(await readApiError(res, 'Avvio generazione grafica fallito'))
-
-      const deadline = Date.now() + 5 * 60 * 1000
-      while (Date.now() < deadline) {
-        await new Promise(r => setTimeout(r, 15000))
-        const params = new URLSearchParams({ id_contenuto: id })
-        if (clienteId) params.set('cliente_id', clienteId)
-        const sres = await fetch(`/api/generate/visual/status?${params.toString()}`)
-        if (!sres.ok) continue
-        const data = await sres.json() as { status?: string; error?: string }
-        if (data.status === 'done') {
-          setVisualState(s => ({ ...s, [id]: 'done' }))
-          setVisualMsg(m => ({ ...m, [id]: 'Grafica generata e aggiunta ai media del contenuto.' }))
-          await fetchData()
-          await refreshSelected(id)
-          return
-        }
-        if (data.status === 'failed') {
-          setVisualState(s => ({ ...s, [id]: 'error' }))
-          setVisualMsg(m => ({ ...m, [id]: data.error || 'Generazione grafica fallita' }))
-          return
-        }
-      }
-      setVisualState(s => ({ ...s, [id]: 'error' }))
-      setVisualMsg(m => ({ ...m, [id]: 'Timeout: la grafica ci mette troppo. Riprova tra poco.' }))
-    } catch (e) {
-      setVisualState(s => ({ ...s, [id]: 'error' }))
-      setVisualMsg(m => ({ ...m, [id]: (e as Error).message }))
-    }
-  }
-
   async function approva(c: Contenuto, user: string = 'admin') {
     setSaving(c.id)
     if (demo) {
@@ -322,16 +277,19 @@ function CalendarioInner() {
     setSaving(null)
   }
 
-  // Genera un'immagine AI con ComfyUI LOCALE (gratis, sul Mac). Solo in locale.
-  async function generaImmagineComfy(c: Contenuto) {
+  // Genera un'immagine AI per il contenuto via OpenRouter (/api/generate/image).
+  // Usa il modello selezionato + la key OpenRouter dell'admin. Se il contenuto ha
+  // già una foto, la usa come riferimento image-to-image per restare on-brand.
+  async function generaImmagine(c: Contenuto) {
     if (!clienteId) return
     setComfyState('generating')
-    setComfyMsg('Generazione immagine con ComfyUI… (SDXL può richiedere 20-60s)')
+    setComfyMsg('Generazione immagine AI in corso…')
     try {
+      const ai = readAISettings()
       const res = await fetch('/api/generate/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, id_contenuto: c.id_contenuto }),
+        body: JSON.stringify({ cliente_id: clienteId, id_contenuto: c.id_contenuto, openrouter_key: ai.openrouter_key }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Generazione immagine fallita')
@@ -1387,22 +1345,22 @@ function CalendarioInner() {
                 </div>
               )}
 
-              {/* Immagine AI locale (ComfyUI) — gratis, gira sul Mac. Solo in locale. */}
+              {/* Immagine AI via OpenRouter — usa il modello selezionato + la key OpenRouter (a pagamento). */}
               <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles className="w-4 h-4 text-emerald-600" />
-                  <p className="text-sm font-bold text-emerald-900">Immagine AI locale (ComfyUI)</p>
+                  <p className="text-sm font-bold text-emerald-900">Genera immagine AI</p>
                 </div>
                 <p className="text-xs text-emerald-700/80 mb-3">
-                  Genera un&apos;immagine dal contenuto con ComfyUI sul tuo Mac (gratis). Richiede ComfyUI avviato e l&apos;app in locale — non funziona sul sito.
+                  Crea un&apos;immagine dal contenuto via OpenRouter. Se il post ha già una foto, la usa come riferimento. Richiede una key OpenRouter con credito.
                 </p>
                 <button
-                  onClick={() => generaImmagineComfy(selected)}
+                  onClick={() => generaImmagine(selected)}
                   disabled={comfyState === 'generating'}
                   className="w-full text-xs font-semibold py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 flex items-center justify-center gap-1.5"
                 >
                   {comfyState === 'generating' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                  {comfyState === 'generating' ? 'Generazione in corso…' : 'Genera immagine (locale)'}
+                  {comfyState === 'generating' ? 'Generazione in corso…' : 'Genera immagine AI'}
                 </button>
                 {comfyMsg && (
                   <p className={`text-xs mt-2 ${comfyState === 'error' ? 'text-red-600' : 'text-emerald-700'}`}>{comfyMsg}</p>
@@ -1489,60 +1447,6 @@ function CalendarioInner() {
                         )
                       })}
                     </div>
-                  </div>
-                )
-              })()}
-
-              {/* Grafica AI (Blotato visual) */}
-              {(() => {
-                const id = selected.id_contenuto
-                const vstate = visualState[id] ?? (selected.visual_status === 'done' ? 'done' : 'idle')
-                const generating = vstate === 'generating'
-                const imgs = Array.isArray(selected.visual_image_urls) ? (selected.visual_image_urls as string[]) : []
-                const video = typeof selected.visual_url === 'string' ? selected.visual_url : ''
-                return (
-                  <div className="rounded-xl border border-fuchsia-100 bg-gradient-to-br from-fuchsia-50/70 to-violet-50/70 p-4">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
-                        <Wand2 className="w-4 h-4 text-fuchsia-600" />
-                        <p className="text-sm font-bold text-fuchsia-900">Grafica AI</p>
-                      </div>
-                      <span className="text-[10px] text-fuchsia-600 uppercase font-bold">
-                        {selected.formato === 'carousel' ? 'carosello' : ['reel','video','story','short'].includes(String(selected.formato)) ? 'video' : 'immagine'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-fuchsia-700/80 mb-3">
-                      L&apos;AI crea la grafica dal contenuto: foto prodotto in scena lifestyle, carosello o slideshow video. Viene aggiunta ai media del post.
-                    </p>
-
-                    {(imgs.length > 0 || video) && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-                        {video && (
-                          <div className="col-span-3 rounded-lg overflow-hidden border border-fuchsia-100 bg-black/5">
-                            <video src={video} controls className="w-full max-h-64 object-contain">
-                              <track kind="captions" />
-                            </video>
-                          </div>
-                        )}
-                        {imgs.slice(0, 6).map((u, i) => (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img key={i} src={u} alt={`Grafica AI ${i + 1}`} className="w-full aspect-square object-cover rounded-lg border border-fuchsia-100" />
-                        ))}
-                      </div>
-                    )}
-
-                    <button
-                      onClick={() => generaVisual(selected)}
-                      disabled={generating}
-                      className="btn-secondary w-full justify-center text-xs py-2 border-fuchsia-200 text-fuchsia-700 hover:bg-fuchsia-50"
-                    >
-                      {generating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : (video || imgs.length ? <RefreshCw className="w-3.5 h-3.5" /> : <Film className="w-3.5 h-3.5" />)}
-                      {generating ? 'Generando la grafica… (può richiedere 1-3 min)' : (video || imgs.length ? 'Rigenera grafica' : 'Genera grafica AI')}
-                    </button>
-
-                    {visualMsg[id] && (
-                      <p className={`text-xs mt-2 ${vstate === 'error' ? 'text-red-600' : 'text-fuchsia-700'}`}>{visualMsg[id]}</p>
-                    )}
                   </div>
                 )
               })()}

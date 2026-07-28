@@ -6,7 +6,7 @@ import { resolveContentQuality, getQualityTokenBudget, summarizeQualityForPrompt
 type Row = Record<string, unknown>
 
 export type AdsResult = { clienteId: string; campagne: number; errori: string[] }
-export type AiKeys = { model?: string; openrouterKey?: string; geminiKey?: string; opencodeKey?: string }
+export type AiKeys = { model?: string; openrouterKey?: string }
 
 // SKILL: ads specialist senior per piattaforma. Genera campagne complete (struttura,
 // audience/ad group, copy, A/B, KPI, policy) e le salva in ads_campaign. Anti-dati
@@ -129,14 +129,12 @@ export async function eseguiAdsPerCliente(
         .replace('{{BUDGET}}', () => budget)
         .replace('{{QUALITY_CONTEXT}}', () => qualityContext)
         + '\n\n' + PRO_COPY_STANDARDS + '\n\n' + FUNNEL_STANDARDS
-      const model = opts.aiKeys?.model || 'gemini-2.5-flash'
+      const model = opts.aiKeys?.model || 'meta-llama/llama-3.3-70b-instruct:free'
       const raw = await callAI({
         model,
         systemPrompt: `${SYSTEM[platform]} Livello qualità: ${quality}. Grammatica e ortografia italiane impeccabili. Non inventare dati non forniti; formula ipotesi misurabili. Rispondi SOLO con JSON valido.`,
         userPrompt,
         openrouterKey: opts.aiKeys?.openrouterKey,
-        geminiKey: opts.aiKeys?.geminiKey,
-        opencodeKey: opts.aiKeys?.opencodeKey,
         maxTokens,
         meta: { clienteId, tipo: 'ads', agentName: 'ads' },
       })

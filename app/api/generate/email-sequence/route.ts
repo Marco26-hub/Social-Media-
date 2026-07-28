@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, tipo, obiettivo_extra, model, openrouter_key, gemini_key, opencode_key, agnes_key, quality, quality_level } = await request.json()
+    const { cliente_id, tipo, obiettivo_extra, model, openrouter_key, quality, quality_level } = await request.json()
     const tipoNorm = String(tipo || '') as EmailSequenceType
     if (!EMAIL_SEQUENCE_CATALOG[tipoNorm]) {
       return NextResponse.json({ error: `tipo richiesto, uno tra: ${Object.keys(EMAIL_SEQUENCE_CATALOG).join(', ')}` }, { status: 400 })
@@ -32,10 +32,10 @@ export async function POST(request: Request) {
     })
 
     const aiRes = await callAI({
-      model: model || 'gemini-2.5-flash',
+      model: model || 'meta-llama/llama-3.3-70b-instruct:free',
       systemPrompt: 'Sei un email marketing strategist senior. Italiano impeccabile: mai parole attaccate, accenti/apostrofi corretti. Rispondi SOLO con JSON valido. Non inventare sconti/codici/prezzi non forniti.',
       userPrompt,
-      openrouterKey: openrouter_key, geminiKey: gemini_key, opencodeKey: opencode_key, agnesKey: agnes_key,
+      openrouterKey: openrouter_key,
       maxTokens: getQualityTokenBudget(contentQuality),
       meta: { clienteId: ctx.clienteId || undefined, tipo: 'email_sequence', agentName: 'email' },
     })
