@@ -30,7 +30,7 @@ import ThemeToggle from '@/components/ThemeToggle'
 import site from '../landing.module.css'
 import styles from './servizi-v2.module.css'
 
-const META_TITLE = 'Gestione Social, SEO e Siti per PMI | Social Automation'
+const META_TITLE = 'Gestione Social Media, SEO e Siti per PMI | SWA'
 const META_DESCRIPTION =
   'Scopri i pacchetti SWA da 390 €/mese: gestione di 2 o 3 social, contenuti, pubblicazione, SEO, GEO, siti, e-commerce e consulenza AI compliance.'
 
@@ -54,6 +54,39 @@ export const metadata: Metadata = {
     title: META_TITLE,
     description: META_DESCRIPTION,
   },
+}
+
+const servicesPageJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${SITE_URL}/servizi#webpage`,
+      url: `${SITE_URL}/servizi`,
+      name: META_TITLE,
+      description: META_DESCRIPTION,
+      inLanguage: 'it-IT',
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      about: { '@id': `${SITE_URL}/#organization` },
+      mainEntity: {
+        '@type': 'ItemList',
+        name: 'Servizi Social Automation',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, item: { '@id': `${SITE_URL}/#social-media-management` } },
+          { '@type': 'ListItem', position: 2, item: { '@id': `${SITE_URL}/#digital-growth` } },
+          { '@type': 'ListItem', position: 3, item: { '@id': `${SITE_URL}/#web-development` } },
+          { '@type': 'ListItem', position: 4, item: { '@id': `${SITE_URL}/#legal-ai-consulting` } },
+        ],
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+        { '@type': 'ListItem', position: 2, name: 'Servizi', item: `${SITE_URL}/servizi` },
+      ],
+    },
+  ],
 }
 
 const SERVICES = [
@@ -145,6 +178,10 @@ const METHOD = [
 
 const FAQ = [
   {
+    q: 'Quanto costa affidare la gestione dei social a Social Automation?',
+    a: 'Il piano Presenza costa 390 € al mese per 2 social e 16 contenuti. Il piano Crescita costa 790 € al mese per 3 social e 24 contenuti, con articolo SEO + GEO e gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
+  },
+  {
     q: 'Il cliente deve gestire il software?',
     a: 'No. Acquisti un servizio gestito. Il portale serve a rendere semplici approvazioni e risultati; il lavoro operativo resta a nostro carico.',
   },
@@ -165,6 +202,10 @@ const FAQ = [
 export default function ServiziPage() {
   return (
     <main id="main-content" className={`${site.page} ${styles.page}`}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(servicesPageJsonLd).replace(/</g, '\\u003c') }}
+      />
       <a className={site.skipLink} href="#main-content">Vai al contenuto</a>
 
       <header className={site.navbar}>
@@ -211,7 +252,7 @@ export default function ServiziPage() {
       <section className={styles.hero} aria-labelledby="services-hero-title">
         <div className={styles.heroCopy}>
           <p className={site.kicker}><Sparkles size={16} aria-hidden="true" /> Servizi digitali integrati</p>
-          <h1 id="services-hero-title">Una sola direzione per tutta la presenza digitale.</h1>
+          <h1 id="services-hero-title">Gestione social, SEO e siti in un’unica regia digitale.</h1>
           <p>
             Social, contenuti organici, sito ed e-commerce lavorano nello stesso
             sistema. Coordiniamo strategia, produzione e misurazione, così ogni
@@ -446,8 +487,18 @@ export default function ServiziPage() {
           <Image className={site.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} />
           <span>Social Automation</span>
         </Link>
-        <div><Link href="/privacy">Privacy</Link><Link href="/termini">Termini</Link><Link href="/login">Accesso</Link></div>
-        <p>© 2026 {TITOLARE.brand}<br />{TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}</p>
+        <div>
+          <Link href="/servizi">Servizi</Link>
+          <Link href="/chi-siamo">Chi siamo</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/termini">Termini</Link>
+          <Link href="/login">Accesso</Link>
+        </div>
+        <p>
+          © 2026 {TITOLARE.brand}<br />
+          {TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}<br />
+          Cermenate (CO) · Servizi in tutta Italia
+        </p>
       </footer>
 
       <a

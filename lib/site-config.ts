@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://socialautomation.app'
-export const SITE_TITLE = 'Gestione Social per PMI e Professionisti | Social Automation'
+export const SITE_URL = 'https://www.socialautomation.app'
+export const SITE_TITLE = 'Gestione Social Media per PMI | Social Automation'
 export const SITE_DESCRIPTION =
-  'SWA gestisce strategia, contenuti e pubblicazione social con approvazione umana. Pacchetti da 390 €/mese, siti, e-commerce, SEO e GEO per PMI e professionisti.'
+  'Gestione social media per PMI e professionisti: strategia, contenuti, pubblicazione e approvazione umana. Pacchetti da 390 €/mese, SEO, GEO e siti.'

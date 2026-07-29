@@ -20,6 +20,37 @@ export const metadata: Metadata = {
   },
 }
 
+const consultationJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${SITE_URL}/consulenza#webpage`,
+      url: `${SITE_URL}/consulenza`,
+      name: META_TITLE,
+      description: META_DESCRIPTION,
+      inLanguage: 'it-IT',
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      mainEntity: { '@id': `${SITE_URL}/#legal-ai-consulting` },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+        { '@type': 'ListItem', position: 2, name: 'Consulenza AI Act e GDPR', item: `${SITE_URL}/consulenza` },
+      ],
+    },
+  ],
+}
+
 export default function ConsulenzaLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(consultationJsonLd).replace(/</g, '\\u003c') }}
+      />
+      {children}
+    </>
+  )
 }

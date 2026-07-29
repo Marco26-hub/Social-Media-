@@ -1,41 +1,56 @@
 # Social Automation
 
-> Servizio gestito di social media management con AI per agenzie e PMI italiane. Gestisce piano editoriale, creazione contenuti, audit SEO e GEO, campagne ADS e pubblicazione sui canali social, sempre con approvazione umana prima di pubblicare.
+> Servizio italiano di gestione social media per PMI e professionisti. Social Automation coordina strategia, piano editoriale, contenuti, approvazione, pubblicazione e report. Offre inoltre SEO, GEO, siti web, e-commerce e gestione campagne.
+
+## Identità
+
+- Nome commerciale: Social Automation
+- Impresa: Social Automation di Marco Dibenedetto
+- Fondatore: Marco Dibenedetto
+- Sede: Cermenate (Como), Italia
+- Area servita: Italia
+- Partita IVA: 03786790133
+- Sito canonico: https://www.socialautomation.app
 
 ## Cosa fa
 
-- Genera contenuti social: hook, caption, hashtag e CTA tramite AI (Claude).
-- Costruisce il piano editoriale mensile per i canali attivi.
-- Esegue audit SEO e GEO (ottimizzazione per i motori di ricerca generativi).
-- Imposta e segue le campagne ADS; il budget pubblicitario è sempre separato dal canone.
-- Analizza i competitor e supporta la lead generation.
-- Pubblica i contenuti tramite Blotato sui canali collegati.
-- Produce report periodici sull'attività.
-- Ogni contenuto richiede un'approvazione umana 1-click prima della pubblicazione.
+- Analizza brand, pubblico, obiettivi e canali.
+- Costruisce il piano editoriale mensile.
+- Produce copy, grafiche, caroselli, Reel, Short e articoli.
+- Adatta i contenuti al linguaggio di ciascun canale.
+- Sottopone i contenuti al cliente prima della pubblicazione.
+- Programma e pubblica i contenuti approvati.
+- Produce report e priorità di miglioramento.
+- Realizza siti web, landing page ed e-commerce.
+- Esegue attività SEO e GEO per migliorare comprensione, indicizzazione e citabilità.
+- Gestisce campagne ADS; il budget pubblicitario è separato dal canone.
 
-## Canali supportati
+L'intelligenza artificiale supporta analisi e produzione. La decisione editoriale e l'approvazione finale restano umane.
 
-- Instagram
-- Facebook
-- TikTok
-- Pinterest
-- LinkedIn
-- YouTube Shorts
-- Blog
+## Pacchetti
 
-## Prezzi
+- Presenza: 390 euro al mese, IVA esclusa. Include 16 contenuti mensili e gestione di 2 social.
+- Crescita: 790 euro al mese, IVA esclusa. Include 24 contenuti su 3 social, un articolo SEO e GEO e gestione di una campagna ADS.
+- Soluzione personalizzata: preventivo per e-commerce, più brand, volumi elevati, video, automazioni e integrazioni.
 
-- Presenza: 390€/mese
-- Crescita: 790€/mese (consigliato)
-- Soluzione su misura: preventivo personalizzato
+Il setup è incluso. Il budget versato alle piattaforme pubblicitarie non è incluso.
 
-Il budget delle campagne ADS è sempre separato dal canone mensile. Dettaglio aggiornato dei pacchetti nella pagina Servizi.
+## Consulenza legale AI
 
-## Note
+La consulenza su AI Act e GDPR è svolta in collaborazione con lo Studio Legale BCS e l'Avv. Vincenzo Sapone, Cassazionista. La consulenza individuale costa 150 euro per 30 minuti.
 
-Prodotto nuovo, attualmente in beta. Non sono ancora disponibili clienti, metriche o testimonianze pubbliche.
+## Pagine principali
 
-## Contatti e link
+- Home: https://www.socialautomation.app/
+- Servizi e pacchetti: https://www.socialautomation.app/servizi
+- Chi siamo: https://www.socialautomation.app/chi-siamo
+- Consulenza AI Act e GDPR: https://www.socialautomation.app/consulenza
+- Trasparenza AI: https://www.socialautomation.app/trasparenza-ai
+- Privacy: https://www.socialautomation.app/privacy
+- Termini: https://www.socialautomation.app/termini
 
-- Sito: https://socialautomation.app
-- Servizi e pacchetti: https://socialautomation.app/servizi
+## Contatti
+
+- Email: swsdautomation@gmail.com
+- PEC: dibenedetto.80@pec.it
+- Telefono e WhatsApp: +39 347 719 6603

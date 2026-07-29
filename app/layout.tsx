@@ -23,10 +23,11 @@ export const metadata: Metadata = {
   creator: 'Social Automation',
   publisher: 'Social Automation',
   applicationName: 'Social Automation',
-  icons: {
-    icon: '/brand/swa-logo-official.png',
-    shortcut: '/brand/swa-logo-official.png',
-    apple: '/brand/swa-logo-official.png',
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION
+      ? { 'msvalidate.01': [process.env.BING_SITE_VERIFICATION] }
+      : undefined,
   },
   openGraph: {
     title: SITE_TITLE,

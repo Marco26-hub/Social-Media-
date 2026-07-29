@@ -54,7 +54,7 @@ export async function PATCH(request: Request) {
 
     // Email di attivazione al cliente (no-op se RESEND_API_KEY non configurata).
     if (prof.email && !result.alreadyActive) {
-      const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://socialautomation.app').replace(/\/$/, '')
+      const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://www.socialautomation.app').replace(/\/$/, '')
       await sendAccountActivated(prof.email, prof.nome || 'Cliente', `${base}/login`).catch(() => {})
     }
 

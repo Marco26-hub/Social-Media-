@@ -10,13 +10,6 @@ const META_TITLE = 'Guide su Social, SEO, GEO e AI per le PMI | SWA'
 const META_DESCRIPTION =
   'Guide operative su gestione social, contenuti, SEO, GEO, siti, e-commerce e uso responsabile dell’AI per PMI e professionisti.'
 
-export const metadata: Metadata = {
-  title: META_TITLE,
-  description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/blog` },
-  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/blog` },
-}
-
 type Item = { slug: string; h1: string; meta_description: string | null; tempo_lettura_min: number | null; immagine_cover: string | null }
 
 async function loadArticles(): Promise<{ items: Item[]; domainMapped: boolean }> {
@@ -32,6 +25,21 @@ async function loadArticles(): Promise<{ items: Item[]; domainMapped: boolean }>
     return { items: rows as Item[], domainMapped: true }
   } catch {
     return { items: [], domainMapped: true }
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { items, domainMapped } = await loadArticles()
+  const hasPublishedArticles = domainMapped && items.length > 0
+
+  return {
+    title: META_TITLE,
+    description: META_DESCRIPTION,
+    alternates: { canonical: `${SITE_URL}/blog` },
+    openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/blog` },
+    robots: hasPublishedArticles
+      ? { index: true, follow: true }
+      : { index: false, follow: true, noarchive: true },
   }
 }
 

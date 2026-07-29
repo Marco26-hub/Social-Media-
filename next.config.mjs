@@ -39,6 +39,10 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
 ]
 
+const noIndexHeaders = [
+  { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+]
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -50,7 +54,16 @@ const nextConfig = {
     ],
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }]
+    return [
+      { source: '/login', headers: noIndexHeaders },
+      { source: '/register', headers: noIndexHeaders },
+      { source: '/portale/:path*', headers: noIndexHeaders },
+      { source: '/dashboard/:path*', headers: noIndexHeaders },
+      { source: '/approve/:path*', headers: noIndexHeaders },
+      { source: '/preview/:path*', headers: noIndexHeaders },
+      { source: '/api/:path*', headers: noIndexHeaders },
+      { source: '/:path*', headers: securityHeaders },
+    ]
   },
 }
 

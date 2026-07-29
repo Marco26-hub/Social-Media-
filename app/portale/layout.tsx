@@ -1,7 +1,13 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import styles from './portale.module.css'
 import PortaleLogout from './PortaleLogout'
+
+export const metadata: Metadata = {
+  title: 'Area cliente | Social Automation',
+  robots: { index: false, follow: false, noarchive: true },
+}
 
 // Area CLIENTE — separata dalla dashboard operatore/admin. Look premium
 // (cream/forest/gold, Fraunces) coerente con la landing. Nessuna sidebar di

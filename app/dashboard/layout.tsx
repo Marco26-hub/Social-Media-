@@ -1,9 +1,15 @@
+import type { Metadata } from 'next'
 import Sidebar from '@/components/Sidebar'
 import DemoBanner from '@/components/DemoBanner'
 import AuthProvider from '@/components/AuthProvider'
 import { GenerationProvider } from '@/components/GenerationProvider'
 import GenerationBar from '@/components/GenerationBar'
 import BackToTop from '@/components/BackToTop'
+
+export const metadata: Metadata = {
+  title: 'Area operativa | Social Automation',
+  robots: { index: false, follow: false, noarchive: true },
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

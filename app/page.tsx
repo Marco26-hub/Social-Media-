@@ -123,6 +123,10 @@ const PROCESS = [
 
 const FAQ = [
   {
+    q: 'Quanto costa la gestione social media per una PMI?',
+    a: 'Il piano Presenza costa 390 € al mese e comprende 16 contenuti su 2 social. Il piano Crescita costa 790 € al mese e comprende 24 contenuti su 3 social, un articolo SEO + GEO e la gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
+  },
+  {
     q: 'Devo imparare a utilizzare un nuovo software?',
     a: 'No. Social Automation è un servizio gestito. Il portale semplifica approvazioni e consultazione dei risultati; strategia, produzione e pubblicazione restano a nostro carico.',
   },
@@ -144,9 +148,28 @@ const FAQ = [
   },
 ]
 
+const homeJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  '@id': `${SITE_URL}/#webpage`,
+  url: SITE_URL,
+  name: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  inLanguage: 'it-IT',
+  isPartOf: { '@id': `${SITE_URL}/#website` },
+  about: { '@id': `${SITE_URL}/#organization` },
+  primaryImageOfPage: { '@id': `${SITE_URL}/#logo` },
+}
+
 export default function LandingPage() {
   return (
     <main id="main-content" className={styles.page}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(homeJsonLd).replace(/</g, '\\u003c'),
+        }}
+      />
       <a className={styles.skipLink} href="#main-content">Vai al contenuto</a>
 
       <header className={styles.navbar}>
@@ -187,12 +210,12 @@ export default function LandingPage() {
 
       <section className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.heroCopy}>
-          <p className={styles.kicker}><Sparkles size={16} aria-hidden="true" /> Servizio digitale gestito</p>
-          <h1 id="hero-title">La tua presenza digitale, gestita con metodo.</h1>
+          <p className={styles.kicker}><Sparkles size={16} aria-hidden="true" /> Gestione social media per PMI</p>
+          <h1 id="hero-title">Gestione social media per PMI, con metodo.</h1>
           <p className={styles.heroLead}>
-            Strategia, contenuti e pubblicazione multicanale in un unico servizio.
-            L’intelligenza artificiale accelera la produzione; il controllo umano
-            tutela qualità, coerenza e responsabilità.
+            Un servizio gestito per PMI e professionisti: strategia, contenuti e
+            pubblicazione multicanale. L’intelligenza artificiale accelera la
+            produzione; il controllo umano tutela qualità e coerenza.
           </p>
           <div className={styles.heroActions}>
             <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.primaryButton}>
@@ -453,8 +476,18 @@ export default function LandingPage() {
           <Image className={styles.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} />
           <span>Social Automation</span>
         </Link>
-        <div><Link href="/privacy">Privacy</Link><Link href="/termini">Termini</Link><Link href="/login">Accesso</Link></div>
-        <p>© 2026 {TITOLARE.brand}<br />{TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}</p>
+        <div>
+          <Link href="/servizi">Servizi</Link>
+          <Link href="/chi-siamo">Chi siamo</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/termini">Termini</Link>
+          <Link href="/login">Accesso</Link>
+        </div>
+        <p>
+          © 2026 {TITOLARE.brand}<br />
+          {TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}<br />
+          Cermenate (CO) · Servizi in tutta Italia
+        </p>
       </footer>
 
       <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.mobileCta}>

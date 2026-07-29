@@ -2,17 +2,19 @@ import type { MetadataRoute } from 'next'
 import { SITE_URL } from '@/lib/site-config'
 
 export default function robots(): MetadataRoute.Robots {
+  const privatePaths = ['/api/']
+
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard', '/api'],
+        disallow: privatePaths,
       },
-      // Crawler AI: consentiti esplicitamente per la visibilità su
-      // ChatGPT, Claude, Perplexity, Gemini, Google AI Overviews, Bing, Apple.
       {
         userAgent: [
+          'OAI-SearchBot',
+          'ChatGPT-User',
           'GPTBot',
           'ClaudeBot',
           'anthropic-ai',
@@ -22,9 +24,10 @@ export default function robots(): MetadataRoute.Robots {
           'Applebot-Extended',
         ],
         allow: '/',
-        disallow: ['/dashboard', '/api'],
+        disallow: privatePaths,
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   }
 }

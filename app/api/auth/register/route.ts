@@ -9,7 +9,7 @@ import { verifyTurnstile } from '@/lib/turnstile'
 import { stripeConfigured, createStripeCheckoutSession, euroStringToCents } from '@/lib/stripe'
 
 function baseUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://socialautomation.app').replace(/\/$/, '')
+  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://www.socialautomation.app').replace(/\/$/, '')
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
