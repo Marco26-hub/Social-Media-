@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ChevronRight,
   CircleHelp,
@@ -37,32 +37,66 @@ const MENU_ICONS: Record<string, LucideIcon> = {
 
 export default function MobileMenu({ links, ctaHref, ctaLabel }: MobileMenuProps) {
   const [open, setOpen] = useState(false)
+  const menuRootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
 
     const previousOverflow = document.body.style.overflow
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
+    const previousOverscroll = document.body.style.overscrollBehavior
+    const desktopQuery = window.matchMedia('(min-width: 1281px)')
+
+    const closeOnDesktop = (event: MediaQueryListEvent) => {
+      if (event.matches) setOpen(false)
+    }
+
+    const keepFocusInsideMenu = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const focusable = menuRootRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (!focusable?.length) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     document.body.style.overflow = 'hidden'
-    window.addEventListener('keydown', closeOnEscape)
+    document.body.style.overscrollBehavior = 'none'
+    window.addEventListener('keydown', keepFocusInsideMenu)
+    desktopQuery.addEventListener('change', closeOnDesktop)
 
     return () => {
       document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', closeOnEscape)
+      document.body.style.overscrollBehavior = previousOverscroll
+      window.removeEventListener('keydown', keepFocusInsideMenu)
+      desktopQuery.removeEventListener('change', closeOnDesktop)
     }
   }, [open])
 
   return (
-    <div className={styles.mobileMenu}>
+    <div ref={menuRootRef} className={styles.mobileMenu}>
       <button
         type="button"
         className={styles.toggle}
         aria-label={open ? 'Chiudi menu' : 'Apri menu'}
         aria-expanded={open}
         aria-controls="mobile-navigation"
+        aria-haspopup="true"
         onClick={() => setOpen(value => !value)}
       >
         {open ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
