@@ -88,9 +88,13 @@ export default function PianoPage() {
     setConfirmOpen(true)
   }
 
-  async function genera(fase?: 1 | 2) {
+  async function genera(faseArg?: 1 | 2) {
     setConfirmOpen(false)
     setMsg(null)
+
+    // Accetta SOLO 1 o 2: se qualcuno ripassa `genera` come handler React,
+    // l'evento del click non deve finire nel body (JSON circolare).
+    const fase = faseArg === 1 || faseArg === 2 ? faseArg : undefined
 
     if (!demo && !clienteId) {
       setMsg({ type: 'err', text: 'Cliente non selezionato' })
@@ -431,10 +435,13 @@ export default function PianoPage() {
           </div>
         )}
 
+        {/* onConfirm va passato come arrow, non come riferimento a `genera`:
+            ConfirmModal lo usa come onClick e React passerebbe l'evento come
+            `fase`, che finiva nel body della richiesta (JSON circolare). */}
         <ConfirmModal
           open={confirmOpen}
           onClose={() => setConfirmOpen(false)}
-          onConfirm={genera}
+          onConfirm={() => genera()}
           title="Conferma generazione piano"
           desc={`Stai per generare ${numContenuti} contenuti per ${piattaforme.length} piattaforme con qualità ${quality}. L'AI verrà chiamata UNA volta.`}
           modello={aiModel}
