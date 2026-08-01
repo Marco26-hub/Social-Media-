@@ -8,6 +8,7 @@ import { notifyAgency } from '@/lib/notifications'
 import { isDemo } from '@/lib/demo'
 import { demoContenuti } from '@/lib/demo-data'
 import { getTableColumns } from '@/lib/db-schema'
+import { toYmd } from '@/lib/publish/blotato-map'
 
 const CALENDARIO_UPDATE_COLUMNS = new Set([
   'data_pubblicazione',
@@ -152,7 +153,11 @@ export async function GET(request: Request) {
       ORDER BY data_pubblicazione ASC, ora_pubblicazione ASC
       LIMIT $${params.length}`
     const rows = await q(query, params)
-    return NextResponse.json(rows)
+    // `data_pubblicazione` è una colonna `date`: senza normalizzazione il client
+    // riceve "2026-07-18T00:00:00.000Z", mentre tutta la UI (statistiche "oggi",
+    // barra della settimana, raggruppamento per giorno, griglia mensile,
+    // preflight) confronta stringhe 'YYYY-MM-DD' e quindi non trovava mai nulla.
+    return NextResponse.json(rows.map(r => ({ ...r, data_pubblicazione: toYmd(r.data_pubblicazione) })))
   } catch (e) {
     return apiError(e)
   }
