@@ -1,15 +1,16 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { isDemo } from '@/lib/demo'
 import type { Contenuto, Cliente } from '@/lib/types'
+import type { Destination } from '@/lib/blotato-accounts'
 import { PACKAGE_LIST } from '@/lib/packages'
 import {
   Building2, Calendar, BarChart3, Target, ShoppingBag, FileText,
   TrendingUp, AlertTriangle, CheckCircle, Clock, ArrowLeft,
-  Loader2, Globe, Check, X,
+  Loader2, Globe, Check, X, Send,
 } from 'lucide-react'
 import Link from 'next/link'
 import { demoContenuti, demoClienti } from '@/lib/demo-data'
@@ -17,6 +18,22 @@ import StatusBadge from '@/components/StatusBadge'
 
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', youtube_shorts: '▶️', linkedin: '💼',
+  threads: '🧵', x: '✖️',
+}
+
+const CANALE_NOME: Record<string, string> = {
+  instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', pinterest: 'Pinterest',
+  youtube_shorts: 'YouTube Shorts', linkedin: 'LinkedIn', threads: 'Threads', x: 'X',
+}
+
+// Prova a vuoto: legge la destinazione REALE di ogni canale senza pubblicare niente.
+// Serve perché il workspace Blotato contiene account di più clienti: senza questa
+// verifica il primo post live potrebbe finire sull'account di qualcun altro.
+async function caricaDestinazioni(clienteId: string): Promise<Destination[]> {
+  const res = await fetch(`/api/data/blotato-accounts?cliente_id=${encodeURIComponent(clienteId)}`)
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Lettura account Blotato fallita')
+  return Array.isArray(data.destinations) ? data.destinations as Destination[] : []
 }
 
 export default function ClienteDetailPage() {
@@ -35,6 +52,11 @@ export default function ClienteDetailPage() {
   const [timezone, setTimezone] = useState('Europe/Rome')
   const [savingTz, setSavingTz] = useState(false)
   const [tzMsg, setTzMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [destinazioni, setDestinazioni] = useState<Destination[]>([])
+  const [destLoading, setDestLoading] = useState(true)
+  const [destAvviso, setDestAvviso] = useState('')
+  const [savingCanale, setSavingCanale] = useState('')
+  const [destMsg, setDestMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -82,6 +104,46 @@ export default function ClienteDetailPage() {
       setDomainMsg({ type: 'err', text: (e as Error).message })
     } finally {
       setSavingDomain(false)
+    }
+  }
+
+  // Anteprima delle destinazioni: sola lettura, non invia nulla a Blotato.
+  const ricaricaDestinazioni = useCallback(async () => {
+    if (!id || isDemo()) { setDestLoading(false); return }
+    setDestLoading(true)
+    setDestAvviso('')
+    try {
+      setDestinazioni(await caricaDestinazioni(String(id)))
+    } catch (e) {
+      setDestinazioni([])
+      setDestAvviso((e as Error).message)
+    } finally {
+      setDestLoading(false)
+    }
+  }, [id])
+
+  useEffect(() => { ricaricaDestinazioni() }, [ricaricaDestinazioni])
+
+  // Fissa account (e pagina/bacheca) per un canale, poi ricarica per mostrare la
+  // destinazione reale risultante invece di fidarsi di quella ottimistica.
+  async function salvaDestinazione(canale: string, accountId: string, subaccountId = '') {
+    if (!cliente) return
+    setSavingCanale(canale)
+    setDestMsg(null)
+    try {
+      const res = await fetch('/api/data/blotato-accounts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente_id: cliente.id, canale, account_id: accountId, subaccount_id: subaccountId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
+      setDestMsg({ type: 'ok', text: 'Destinazione aggiornata.' })
+      await ricaricaDestinazioni()
+    } catch (e) {
+      setDestMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSavingCanale('')
     }
   }
 
@@ -291,6 +353,86 @@ export default function ClienteDetailPage() {
           <div className={`mt-2 text-xs flex items-center gap-1.5 ${tzMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>
             {tzMsg.type === 'ok' ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
             {tzMsg.text}
+          </div>
+        )}
+      </div>
+
+      {/* Account Blotato: dove finiranno davvero i post di QUESTO cliente.
+          Il workspace Blotato è condiviso tra più clienti, quindi qui si guarda la
+          destinazione reale prima di pubblicare, e si fissa quando è ambigua. */}
+      <div className="card p-5">
+        <h2 className="font-bold text-gray-900 flex items-center gap-2">
+          <Send className="w-4 h-4 text-brand-600" />
+          Account Blotato — dove verranno pubblicati i contenuti
+        </h2>
+        <p className="text-xs text-gray-500 mt-1 mb-4">
+          Questa è la destinazione reale che verrebbe usata alla pubblicazione. Da qui non viene inviato nulla.
+          Se per un canale ci sono più account collegati, la pubblicazione resta bloccata finché non scegli quello giusto.
+        </p>
+
+        {destLoading ? (
+          <p className="text-sm text-gray-400">Lettura account da Blotato…</p>
+        ) : destAvviso ? (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">{destAvviso}</p>
+        ) : destinazioni.length === 0 ? (
+          <p className="text-sm text-gray-400">Nessun canale da configurare per questo cliente.</p>
+        ) : (
+          <div className="space-y-2">
+            {destinazioni.map(d => (
+              <div
+                key={d.canale}
+                className={`rounded-lg border p-3 ${
+                  d.stato === 'ok' ? 'border-gray-200 bg-white'
+                    : d.stato === 'da_scegliere' ? 'border-amber-300 bg-amber-50'
+                    : 'border-gray-200 bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <span className="text-sm font-medium text-gray-900">
+                    {CANALE_ICON[d.canale] || '📄'} {CANALE_NOME[d.canale] || d.canale}
+                  </span>
+                  {d.stato === 'ok' ? (
+                    <span className="text-sm text-green-700">→ {d.label}</span>
+                  ) : (
+                    <span className="text-xs text-amber-800">{d.motivo}</span>
+                  )}
+                </div>
+
+                {d.opzioni.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <select
+                      value={d.accountId}
+                      disabled={savingCanale === d.canale}
+                      onChange={e => salvaDestinazione(d.canale, e.target.value)}
+                      className="input text-sm max-w-xs"
+                    >
+                      <option value="">— scegli l&apos;account —</option>
+                      {d.opzioni.map(o => (
+                        <option key={o.id} value={o.id}>{o.label}</option>
+                      ))}
+                    </select>
+
+                    {/* Un account può contenere più Pages/board: va scelta anche quella */}
+                    {d.sottoOpzioni && d.sottoOpzioni.length > 0 && (
+                      <select
+                        defaultValue=""
+                        disabled={savingCanale === d.canale || !d.accountId}
+                        onChange={e => salvaDestinazione(d.canale, d.accountId, e.target.value)}
+                        className="input text-sm max-w-xs"
+                      >
+                        <option value="">— scegli pagina/bacheca —</option>
+                        {d.sottoOpzioni.map(o => (
+                          <option key={o.id} value={o.id}>{o.label}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+            {destMsg && (
+              <p className={`text-xs ${destMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>{destMsg.text}</p>
+            )}
           </div>
         )}
       </div>
