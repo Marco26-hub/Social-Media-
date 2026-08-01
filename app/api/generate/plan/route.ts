@@ -639,6 +639,18 @@ Output SOLO JSON array valido:
     // prima un solo errore a metà loop faceva perdere anche gli item già validi.
     for (const { item: rawItem, chunk } of itemChunkPairs) {
       const item = sanitizeItem(rawItem, chunk)
+
+      // Un contenuto senza testo non è un contenuto: i modelli piccoli (tipici del
+      // tier gratuito) chiudono a volte il JSON con oggetti che hanno data, canale e
+      // formato ma hook/caption vuoti. Prima finivano in calendario come contenuti
+      // veri — un piano "da 7" di cui 4 gusci vuoti, senza che nulla lo segnalasse.
+      // Ora vengono scartati e contati, così il messaggio finale dice la verità.
+      const haTesto = String(item.hook || '').trim() || String(item.caption || '').trim()
+      if (!haTesto) {
+        scartati.push('contenuto senza hook né caption (risposta del modello incompleta)')
+        continue
+      }
+
       const id_contenuto = `C${Date.now().toString(36).toUpperCase()}_${inseriti.length}_${scartati.length}`
       const itemQuality = normalizeContentQuality(item.quality_level) ?? contentQuality
       const [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10] = nextChunkMediaSlots(chunk, String(item.formato || 'post'), item.media_refs)

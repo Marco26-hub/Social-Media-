@@ -169,7 +169,7 @@ export default function PianoPage() {
         ? ` ⚠️ ${data.chunks_failed} di ${data.chunks_total} blocchi settimanali non ha generato contenuti (riprova per coprire quei giorni).`
         : ''
       const scartatiNote = data?.items_scartati
-        ? ` ${data.items_scartati} contenuti generati sono stati scartati per dati non validi.`
+        ? ` ⚠️ ${data.items_scartati} contenuti sono stati scartati perché il modello li ha restituiti incompleti (senza testo): rigenera, o passa a un modello più capace dal selettore in alto.`
         : ''
       const faseNote = fase ? ` (fase ${fase}: settimane ${fase === 1 ? '1-2' : '3-4'})` : ''
       setMsg({ type: 'ok', text: `Piano generato${faseNote} (${data?.count ?? '?'} contenuti). I contenuti sono nel calendario.${imgNote}${chunkNote}${scartatiNote}` })
