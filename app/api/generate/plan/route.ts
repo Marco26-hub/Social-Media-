@@ -203,11 +203,14 @@ export async function POST(request: Request) {
   try {
     await requireAuth()
     const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita, media_urls, uploaded_assets, fase, visual_effects, visual_preset, use_trending_effects, include_weekend, use_web_trends, pacchetto } = await request.json()
-    // Modalità "piano del pacchetto": se il body indica un pacchetto valido, la
-    // generazione è guidata dalla sua ricetta (numero, mix, social, qualità) invece
-    // che dai parametri manuali. Se assente/invalido → piano libero come prima.
-    const pkg: PackageSpec | null = getPackage(pacchetto)
-    const periodoEff = pkg ? 'mensile' : periodo
+    // Modalità "piano del pacchetto": la generazione è guidata dalla ricetta del
+    // pacchetto (numero, mix, social, qualità) invece che dai parametri manuali.
+    // Il body dice SOLO che la si vuole: quale pacchetto sia davvero è un dato
+    // commerciale e va letto dal cliente a DB (vedi più sotto), altrimenti
+    // chiunque potrebbe chiedere il pacchetto superiore e scavalcare il cap di
+    // qualità del proprio piano.
+    const pkgRequested: PackageSpec | null = getPackage(pacchetto)
+    const periodoEff = pkgRequested ? 'mensile' : periodo
     const mediaPool: string[] = Array.isArray(media_urls) ? media_urls.filter((u): u is string => typeof u === 'string' && u.length > 0) : []
     // Descrizione per foto (nome prodotto) dal client: mappa url→label. Serve al prompt
     // per far scegliere al modello la foto giusta per numero (media_refs). Opzionale:
@@ -263,6 +266,16 @@ export async function POST(request: Request) {
     ])
     const brand = brandRows[0] ?? null
     const client = (clientRows[0] ?? null) as Record<string, unknown> | null
+
+    // Il pacchetto che conta è quello acquistato, non quello chiesto dal client.
+    const pkg: PackageSpec | null = pkgRequested ? getPackage(client?.pacchetto) : null
+    if (pkgRequested && !pkg) {
+      return NextResponse.json(
+        { error: 'Questo cliente non ha un pacchetto attivo: usa il piano libero oppure assegna il pacchetto dalla scheda cliente.' },
+        { status: 403 },
+      )
+    }
+
     // Qualità: il pacchetto la impone (Presenza=Medium, Crescita=High); altrimenti
     // si risolve da richiesta + piano del cliente come prima.
     const contentQuality = pkg ? pkg.quality : resolveContentQuality({ requestedQuality, piano: client?.piano })

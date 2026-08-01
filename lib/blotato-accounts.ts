@@ -131,7 +131,12 @@ export async function resolveBlotatoTarget(
     target.disabledStitch = false
     target.isBrandedContent = false
     target.isYourBrand = false
-    target.isAiGenerated = true
+    // Dichiarazione "contenuto generato da IA" mostrata da TikTok sul post: va
+    // detta solo quando è vera, cioè quando il MEDIA è stato generato dall'AI.
+    // Era fissa a true, quindi bollava così anche foto e video del cliente.
+    // `fonte_media` vale 'upload_cliente' per i media caricati e '<provider>_ai'
+    // (es. 'openrouter_ai') per quelli generati.
+    target.isAiGenerated = String(row.fonte_media || '').endsWith('_ai')
   } else if (platform === 'youtube') {
     target.title = (str(row.hook) || str(row.nome_prodotto) || 'Video').slice(0, 90)
     target.privacyStatus = 'public'

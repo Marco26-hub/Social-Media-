@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { dbReady, q } from '@/lib/db'
 import { resolveBlogClienteId } from '@/lib/blog-tenant'
@@ -32,11 +33,18 @@ export async function generateMetadata(): Promise<Metadata> {
   const { items, domainMapped } = await loadArticles()
   const hasPublishedArticles = domainMapped && items.length > 0
 
+  // Il blog è multi-tenant: servito anche sui domini dei clienti. Il canonical
+  // deve puntare all'host della richiesta, non a socialautomation.app/blog —
+  // che oltretutto è noindex quando non ha articoli, quindi indicava ai motori
+  // una pagina che chiede di non essere indicizzata.
+  const host = (await headers()).get('host')
+  const base = host ? `https://${host}` : SITE_URL
+
   return {
     title: META_TITLE,
     description: META_DESCRIPTION,
-    alternates: { canonical: `${SITE_URL}/blog` },
-    openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/blog` },
+    alternates: { canonical: `${base}/blog` },
+    openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${base}/blog` },
     robots: hasPublishedArticles
       ? { index: true, follow: true }
       : { index: false, follow: true, noarchive: true },

@@ -1,12 +1,21 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
-import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { requireAdmin, requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
 import { demoClienti } from '@/lib/demo-data'
 
+// Campi operativi: modificabili da chiunque abbia accesso al cliente.
 const CLIENTE_UPDATE_COLUMNS = new Set([
-  'nome', 'settore', 'email', 'telefono', 'piano', 'pacchetto', 'timezone', 'contenuti_mese', 'attivo', 'note', 'blog_domain',
+  'nome', 'settore', 'email', 'telefono', 'timezone', 'note', 'blog_domain',
+])
+
+// Campi COMMERCIALI: decidono cosa il cliente ha pagato (livello del pacchetto,
+// quota di contenuti, attivazione) e quindi quanto può consumare. Vanno riservati
+// agli admin dell'agenzia: con il solo accesso al proprio cliente un utente
+// potrebbe altrimenti auto-promuoversi il pacchetto e alzarsi la quota.
+const CLIENTE_ADMIN_COLUMNS = new Set([
+  'piano', 'pacchetto', 'contenuti_mese', 'attivo',
 ])
 
 // Domini validi: hostname puro (no protocollo/path), lowercase, punti/trattini.
@@ -74,10 +83,14 @@ export async function PATCH(request: Request) {
       body.blog_domain = domain
     }
 
+    // I campi commerciali passano solo se chi scrive è admin dell'agenzia.
+    const wantsAdminFields = Object.keys(body).some(k => CLIENTE_ADMIN_COLUMNS.has(k))
+    if (wantsAdminFields) await requireAdmin()
+
     const fields: string[] = []
     const params: unknown[] = []
     for (const [key, val] of Object.entries(body)) {
-      if (!CLIENTE_UPDATE_COLUMNS.has(key)) continue
+      if (!CLIENTE_UPDATE_COLUMNS.has(key) && !CLIENTE_ADMIN_COLUMNS.has(key)) continue
       params.push(val === '' ? null : val)
       fields.push(`${key} = $${params.length}`)
     }
