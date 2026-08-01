@@ -26,7 +26,7 @@ const CATEGORIE = [
   ['trending', 'Trending'],
   ['seo', 'SEO / Blog'],
 ]
-const STATI: Status[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','IN_PUBBLICAZIONE','PUBBLICATO','ERRORE','ERRORE_MANUALE']
+const STATI: Status[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','NON_APPROVATO','IN_PUBBLICAZIONE','PUBBLICATO','ERRORE','ERRORE_MANUALE']
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', linkedin: '💼', threads: '🧵', x: '✖️', youtube_shorts: '▶️', blog: '📝'
 }
@@ -87,6 +87,7 @@ function statusTone(status: string) {
   if (status === 'PUBBLICATO') return 'bg-green-500'
   if (status === 'APPROVATO' || status === 'IN_PUBBLICAZIONE') return 'bg-blue-500'
   if (status === 'ERRORE' || status === 'ERRORE_MANUALE') return 'bg-red-500'
+  if (status === 'NON_APPROVATO') return 'bg-rose-400'
   if (status === 'DA_APPROVARE') return 'bg-amber-500'
   return 'bg-slate-400'
 }
@@ -126,6 +127,10 @@ function CalendarioInner() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  // Conferma "non approvare": rejectTarget = singolo post (tasto rosso), rejectBulkOpen = selezione multipla.
+  const [rejectTarget, setRejectTarget] = useState<Contenuto | null>(null)
+  const [rejectBulkOpen, setRejectBulkOpen] = useState(false)
+  const [rejecting, setRejecting] = useState(false)
   const [brand, setBrand] = useState<{ brand_name?: string | null; social_handle?: string | null } | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
   const [comfyState, setComfyState] = useState<'idle' | 'generating' | 'done' | 'error'>('idle')
@@ -243,12 +248,29 @@ function CalendarioInner() {
   async function rifiuta(c: Contenuto) {
     setSaving(c.id)
     if (demo) {
-      setDemoData(prev => prev.map(x => x.id === c.id ? { ...x, status: 'BOZZA' as Status } : x))
+      setDemoData(prev => prev.map(x => x.id === c.id ? { ...x, status: 'NON_APPROVATO' as Status } : x))
     } else {
       await fetch('/api/data/calendario', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: c.id, status: 'BOZZA' }),
+        body: JSON.stringify({ id: c.id, status: 'NON_APPROVATO' }),
+      })
+    }
+    setSelected(null)
+    setSaving(null)
+  }
+
+  // Recupero di un contenuto rifiutato: torna in coda "Da approvare" così non
+  // resta intrappolato nel bucket Non approvati.
+  async function ripristina(c: Contenuto) {
+    setSaving(c.id)
+    if (demo) {
+      setDemoData(prev => prev.map(x => x.id === c.id ? { ...x, status: 'DA_APPROVARE' as Status } : x))
+    } else {
+      await fetch('/api/data/calendario', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: c.id, status: 'DA_APPROVARE' }),
       })
     }
     setSelected(null)
@@ -464,6 +486,54 @@ function CalendarioInner() {
     }
   }
 
+  // Non approva in blocco i contenuti selezionati → NON_APPROVATO. Il PATCH accetta
+  // un id per volta, quindi mandiamo le richieste in parallelo e aggiorniamo solo i
+  // contenuti davvero passati (fonte di verità), come fa bulkDelete.
+  async function bulkReject() {
+    // GUARD: solo i contenuti DA_APPROVARE sono rifiutabili (come il tasto rosso
+    // singolo). Mai toccare post APPROVATO/IN_PUBBLICAZIONE/PUBBLICATO (già inviati o
+    // live su Blotato) né già NON_APPROVATO: li rifiuteremmo desincronizzando lo stato
+    // reale della pubblicazione.
+    const rejectableIds = [...selectedIds].filter(id => contenuti.find(c => c.id === id)?.status === 'DA_APPROVARE')
+    const skipped = selectedIds.size - rejectableIds.length
+    if (!rejectableIds.length) {
+      setAdminError('Nessun contenuto "Da approvare" tra i selezionati: solo i contenuti in attesa di approvazione possono essere rifiutati.')
+      setRejectBulkOpen(false)
+      return
+    }
+    setRejecting(true)
+    setAdminError(null)
+    try {
+      const rejSet = new Set(rejectableIds)
+      if (demo) {
+        setDemoData(prev => prev.map(item => rejSet.has(item.id) ? { ...item, status: 'NON_APPROVATO' as Status } : item))
+        setContenuti(prev => prev.map(item => rejSet.has(item.id) ? { ...item, status: 'NON_APPROVATO' as Status } : item))
+      } else {
+        const results = await Promise.allSettled(rejectableIds.map(id =>
+          fetch('/api/data/calendario', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status: 'NON_APPROVATO' }),
+          }).then(res => { if (!res.ok) throw new Error(); return id }),
+        ))
+        const ok = new Set(results.filter((r): r is PromiseFulfilledResult<string> => r.status === 'fulfilled').map(r => r.value))
+        setContenuti(prev => prev.map(item => ok.has(item.id) ? { ...item, status: 'NON_APPROVATO' as Status } : item))
+        const failed = rejectableIds.length - ok.size
+        const notes: string[] = []
+        if (failed > 0) notes.push(`${failed} non aggiornati`)
+        if (skipped > 0) notes.push(`${skipped} saltati (non erano "Da approvare")`)
+        if (notes.length) setAdminError(notes.join(' · '))
+      }
+      if (selected && selectedIds.has(selected.id)) setSelected(null)
+      setSelectedIds(new Set())
+      setRejectBulkOpen(false)
+    } catch (e) {
+      setAdminError((e as Error).message)
+    } finally {
+      setRejecting(false)
+    }
+  }
+
   function toggleSelectId(id: string) {
     setSelectedIds(prev => {
       const next = new Set(prev)
@@ -610,12 +680,16 @@ function CalendarioInner() {
     total: contenuti.length,
     daApprovare: contenuti.filter(c => c.status === 'DA_APPROVARE').length,
     approvati: contenuti.filter(c => c.status === 'APPROVATO' || c.status === 'IN_PUBBLICAZIONE').length,
+    nonApprovati: contenuti.filter(c => c.status === 'NON_APPROVATO').length,
     pubblicati: contenuti.filter(c => c.status === 'PUBBLICATO' || c.blotato_status === 'published').length,
     errori: contenuti.filter(c => c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE' || c.blotato_status === 'failed' || Boolean(c.errore_tecnico)).length,
     oggi: contenuti.filter(c => c.data_pubblicazione === todayIso).length,
     video: contenuti.filter(c => c.media_type === 'video' || ['reel', 'video', 'short', 'story'].includes(c.formato)).length,
     trend: contenuti.filter(c => c.obiettivo === 'trending' || c.template_style || c.creative_brief || c.quality_level === 'high').length,
   }
+  // Quanti dei selezionati sono davvero rifiutabili (solo DA_APPROVARE): serve al
+  // modale di conferma bulk per non promettere un rifiuto su post già pubblicati.
+  const rejectableSelectedCount = [...selectedIds].filter(id => contenuti.find(c => c.id === id)?.status === 'DA_APPROVARE').length
   const nextContent = calendarItems.find(c => c.data_pubblicazione >= todayIso && c.status !== 'PUBBLICATO')
   const channelEntries = Object.entries(
     contenuti.reduce<Record<string, number>>((acc, c) => {
@@ -683,6 +757,7 @@ function CalendarioInner() {
               { label: 'Da approvare', value: stats.daApprovare, tone: 'text-amber-200' },
               { label: 'Oggi', value: stats.oggi, tone: 'text-brand-100' },
               { label: 'Approvati', value: stats.approvati, tone: 'text-blue-200' },
+              { label: 'Non approvati', value: stats.nonApprovati, tone: 'text-rose-200' },
               { label: 'Pubblicati', value: stats.pubblicati, tone: 'text-emerald-200' },
               { label: 'Errori', value: stats.errori, tone: 'text-red-200' },
               { label: 'Reel/Video', value: stats.video, tone: 'text-fuchsia-200' },
@@ -865,13 +940,22 @@ function CalendarioInner() {
               </span>
             </label>
             {selectedIds.size > 0 && (
-              <button
-                onClick={() => setBulkDeleteOpen(true)}
-                className="btn-danger py-1.5 px-3 text-xs inline-flex items-center gap-1.5"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Elimina selezionati ({selectedIds.size})
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setRejectBulkOpen(true)}
+                  className="py-1.5 px-3 text-xs inline-flex items-center gap-1.5 rounded-lg font-medium bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  Non approva selezionati ({selectedIds.size})
+                </button>
+                <button
+                  onClick={() => setBulkDeleteOpen(true)}
+                  className="btn-danger py-1.5 px-3 text-xs inline-flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Elimina selezionati ({selectedIds.size})
+                </button>
+              </div>
             )}
           </div>
           {calendarItems.map((c, index) => {
@@ -1068,10 +1152,16 @@ function CalendarioInner() {
                         <CheckCircle className="w-3.5 h-3.5" />
                         <span className="hidden md:inline">{saving === c.id ? '...' : 'Approva'}</span>
                       </button>
-                      <button onClick={() => rifiuta(c)} disabled={saving === c.id} title="Rifiuta / elimina" className="btn-danger py-1.5 px-2 md:px-3 justify-center">
+                      <button onClick={() => setRejectTarget(c)} disabled={saving === c.id} title="Non approvare (va in Non approvati)" className="btn-danger py-1.5 px-2 md:px-3 justify-center">
                         <XCircle className="w-3.5 h-3.5" />
                       </button>
                     </>
+                  )}
+                  {c.status === 'NON_APPROVATO' && (
+                    <button onClick={() => ripristina(c)} disabled={saving === c.id} title="Ripristina in Da approvare" className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
+                      <RefreshCw className={`w-3.5 h-3.5 ${saving === c.id ? 'animate-spin' : ''}`} />
+                      <span className="hidden md:inline">Ripristina</span>
+                    </button>
                   )}
                   {(c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE') && (
                     <button onClick={() => resetErrore(c)} disabled={saving === c.id} className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
@@ -1497,9 +1587,18 @@ function CalendarioInner() {
                     <CheckCircle className="w-4 h-4" />
                     {saving === selected.id ? 'Salvando...' : 'Approva'}
                   </button>
-                  <button onClick={() => rifiuta(selected)} className="btn-danger flex-1 justify-center" disabled={saving === selected.id}>
+                  <button onClick={() => setRejectTarget(selected)} className="btn-danger flex-1 justify-center" disabled={saving === selected.id}>
                     <XCircle className="w-4 h-4" />
-                    Rimanda a bozza
+                    Non approvare
+                  </button>
+                </div>
+              )}
+
+              {selected.status === 'NON_APPROVATO' && (
+                <div className="flex gap-3">
+                  <button onClick={() => ripristina(selected)} className="btn-secondary flex-1 justify-center" disabled={saving === selected.id}>
+                    <RefreshCw className={`w-4 h-4 ${saving === selected.id ? 'animate-spin' : ''}`} />
+                    {saving === selected.id ? 'Salvando...' : 'Ripristina in Da approvare'}
                   </button>
                 </div>
               )}
@@ -1586,6 +1685,49 @@ function CalendarioInner() {
               >
                 {bulkDeleting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 {bulkDeleting ? 'Elimino...' : `Elimina ${selectedIds.size}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conferma "Non approvare": copre sia il singolo post (tasto rosso) sia la
+          selezione multipla. Il rifiuto sposta il contenuto in Non approvati (recuperabile). */}
+      {(rejectTarget !== null || rejectBulkOpen) && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => { if (!rejecting) { setRejectTarget(null); setRejectBulkOpen(false) } }}>
+          <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <XCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900">
+                  {rejectBulkOpen ? `Non approvare ${rejectableSelectedCount} post?` : 'Non approvare questo post?'}
+                </h2>
+                <p className="text-xs text-gray-500">Andranno nella lista Non approvati</p>
+              </div>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-sm text-gray-700">
+                {rejectBulkOpen
+                  ? <><span className="font-semibold">{rejectableSelectedCount}</span> contenuti in <span className="font-semibold">Da approvare</span> passeranno in <span className="font-semibold">Non approvati</span> e non verranno pubblicati.{selectedIds.size > rejectableSelectedCount && <> Gli altri <span className="font-semibold">{selectedIds.size - rejectableSelectedCount}</span> selezionati verranno saltati (non sono in attesa di approvazione).</>}</>
+                  : <>Il post <span className="font-semibold">{rejectTarget?.id_contenuto}</span> ({rejectTarget?.canale} · {rejectTarget?.formato}) passerà in <span className="font-semibold">Non approvati</span> e non verrà pubblicato.</>}
+              </p>
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
+                Azione reversibile: potrai riportarli in <span className="font-semibold">Da approvare</span> con il pulsante Ripristina.
+              </div>
+            </div>
+            <div className="p-5 border-t flex gap-3">
+              <button onClick={() => { setRejectTarget(null); setRejectBulkOpen(false) }} disabled={rejecting} className="btn-secondary flex-1 justify-center">
+                Annulla
+              </button>
+              <button
+                onClick={() => { if (rejectBulkOpen) { bulkReject() } else { const t = rejectTarget; setRejectTarget(null); if (t) rifiuta(t) } }}
+                disabled={rejecting}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-semibold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2"
+              >
+                {rejecting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                {rejecting ? 'Aggiorno...' : rejectBulkOpen ? `Non approvare ${rejectableSelectedCount}` : 'Non approvare'}
               </button>
             </div>
           </div>

@@ -218,12 +218,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Cliente non trovato' }, { status: 404 })
     }
 
+    // Quota mensile usata: escludi le bozze, gli errori E i contenuti RIFIUTATI
+    // (NON_APPROVATO). Un contenuto rifiutato non deve consumare quota — come già
+    // avveniva quando "rifiuta" lo rimandava in BOZZA. Senza questa esclusione il
+    // rifiuto non libererebbe più quota al cliente.
     const usedRows = await q(
       `SELECT count(*)::int AS usati
        FROM calendario
        WHERE cliente_id = $1
          AND date_trunc('month', data_pubblicazione::date) = date_trunc('month', CURRENT_DATE)
-         AND status NOT IN ('BOZZA', 'ERRORE')`,
+         AND status NOT IN ('BOZZA', 'ERRORE', 'NON_APPROVATO')`,
       [cid],
     )
     const usati = toInt(usedRows[0]?.usati, 0)

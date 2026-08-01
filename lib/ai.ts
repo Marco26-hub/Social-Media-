@@ -221,11 +221,16 @@ async function callAIImpl(params: {
 
 // Contenuto messaggio user per API OpenAI-compatibile: stringa se niente immagini,
 // array multimodale text+image_url se ci sono (URL pubblici; la vision legge il prodotto).
+// Cap a 10 immagini (= limite carosello Instagram): copre un intero blocco del piano
+// (IMAGES_PER_CHUNK=7) e un carosello pieno. Prima erano solo 4 → con più foto la vision
+// "vedeva" solo le prime 4 e assegnava/descriveva male le altre. I modelli vision usati
+// (gemini-2.5-flash, gpt-4o-mini) accettano tranquillamente 10 immagini per messaggio.
+const MAX_VISION_IMAGES = 10
 function buildOpenAIUserContent(userPrompt: string, images: string[]): unknown {
   if (!images.length) return userPrompt
   return [
     { type: 'text', text: userPrompt },
-    ...images.slice(0, 4).map((url) => ({ type: 'image_url', image_url: { url } })),
+    ...images.slice(0, MAX_VISION_IMAGES).map((url) => ({ type: 'image_url', image_url: { url } })),
   ]
 }
 

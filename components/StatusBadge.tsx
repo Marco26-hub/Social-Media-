@@ -11,6 +11,7 @@ const config: Record<string, { bg: string; text: string; label: string }> = {
   ERRORE_MANUALE:   { bg: 'bg-red-200',    text: 'text-red-900',   label: 'Errore manuale' },
   DRY_RUN_OK:       { bg: 'bg-teal-100',   text: 'text-teal-800',  label: 'Dry run ok' },
   ARCHIVIATO:       { bg: 'bg-gray-200',   text: 'text-gray-500',  label: 'Archiviato' },
+  NON_APPROVATO:    { bg: 'bg-rose-100',   text: 'text-rose-700',  label: 'Non approvato' },
 }
 
 export default function StatusBadge({ status }: { status: Status | string }) {

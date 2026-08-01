@@ -1,0 +1,62 @@
+import type { ContentQuality } from '@/lib/content-quality'
+
+// ─────────────────────────────────────────────────────────────────────────
+// PACCHETTI COMMERCIALI (source of truth). Il cliente acquista un pacchetto e
+// il piano editoriale "del pacchetto" genera ESATTAMENTE i contenuti compresi
+// (numero, mix formati, n° social, qualità). La modalità "piano libero" resta
+// invariata: lì l'operatore decide tutto a mano.
+//
+// Aggiorna QUI i pacchetti: prezzo, contenuti/mese, mix, qualità. La pagina
+// piano e la generazione backend leggono da qui.
+// ─────────────────────────────────────────────────────────────────────────
+
+export type PackageId = 'presenza' | 'crescita'
+
+export type PackageSpec = {
+  id: PackageId
+  nome: string
+  prezzoMese: number
+  contenutiMese: number     // totale contenuti social/mese
+  postCaroselli: number     // quota post + caroselli
+  reelBrevi: number         // quota reel / stories / short
+  social: number            // n° social coordinati
+  quality: ContentQuality   // livello qualità dei contenuti
+  articoloBlog: boolean      // include 1 articolo SEO+GEO (generato nella sezione Blog)
+  descrizione: string
+}
+
+export const PACKAGES: Record<PackageId, PackageSpec> = {
+  presenza: {
+    id: 'presenza',
+    nome: 'Presenza',
+    prezzoMese: 390,
+    contenutiMese: 16,
+    postCaroselli: 12,
+    reelBrevi: 4,
+    social: 2,
+    quality: 'medium',
+    articoloBlog: false,
+    descrizione: '16 contenuti/mese (12 post/caroselli + 4 reel o stories) su 2 social.',
+  },
+  crescita: {
+    id: 'crescita',
+    nome: 'Crescita',
+    prezzoMese: 790,
+    contenutiMese: 24,
+    postCaroselli: 18,
+    reelBrevi: 6,
+    social: 3,
+    quality: 'high',
+    articoloBlog: true,
+    descrizione: '24 contenuti/mese (18 post/caroselli + 6 reel o short) su 3 social + 1 articolo SEO/GEO.',
+  },
+}
+
+export const PACKAGE_LIST: PackageSpec[] = [PACKAGES.presenza, PACKAGES.crescita]
+
+// Risolve un id pacchetto (tollerante a maiuscole/spazi). null se non valido.
+export function getPackage(id: unknown): PackageSpec | null {
+  if (typeof id !== 'string') return null
+  const key = id.trim().toLowerCase()
+  return (PACKAGES as Record<string, PackageSpec>)[key] ?? null
+}

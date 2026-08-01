@@ -6,7 +6,7 @@ import { isDemo } from '@/lib/demo'
 import { demoClienti } from '@/lib/demo-data'
 
 const CLIENTE_UPDATE_COLUMNS = new Set([
-  'nome', 'settore', 'email', 'telefono', 'piano', 'contenuti_mese', 'attivo', 'note', 'blog_domain',
+  'nome', 'settore', 'email', 'telefono', 'piano', 'pacchetto', 'contenuti_mese', 'attivo', 'note', 'blog_domain',
 ])
 
 // Domini validi: hostname puro (no protocollo/path), lowercase, punti/trattini.

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { isDemo } from '@/lib/demo'
 import type { Contenuto, Cliente } from '@/lib/types'
+import { PACKAGE_LIST } from '@/lib/packages'
 import {
   Building2, Calendar, BarChart3, Target, ShoppingBag, FileText,
   TrendingUp, AlertTriangle, CheckCircle, Clock, ArrowLeft,
@@ -28,6 +29,9 @@ export default function ClienteDetailPage() {
   const [blogDomain, setBlogDomain] = useState('')
   const [savingDomain, setSavingDomain] = useState(false)
   const [domainMsg, setDomainMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [pacchetto, setPacchetto] = useState('')
+  const [savingPkg, setSavingPkg] = useState(false)
+  const [pkgMsg, setPkgMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -35,6 +39,7 @@ export default function ClienteDetailPage() {
         const c = demoClienti.find(x => x.id === id || x.slug === id)
         if (c) {
           setCliente(c)
+          setPacchetto(c.pacchetto || '')
           setContenuti(demoContenuti.filter(x => x.cliente_id === c.id).slice(0, 10))
         }
         setLoading(false)
@@ -47,7 +52,7 @@ export default function ClienteDetailPage() {
         ])
         const clienti = Array.isArray(cRes) ? cRes as Cliente[] : []
         const c = clienti.find(x => x.id === id || x.slug === id)
-        if (c) { setCliente(c); setBlogDomain(c.blog_domain || '') }
+        if (c) { setCliente(c); setBlogDomain(c.blog_domain || ''); setPacchetto(c.pacchetto || '') }
         setContenuti((Array.isArray(calRes) ? calRes : []).slice(0, 10))
       } catch {}
       setLoading(false)
@@ -73,6 +78,29 @@ export default function ClienteDetailPage() {
       setDomainMsg({ type: 'err', text: (e as Error).message })
     } finally {
       setSavingDomain(false)
+    }
+  }
+
+  // Pacchetto acquistato dal cliente (upgrade/downgrade). '' = nessun pacchetto → null.
+  async function savePacchetto() {
+    if (!cliente) return
+    setSavingPkg(true)
+    setPkgMsg(null)
+    try {
+      const res = await fetch('/api/data/clienti', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: cliente.id, pacchetto }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
+      const nuovo = (pacchetto === 'presenza' || pacchetto === 'crescita') ? pacchetto : null
+      setCliente(prev => prev ? { ...prev, pacchetto: nuovo } : prev)
+      setPkgMsg({ type: 'ok', text: 'Pacchetto aggiornato.' })
+    } catch (e) {
+      setPkgMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSavingPkg(false)
     }
   }
 
@@ -179,6 +207,38 @@ export default function ClienteDetailPage() {
           <p className="text-xs text-gray-400 mt-2">
             Attivo su: <a href={`https://${cliente.blog_domain}/blog`} target="_blank" rel="noopener" className="text-brand-600 hover:underline">{cliente.blog_domain}/blog</a>
           </p>
+        )}
+      </div>
+
+      {/* Pacchetto acquistato — guida il "piano del pacchetto" nella pagina Piano */}
+      <div className="card p-5 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <ShoppingBag className="w-4 h-4 text-violet-600" />
+          <h2 className="font-bold text-gray-900">Pacchetto acquistato</h2>
+        </div>
+        <p className="text-xs text-gray-500 mb-3">
+          Il pacchetto del cliente. Il &quot;piano del pacchetto&quot; genera in automatico i contenuti compresi (numero, mix formati, social, qualità). Cambialo qui in caso di upgrade.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <select
+            value={pacchetto}
+            onChange={e => setPacchetto(e.target.value)}
+            className="input flex-1 text-sm"
+          >
+            <option value="">Nessun pacchetto (solo piano libero)</option>
+            {PACKAGE_LIST.map(p => (
+              <option key={p.id} value={p.id}>{p.nome} — €{p.prezzoMese}/mese · {p.contenutiMese} contenuti</option>
+            ))}
+          </select>
+          <button onClick={savePacchetto} disabled={savingPkg} className="btn-primary py-2 px-4 justify-center whitespace-nowrap">
+            {savingPkg ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva pacchetto'}
+          </button>
+        </div>
+        {pkgMsg && (
+          <div className={`mt-2 text-xs flex items-center gap-1.5 ${pkgMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>
+            {pkgMsg.type === 'ok' ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+            {pkgMsg.text}
+          </div>
         )}
       </div>
 

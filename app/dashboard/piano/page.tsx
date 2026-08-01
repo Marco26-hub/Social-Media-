@@ -12,6 +12,7 @@ import { uploadAssets } from '@/lib/asset-upload'
 import { useGeneration } from '@/components/GenerationProvider'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
+import { getPackage, type PackageSpec } from '@/lib/packages'
 
 type QualitySelection = 'auto' | ContentQuality
 type PlanAsset = { url: string; name: string; mime?: string; kind?: 'image' | 'video' }
@@ -33,14 +34,17 @@ export default function PianoPage() {
   const [quality, setQuality] = useState<QualitySelection>('auto')
   const [visualPreset, setVisualPreset] = useState<'' | 'trending' | 'premium' | 'minimal' | 'classico'>('')
   const [useTrendingEffects, setUseTrendingEffects] = useState(false)
+  const [useWebTrends, setUseWebTrends] = useState(false)
   const [includeWeekend, setIncludeWeekend] = useState(true)
   const [planAssets, setPlanAssets] = useState<PlanAsset[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [clientePkg, setClientePkg] = useState<PackageSpec | null>(null)
   const { clienteId } = useActiveClienteId()
   const demo = useRuntimeDemo()
   const gen = useGeneration()
   const running = gen.isRunning('piano')
+  const runningPkg = gen.isRunning('piano-pacchetto')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -48,8 +52,40 @@ export default function PianoPage() {
     }
   }, [])
 
+  // Pacchetto del cliente attivo: abilita la modalità "piano del pacchetto".
+  useEffect(() => {
+    let alive = true
+    async function loadPkg() {
+      if (!clienteId) { setClientePkg(null); return }
+      try {
+        const rows = await fetch('/api/data/clienti').then(r => r.ok ? r.json() : [])
+        const c = Array.isArray(rows) ? rows.find((x: { id?: string; slug?: string }) => x.id === clienteId || x.slug === clienteId) : null
+        if (alive) setClientePkg(getPackage(c?.pacchetto))
+      } catch { if (alive) setClientePkg(null) }
+    }
+    loadPkg()
+    return () => { alive = false }
+  }, [clienteId])
+
   function togglePlatform(key: PlatformKey) {
     setPiattaforme(p => p.includes(key) ? p.filter(x => x !== key) : [...p, key])
+  }
+
+  // Nome prodotto precompilato dal filename: "tshirt-lario.jpg" → "Tshirt Lario".
+  // L'AI lo usa per scegliere la foto giusta per ogni contenuto del piano.
+  function prettyName(filename: string): string {
+    const base = filename
+      .replace(/\.[a-z0-9]{2,5}$/i, '')   // togli estensione
+      .replace(/[-_.]+/g, ' ')            // trattini/underscore → spazio
+      .replace(/\d{3,}/g, '')             // togli code numeriche lunghe
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (!base) return ''
+    return base.replace(/\b\p{L}/gu, c => c.toUpperCase()).slice(0, 60)
+  }
+
+  function renamePlanAsset(index: number, value: string) {
+    setPlanAssets(prev => prev.map((a, i) => i === index ? { ...a, name: value } : a))
   }
 
   // Upload in blocchi da 14 (limite server per richiesta) finché tutti i media scelti sono caricati.
@@ -65,7 +101,7 @@ export default function PianoPage() {
         form.append('cliente_id', clienteId)
         chunk.forEach(file => form.append('files', file))
         const data = await uploadAssets(form)
-        const uploaded = (data.assets || []).map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind }))
+        const uploaded = (data.assets || []).map(a => ({ url: a.url, name: prettyName(a.name), mime: a.mime, kind: a.kind }))
         setPlanAssets(prev => [...prev, ...uploaded])
       }
     } catch (e) {
@@ -116,7 +152,7 @@ export default function PianoPage() {
       key: fase ? `piano-fase-${fase}` : 'piano',
       label: `Piano editoriale ${periodo}${faseLabel}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.map(a => a.url), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, ...(fase ? { fase } : {}), ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 50000 : 25000,
       timeoutMs: periodo === 'mensile' ? 130000 : 95000,
@@ -128,7 +164,7 @@ export default function PianoPage() {
         ? ' Nessun media caricato: i contenuti sono senza foto/video, caricali poi dal calendario.'
         : data.images_insufficient
           ? ` ${data.images_provided} media usati uno per contenuto: sono finiti prima dei post, gli ultimi restano senza media (caricane altri o assegnali dal calendario).`
-          : ` ${data.images_provided} media distribuiti, uno per contenuto (carosello 3-10).`
+          : ` ${data.images_provided} media abbinati dall'AI ai contenuti in base alla descrizione (carosello 3-10).`
       const chunkNote = data?.chunks_failed
         ? ` ⚠️ ${data.chunks_failed} di ${data.chunks_total} blocchi settimanali non ha generato contenuti (riprova per coprire quei giorni).`
         : ''
@@ -139,6 +175,34 @@ export default function PianoPage() {
       setMsg({ type: 'ok', text: `Piano generato${faseNote} (${data?.count ?? '?'} contenuti). I contenuti sono nel calendario.${imgNote}${chunkNote}${scartatiNote}` })
     } else {
       setMsg({ type: 'err', text: result.error || 'Generazione piano fallita' })
+    }
+  }
+
+  // Modalità "piano del pacchetto": numero/mix/social/qualità imposti dal pacchetto
+  // acquistato dal cliente. Sempre mensile. Le altre scelte manuali sono ignorate.
+  async function generaPacchetto() {
+    setMsg(null)
+    if (!clientePkg) return
+    if (!demo && !clienteId) { setMsg({ type: 'err', text: 'Cliente non selezionato' }); return }
+    if (piattaforme.length === 0) {
+      setMsg({ type: 'err', text: `Seleziona i ${clientePkg.social} social del pacchetto ${clientePkg.nome}` })
+      return
+    }
+    const aiSettings = readAISettings()
+    const result = await gen.run<{ count?: number; articolo_blog?: boolean; pacchetto_troncati?: number; images_provided?: number }>({
+      key: 'piano-pacchetto',
+      label: `Piano pacchetto ${clientePkg.nome}`,
+      url: '/api/generate/plan',
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo: 'mensile', quality: 'auto', media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind })), include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...aiSettings },
+      href: '/dashboard/calendario',
+      estMs: 55000,
+      timeoutMs: 140000,
+    })
+    if (result.ok) {
+      const d = result.data
+      setMsg({ type: 'ok', text: `Piano ${clientePkg.nome} generato (${d?.count ?? '?'} contenuti${d?.articolo_blog ? ' + articolo blog collegato' : ''}). Sono nel calendario, in stato Da approvare.` })
+    } else {
+      setMsg({ type: 'err', text: result.error || 'Generazione piano pacchetto fallita' })
     }
   }
 
@@ -218,6 +282,15 @@ export default function PianoPage() {
             className="rounded border-gray-300"
           />
           <span className="text-sm text-gray-700">Effetti virali su reel e video (transizioni rapide, hook aggressivo)</span>
+        </label>
+        <label className="flex items-center gap-2 mt-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={useWebTrends}
+            onChange={e => setUseWebTrends(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          <span className="text-sm text-gray-700">Trend dal web reali (ricerca i format del momento per il settore — solo piano mensile/pacchetto; +qualche secondo e piccolo costo)</span>
         </label>
         <p className="text-xs text-gray-500 mt-2">
           Vale per i template visual di reel e caroselli. Con Auto decide l’AI in base al brand.
@@ -358,7 +431,7 @@ export default function PianoPage() {
                 <li>• <span className="font-medium">MP4</span> usato direttamente come video/reel quando assegnato a quel formato</li>
               </ul>
               <p className="mt-1.5 text-gray-500">
-                Carica tutto qui sotto in un colpo solo: foto e MP4 verranno assegnati in ordine ai contenuti del piano.
+                Carica tutto qui sotto in un colpo solo: dai un nome a ogni media e l&apos;AI assegnerà a ogni contenuto la foto giusta in base alla descrizione.
               </p>
             </div>
           </div>
@@ -381,31 +454,63 @@ export default function PianoPage() {
           {uploadError && <p className="text-xs text-red-600 mt-2">{uploadError}</p>}
 
           {planAssets.length > 0 && (
-            <div className="mt-3 grid grid-cols-6 sm:grid-cols-8 gap-1.5">
-              {planAssets.map((a, i) => (
-                <div key={a.url + i} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100">
-                  {a.kind === 'video' || a.mime?.startsWith('video/') || isVideoUrl(a.url) ? (
-                    <video src={a.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removePlanImage(i)}
-                    className="absolute inset-0 bg-black/0 group-hover:bg-black/50 flex items-center justify-center transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-white opacity-0 group-hover:opacity-100" />
-                  </button>
-                </div>
-              ))}
-            </div>
+            <>
+              <p className="mt-3 text-[11px] text-gray-500">Dai un nome a ogni media col prodotto che contiene — l&apos;AI lo userà per scegliere la foto giusta per ogni contenuto.</p>
+              <div className="mt-1.5 grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {planAssets.map((a, i) => (
+                  <div key={a.url + i} className="rounded-lg overflow-hidden border border-gray-200 bg-white">
+                    <div className="relative group aspect-square bg-gray-100">
+                      {a.kind === 'video' || a.mime?.startsWith('video/') || isVideoUrl(a.url) ? (
+                        <video src={a.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removePlanImage(i)}
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 text-red-600 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Rimuovi media"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <input
+                      value={a.name || ''}
+                      onChange={e => renamePlanAsset(i, e.target.value)}
+                      placeholder="Nome prodotto…"
+                      className="w-full text-[11px] px-2 py-1.5 border-t border-gray-100 focus:outline-none focus:bg-violet-50/40"
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
+        {/* Modalità pacchetto: se il cliente ha un pacchetto, un click genera i contenuti compresi */}
+        {clientePkg && (
+          <div className="mb-3 p-3 rounded-xl bg-white/70 border border-emerald-200">
+            <p className="text-xs text-gray-700">
+              Cliente con pacchetto <span className="font-bold text-emerald-700">{clientePkg.nome}</span>: {clientePkg.contenutiMese} contenuti/mese ({clientePkg.postCaroselli} post-caroselli + {clientePkg.reelBrevi} reel/short) su {clientePkg.social} social, qualità <span className="uppercase">{clientePkg.quality}</span>{clientePkg.articoloBlog ? ' + articolo blog collegato' : ''}.
+            </p>
+            <button
+              onClick={generaPacchetto}
+              disabled={runningPkg || running || uploadingImages || piattaforme.length === 0}
+              className="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+            >
+              {runningPkg ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+              {runningPkg ? 'Generazione pacchetto...' : `Genera piano del pacchetto ${clientePkg.nome}`}
+            </button>
+            <p className="mt-1.5 text-[11px] text-gray-500 text-center">Numero, mix formati e qualità imposti dal pacchetto. Seleziona i {clientePkg.social} social sopra.</p>
+          </div>
+        )}
+
+        {clientePkg && <p className="text-[11px] text-gray-400 mb-2 text-center">— oppure genera un piano libero (scegli tu i parametri) —</p>}
+
         <button
           onClick={chiediConferma}
-          disabled={running || uploadingImages || piattaforme.length === 0}
+          disabled={running || runningPkg || uploadingImages || piattaforme.length === 0}
           className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
         >
           {running ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
@@ -465,8 +570,8 @@ export default function PianoPage() {
       {/* Hint */}
       <div className="mt-4 flex items-start gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
         <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
-        <p>I contenuti verranno creati in stato <span className="font-mono bg-white px-1 rounded">BOZZA</span>.
-        Dovrai approvarli dal <a href="/dashboard/calendario" className="text-brand-600 hover:underline">calendario</a> prima della pubblicazione.</p>
+        <p>I contenuti verranno creati in stato <span className="font-mono bg-white px-1 rounded">DA APPROVARE</span>.
+        Dal <a href="/dashboard/calendario" className="text-brand-600 hover:underline">calendario</a> li approvi (verde → sync Blotato) o li rifiuti (rosso → Non approvati) prima della pubblicazione.</p>
       </div>
     </div>
   )

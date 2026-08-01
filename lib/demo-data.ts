@@ -232,6 +232,7 @@ export const demoClienti: Cliente[] = [
     email: 'info@silkincom.com',
     telefono: null,
     piano: 'pro',
+    pacchetto: 'crescita',
     contenuti_mese: 30,
     attivo: true,
     blog_domain: null,

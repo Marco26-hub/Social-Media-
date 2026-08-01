@@ -1,7 +1,7 @@
 export type Status =
   | 'BOZZA' | 'IDEA' | 'DA_APPROVARE' | 'APPROVATO'
   | 'IN_PUBBLICAZIONE' | 'PUBBLICATO' | 'ERRORE'
-  | 'ERRORE_MANUALE' | 'DRY_RUN_OK' | 'ARCHIVIATO'
+  | 'ERRORE_MANUALE' | 'DRY_RUN_OK' | 'ARCHIVIATO' | 'NON_APPROVATO'
 
 export type Canale = 'instagram' | 'facebook' | 'tiktok' | 'pinterest' | 'linkedin' | 'youtube_shorts' | 'blog' | 'threads' | 'x'
 export type Formato = 'post' | 'carousel' | 'reel' | 'story' | 'pin' | 'short' | 'video' | 'articolo'
@@ -25,6 +25,7 @@ export interface Cliente {
   email: string | null
   telefono: string | null
   piano: 'free' | 'pro' | 'agency' | 'enterprise'
+  pacchetto: 'presenza' | 'crescita' | null
   contenuti_mese: number
   attivo: boolean
   blog_domain: string | null
