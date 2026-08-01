@@ -21,6 +21,18 @@ import { getPackage, type PackageSpec } from '@/lib/packages'
 import { buildBrandContext } from '@/lib/brand-context'
 import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage } from '@/lib/production-cycle'
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
+// Governo di ORARI (e del solo vincolo di giorno che dipende dal canale): il
+// piano non deve più affidarsi a un default fisso '10:00' né agli orari a caso
+// del modello. Fasce per canale + cadenza dal pacchetto vivono in lib/scheduling.
+import {
+  cadenzaDaPacchetto,
+  getCanaleSlots,
+  giornoValidoPerCanale,
+  isWeekend,
+  pickSlot,
+  prossimoGiornoValido,
+  slotsPerPrompt,
+} from '@/lib/scheduling'
 
 // Standard del piano: composti dalla "bibbia" condivisa (lib/prompt-standards).
 // Forza DIVERSITÀ + funnel strategico + SEO/GEO + copy professionale.
@@ -377,6 +389,27 @@ ${buildExtendedOutputSchema(contentQuality)}
     // Contesto stagionale calcolato sull'intero range del piano (comune a tutti i blocchi).
     const temporalContext = buildTemporalContext(chunks[0].start, chunks[chunks.length - 1].end)
 
+    // --- Cadenza + fasce orarie (dal pacchetto e dalle piattaforme) ----------
+    // Prima il prompt non diceva NULLA sugli orari e il modello li inventava
+    // (09:30, 18:45, 19:15...) mentre il fallback schiacciava tutto su '10:00'.
+    // Ora il modello riceve: quante uscite a settimana, su quanti giorni, quante
+    // al massimo nello stesso giorno (cadenza del pacchetto) e le fasce reali di
+    // ogni canale selezionato. L'enforcement resta comunque deterministico sotto.
+    // Passiamo un target PER SETTIMANA (i blocchi del mensile sono settimanali),
+    // quindi periodo 'settimanale'; con pacchetto il 4° parametro è ignorato.
+    const targetPerSettimana = pkg
+      ? pkgPerWeek
+      : periodoEff === 'mensile'
+        ? chunks[0].targetMax
+        : chunks.reduce((sum, c) => sum + c.targetMax, 0)
+    const cadenza = cadenzaDaPacchetto(pkg, 'settimanale', includeWeekend, targetPerSettimana)
+    const cadenzaContext = `
+
+CADENZA DEL PIANO — vincolante:
+- Ritmo: ${cadenza.contenutiSettimana} contenuti a settimana, distribuiti su ${cadenza.giorniAttivi} giorni DIVERSI${includeWeekend ? '' : ' (solo lun-ven)'}.
+- Massimo ${cadenza.maxPerGiorno} contenut${cadenza.maxPerGiorno === 1 ? 'o' : 'i'} nello stesso giorno.${cadenza.maxPerGiorno === 1 ? ' Mai due contenuti nella stessa data.' : ' Se un giorno ne ospita più d\'uno, devono essere su canali diversi e a orari diversi.'}`
+    const orariCadenzaPrompt = `${cadenzaContext}${slotsPerPrompt(piattaforme)}`.trim()
+
     // Trend web reali (opt-in): una sola ricerca prima dei blocchi, iniettata in tutti.
     // SOLO per il mensile: la ricerca è awaited sul path critico (i blocchi la usano nel
     // prompt) e il mensile ha budget timeout ampio (130-140s); il settimanale (95s, con
@@ -405,12 +438,13 @@ ${brandContext || 'BRAND non ancora configurato: resta coerente con i prodotti e
 PRODOTTI:
 ${productsJson}
 
-Distribuzione: alterna mattina (9-11) e sera (18-21).
 ${includeWeekend
   ? 'Distribuisci i contenuti su TUTTI i 7 giorni, weekend (sabato e domenica) COMPRESI: lun/gio = inspiration, ven = vendita/promo, sab/dom = community/lifestyle.'
   : 'Pubblica SOLO da lunedi a venerdi: NIENTE contenuti sabato e domenica. Lun/gio = inspiration, ven = vendita/promo.'}
 Non concentrare prodotti in pochi giorni.
 DATE — vincolante: usa date REALI dentro ${chunk.start}..${chunk.end}, distribuite su GIORNI DIVERSI (spalma i contenuti sull'intero range, non ammucchiarli sullo stesso giorno e soprattutto NON metterli tutti su ${chunk.start}). Mai placeholder "YYYY-MM-DD".
+
+${orariCadenzaPrompt}
 Tono moderno fashion coerente con brand. Ogni contenuto deve sembrare attuale e social-native: POV, micro-storia, swipe tension, behind-the-scenes, myth-busting o creator-style voice quando coerente; mai copy statico/corporate.
 
 Output SOLO JSON array valido:
@@ -509,7 +543,10 @@ Output SOLO JSON array valido:
     }
     const chunkDays = new Map<Chunk, string[]>()
     const chunkDateCursor = new Map<Chunk, number>()
-    function spreadDate(chunk: Chunk): string {
+    // Giorni reali del blocco (weekend escluso se il cliente lo esclude). Estratta
+    // da spreadDate perché ora serve anche alle correzioni di giorno: qualsiasi
+    // spostamento deve scegliere DENTRO questa lista, mai fuori dal range.
+    function giorniDelChunk(chunk: Chunk): string[] {
       let days = chunkDays.get(chunk)
       if (!days) {
         const all = enumerateDays(chunk.start, chunk.end)
@@ -518,15 +555,61 @@ Output SOLO JSON array valido:
         days = weekdays.length ? weekdays : all
         chunkDays.set(chunk, days)
       }
+      return days
+    }
+    function spreadDate(chunk: Chunk): string {
+      const days = giorniDelChunk(chunk)
       const cursor = chunkDateCursor.get(chunk) ?? 0
       chunkDateCursor.set(chunk, cursor + 1)
       return days[cursor % days.length]
+    }
+
+    // --- Orari governati: stato condiviso da TUTTO il batch ------------------
+    // `slotUsati` contiene le assegnazioni già fatte (chiavi gestite da pickSlot):
+    // passandolo a ogni chiamata, due contenuti dello stesso canale non possono
+    // finire stesso giorno + stessa ora. `contenutiPerGiorno` fa rispettare
+    // cadenza.maxPerGiorno senza toccare la distribuzione di spreadDate.
+    const slotUsati = new Set<string>()
+    const contenutiPerGiorno = new Map<string, number>()
+
+    // Giorno con capacità residua: se la data proposta ha già raggiunto il tetto
+    // di contenuti/giorno della cadenza, si sposta al giorno VALIDO più vicino del
+    // blocco che ha ancora spazio. Se il blocco è pieno si resta dov'è (meglio un
+    // giorno affollato che una data fuori range).
+    function giornoConCapacita(canale: string, giorno: string, giorni: string[]): string {
+      if ((contenutiPerGiorno.get(giorno) ?? 0) < cadenza.maxPerGiorno) return giorno
+      const target = new Date(`${giorno}T00:00:00Z`).getTime()
+      const candidati = giorni
+        .filter(d => giornoValidoPerCanale(canale, d))
+        .sort((a, b) => Math.abs(new Date(`${a}T00:00:00Z`).getTime() - target) - Math.abs(new Date(`${b}T00:00:00Z`).getTime() - target))
+      for (const d of candidati) {
+        if ((contenutiPerGiorno.get(d) ?? 0) < cadenza.maxPerGiorno) return d
+      }
+      return giorno
+    }
+
+    // Telemetria (non decide nulla): l'orario proposto dal modello cadeva davvero
+    // in una fascia di quel canale? Misura quanto il vincolo ORARI del prompt
+    // viene rispettato — l'orario effettivo lo assegna comunque pickSlot.
+    function oraFuoriFascia(canale: string, giorno: string, ora: string): boolean {
+      if (!TIME_RE.test(ora)) return true
+      const slots = getCanaleSlots(canale)
+      const fasce = isWeekend(giorno)
+        ? (Object.keys(slots.weekend).length ? slots.weekend : slots.feriale)
+        : (Object.keys(slots.feriale).length ? slots.feriale : slots.weekend)
+      const inMinuti = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5))
+      const m = inMinuti(ora)
+      return !Object.values(fasce).some(lista => {
+        if (!lista?.length) return false
+        return m >= inMinuti(lista[0]) - 20 && m <= inMinuti(lista[lista.length - 1]) + 20
+      })
     }
 
     // Conta le correzioni forzate (canale/data fuori scelta): sono invisibili
     // all'utente ma possono ammassare i contenuti sul primo canale → va segnalato.
     let itemsCorrettiCanale = 0
     let itemsCorrettiData = 0
+    let itemsOraFuoriFascia = 0
     function sanitizeItem(raw: Record<string, unknown>, chunk: Chunk): Record<string, unknown> {
       const out = { ...raw }
       const rawDate = typeof out.data_pubblicazione === 'string' ? out.data_pubblicazione : ''
@@ -552,14 +635,40 @@ Output SOLO JSON array valido:
           }
         }
       }
-      const rawTime = typeof out.ora_pubblicazione === 'string' ? out.ora_pubblicazione : ''
-      out.ora_pubblicazione = TIME_RE.test(rawTime) ? rawTime : '10:00'
+      // Canale e formato PRIMA dell'orario: adesso l'orario dipende da entrambi
+      // (fasce del canale + regola di formato), quindi vanno normalizzati prima.
       const rawCanale = typeof out.canale === 'string' ? out.canale.toLowerCase().trim() : ''
       const canaleOk = VALID_CANALI.has(rawCanale) && piattaformeSet.has(rawCanale)
       out.canale = canaleOk ? rawCanale : fallbackCanale
       if (!canaleOk) itemsCorrettiCanale++
       const rawFormato = typeof out.formato === 'string' ? out.formato.toLowerCase().trim() : ''
       out.formato = VALID_FORMATI.has(rawFormato) ? rawFormato : 'post'
+      const canale = String(out.canale)
+      const formato = String(out.formato)
+
+      // --- Giorno: due sole correzioni, entrambe dentro i giorni del blocco ---
+      // spreadDate resta la logica di distribuzione: qui si interviene solo se
+      // (a) il canale nel weekend non ha pubblico (linkedin, blog) oppure
+      // (b) il giorno ha già raggiunto il maxPerGiorno della cadenza.
+      const giorniChunk = giorniDelChunk(chunk)
+      const giornoProposto = typeof out.data_pubblicazione === 'string' ? out.data_pubblicazione : spreadDate(chunk)
+      const giorno = giornoConCapacita(canale, prossimoGiornoValido(canale, giornoProposto, giorniChunk), giorniChunk)
+      if (giorno !== giornoProposto) itemsCorrettiData++
+      out.data_pubblicazione = giorno
+      contenutiPerGiorno.set(giorno, (contenutiPerGiorno.get(giorno) ?? 0) + 1)
+
+      // --- Ora: niente più default fisso '10:00' -----------------------------
+      // pickSlot si applica SEMPRE (non solo quando l'ora manca): un orario fuori
+      // dalle fasce del canale è sbagliato quanto un orario assente. Riceve il Set
+      // condiviso del batch, quindi non può ripetere canale+giorno+ora.
+      const rawTime = typeof out.ora_pubblicazione === 'string' ? out.ora_pubblicazione.trim() : ''
+      if (oraFuoriFascia(canale, giorno, rawTime)) itemsOraFuoriFascia++
+      const rawObiettivo = typeof out.obiettivo === 'string' ? out.obiettivo.toLowerCase().trim() : ''
+      out.ora_pubblicazione = pickSlot(
+        { canale, formato, obiettivo: rawObiettivo || (typeof obiettivo === 'string' ? obiettivo.toLowerCase().trim() : '') },
+        giorno,
+        slotUsati,
+      )
       return out
     }
 
@@ -680,7 +789,8 @@ Output SOLO JSON array valido:
         effectiveClienteId,
         id_contenuto,
         item.data_pubblicazione || null,
-        item.ora_pubblicazione || '10:00',
+        // sanitizeItem garantisce sempre un HH:MM governato: nessun default fisso.
+        item.ora_pubblicazione,
         item.canale || 'instagram',
         item.formato || 'post',
         item.obiettivo || obiettivo || 'mix',
@@ -755,11 +865,15 @@ Output SOLO JSON array valido:
     let articoloBlogInserito = false
     if (pkg?.articoloBlog) {
       try {
+        // Anche la voce blog esce dal governo orari: mattina di un feriale del
+        // primo blocco (il blog nel weekend perde la giornata di indicizzazione).
+        const giornoArticolo = prossimoGiornoValido('blog', chunks[0].start, giorniDelChunk(chunks[0]))
+        const oraArticolo = pickSlot({ canale: 'blog', formato: 'articolo', obiettivo: 'educazione' }, giornoArticolo, slotUsati)
         await insertCalendario(
           ['cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione', 'canale', 'formato', 'obiettivo', 'nome_prodotto', 'tema', 'hook', 'caption', 'cta', 'status', 'link_prodotto', 'link_prodotto_finale', 'quality_level'],
-          [effectiveClienteId, `C${Date.now().toString(36).toUpperCase()}_ART`, chunks[0].start, '10:00', 'blog', 'articolo', 'educazione', `Articolo SEO+GEO — pacchetto ${pkg.nome}`, 'Articolo SEO+GEO del mese', 'Approfondimento SEO/GEO incluso nel pacchetto', 'Articolo SEO+GEO incluso nel pacchetto: generalo e gestiscilo nella sezione Blog.', 'Vai alla sezione Blog', 'DA_APPROVARE', '/dashboard/blog', '/dashboard/blog', pkg.quality],
+          [effectiveClienteId, `C${Date.now().toString(36).toUpperCase()}_ART`, giornoArticolo, oraArticolo, 'blog', 'articolo', 'educazione', `Articolo SEO+GEO — pacchetto ${pkg.nome}`, 'Articolo SEO+GEO del mese', 'Approfondimento SEO/GEO incluso nel pacchetto', 'Articolo SEO+GEO incluso nel pacchetto: generalo e gestiscilo nella sezione Blog.', 'Vai alla sezione Blog', 'DA_APPROVARE', '/dashboard/blog', '/dashboard/blog', pkg.quality],
         )
-        inseriti.push({ id_contenuto: 'ARTICOLO_BLOG', canale: 'blog', data_pubblicazione: chunks[0].start })
+        inseriti.push({ id_contenuto: 'ARTICOLO_BLOG', canale: 'blog', data_pubblicazione: giornoArticolo })
         articoloBlogInserito = true
       } catch (error) {
         console.warn('[plan] voce articolo blog non inserita:', error instanceof Error ? error.message : error)
@@ -779,6 +893,10 @@ Output SOLO JSON array valido:
       // Correzioni forzate rese visibili: canale riassegnato / data spostata nel range.
       ...(itemsCorrettiCanale && { items_canale_corretto: itemsCorrettiCanale }),
       ...(itemsCorrettiData && { items_data_corretta: itemsCorrettiData }),
+      // Quanti orari proposti dal modello erano fuori dalle fasce del canale
+      // (l'orario finale è comunque quello governato da pickSlot).
+      ...(itemsOraFuoriFascia && { items_ora_fuori_fascia: itemsOraFuoriFascia }),
+      cadenza: { contenuti_settimana: cadenza.contenutiSettimana, giorni_attivi: cadenza.giorniAttivi, max_per_giorno: cadenza.maxPerGiorno },
       quality_level: contentQuality,
       quality_downgraded: isQualityDowngraded(requestedQuality, contentQuality),
       images_provided: mediaPool.length,
