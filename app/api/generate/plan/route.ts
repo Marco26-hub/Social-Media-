@@ -18,6 +18,7 @@ import { getClientGenerationContext } from '@/lib/client-context'
 import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS, DIVERSITY_STANDARDS, FUNNEL_STANDARDS, HOOK_FORMULAS, COPY_FRAMEWORKS, COPY_ANGLES } from '@/lib/prompt-standards'
 import { fetchSectorTrends, buildTrendContext } from '@/lib/trends'
 import { getPackage, type PackageSpec } from '@/lib/packages'
+import { buildBrandContext } from '@/lib/brand-context'
 import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage } from '@/lib/production-cycle'
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
 
@@ -266,7 +267,9 @@ export async function POST(request: Request) {
     // si risolve da richiesta + piano del cliente come prima.
     const contentQuality = pkg ? pkg.quality : resolveContentQuality({ requestedQuality, piano: client?.piano })
     const piattaformeStr = piattaforme.join(', ')
-    const brandJson = JSON.stringify(brand || {}, null, 2)
+    // Stesso contesto brand del generatore di post singoli (campi espliciti + default),
+    // non più un dump JSON grezzo. Vuoto se il brand non è configurato → nota esplicita.
+    const brandContext = buildBrandContext(brand)
     const productsJson = JSON.stringify(products || [], null, 2)
     const historyContext = buildHistoryContext(recentRows as Record<string, unknown>[])
 
@@ -384,8 +387,7 @@ ${buildExtendedOutputSchema(contentQuality)}
 Crea contenuti per ${chunk.label}, dal ${chunk.start} al ${chunk.end}, per / ${piattaformeStr} /.
 Genera TRA ${targetMin} E ${targetMax} contenuti (mai meno di ${targetMin}). Ogni data_pubblicazione DEVE cadere dentro il range ${chunk.start}..${chunk.end} incluso — mai fuori, mai un placeholder generico.
 
-BRAND:
-${brandJson}
+${brandContext || 'BRAND non ancora configurato: resta coerente con i prodotti e la stagione, NON inventare tono di voce, valori o claim.'}
 
 PRODOTTI:
 ${productsJson}
