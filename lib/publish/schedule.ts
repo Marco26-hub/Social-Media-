@@ -7,6 +7,8 @@ import { isDemo } from '@/lib/demo'
 import { validateMediaUrls } from '@/lib/media-validate'
 import { getBlotatoKey } from '@/lib/blotato-key'
 import { resolveBlotatoTarget } from '@/lib/blotato-accounts'
+import { CANALE_TO_BLOTATO, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
+import { preflightRow } from '@/lib/publish/preflight'
 
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 
@@ -39,28 +41,7 @@ async function isDryRunForCliente(clienteId: string): Promise<boolean> {
 
 type ContentRow = Record<string, unknown>
 
-// Mapping canale interno → nome piattaforma atteso da Blotato (schema MCP blotato_create_post).
-// X interno = 'twitter' per Blotato; youtube_shorts = 'youtube'. 'blog' NON ha target Blotato.
-const CANALE_TO_BLOTATO: Record<string, string> = {
-  instagram: 'instagram',
-  facebook: 'facebook',
-  tiktok: 'tiktok',
-  pinterest: 'pinterest',
-  linkedin: 'linkedin',
-  threads: 'threads',
-  x: 'twitter',
-  youtube_shorts: 'youtube',
-}
-
-// Timestamp ISO 8601 con timezone (Blotato richiede scheduledTime ISO).
-function toIso(data: unknown, ora: unknown): string {
-  const d = String(data || '').trim()
-  const t = String(ora || '00:00').slice(0, 5)
-  if (!d) throw new Error('data_pubblicazione mancante: impossibile programmare il post')
-  const dt = new Date(`${d}T${t}:00`)
-  if (isNaN(dt.getTime())) throw new Error(`data/ora non valide: ${d} ${t}`)
-  return dt.toISOString()
-}
+// Mapping canale/piattaforma e conversione fuso: source-of-truth in lib/publish/blotato-map.
 
 // Esito esplicito della pubblicazione: NIENTE fallback silenzioso.
 // Il chiamante sa sempre se ha davvero programmato, se è dry-run o se è stato saltato.
@@ -72,6 +53,7 @@ export type PublishOutcome =
 export async function scheduleOnBlotato(
   clienteId: string,
   row: ContentRow,
+  timezone: string = DEFAULT_TIMEZONE,
 ): Promise<PublishOutcome> {
   // Guardia pubblicazione: se non live (demo o PUBLISH_ENABLED != true) → dry-run.
   // Il contenuto resta APPROVATO senza blotato_post_id: verrà pubblicato quando
@@ -127,6 +109,17 @@ export async function scheduleOnBlotato(
     throw new Error(`Account Blotato non collegato per il canale '${canale}': collega l'account nel workspace Blotato`)
   }
 
+  // Campi target dipendenti dal FORMATO (non dall'account, quindi qui e non nel resolver):
+  // - mediaType per IG/FB: senza, un post-immagine finisce reel di default → sbagliato.
+  // - firstComment IG: gli hashtag Instagram vanno nel primo commento, non in caption.
+  // - link FB: anteprima link per i post Facebook.
+  const mediaType = formatoToMediaType(formato)
+  if (mediaType && (platform === 'instagram' || platform === 'facebook')) target.mediaType = mediaType
+  const hashtag = String(row.hashtag || '').trim()
+  if (platform === 'instagram' && hashtag) target.firstComment = hashtag
+  const linkProdottoFinale = String(row.link_prodotto_finale || row.link_prodotto || '').trim()
+  if (platform === 'facebook' && linkProdottoFinale && formato !== 'story') target.link = linkProdottoFinale
+
   // Costruisci il contenuto testuale completo per la piattaforma (hook+caption+cta+hashtag).
   const text = buildPlatformContent(canale, formato, row)
 
@@ -145,7 +138,24 @@ export async function scheduleOnBlotato(
     }
   }
 
-  const scheduledTime = toIso(row.data_pubblicazione, row.ora_pubblicazione)
+  const scheduledTime = zonedToUtcIso(row.data_pubblicazione, row.ora_pubblicazione, timezone)
+
+  // PRE-FLIGHT: "avvisa + blocca solo il sync". Se la riga non è pubblicabile su
+  // Blotato (es. data nel passato, media mancanti, carosello fuori 2–10), NON tentiamo
+  // il POST che fallirebbe: scriviamo il motivo e usciamo come skipped.
+  const pf = preflightRow(row, timezone)
+  if (!pf.ok) {
+    const reason = pf.errors.map(e => e.message).join('; ')
+    if (row.id) {
+      await q(
+        `UPDATE calendario SET blotato_status = 'failed', errore_tecnico = $1, blotato_sync_at = now(), updated_at = now()
+         WHERE id = $2 AND cliente_id = $3`,
+        [`Pre-flight Blotato: ${reason.slice(0, 500)}`, row.id, clienteId],
+      ).catch(() => {})
+    }
+    console.warn(`[Blotato] pre-flight KO per ${String(row.id || '')}: ${reason}`)
+    return { status: 'skipped', reason }
+  }
 
   // Lock di pubblicazione atomico: prima di POST /v2/posts marchiamo la riga con
   // publish_lock_id. Se un altro processo l'ha già lockata (retry concorrente,

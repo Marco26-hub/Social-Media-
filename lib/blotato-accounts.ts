@@ -10,6 +10,8 @@
 // NIENTE fallback silenzioso: se un canale non ha un account Blotato collegato,
 // l'errore è esplicito e dice cosa collegare, non pubblica a caso.
 
+import { CANALE_TO_BLOTATO } from '@/lib/publish/blotato-map'
+
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 
 export type BlotatoSubaccount = { id: string; name?: string; type?: string }
@@ -79,18 +81,6 @@ export async function listBlotatoAccounts(key: string, force = false): Promise<B
   return accounts
 }
 
-// Mapping canale interno → piattaforma Blotato (allineato a CANALE_TO_BLOTATO in schedule.ts).
-const CANALE_TO_PLATFORM: Record<string, string> = {
-  instagram: 'instagram',
-  facebook: 'facebook',
-  tiktok: 'tiktok',
-  pinterest: 'pinterest',
-  linkedin: 'linkedin',
-  threads: 'threads',
-  x: 'twitter',
-  youtube_shorts: 'youtube',
-}
-
 export type ResolvedTarget = {
   accountId: string
   // target da mettere nel payload /v2/posts: { targetType, + campi per-piattaforma }.
@@ -104,7 +94,7 @@ export async function resolveBlotatoTarget(
   canale: string,
   row: Record<string, unknown>,
 ): Promise<ResolvedTarget> {
-  const platform = CANALE_TO_PLATFORM[canale]
+  const platform = CANALE_TO_BLOTATO[canale]
   if (!platform) throw new Error(`Canale '${canale}' non pubblicabile via Blotato`)
 
   const accounts = await listBlotatoAccounts(key)
@@ -133,13 +123,19 @@ export async function resolveBlotatoTarget(
     const page = account.subaccounts[0]
     if (page) target.pageId = page.id
   } else if (platform === 'tiktok') {
-    // Default sicuri per pubblicazione pubblica; l'utente può raffinarli poi.
+    // TikTok richiede TUTTI questi campi (contratto v2). Default sicuri per
+    // pubblicazione pubblica; l'utente può raffinarli poi.
     target.privacyLevel = 'PUBLIC_TO_EVERYONE'
-    target.isYourBrand = false
+    target.disabledComments = false
+    target.disabledDuet = false
+    target.disabledStitch = false
     target.isBrandedContent = false
+    target.isYourBrand = false
+    target.isAiGenerated = true
   } else if (platform === 'youtube') {
     target.title = (str(row.hook) || str(row.nome_prodotto) || 'Video').slice(0, 90)
     target.privacyStatus = 'public'
+    target.shouldNotifySubscribers = false
   }
 
   return { accountId: account.id, target }

@@ -32,6 +32,9 @@ export default function ClienteDetailPage() {
   const [pacchetto, setPacchetto] = useState('')
   const [savingPkg, setSavingPkg] = useState(false)
   const [pkgMsg, setPkgMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [timezone, setTimezone] = useState('Europe/Rome')
+  const [savingTz, setSavingTz] = useState(false)
+  const [tzMsg, setTzMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -40,6 +43,7 @@ export default function ClienteDetailPage() {
         if (c) {
           setCliente(c)
           setPacchetto(c.pacchetto || '')
+          setTimezone(c.timezone || 'Europe/Rome')
           setContenuti(demoContenuti.filter(x => x.cliente_id === c.id).slice(0, 10))
         }
         setLoading(false)
@@ -52,7 +56,7 @@ export default function ClienteDetailPage() {
         ])
         const clienti = Array.isArray(cRes) ? cRes as Cliente[] : []
         const c = clienti.find(x => x.id === id || x.slug === id)
-        if (c) { setCliente(c); setBlogDomain(c.blog_domain || ''); setPacchetto(c.pacchetto || '') }
+        if (c) { setCliente(c); setBlogDomain(c.blog_domain || ''); setPacchetto(c.pacchetto || ''); setTimezone(c.timezone || 'Europe/Rome') }
         setContenuti((Array.isArray(calRes) ? calRes : []).slice(0, 10))
       } catch {}
       setLoading(false)
@@ -101,6 +105,28 @@ export default function ClienteDetailPage() {
       setPkgMsg({ type: 'err', text: (e as Error).message })
     } finally {
       setSavingPkg(false)
+    }
+  }
+
+  // Fuso orario del cliente: interpreta le ore del piano e converte in UTC per Blotato.
+  async function saveTimezone() {
+    if (!cliente) return
+    setSavingTz(true)
+    setTzMsg(null)
+    try {
+      const res = await fetch('/api/data/clienti', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: cliente.id, timezone }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
+      setCliente(prev => prev ? { ...prev, timezone } : prev)
+      setTzMsg({ type: 'ok', text: 'Fuso orario aggiornato.' })
+    } catch (e) {
+      setTzMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSavingTz(false)
     }
   }
 
@@ -238,6 +264,33 @@ export default function ClienteDetailPage() {
           <div className={`mt-2 text-xs flex items-center gap-1.5 ${pkgMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>
             {pkgMsg.type === 'ok' ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
             {pkgMsg.text}
+          </div>
+        )}
+      </div>
+
+      {/* Fuso orario — usato per programmare i post su Blotato all'ora giusta */}
+      <div className="card p-5 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Clock className="w-4 h-4 text-teal-600" />
+          <h2 className="font-bold text-gray-900">Fuso orario</h2>
+        </div>
+        <p className="text-xs text-gray-500 mb-3">
+          Le ore del piano (es. 10:00) sono interpretate in questo fuso e convertite per la pubblicazione. Imposta il fuso del cliente.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <select value={timezone} onChange={e => setTimezone(e.target.value)} className="input flex-1 text-sm">
+            {['Europe/Rome', 'Europe/London', 'Europe/Paris', 'Europe/Madrid', 'Europe/Berlin', 'America/New_York', 'America/Los_Angeles', 'Asia/Dubai'].map(tz => (
+              <option key={tz} value={tz}>{tz}</option>
+            ))}
+          </select>
+          <button onClick={saveTimezone} disabled={savingTz} className="btn-primary py-2 px-4 justify-center whitespace-nowrap">
+            {savingTz ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva fuso'}
+          </button>
+        </div>
+        {tzMsg && (
+          <div className={`mt-2 text-xs flex items-center gap-1.5 ${tzMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>
+            {tzMsg.type === 'ok' ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+            {tzMsg.text}
           </div>
         )}
       </div>

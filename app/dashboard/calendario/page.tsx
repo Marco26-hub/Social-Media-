@@ -4,7 +4,9 @@ export const dynamic = 'force-dynamic'
 import { Fragment, useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid } from 'lucide-react'
+import CalendarGrid from '@/components/CalendarGrid'
+import { preflightRow } from '@/lib/publish/preflight'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
@@ -138,12 +140,26 @@ function CalendarioInner() {
   const [dryRun, setDryRun] = useState<boolean | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [vista, setVista] = useState<'lista' | 'griglia'>('lista')
+  const [clienteTz, setClienteTz] = useState('Europe/Rome')
   const demo = useRuntimeDemo()
 
   const clienteId = readClienteId()
 
   useEffect(() => {
     fetch('/api/data/brand').then(r => r.ok ? r.json() : null).then(setBrand).catch(() => setBrand(null))
+  }, [clienteId])
+
+  // Fuso del cliente attivo: usato dal pre-flight (badge/griglia) per validare l'orario.
+  useEffect(() => {
+    if (!clienteId) return
+    fetch('/api/data/clienti')
+      .then(r => r.ok ? r.json() : [])
+      .then((rows: Array<{ id?: string; slug?: string; timezone?: string }>) => {
+        const c = Array.isArray(rows) ? rows.find(x => x.id === clienteId || x.slug === clienteId) : null
+        if (c?.timezone) setClienteTz(c.timezone)
+      })
+      .catch(() => {})
   }, [clienteId])
 
   // Modalità pubblicazione del cliente (dry_run): REAL = pubblica, DEMO = prova.
@@ -904,6 +920,22 @@ function CalendarioInner() {
         })}
       </div>
 
+      {/* Toggle vista: lista editoriale ↔ griglia calendario (stile Blotato) */}
+      <div className="flex items-center gap-1 mb-3">
+        <button
+          onClick={() => setVista('lista')}
+          className={`inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-colors ${vista === 'lista' ? 'bg-brand-600 text-white' : 'bg-white text-gray-600 border border-slate-200 hover:bg-slate-50'}`}
+        >
+          <List className="w-3.5 h-3.5" /> Lista
+        </button>
+        <button
+          onClick={() => setVista('griglia')}
+          className={`inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium transition-colors ${vista === 'griglia' ? 'bg-brand-600 text-white' : 'bg-white text-gray-600 border border-slate-200 hover:bg-slate-50'}`}
+        >
+          <LayoutGrid className="w-3.5 h-3.5" /> Griglia
+        </button>
+      </div>
+
       {/* Lista */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -923,6 +955,8 @@ function CalendarioInner() {
           <p className="text-lg">Nessun contenuto trovato</p>
           <p className="text-sm mt-1">Cambia i filtri o attendi il piano settimanale</p>
         </div>
+      ) : vista === 'griglia' ? (
+        <CalendarGrid items={calendarItems} tz={clienteTz} onSelect={setSelected} />
       ) : (
         <div className="space-y-3">
           {/* Barra selezione multipla — seleziona tutto + elimina in blocco */}
@@ -1043,6 +1077,14 @@ function CalendarioInner() {
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <span className="font-mono text-xs text-gray-400">{c.id_contenuto}</span>
                     <StatusBadge status={c.status} />
+                    {(() => {
+                      // Badge pre-flight Blotato: solo per contenuti che verranno sincronizzati
+                      // (non pubblicati/archiviati/non_approvati). Avvisa senza bloccare l'approvazione.
+                      if (['PUBBLICATO', 'NON_APPROVATO', 'ARCHIVIATO'].includes(c.status)) return null
+                      const pf = preflightRow(c as unknown as Record<string, unknown>, clienteTz)
+                      if (pf.ok) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 inline-flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Pronto Blotato</span>
+                      return <span title={pf.errors.map(e => e.message).join('; ')} className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Blocca sync</span>
+                    })()}
                     {c.quality_level && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700 uppercase">{c.quality_level}</span>
                     )}

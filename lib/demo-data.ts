@@ -233,6 +233,7 @@ export const demoClienti: Cliente[] = [
     telefono: null,
     piano: 'pro',
     pacchetto: 'crescita',
+    timezone: 'Europe/Rome',
     contenuti_mese: 30,
     attivo: true,
     blog_domain: null,

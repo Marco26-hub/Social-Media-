@@ -80,6 +80,10 @@ export async function POST() {
     [clienteId],
   )
 
+  // Fuso del cliente per la conversione scheduledTime (default Europe/Rome).
+  const tzRows = await q("SELECT timezone FROM clienti WHERE id = $1 LIMIT 1", [clienteId])
+  const timezone = String((tzRows[0] as { timezone?: string } | undefined)?.timezone || 'Europe/Rome')
+
   let synced = 0
   let dryRun = 0
   let skipped = 0
@@ -87,7 +91,7 @@ export async function POST() {
 
   for (const row of rows) {
     try {
-      const outcome = await scheduleOnBlotato(clienteId, row)
+      const outcome = await scheduleOnBlotato(clienteId, row, timezone)
       if (outcome.status === 'scheduled') synced++
       else if (outcome.status === 'dry_run') dryRun++
       else skipped++

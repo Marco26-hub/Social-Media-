@@ -221,7 +221,9 @@ export async function PATCH(request: Request) {
         const content = await q('SELECT * FROM calendario WHERE id = $1 AND cliente_id = $2', [id, cid])
         if (content.length) {
           const row = content[0] as Record<string, unknown>
-          const outcome = await scheduleOnBlotato(cid, row)
+          const tzRows = await q("SELECT timezone FROM clienti WHERE id = $1 LIMIT 1", [cid])
+          const timezone = String((tzRows[0] as { timezone?: string } | undefined)?.timezone || 'Europe/Rome')
+          const outcome = await scheduleOnBlotato(cid, row, timezone)
           publishStatus = outcome.status
           if (outcome.status === 'dry_run') publishNote = 'Pubblicazione disattivata (PUBLISH_ENABLED=false): contenuto approvato ma NON pubblicato. Sarà pubblicato quando abiliti la pubblicazione.'
           else if (outcome.status === 'skipped') publishNote = outcome.reason
