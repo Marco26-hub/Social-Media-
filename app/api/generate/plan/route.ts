@@ -212,6 +212,108 @@ function gruppoFormato(formato: string): GruppoFormato {
   return 'post'
 }
 
+// --- Distribuzione dei media sui blocchi: consapevole di TIPO e MARCATURA ----
+// Prima il pool veniva tagliato in fette CONTIGUE (blocco 1 = primi N file, ecc.).
+// L'ordine naturale del file picker però è "prima le 28 foto, poi i 4 MP4":
+// con 4 blocchi tutti gli MP4 finivano nell'ultimo e 3 reel su 4 restavano senza
+// video, pur avendo caricato ESATTAMENTE il materiale che la schermata chiedeva.
+// Stesso difetto per la marcatura manuale: 4 media marcati 'reel' caricati di
+// seguito finivano tutti nello stesso blocco.
+// Ora i media vengono prima RAGGRUPPATI per (marcatura, tipo) e poi assegnati ai
+// blocchi a round-robin DENTRO ogni gruppo: 28 foto + 4 MP4 su 4 blocchi danno
+// 7 foto + 1 MP4 per blocco qualunque sia l'ordine di caricamento.
+// Invarianti mantenute: ogni media compare in UN SOLO blocco (unicità globale),
+// nessun media resta inutilizzato, e dentro il blocco l'ordine è quello di
+// caricamento → la numerazione mostrata all'AI è stabile e coincide con quella
+// usata poi in fase di assegnazione (media_refs).
+function distribuisciMediaSuBlocchi(
+  pool: string[],
+  blocchi: number,
+  tagOf: (url: string) => MediaTag,
+): string[][] {
+  const k = Math.max(1, blocchi)
+  const out: string[][] = Array.from({ length: k }, () => [] as string[])
+  if (!pool.length) return out
+  // Gruppi in ordine di prima apparizione: funzione pura e deterministica
+  // (stesso input → stessa distribuzione), condizione necessaria perché la
+  // numerazione mostrata nel prompt sia riproducibile.
+  const gruppi = new Map<string, number[]>()
+  pool.forEach((url, idx) => {
+    const key = `${tagOf(url)}|${isVideoUrl(url) ? 'video' : 'immagine'}`
+    const lista = gruppi.get(key)
+    if (lista) lista.push(idx)
+    else gruppi.set(key, [idx])
+  })
+  // Offset rotante tra un gruppo e il successivo: senza, i gruppi più piccoli
+  // del numero di blocchi (es. 2 MP4 su 4 settimane) partirebbero tutti dal
+  // blocco 0 e le ultime settimane resterebbero scoperte.
+  let offset = 0
+  const indiciPerBlocco: number[][] = Array.from({ length: k }, () => [] as number[])
+  for (const indici of gruppi.values()) {
+    indici.forEach((poolIdx, j) => indiciPerBlocco[(offset + j) % k].push(poolIdx))
+    offset = (offset + indici.length) % k
+  }
+  indiciPerBlocco.forEach((indici, ci) => {
+    out[ci] = indici.sort((a, b) => a - b).map(i => pool[i])
+  })
+  return out
+}
+
+// --- Mix dei formati imposto al modello -------------------------------------
+// Il fabbisogno media mostrato all'utente NON è una stima libera: assume un mix
+// preciso (1 carosello ogni 3 contenuti statici, ~1 contenuto su 4 in formato
+// reel). Il prompt però non diceva nulla sui formati: il modello poteva generare
+// 12 caroselli e servivano 60 immagini invece delle 28 annunciate — il numero
+// mostrato non era garantito da nulla. Qui il mix diventa un vincolo scritto,
+// per BLOCCO (non per mese: il modello si ancora a quello che legge).
+// CAROSELLI_OGNI replica la costante omonima di lib/media-requirements.ts (non
+// esportata): se cambia lì va cambiata anche qui, altrimenti il piano promette
+// un fabbisogno e ne consuma un altro.
+const CAROSELLI_OGNI = 3
+// Quota reel del piano libero: stessa proporzione di QUOTA_REEL in
+// lib/media-requirements.ts, usata quando non c'è un pacchetto che detti il mix.
+const QUOTA_REEL_LIBERO = 0.25
+type MixFormati = { caroselli: number; reel: number; postSingoli: number; fonte: 'pacchetto' | 'libero' }
+
+// Ripartizione intera di un totale su N blocchi senza perdere né inventare unità
+// (6 reel su 4 settimane → 1,2,1,2 = 6): gli arrotondamenti per blocco farebbero
+// sballare il totale del mese in un verso o nell'altro.
+function quotaBlocco(totale: number, blocchi: number, indice: number): number {
+  if (blocchi <= 0) return 0
+  const t = Math.max(0, Math.round(totale))
+  return Math.floor(((indice + 1) * t) / blocchi) - Math.floor((indice * t) / blocchi)
+}
+
+function mixFormatiBlocco(pkg: PackageSpec | null, perBlocco: number, blocchi: number, indice: number): MixFormati {
+  const totale = Math.max(0, Math.round(perBlocco))
+  if (pkg) {
+    // Pacchetto: il mix è quello venduto (postCaroselli + reelBrevi), spalmato
+    // sui blocchi con la stessa aritmetica del fabbisogno mostrato a schermo.
+    const reel = quotaBlocco(pkg.reelBrevi, blocchi, indice)
+    const caroselli = quotaBlocco(Math.floor(pkg.postCaroselli / CAROSELLI_OGNI), blocchi, indice)
+    return { caroselli, reel, postSingoli: Math.max(0, totale - reel - caroselli), fonte: 'pacchetto' }
+  }
+  // Piano libero: proporzione dichiarata (25% reel, 1 carosello ogni 3 statici).
+  const reel = Math.round(totale * QUOTA_REEL_LIBERO)
+  const statici = Math.max(0, totale - reel)
+  const caroselli = Math.floor(statici / CAROSELLI_OGNI)
+  return { caroselli, reel, postSingoli: statici - caroselli, fonte: 'libero' }
+}
+
+function buildMixFormatiContext(mix: MixFormati): string {
+  const perCarosello = MEDIA_PER_FORMATO.carousel.immagini
+  const rigaCaroselli = mix.caroselli > 0
+    ? `- Al MASSIMO ${mix.caroselli} ${mix.caroselli === 1 ? 'contenuto' : 'contenuti'} con formato "carousel": ogni carosello consuma ${perCarosello} immagini, produrne di più lascia gli altri contenuti senza foto.`
+    : '- NESSUN carosello in questo blocco: il materiale caricato non ne prevede. Usa post/story/pin e reel.'
+  return `
+
+MIX DEI FORMATI IN QUESTO BLOCCO — vincolante (${mix.fonte === 'pacchetto' ? 'è il mix del pacchetto acquistato' : 'proporzione dichiarata: ~1 contenuto su 4 in formato reel, 1 carosello ogni 3 contenuti statici'}; il materiale che l'utente ha caricato è stato calcolato ESATTAMENTE su questi numeri):
+${rigaCaroselli}
+- ${mix.reel} ${mix.reel === 1 ? 'contenuto' : 'contenuti'} in formato reel/short/video (sono gli unici che possono usare un MP4).
+- I restanti ${mix.postSingoli} ${mix.postSingoli === 1 ? 'contenuto' : 'contenuti'}: post/story/pin, una sola immagine ciascuno.
+- Nel dubbio scegli "post": un post in più non rompe il piano, un carosello in più sì (vale 5 immagini).`
+}
+
 // --- Schema DB: introspection dinamica invece di due liste hardcoded --------
 // Prima c'erano DUE elenchi di colonne mantenuti a mano (insertColumns completo +
 // retryColumns "base" per il fallback): sono andati fuori sync — le colonne extra
@@ -347,7 +449,9 @@ ${buildExtendedOutputSchema(contentQuality)}
     // delle foto caricate, quindi la vision copre molte più immagini nel mese
     // invece delle sole prime 7 di sempre.
     const today = new Date()
-    const IMAGES_PER_CHUNK = 7
+    // `images` nasce vuoto: la ripartizione vera avviene una sola volta sotto
+    // (distribuisciMediaSuBlocchi), quando il numero di blocchi è definitivo.
+    // Prima ogni ramo faceva la sua slice e poi veniva comunque sovrascritta.
     // Piano del pacchetto: numero ESATTO di contenuti al mese, distribuito sulle 4
     // settimane (16→4/sett, 24→6/sett). targetMin=targetMax forza il modello sul numero.
     const pkgPerWeek = pkg ? Math.round(pkg.contenutiMese / 4) : 0
@@ -365,7 +469,7 @@ ${buildExtendedOutputSchema(contentQuality)}
           end: fmtDate(addDays(today, i * 7 + 6)),
           label: `Settimana ${i + 1} del piano mensile`,
           targetMin: minPerWeek, targetMax: maxPerWeek,
-          images: mediaPool.slice(i * IMAGES_PER_CHUNK, (i + 1) * IMAGES_PER_CHUNK),
+          images: [],
         })
       }
     } else if (contentQuality === 'high' || contentQuality === 'medium') {
@@ -378,14 +482,14 @@ ${buildExtendedOutputSchema(contentQuality)}
         end: fmtDate(addDays(today, 3)),
         label: 'Prima metà piano settimanale (giorni 1-4)',
         targetMin: 4, targetMax: 5,
-        images: mediaPool.slice(0, 4),
+        images: [],
       })
       chunks.push({
         start: fmtDate(addDays(today, 4)),
         end: fmtDate(addDays(today, 6)),
         label: 'Seconda metà piano settimanale (giorni 5-7)',
         targetMin: 3, targetMax: 5,
-        images: mediaPool.slice(4, 8),
+        images: [],
       })
     } else {
       chunks.push({
@@ -393,24 +497,27 @@ ${buildExtendedOutputSchema(contentQuality)}
         end: fmtDate(addDays(today, 6)),
         label: 'Piano settimanale',
         targetMin: 7, targetMax: 10,
-        images: mediaPool.slice(0, IMAGES_PER_CHUNK),
+        images: [],
       })
     }
 
-    // Ridistribuisci TUTTE le foto caricate sui blocchi effettivi di questo run,
-    // in fette contigue disgiunte: così ogni immagine viene usata una volta sola
-    // (unicità globale garantita) e nessuna foto resta inutilizzata perché lo
-    // slice fisso a 7 la tagliava fuori. Le fette restano ordinate → la vision
-    // di ciascun blocco vede le stesse foto che poi gli vengono assegnate.
+    // Ridistribuisci TUTTE le foto/MP4 caricati sui blocchi effettivi di questo
+    // run. NON più a fette contigue (era il difetto: con "28 foto poi 4 MP4"
+    // i video finivano tutti nell'ultimo blocco), ma a round-robin dentro ogni
+    // gruppo (marcatura, tipo): ogni blocco riceve la sua quota di MP4, di media
+    // marcati e di foto libere. Unicità globale invariata: un media, un blocco.
     if (mediaPool.length) {
-      const n = mediaPool.length
-      const k = chunks.length
-      for (let ci = 0; ci < k; ci++) {
-        const from = Math.floor((ci * n) / k)
-        const to = Math.floor(((ci + 1) * n) / k)
-        chunks[ci].images = mediaPool.slice(from, to)
-      }
+      const perBlocco = distribuisciMediaSuBlocchi(mediaPool, chunks.length, url => assetTags.get(url) ?? 'auto')
+      chunks.forEach((chunk, ci) => { chunk.images = perBlocco[ci] })
     }
+
+    // Mix dei formati per blocco (difetto C): calcolato UNA volta qui perché
+    // serve in due punti — al prompt (vincolo scritto per il modello) e a
+    // sanitizeItem (degrado del carosello eccedente quando le foto non bastano).
+    const mixPerChunk = new Map<Chunk, MixFormati>()
+    chunks.forEach((chunk, ci) => {
+      mixPerChunk.set(chunk, mixFormatiBlocco(pkg, pkg ? pkgPerWeek : chunk.targetMax, chunks.length, ci))
+    })
 
     // Contesto stagionale calcolato sull'intero range del piano (comune a tutti i blocchi).
     const temporalContext = buildTemporalContext(chunks[0].start, chunks[chunks.length - 1].end)
@@ -478,6 +585,9 @@ Output SOLO JSON array valido:
           + '\n' + PLAN_STANDARDS + '\n' + qualityPrompt
           + historyContext + temporalContext + trendContext
           + buildPackageContext(pkg, pkgPerWeek)
+          // Vincolo sui FORMATI: senza, il fabbisogno media annunciato all'utente
+          // resta una stima che il modello può far saltare con 12 caroselli.
+          + buildMixFormatiContext(mixPerChunk.get(chunk) ?? mixFormatiBlocco(pkg, targetMax, chunks.length, chunkIndex))
           + buildChunkDiversitySeed(chunkIndex, chunks.length)
           + buildPlanAssetContext(chunk.images, assetLabels)
         const visionImages = chunk.images.filter(url => !isVideoUrl(url))
@@ -636,6 +746,11 @@ Output SOLO JSON array valido:
     let itemsCorrettiCanale = 0
     let itemsCorrettiData = 0
     let itemsOraFuoriFascia = 0
+    // Caroselli accettati per blocco + quanti sono stati degradati a 'post'
+    // perché eccedevano il mix dichiarato E non c'erano abbastanza immagini
+    // libere per farne uno vero (vedi sanitizeItem).
+    const caroselliPerChunk = new Map<Chunk, number>()
+    let caroselliDegradati = 0
     function sanitizeItem(raw: Record<string, unknown>, chunk: Chunk): Record<string, unknown> {
       const out = { ...raw }
       const rawDate = typeof out.data_pubblicazione === 'string' ? out.data_pubblicazione : ''
@@ -669,6 +784,35 @@ Output SOLO JSON array valido:
       if (!canaleOk) itemsCorrettiCanale++
       const rawFormato = typeof out.formato === 'string' ? out.formato.toLowerCase().trim() : ''
       out.formato = VALID_FORMATI.has(rawFormato) ? rawFormato : 'post'
+
+      // --- Carosello eccedente → 'post' (rete di sicurezza del mix formati) ---
+      // Il vincolo vero sta nel prompt (buildMixFormatiContext). Qui NON si
+      // riscrive il piano a tavolino: si degrada un carosello a post SOLO se
+      // ricorrono ENTRAMBE le condizioni, cioè quando il carosello sarebbe
+      // comunque finto:
+      //   (a) il blocco ha già usato tutti i caroselli previsti dal mix, e
+      //   (b) nel blocco non restano abbastanza immagini libere e compatibili
+      //       per un carosello vero (minimo 3 slide).
+      // Con (b) falsa il carosello in più è sostenibile e resta com'è; senza
+      // media caricati non si tocca nulla (il piano vale come brief editoriale).
+      // Un post con 1 immagine è un contenuto pubblicabile, un "carosello" con
+      // 1 slide no: il degrado toglie una promessa che non potremmo mantenere.
+      if (gruppoFormato(String(out.formato)) === 'carosello' && chunk.images.length) {
+        const quota = mixPerChunk.get(chunk)?.caroselli ?? 0
+        const giaUsati = caroselliPerChunk.get(chunk) ?? 0
+        const usati = chunkUsedIdx.get(chunk)
+        let liberiPerCarosello = 0
+        for (let i = 0; i < chunk.images.length; i++) {
+          if (!usati?.has(i) && mediaCompatibile(chunk.images[i], 'carosello')) liberiPerCarosello++
+        }
+        if (giaUsati >= quota && liberiPerCarosello < CAROUSEL_MIN) {
+          out.formato = 'post'
+          caroselliDegradati++
+        } else {
+          caroselliPerChunk.set(chunk, giaUsati + 1)
+        }
+      }
+
       const canale = String(out.canale)
       const formato = String(out.formato)
 
@@ -997,6 +1141,9 @@ Output SOLO JSON array valido:
       // Vincoli media applicati: quante scelte dell'AI sono state respinte perché
       // violavano il tipo (MP4 su formato statico) o la marcatura manuale, e quanti
       // contenuti sono rimasti senza media perché non ne restava uno compatibile.
+      // Caroselli richiesti dal modello oltre il mix dichiarato e degradati a
+      // post perché non restavano immagini per farne uno vero (min 3 slide).
+      ...(caroselliDegradati && { caroselli_degradati: caroselliDegradati }),
       ...(mediaScartatiTipo && { media_scartati_tipo: mediaScartatiTipo }),
       ...(mediaScartatiTag && { media_scartati_tag: mediaScartatiTag }),
       ...(slotSenzaMediaCompatibile && { contenuti_senza_media_compatibile: slotSenzaMediaCompatibile }),

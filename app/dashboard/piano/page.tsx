@@ -42,6 +42,59 @@ function tagMeta(tag: MediaTag) {
   return TAG_OPTIONS.find(o => o.value === tag) ?? TAG_OPTIONS[0]
 }
 
+// ── Semaforo media di UN SINGOLO pulsante ────────────────────────────────
+// I due pulsanti generano quantità diverse: il VERDE (piano del pacchetto)
+// fa SEMPRE il mese intero, il VIOLA (piano libero) segue il periodo scelto
+// sopra. Un semaforo unico sul periodo selezionato diceva "media sufficienti"
+// mentre stavi per generare il quadruplo dei contenuti: ora ogni pulsante ha
+// il suo, e possono dire cose diverse nello stesso momento (verde sul libero
+// settimanale, ambra sul pacchetto mensile).
+// Non blocca mai: avvisa e lascia decidere.
+function SemaforoMedia({ titolo, pulsante, requisiti, verifica, caricati }: {
+  titolo: string
+  pulsante: string
+  requisiti: { immagini: number; video: number }
+  verifica: { ok: boolean; mancanti: string[]; avvisi: string[] }
+  caricati: { immagini: number; video: number }
+}) {
+  const richiesti = `${requisiti.immagini} immagini${requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}`
+  const disponibili = `${caricati.immagini} ${caricati.immagini === 1 ? 'immagine' : 'immagini'} e ${caricati.video} MP4`
+  const Icona = verifica.ok ? CheckCircle2 : AlertTriangle
+  return (
+    <div
+      className={`mb-2.5 flex items-start gap-2 rounded-xl border p-2.5 text-xs ${
+        verifica.ok
+          ? 'border-emerald-200 bg-emerald-50/80 text-emerald-800'
+          : 'border-amber-300 bg-amber-50 text-amber-900'
+      }`}
+    >
+      <Icona className="w-4 h-4 mt-0.5 flex-shrink-0" />
+      <div>
+        <p className="font-semibold">
+          {titolo}: {verifica.ok ? 'media sufficienti' : 'media insufficienti'}
+        </p>
+        <p className="mt-0.5">
+          Servono <span className="font-semibold">{richiesti}</span>, hai caricato <span className="font-semibold">{disponibili}</span>.
+          {!verifica.ok && ' Puoi generare comunque, ma i contenuti scoperti restano senza media (li aggiungi poi dal calendario).'}
+        </p>
+        {!verifica.ok && verifica.mancanti.length > 0 && (
+          <ul className="mt-1 space-y-0.5">
+            {verifica.mancanti.map((m, i) => <li key={i}>• {m}</li>)}
+          </ul>
+        )}
+        {verifica.avvisi.length > 0 && (
+          <ul className={`mt-1 space-y-0.5 ${verifica.ok ? 'text-emerald-700/90' : 'text-amber-800/80'}`}>
+            {verifica.avvisi.map((a, i) => <li key={i}>• {a}</li>)}
+          </ul>
+        )}
+        <p className={`mt-1 ${verifica.ok ? 'text-emerald-700/80' : 'text-amber-800/70'}`}>
+          ↓ Questo conto vale per {pulsante}.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function PianoPage() {
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
   const [piattaforme, setPiattaforme] = useState<PlatformKey[]>(['instagram','facebook','tiktok','pinterest'])
@@ -245,15 +298,18 @@ export default function PianoPage() {
   // numero esce dal pacchetto/quota del cliente e dalle regole per formato
   // (1 media per post, 5 per carosello, 1 MP4 per reel), e si aggiorna da solo
   // mentre l'utente carica.
+  // Fabbisogno del PULSANTE VIOLA (piano libero): segue il periodo selezionato.
   const requisiti = useMemo(
     () => requisitiDaPacchetto(clientePkg, clienteQuota, periodo),
     [clientePkg, clienteQuota, periodo],
   )
-  // Il piano del pacchetto è SEMPRE mensile: se l'utente sta guardando il
-  // settimanale, il fabbisogno del pacchetto va detto a parte o sembra minore.
+  // Fabbisogno del PULSANTE VERDE (piano del pacchetto): SEMPRE mensile, perché
+  // quel pulsante genera il mese intero anche se sopra è selezionato
+  // "settimanale" (route.ts forza periodo='mensile'). Calcolarlo sul periodo
+  // selezionato mostrava un quarto dei media davvero necessari.
   const requisitiPacchetto = useMemo(
-    () => (clientePkg && periodo !== 'mensile' ? requisitiDaPacchetto(clientePkg, clienteQuota, 'mensile') : null),
-    [clientePkg, clienteQuota, periodo],
+    () => (clientePkg ? requisitiDaPacchetto(clientePkg, clienteQuota, 'mensile') : null),
+    [clientePkg, clienteQuota],
   )
   // Senza pacchetto né quota il fabbisogno non è calcolabile: niente allarmi,
   // si mostrano solo le regole per formato.
@@ -264,10 +320,24 @@ export default function PianoPage() {
     const video = planAssets.filter(a => isVideoMedia(a.url)).length
     return { video, immagini: planAssets.length - video }
   }, [planAssets])
+  // Due verifiche indipendenti: con 7 foto + 1 MP4 il libero settimanale è
+  // verde e il pacchetto mensile è ambra, ed è giusto vederle entrambe.
   const verifica = useMemo(
     () => verificaMedia(planAssets.map(a => ({ url: a.url, tag: a.tag })), requisiti),
     [planAssets, requisiti],
   )
+  const verificaPacchetto = useMemo(
+    () => (requisitiPacchetto ? verificaMedia(planAssets.map(a => ({ url: a.url, tag: a.tag })), requisitiPacchetto) : null),
+    [planAssets, requisitiPacchetto],
+  )
+  // Quando il periodo selezionato è già "mensile" i due conti coincidono: va
+  // detto, altrimenti due riquadri identici sembrano un doppione o un errore.
+  const stessoFabbisogno = !!requisitiPacchetto
+    && requisitiPacchetto.immagini === requisiti.immagini
+    && requisitiPacchetto.video === requisiti.video
+  // Contenuti/mese davvero generati dal pulsante verde: la quota del cliente
+  // (clienti.contenuti_mese) può sovrascrivere quella del pacchetto.
+  const contenutiMesePacchetto = clienteQuota && clienteQuota > 0 ? Math.round(clienteQuota) : (clientePkg?.contenutiMese ?? 0)
 
   const numContenuti = periodo === 'mensile' ? '25-35' : '7-10'
   const isFree = aiModel.endsWith(':free')
@@ -486,7 +556,8 @@ export default function PianoPage() {
               {fabbisognoNoto ? (
                 <>
                   <p className="mt-0.5">
-                    Servono <span className="font-bold text-violet-700">{requisiti.immagini} immagini</span>
+                    Piano <span className="font-semibold capitalize">{periodo}</span> (pulsante viola): servono{' '}
+                    <span className="font-bold text-violet-700">{requisiti.immagini} immagini</span>
                     {requisiti.video > 0 && <> + <span className="font-bold text-violet-700">{requisiti.video} MP4</span></>}
                     {' · '}caricati{' '}
                     <span className={`font-bold ${caricati.immagini >= requisiti.immagini ? 'text-emerald-700' : 'text-amber-700'}`}>
@@ -514,6 +585,26 @@ export default function PianoPage() {
                     <li>• <span className="font-medium">1 MP4</span> per ogni reel/short, oppure {MEDIA_PER_FORMATO.reel.immagini} immagini da montare come slide</li>
                   </ul>
                 </>
+              )}
+              {/* Il pulsante verde genera il MESE INTERO anche col settimanale
+                  selezionato: il suo numero va detto qui, o sorprende chi lo preme. */}
+              {clientePkg && requisitiPacchetto && (
+                <p className="mt-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-2 py-1.5 text-emerald-900">
+                  {stessoFabbisogno ? (
+                    <>
+                      Il pulsante verde <span className="font-semibold">Genera piano del pacchetto {clientePkg.nome}</span> genera il mese intero
+                      ({contenutiMesePacchetto} contenuti): stesso fabbisogno di qui sopra,{' '}
+                      <span className="font-bold">{requisitiPacchetto.immagini} immagini{requisitiPacchetto.video > 0 ? ` + ${requisitiPacchetto.video} MP4` : ''}</span>.
+                    </>
+                  ) : (
+                    <>
+                      Attenzione: il pulsante verde <span className="font-semibold">Genera piano del pacchetto {clientePkg.nome}</span> ignora il periodo
+                      qui sopra e genera <span className="font-semibold">sempre il mese intero</span> ({contenutiMesePacchetto} contenuti): per quello servono{' '}
+                      <span className="font-bold">{requisitiPacchetto.immagini} immagini{requisitiPacchetto.video > 0 ? ` + ${requisitiPacchetto.video} MP4` : ''}</span>,
+                      non {requisiti.immagini} immagini{requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}.
+                    </>
+                  )}
+                </p>
               )}
               <p className="mt-1.5 text-gray-500">
                 Carica tutto qui sotto in un colpo solo: dai un nome a ogni media e scegli la destinazione (Carosello · Reel/Video · Post).
@@ -596,49 +687,28 @@ export default function PianoPage() {
           )}
         </div>
 
-        {/* Semaforo media: sta SOPRA i pulsanti perché è l'ultima cosa da sapere
-            prima di generare. Non blocca mai: avvisa e lascia decidere. */}
-        {fabbisognoNoto && (
-          verifica.ok ? (
-            <div className="mb-3 flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50/80 p-2.5 text-xs text-emerald-800">
-              <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold">
-                  Media sufficienti: {caricati.immagini} {caricati.immagini === 1 ? 'immagine' : 'immagini'} e {caricati.video} MP4 per {requisiti.immagini} immagini{requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''} richiesti.
-                </p>
-                {verifica.avvisi.length > 0 && (
-                  <ul className="mt-1 space-y-0.5 text-emerald-700/90">
-                    {verifica.avvisi.map((a, i) => <li key={i}>• {a}</li>)}
-                  </ul>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-900">
-              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold">
-                  Media insufficienti per questo piano. Puoi generare comunque, ma alcuni contenuti resteranno senza foto (li aggiungi poi dal calendario).
-                </p>
-                <ul className="mt-1 space-y-0.5">
-                  {verifica.mancanti.map((m, i) => <li key={i}>• {m}</li>)}
-                </ul>
-                {verifica.avvisi.length > 0 && (
-                  <ul className="mt-1 space-y-0.5 text-amber-800/80">
-                    {verifica.avvisi.map((a, i) => <li key={i}>• {a}</li>)}
-                  </ul>
-                )}
-              </div>
-            </div>
-          )
-        )}
-
         {/* Modalità pacchetto: se il cliente ha un pacchetto, un click genera i contenuti compresi */}
         {clientePkg && (
           <div className="mb-3 p-3 rounded-xl bg-white/70 border border-emerald-200">
             <p className="text-xs text-gray-700">
               Cliente con pacchetto <span className="font-bold text-emerald-700">{clientePkg.nome}</span>: {clientePkg.contenutiMese} contenuti/mese ({clientePkg.postCaroselli} post-caroselli + {clientePkg.reelBrevi} reel/short) su {clientePkg.social} social, qualità <span className="uppercase">{clientePkg.quality}</span>{clientePkg.articoloBlog ? ' + articolo blog collegato' : ''}.
             </p>
+            <p className="mt-1 mb-2 text-[11px] font-medium text-emerald-800">
+              Questo pulsante genera sempre il <span className="font-bold">mese intero</span> ({contenutiMesePacchetto} contenuti
+              {contenutiMesePacchetto !== clientePkg.contenutiMese ? ', quota impostata sul cliente' : ''}), qualunque periodo sia selezionato al punto 1.
+            </p>
+            {/* Semaforo del PACCHETTO: fabbisogno del mese intero, non del
+                periodo selezionato. Sta sopra il pulsante perché è l'ultima
+                cosa da sapere prima di premerlo. */}
+            {requisitiPacchetto && verificaPacchetto && (
+              <SemaforoMedia
+                titolo={`Piano del pacchetto ${clientePkg.nome} · mese intero`}
+                pulsante="il pulsante verde qui sotto"
+                requisiti={requisitiPacchetto}
+                verifica={verificaPacchetto}
+                caricati={caricati}
+              />
+            )}
             <button
               onClick={generaPacchetto}
               disabled={runningPkg || running || uploadingImages || piattaforme.length === 0}
@@ -648,18 +718,22 @@ export default function PianoPage() {
               {runningPkg ? 'Generazione pacchetto...' : `Genera piano del pacchetto ${clientePkg.nome}`}
             </button>
             <p className="mt-1.5 text-[11px] text-gray-500 text-center">Numero, mix formati e qualità imposti dal pacchetto. Seleziona i {clientePkg.social} social sopra.</p>
-            {/* Il piano del pacchetto è mensile anche se sopra è selezionato
-                "settimanale": qui il fabbisogno è quello del mese intero. */}
-            {requisitiPacchetto && (
-              <p className="mt-1 text-[11px] text-gray-500 text-center">
-                Piano mensile: servono <span className="font-semibold text-gray-700">{requisitiPacchetto.immagini} immagini{requisitiPacchetto.video > 0 ? ` + ${requisitiPacchetto.video} MP4` : ''}</span>
-                {' '}(caricati {caricati.immagini} + {caricati.video} MP4).
-              </p>
-            )}
           </div>
         )}
 
         {clientePkg && <p className="text-[11px] text-gray-400 mb-2 text-center">— oppure genera un piano libero (scegli tu i parametri) —</p>}
+
+        {/* Semaforo del PIANO LIBERO: fabbisogno del periodo selezionato al
+            punto 1. Può essere verde mentre quello del pacchetto è ambra. */}
+        {fabbisognoNoto && (
+          <SemaforoMedia
+            titolo={`Piano libero ${periodo}`}
+            pulsante="il pulsante viola qui sotto"
+            requisiti={requisiti}
+            verifica={verifica}
+            caricati={caricati}
+          />
+        )}
 
         <button
           onClick={chiediConferma}
