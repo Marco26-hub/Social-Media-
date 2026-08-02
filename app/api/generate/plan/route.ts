@@ -78,7 +78,12 @@ ${shown.map((url, index) => `${index + 1}. ${labels.get(url) || 'media'} — ${u
 - Per OGNI contenuto scegli la/le foto giuste in base alla descrizione accanto al numero e a ciò che vedi, e indica il/i numero/i nel campo "media_refs": es. "media_refs":[2] per un post/reel singolo, "media_refs":[2,5,7] per un carosello.
 - Usa ogni foto UNA sola volta in questo blocco: non ripetere lo stesso numero su contenuti diversi.
 - Se un contenuto non ha una foto adatta tra quelle mostrate, lascia "media_refs":[] (verrà completato in automatico).
-- Non inventare dettagli visivi non presenti nei media.`
+- Non inventare dettagli visivi non presenti nei media.
+- ⚠️ IL NOME ACCANTO A OGNI MEDIA È IL NOME UFFICIALE DEL PRODOTTO per quel contenuto: usalo
+  come "nome_prodotto" e come base di hook/caption. NON scrivere invece su un prodotto diverso
+  preso dal catalogo PRODOTTI qui sopra, anche se il catalogo elenca altri articoli — quando un
+  contenuto usa media_refs, il media caricato vince SEMPRE sui dati del catalogo. Il catalogo
+  PRODOTTI serve solo per i contenuti che restano senza foto (media_refs:[]).`
 }
 
 // --- Date helpers -----------------------------------------------------------
