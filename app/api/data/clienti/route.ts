@@ -3,6 +3,8 @@ import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import { requireAdmin, requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { getPackage } from '@/lib/packages'
+import { pacchettoSlugFromPiano } from '@/lib/pacchetti'
+import { PACCHETTO_PIANO, PACCHETTO_FALLBACK } from '@/lib/provisioning'
 import { isDemo } from '@/lib/demo'
 import { demoClienti } from '@/lib/demo-data'
 
@@ -48,9 +50,18 @@ export async function POST(request: Request) {
     if (!nome) return NextResponse.json({ error: 'nome richiesto' }, { status: 400 })
     if (isDemo() || !dbReady()) return NextResponse.json({ id: `demo-${Date.now().toString(36)}`, demo: true })
     const slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    // Pacchetto e quota derivati dallo STESSO mapping piano->pacchetto che genera
+    // la card "Il tuo pacchetto" in "Il mio piano" (lib/pacchetti.ts), non lasciati
+    // a null: creare un cliente qui e uno via attivazione registrazione con lo
+    // stesso piano deve produrre la stessa quota. Prima questo INSERT non
+    // impostava n\u00e9 pacchetto n\u00e9 contenuti_mese, che restava al default schema 30
+    // \u2014 mai coerente col pacchetto mostrato (es. Presenza dichiara 16).
+    const pianoEff = piano || 'pro'
+    const pacchettoSlug = pacchettoSlugFromPiano(pianoEff)
+    const pkgNumeri = PACCHETTO_PIANO[pacchettoSlug] || PACCHETTO_FALLBACK
     const rows = await q(
-      'INSERT INTO clienti (nome, slug, settore, email, telefono, piano, attivo) VALUES ($1,$2,$3,$4,$5,$6,true) RETURNING id',
-      [nome, slug, settore || null, email || null, telefono || null, piano || 'pro']
+      'INSERT INTO clienti (nome, slug, settore, email, telefono, piano, pacchetto, contenuti_mese, attivo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true) RETURNING id',
+      [nome, slug, settore || null, email || null, telefono || null, pianoEff, pacchettoSlug, pkgNumeri.contenuti]
     )
     const clienteId = (rows[0] as { id: string }).id
     await q(
