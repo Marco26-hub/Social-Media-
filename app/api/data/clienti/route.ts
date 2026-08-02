@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import { requireAdmin, requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { getPackage } from '@/lib/packages'
 import { isDemo } from '@/lib/demo'
 import { demoClienti } from '@/lib/demo-data'
 
@@ -86,6 +87,16 @@ export async function PATCH(request: Request) {
     // I campi commerciali passano solo se chi scrive è admin dell'agenzia.
     const wantsAdminFields = Object.keys(body).some(k => CLIENTE_ADMIN_COLUMNS.has(k))
     if (wantsAdminFields) await requireAdmin()
+
+    // Cambiando pacchetto si allinea anche la quota mensile, a meno che l'admin
+    // la stia impostando a mano nella stessa richiesta (override voluto).
+    // Prima i due dati vivevano separati: la pagina "Il mio piano" mostrava il
+    // pacchetto Presenza (16 contenuti) accanto a "7/30 usati", perché
+    // contenuti_mese era rimasto al default storico di 30.
+    if (typeof body.pacchetto === 'string' && body.contenuti_mese === undefined) {
+      const pkgScelto = getPackage(body.pacchetto)
+      if (pkgScelto) body.contenuti_mese = pkgScelto.contenutiMese
+    }
 
     const fields: string[] = []
     const params: unknown[] = []

@@ -47,6 +47,9 @@ export default function ClienteDetailPage() {
   const [savingDomain, setSavingDomain] = useState(false)
   const [domainMsg, setDomainMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [pacchetto, setPacchetto] = useState('')
+  const [contenutiMese, setContenutiMese] = useState('')
+  const [savingQuota, setSavingQuota] = useState(false)
+  const [quotaMsg, setQuotaMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [savingPkg, setSavingPkg] = useState(false)
   const [pkgMsg, setPkgMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [timezone, setTimezone] = useState('Europe/Rome')
@@ -65,6 +68,7 @@ export default function ClienteDetailPage() {
         if (c) {
           setCliente(c)
           setPacchetto(c.pacchetto || '')
+          setContenutiMese(String(c.contenuti_mese ?? ''))
           setTimezone(c.timezone || 'Europe/Rome')
           setContenuti(demoContenuti.filter(x => x.cliente_id === c.id).slice(0, 10))
         }
@@ -78,7 +82,7 @@ export default function ClienteDetailPage() {
         ])
         const clienti = Array.isArray(cRes) ? cRes as Cliente[] : []
         const c = clienti.find(x => x.id === id || x.slug === id)
-        if (c) { setCliente(c); setBlogDomain(c.blog_domain || ''); setPacchetto(c.pacchetto || ''); setTimezone(c.timezone || 'Europe/Rome') }
+        if (c) { setCliente(c); setBlogDomain(c.blog_domain || ''); setPacchetto(c.pacchetto || ''); setContenutiMese(String(c.contenuti_mese ?? '')); setTimezone(c.timezone || 'Europe/Rome') }
         setContenuti((Array.isArray(calRes) ? calRes : []).slice(0, 10))
       } catch {}
       setLoading(false)
@@ -144,6 +148,33 @@ export default function ClienteDetailPage() {
       setDestMsg({ type: 'err', text: (e as Error).message })
     } finally {
       setSavingCanale('')
+    }
+  }
+
+  // Quota mensile: override manuale del numero che segue il pacchetto.
+  async function saveContenutiMese() {
+    if (!cliente) return
+    const n = Number(contenutiMese)
+    if (!Number.isFinite(n) || n < 0 || n > 200) {
+      setQuotaMsg({ type: 'err', text: 'Inserisci un numero tra 0 e 200.' })
+      return
+    }
+    setSavingQuota(true)
+    setQuotaMsg(null)
+    try {
+      const res = await fetch('/api/data/clienti', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: cliente.id, contenuti_mese: n }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
+      setCliente(prev => prev ? { ...prev, contenuti_mese: n } : prev)
+      setQuotaMsg({ type: 'ok', text: `Quota aggiornata: ${n} contenuti al mese.` })
+    } catch (e) {
+      setQuotaMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSavingQuota(false)
     }
   }
 
@@ -321,6 +352,33 @@ export default function ClienteDetailPage() {
           <button onClick={savePacchetto} disabled={savingPkg} className="btn-primary py-2 px-4 justify-center whitespace-nowrap">
             {savingPkg ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva pacchetto'}
           </button>
+        </div>
+
+        {/* Quota effettiva: normalmente segue il pacchetto, ma resta modificabile
+            per gli accordi fuori listino (es. contenuti extra concordati). È il
+            numero che il cliente vede in "Il mio piano" come contenuti del mese. */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <label className="text-xs font-medium text-gray-700">Contenuti inclusi al mese</label>
+          <p className="text-[11px] text-gray-500 mt-0.5 mb-2">
+            Si allinea da solo al pacchetto scelto. Modificalo solo per accordi fuori listino: è la quota che il cliente vede nella sua area.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="number"
+              min={0}
+              max={200}
+              value={contenutiMese}
+              onChange={e => setContenutiMese(e.target.value)}
+              className="input flex-1 text-sm"
+              placeholder="16"
+            />
+            <button onClick={saveContenutiMese} disabled={savingQuota} className="btn-secondary py-2 px-4 justify-center whitespace-nowrap">
+              {savingQuota ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva quota'}
+            </button>
+          </div>
+          {quotaMsg && (
+            <p className={`text-xs mt-2 ${quotaMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>{quotaMsg.text}</p>
+          )}
         </div>
         {pkgMsg && (
           <div className={`mt-2 text-xs flex items-center gap-1.5 ${pkgMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>
