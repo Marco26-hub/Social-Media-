@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useMemo, useState, type ComponentType, type ElementType } from 'react'
+import { Suspense, useMemo, type ComponentType, type ElementType } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
 export type TabDef = {
@@ -15,25 +16,33 @@ export type TabDef = {
 // di una sola pagina (le vecchie URL restano vive via redirect stub).
 // Il tab attivo sta in `?tab=` così deep-link e refresh sono stabili, e `key`
 // rimonta pulito il contenuto a ogni cambio (stesso pattern di /dashboard/social).
-export default function TabbedPage({ tabs }: { tabs: TabDef[] }) {
+//
+// `useSearchParams()` (non `window.location.search` letto una volta al mount)
+// perché un <Link> verso la stessa pathname con un `?tab=` diverso (es. il
+// pulsante "Configura questo cliente" dopo un'attivazione registrazione) è una
+// navigazione soft: il componente non viene rimontato, quindi un effect legato
+// al mount non vede mai il nuovo valore e il tab restava bloccato su quello di
+// partenza pur cambiando l'URL. useSearchParams() si aggiorna anche sulla
+// navigazione client-side, quindi qui `active` è derivato ad ogni render invece
+// di vivere in uno state locale che può disallinearsi dall'URL.
+function TabbedPageInner({ tabs }: { tabs: TabDef[] }) {
   const { data: session } = useSession()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const isAdmin = ['admin', 'super_admin'].includes(session?.user?.ruolo ?? '')
   // Stessa regola `adminOnly` della sidebar: i tab riservati (es. Log, Consumi AI)
   // non compaiono ai clienti, che prima non avevano la voce di menu corrispondente.
   const visible = useMemo(() => tabs.filter(t => !t.adminOnly || isAdmin), [tabs, isAdmin])
 
-  const [active, setActive] = useState(tabs[0].key)
-
-  useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get('tab')
-    if (q && visible.some(t => t.key === q)) setActive(q)
-  }, [visible])
+  const tabParam = searchParams.get('tab')
+  const active = tabParam && visible.some(t => t.key === tabParam) ? tabParam : (visible[0]?.key ?? tabs[0].key)
 
   function choose(key: string) {
-    setActive(key)
-    const url = new URL(window.location.href)
-    url.searchParams.set('tab', key)
-    window.history.replaceState(null, '', url.toString())
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', key)
+    // router.replace (non window.history) perché useSearchParams si aggiorna
+    // solo sulla navigazione del router Next, non su una history API grezza.
+    router.replace(`?${params.toString()}`, { scroll: false })
   }
 
   const current = visible.find(t => t.key === active) ?? visible[0]
@@ -67,5 +76,13 @@ export default function TabbedPage({ tabs }: { tabs: TabDef[] }) {
 
       <Active key={current.key} />
     </div>
+  )
+}
+
+export default function TabbedPage({ tabs }: { tabs: TabDef[] }) {
+  return (
+    <Suspense fallback={<div className="p-8 text-sm text-gray-400">Caricamento…</div>}>
+      <TabbedPageInner tabs={tabs} />
+    </Suspense>
   )
 }

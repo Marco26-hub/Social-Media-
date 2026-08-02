@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { UserCheck, Check, X, Mail, Phone, Building2, Package, Clock, Inbox } from 'lucide-react'
+import Link from 'next/link'
+import { UserCheck, Check, X, Mail, Phone, Building2, Package, Clock, Inbox, CheckCircle2, ArrowRight, AlertTriangle } from 'lucide-react'
 
 type Registrazione = {
   id: string
@@ -13,6 +14,13 @@ type Registrazione = {
   created_at: string
 }
 
+// Esito visibile di un'azione (attiva/rifiuta) su una registrazione: resta
+// visibile finché l'admin non naviga via o non ne apre un altro, non è un
+// toast che sparisce da solo (l'admin deve poter cliccare "Configura" con calma).
+type Esito =
+  | { tipo: 'attivato'; nome: string; clienteId: string; giaAttivo: boolean }
+  | { tipo: 'rifiutato'; nome: string }
+
 const PACCHETTO_LABEL: Record<string, string> = {
   presenza: 'Presenza', crescita: 'Crescita',
 }
@@ -22,6 +30,10 @@ export default function RegistrazioniPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [esito, setEsito] = useState<Esito | null>(null)
+  // Errori per-riga (fallimento activate/reject): non rimuovono la riga e non
+  // vanno confusi con un errore globale che coinvolgerebbe tutte le altre righe.
+  const [rowErrors, setRowErrors] = useState<Record<string, string>>({})
 
   async function load() {
     setLoading(true)
@@ -45,14 +57,40 @@ export default function RegistrazioniPage() {
   useEffect(() => { load() }, [])
 
   async function act(id: string, action: 'activate' | 'reject') {
+    const riga = items.find(i => i.id === id)
     setBusy(id)
+    setRowErrors(prev => {
+      const rest = { ...prev }
+      delete rest[id]
+      return rest
+    })
     try {
       const res = await fetch('/api/admin/registrazioni', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action }),
       })
-      if (res.ok) setItems(prev => prev.filter(i => i.id !== id))
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        // Fallimento: la riga resta visibile, l'errore compare accanto a lei
+        // (non un errore globale che confonderebbe con le altre registrazioni).
+        setRowErrors(prev => ({ ...prev, [id]: data.error || 'Operazione non riuscita.' }))
+        return
+      }
+
+      if (action === 'reject') {
+        setEsito({ tipo: 'rifiutato', nome: riga?.nome || 'Registrazione' })
+      } else {
+        // In demo (o DB non pronto) l'API risponde { ok:true, demo:true } senza
+        // cliente_id: nessun cliente è stato creato davvero, niente da configurare.
+        if (data.cliente_id) {
+          setEsito({ tipo: 'attivato', nome: riga?.nome || 'Cliente', clienteId: data.cliente_id, giaAttivo: !!data.already_active })
+        }
+      }
+      setItems(prev => prev.filter(i => i.id !== id))
+    } catch {
+      setRowErrors(prev => ({ ...prev, [id]: 'Errore di rete.' }))
     } finally {
       setBusy(null)
     }
@@ -79,6 +117,52 @@ export default function RegistrazioniPage() {
 
       {error && <div className="card p-4 mb-4 text-sm text-red-700 bg-red-50 border-red-200">{error}</div>}
 
+      {esito && esito.tipo === 'attivato' && (
+        <div className="card p-4 mb-4 bg-green-50 border-green-200 flex flex-col sm:flex-row sm:items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+          <div className="flex-1 min-w-0 text-sm text-green-800">
+            {esito.giaAttivo ? (
+              <>
+                <span className="font-semibold">{esito.nome}</span> era già attivo: nessun nuovo cliente è stato creato.
+              </>
+            ) : (
+              <>
+                <span className="font-semibold">{esito.nome}</span> attivato: l&apos;accesso al pannello è stato creato.
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href={`/dashboard/clienti?tab=onboarding&cliente_id=${esito.clienteId}`}
+              className="btn-primary text-sm"
+            >
+              Configura questo cliente <ArrowRight className="w-4 h-4" />
+            </Link>
+            <button
+              onClick={() => setEsito(null)}
+              className="px-3 py-2 text-sm font-medium rounded-lg text-green-700 hover:bg-green-100"
+            >
+              Chiudi
+            </button>
+          </div>
+        </div>
+      )}
+
+      {esito && esito.tipo === 'rifiutato' && (
+        <div className="card p-4 mb-4 bg-gray-50 border-gray-200 flex items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-gray-500 flex-shrink-0" />
+          <div className="flex-1 min-w-0 text-sm text-gray-700">
+            <span className="font-semibold">{esito.nome}</span> rifiutato.
+          </div>
+          <button
+            onClick={() => setEsito(null)}
+            className="px-3 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 flex-shrink-0"
+          >
+            Chiudi
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="card p-8 text-center text-gray-400 text-sm">Caricamento…</div>
       ) : items.length === 0 ? (
@@ -90,7 +174,7 @@ export default function RegistrazioniPage() {
       ) : (
         <div className="space-y-3">
           {items.map(r => (
-            <div key={r.id} className="card p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div key={r.id} className={`card p-5 flex flex-col sm:flex-row sm:items-center gap-4 ${rowErrors[r.id] ? 'border-red-200' : ''}`}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-gray-900">{r.nome}</h3>
@@ -106,6 +190,11 @@ export default function RegistrazioniPage() {
                   {r.telefono && <span className="inline-flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> {r.telefono}</span>}
                   <span className="inline-flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {formatDate(r.created_at)}</span>
                 </div>
+                {rowErrors[r.id] && (
+                  <div className="mt-2 flex items-center gap-1.5 text-sm text-red-700">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" /> {rowErrors[r.id]}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button

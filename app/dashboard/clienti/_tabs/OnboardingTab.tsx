@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   UserPlus, Globe, Sparkles, Package, CheckCircle, ArrowRight, ArrowLeft,
-  Loader2, Camera, Search, Target, MessageCircle
+  Loader2, Camera, Search, Target, MessageCircle, Info
 } from 'lucide-react'
 import { isDemo } from '@/lib/demo'
 import { useGeneration } from '@/components/GenerationProvider'
@@ -20,13 +20,35 @@ type BrandProfile = {
 
 type ProductInput = { nome: string; categoria: string; prezzo: string }
 
+type ClienteRow = { id: string; nome: string; email?: string | null; blog_domain?: string | null }
+
+// useSearchParams richiede un boundary Suspense (stesso pattern di
+// /dashboard/calendario): senza, Next.js fallisce la build.
 export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="p-4 md:p-8 max-w-2xl mx-auto text-sm text-gray-400">Caricamento…</div>}>
+      <OnboardingInner />
+    </Suspense>
+  )
+}
+
+function OnboardingInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // ?cliente_id=... arriva da Registrazioni > Attiva (vedi RegistrazioniTab):
+  // il cliente esiste già (creato da activateRegistration), quindi qui NON si
+  // deve rifare la POST di creazione — duplicherebbe il cliente. Si riprende
+  // l'onboarding direttamente dallo step 2 (Brand).
+  const clienteIdParam = searchParams.get('cliente_id')
   const demo = isDemo()
   const gen = useGeneration()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
+
+  // Ripresa onboarding su cliente esistente
+  const [resumingCliente, setResumingCliente] = useState<{ nome: string } | null>(null)
+  const [checkingResume, setCheckingResume] = useState(!!clienteIdParam)
 
   // Step 1
   const [nomeCliente, setNomeCliente] = useState('')
@@ -51,6 +73,43 @@ export default function OnboardingPage() {
   }
   function addProdotto() { setProdotti(prev => [...prev, { nome: '', categoria: '', prezzo: '' }]) }
   function removeProdotto(i: number) { setProdotti(prev => prev.filter((_, j) => j !== i)) }
+
+  // ?cliente_id=X in query → riprendi l'onboarding su un cliente già
+  // esistente invece di crearne uno nuovo (vedi commento su clienteIdParam).
+  // Se il cliente non esiste più o il fetch fallisce, si mostra l'errore e si
+  // ripiega sullo step 1 normale: la pagina non deve mai restare bloccata.
+  useEffect(() => {
+    if (!clienteIdParam) return
+    let cancelled = false
+    async function riprendiOnboarding() {
+      setCheckingResume(true)
+      setErrore(null)
+      try {
+        const res = await fetch('/api/data/clienti')
+        const data = await res.json().catch(() => null)
+        if (!res.ok) throw new Error((data && data.error) || `HTTP ${res.status}`)
+        const cliente = (Array.isArray(data) ? data as ClienteRow[] : []).find(c => c.id === clienteIdParam)
+        if (!cliente) throw new Error('cliente non trovato (rimosso o accesso non disponibile)')
+        if (cancelled) return
+        setClienteId(cliente.id)
+        setNomeCliente(cliente.nome || '')
+        setEmailCliente(cliente.email || '')
+        if (cliente.blog_domain) setUrlSito(`https://${cliente.blog_domain}`)
+        document.cookie = `active_cliente_id=${cliente.id};path=/`
+        setResumingCliente({ nome: cliente.nome || 'cliente' })
+        setStep(2)
+      } catch (e) {
+        if (cancelled) return
+        setErrore(`Impossibile riprendere l'onboarding del cliente indicato: ${(e as Error).message}. Puoi creare un nuovo cliente qui sotto.`)
+        setResumingCliente(null)
+        setStep(1)
+      } finally {
+        if (!cancelled) setCheckingResume(false)
+      }
+    }
+    riprendiOnboarding()
+    return () => { cancelled = true }
+  }, [clienteIdParam])
 
   // Step 1 → Create client
   async function creaCliente() {
@@ -249,9 +308,26 @@ export default function OnboardingPage() {
     { key: 'x', emoji: '✖️', label: 'X' },
   ]
 
+  if (checkingResume) {
+    return (
+      <div className="p-4 md:p-8 max-w-2xl mx-auto">
+        <div className="card p-6 flex items-center gap-2 text-sm text-gray-500">
+          <Loader2 className="w-4 h-4 animate-spin" /> Caricamento cliente…
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
       <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Onboarding Nuovo Cliente</h1>
+
+      {resumingCliente && (
+        <div className="mb-6 p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-700 flex items-center gap-2">
+          <Info className="w-4 h-4 flex-shrink-0" />
+          <span>Onboarding di <strong>{resumingCliente.nome}</strong> — cliente già attivato, si riprende da qui (nessun nuovo cliente creato).</span>
+        </div>
+      )}
 
       {/* Stepper */}
       <div className="flex items-center justify-between mb-8">
