@@ -18,6 +18,9 @@ import { getClientGenerationContext } from '@/lib/client-context'
 import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS, DIVERSITY_STANDARDS, FUNNEL_STANDARDS, HOOK_FORMULAS, COPY_FRAMEWORKS, COPY_ANGLES } from '@/lib/prompt-standards'
 import { fetchSectorTrends, buildTrendContext } from '@/lib/trends'
 import { getPackage, type PackageSpec } from '@/lib/packages'
+// Fabbisogno e vincoli media: quante slide vuole un carosello, quali formati
+// possono ricevere un MP4 e come si legge la marcatura manuale dell'utente.
+import { MEDIA_PER_FORMATO, normalizeMediaTag, type MediaTag } from '@/lib/media-requirements'
 import { buildBrandContext } from '@/lib/brand-context'
 import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage } from '@/lib/production-cycle'
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
@@ -194,6 +197,21 @@ function isVideoUrl(url: string) {
   return url.split('?')[0].toLowerCase().endsWith('.mp4')
 }
 
+// --- Gruppi di formato: il ponte tra il formato scelto dall'AI e i vincoli media
+// I formati del calendario sono 8, ma per i media contano solo tre famiglie:
+//  - 'reel'      → reel/short/video: SONO gli unici che possono ricevere un MP4
+//  - 'carosello' → carousel: blocco di più immagini
+//  - 'post'      → post/story/pin/articolo: una sola immagine, mai un video
+// I valori coincidono con MediaTag (meno 'auto'), così la marcatura manuale si
+// confronta direttamente con il gruppo del contenuto.
+type GruppoFormato = Exclude<MediaTag, 'auto'>
+function gruppoFormato(formato: string): GruppoFormato {
+  const f = String(formato || '').toLowerCase().trim()
+  if (f === 'carousel' || f === 'carosello') return 'carosello'
+  if (f === 'reel' || f === 'short' || f === 'video') return 'reel'
+  return 'post'
+}
+
 // --- Schema DB: introspection dinamica invece di due liste hardcoded --------
 // Prima c'erano DUE elenchi di colonne mantenuti a mano (insertColumns completo +
 // retryColumns "base" per il fallback): sono andati fuori sync — le colonne extra
@@ -228,13 +246,21 @@ export async function POST(request: Request) {
     // per far scegliere al modello la foto giusta per numero (media_refs). Opzionale:
     // se manca, il piano ripiega sull'assegnazione posizionale (retrocompatibile).
     const assetLabels = new Map<string, string>()
+    // Marcatura manuale del media (`tag` in uploaded_assets): l'utente può dire
+    // "questa foto è del carosello, questo MP4 è del reel". È un VINCOLO, non un
+    // suggerimento: un media marcato non finisce mai su un altro gruppo di
+    // formati. Assente o 'auto' → decide l'AI come prima (retrocompatibile).
+    const assetTags = new Map<string, MediaTag>()
     if (Array.isArray(uploaded_assets)) {
       for (const raw of uploaded_assets) {
         if (!raw || typeof raw !== 'object') continue
         const rec = raw as Record<string, unknown>
         const url = typeof rec.url === 'string' ? rec.url.trim() : ''
+        if (!url) continue
         const name = typeof rec.name === 'string' ? rec.name.trim() : ''
-        if (url && name) assetLabels.set(url, name)
+        if (name) assetLabels.set(url, name)
+        const tag = normalizeMediaTag(rec.tag)
+        if (tag !== 'auto') assetTags.set(url, tag)
       }
     }
     // Weekend nel piano: default INCLUSO. Se false, il piano usa solo lun-ven
@@ -681,12 +707,37 @@ Output SOLO JSON array valido:
     // Fallback robusto: se media_refs manca/è invalido, si completa dalle foto libere
     // del blocco in ordine (retrocompatibile). Foto finite → contenuto senza media (null),
     // segnalato — mai riusare la stessa immagine di nascosto.
+    // NOVITÀ: la scelta dell'AI non è più l'ultima parola. Prima di essere accettata
+    // passa da due vincoli DURI (mediaCompatibile): il TIPO del file (un MP4 solo su
+    // reel/short/video) e la MARCATURA manuale dell'utente. Un media respinto viene
+    // rimpiazzato da uno libero e compatibile; se non ce n'è, lo slot resta vuoto.
     const MEDIA_SLOTS = 10
-    const CAROUSEL_TARGET = 5   // dentro il range 3..10
-    const CAROUSEL_MIN = 3
+    // Target e minimo del carosello vengono dalle regole di fabbisogno (una sola
+    // fonte di verità con la schermata che dice all'utente quanti media caricare).
+    const CAROUSEL_TARGET = MEDIA_PER_FORMATO.carousel.immagini      // 5, dentro il range 3..10
+    const CAROUSEL_MIN = MEDIA_PER_FORMATO.carousel.min ?? 3
     const chunkUsedIdx = new Map<Chunk, Set<number>>()
     let photosExhausted = false      // finite le foto → contenuti senza immagine
     let carouselUnderfilled = false  // carosello con meno di 3 foto disponibili
+    let mediaScartatiTipo = 0        // MP4 che l'AI aveva messo su post/carosello/story
+    let mediaScartatiTag = 0         // media marcati a mano per un altro gruppo di formati
+    let slotSenzaMediaCompatibile = 0 // contenuti lasciati senza media: nessuno compatibile
+
+    // --- Compatibilità media ↔ contenuto: due vincoli DURI ---------------------
+    // 1) TIPO: un MP4 è un video finale, può stare SOLO su reel/short/video. Il
+    //    prompt lo chiedeva come preferenza ("assegnali preferibilmente a...") e
+    //    nessuno lo verificava: un MP4 poteva finire su un post statico.
+    // 2) MARCATURA manuale: un media marcato 'carosello'/'reel'/'post' vale solo
+    //    per quel gruppo di formati. Se per un contenuto non resta nulla di
+    //    compatibile lo slot resta VUOTO: meglio senza foto che con la foto
+    //    sbagliata (il calendario mostra il contenuto come da completare).
+    function mediaCompatibile(url: string, gruppo: GruppoFormato): boolean {
+      const tag = assetTags.get(url) ?? 'auto'
+      if (tag !== 'auto' && tag !== gruppo) return false
+      if (isVideoUrl(url) && gruppo !== 'reel') return false
+      return true
+    }
+
     function nextChunkMediaSlots(chunk: Chunk, formato: string, mediaRefs: unknown): (string | null)[] {
       const empty = Array<string | null>(MEDIA_SLOTS).fill(null)
       const total = chunk.images.length
@@ -694,43 +745,82 @@ Output SOLO JSON array valido:
       const used = chunkUsedIdx.get(chunk) ?? new Set<number>()
       chunkUsedIdx.set(chunk, used)
 
+      const gruppo = gruppoFormato(formato)
+      const isCarousel = gruppo === 'carosello'
+      const isVideoFormat = gruppo === 'reel'
+      const compatibile = (idx: number) => mediaCompatibile(chunk.images[idx], gruppo)
+
       // Indici richiesti dal modello (1-based → 0-based): validi, in range, ancora
-      // liberi in questo blocco, in ordine e senza duplicati.
+      // liberi in questo blocco, in ordine e senza duplicati. In più ora devono
+      // essere COMPATIBILI: la scelta dell'AI si rispetta, ma non può violare il
+      // tipo del file né la marcatura decisa dall'utente.
       const requested: number[] = []
       const seen = new Set<number>()
       if (Array.isArray(mediaRefs)) {
         for (const ref of mediaRefs) {
           const n = typeof ref === 'number' ? ref : parseInt(String(ref), 10)
           const idx = n - 1
-          if (Number.isInteger(idx) && idx >= 0 && idx < total && !used.has(idx) && !seen.has(idx)) {
-            seen.add(idx)
-            requested.push(idx)
-          }
+          if (!Number.isInteger(idx) || idx < 0 || idx >= total || used.has(idx) || seen.has(idx)) continue
+          seen.add(idx)
+          const url = chunk.images[idx]
+          // MP4 su un formato statico: scartato e rimpiazzato più sotto da
+          // un'immagine libera (fallback), non assegnato "tanto per".
+          if (isVideoUrl(url) && !isVideoFormat) { mediaScartatiTipo++; continue }
+          if (!compatibile(idx)) { mediaScartatiTag++; continue }
+          requested.push(idx)
         }
       }
 
-      const isCarousel = formato === 'carousel'
+      const picked: number[] = []
+
+      // REEL/SHORT/VIDEO: l'MP4 ha la precedenza sulle immagini. Se il modello ne
+      // ha già scelto uno si usa il suo; altrimenti si pesca il primo MP4 libero e
+      // compatibile del blocco — un reel deve ricevere il video, non una foto.
+      if (isVideoFormat) {
+        const videoRichiesto = requested.find(i => isVideoUrl(chunk.images[i]))
+        if (videoRichiesto !== undefined) {
+          picked.push(videoRichiesto)
+        } else {
+          for (let i = 0; i < total; i++) {
+            if (used.has(i) || !isVideoUrl(chunk.images[i]) || !compatibile(i)) continue
+            picked.push(i)
+            break
+          }
+        }
+      }
 
       // Se il modello ha scelto foto valide, rispettiamo ESATTAMENTE la sua scelta
       // (singolo = 1 foto, carosello = tutte le foto dichiarate, cap 10): completare
       // un carosello con foto NON scelte reintrodurrebbe l'abbinamento sbagliato che
       // stiamo eliminando. Solo se il modello non dichiara nulla di valido si ripiega
-      // sul pool in ordine (fallback retrocompatibile: 1 per singolo, 5 per carosello).
-      const picked: number[] = requested.slice(0, isCarousel ? MEDIA_SLOTS : 1)
+      // sul pool in ordine (fallback retrocompatibile: 1 per singolo, 5 per carosello),
+      // pescando però SOLO tra i media compatibili con questo contenuto.
+      if (!picked.length) picked.push(...requested.slice(0, isCarousel ? MEDIA_SLOTS : 1))
       if (!picked.length) {
         const fallbackTarget = isCarousel ? CAROUSEL_TARGET : 1
         for (let i = 0; i < total && picked.length < fallbackTarget; i++) {
-          if (!used.has(i)) picked.push(i)
+          if (!used.has(i) && compatibile(i)) picked.push(i)
         }
       }
 
-      if (!picked.length) { photosExhausted = true; return empty }
+      if (!picked.length) {
+        // Distinguiamo le due cause: foto finite (carica più materiale) oppure
+        // materiale presente ma tutto marcato/tipizzato per altri formati.
+        let liberi = 0
+        for (let i = 0; i < total; i++) if (!used.has(i)) liberi++
+        if (liberi > 0) slotSenzaMediaCompatibile++
+        else photosExhausted = true
+        return empty
+      }
       // carouselUnderfilled = SCARSITÀ reale di foto, non scelta volontaria del modello.
-      // Segnala solo se il carosello ha <3 foto E non ne restano di libere nel blocco:
-      // se il modello ne ha scelte poche ma ci sono ancora foto disponibili è una sua
-      // decisione legittima, non una carenza da segnalare ("carica più foto").
+      // Segnala solo se il carosello ha <3 foto E non ne restano di libere e compatibili
+      // nel blocco: se il modello ne ha scelte poche ma ce ne sono ancora di
+      // disponibili è una sua decisione legittima, non una carenza da segnalare.
       if (isCarousel && picked.length < CAROUSEL_MIN) {
-        const freeRemaining = total - used.size - picked.length
+        let freeRemaining = 0
+        for (let i = 0; i < total; i++) {
+          if (!used.has(i) && !picked.includes(i) && compatibile(i)) freeRemaining++
+        }
         if (freeRemaining <= 0) carouselUnderfilled = true
       }
 
@@ -904,6 +994,12 @@ Output SOLO JSON array valido:
       images_insufficient: photosExhausted,
       // Almeno un carosello ha meno di 3 foto disponibili (sotto il minimo).
       carousel_underfilled: carouselUnderfilled,
+      // Vincoli media applicati: quante scelte dell'AI sono state respinte perché
+      // violavano il tipo (MP4 su formato statico) o la marcatura manuale, e quanti
+      // contenuti sono rimasti senza media perché non ne restava uno compatibile.
+      ...(mediaScartatiTipo && { media_scartati_tipo: mediaScartatiTipo }),
+      ...(mediaScartatiTag && { media_scartati_tag: mediaScartatiTag }),
+      ...(slotSenzaMediaCompatibile && { contenuti_senza_media_compatibile: slotSenzaMediaCompatibile }),
       ...(schemaFallbackUsed && { schema_fallback: true, warning: 'Eseguire npm run migrate per abilitare tutti i campi qualità e ottimizzazione' }),
     })
   } catch (e) {
