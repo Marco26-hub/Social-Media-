@@ -5,7 +5,9 @@
 // Perché serve: /v2/posts richiede OBBLIGATORIAMENTE accountId — identifica SU
 // QUALE account social pubblicare. Prima nessuno lo popolava, quindi ogni
 // pubblicazione falliva con "Account Blotato non collegato". Qui lo risolviamo
-// una volta dagli account collegati in Blotato (blotato_list_accounts → GET /v2/accounts).
+// una volta dagli account collegati in Blotato (blotato_list_accounts → GET /v2/users/me/accounts).
+// NOTA STORICA: GET /v2/accounts sembrava l'endpoint giusto ma risponde 404 (verificato
+// con chiave reale valida) — il path corretto, verificato 200 dal vivo, è /v2/users/me/accounts.
 //
 // NIENTE fallback silenzioso: se un canale non ha un account Blotato collegato,
 // l'errore è esplicito e dice cosa collegare, non pubblica a caso.
@@ -28,10 +30,22 @@ export type BlotatoAccount = {
   username?: string
   name?: string
   subaccounts: BlotatoSubaccount[]
+  // Se il fetch delle sotto-destinazioni (Page/board) per QUESTO account è fallito,
+  // il motivo va qui. subaccounts resta [] ma NON vuol dire "nessuna Page collegata":
+  // vuol dire "non siamo riusciti a verificarlo". pickSubaccount deve distinguere i
+  // due casi, altrimenti un errore di rete si traveste da "account senza Page".
+  subaccountsError?: string
 }
 
+// Piattaforme per cui esistono sotto-destinazioni (Facebook Page, board Pinterest,
+// Company Page LinkedIn) e per cui quindi vale la pena chiamare l'endpoint
+// /subaccounts per-account. Le altre (youtube, instagram, threads, tiktok, twitter)
+// rispondono comunque {items:[]} ma chiamarle sarebbe traffico sprecato.
+const SUBACCOUNT_PLATFORMS = new Set(['facebook', 'pinterest', 'linkedin'])
+
 // Cache per-key con TTL breve: una "Sincronizza" tocca N contenuti; senza cache
-// faremmo N chiamate identiche a /v2/accounts. 60s copre l'intero batch.
+// faremmo N chiamate identiche a /v2/users/me/accounts (+ una per /subaccounts
+// per ogni account facebook/pinterest/linkedin). 60s copre l'intero batch.
 const accountsCache = new Map<string, { at: number; accounts: BlotatoAccount[] }>()
 const ACCOUNTS_TTL_MS = 60_000
 
@@ -41,25 +55,52 @@ function normalizeAccount(raw: unknown): BlotatoAccount | null {
   const id = String(o.id ?? o.accountId ?? o.account_id ?? '').trim()
   const platform = String(o.platform ?? o.type ?? o.network ?? '').trim().toLowerCase()
   if (!id || !platform) return null
-  const rawSubs = Array.isArray(o.subaccounts) ? o.subaccounts
-    : Array.isArray(o.pages) ? o.pages
-    : Array.isArray(o.boards) ? o.boards
-    : []
-  const subaccounts: BlotatoSubaccount[] = rawSubs
-    .map((s): BlotatoSubaccount | null => {
-      if (!s || typeof s !== 'object') return null
-      const so = s as Record<string, unknown>
-      const sid = String(so.id ?? so.pageId ?? so.boardId ?? '').trim()
-      if (!sid) return null
-      return { id: sid, name: so.name ? String(so.name) : undefined, type: so.type ? String(so.type) : undefined }
-    })
-    .filter((s): s is BlotatoSubaccount => s !== null)
+  // La risposta reale di /v2/users/me/accounts NON include sotto-destinazioni inline
+  // (niente subaccounts/pages/boards nell'oggetto account): vanno recuperate a parte
+  // con fetchSubaccounts, popolate dopo in listBlotatoAccounts.
   return {
     id,
     platform,
     username: o.username ? String(o.username) : undefined,
-    name: o.name ? String(o.name) : (o.displayName ? String(o.displayName) : undefined),
-    subaccounts,
+    // Ordine: name/displayName (se mai presenti) prima, poi fullname (il campo che i
+    // dati reali usano davvero — spesso vuoto per account non-Page tipo instagram/tiktok).
+    name: o.name ? String(o.name)
+      : o.displayName ? String(o.displayName)
+      : o.fullname ? String(o.fullname)
+      : undefined,
+    subaccounts: [],
+  }
+}
+
+// Recupera le sotto-destinazioni (Page/board) di UN account. Endpoint verificato dal
+// vivo (200, chiave reale): GET /v2/users/me/accounts/{accountId}/subaccounts, schema
+// { items: [{ id, name, accountId }] }. Non lancia mai: un fallimento qui non deve far
+// saltare l'intera lista account, diventa `subaccountsError` sul singolo account.
+async function fetchSubaccounts(key: string, accountId: string): Promise<{ subs: BlotatoSubaccount[]; error?: string }> {
+  try {
+    const res = await fetch(`${BLOTATO_API_BASE}/v2/users/me/accounts/${accountId}/subaccounts`, {
+      headers: { Authorization: `Bearer ${key}`, 'blotato-api-key': key },
+    })
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      return { subs: [], error: `Blotato subaccounts ${res.status}: ${body.slice(0, 160) || 'errore lista sotto-destinazioni'}` }
+    }
+    const data = await res.json().catch(() => null) as unknown
+    const arr = Array.isArray(data) ? data
+      : (data && typeof data === 'object' ? (data as Record<string, unknown>).items : null)
+    if (!Array.isArray(arr)) return { subs: [], error: 'Blotato: risposta sotto-destinazioni inattesa (nessun array)' }
+    const subs = arr
+      .map((s): BlotatoSubaccount | null => {
+        if (!s || typeof s !== 'object') return null
+        const so = s as Record<string, unknown>
+        const sid = String(so.id ?? '').trim()
+        if (!sid) return null
+        return { id: sid, name: so.name ? String(so.name) : undefined }
+      })
+      .filter((s): s is BlotatoSubaccount => s !== null)
+    return { subs }
+  } catch (e) {
+    return { subs: [], error: `Blotato subaccounts: errore di rete (${(e as Error).message})` }
   }
 }
 
@@ -67,7 +108,7 @@ export async function listBlotatoAccounts(key: string, force = false): Promise<B
   const cached = accountsCache.get(key)
   if (!force && cached && Date.now() - cached.at < ACCOUNTS_TTL_MS) return cached.accounts
 
-  const res = await fetch(`${BLOTATO_API_BASE}/v2/accounts`, {
+  const res = await fetch(`${BLOTATO_API_BASE}/v2/users/me/accounts`, {
     headers: { Authorization: `Bearer ${key}`, 'blotato-api-key': key },
   })
   if (!res.ok) {
@@ -84,8 +125,18 @@ export async function listBlotatoAccounts(key: string, force = false): Promise<B
         : null)
   if (!Array.isArray(arr)) throw new Error('Blotato: risposta account inattesa (nessun array)')
   const accounts = arr.map(normalizeAccount).filter((a): a is BlotatoAccount => a !== null)
-  accountsCache.set(key, { at: Date.now(), accounts })
-  return accounts
+
+  // Sotto-destinazioni: solo per le piattaforme che ne hanno bisogno (facebook/pinterest/
+  // linkedin), una chiamata per account, in parallelo. Un fallimento su UN account non
+  // deve inquinare gli altri: fetchSubaccounts non lancia mai, ritorna subaccountsError.
+  const withSubs = await Promise.all(accounts.map(async (a) => {
+    if (!SUBACCOUNT_PLATFORMS.has(a.platform)) return a
+    const { subs, error } = await fetchSubaccounts(key, a.id)
+    return { ...a, subaccounts: subs, subaccountsError: error }
+  }))
+
+  accountsCache.set(key, { at: Date.now(), accounts: withSubs })
+  return withSubs
 }
 
 // Prefisso della chiave in `settings` che fissa l'account Blotato scelto per un cliente
@@ -100,7 +151,12 @@ function accountLabel(a: BlotatoAccount): string {
   const nome = (a.name || '').trim()
   const user = (a.username || '').trim()
   if (nome && user && nome.toLowerCase() !== user.toLowerCase()) return `${nome} (@${user})`
-  return nome || (user ? `@${user}` : '') || a.id
+  if (nome) return nome
+  if (user) return `@${user}`
+  // Né fullname né username (capita nei dati reali, es. account facebook/instagram non-Page):
+  // mai una label vuota, altrimenti due account della stessa piattaforma sono indistinguibili
+  // nella UI di scelta e nei messaggi di errore fail-closed.
+  return `${a.platform} #${a.id.slice(-6)}`
 }
 
 // Legge l'account fissato per (cliente, canale). Ritorna '' se non configurato e non
@@ -217,6 +273,12 @@ function pickSubaccount(
     throw new Error(`La ${cosa} fissata per questo cliente non è più collegata in Blotato. Disponibili: ${subs.map(s => s.name || s.id).join(', ') || 'nessuna'}. Riscegli nella scheda cliente.`)
   }
   if (!subs.length) {
+    // Zero risultati per errore di rete/API != zero Page collegate: dirlo "nessuna
+    // collegata" quando in realtà non siamo riusciti a verificarlo manderebbe l'utente
+    // a scollegare/ricollegare una Page che esiste già. Mai inventare un fallback silenzioso.
+    if (account.subaccountsError) {
+      throw new Error(`Impossibile verificare le ${cosa} dell'account ${accountLabel(account)}: ${account.subaccountsError}. Riprova; se persiste, inserisci l'ID della ${cosa} a mano.`)
+    }
     if (!obbligatorio) throw new Error(`Nessuna ${cosa} collegata`)
     throw new Error(`Nessuna ${cosa} collegata in Blotato per l'account ${accountLabel(account)}: collegala nel workspace Blotato.`)
   }
@@ -259,6 +321,12 @@ export async function resolveBlotatoTarget(
     target.boardId = pickSubaccount(account, 'board Pinterest', pinnedSubaccountId, true).id
     target.title = (str(row.hook) || str(row.nome_prodotto) || 'Nuovo pin').slice(0, 100)
   } else if (platform === 'linkedin') {
+    // Se il fetch delle Company Page è fallito, NON trattarlo come "nessuna Company Page
+    // collegata": pubblicherebbe silenziosamente sul profilo personale mentre magari
+    // esiste (ed è pinnata) una Company Page che non siamo riusciti a vedere.
+    if (account.subaccountsError) {
+      throw new Error(`Impossibile verificare le Company Page LinkedIn dell'account ${accountLabel(account)}: ${account.subaccountsError}. Riprova prima di pubblicare.`)
+    }
     // Se c'è una Company Page collegata la usiamo; altrimenti profilo personale.
     const page = account.subaccounts.length ? pickSubaccount(account, 'Company Page LinkedIn', pinnedSubaccountId, false) : null
     if (page) target.pageId = page.id
@@ -333,7 +401,7 @@ export async function planDestinations(key: string, clienteId: string, canali: s
     // mostrarlo verde qui darebbe una falsa sicurezza proprio prima del test live.
     const account = scelta.account
     const base = { canale, platform, accountId: account.id, label: accountLabel(account), opzioni }
-    if (platform === 'facebook' || platform === 'pinterest' || (platform === 'linkedin' && account.subaccounts.length)) {
+    if (platform === 'facebook' || platform === 'pinterest' || (platform === 'linkedin' && (account.subaccounts.length || account.subaccountsError))) {
       try {
         const sub = pickSubaccount(
           account,
