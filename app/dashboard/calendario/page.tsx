@@ -462,7 +462,7 @@ function CalendarioInner() {
       const extraPatch: Partial<Contenuto> = uploaded.kind === 'video' || uploaded.mime?.startsWith('video/')
         ? { media_type: 'video' }
         : {}
-      await saveMediaSlot(c, col, url, extraPatch)
+      await saveField(c, col, url, extraPatch)
     } catch (e) {
       setAdminError((e as Error).message)
     } finally {
@@ -476,7 +476,7 @@ function CalendarioInner() {
     setUploadingPhoto(`${c.id}:${slot}`)
     setAdminError(null)
     try {
-      await saveMediaSlot(c, col, null)
+      await saveField(c, col, null)
     } catch (e) {
       setAdminError((e as Error).message)
     } finally {
@@ -484,8 +484,11 @@ function CalendarioInner() {
     }
   }
 
-  // Persiste un valore (url o null) in una colonna link_media_* e allinea lo stato locale.
-  async function saveMediaSlot(c: Contenuto, col: string, value: string | null, extraPatch: Partial<Contenuto> = {}) {
+  // Persiste un valore in una colonna qualunque (media, hook, caption, hashtag,
+  // cta...) e allinea sia la lista sia la scheda "Dettagli" eventualmente aperta.
+  // Generica di proposito: prima serviva solo ai media, ma il PATCH sottostante
+  // già accettava qualsiasi colonna in whitelist — mancava solo chi la chiamasse.
+  async function saveField(c: Contenuto, col: string, value: string | null, extraPatch: Partial<Contenuto> = {}) {
     if (demo) {
       setDemoData(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...extraPatch } : item))
     } else {
@@ -494,10 +497,56 @@ function CalendarioInner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: c.id, [col]: value, ...extraPatch }),
       })
-      if (!patchRes.ok) throw new Error(await readApiError(patchRes, 'Salvataggio media fallito'))
+      if (!patchRes.ok) throw new Error(await readApiError(patchRes, `Salvataggio ${col} fallito`))
     }
     setContenuti(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...extraPatch } : item))
     setSelected(prev => prev && prev.id === c.id ? { ...prev, [col]: value, ...extraPatch } : prev)
+  }
+
+  async function saveTextField(c: Contenuto, col: 'hook' | 'caption' | 'hashtag' | 'cta', value: string) {
+    setSaving(c.id)
+    setAdminError(null)
+    try {
+      await saveField(c, col, value)
+    } catch (e) {
+      setAdminError((e as Error).message)
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  // Testo/hashtag: editabile finché il contenuto non è mai stato inviato a
+  // Blotato. Dopo, Blotato ha già la sua copia: modificare qui non aggiornerebbe
+  // il post reale già programmato o pubblicato, quindi resta di sola lettura
+  // per non far credere all'admin di aver corretto qualcosa che in realtà è
+  // già partito così com'era.
+  function editableField(c: Contenuto, label: string, col: 'hook' | 'caption' | 'hashtag' | 'cta', multiline = false) {
+    const value = asText(c[col])
+    if (c.blotato_post_id) {
+      if (!hasText(value)) return null
+      return (
+        <div>
+          <p className="label">{label}</p>
+          <p className={`text-sm whitespace-pre-wrap ${col === 'hashtag' ? 'text-brand-600' : 'text-gray-700'}`}>{value}</p>
+        </div>
+      )
+    }
+    const Field = multiline ? 'textarea' : 'input'
+    return (
+      <div>
+        <p className="label flex items-center justify-between">
+          <span>{label}</span>
+          {saving === c.id && <RefreshCw className="w-3 h-3 text-gray-400 animate-spin" />}
+        </p>
+        <Field
+          key={`${c.id}-${col}`}
+          defaultValue={value}
+          onBlur={e => { if (e.target.value !== value) saveTextField(c, col, e.target.value) }}
+          className={`input text-sm w-full mt-1 ${multiline ? 'h-24 resize-none' : ''}`}
+        />
+        {col === 'hashtag' && <p className="text-[10px] text-gray-400 mt-1">Instagram accetta al massimo 5 hashtag nel testo del post.</p>}
+      </div>
+    )
   }
 
   async function deleteContent(c: Contenuto) {
@@ -1317,31 +1366,11 @@ function CalendarioInner() {
                 <PostPreview c={selected} brand={brand} />
               </div>
 
-              {/* Contenuto */}
-              {hasText(selected.hook) && (
-                <div>
-                  <p className="label">Hook</p>
-                  <p className="text-sm text-gray-800 font-medium">{asText(selected.hook)}</p>
-                </div>
-              )}
-              {hasText(selected.caption) && (
-                <div>
-                  <p className="label">Caption</p>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{asText(selected.caption)}</p>
-                </div>
-              )}
-              {hasText(selected.hashtag) && (
-                <div>
-                  <p className="label">Hashtag</p>
-                  <p className="text-sm text-brand-600">{asText(selected.hashtag)}</p>
-                </div>
-              )}
-              {hasText(selected.cta) && (
-                <div>
-                  <p className="label">CTA</p>
-                  <p className="text-sm text-gray-700">{asText(selected.cta)}</p>
-                </div>
-              )}
+              {/* Contenuto — editabile finché non è mai stato inviato a Blotato */}
+              {editableField(selected, 'Hook', 'hook')}
+              {editableField(selected, 'Caption', 'caption', true)}
+              {editableField(selected, 'Hashtag', 'hashtag')}
+              {editableField(selected, 'CTA', 'cta')}
 
               {Boolean(selected.angle || selected.audience_segment || selected.funnel_stage || selected.kpi_target || selected.primary_message || selected.creative_brief || selected.template_id || selected.template_style || selected.production_notes || selected.compliance_notes || selected.expected_outcome || selected.production_cycle_stage || selected.performance_hypothesis || selected.optimization_cycle_json || selected.next_iteration_actions) && (
                 <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-4">
