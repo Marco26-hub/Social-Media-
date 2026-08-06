@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { Fragment, useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid, CalendarClock } from 'lucide-react'
 import CalendarGrid from '@/components/CalendarGrid'
 import { preflightRow } from '@/lib/publish/preflight'
 import { useSearchParams } from 'next/navigation'
@@ -139,6 +139,7 @@ function CalendarioInner() {
   const [comfyMsg, setComfyMsg] = useState<string | null>(null)
   const [dryRun, setDryRun] = useState<boolean | null>(null)
   const [syncing, setSyncing] = useState(false)
+  const [requeuing, setRequeuing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [vista, setVista] = useState<'lista' | 'griglia'>('lista')
   const [clienteTz, setClienteTz] = useState('Europe/Rome')
@@ -364,6 +365,29 @@ function CalendarioInner() {
       setSyncMsg({ type: 'err', text: (e as Error).message })
     } finally {
       setSyncing(false)
+    }
+  }
+
+  // Rimette in coda i contenuti APPROVATI mai sincronizzati la cui data è già
+  // passata: li sposta al prossimo slot libero (SOLO data/ora, niente Blotato).
+  async function requeuePassati() {
+    setRequeuing(true)
+    setSyncMsg(null)
+    try {
+      const res = await fetch('/api/data/calendario/requeue-passati', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.hint || data.error || 'Requeue fallito')
+      setSyncMsg({
+        type: 'ok',
+        text: data.count === 0
+          ? (data.note || 'Nessun contenuto in ritardo da rimettere in coda.')
+          : `${data.count} contenuti rimessi in coda: ${data.requeued.map((r: { canale: string; a: { giorno: string; ora: string } }) => `${r.canale} → ${r.a.giorno} ${r.a.ora}`).join(', ')}.`,
+      })
+      await fetchData()
+    } catch (e) {
+      setSyncMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setRequeuing(false)
     }
   }
 
@@ -754,6 +778,10 @@ function CalendarioInner() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button onClick={requeuePassati} disabled={requeuing} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 disabled:opacity-60 inline-flex items-center gap-1.5" title="Sposta i contenuti approvati con data già passata al prossimo slot libero (solo data/ora, non tocca Blotato)">
+                {requeuing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
+                <span>{requeuing ? 'Rimetto in coda...' : 'Rimetti in coda i passati'}</span>
+              </button>
               <button onClick={syncBlotato} disabled={syncing} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm hover:bg-slate-100 disabled:opacity-60 inline-flex items-center gap-1.5" title="Invia i contenuti APPROVATI a Blotato per la pubblicazione">
                 {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
                 <span>{syncing ? 'Sincronizzo...' : 'Sincronizza Blotato'}</span>

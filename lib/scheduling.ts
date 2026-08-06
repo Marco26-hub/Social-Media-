@@ -419,6 +419,47 @@ export function prossimoGiornoValido(canale: string, giorno: string, giorniDispo
   return migliore
 }
 
+// ── Requeue: prossimo slot libero per un contenuto rimasto indietro ────────
+// Diverso da pickSlot: quello sceglie l'ORA dentro un giorno già deciso da chi
+// genera il piano. Qui il giorno stesso non è dato — un contenuto la cui data
+// è passata va prima incamminato al prossimo giorno libero per il suo canale,
+// poi gli si assegna l'ora con la stessa pickSlot di sempre. Usato dal requeue
+// dei contenuti APPROVATI mai sincronizzati la cui data/ora è già nel passato.
+
+export function addDays(giorno: string, n: number): string {
+  const d = new Date(`${giorno}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  const p = (x: number) => String(x).padStart(2, '0')
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`
+}
+
+/**
+ * Primo giorno, a partire da `daGiorno` incluso, dove il canale non è ancora
+ * usato (canaleGiaUsatoNelGiorno) e il giorno gli è valido (niente weekend per
+ * LinkedIn/blog). `maxGiorni` è un tetto di sicurezza: se anche dopo due mesi
+ * non si trova nulla (calendario abnormemente pieno), meglio restituire
+ * l'ultimo giorno provato con un warning che raddoppiare in silenzio su un
+ * giorno già saturo.
+ */
+export function nextFreeDay(canale: string, daGiorno: string, usati: Set<string>, maxGiorni = 60): string {
+  let giorno = daGiorno
+  for (let i = 0; i < maxGiorni; i++) {
+    if (giornoValidoPerCanale(canale, giorno) && !canaleGiaUsatoNelGiorno(canale, giorno, usati)) return giorno
+    giorno = addDays(giorno, 1)
+  }
+  console.warn(`[scheduling] nextFreeDay: nessun giorno libero per '${canale}' entro ${maxGiorni} giorni da ${daGiorno}, uso ${giorno} comunque.`)
+  return giorno
+}
+
+export type RequeueRequest = SlotRequest & { daGiorno: string }
+
+/** Prossimo giorno libero (nextFreeDay) + prima ora libero in quel giorno (pickSlot). */
+export function nextAvailableSlot(req: RequeueRequest, usati: Set<string>): { giorno: string; ora: string } {
+  const giorno = nextFreeDay(req.canale, req.daGiorno, usati)
+  const ora = pickSlot(req, giorno, usati)
+  return { giorno, ora }
+}
+
 // ── Cadenza dal pacchetto ────────────────────────────────────────────────
 
 export type CadenzaPiano = {

@@ -16,6 +16,34 @@ function genModeFrom(arr: Setting[]): 'MANUAL' | 'AUTO' {
   return (arr.find(s => s.chiave === 'generation_mode')?.valore || '').toUpperCase() === 'AUTO' ? 'AUTO' : 'MANUAL'
 }
 
+// Righe "fail-safe assenti": se il cliente non ha mai avuto una riga per questa
+// chiave (mai seed-ata, es. clienti creati prima che dry_run esistesse), il
+// toggle spariva del tutto dalla pagina — nessun modo di accenderlo dalla UI.
+// Sintetizziamo la riga mancante col valore che il backend usa quando manca
+// (vedi isDryRunForCliente in lib/publish/schedule.ts: assente = TRUE/prova),
+// così la UI mostra sempre lo stato vero e resta comunque cliccabile.
+const SYNTHETIC_ID_PREFIX = '__missing__:'
+const MISSING_DEFAULTS: Record<string, string> = { dry_run: 'TRUE' }
+
+function isSyntheticId(id: string): boolean {
+  return id.startsWith(SYNTHETIC_ID_PREFIX)
+}
+
+function withSyntheticDefaults(arr: Setting[]): Setting[] {
+  const present = new Set(arr.map(s => s.chiave))
+  const synthetic = Object.entries(MISSING_DEFAULTS)
+    .filter(([chiave]) => !present.has(chiave))
+    .map(([chiave, valore]): Setting => ({
+      id: `${SYNTHETIC_ID_PREFIX}${chiave}`,
+      cliente_id: '',
+      chiave,
+      valore,
+      descrizione: null,
+      updated_at: '',
+    }))
+  return [...arr, ...synthetic]
+}
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Setting[]>([])
   const [loading, setLoading]   = useState(true)
@@ -41,7 +69,7 @@ export default function SettingsPage() {
     fetch('/api/data/settings')
       .then(res => res.json())
       .then(data => {
-        const arr = (data ?? []) as Setting[]
+        const arr = withSyntheticDefaults((data ?? []) as Setting[])
         setSettings(arr)
         const bk = arr.find(s => s.chiave === 'blotato_api_key')?.valore || ''
         setBlotatoKey(bk)
@@ -125,11 +153,30 @@ export default function SettingsPage() {
   async function updateSetting(s: Setting, newVal: string) {
     setSaving(s.id)
     if (!demo) {
-      await fetch('/api/data/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: s.id, valore: newVal })
-      })
+      if (isSyntheticId(s.id)) {
+        // Riga mai esistita per questo cliente: PATCH non avrebbe nulla da trovare.
+        // L'upsert POST la crea al primo click, poi si ricarica per prendere l'id vero
+        // (il POST non lo restituisce) e non passare più per la sintetica.
+        await fetch('/api/data/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chiave: s.chiave, valore: newVal }),
+        })
+        const fresh = await fetch('/api/data/settings').then(r => r.json()).catch(() => null)
+        if (Array.isArray(fresh)) {
+          setSettings(withSyntheticDefaults(fresh as Setting[]))
+          setSaved(s.id)
+          setTimeout(() => setSaved(null), 2000)
+          setSaving(null)
+          return
+        }
+      } else {
+        await fetch('/api/data/settings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: s.id, valore: newVal })
+        })
+      }
     }
     setSettings(prev => prev.map(x => x.id === s.id ? { ...x, valore: newVal } : x))
     setSaved(s.id)
