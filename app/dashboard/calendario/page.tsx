@@ -262,6 +262,33 @@ function CalendarioInner() {
     setSaving(null)
   }
 
+  // Sincronizza su Blotato UN SOLO contenuto — a differenza di "Sincronizza
+  // Blotato" (tutto il batch APPROVATO non ancora inviato in un colpo), utile
+  // per testare un singolo invio reale senza coinvolgere gli altri.
+  async function syncUno(c: Contenuto) {
+    setSaving(c.id)
+    setSyncMsg(null)
+    try {
+      const res = await fetch(`/api/data/calendario/${c.id}/sync-uno`, { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Sincronizzazione singola fallita')
+      const label = data.status === 'scheduled'
+        ? 'inviato a Blotato: programmato per davvero.'
+        : data.status === 'dry_run'
+          ? 'dry-run: pubblicazione non attiva, nessun invio reale.'
+          : `non inviato: ${data.reason || 'scartato dal pre-flight'}`
+      setSyncMsg({
+        type: data.status === 'scheduled' || data.status === 'dry_run' ? 'ok' : 'err',
+        text: `${c.canale} · ${c.formato} — ${label}`,
+      })
+      await fetchData()
+    } catch (e) {
+      setSyncMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSaving(null)
+    }
+  }
+
   async function rifiuta(c: Contenuto) {
     setSaving(c.id)
     if (demo) {
@@ -1237,6 +1264,12 @@ function CalendarioInner() {
                     <button onClick={() => resetErrore(c)} disabled={saving === c.id} className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
                       <RefreshCw className={`w-3.5 h-3.5 ${saving === c.id ? 'animate-spin' : ''}`} />
                       <span className="hidden md:inline">Riprova</span>
+                    </button>
+                  )}
+                  {c.status === 'APPROVATO' && !c.blotato_post_id && (
+                    <button onClick={() => syncUno(c)} disabled={saving === c.id} title="Sincronizza SOLO questo contenuto su Blotato (non l'intero batch)" className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
+                      {saving === c.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />}
+                      <span className="hidden md:inline">Sincronizza questo</span>
                     </button>
                   )}
                   <button
