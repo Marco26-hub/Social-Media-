@@ -807,6 +807,13 @@ function CalendarioInner() {
   // modale di conferma bulk per non promettere un rifiuto su post già pubblicati.
   const rejectableSelectedCount = [...selectedIds].filter(id => contenuti.find(c => c.id === id)?.status === 'DA_APPROVARE').length
   const nextContent = calendarItems.find(c => c.data_pubblicazione >= todayIso && c.status !== 'PUBBLICATO')
+  // Inviati a Blotato ma mai confermati: l'orario è passato e lo stato è fermo a
+  // 'scheduled'. Tolleranza di 15' per non allarmare su un ritardo fisiologico.
+  const stalli = contenuti.filter(c => {
+    if (c.blotato_status !== 'scheduled' || !c.blotato_scheduled_at) return false
+    const t = new Date(c.blotato_scheduled_at).getTime()
+    return Number.isFinite(t) && Date.now() - t > 15 * 60 * 1000
+  })
   const channelEntries = Object.entries(
     contenuti.reduce<Record<string, number>>((acc, c) => {
       acc[c.canale] = (acc[c.canale] || 0) + 1
@@ -911,6 +918,34 @@ function CalendarioInner() {
         <div className={`mb-4 rounded-xl border p-3 text-sm flex items-start gap-2 ${syncMsg.type === 'ok' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
           {syncMsg.type === 'ok' ? <CheckCircle className="w-4 h-4 mt-0.5" /> : <AlertTriangle className="w-4 h-4 mt-0.5" />}
           {syncMsg.text}
+        </div>
+      )}
+
+      {/* Contenuti "in stallo": inviati a Blotato, orario passato, nessuna conferma
+          di pubblicazione mai arrivata. Senza questo avviso restano invisibili —
+          il campo blotato_status resta 'scheduled' per sempre se il webhook non
+          risponde (in produzione basta che manchi BLOTATO_WEBHOOK_SECRET perché
+          ogni callback venga rifiutato con 401). È successo davvero: un post
+          programmato non è uscito e nessuno se n'è accorto per ore. */}
+      {stalli.length > 0 && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-semibold">
+              {stalli.length === 1 ? '1 contenuto risulta ancora "programmato" ma l\'orario è passato.' : `${stalli.length} contenuti risultano ancora "programmati" ma l'orario è passato.`}
+            </p>
+            <p className="mt-0.5 text-red-700">
+              Blotato non ha confermato la pubblicazione. Verifica sul social se il post è uscito davvero: se non c&apos;è, controlla lo storico Blotato e la API key del cliente.
+            </p>
+            <ul className="mt-1.5 space-y-0.5 text-xs text-red-700">
+              {stalli.slice(0, 5).map(c => (
+                <li key={c.id}>
+                  <span className="font-mono">{c.id_contenuto}</span> · {c.canale} · previsto {formatDateLabel(c.data_pubblicazione)} alle {formatTimeLabel(c.ora_pubblicazione)}
+                </li>
+              ))}
+              {stalli.length > 5 && <li>…e altri {stalli.length - 5}.</li>}
+            </ul>
+          </div>
         </div>
       )}
 
