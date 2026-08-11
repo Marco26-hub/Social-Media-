@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { PenLine, Search, ListTree, FileText, HelpCircle, Tag, Loader2, CheckCircle2, Sparkles, AlertCircle, Image as ImageIcon, X } from 'lucide-react'
-import { readClienteId } from '@/lib/use-data'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { PenLine, Search, ListTree, FileText, HelpCircle, Tag, Loader2, CheckCircle2, Sparkles, AlertCircle, Image as ImageIcon, X, Globe2, ExternalLink, Save } from 'lucide-react'
+import { useActiveClienteId } from '@/lib/tenant/client'
 import { readAISettings, readApiError } from '@/lib/ai-client'
 import { uploadAssets } from '@/lib/asset-upload'
 import AIModelSelector from '@/components/AIModelSelector'
 import BlogArticlesList from '@/components/BlogArticlesList'
+import { publicBlogUrl } from '@/lib/blog-url'
 
 // I 5 passi che l'AI esegue (illustrativi).
 const PASSI = [
@@ -18,6 +20,7 @@ const PASSI = [
 ]
 
 export default function BlogPage() {
+  const { clienteId, loading: loadingCliente } = useActiveClienteId()
   const [tema, setTema] = useState('')
   const [loading, setLoading] = useState(false)
   const [ok, setOk] = useState(false)
@@ -25,12 +28,48 @@ export default function BlogPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [cover, setCover] = useState('')
   const [uploadingCover, setUploadingCover] = useState(false)
+  const [clienteNome, setClienteNome] = useState('')
+  const [blogDomain, setBlogDomain] = useState('')
+  const [savingDomain, setSavingDomain] = useState(false)
+  const [domainMessage, setDomainMessage] = useState('')
+
+  useEffect(() => {
+    if (!clienteId) return
+    fetch('/api/data/clienti')
+      .then(res => res.ok ? res.json() : [])
+      .then(rows => {
+        const cliente = (Array.isArray(rows) ? rows : []).find((row: { id?: string }) => row.id === clienteId)
+        setClienteNome(cliente?.nome || cliente?.slug || '')
+        setBlogDomain(cliente?.blog_domain || '')
+      })
+      .catch(() => {})
+  }, [clienteId])
+
+  async function saveBlogDomain() {
+    if (!clienteId) return
+    setSavingDomain(true); setDomainMessage('')
+    try {
+      const res = await fetch('/api/data/clienti', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: clienteId, blog_domain: blogDomain.trim() }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Salvataggio non riuscito')
+      if (typeof data.blog_domain === 'string') setBlogDomain(data.blog_domain)
+      setDomainMessage('Destinazione Blog salvata.')
+    } catch (e) {
+      setDomainMessage((e as Error).message)
+    } finally {
+      setSavingDomain(false)
+    }
+  }
 
   async function uploadCover(file: File) {
     setUploadingCover(true); setError('')
     try {
       const fd = new FormData()
-      fd.append('cliente_id', readClienteId() || '')
+      fd.append('cliente_id', clienteId || '')
       fd.append('files', file)
       const d = await uploadAssets(fd)
       setCover(d.assets?.[0]?.url || '')
@@ -47,7 +86,7 @@ export default function BlogPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cliente_id: readClienteId(),
+          cliente_id: clienteId,
           tema: tema.trim(),
           model: ai.model,
           openrouter_key: ai.openrouter_key,
@@ -76,6 +115,36 @@ export default function BlogPage() {
         <p className="text-sm text-gray-500 mt-1">
           L&apos;AI scrive un articolo SEO completo (title, meta, sezioni, FAQ) e lo salva in <strong>Blog</strong> pronto da revisionare.
         </p>
+      </div>
+
+      <div className="card p-4 md:p-5 mb-6 border border-brand-100 bg-brand-50/40">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-brand-700 font-bold flex items-center gap-1.5"><Globe2 className="w-4 h-4" /> Pagina pubblica</p>
+            <h2 className="text-base font-bold text-gray-900 mt-1">Destinazione Blog {clienteNome ? `· ${clienteNome}` : ''}</h2>
+            <p className="text-xs text-gray-500 mt-1">Incolla il dominio o l&apos;URL completo: protocollo e percorso <code>/blog</code> vengono riconosciuti automaticamente.</p>
+          </div>
+          {publicBlogUrl(blogDomain) && (
+            <a href={publicBlogUrl(blogDomain)} target="_blank" rel="noopener noreferrer" className="btn-secondary text-xs py-2 px-3 justify-center whitespace-nowrap">
+              Apri Blog <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 mt-3">
+          <input
+            type="text"
+            value={blogDomain}
+            onChange={event => setBlogDomain(event.target.value)}
+            placeholder="https://socialautomation.app/blog"
+            className="input flex-1 font-mono text-sm"
+            disabled={loadingCliente || savingDomain}
+          />
+          <button type="button" onClick={saveBlogDomain} disabled={!clienteId || savingDomain} className="btn-primary py-2 px-4 justify-center whitespace-nowrap disabled:opacity-50">
+            {savingDomain ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salva destinazione
+          </button>
+        </div>
+        {domainMessage && <p className={`text-xs mt-2 ${domainMessage.includes('salvata') ? 'text-green-700' : 'text-red-700'}`}>{domainMessage}</p>}
+        {clienteId && <Link href={`/dashboard/clienti/${clienteId}`} className="inline-flex items-center gap-1 text-[11px] text-brand-700 font-semibold mt-2 hover:underline">Apri configurazione completa del cliente <ExternalLink className="w-3 h-3" /></Link>}
       </div>
 
       {/* Selettore modello (OpenRouter) */}

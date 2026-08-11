@@ -42,7 +42,7 @@ export default function TerminiPage() {
 
       <h2>3. Piani, prezzi e pagamenti</h2>
       <ul>
-        <li>I canoni e gli eventuali costi iniziali sono indicati nella pagina <a href="/servizi#pacchetti">Pacchetti</a>. I prezzi sono mensili e IVA esclusa, salvo diversa indicazione.</li>
+        <li>I canoni e gli eventuali costi iniziali sono indicati nella pagina <a href="/pacchetti">Pacchetti</a>. I prezzi sono mensili e IVA esclusa, salvo diversa indicazione.</li>
         <li>La fatturazione degli abbonamenti è gestita tramite Stripe, con rinnovo automatico mensile salvo disdetta.</li>
         <li>Il budget destinato alle campagne pubblicitarie è sempre separato dal canone del servizio.</li>
         <li>Le consulenze legali (€150/30 min) sono erogate dallo Studio Legale BCS e regolate anche dalle condizioni dello Studio.</li>

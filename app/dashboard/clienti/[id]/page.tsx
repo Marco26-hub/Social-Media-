@@ -8,13 +8,14 @@ import type { Contenuto, Cliente } from '@/lib/types'
 import type { Destination } from '@/lib/blotato-accounts'
 import { PACKAGE_LIST } from '@/lib/packages'
 import {
-  Building2, Calendar, BarChart3, Target, ShoppingBag, FileText,
+  Building2, Calendar, BarChart3, Target, ShoppingBag, FileText, CreditCard,
   TrendingUp, AlertTriangle, CheckCircle, Clock, ArrowLeft,
   Loader2, Globe, Check, X, Send,
 } from 'lucide-react'
 import Link from 'next/link'
 import { demoContenuti, demoClienti } from '@/lib/demo-data'
 import StatusBadge from '@/components/StatusBadge'
+import { publicBlogUrl } from '@/lib/blog-url'
 
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', youtube_shorts: '▶️', linkedin: '💼',
@@ -67,6 +68,7 @@ export default function ClienteDetailPage() {
         const c = demoClienti.find(x => x.id === id || x.slug === id)
         if (c) {
           setCliente(c)
+          setBlogDomain(c.blog_domain || '')
           setPacchetto(c.pacchetto || '')
           setContenutiMese(String(c.contenuti_mese ?? ''))
           setTimezone(c.timezone || 'Europe/Rome')
@@ -102,8 +104,10 @@ export default function ClienteDetailPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
-      setCliente(prev => prev ? { ...prev, blog_domain: blogDomain.trim() || null } : prev)
-      setDomainMsg({ type: 'ok', text: 'Dominio salvato.' })
+      const savedDomain = typeof data.blog_domain === 'string' ? data.blog_domain : blogDomain.trim()
+      setBlogDomain(savedDomain)
+      setCliente(prev => prev ? { ...prev, blog_domain: savedDomain || null } : prev)
+      setDomainMsg({ type: 'ok', text: 'Link Blog salvato.' })
     } catch (e) {
       setDomainMsg({ type: 'err', text: (e as Error).message })
     } finally {
@@ -192,7 +196,13 @@ export default function ClienteDetailPage() {
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
       const nuovo = (pacchetto === 'presenza' || pacchetto === 'crescita') ? pacchetto : null
-      setCliente(prev => prev ? { ...prev, pacchetto: nuovo } : prev)
+      const packageSpec = PACKAGE_LIST.find(item => item.id === nuovo)
+      if (packageSpec) setContenutiMese(String(packageSpec.contenutiMese))
+      setCliente(prev => prev ? {
+        ...prev,
+        pacchetto: nuovo,
+        contenuti_mese: packageSpec?.contenutiMese ?? prev.contenuti_mese,
+      } : prev)
       setPkgMsg({ type: 'ok', text: 'Pacchetto aggiornato.' })
     } catch (e) {
       setPkgMsg({ type: 'err', text: (e as Error).message })
@@ -300,20 +310,20 @@ export default function ClienteDetailPage() {
       <div className="card p-5 mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Globe className="w-4 h-4 text-sky-600" />
-          <h2 className="font-bold text-gray-900">Blog pubblico</h2>
+          <h2 className="font-bold text-gray-900">Link pagina Blog</h2>
         </div>
         <p className="text-xs text-gray-500 mb-3">
-          Dominio/sottodominio dedicato per il blog pubblico di questo cliente (es. <span className="font-mono">blog.{cliente.slug}.com</span>). Configura anche il DNS e il dominio custom su Render perché funzioni.
+          Incolla il dominio oppure l&apos;URL completo della pagina Blog di questo cliente. Il sistema lo collega agli articoli, ai dati SEO e agli strumenti GEO.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             value={blogDomain}
             onChange={e => setBlogDomain(e.target.value)}
-            placeholder="blog.tuodominio.com"
+            placeholder="https://www.tuodominio.com/blog"
             className="input flex-1 font-mono text-sm"
           />
           <button onClick={saveBlogDomain} disabled={savingDomain} className="btn-primary py-2 px-4 justify-center whitespace-nowrap">
-            {savingDomain ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva dominio'}
+            {savingDomain ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva link Blog'}
           </button>
         </div>
         {domainMsg && (
@@ -322,21 +332,26 @@ export default function ClienteDetailPage() {
             {domainMsg.text}
           </div>
         )}
-        {cliente.blog_domain && (
+        {cliente.blog_domain && publicBlogUrl(cliente.blog_domain) && (
           <p className="text-xs text-gray-400 mt-2">
-            Attivo su: <a href={`https://${cliente.blog_domain}/blog`} target="_blank" rel="noopener" className="text-brand-600 hover:underline">{cliente.blog_domain}/blog</a>
+            Pagina collegata: <a href={publicBlogUrl(cliente.blog_domain)} target="_blank" rel="noopener" className="text-brand-600 hover:underline">{publicBlogUrl(cliente.blog_domain)}</a>
           </p>
         )}
       </div>
 
       {/* Pacchetto acquistato — guida il "piano del pacchetto" nella pagina Piano */}
       <div className="card p-5 mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <ShoppingBag className="w-4 h-4 text-violet-600" />
-          <h2 className="font-bold text-gray-900">Pacchetto acquistato</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4 text-violet-600" />
+            <h2 className="font-bold text-gray-900">Pacchetto acquistato</h2>
+          </div>
+          <Link href="/dashboard/clienti?tab=pagamenti" className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:underline">
+            <CreditCard className="w-3.5 h-3.5" /> Abbonamento e fatture
+          </Link>
         </div>
         <p className="text-xs text-gray-500 mb-3">
-          Il pacchetto del cliente. Il &quot;piano del pacchetto&quot; genera in automatico i contenuti compresi (numero, mix formati, social, qualità). Cambialo qui in caso di upgrade.
+          Il pacchetto del cliente genera in automatico contenuti, formati, social e qualità. Se esiste un abbonamento Stripe attivo, verifica anche il canone nella sezione Pagamenti.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <select

@@ -1,84 +1,138 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { CircleHelp, LayoutGrid, PackageCheck, Scale, Workflow, type LucideIcon } from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import {
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  Globe2,
+  Layers3,
+  Megaphone,
+  Newspaper,
+  PackageCheck,
+  Scale,
+  ScanSearch,
+  Workflow,
+  type LucideIcon,
+} from 'lucide-react'
 import styles from './desktop-menu.module.css'
 
-type DesktopMenuLink = {
+type SolutionLink = {
   href: string
   label: string
+  description: string
+  icon: LucideIcon
 }
 
-type DesktopMenuProps = {
-  links: DesktopMenuLink[]
-}
+const SOLUTIONS: SolutionLink[] = [
+  {
+    href: '/servizi/gestione-social-media',
+    label: 'Gestione social',
+    description: 'Strategia, contenuti e pubblicazione.',
+    icon: Megaphone,
+  },
+  {
+    href: '/servizi/seo-geo',
+    label: 'SEO + GEO',
+    description: 'Visibilità su ricerca e sistemi AI.',
+    icon: ScanSearch,
+  },
+  {
+    href: '/servizi/siti-e-commerce',
+    label: 'Siti ed e-commerce',
+    description: 'Esperienze pensate per convertire.',
+    icon: Globe2,
+  },
+  {
+    href: '/consulenza',
+    label: 'Consulenza legale AI',
+    description: 'Privacy, AI Act e trasparenza.',
+    icon: Scale,
+  },
+]
 
-const MENU_ICONS: Record<string, LucideIcon> = {
-  '#servizi': LayoutGrid,
-  '#metodo': Workflow,
-  '#prezzi': PackageCheck,
-  '#pacchetti': PackageCheck,
-  '#legale': Scale,
-  '#faq': CircleHelp,
-}
-
-export default function DesktopMenu({ links }: DesktopMenuProps) {
-  const [activeHref, setActiveHref] = useState('')
+export default function DesktopMenu() {
+  const pathname = usePathname()
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [solutionsOpen, setSolutionsOpen] = useState(false)
 
   useEffect(() => {
-    let frame = 0
-
-    const updateActiveLink = () => {
-      frame = 0
-      const activationLine = 150
-      let current = ''
-      let nearestTop = Number.NEGATIVE_INFINITY
-
-      for (const link of links) {
-        const section = document.querySelector<HTMLElement>(link.href)
-        const sectionTop = section?.getBoundingClientRect().top
-        if (sectionTop !== undefined && sectionTop <= activationLine && sectionTop > nearestTop) {
-          current = link.href
-          nearestTop = sectionTop
-        }
-      }
-
-      setActiveHref(current)
+    const closeMenu = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setSolutionsOpen(false)
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSolutionsOpen(false)
     }
 
-    const scheduleUpdate = () => {
-      if (!frame) frame = window.requestAnimationFrame(updateActiveLink)
-    }
-
-    updateActiveLink()
-    window.addEventListener('scroll', scheduleUpdate, { passive: true })
-    window.addEventListener('hashchange', scheduleUpdate)
-
+    document.addEventListener('pointerdown', closeMenu)
+    document.addEventListener('keydown', closeOnEscape)
     return () => {
-      if (frame) window.cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', scheduleUpdate)
-      window.removeEventListener('hashchange', scheduleUpdate)
+      document.removeEventListener('pointerdown', closeMenu)
+      document.removeEventListener('keydown', closeOnEscape)
     }
-  }, [links])
+  }, [])
+
+  const solutionIsActive = pathname === '/servizi' || SOLUTIONS.some(link => pathname === link.href)
 
   return (
     <nav className={styles.desktopMenu} aria-label="Navigazione principale">
-      {links.map(link => {
-        const active = activeHref === link.href
-        const Icon = MENU_ICONS[link.href] || LayoutGrid
-        return (
-          <a
-            key={link.href}
-            href={link.href}
-            className={active ? styles.active : undefined}
-            aria-current={active ? 'location' : undefined}
-            onClick={() => setActiveHref(link.href)}
-          >
-            <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
-            {link.label}
-          </a>
-        )
-      })}
+      <Link className={`${styles.menuLink} ${pathname === '/' ? styles.active : ''}`} href="/">
+        Home
+      </Link>
+      <div className={styles.solutionRoot} ref={menuRef}>
+        <button
+          type="button"
+          className={`${styles.menuLink} ${styles.menuTrigger} ${solutionIsActive ? styles.active : ''}`}
+          aria-expanded={solutionsOpen}
+          aria-controls="desktop-solutions-menu"
+          onClick={() => setSolutionsOpen(open => !open)}
+        >
+          <Layers3 size={15} strokeWidth={1.9} aria-hidden="true" />
+          Soluzioni
+          <ChevronDown className={solutionsOpen ? styles.chevronOpen : ''} size={14} aria-hidden="true" />
+        </button>
+
+        {solutionsOpen && (
+          <div id="desktop-solutions-menu" className={styles.flyout}>
+            <div className={styles.flyoutHeading}>
+              <div>
+                <span>Ecosistema SWA</span>
+                <strong>Una pagina per ogni competenza.</strong>
+              </div>
+              <Link href="/servizi" onClick={() => setSolutionsOpen(false)}>
+                Panoramica <ChevronRight size={14} aria-hidden="true" />
+              </Link>
+            </div>
+            <div className={styles.solutionGrid}>
+              {SOLUTIONS.map(({ href, label, description, icon: Icon }) => (
+                <Link key={href} href={href} onClick={() => setSolutionsOpen(false)}>
+                  <span className={styles.solutionIcon}><Icon size={18} aria-hidden="true" /></span>
+                  <span>
+                    <strong>{label}</strong>
+                    <small>{description}</small>
+                  </span>
+                  <ChevronRight size={15} aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Link className={`${styles.menuLink} ${pathname === '/metodo' ? styles.active : ''}`} href="/metodo">
+        <Workflow size={15} strokeWidth={1.9} aria-hidden="true" /> Metodo
+      </Link>
+      <Link className={`${styles.menuLink} ${pathname === '/pacchetti' ? styles.active : ''}`} href="/pacchetti">
+        <PackageCheck size={15} strokeWidth={1.9} aria-hidden="true" /> Pacchetti
+      </Link>
+      <Link className={`${styles.menuLink} ${pathname.startsWith('/blog') ? styles.active : ''}`} href="/blog">
+        <Newspaper size={15} strokeWidth={1.9} aria-hidden="true" /> Journal
+      </Link>
+      <Link className={`${styles.menuLink} ${pathname === '/chi-siamo' ? styles.active : ''}`} href="/chi-siamo">
+        <Building2 size={15} strokeWidth={1.9} aria-hidden="true" /> Azienda
+      </Link>
     </nav>
   )
 }

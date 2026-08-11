@@ -262,7 +262,7 @@
 :global(html[data-theme='dark']) .articleCta { background: #271816; color: #dbc9c3; }
 :global(html[data-theme='dark']) .finalCta { background: #0f6b4f; }
 
-@media (max-width: 1120px) {
+@media (max-width: 1180px) {
   .desktopNav,
   .navActions { display: none; }
   .navbar > :last-child { margin-left: auto; }

@@ -4,6 +4,7 @@ import { dbReady, q } from '@/lib/db'
 import { requireClienteId } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
 import { stripeConfigured, createStripePortalSession } from '@/lib/stripe'
+import { getPublicBaseUrl } from '@/lib/base-url'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,8 +31,8 @@ export async function POST(request: Request) {
       )
     }
 
-    const origin = new URL(request.url).origin
-    const session = await createStripePortalSession({ stripeCustomerId: customerId, returnUrl: `${origin}/portale` })
+    const baseUrl = getPublicBaseUrl(request).replace(/\/$/, '')
+    const session = await createStripePortalSession({ stripeCustomerId: customerId, returnUrl: `${baseUrl}/portale` })
     return NextResponse.json({ url: session.url })
   } catch (e) {
     return apiError(e)

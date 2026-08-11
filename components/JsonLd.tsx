@@ -65,7 +65,7 @@ const jsonLd = {
           {
             '@type': 'Offer',
             name: 'Piano Presenza',
-            url: `${SITE_URL}/servizi#pacchetti`,
+            url: `${SITE_URL}/pacchetti`,
             price: '390',
             priceCurrency: 'EUR',
             priceSpecification: {
@@ -89,7 +89,7 @@ const jsonLd = {
           {
             '@type': 'Offer',
             name: 'Piano Crescita',
-            url: `${SITE_URL}/servizi#pacchetti`,
+            url: `${SITE_URL}/pacchetti`,
             price: '790',
             priceCurrency: 'EUR',
             priceSpecification: {
@@ -112,7 +112,10 @@ const jsonLd = {
           },
           {
             '@type': 'Offer',
-            url: `${SITE_URL}/servizi#servizi`,
+            url: `${SITE_URL}/servizi/siti-e-commerce`,
+            price: '19.90',
+            priceCurrency: 'EUR',
+            valueAddedTaxIncluded: false,
             itemOffered: {
               '@type': 'Service',
               '@id': `${SITE_URL}/#web-development`,
@@ -121,7 +124,7 @@ const jsonLd = {
               provider: { '@id': `${SITE_URL}/#organization` },
               areaServed: { '@type': 'Country', name: 'Italia' },
               description:
-                'Progettazione di siti web ed e-commerce responsive, integrati con contenuti, campagne, analytics e percorsi di conversione.',
+                'Pacchetto separato per siti web ed e-commerce responsive da 19,90 euro al mese. Dopo 12 mesi di canone il sito diventa di proprietà del cliente.',
             },
           },
           {

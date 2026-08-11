@@ -7,6 +7,7 @@ import { dbReady, q } from '@/lib/db'
 import { resolveBlogClienteId } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
 import { SWA_BLOG_ARTICLES } from '@/lib/swa-blog-content'
+import FloatingNavigation from '@/components/FloatingNavigation'
 import { BlogFooter, BlogHeader } from './BlogChrome'
 import styles from './blog.module.css'
 
@@ -286,12 +287,13 @@ export default async function BlogIndexPage() {
           <h2>Serve una direzione per la tua presenza digitale?</h2>
           <p>Partiamo da obiettivi, canali e risorse reali. Poi definiamo attività, responsabilità e costi.</p>
         </div>
-        <Link href="/servizi#pacchetti" className={styles.lightButton}>
+        <Link href="/pacchetti" className={styles.lightButton}>
           Confronta i pacchetti <ArrowRight size={17} aria-hidden="true" />
         </Link>
       </section>
 
       <BlogFooter />
+      <FloatingNavigation />
     </main>
   )
 }

@@ -11,6 +11,7 @@ type ClienteRow = {
   id?: unknown
   nome?: unknown
   piano?: unknown
+  pacchetto?: unknown
   contenuti_mese?: unknown
   attivo?: unknown
 }
@@ -63,9 +64,10 @@ function isoOrNull(value: unknown): string | null {
 
 function buildPayload(cliente: ClienteRow, usati: number, pagamenti?: PaymentSnapshot) {
   const piano = typeof cliente.piano === 'string' ? cliente.piano : 'free'
+  const packageSource = typeof cliente.pacchetto === 'string' && cliente.pacchetto ? cliente.pacchetto : piano
   const inclusi = toInt(cliente.contenuti_mese, 0)
-  const pacchetto = pacchettoFromPiano(piano)
-  const slug = pacchettoSlugFromPiano(piano)
+  const pacchetto = pacchettoFromPiano(packageSource)
+  const slug = pacchettoSlugFromPiano(packageSource)
   const percentuale = inclusi > 0 ? Math.min(100, Math.round((usati / inclusi) * 100)) : 0
 
   return {
@@ -184,6 +186,7 @@ export async function GET() {
         id: 'demo-silkincom',
         nome: 'SILKinCOM Demo',
         piano: 'presenza',
+        pacchetto: 'presenza',
         contenuti_mese: 16,
         attivo: true,
       }, 8, {
@@ -207,7 +210,7 @@ export async function GET() {
 
     const cid = await requireClienteId()
     const clienti = await q(
-      `SELECT id, nome, piano, contenuti_mese, attivo
+      `SELECT id, nome, piano, pacchetto, contenuti_mese, attivo
        FROM clienti
        WHERE id = $1
        LIMIT 1`,

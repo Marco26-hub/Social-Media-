@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ArrowUp } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { ArrowLeft, ArrowUp } from 'lucide-react'
 import styles from './floating-navigation.module.css'
 
 export default function FloatingNavigation() {
+  const pathname = usePathname()
   const [showTop, setShowTop] = useState(false)
 
   useEffect(() => {
@@ -16,6 +18,20 @@ export default function FloatingNavigation() {
 
   return (
     <nav className={styles.controls} aria-label="Navigazione rapida">
+      {pathname !== '/' && (
+        <button
+          type="button"
+          onClick={() => {
+            const referrerIsInternal = document.referrer.startsWith(window.location.origin)
+            if (referrerIsInternal && window.history.length > 1) window.history.back()
+            else window.location.assign('/')
+          }}
+          aria-label="Torna indietro"
+          data-tooltip="Torna indietro"
+        >
+          <ArrowLeft size={19} aria-hidden="true" />
+        </button>
+      )}
       <button
         type="button"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

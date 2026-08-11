@@ -15,7 +15,11 @@ export type StripePortalSession = {
 }
 
 export function stripeConfigured(): boolean {
-  return Boolean(process.env.STRIPE_SECRET_KEY?.trim())
+  return /^sk_(test|live)_/.test(process.env.STRIPE_SECRET_KEY?.trim() || '')
+}
+
+export function stripeWebhookConfigured(): boolean {
+  return /^whsec_/.test(process.env.STRIPE_WEBHOOK_SECRET?.trim() || '')
 }
 
 function stripeKey(): string {
@@ -159,7 +163,7 @@ export async function createStripeCheckoutSession(args: {
   const hourBucket = new Date().toISOString().slice(0, 13)
   const idempotencyKey = crypto
     .createHash('sha256')
-    .update(`${args.clienteId}:${hourBucket}`)
+    .update(`${args.clienteId}:${args.pacchettoSlug}:${hourBucket}`)
     .digest('hex')
 
   return stripeRequest<StripeCheckoutSession>('/checkout/sessions', params, { idempotencyKey })

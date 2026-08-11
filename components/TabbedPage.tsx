@@ -2,6 +2,7 @@
 import { Suspense, useMemo, type ComponentType, type ElementType } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { isDemo } from '@/lib/demo'
 
 export type TabDef = {
   key: string
@@ -29,7 +30,7 @@ function TabbedPageInner({ tabs }: { tabs: TabDef[] }) {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const isAdmin = ['admin', 'super_admin'].includes(session?.user?.ruolo ?? '')
+  const isAdmin = isDemo() || ['admin', 'super_admin'].includes(session?.user?.ruolo ?? '')
   // Stessa regola `adminOnly` della sidebar: i tab riservati (es. Log, Consumi AI)
   // non compaiono ai clienti, che prima non avevano la voce di menu corrispondente.
   const visible = useMemo(() => tabs.filter(t => !t.adminOnly || isAdmin), [tabs, isAdmin])

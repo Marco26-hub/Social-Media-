@@ -8,6 +8,7 @@ import { normalizeArticle, buildJsonLd, type BlogArticleData } from '@/lib/blog-
 import { resolveBlogClienteId } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
 import { getSwaBlogArticle } from '@/lib/swa-blog-content'
+import FloatingNavigation from '@/components/FloatingNavigation'
 import { BlogFooter, BlogHeader } from '../BlogChrome'
 import styles from '../blog.module.css'
 
@@ -184,7 +185,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
             )}
 
             {article.cta_finale && <div className={styles.articleCta}>{article.cta_finale}</div>}
-            <Link href="/servizi#pacchetti" className={styles.primaryButton}>
+            <Link href="/pacchetti" className={styles.primaryButton}>
               Scopri come possiamo aiutarti <ArrowRight size={17} aria-hidden="true" />
             </Link>
             <br />
@@ -194,6 +195,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
       </article>
 
       <BlogFooter />
+      <FloatingNavigation />
     </main>
   )
 }

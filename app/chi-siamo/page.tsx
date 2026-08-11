@@ -12,11 +12,15 @@ import {
 } from 'lucide-react'
 import { SITE_URL } from '@/lib/site-config'
 import { TITOLARE } from '@/lib/legal-config'
+import FloatingNavigation from '@/components/FloatingNavigation'
+import PublicFooter from '@/components/PublicFooter'
+import PublicHeader from '@/components/PublicHeader'
 import styles from './chi-siamo.module.css'
 
 const META_TITLE = 'Chi siamo | Social Automation, Cermenate (Como)'
 const META_DESCRIPTION =
   'Conosci Social Automation di Marco Dibenedetto: gestione social media, SEO, GEO e siti per PMI, da Cermenate (Como) in tutta Italia.'
+const WHATSAPP_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei conoscere meglio Social Automation e valutare un progetto.')}`
 
 export const metadata: Metadata = {
   title: META_TITLE,
@@ -60,19 +64,7 @@ export default function ChiSiamoPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="Social Automation, home">
-          <span className={styles.logoShell}>
-            <Image src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
-          </span>
-          <span>Social Automation</span>
-        </Link>
-        <nav aria-label="Navigazione pagina">
-          <Link href="/">Home</Link>
-          <Link href="/servizi">Servizi e pacchetti</Link>
-          <Link href="/blog">SWA Journal</Link>
-        </nav>
-      </header>
+      <PublicHeader ctaHref={WHATSAPP_URL} ctaLabel="Conosciamoci" />
 
       <section className={styles.hero} aria-labelledby="about-title">
         <div>
@@ -170,15 +162,13 @@ export default function ChiSiamoPage() {
       <section className={styles.cta}>
         <h2>Valutiamo insieme il punto di partenza.</h2>
         <p>Raccontaci obiettivi, canali e attività già in corso. Ti indichiamo il perimetro più adatto senza promesse irrealistiche.</p>
-        <Link href="/servizi#pacchetti" className={styles.primary}>
+        <Link href="/pacchetti" className={styles.primary}>
           Confronta i pacchetti <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </section>
 
-      <footer className={styles.footer}>
-        <p>{TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva} · Cermenate (CO)</p>
-        <div><Link href="/blog">Journal</Link><Link href="/privacy">Privacy</Link><Link href="/termini">Termini</Link></div>
-      </footer>
+      <PublicFooter />
+      <FloatingNavigation />
     </main>
   )
 }

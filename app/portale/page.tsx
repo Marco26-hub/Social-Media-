@@ -24,10 +24,11 @@ type PlanData = {
     enabled: boolean
     stato: string
     needs_migration?: boolean
+    stripe_customer_id?: string | null
     subscription_status?: string | null
     current_period_end?: string | null
     cancel_at_period_end?: boolean | null
-    ultimo_pagamento?: { amount_paid: number; currency: string; paid_at: string | null } | null
+    ultimo_pagamento?: { amount_paid: number; currency: string; paid_at: string | null; hosted_invoice_url?: string | null; invoice_pdf?: string | null } | null
   }
 }
 
@@ -141,6 +142,7 @@ export default function PortaleClientePage() {
   // Sintesi client-facing: fuori le righe tecniche grezze (es. "funnel non_classificato").
   const summary = (report?.executive?.executiveSummary || []).filter(s => !/non[_ ]?classificato/i.test(s))
   const payStatus = pay.subscription_status || pay.stato
+  const canManagePayment = pay.enabled && Boolean(pay.stripe_customer_id)
 
   return (
     <div>
@@ -186,12 +188,19 @@ export default function PortaleClientePage() {
               {pay.ultimo_pagamento && <span>Ultimo pagamento: <strong>{formatMoney(pay.ultimo_pagamento.amount_paid, pay.ultimo_pagamento.currency)}</strong></span>}
             </div>
             <p className={styles.subNote}>Il canone si rinnova ogni mese in automatico. Da qui puoi aggiornare la carta, scaricare le fatture o disdire.</p>
+            {pay.ultimo_pagamento?.hosted_invoice_url || pay.ultimo_pagamento?.invoice_pdf ? (
+              <div className={styles.invoiceActions}>
+                {pay.ultimo_pagamento.hosted_invoice_url && <a href={pay.ultimo_pagamento.hosted_invoice_url} target="_blank" rel="noopener noreferrer">Apri fattura</a>}
+                {pay.ultimo_pagamento.invoice_pdf && <a href={pay.ultimo_pagamento.invoice_pdf} target="_blank" rel="noopener noreferrer">Scarica PDF</a>}
+              </div>
+            ) : null}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <button onClick={openPortal} disabled={portalLoading} className={styles.payBtn}>
+            <button onClick={openPortal} disabled={portalLoading || !canManagePayment} className={styles.payBtn}>
               {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink size={16} />}
-              Paga e gestisci
+              Gestisci abbonamento
             </button>
+            {!canManagePayment && <p className={styles.payUnavailable}>Portale disponibile dopo il collegamento del primo pagamento.</p>}
             {portalError && <p className={styles.payErr}>{portalError}</p>}
           </div>
         </div>

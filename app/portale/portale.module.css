@@ -115,6 +115,9 @@
 .subMeta { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; color: rgba(16, 18, 14, 0.66); font-size: 14px; }
 .subMeta strong { color: var(--ink); }
 .subNote { margin-top: 10px; color: rgba(16, 18, 14, 0.5); font-size: 12.5px; }
+.invoiceActions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+.invoiceActions a { color: var(--forest-2); font-size: 12px; font-weight: 800; text-decoration: none; }
+.invoiceActions a:hover { text-decoration: underline; }
 .payBtn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 13px 24px; border-radius: 999px; border: none;
@@ -165,6 +168,7 @@
 .err p { margin: 4px 0 0; color: #a12828; font-size: 14px; }
 .loading { display: grid; place-items: center; min-height: 60vh; }
 .payErr { margin-top: 8px; text-align: right; color: #a12828; font-size: 12px; max-width: 220px; }
+.payUnavailable { margin-top: 8px; max-width: 230px; color: rgba(16, 18, 14, .5); font-size: 11px; line-height: 1.4; text-align: right; }
 
 @media (max-width: 900px) {
   .grid2 { grid-template-columns: 1fr; }
@@ -183,4 +187,5 @@
   .featGrid { grid-template-columns: 1fr; }
   .subCard { flex-direction: column; align-items: stretch; }
   .payBtn { width: 100%; }
+  .payUnavailable { max-width: none; text-align: left; }
 }

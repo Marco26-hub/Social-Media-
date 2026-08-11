@@ -7,6 +7,7 @@ import { pacchettoSlugFromPiano } from '@/lib/pacchetti'
 import { PACCHETTO_PIANO, PACCHETTO_FALLBACK } from '@/lib/provisioning'
 import { isDemo } from '@/lib/demo'
 import { demoClienti } from '@/lib/demo-data'
+import { normalizeBlogDomain } from '@/lib/blog-url'
 
 // Campi operativi: modificabili da chiunque abbia accesso al cliente.
 const CLIENTE_UPDATE_COLUMNS = new Set([
@@ -20,11 +21,6 @@ const CLIENTE_UPDATE_COLUMNS = new Set([
 const CLIENTE_ADMIN_COLUMNS = new Set([
   'piano', 'pacchetto', 'contenuti_mese', 'attivo',
 ])
-
-// Domini validi: hostname puro (no protocollo/path), lowercase, punti/trattini.
-function isValidDomain(value: string): boolean {
-  return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(value)
-}
 
 export async function GET() {
   try {
@@ -84,9 +80,9 @@ export async function PATCH(request: Request) {
     if (isDemo() || !dbReady()) return NextResponse.json({ ok: true, demo: true })
 
     if (typeof body.blog_domain === 'string' && body.blog_domain.trim()) {
-      const domain = body.blog_domain.trim().toLowerCase()
-      if (!isValidDomain(domain)) {
-        return NextResponse.json({ error: 'Dominio non valido: usa solo hostname, es. blog.miosito.com (niente https:// o /path)' }, { status: 400 })
+      const domain = normalizeBlogDomain(body.blog_domain)
+      if (!domain) {
+        return NextResponse.json({ error: 'Link Blog non valido. Usa un dominio o un URL completo, es. https://www.miosito.com/blog' }, { status: 400 })
       }
       const clash = await q('SELECT id, nome FROM clienti WHERE blog_domain = $1 AND id != $2', [domain, id])
       if (clash.length) {
@@ -120,7 +116,7 @@ export async function PATCH(request: Request) {
 
     params.push(id)
     await q(`UPDATE clienti SET ${fields.join(', ')}, updated_at = now() WHERE id = $${params.length}`, params)
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, blog_domain: body.blog_domain ?? undefined })
   } catch (e) {
     return apiError(e)
   }
