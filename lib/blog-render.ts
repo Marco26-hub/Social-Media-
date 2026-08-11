@@ -62,13 +62,27 @@ export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
   const url = a.url_pubblicato || (siteUrl ? `${siteUrl.replace(/\/$/, '')}/blog/${a.slug}` : `/blog/${a.slug}`)
   const ld: object[] = [{
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: a.h1,
     description: a.meta_description || '',
     author: { '@type': 'Organization', name: a.autore },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Social Automation',
+      ...(siteUrl ? {
+        url: siteUrl.replace(/\/$/, ''),
+        logo: {
+          '@type': 'ImageObject',
+          url: `${siteUrl.replace(/\/$/, '')}/brand/swa-logo-official.png`,
+        },
+      } : {}),
+    },
     keywords: a.keywords_target.join(', '),
+    inLanguage: 'it-IT',
     ...(a.immagine_cover ? { image: a.immagine_cover } : {}),
     ...(a.data_pubblicazione ? { datePublished: a.data_pubblicazione } : {}),
+    ...(a.data_pubblicazione ? { dateModified: a.data_pubblicazione } : {}),
+    isPartOf: { '@type': 'Blog', '@id': `${siteUrl?.replace(/\/$/, '') || ''}/blog#blog` },
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
   }]
   if (a.faq.length) {

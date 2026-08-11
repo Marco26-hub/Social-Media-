@@ -70,6 +70,7 @@ export default function ChiSiamoPage() {
         <nav aria-label="Navigazione pagina">
           <Link href="/">Home</Link>
           <Link href="/servizi">Servizi e pacchetti</Link>
+          <Link href="/blog">SWA Journal</Link>
         </nav>
       </header>
 
@@ -176,7 +177,7 @@ export default function ChiSiamoPage() {
 
       <footer className={styles.footer}>
         <p>{TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva} · Cermenate (CO)</p>
-        <div><Link href="/privacy">Privacy</Link><Link href="/termini">Termini</Link></div>
+        <div><Link href="/blog">Journal</Link><Link href="/privacy">Privacy</Link><Link href="/termini">Termini</Link></div>
       </footer>
     </main>
   )

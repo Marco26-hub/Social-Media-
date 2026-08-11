@@ -44,6 +44,8 @@ La consulenza su AI Act e GDPR è svolta in collaborazione con lo Studio Legale 
 - Home: https://www.socialautomation.app/
 - Servizi e pacchetti: https://www.socialautomation.app/servizi
 - Chi siamo: https://www.socialautomation.app/chi-siamo
+- SWA Journal: https://www.socialautomation.app/blog
+- Feed RSS del Journal: https://www.socialautomation.app/blog/feed.xml
 - Consulenza AI Act e GDPR: https://www.socialautomation.app/consulenza
 - Trasparenza AI: https://www.socialautomation.app/trasparenza-ai
 - Privacy: https://www.socialautomation.app/privacy

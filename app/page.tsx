@@ -189,6 +189,7 @@ export default function LandingPage() {
           ]}
         />
         <div className={styles.navActions}>
+          <Link href="/blog" className={styles.loginLink}>Journal</Link>
           <ThemeToggle />
           <Link href="/portale" className={styles.loginLink}><LogIn size={15} aria-hidden="true" /> Area cliente</Link>
           <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.navCta}>
@@ -197,6 +198,7 @@ export default function LandingPage() {
         </div>
         <MobileMenu
           links={[
+            { href: '/blog', label: 'SWA Journal' },
             { href: '#servizi', label: 'Servizi' },
             { href: '#metodo', label: 'Come funziona' },
             { href: '#prezzi', label: 'Pacchetti' },
@@ -479,6 +481,7 @@ export default function LandingPage() {
         <div>
           <Link href="/servizi">Servizi</Link>
           <Link href="/chi-siamo">Chi siamo</Link>
+          <Link href="/blog">Journal</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/termini">Termini</Link>
           <Link href="/login">Accesso</Link>

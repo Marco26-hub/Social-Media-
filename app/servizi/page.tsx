@@ -225,6 +225,7 @@ export default function ServiziPage() {
           ]}
         />
         <div className={site.navActions}>
+          <Link href="/blog" className={site.loginLink}>Journal</Link>
           <ThemeToggle />
           <Link href="/portale" className={site.loginLink}><LogIn size={15} aria-hidden="true" /> Area cliente</Link>
           <a
@@ -238,6 +239,7 @@ export default function ServiziPage() {
         </div>
         <MobileMenu
           links={[
+            { href: '/blog', label: 'SWA Journal' },
             { href: '#servizi', label: 'Servizi' },
             { href: '#metodo', label: 'Come funziona' },
             { href: '#pacchetti', label: 'Pacchetti' },
@@ -490,6 +492,7 @@ export default function ServiziPage() {
         <div>
           <Link href="/servizi">Servizi</Link>
           <Link href="/chi-siamo">Chi siamo</Link>
+          <Link href="/blog">Journal</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/termini">Termini</Link>
           <Link href="/login">Accesso</Link>
