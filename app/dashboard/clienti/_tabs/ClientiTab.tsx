@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, CheckCircle2, Loader2, Plus, Users } from 'lucide-react'
+import Link from 'next/link'
+import { Building2, CheckCircle2, Loader2, Plus, Settings2, Users } from 'lucide-react'
 import type { Cliente } from '@/lib/types'
 import { isDemo } from '@/lib/demo'
 import { readClienteId, writeClienteId } from '@/lib/use-data'
@@ -144,37 +145,52 @@ export default function ClientiPage() {
             </div>
           ) : (
             clienti.map(cliente => (
-              <button
+              // La card fa DUE cose diverse, prima confuse in un unico click: il corpo
+              // seleziona il cliente attivo e porta alla dashboard; il link in fondo
+              // apre la scheda del cliente (pacchetto, fuso, account Blotato), che
+              // esisteva già ma era raggiungibile solo scrivendo l'URL a mano.
+              <div
                 key={cliente.id}
-                onClick={() => selectCliente(cliente.id)}
-                className={`card p-5 text-left transition hover:shadow-md ${
+                className={`card p-5 transition hover:shadow-md ${
                   activeId === cliente.id ? 'ring-2 ring-brand-500' : ''
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-lg bg-gray-900 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-900 truncate">{cliente.nome}</h3>
-                {activeId === cliente.id && <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />}
+                <button onClick={() => selectCliente(cliente.id)} className="w-full text-left">
+                  <div className="flex items-start gap-3">
+                    <div className="w-11 h-11 rounded-lg bg-gray-900 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-5 h-5 text-white" />
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{cliente.settore ?? 'Settore non indicato'}</p>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium uppercase">
-                        {cliente.piano}
-                      </span>
-                    <span className={cliente.attivo ? 'text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium' : 'text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium'}>
-                      {cliente.attivo ? 'Attivo' : 'Inattivo'}
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 font-medium">
-                      Apri workspace
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-gray-900 truncate">{cliente.nome}</h3>
+                        {activeId === cliente.id && <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">{cliente.settore ?? 'Settore non indicato'}</p>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium uppercase">
+                          {cliente.piano}
+                        </span>
+                        <span className={cliente.attivo ? 'text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium' : 'text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium'}>
+                          {cliente.attivo ? 'Attivo' : 'Inattivo'}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 font-medium">
+                          Apri workspace
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  </div>
+                </button>
+                <div className="mt-3 pt-3 border-t border-slate-100 flex justify-end">
+                  <Link
+                    href={`/dashboard/clienti/${cliente.id}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 hover:text-brand-800 hover:underline"
+                    title="Pacchetto, fuso orario, account Blotato su cui pubblicare"
+                  >
+                    <Settings2 className="w-3.5 h-3.5" />
+                    Scheda cliente
+                  </Link>
                 </div>
-              </button>
+              </div>
             ))
           )}
         </div>
