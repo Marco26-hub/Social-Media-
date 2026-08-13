@@ -1,6 +1,6 @@
 # HANDOFF — Social Automation
 
-Stato al 2026-08-04. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+Stato al 2026-08-13. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
 
 ## Stack
 - **Frontend/Backend:** Next.js 15.5 (App Router), React 19, Tailwind. Deploy su **Vercel**.
@@ -11,7 +11,7 @@ Stato al 2026-08-04. Piattaforma SaaS di social media automation con AI (Next.js
 - **Scheduling:** GitHub Actions cron (`.github/workflows/agenti-cron.yml`, lun 07:00 UTC) → chiama `/api/agents/*` con `CRON_SECRET`.
 
 ## Database
-- Migrazioni in **`db/migrations/`** (001–039). Runner: `npm run migrate` (usa `DIRECT_DATABASE_URL`, invia ogni file intero a Postgres). `npm run migrate:dry` per il dry-run — attenzione: elenca TUTTI i file su disco, non quelli mancanti sul DB (non dice nulla sullo stato remoto).
+- Migrazioni in **`db/migrations/`** (001–041). Runner: `npm run migrate` (usa `DIRECT_DATABASE_URL`, invia ogni file intero a Postgres). `npm run migrate:dry` per il dry-run — attenzione: elenca TUTTI i file su disco, non quelli mancanti sul DB (non dice nulla sullo stato remoto). La 041 aggiunge lo stato e gli URL dei Reel visuali Blotato.
 - **⚠️ Vercel NON applica le migrazioni al deploy.** Push del codice e stato del DB sono due cose separate: dopo ogni push (anche del socio) controllare `schema_migrations` prima di assumere che lo schema sia allineato al codice live. Successo passato: codice per pacchetti/timezone in produzione per ore con le colonne ancora assenti (silenzioso finché non si guarda).
 - **Due connection string** (pooler Supavisor, IPv4):
   - `DATABASE_URL` — transaction pooler **:6543** (runtime app serverless).
@@ -36,10 +36,13 @@ Vecchie pagine unificate in poche pagine-contenitore con tab, vecchie URL vive v
 - `/dashboard/clienti` — Clienti · Registrazioni · Pagamenti · Onboarding
 - `/dashboard/settings` — Impostazioni · Profilo Brand · Prodotti · Setup Produzione
 
-## Piano editoriale — generazione con AI (lavoro pesante di questa sessione)
+## Piano editoriale — generazione con AI
 - **`lib/scheduling.ts`**: orari e giorni non più a caso. Fasce per canale (`CHANNEL_SLOTS`, con motivazione per ciascuna), cadenza dal pacchetto (`cadenzaDaPacchetto`), niente più default fisso `10:00`.
-- **`lib/media-requirements.ts`**: calcola quante immagini/MP4 servono davvero (dal pacchetto/quota), non una stima fissa. Reel senza MP4 = 1 sola immagine di copertina, il sistema NON monta video dalle foto.
-- **`app/api/generate/plan/route.ts`**: MP4 vincolato SOLO a formati video (mai su post/carosello), marcatura manuale media (`auto|carosello|reel|post`) rispettata, distribuzione media tra blocchi settimanali consapevole di tipo/marcatura (non più a fette cieche — un MP4 caricato con le foto poteva finire tutto nell'ultimo blocco), mix formati imposto nel prompt, item senza hook/caption scartati invece di salvati come gusci vuoti, nome del media trattato come vincolante (vince sul catalogo prodotti quando il contenuto usa una foto caricata).
+- **`lib/media-requirements.ts`**: calcola le quantità esatte per Post, Story, Caroselli e Reel dal pacchetto/quota e dal periodo. I caricamenti sono separati per destinazione. Un Reel accetta 1 MP4 oppure 5 foto verticali 9:16.
+- **Reel da foto:** Blotato monta le 3–5 foto in un MP4 9:16. Il video torna in stato `ready_for_review`, deve essere visto in Anteprima e approvato una seconda volta; non viene mai pubblicato appena generato.
+- **`app/api/generate/plan/route.ts`**: MP4 vincolato ai formati video, marcatura manuale (`auto|carosello|reel|story|post`) rispettata, mix formati e numero generazioni derivati dallo stesso pacchetto. Settimanale e mensile sono separati: Crescita = 6/24, Presenza = 4/16 salvo quota cliente esplicita.
+- **Fallback generazione:** un blocco AI riuscito viene conservato. Ogni elemento mancante diventa uno slot `ERRORE_MANUALE` con prefisso nota `[GENERATION_FALLBACK]`, mantenendo data, canale, formato e media. Il popup finale mostra quanti elementi sistemare e apre `/dashboard/calendario?filter=ERRORE_MANUALE`. Dal dettaglio si può correggere manualmente o usare `POST /api/data/calendario/[id]/regenerate`; il risultato torna sempre `DA_APPROVARE`, mai direttamente in pubblicazione.
+- **Calendario:** giorni cliccabili, trascinamento su un altro giorno per elementi non ancora sincronizzati, modifica copy/media e anteprima prima dell'approvazione.
 - **`lib/pacchetti.ts`** (vetrina commerciale, campo `piano`) e **`lib/packages.ts`** (generazione, campo `pacchetto`) sono **due sistemi paralleli** che oggi coincidono solo perché allineati a mano — da unificare prima di avere molti clienti.
 - Ogni punto di creazione cliente (`lib/provisioning.ts` per l'attivazione registrazione, `app/api/data/clienti` POST per l'onboarding manuale) deve impostare `pacchetto`+`contenuti_mese` derivandoli dallo stesso mapping piano→pacchetto — trovati e corretti bug identici in entrambi i punti (quota rimasta al default schema 30 invece che 16/24).
 
@@ -47,13 +50,21 @@ Vecchie pagine unificate in poche pagine-contenitore con tab, vecchie URL vive v
 Il workspace Blotato ospita gli account di **più clienti reali insieme** (SILKinCOM, Studio Legale BCS, SWA — l'agenzia stessa) più altri brand gestiti dallo stesso studio. **Mai scegliere un account implicitamente**: `lib/blotato-accounts.ts` fallisce chiuso (`pickAccount`/`pickSubaccount`) se per una piattaforma ci sono più account/Pagine senza una scelta esplicita salvata (`settings.blotato_account_<canale>` / `blotato_subaccount_<canale>`). Anteprima sola-lettura in scheda cliente ("Account Blotato — dove verranno pubblicati i contenuti") prima di qualunque test live.
 - **Endpoint corretto**: `GET /v2/users/me/accounts` (non `/v2/accounts`, che risponde 404 — bug trovato e corretto, non era un problema di chiave). Sotto-destinazioni (Facebook Page/Pinterest board/LinkedIn Company Page) via `GET /v2/users/me/accounts/{id}/subaccounts`, chiamata separata per account.
 - **Gate di pubblicazione**: `PUBLISH_ENABLED` (env) + `dry_run` per cliente (settings) — entrambi devono essere sbloccati. Default fail-safe: valore mancante o non `FALSE` esplicito = dry-run.
+- **Payload Instagram:** massimo 5 hashtag applicato anche al payload finale; per le Story `firstComment` è sempre rimosso perché non supportato.
+- **Riconciliazione reale:** `POST /api/data/blotato-reconcile` interroga `GET /v2/posts/{postSubmissionId}` per ogni invio del mese e aggiorna `published`, `failed`, `scheduled` o `in-progress`, URL pubblico ed errore. Il pulsante **Verifica Blotato** mostra pubblicati confermati, in coda, non inviati, falliti, mancanti da creare e mancanti da pubblicare rispetto a `clienti.contenuti_mese`. Anche **Sincronizza Blotato** esegue la riconciliazione dopo l'invio. Non contare mai `scheduled` come pubblicato.
 - **Pagina Facebook SWA** ("Social Web Automation", account id `44606`) configurata in questa sessione: Pagina business collegata, Instagram, sito aggiuntivo, indirizzo (Via G. Verdi 2/B, Cermenate CO), Impressum (SWA S.r.l.). Nessun post ancora pubblicato — resta da fare.
-- **Mai testato in produzione**: `blotato_post_id` nullo su tutti i contenuti storici, nessuna pubblicazione reale è mai partita. Il primo test live va fatto un contenuto alla volta.
+- Per gli invii storici usare prima **Verifica Blotato**. Non azzerare un `blotato_post_id` fermo su `scheduled` finché non è stato controllato sul social/Blotato: il requeue può altrimenti duplicare un post già uscito.
+
+## Verifiche 2026-08-13
+- `npm run build`: passa; restano 6 warning lint preesistenti in moduli non toccati.
+- Playwright: popup fallback → filtro esatto → modifica/rigenerazione → anteprima → `DA_APPROVARE`, senza pubblicazione automatica; consuntivo pacchetto Blotato verificato con API mock.
+- Server locale di prova: `http://127.0.0.1:3108/dashboard/piano` (processo di sviluppo, non URL pubblico).
+- Commit principali: `4014da5`, `9fbaa1e`, `81f9ef3` (quest'ultimo precede questo aggiornamento handoff).
 
 ## Da completare
-1. Deploy Vercel: push del codice + tutte le env Supabase. Il progetto Vercel auto-deploya da `main`.
+1. Deploy Vercel: push del codice + tutte le env Supabase. Il progetto Vercel auto-deploya da `main`. Verificare che la migrazione 041 sia applicata prima del test Reel da foto.
 2. GitHub → repo variable `APP_BASE_URL` = dominio Vercel (per il cron).
 3. **Sicurezza:** gli account `admin` e `cliente` usano ancora la password di default `1234567` — cambiarle prima del go-live.
 4. Spegnere Render solo dopo che Vercel è verificato (media e dati sono già su Supabase).
-5. Primo post + prima storia "chi siamo" su Facebook SWA, poi replicare su Instagram (in corso).
-6. Verificare se `PUBLISH_ENABLED` su Vercel è impostato correttamente prima del primo test di pubblicazione reale.
+5. Eseguire **Verifica Blotato** sul mese corrente e risolvere gli stati `failed`/`scheduled` passati prima di rimetterli in coda.
+6. Verificare `PUBLISH_ENABLED=true`, `dry_run=FALSE`, API key e account/subaccount fissati per cliente prima di una pubblicazione reale. Il primo test va fatto con **Sincronizza questo** su un solo contenuto.
