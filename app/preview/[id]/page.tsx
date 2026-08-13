@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import PostPreview from '@/components/PostPreview'
 import type { Contenuto } from '@/lib/types'
-import { Ban, Check, ArrowLeft, LayoutDashboard, ArrowUp } from 'lucide-react'
+import { Ban, Check, ArrowLeft, LayoutDashboard, ArrowUp, Music2 } from 'lucide-react'
 
 // La preview mostra il contenuto REALE (il suo canale + formato dal DB), non una
 // lista fissa di piattaforme. Così l'anteprima combacia con il calendario.
@@ -91,6 +91,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
   const [ideaVisual, setIdeaVisual] = useState<string | null>(null)
   const [voiceoverScript, setVoiceoverScript] = useState<string | null>(null)
   const [musicMood, setMusicMood] = useState<string | null>(null)
+  const [reelAudioUrl, setReelAudioUrl] = useState('')
+  const [reelAudioTitle, setReelAudioTitle] = useState('')
   // Link condivisibile basato sul preview_token opaco (non sull'id enumerabile).
   const [shareUrl, setShareUrl] = useState('')
 
@@ -140,6 +142,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setIdeaVisual(textValue(d.idea_visual) || null)
         setVoiceoverScript(textValue(d.voiceover_script) || null)
         setMusicMood(textValue(d.music_mood) || null)
+        setReelAudioUrl(textValue(d.reel_audio_url))
+        setReelAudioTitle(textValue(d.reel_audio_title))
         if (Array.isArray(d.tags)) setTags(d.tags.filter((tag): tag is string => typeof tag === 'string'))
       }
       const exRaw = localStorage.getItem(`preview_${id}_excluded`)
@@ -195,6 +199,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setIdeaVisual(s(d.idea_visual) || null)
         setVoiceoverScript(s(d.voiceover_script) || null)
         setMusicMood(s(d.music_mood) || null)
+        setReelAudioUrl(s(d.reel_audio_url))
+        setReelAudioTitle(s(d.reel_audio_title))
         if (Array.isArray(d.tags)) setTags(d.tags.filter((tag): tag is string => typeof tag === 'string'))
       })
       .catch(() => {})
@@ -246,6 +252,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     scenes_json: scenesJson, slides_json: slidesJson, overlay_text: overlayText,
     alt_text: altText, tags, thumbnail_url: thumbnailUrl,
     idea_visual: ideaVisual, voiceover_script: voiceoverScript, music_mood: musicMood,
+    reel_audio_url: reelAudioUrl || null, reel_audio_title: reelAudioTitle || null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
     created_at: '', updated_at: '',
   }
@@ -303,6 +310,21 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
               <label className="text-[10px] text-gray-400">URL Media</label>
               <input value={mediaUrl} onChange={e => setMediaUrl(e.target.value)} className="input text-xs mt-0.5" />
             </div>
+            {['reel', 'short', 'video'].includes(formato) && (
+              <div className="md:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-emerald-900">
+                  <Music2 className="h-4 w-4" /> Audio Reel
+                </div>
+                {reelAudioUrl ? (
+                  <>
+                    <p className="mb-2 truncate text-[11px] text-emerald-800">{reelAudioTitle || 'Traccia audio caricata'}</p>
+                    <audio src={reelAudioUrl} controls preload="metadata" className="h-9 w-full" />
+                  </>
+                ) : (
+                  <p className="text-[11px] text-emerald-700">Nessuna traccia audio associata.</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

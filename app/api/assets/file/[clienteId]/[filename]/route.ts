@@ -22,6 +22,10 @@ const MIME_BY_EXT: Record<string, string> = {
   '.gif': 'image/gif',
   '.avif': 'image/avif',
   '.mp4': 'video/mp4',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.m4a': 'audio/mp4',
+  '.ogg': 'audio/ogg',
 }
 
 function safeSegment(value: string) {

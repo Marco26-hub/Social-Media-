@@ -107,7 +107,7 @@ export default function CalendarGrid({ items, tz, onSelect, onMove }: {
                   }}
                   onDrop={event => {
                     event.preventDefault()
-                    const contentId = event.dataTransfer.getData('contenuto_id')
+                    const contentId = event.dataTransfer.getData('contenuto_id') || event.dataTransfer.getData('text/plain')
                     const content = items.find(item => item.id === contentId)
                     setDragOverDate(null)
                     setDraggingId(null)
@@ -133,6 +133,7 @@ export default function CalendarGrid({ items, tz, onSelect, onMove }: {
                           onDragStart={event => {
                             if (!movable) return
                             event.dataTransfer.setData('contenuto_id', it.id)
+                            event.dataTransfer.setData('text/plain', it.id)
                             event.dataTransfer.effectAllowed = 'move'
                             setDraggingId(it.id)
                           }}

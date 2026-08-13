@@ -382,6 +382,7 @@ export async function POST(request: Request) {
     // per far scegliere al modello la foto giusta per numero (media_refs). Opzionale:
     // se manca, il piano ripiega sull'assegnazione posizionale (retrocompatibile).
     const assetLabels = new Map<string, string>()
+    const reelAudioAssets: { url: string; title: string }[] = []
     // Marcatura manuale del media (`tag` in uploaded_assets): l'utente può dire
     // "questa foto è del carosello, questo MP4 è del reel". È un VINCOLO, non un
     // suggerimento: un media marcato non finisce mai su un altro gruppo di
@@ -395,6 +396,12 @@ export async function POST(request: Request) {
         if (!url) continue
         const name = typeof rec.name === 'string' ? rec.name.trim() : ''
         const description = typeof rec.description === 'string' ? rec.description.trim() : ''
+        const kind = typeof rec.kind === 'string' ? rec.kind.trim().toLowerCase() : ''
+        const mime = typeof rec.mime === 'string' ? rec.mime.trim().toLowerCase() : ''
+        if (kind === 'audio' || mime.startsWith('audio/')) {
+          reelAudioAssets.push({ url, title: name || 'Audio Reel' })
+          continue
+        }
         const label = [name, description].filter(Boolean).join(' — ')
         if (label) assetLabels.set(url, label)
         const explicitTag = normalizeMediaTag(rec.tag)
@@ -1135,6 +1142,8 @@ Output SOLO JSON array valido:
     const scartati: string[] = []
     let fallbackInseriti = 0
     let schemaFallbackUsed = false
+    let nextReelAudio = 0
+    const audioByCreative = new Map<string, { url: string; title: string }>()
 
     for (const { item: rawItem, chunk } of itemChunkPairs) {
       const item = sanitizeItem(rawItem, chunk)
@@ -1158,6 +1167,13 @@ Output SOLO JSON array valido:
       // persistiamo il link così il publisher può appenderlo al testo Blotato.
       const itemProduct = (products as Array<Record<string, unknown>>).find(p => p.product_id === item.product_id)
       const itemLinkProdotto = (itemProduct?.link_prodotto as string) || null
+      const isReelFormat = ['reel', 'short', 'video'].includes(String(item.formato || '').toLowerCase())
+      const creativeKey = [item.data_pubblicazione, item.ora_pubblicazione, item.tema, item.hook].map(value => String(value || '')).join('|')
+      let reelAudio: { url: string; title: string } | null = null
+      if (isReelFormat && reelAudioAssets.length) {
+        reelAudio = audioByCreative.get(creativeKey) || reelAudioAssets[nextReelAudio++ % reelAudioAssets.length]
+        audioByCreative.set(creativeKey, reelAudio)
+      }
       const insertColumns = [
         'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
         'canale', 'formato', 'obiettivo', 'product_id', 'nome_prodotto',
@@ -1168,6 +1184,7 @@ Output SOLO JSON array valido:
         'link_media_6', 'link_media_7', 'link_media_8', 'link_media_9', 'link_media_10',
         'scenes_json', 'slides_json', 'overlay_text', 'alt_text', 'tags',
         'idea_visual', 'voiceover_script', 'music_mood',
+        'reel_audio_url', 'reel_audio_title', 'reel_audio_source_url', 'reel_audio_license',
         'quality_level', 'audience_segment', 'funnel_stage', 'angle', 'primary_message',
         'proof_points', 'hook_variants', 'caption_long', 'cta_variants', 'creative_brief',
         'template_id', 'template_style', 'layout_spec_json', 'asset_requirements_json',
@@ -1210,6 +1227,10 @@ Output SOLO JSON array valido:
         pickText(item, ['idea_visual', 'visual']) || null,
         pickText(item, ['voiceover_script', 'voiceover']) || null,
         pickText(item, ['music_mood', 'musica_mood']) || null,
+        reelAudio?.url || null,
+        reelAudio?.title || null,
+        null,
+        reelAudio ? 'Licenza dichiarata dal caricante; conservare la prova di origine' : null,
         itemQuality,
         pickText(item, ['audience_segment', 'audience', 'target_segment']) || null,
         pickText(item, ['funnel_stage', 'fase_funnel']) || null,

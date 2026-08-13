@@ -12,12 +12,15 @@ export const runtime = 'nodejs'
 const MAX_FILES = 14
 const MAX_IMAGE_FILE_SIZE = 8 * 1024 * 1024
 const MAX_VIDEO_FILE_SIZE = 100 * 1024 * 1024
+const MAX_AUDIO_FILE_SIZE = 25 * 1024 * 1024
 const ALLOWED_IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'])
 const ALLOWED_VIDEO_MIME = new Set(['video/mp4'])
+const ALLOWED_AUDIO_MIME = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'])
 
 function mediaKind(mime: string) {
   if (ALLOWED_VIDEO_MIME.has(mime)) return 'video'
   if (ALLOWED_IMAGE_MIME.has(mime)) return 'image'
+  if (ALLOWED_AUDIO_MIME.has(mime)) return 'audio'
   return null
 }
 
@@ -52,7 +55,12 @@ export async function POST(request: Request) {
         skipped.push({ name: file.name, motivo: 'video: supportato solo .mp4' })
         continue
       }
-      const maxSize = kind === 'video' ? MAX_VIDEO_FILE_SIZE : MAX_IMAGE_FILE_SIZE
+      const audioExtensions = new Set(['.mp3', '.wav', '.m4a', '.ogg'])
+      if (kind === 'audio' && !audioExtensions.has(path.extname(file.name).toLowerCase())) {
+        skipped.push({ name: file.name, motivo: 'audio: supportati MP3, WAV, M4A e OGG' })
+        continue
+      }
+      const maxSize = kind === 'video' ? MAX_VIDEO_FILE_SIZE : kind === 'audio' ? MAX_AUDIO_FILE_SIZE : MAX_IMAGE_FILE_SIZE
       if (file.size > maxSize) {
         const maxMb = Math.round(maxSize / 1024 / 1024)
         skipped.push({ name: file.name, motivo: `supera ${maxMb}MB` })

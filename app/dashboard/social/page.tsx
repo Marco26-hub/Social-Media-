@@ -36,7 +36,7 @@ type UploadedAsset = {
   path?: string
   mime?: string
   size?: number
-  kind?: 'image' | 'video'
+  kind?: 'image' | 'video' | 'audio'
   source: 'upload' | 'url'
 }
 

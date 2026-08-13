@@ -69,6 +69,10 @@ const CALENDARIO_UPDATE_COLUMNS = new Set([
   'idea_visual',
   'voiceover_script',
   'music_mood',
+  'reel_audio_url',
+  'reel_audio_title',
+  'reel_audio_source_url',
+  'reel_audio_license',
   'quality_level',
   'audience_segment',
   'funnel_stage',
@@ -103,6 +107,10 @@ const CALENDARIO_UPDATE_COLUMNS = new Set([
   'blotato_visual_status',
   'blotato_visual_media_url',
   'blotato_visual_source_hash',
+  'blotato_audio_visual_id',
+  'blotato_audio_visual_status',
+  'blotato_audio_visual_media_url',
+  'blotato_audio_visual_updated_at',
 ])
 
 export async function GET(request: Request) {

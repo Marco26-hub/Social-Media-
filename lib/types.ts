@@ -110,6 +110,10 @@ export interface Contenuto {
   idea_visual: string | null
   voiceover_script: string | null
   music_mood: string | null
+  reel_audio_url?: string | null
+  reel_audio_title?: string | null
+  reel_audio_source_url?: string | null
+  reel_audio_license?: string | null
   quality_level?: ContentQuality | null
   audience_segment?: string | null
   funnel_stage?: string | null
@@ -150,6 +154,10 @@ export interface Contenuto {
   blotato_visual_media_url?: string | null
   blotato_visual_source_hash?: string | null
   blotato_visual_updated_at?: string | null
+  blotato_audio_visual_id?: string | null
+  blotato_audio_visual_status?: string | null
+  blotato_audio_visual_media_url?: string | null
+  blotato_audio_visual_updated_at?: string | null
   // Generazione grafica AI (Blotato visual)
   visual_job_id?: string | null
   visual_status?: string | null

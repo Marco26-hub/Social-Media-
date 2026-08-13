@@ -14,7 +14,7 @@ export type UploadedAsset = {
   url: string
   path?: string
   mime?: string
-  kind?: 'image' | 'video'
+  kind?: 'image' | 'video' | 'audio'
   size?: number
   source: 'upload'
   storage: 'storage' | 'local'
@@ -22,7 +22,7 @@ export type UploadedAsset = {
 export type UploadResult = { assets: UploadedAsset[]; skipped: { name: string; motivo: string }[]; storage: 'storage' | 'local' }
 
 type PresignItem =
-  | { name: string; ok: true; uploadUrl: string; url: string; path: string; key: string; mime: string; kind: 'image' | 'video' }
+  | { name: string; ok: true; uploadUrl: string; url: string; path: string; key: string; mime: string; kind: 'image' | 'video' | 'audio' }
   | { name: string; ok: false; motivo: string }
 
 export async function uploadAssets(form: FormData): Promise<UploadResult> {

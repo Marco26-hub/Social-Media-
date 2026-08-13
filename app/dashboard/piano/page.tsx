@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useMemo } from 'react'
 import { PLATFORM_LIST, type PlatformKey } from '@/lib/social-config'
-import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2, Image as ImageIcon, Film, Layers, Smartphone } from 'lucide-react'
+import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2, Image as ImageIcon, Film, Layers, Smartphone, Music2 } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
@@ -26,10 +26,11 @@ import {
 type QualitySelection = 'auto' | ContentQuality
 // `tag` = marcatura manuale ("questa foto è del carosello, questo MP4 del reel").
 // Viaggia nel body dentro uploaded_assets e vincola l'assegnazione lato server.
-type PlanAsset = { url: string; name: string; mime?: string; kind?: 'image' | 'video'; tag: MediaTag }
+type PlanAsset = { url: string; name: string; mime?: string; kind?: 'image' | 'video' | 'audio'; tag: MediaTag }
 const MAX_PLAN_IMAGES = 60
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif'
 const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
+const AUDIO_ACCEPT = 'audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/ogg,.mp3,.wav,.m4a,.ogg'
 
 // Le 5 destinazioni selezionabili sulla miniatura. 'auto' resta il default
 // (decide l'AI): chi non vuole pensarci non deve toccare niente.
@@ -196,7 +197,7 @@ export default function PianoPage() {
         const data = await uploadAssets(form)
         const uploaded: PlanAsset[] = (data.assets || []).map(a => ({
           url: a.url,
-          name: prettyName(a.name),
+          name: a.kind === 'audio' ? a.name : prettyName(a.name),
           mime: a.mime,
           kind: a.kind,
           tag: destination,
@@ -253,7 +254,7 @@ export default function PianoPage() {
       key: fase ? `piano-fase-${fase}` : 'piano',
       label: `Piano editoriale ${periodo}${faseLabel}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 50000 : 25000,
       timeoutMs: periodo === 'mensile' ? 130000 : 95000,
@@ -301,7 +302,7 @@ export default function PianoPage() {
       key: 'piano-pacchetto',
       label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 55000 : 30000,
       timeoutMs: periodo === 'mensile' ? 140000 : 100000,
@@ -337,12 +338,13 @@ export default function PianoPage() {
   // Conteggio per estensione, la stessa regola usata da verificaMedia e dal
   // backend: quello che si legge qui è quello che vede l'assegnazione.
   const caricati = useMemo(() => {
-    const video = planAssets.filter(a => isVideoMedia(a.url)).length
-    return { video, immagini: planAssets.length - video }
+    const visualAssets = planAssets.filter(a => a.kind !== 'audio')
+    const video = visualAssets.filter(a => isVideoMedia(a.url)).length
+    return { video, immagini: visualAssets.length - video }
   }, [planAssets])
   // Piano pacchetto e piano libero hanno verifiche indipendenti.
   const verifica = useMemo(
-    () => verificaMedia(planAssets.map(a => ({ url: a.url, tag: a.tag })), requisiti),
+    () => verificaMedia(planAssets.filter(a => a.kind !== 'audio').map(a => ({ url: a.url, tag: a.tag })), requisiti),
     [planAssets, requisiti],
   )
   const contenutiPacchettoPeriodo = clientePkg ? packageContentCount(clientePkg, periodo, clienteQuota) : 0
@@ -367,7 +369,7 @@ export default function PianoPage() {
     [contenutiLiberiStimati],
   )
   const verificaLibera = useMemo(
-    () => verificaMedia(planAssets.map(a => ({ url: a.url, tag: a.tag })), requisitiLiberi),
+    () => verificaMedia(planAssets.filter(a => a.kind !== 'audio').map(a => ({ url: a.url, tag: a.tag })), requisitiLiberi),
     [planAssets, requisitiLiberi],
   )
   const isFree = aiModel.endsWith(':free')
@@ -651,7 +653,7 @@ export default function PianoPage() {
 
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2" aria-label="Caricamento media separato per formato">
             {DESTINATION_UPLOADS.map(destination => {
-              const destinationAssets = planAssets.filter(asset => asset.tag === destination.tag)
+              const destinationAssets = planAssets.filter(asset => asset.tag === destination.tag && asset.kind !== 'audio')
               const imageCount = destinationAssets.filter(asset => !isVideoMedia(asset.url)).length
               const videoCount = destinationAssets.length - imageCount
               const target = uploadTargets?.[destination.tag]
@@ -696,6 +698,27 @@ export default function PianoPage() {
             })}
           </div>
 
+          <label className={`mt-3 flex min-h-[78px] cursor-pointer items-center gap-3 rounded-lg border border-emerald-200 bg-white p-3 text-xs shadow-sm transition-all hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-md ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}>
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
+              {uploadingImages ? <Loader2 className="h-5 w-5 animate-spin" /> : <Music2 className="h-5 w-5" />}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-gray-950">Audio Reel</span>
+              <span className="mt-0.5 block text-[10px] text-gray-500">MP3, WAV, M4A o OGG · massimo 25 MB · solo Reel/Video</span>
+            </span>
+            <span className="rounded-md bg-emerald-50 px-2 py-1 font-mono text-[10px] font-semibold text-emerald-800">
+              {planAssets.filter(asset => asset.kind === 'audio').length} audio
+            </span>
+            <input
+              type="file"
+              multiple
+              accept={AUDIO_ACCEPT}
+              className="hidden"
+              disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+              onChange={e => { uploadPlanImages(e.target.files, 'reel'); e.target.value = '' }}
+            />
+          </label>
+
           <label className={`mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-[11px] text-gray-600 hover:border-gray-400 hover:bg-gray-50 ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}>
             <ImagePlus className="h-3.5 w-3.5" />
             Auto / destinazione dal nome o dalla descrizione ({planAssets.filter(asset => asset.tag === 'auto').length})
@@ -720,17 +743,24 @@ export default function PianoPage() {
                 {planAssets.map((a, i) => {
                   const meta = tagMeta(a.tag)
                   const isVideo = a.kind === 'video' || a.mime?.startsWith('video/') || isVideoMedia(a.url)
+                  const isAudio = a.kind === 'audio' || a.mime?.startsWith('audio/')
                   return (
                     <div key={a.url + i} className="rounded-lg overflow-hidden border border-gray-200 bg-white">
                       <div className="relative group aspect-square bg-gray-100">
-                        {isVideo ? (
+                        {isAudio ? (
+                          <div className="flex h-full flex-col items-center justify-center gap-2 bg-emerald-50 px-2 text-center text-emerald-800">
+                            <Music2 className="h-8 w-8" />
+                            <span className="line-clamp-2 text-[10px] font-semibold">Audio Reel</span>
+                            <audio src={a.url} controls preload="metadata" className="h-7 w-full" />
+                          </div>
+                        ) : isVideo ? (
                           <video src={a.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
                         ) : (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
                         )}
                         {/* MP4 e marcatura leggibili a colpo d'occhio sulla miniatura */}
-                        {isVideo && (
+                        {isVideo && !isAudio && (
                           <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full bg-black/65 text-white text-[9px] font-bold leading-none">MP4</span>
                         )}
                         <span className={`absolute bottom-1 left-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold leading-none ${meta.pill}`}>
@@ -756,9 +786,10 @@ export default function PianoPage() {
                         onChange={e => retagPlanAsset(i, e.target.value)}
                         aria-label={`Destinazione di ${a.name || 'questo media'}`}
                         title="Dove deve finire questo media"
-                        className="w-full text-[11px] px-1.5 py-1.5 bg-white text-gray-700 border-t border-gray-100 focus:outline-none focus:bg-violet-50/40 cursor-pointer"
+                        disabled={isAudio}
+                        className="w-full text-[11px] px-1.5 py-1.5 bg-white text-gray-700 border-t border-gray-100 focus:outline-none focus:bg-violet-50/40 cursor-pointer disabled:bg-emerald-50 disabled:text-emerald-800"
                       >
-                        {TAG_OPTIONS.map(o => (
+                        {(isAudio ? TAG_OPTIONS.filter(o => o.value === 'reel') : TAG_OPTIONS).map(o => (
                           <option key={o.value} value={o.value}>{o.menu}</option>
                         ))}
                       </select>

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { Fragment, useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid, CalendarClock } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid, CalendarClock, Music2, GripVertical, Move } from 'lucide-react'
 import CalendarGrid from '@/components/CalendarGrid'
 import { preflightRow } from '@/lib/publish/preflight'
 import { toYmd } from '@/lib/publish/blotato-map'
@@ -34,6 +34,7 @@ const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', linkedin: '💼', threads: '🧵', x: '✖️', youtube_shorts: '▶️', blog: '📝'
 }
 const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
+const AUDIO_ACCEPT = 'audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/ogg,.mp3,.wav,.m4a,.ogg'
 
 type PackageReconcile = {
   month: string
@@ -160,6 +161,10 @@ function CalendarioInner() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [bulkMoveOpen, setBulkMoveOpen] = useState(false)
+  const [bulkMoveDate, setBulkMoveDate] = useState('')
+  const [bulkMoveTime, setBulkMoveTime] = useState('')
+  const [bulkMoving, setBulkMoving] = useState(false)
   // Conferma "non approvare": rejectTarget = singolo post (tasto rosso), rejectBulkOpen = selezione multipla.
   const [rejectTarget, setRejectTarget] = useState<Contenuto | null>(null)
   const [rejectBulkOpen, setRejectBulkOpen] = useState(false)
@@ -622,6 +627,35 @@ function CalendarioInner() {
     }
   }
 
+  async function attachReelAudio(c: Contenuto, file: File) {
+    if (!clienteId) return
+    setUploadingPhoto(`${c.id}:audio`)
+    setAdminError(null)
+    try {
+      const form = new FormData()
+      form.append('cliente_id', clienteId)
+      form.append('files', file)
+      const uploadData = await uploadAssets(form)
+      const uploaded = uploadData.assets?.[0]
+      if (!uploaded?.url || uploaded.kind !== 'audio') throw new Error('Il file selezionato non è un audio supportato')
+      await saveField(c, 'reel_audio_url', uploaded.url, {
+        reel_audio_title: uploaded.name,
+        reel_audio_source_url: null,
+        reel_audio_license: 'Licenza dichiarata dal caricante; conservare la prova di origine',
+        blotato_visual_id: null,
+        blotato_visual_status: null,
+        blotato_visual_media_url: null,
+        blotato_audio_visual_id: null,
+        blotato_audio_visual_status: null,
+        blotato_audio_visual_media_url: null,
+      })
+    } catch (e) {
+      setAdminError((e as Error).message)
+    } finally {
+      setUploadingPhoto(null)
+    }
+  }
+
   // Persiste un valore in una colonna qualunque (media, hook, caption, hashtag,
   // cta...) e allinea sia la lista sia la scheda "Dettagli" eventualmente aperta.
   // Generica di proposito: prima serviva solo ai media, ma il PATCH sottostante
@@ -785,6 +819,71 @@ function CalendarioInner() {
       setAdminError((e as Error).message)
     } finally {
       setRejecting(false)
+    }
+  }
+
+  async function bulkMove() {
+    if (!bulkMoveDate || !selectedIds.size) return
+    const selectedRows = contenuti.filter(item => selectedIds.has(item.id))
+    const movable = selectedRows.filter(item => !item.blotato_post_id
+      && item.blotato_status !== 'scheduled'
+      && item.blotato_status !== 'published'
+      && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(item.status))
+    const skipped = selectedRows.length - movable.length
+    if (!movable.length) {
+      setAdminError('I contenuti selezionati sono già sincronizzati o pubblicati: rimettili in coda prima di spostarli.')
+      setBulkMoveOpen(false)
+      return
+    }
+    setBulkMoving(true)
+    setAdminError(null)
+    try {
+      const movedIds = new Set<string>()
+      let failed = 0
+      if (demo) {
+        movable.forEach(item => movedIds.add(item.id))
+        setDemoData(prev => prev.map(item => movedIds.has(item.id) ? {
+          ...item,
+          data_pubblicazione: bulkMoveDate,
+          ...(bulkMoveTime ? { ora_pubblicazione: bulkMoveTime } : {}),
+        } : item))
+      } else {
+        const results = await Promise.allSettled(movable.map(async item => {
+          const res = await fetch('/api/data/calendario', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: item.id,
+              data_pubblicazione: bulkMoveDate,
+              ...(bulkMoveTime ? { ora_pubblicazione: bulkMoveTime } : {}),
+            }),
+          })
+          if (!res.ok) throw new Error(await readApiError(res, `Spostamento ${item.id_contenuto} fallito`))
+          return item.id
+        }))
+        results.forEach(result => { if (result.status === 'fulfilled') movedIds.add(result.value) })
+        failed = movable.length - movedIds.size
+      }
+      setContenuti(prev => prev.map(item => movedIds.has(item.id) ? {
+        ...item,
+        data_pubblicazione: bulkMoveDate,
+        ...(bulkMoveTime ? { ora_pubblicazione: bulkMoveTime } : {}),
+      } : item))
+      setSelectedIds(new Set())
+      setBulkMoveOpen(false)
+      setBulkMoveDate('')
+      setBulkMoveTime('')
+      if (failed || skipped) {
+        setAdminError([
+          failed ? `${failed} contenuti non spostati` : '',
+          skipped ? `${skipped} saltati perché già sincronizzati` : '',
+        ].filter(Boolean).join(' · '))
+      }
+      setSyncMsg({ type: 'ok', text: `${movedIds.size} contenuti spostati al ${formatDateLabel(bulkMoveDate)}.` })
+    } catch (e) {
+      setAdminError((e as Error).message)
+    } finally {
+      setBulkMoving(false)
     }
   }
 
@@ -1303,7 +1402,19 @@ function CalendarioInner() {
               </span>
             </label>
             {selectedIds.size > 0 && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <button
+                  onClick={() => {
+                    const first = contenuti.find(item => selectedIds.has(item.id))
+                    setBulkMoveDate(first ? toYmd(first.data_pubblicazione) : todayIso)
+                    setBulkMoveTime('')
+                    setBulkMoveOpen(true)
+                  }}
+                  className="py-1.5 px-3 text-xs inline-flex items-center gap-1.5 rounded-lg font-medium bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors"
+                >
+                  <Move className="w-3.5 h-3.5" />
+                  Sposta selezionati ({selectedIds.size})
+                </button>
                 <button
                   onClick={() => setRejectBulkOpen(true)}
                   className="py-1.5 px-3 text-xs inline-flex items-center gap-1.5 rounded-lg font-medium bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors"
@@ -1339,7 +1450,18 @@ function CalendarioInner() {
             return (
             <Fragment key={c.id}>
               {showDateHeader && (
-                <div className="sticky top-0 z-10 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur md:p-4">
+                <div
+                  onDragOver={event => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setDragOverDate(toYmd(c.data_pubblicazione)) }}
+                  onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragOverDate(null) }}
+                  onDrop={event => {
+                    event.preventDefault()
+                    const contentId = event.dataTransfer.getData('contenuto_id') || event.dataTransfer.getData('text/plain')
+                    const content = contenuti.find(item => item.id === contentId)
+                    setDragOverDate(null)
+                    if (content) void handleDrop(content, toYmd(c.data_pubblicazione))
+                  }}
+                  className={`sticky top-0 z-10 rounded-2xl border bg-white/95 p-3 shadow-sm backdrop-blur transition-colors md:p-4 ${dragOverDate === toYmd(c.data_pubblicazione) ? 'border-brand-500 bg-brand-50/95 ring-2 ring-brand-200' : 'border-slate-200'}`}
+                >
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wide text-brand-600">{formatDayName(c.data_pubblicazione)}</p>
@@ -1357,14 +1479,29 @@ function CalendarioInner() {
                   </div>
                 </div>
               )}
-              <div
-                draggable={!c.blotato_post_id && c.blotato_status !== 'scheduled' && c.blotato_status !== 'published' && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(c.status)}
-                onDragStart={e => { e.dataTransfer.setData('contenuto_id', c.id); setDragItem(c.id) }}
-                onDragEnd={() => setDragItem(null)}
-                className={`card overflow-hidden border-slate-200/80 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg md:p-4 cursor-grab active:cursor-grabbing ${dragItem === c.id ? 'opacity-50 scale-95' : ''} ${selectedIds.has(c.id) ? 'ring-2 ring-brand-400' : ''}`}
-              >
+              <div className={`card overflow-hidden border-slate-200/80 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg md:p-4 ${dragItem === c.id ? 'opacity-50 scale-95' : ''} ${selectedIds.has(c.id) ? 'ring-2 ring-brand-400' : ''}`}>
               <div className={`mb-3 h-1 rounded-full ${statusTone(c.status)}`} />
               <div className="flex flex-wrap items-start gap-3 md:gap-4">
+                {(() => {
+                  const movable = !c.blotato_post_id && c.blotato_status !== 'scheduled' && c.blotato_status !== 'published' && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(c.status)
+                  return (
+                    <span
+                      draggable={movable}
+                      onDragStart={event => {
+                        if (!movable) return
+                        event.dataTransfer.setData('contenuto_id', c.id)
+                        event.dataTransfer.setData('text/plain', c.id)
+                        event.dataTransfer.effectAllowed = 'move'
+                        setDragItem(c.id)
+                      }}
+                      onDragEnd={() => { setDragItem(null); setDragOverDate(null) }}
+                      title={movable ? 'Trascina in un altro giorno' : 'Già sincronizzato: rimettilo in coda prima di spostarlo'}
+                      className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border ${movable ? 'cursor-grab border-slate-200 bg-slate-50 text-slate-500 hover:border-brand-300 hover:text-brand-700 active:cursor-grabbing' : 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'}`}
+                    >
+                      <GripVertical className="h-4 w-4" />
+                    </span>
+                  )
+                })()}
                 {/* Checkbox selezione per eliminazione multipla */}
                 <input
                   type="checkbox"
@@ -1493,6 +1630,7 @@ function CalendarioInner() {
                         scenes_json: c.scenes_json, slides_json: c.slides_json, overlay_text: c.overlay_text,
                         alt_text: c.alt_text, tags: c.tags, thumbnail_url: c.thumbnail_url,
                         idea_visual: c.idea_visual, voiceover_script: c.voiceover_script, music_mood: c.music_mood,
+                        reel_audio_url: c.reel_audio_url, reel_audio_title: c.reel_audio_title,
                         blotato_visual_media_url: c.blotato_visual_media_url,
                         link_prodotto_finale: c.link_prodotto_finale || c.link_prodotto,
                         brand_name: brand?.brand_name, social_handle: brand?.social_handle,
@@ -1941,6 +2079,35 @@ function CalendarioInner() {
                 )
               })()}
 
+              {['reel', 'short', 'video'].includes(selected.formato) && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Music2 className="h-4 w-4 text-emerald-700" />
+                      <p className="text-sm font-bold text-emerald-950">Audio Reel</p>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase text-emerald-700">MP3 · WAV · M4A · OGG</span>
+                  </div>
+                  {selected.reel_audio_url && (
+                    <div className="mb-3">
+                      <p className="mb-1 truncate text-[11px] font-medium text-emerald-800">{selected.reel_audio_title || 'Traccia audio caricata'}</p>
+                      <audio src={selected.reel_audio_url} controls preload="metadata" className="h-9 w-full" />
+                    </div>
+                  )}
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-emerald-400 bg-white px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-50">
+                    {uploadingPhoto === `${selected.id}:audio` ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Music2 className="h-4 w-4" />}
+                    {selected.reel_audio_url ? 'Sostituisci audio' : 'Carica audio Reel'}
+                    <input
+                      type="file"
+                      accept={AUDIO_ACCEPT}
+                      className="hidden"
+                      disabled={uploadingPhoto === `${selected.id}:audio`}
+                      onChange={e => { const file = e.target.files?.[0]; if (file) attachReelAudio(selected, file); e.target.value = '' }}
+                    />
+                  </label>
+                </div>
+              )}
+
               {/* Errore */}
               {selected.errore_tecnico && (
                 <div className="bg-red-50 rounded-lg p-3">
@@ -2068,6 +2235,54 @@ function CalendarioInner() {
       )}
 
       {/* Modale conferma eliminazione multipla */}
+      {bulkMoveOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => !bulkMoving && setBulkMoveOpen(false)}>
+          <div className="w-full max-w-md rounded-xl bg-white shadow-2xl" onClick={event => event.stopPropagation()}>
+            <div className="flex items-center gap-3 border-b p-5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+                <CalendarClock className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-bold text-gray-900">Sposta {selectedIds.size} contenuti</h2>
+                <p className="text-xs text-gray-500">Inclusi i contenuti ancora da approvare</p>
+              </div>
+            </div>
+            <div className="space-y-4 p-5">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-gray-700">Nuova data</label>
+                <input
+                  type="date"
+                  value={bulkMoveDate}
+                  onChange={event => setBulkMoveDate(event.target.value)}
+                  className="input w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-gray-700">Nuova ora <span className="font-normal text-gray-400">(facoltativa)</span></label>
+                <input
+                  type="time"
+                  value={bulkMoveTime}
+                  onChange={event => setBulkMoveTime(event.target.value)}
+                  className="input w-full"
+                />
+                <p className="mt-1 text-[11px] text-gray-500">Lascia vuoto per mantenere l’orario di ciascun contenuto.</p>
+              </div>
+              <p className="rounded-lg border border-sky-100 bg-sky-50 p-3 text-xs text-sky-800">
+                I contenuti già programmati o pubblicati su Blotato verranno saltati. Prima devono essere rimessi in coda.
+              </p>
+            </div>
+            <div className="flex gap-3 border-t p-5">
+              <button type="button" onClick={() => setBulkMoveOpen(false)} disabled={bulkMoving} className="btn-secondary flex-1 justify-center">Annulla</button>
+              <button type="button" onClick={bulkMove} disabled={bulkMoving || !bulkMoveDate} className="btn-primary flex-1 justify-center">
+                {bulkMoving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Move className="h-4 w-4" />}
+                {bulkMoving ? 'Sposto...' : 'Sposta'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {bulkDeleteOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => !bulkDeleting && setBulkDeleteOpen(false)}>
           <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>

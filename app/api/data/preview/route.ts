@@ -60,6 +60,11 @@ export async function GET(request: Request) {
       'idea_visual',
       'voiceover_script',
       'music_mood',
+      'reel_audio_url',
+      'reel_audio_title',
+      'reel_audio_source_url',
+      'reel_audio_license',
+      'blotato_visual_media_url',
     ].map(optionalText).join(',\n              ')
     const tokenSelect = hasPreviewToken ? 'c.preview_token::text AS preview_token,' : ''
     const rows = await q(

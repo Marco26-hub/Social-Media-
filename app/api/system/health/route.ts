@@ -7,7 +7,7 @@ import { AUTH_SECRET } from '@/lib/auth-secret'
 
 export const dynamic = 'force-dynamic'
 
-const LATEST_REQUIRED_MIGRATION = '041_blotato_visual_reels.sql'
+const LATEST_REQUIRED_MIGRATION = '042_reel_audio.sql'
 
 function hasEnv(name: string) {
   return Boolean(process.env[name]?.trim())

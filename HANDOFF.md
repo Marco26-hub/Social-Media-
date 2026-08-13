@@ -11,7 +11,7 @@ Stato al 2026-08-13. Piattaforma SaaS di social media automation con AI (Next.js
 - **Scheduling:** GitHub Actions cron (`.github/workflows/agenti-cron.yml`, lun 07:00 UTC) → chiama `/api/agents/*` con `CRON_SECRET`.
 
 ## Database
-- Migrazioni in **`db/migrations/`** (001–041). Runner: `npm run migrate` (usa `DIRECT_DATABASE_URL`, invia ogni file intero a Postgres). `npm run migrate:dry` per il dry-run — attenzione: elenca TUTTI i file su disco, non quelli mancanti sul DB (non dice nulla sullo stato remoto). La 041 aggiunge lo stato e gli URL dei Reel visuali Blotato.
+- Migrazioni in **`db/migrations/`** (001–042). Runner: `npm run migrate` (usa `DIRECT_DATABASE_URL`, invia ogni file intero a Postgres). `npm run migrate:dry` per il dry-run — attenzione: elenca TUTTI i file su disco, non quelli mancanti sul DB (non dice nulla sullo stato remoto). La 041 aggiunge lo stato e gli URL dei Reel visuali Blotato; la 042 aggiunge audio Reel e stato del relativo render.
 - **⚠️ Vercel NON applica le migrazioni al deploy.** Push del codice e stato del DB sono due cose separate: dopo ogni push (anche del socio) controllare `schema_migrations` prima di assumere che lo schema sia allineato al codice live. Successo passato: codice per pacchetti/timezone in produzione per ore con le colonne ancora assenti (silenzioso finché non si guarda).
 - **Due connection string** (pooler Supavisor, IPv4):
   - `DATABASE_URL` — transaction pooler **:6543** (runtime app serverless).
@@ -42,7 +42,8 @@ Vecchie pagine unificate in poche pagine-contenitore con tab, vecchie URL vive v
 - **Reel da foto:** Blotato monta le 3–5 foto in un MP4 9:16. Il video torna in stato `ready_for_review`, deve essere visto in Anteprima e approvato una seconda volta; non viene mai pubblicato appena generato.
 - **`app/api/generate/plan/route.ts`**: MP4 vincolato ai formati video, marcatura manuale (`auto|carosello|reel|story|post`) rispettata, mix formati e numero generazioni derivati dallo stesso pacchetto. Settimanale e mensile sono separati: Crescita = 6/24, Presenza = 4/16 salvo quota cliente esplicita.
 - **Fallback generazione:** un blocco AI riuscito viene conservato. Ogni elemento mancante diventa uno slot `ERRORE_MANUALE` con prefisso nota `[GENERATION_FALLBACK]`, mantenendo data, canale, formato e media. Il popup finale mostra quanti elementi sistemare e apre `/dashboard/calendario?filter=ERRORE_MANUALE`. Dal dettaglio si può correggere manualmente o usare `POST /api/data/calendario/[id]/regenerate`; il risultato torna sempre `DA_APPROVARE`, mai direttamente in pubblicazione.
-- **Calendario:** giorni cliccabili, trascinamento su un altro giorno per elementi non ancora sincronizzati, modifica copy/media e anteprima prima dell'approvazione.
+- **Calendario:** giorni cliccabili; trascinamento tramite maniglia verso griglia, barra settimanale o intestazione del giorno; spostamento multiplo con data e ora opzionale. `DA_APPROVARE`, bozze ed errori sono spostabili; elementi già sincronizzati/pubblicati richiedono prima il requeue. Copy/media/audio Reel sono modificabili e visibili in anteprima prima dell'approvazione.
+- **Audio Reel:** upload separato MP3/WAV/M4A/OGG (25 MB) dal piano o dai dettagli calendario, assegnato esclusivamente ai Reel e mostrato con player in anteprima. La migrazione 042 persiste sorgente/licenza e stato del render audio. L'incorporamento nel video finale via template Blotato `Combine Clips` richiede autorizzazione esplicita al trasferimento dell'audio al servizio esterno.
 - **`lib/pacchetti.ts`** (vetrina commerciale, campo `piano`) e **`lib/packages.ts`** (generazione, campo `pacchetto`) sono **due sistemi paralleli** che oggi coincidono solo perché allineati a mano — da unificare prima di avere molti clienti.
 - Ogni punto di creazione cliente (`lib/provisioning.ts` per l'attivazione registrazione, `app/api/data/clienti` POST per l'onboarding manuale) deve impostare `pacchetto`+`contenuti_mese` derivandoli dallo stesso mapping piano→pacchetto — trovati e corretti bug identici in entrambi i punti (quota rimasta al default schema 30 invece che 16/24).
 
@@ -62,7 +63,7 @@ Il workspace Blotato ospita gli account di **più clienti reali insieme** (SILKi
 - Commit principali: `4014da5`, `9fbaa1e`, `81f9ef3` (quest'ultimo precede questo aggiornamento handoff).
 
 ## Da completare
-1. Deploy Vercel: push del codice + tutte le env Supabase. Il progetto Vercel auto-deploya da `main`. Verificare che la migrazione 041 sia applicata prima del test Reel da foto.
+1. Deploy Vercel: push del codice + tutte le env Supabase. Il progetto Vercel auto-deploya da `main`. Verificare che la migrazione 042 sia applicata prima del test upload audio Reel.
 2. GitHub → repo variable `APP_BASE_URL` = dominio Vercel (per il cron).
 3. **Sicurezza:** gli account `admin` e `cliente` usano ancora la password di default `1234567` — cambiarle prima del go-live.
 4. Spegnere Render solo dopo che Vercel è verificato (media e dati sono già su Supabase).
