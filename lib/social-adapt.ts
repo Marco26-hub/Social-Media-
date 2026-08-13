@@ -8,6 +8,8 @@
 // Se ritorna null → la combinazione canale/formato base è incompatibile e il
 // cross-post va saltato con warning esplicito.
 
+import { trimHashtags } from '@/lib/hashtags'
+
 type Row = Record<string, unknown>
 
 // Limiti reali (2026) per canale.
@@ -28,7 +30,7 @@ const MAX_HASHTAGS: Record<string, number> = {
   x: 2,
   linkedin: 5,
   threads: 5,
-  instagram: 30,
+  instagram: 5,
   tiktok: 8,
   pinterest: 20,
   facebook: 3,
@@ -51,11 +53,6 @@ function truncateSmart(text: string, limit: number): string {
   const cut = clean.slice(0, limit - 1)
   const lastSpace = cut.lastIndexOf(' ')
   return (lastSpace > limit * 0.7 ? cut.slice(0, lastSpace) : cut).trimEnd() + '…'
-}
-
-function trimHashtags(raw: string, max: number): string {
-  const tags = raw.split(/\s+/).filter(t => t.startsWith('#')).slice(0, max)
-  return tags.join(' ')
 }
 
 export type AdaptResult =

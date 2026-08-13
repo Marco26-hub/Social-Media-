@@ -9,6 +9,7 @@ import { getBlotatoKey } from '@/lib/blotato-key'
 import { resolveBlotatoTarget } from '@/lib/blotato-accounts'
 import { CANALE_TO_BLOTATO, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
 import { preflightRow } from '@/lib/publish/preflight'
+import { normalizeHashtagsForPublish } from '@/lib/hashtags'
 
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 
@@ -80,6 +81,7 @@ export async function scheduleOnBlotato(
 
   const canale = row.canale as string
   const formato = row.formato as string
+  const isStory = formato.toLowerCase() === 'story'
 
   // 'blog' non è una piattaforma Blotato: va pubblicato altrove (CMS), non qui.
   const platform = CANALE_TO_BLOTATO[canale]
@@ -111,14 +113,19 @@ export async function scheduleOnBlotato(
 
   // Campi target dipendenti dal FORMATO (non dall'account, quindi qui e non nel resolver):
   // - mediaType per IG/FB: senza, un post-immagine finisce reel di default → sbagliato.
-  // - firstComment IG: gli hashtag Instagram vanno nel primo commento, non in caption.
+  // - firstComment IG: gli hashtag Instagram vanno nel primo commento, tranne nelle
+  //   story che non supportano commenti nel payload Blotato.
   // - link FB: anteprima link per i post Facebook.
   const mediaType = formatoToMediaType(formato)
   if (mediaType && (platform === 'instagram' || platform === 'facebook')) target.mediaType = mediaType
-  const hashtag = String(row.hashtag || '').trim()
-  if (platform === 'instagram' && hashtag) target.firstComment = hashtag
+  const hashtag = normalizeHashtagsForPublish(canale, String(row.hashtag || ''))
+  if (platform === 'instagram' && isStory) {
+    delete target.firstComment
+  } else if (platform === 'instagram' && hashtag) {
+    target.firstComment = hashtag
+  }
   const linkProdottoFinale = String(row.link_prodotto_finale || row.link_prodotto || '').trim()
-  if (platform === 'facebook' && linkProdottoFinale && formato !== 'story') target.link = linkProdottoFinale
+  if (platform === 'facebook' && linkProdottoFinale && !isStory) target.link = linkProdottoFinale
 
   // Costruisci il contenuto testuale completo per la piattaforma (hook+caption+cta+hashtag).
   const text = buildPlatformContent(canale, formato, row)
@@ -278,7 +285,7 @@ function buildPlatformContent(canale: string, formato: string, row: ContentRow):
   const hook = (row.hook || '') as string
   const caption = (row.caption || '') as string
   const cta = (row.cta || '') as string
-  const hashtag = (row.hashtag || '') as string
+  const hashtag = normalizeHashtagsForPublish(canale, (row.hashtag || '') as string)
   const nomeProdotto = (row.nome_prodotto || '') as string
   const linkProdotto = ((row.link_prodotto_finale || row.link_prodotto || '') as string).trim()
 

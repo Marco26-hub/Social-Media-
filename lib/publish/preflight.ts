@@ -8,6 +8,7 @@
 // qui: li copre resolveBlotatoTarget nel sync, che lancia un errore esplicito.
 
 import { CANALE_TO_BLOTATO, PLATFORM_REQUIREMENTS, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from './blotato-map'
+import { MAX_BLOTATO_INSTAGRAM_HASHTAGS, hashtagCount } from '@/lib/hashtags'
 
 export type PreflightIssue = { code: string; message: string }
 export type PreflightResult = { ok: boolean; errors: PreflightIssue[]; warnings: string[] }
@@ -40,7 +41,14 @@ export function preflightRow(row: Record<string, unknown>, tz: string = DEFAULT_
   // Testo
   const hook = String(row.hook || '').trim()
   const caption = String(row.caption || '').trim()
+  const hashtag = String(row.hashtag || '').trim()
   if (!hook && !caption) warnings.push('Testo vuoto (hook e caption mancanti)')
+  if (platform === 'instagram') {
+    const count = hashtagCount(hashtag)
+    if (count > MAX_BLOTATO_INSTAGRAM_HASHTAGS) {
+      warnings.push(`Instagram/Blotato accetta massimo ${MAX_BLOTATO_INSTAGRAM_HASHTAGS} hashtag: verranno ridotti da ${count} a ${MAX_BLOTATO_INSTAGRAM_HASHTAGS}`)
+    }
+  }
 
   // Media
   const media = collectMedia(row)
