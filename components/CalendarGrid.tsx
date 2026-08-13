@@ -29,10 +29,11 @@ const MONTHS = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'L
 
 function pad(n: number): string { return String(n).padStart(2, '0') }
 
-export default function CalendarGrid({ items, tz, onSelect }: {
+export default function CalendarGrid({ items, tz, onSelect, onMove }: {
   items: Contenuto[]
   tz: string
   onSelect: (c: Contenuto) => void
+  onMove: (c: Contenuto, newDate: string) => unknown | Promise<unknown>
 }) {
   // Mese iniziale: quello del primo contenuto con data, altrimenti il mese corrente.
   // `toYmd` perché la data può arrivare come ISO completo: concatenarci 'T12:00:00'
@@ -43,6 +44,8 @@ export default function CalendarGrid({ items, tz, onSelect }: {
   const init = Number.isFinite(parsed.getTime()) ? parsed : new Date()
   const [year, setYear] = useState(init.getFullYear())
   const [month, setMonth] = useState(init.getMonth()) // 0-based
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
 
   // Indicizza i contenuti per giorno (YYYY-MM-DD).
   const byDay = new Map<string, Contenuto[]>()
@@ -95,17 +98,48 @@ export default function CalendarGrid({ items, tz, onSelect }: {
               const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`
               const dayItems = (byDay.get(dateStr) || []).slice().sort((a, b) => (a.ora_pubblicazione || '').localeCompare(b.ora_pubblicazione || ''))
               return (
-                <div key={dateStr} className="min-h-[92px] rounded-lg border border-slate-200 bg-white p-1">
+                <div
+                  key={dateStr}
+                  data-calendar-date={dateStr}
+                  onDragOver={event => { event.preventDefault(); setDragOverDate(dateStr) }}
+                  onDragLeave={event => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragOverDate(null)
+                  }}
+                  onDrop={event => {
+                    event.preventDefault()
+                    const contentId = event.dataTransfer.getData('contenuto_id')
+                    const content = items.find(item => item.id === contentId)
+                    setDragOverDate(null)
+                    setDraggingId(null)
+                    if (content) void onMove(content, dateStr)
+                  }}
+                  className={`min-h-[92px] rounded-lg border p-1 transition-colors ${
+                    dragOverDate === dateStr ? 'border-brand-500 bg-brand-50' : 'border-slate-200 bg-white'
+                  }`}
+                >
                   <div className="text-[11px] font-semibold text-gray-500 px-1">{day}</div>
                   <div className="space-y-1 mt-0.5">
                     {dayItems.map(it => {
                       const pf = preflightRow(it as unknown as Record<string, unknown>, tz)
+                      const movable = !it.blotato_post_id
+                        && it.blotato_status !== 'scheduled'
+                        && it.blotato_status !== 'published'
+                        && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(it.status)
                       return (
                         <button
                           key={it.id}
+                          data-content-id={it.id}
+                          draggable={movable}
+                          onDragStart={event => {
+                            if (!movable) return
+                            event.dataTransfer.setData('contenuto_id', it.id)
+                            event.dataTransfer.effectAllowed = 'move'
+                            setDraggingId(it.id)
+                          }}
+                          onDragEnd={() => { setDraggingId(null); setDragOverDate(null) }}
                           onClick={() => onSelect(it)}
-                          title={pf.ok ? `${it.canale} · ${it.formato}` : `Blocca sync: ${pf.errors.map(e => e.message).join('; ')}`}
-                          className="w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-left text-[11px] bg-slate-50 hover:bg-slate-100 transition-colors"
+                          title={!movable ? 'Contenuto già sincronizzato: non spostabile' : pf.ok ? `${it.canale} · ${it.formato} · trascina per spostare` : `Blocca sync: ${pf.errors.map(e => e.message).join('; ')}`}
+                          className={`w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-left text-[11px] bg-slate-50 hover:bg-slate-100 transition-opacity ${movable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${draggingId === it.id ? 'opacity-40' : ''}`}
                         >
                           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot(it.status)}`} />
                           <span className="shrink-0">{CANALE_ICON[it.canale] || '📄'}</span>

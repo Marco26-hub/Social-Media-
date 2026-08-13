@@ -116,13 +116,16 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         if (textValue(d.caption)) setCaption(textValue(d.caption))
         if (textValue(d.hashtag)) setHashtag(textValue(d.hashtag))
         if (textValue(d.cta)) setCta(textValue(d.cta))
-        if (textValue(d.link_media_1)) setMediaUrl(textValue(d.link_media_1))
+        if (textValue(d.blotato_visual_media_url) || textValue(d.link_media_1)) {
+          setMediaUrl(textValue(d.blotato_visual_media_url) || textValue(d.link_media_1))
+        }
         if (textValue(d.brand_name)) setBrandName(textValue(d.brand_name))
         if (textValue(d.social_handle)) setSocialHandle(textValue(d.social_handle))
         if (textValue(d.link_prodotto_finale)) setLinkProdotto(textValue(d.link_prodotto_finale))
         const localCanale = canaleValue(d.canale)
         const localFormato = formatoValue(d.formato)
         const localMediaSlots = mediaSlotValues(d)
+        if (textValue(d.blotato_visual_media_url)) localMediaSlots[0] = textValue(d.blotato_visual_media_url)
         if (localCanale) setCanale(localCanale)
         if (localFormato) setFormato(localFormato)
         if (localMediaSlots.some(Boolean)) setMediaSlots(localMediaSlots)
@@ -170,14 +173,16 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setCaption(s(d.caption))
         setHashtag(s(d.hashtag))
         setCta(s(d.cta))
-        setMediaUrl(s(d.link_media_1))
+        setMediaUrl(s(d.blotato_visual_media_url) || s(d.link_media_1))
         if (s(d.brand_name)) setBrandName(s(d.brand_name))
         if (s(d.social_handle)) setSocialHandle(s(d.social_handle))
         const dbCanale = canaleValue(d.canale)
         const dbFormato = formatoValue(d.formato)
         if (dbCanale) setCanale(dbCanale)
         if (dbFormato) setFormato(dbFormato)
-        setMediaSlots(mediaSlotValues(d))
+        const dbMediaSlots = mediaSlotValues(d)
+        if (s(d.blotato_visual_media_url)) dbMediaSlots[0] = s(d.blotato_visual_media_url)
+        setMediaSlots(dbMediaSlots)
         setLinkProdotto(s(d.link_prodotto_finale) || s(d.link_prodotto))
         setNomeProdotto(s(d.nome_prodotto))
         setTema(s(d.tema))
@@ -228,6 +233,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     approvato_da: null, data_approvazione: null,
     blotato_post_id: null, blotato_scheduled_at: null,
     blotato_status: null, blotato_post_url: null, blotato_sync_at: null,
+    blotato_visual_media_url: resolvedMediaSlots[0],
     errore: null, note: note || null,
     platform_account_id: null, publish_lock_id: null,
     media_validato: null,

@@ -27,15 +27,24 @@ type QualitySelection = 'auto' | ContentQuality
 // Viaggia nel body dentro uploaded_assets e vincola l'assegnazione lato server.
 type PlanAsset = { url: string; name: string; mime?: string; kind?: 'image' | 'video'; tag: MediaTag }
 const MAX_PLAN_IMAGES = 60
+const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif'
 const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
 
-// Le 4 destinazioni selezionabili sulla miniatura. 'auto' resta il default
+// Le 5 destinazioni selezionabili sulla miniatura. 'auto' resta il default
 // (decide l'AI): chi non vuole pensarci non deve toccare niente.
 const TAG_OPTIONS: { value: MediaTag; label: string; menu: string; pill: string }[] = [
   { value: 'auto',      label: 'Auto',       menu: 'Auto — decide l’AI', pill: 'bg-gray-900/55 text-white' },
   { value: 'carosello', label: 'Carosello',  menu: 'Carosello',          pill: 'bg-violet-600/90 text-white' },
   { value: 'reel',      label: 'Reel/Video', menu: 'Reel / Video',       pill: 'bg-rose-600/90 text-white' },
+  { value: 'story',     label: 'Story',      menu: 'Story',              pill: 'bg-amber-600/90 text-white' },
   { value: 'post',      label: 'Post',       menu: 'Post',               pill: 'bg-sky-600/90 text-white' },
+]
+
+const DESTINATION_UPLOADS: { tag: Exclude<MediaTag, 'auto'>; title: string; detail: string; accept: string; style: string }[] = [
+  { tag: 'post', title: 'Foto Post', detail: 'IG/FB 4:5 · Pin 2:3', accept: IMAGE_ACCEPT, style: 'border-sky-300 text-sky-800 hover:bg-sky-50' },
+  { tag: 'story', title: 'Foto Story', detail: 'Verticale 9:16', accept: IMAGE_ACCEPT, style: 'border-amber-300 text-amber-800 hover:bg-amber-50' },
+  { tag: 'carosello', title: 'Foto Carosello', detail: '3-10 slide, stesso rapporto', accept: IMAGE_ACCEPT, style: 'border-violet-300 text-violet-800 hover:bg-violet-50' },
+  { tag: 'reel', title: 'Reel / Video', detail: 'MP4 o 3-5 foto 9:16', accept: MEDIA_ACCEPT, style: 'border-rose-300 text-rose-800 hover:bg-rose-50' },
 ]
 
 function tagMeta(tag: MediaTag) {
@@ -168,14 +177,14 @@ export default function PianoPage() {
   }
 
   // Marcatura manuale: vincolo, non consiglio. Lato server un media marcato
-  // "carosello" non finisce su un reel (e viceversa).
+  // "carosello" non finisce su un reel o una story (e viceversa).
   function retagPlanAsset(index: number, value: string) {
     const tag = normalizeMediaTag(value)
     setPlanAssets(prev => prev.map((a, i) => i === index ? { ...a, tag } : a))
   }
 
   // Upload in blocchi da 14 (limite server per richiesta) finché tutti i media scelti sono caricati.
-  async function uploadPlanImages(files: FileList | null) {
+  async function uploadPlanImages(files: FileList | null, destination: MediaTag = 'auto') {
     if (!files?.length || !clienteId) return
     setUploadError(null)
     setUploadingImages(true)
@@ -187,8 +196,13 @@ export default function PianoPage() {
         form.append('cliente_id', clienteId)
         chunk.forEach(file => form.append('files', file))
         const data = await uploadAssets(form)
-        // Nuovi media sempre 'auto': la marcatura è una scelta esplicita dell'utente.
-        const uploaded: PlanAsset[] = (data.assets || []).map(a => ({ url: a.url, name: prettyName(a.name), mime: a.mime, kind: a.kind, tag: 'auto' }))
+        const uploaded: PlanAsset[] = (data.assets || []).map(a => ({
+          url: a.url,
+          name: prettyName(a.name),
+          mime: a.mime,
+          kind: a.kind,
+          tag: destination,
+        }))
         setPlanAssets(prev => [...prev, ...uploaded])
       }
     } catch (e) {
@@ -607,32 +621,59 @@ export default function PianoPage() {
                 </p>
               )}
               <p className="mt-1.5 text-gray-500">
-                Carica tutto qui sotto in un colpo solo: dai un nome a ogni media e scegli la destinazione (Carosello · Reel/Video · Post).
-                Con <span className="font-medium">Auto</span> decide l&apos;AI in base alla descrizione. Gli <span className="font-medium">MP4</span> vanno solo su reel, short o video.
+                Carica i file direttamente nella loro destinazione. Gli <span className="font-medium">MP4</span> sono accettati solo in Reel/Video;
+                senza MP4, 3-5 foto Reel vengono montate in un video 9:16 da vedere prima della pubblicazione.
               </p>
             </div>
           </div>
 
-          <label className={`mt-3 flex items-center justify-center gap-2 border-2 border-dashed rounded-xl py-3 text-xs font-medium cursor-pointer transition-colors ${
-            uploadingImages ? 'border-violet-200 text-violet-400' : 'border-violet-300 text-violet-700 hover:bg-violet-50'
-          }`}>
-            {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
-            {uploadingImages ? 'Caricamento...' : `Scegli foto/MP4 dal tuo computer (${planAssets.length}/${MAX_PLAN_IMAGES})`}
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label="Caricamento media separato per formato">
+            {DESTINATION_UPLOADS.map(destination => {
+              const count = planAssets.filter(asset => asset.tag === destination.tag).length
+              return (
+                <label
+                  key={destination.tag}
+                  className={`flex min-h-[62px] cursor-pointer items-center gap-2 border-2 border-dashed px-3 py-2 text-xs transition-colors ${destination.style} ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}
+                >
+                  {uploadingImages ? <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin" /> : <ImagePlus className="h-4 w-4 flex-shrink-0" />}
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">{destination.title}</span>
+                    <span className="block text-[10px] opacity-75">{destination.detail}</span>
+                  </span>
+                  <span className="font-mono text-sm font-bold" aria-label={`${count} media caricati`}>{count}</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept={destination.accept}
+                    className="hidden"
+                    disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+                    onChange={e => { uploadPlanImages(e.target.files, destination.tag); e.target.value = '' }}
+                  />
+                </label>
+              )
+            })}
+          </div>
+
+          <label className={`mt-2 flex cursor-pointer items-center justify-center gap-2 border border-dashed border-gray-300 px-3 py-2 text-[11px] text-gray-600 hover:bg-gray-50 ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}>
+            <ImagePlus className="h-3.5 w-3.5" />
+            Auto / destinazione dal nome o dalla descrizione ({planAssets.filter(asset => asset.tag === 'auto').length})
             <input
               type="file"
               multiple
               accept={MEDIA_ACCEPT}
               className="hidden"
               disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
-              onChange={e => { uploadPlanImages(e.target.files); e.target.value = '' }}
+              onChange={e => { uploadPlanImages(e.target.files, 'auto'); e.target.value = '' }}
             />
           </label>
+
+          <p className="mt-2 text-right text-[10px] text-gray-500">Totale {planAssets.length}/{MAX_PLAN_IMAGES} media</p>
 
           {uploadError && <p className="text-xs text-red-600 mt-2">{uploadError}</p>}
 
           {planAssets.length > 0 && (
             <>
-              <p className="mt-3 text-[11px] text-gray-500">Dai un nome a ogni media col prodotto che contiene e marca dove deve finire — l&apos;AI userà nome e marcatura per assegnarlo al contenuto giusto.</p>
+              <p className="mt-3 text-[11px] text-gray-500">Controlla nome e destinazione sulle miniature. Puoi spostare qualsiasi file in un altro formato prima di generare il piano.</p>
               <div className="mt-1.5 grid grid-cols-3 sm:grid-cols-5 gap-2">
                 {planAssets.map((a, i) => {
                   const meta = tagMeta(a.tag)

@@ -7,6 +7,7 @@ import type { Contenuto, Status } from '@/lib/types'
 import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid, CalendarClock } from 'lucide-react'
 import CalendarGrid from '@/components/CalendarGrid'
 import { preflightRow } from '@/lib/publish/preflight'
+import { toYmd } from '@/lib/publish/blotato-map'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
@@ -121,6 +122,7 @@ function CalendarioInner() {
   const [demoData, setDemoData]     = useState<Contenuto[]>(demoContenuti)
   const [dragItem, setDragItem]     = useState<string | null>(null)
   const [dragOverDate, setDragOverDate] = useState<string | null>(null)
+  const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [backuping, setBackuping] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Contenuto | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -177,7 +179,7 @@ function CalendarioInner() {
   // Cambio filtro/cliente → azzera la selezione multipla (gli id mostrati cambiano).
   useEffect(() => {
     setSelectedIds(new Set())
-  }, [filterStatus, filterCanale, filterFormato, filterCategoria, searchText, clienteId])
+  }, [filterStatus, filterCanale, filterFormato, filterCategoria, searchText, selectedDay, clienteId])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -246,7 +248,7 @@ function CalendarioInner() {
         approvato_da: user, data_approvazione: new Date().toISOString(),
       } : x))
     } else {
-      await fetch('/api/data/calendario', {
+      const res = await fetch('/api/data/calendario', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -257,6 +259,20 @@ function CalendarioInner() {
           checked_link: 'SI',
         }),
       })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setSyncMsg({ type: 'err', text: data.error || 'Approvazione non riuscita' })
+      } else if (data.publish_status === 'visual_pending' || data.publish_status === 'visual_review') {
+        setSyncMsg({
+          type: 'ok',
+          text: data.publish_status === 'visual_review'
+            ? 'Montaggio Reel pronto: apri Preview, controlla il video e approvalo di nuovo per pubblicarlo.'
+            : 'Montaggio Reel in corso: nessuna pubblicazione è partita. Premi Sincronizza per aggiornarne lo stato.',
+        })
+      } else if (data.publish_note) {
+        setSyncMsg({ type: data.publish_status === 'skipped' ? 'err' : 'ok', text: data.publish_note })
+      }
+      await fetchData()
     }
     setSelected(null)
     setSaving(null)
@@ -274,11 +290,15 @@ function CalendarioInner() {
       if (!res.ok) throw new Error(data.error || 'Sincronizzazione singola fallita')
       const label = data.status === 'scheduled'
         ? 'inviato a Blotato: programmato per davvero.'
+        : data.status === 'visual_review'
+          ? 'video pronto: apri Preview e approvalo di nuovo; non è stato pubblicato.'
+          : data.status === 'visual_pending'
+            ? 'montaggio video in corso; non è stato pubblicato.'
         : data.status === 'dry_run'
           ? 'dry-run: pubblicazione non attiva, nessun invio reale.'
           : `non inviato: ${data.reason || 'scartato dal pre-flight'}`
       setSyncMsg({
-        type: data.status === 'scheduled' || data.status === 'dry_run' ? 'ok' : 'err',
+        type: ['scheduled', 'dry_run', 'visual_pending', 'visual_review'].includes(data.status) ? 'ok' : 'err',
         text: `${c.canale} · ${c.formato} — ${label}`,
       })
       await fetchData()
@@ -381,11 +401,15 @@ function CalendarioInner() {
       const failNote = data.failed ? ` (${data.failed} falliti)${firstErr}` : ''
       // dry-run = pubblicazione non attiva: contenuti pronti ma non pubblicati davvero.
       const dryNote = data.dry_run ? ` ${data.dry_run} in dry-run (PUBLISH_ENABLED non attivo).` : ''
+      const visualNote = [
+        data.visual_pending ? `${data.visual_pending} montaggi in corso` : '',
+        data.visual_review ? `${data.visual_review} video pronti da vedere e approvare` : '',
+      ].filter(Boolean).join(', ')
       setSyncMsg({
         type: data.failed ? 'err' : 'ok',
         text: data.candidates === 0
           ? 'Nessun contenuto approvato da sincronizzare.'
-          : `${data.synced} contenuti inviati a Blotato${failNote}.${dryNote}`,
+          : `${data.synced} contenuti inviati a Blotato${failNote}.${dryNote}${visualNote ? ` ${visualNote}. Nessun video appena generato è stato pubblicato.` : ''}`,
       })
       await fetchData()
     } catch (e) {
@@ -663,7 +687,7 @@ function CalendarioInner() {
   }
 
   function toggleSelectAll() {
-    setSelectedIds(prev => prev.size === contenuti.length ? new Set() : new Set(contenuti.map(c => c.id)))
+    setSelectedIds(prev => prev.size === visibleCalendarItems.length ? new Set() : new Set(visibleCalendarItems.map(c => c.id)))
   }
 
   async function handleScore(c: Contenuto) {
@@ -759,12 +783,16 @@ function CalendarioInner() {
     setSendingToken(null)
   }
 
-  async function handleDrop(c: Contenuto, newDate: string) {
+  async function handleDrop(c: Contenuto, newDate: string): Promise<boolean> {
     setDragOverDate(null)
-    if (c.data_pubblicazione === newDate) return
+    if (toYmd(c.data_pubblicazione) === newDate) return true
+    if (c.blotato_post_id || c.blotato_status === 'scheduled' || c.blotato_status === 'published' || ['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(c.status)) {
+      setSyncMsg({ type: 'err', text: 'Contenuto già sincronizzato con Blotato: rimettilo prima in coda, poi potrai spostarlo.' })
+      return false
+    }
     if (demo) {
       setDemoData(prev => prev.map(x => x.id === c.id ? { ...x, data_pubblicazione: newDate } : x))
-      return
+      return true
     }
     try {
       const res = await fetch('/api/data/calendario', {
@@ -777,10 +805,12 @@ function CalendarioInner() {
         throw new Error(data.error || `spostamento non salvato (HTTP ${res.status})`)
       }
       setContenuti(prev => prev.map(x => x.id === c.id ? { ...x, data_pubblicazione: newDate } : x))
+      return true
     } catch (e) {
       // NIENTE fallback muto: senza questo l'utente trascina, il card "resta" sulla
       // nuova data in UI ma il DB ha la data vecchia -> disallineamento silenzioso.
       setSyncMsg({ type: 'err', text: `Spostamento non salvato (riprova): ${(e as Error).message}` })
+      return false
     }
   }
 
@@ -795,6 +825,9 @@ function CalendarioInner() {
     const right = `${b.data_pubblicazione || '9999-12-31'} ${b.ora_pubblicazione || '99:99'}`
     return left.localeCompare(right)
   })
+  const visibleCalendarItems = selectedDay
+    ? calendarItems.filter(c => toYmd(c.data_pubblicazione) === selectedDay)
+    : calendarItems
   const stats = {
     total: contenuti.length,
     daApprovare: contenuti.filter(c => c.status === 'DA_APPROVARE').length,
@@ -1029,8 +1062,12 @@ function CalendarioInner() {
           const isToday = date === new Date().toISOString().split('T')[0]
           const isOver = dragOverDate === date
           return (
-            <div
+            <button
+              type="button"
               key={date}
+              onClick={() => setSelectedDay(current => current === date ? null : date)}
+              aria-pressed={selectedDay === date}
+              title={selectedDay === date ? 'Mostra tutta la settimana' : `Mostra i contenuti del ${formatDateLabel(date)}`}
               onDragOver={e => { e.preventDefault(); setDragOverDate(date) }}
               onDragLeave={() => setDragOverDate(null)}
               onDrop={e => {
@@ -1042,22 +1079,23 @@ function CalendarioInner() {
               }}
               className={`flex-1 min-w-[60px] rounded-xl border-2 px-2 py-2 text-center cursor-pointer transition-colors ${
                 isOver ? 'border-brand-400 bg-brand-50 scale-105' :
+                selectedDay === date ? 'border-brand-600 bg-brand-600 text-white shadow-md' :
                 isToday ? 'border-brand-300 bg-brand-50/50' :
                 'border-gray-200 bg-white hover:border-gray-300'
               }`}
             >
-              <p className="text-[10px] text-gray-400 uppercase">
+              <p className={`text-[10px] uppercase ${selectedDay === date ? 'text-white/75' : 'text-gray-400'}`}>
                 {['LUN','MAR','MER','GIO','VEN','SAB','DOM'][new Date(date).getDay() === 0 ? 6 : new Date(date).getDay() - 1]}
               </p>
-              <p className={`text-sm font-bold ${isToday ? 'text-brand-600' : 'text-gray-700'}`}>
+              <p className={`text-sm font-bold ${selectedDay === date ? 'text-white' : isToday ? 'text-brand-600' : 'text-gray-700'}`}>
                 {date.split('-')[2]}
               </p>
               {countOnDate > 0 && (
-                <span className={`text-[10px] font-medium ${isToday ? 'text-brand-500' : 'text-gray-400'}`}>
+                <span className={`text-[10px] font-medium ${selectedDay === date ? 'text-white/80' : isToday ? 'text-brand-500' : 'text-gray-400'}`}>
                   {countOnDate}
                 </span>
               )}
-            </div>
+            </button>
           )
         })}
       </div>
@@ -1098,7 +1136,7 @@ function CalendarioInner() {
           <p className="text-sm mt-1">Cambia i filtri o attendi il piano settimanale</p>
         </div>
       ) : vista === 'griglia' ? (
-        <CalendarGrid items={calendarItems} tz={clienteTz} onSelect={setSelected} />
+        <CalendarGrid items={calendarItems} tz={clienteTz} onSelect={setSelected} onMove={handleDrop} />
       ) : (
         <div className="space-y-3">
           {/* Barra selezione multipla — seleziona tutto + elimina in blocco */}
@@ -1106,8 +1144,8 @@ function CalendarioInner() {
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={selectedIds.size > 0 && selectedIds.size === contenuti.length}
-                ref={el => { if (el) el.indeterminate = selectedIds.size > 0 && selectedIds.size < contenuti.length }}
+                checked={selectedIds.size > 0 && selectedIds.size === visibleCalendarItems.length}
+                ref={el => { if (el) el.indeterminate = selectedIds.size > 0 && selectedIds.size < visibleCalendarItems.length }}
                 onChange={toggleSelectAll}
                 className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
               />
@@ -1134,10 +1172,16 @@ function CalendarioInner() {
               </div>
             )}
           </div>
-          {calendarItems.map((c, index) => {
-            const previousDate = calendarItems[index - 1]?.data_pubblicazione
+          {visibleCalendarItems.length === 0 && selectedDay ? (
+            <div className="card p-10 text-center text-gray-500">
+              <CalendarDays className="mx-auto mb-2 h-6 w-6 text-gray-400" />
+              <p className="text-sm font-semibold">Nessun contenuto il {formatDateLabel(selectedDay)}</p>
+              <button type="button" onClick={() => setSelectedDay(null)} className="btn-secondary mt-3 text-xs">Mostra tutta la settimana</button>
+            </div>
+          ) : visibleCalendarItems.map((c, index) => {
+            const previousDate = visibleCalendarItems[index - 1]?.data_pubblicazione
             const showDateHeader = c.data_pubblicazione !== previousDate
-            const dayItems = calendarItems.filter(item => item.data_pubblicazione === c.data_pubblicazione)
+            const dayItems = visibleCalendarItems.filter(item => item.data_pubblicazione === c.data_pubblicazione)
             const dayStatus = dayItems.reduce<Record<string, number>>((acc, item) => {
               acc[item.status] = (acc[item.status] || 0) + 1
               return acc
@@ -1165,7 +1209,7 @@ function CalendarioInner() {
                 </div>
               )}
               <div
-                draggable
+                draggable={!c.blotato_post_id && c.blotato_status !== 'scheduled' && c.blotato_status !== 'published' && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(c.status)}
                 onDragStart={e => { e.dataTransfer.setData('contenuto_id', c.id); setDragItem(c.id) }}
                 onDragEnd={() => setDragItem(null)}
                 className={`card overflow-hidden border-slate-200/80 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg md:p-4 cursor-grab active:cursor-grabbing ${dragItem === c.id ? 'opacity-50 scale-95' : ''} ${selectedIds.has(c.id) ? 'ring-2 ring-brand-400' : ''}`}
@@ -1269,12 +1313,16 @@ function CalendarioInner() {
                       <span className={`inline-block w-1.5 h-1.5 rounded-full ${
                         c.blotato_status === 'published' ? 'bg-green-500' :
                         c.blotato_status === 'scheduled' ? 'bg-blue-500' :
-                        c.blotato_status === 'failed' ? 'bg-red-500' : 'bg-gray-400'
+                        c.blotato_status === 'failed' ? 'bg-red-500' :
+                        c.blotato_status === 'visual_pending' ? 'bg-amber-500' :
+                        c.blotato_status === 'visual_review' ? 'bg-violet-500' : 'bg-gray-400'
                       }`} />
                       <span className="text-[10px] text-gray-500">
                         {c.blotato_status === 'published' ? 'Pubblicato' :
                          c.blotato_status === 'scheduled' ? 'In coda Blotato' :
-                         c.blotato_status === 'failed' ? 'Fallito' : c.blotato_status}
+                         c.blotato_status === 'failed' ? 'Fallito' :
+                         c.blotato_status === 'visual_pending' ? 'Montaggio Reel in corso' :
+                         c.blotato_status === 'visual_review' ? 'Video pronto da approvare' : c.blotato_status}
                       </span>
                     </div>
                   )}
@@ -1288,7 +1336,7 @@ function CalendarioInner() {
                       try { localStorage.setItem(`preview_${c.id_contenuto}`, JSON.stringify({
                         hook: c.hook, caption: c.caption, hashtag: c.hashtag, cta: c.cta,
                         canale: c.canale, formato: c.formato,
-                        link_media_1: c.link_media_1, link_media_2: c.link_media_2, link_media_3: c.link_media_3,
+                        link_media_1: c.blotato_visual_media_url || c.link_media_1, link_media_2: c.link_media_2, link_media_3: c.link_media_3,
                         link_media_4: c.link_media_4, link_media_5: c.link_media_5, link_media_6: c.link_media_6,
                         link_media_7: c.link_media_7, link_media_8: c.link_media_8, link_media_9: c.link_media_9,
                         link_media_10: c.link_media_10,
@@ -1296,6 +1344,7 @@ function CalendarioInner() {
                         scenes_json: c.scenes_json, slides_json: c.slides_json, overlay_text: c.overlay_text,
                         alt_text: c.alt_text, tags: c.tags, thumbnail_url: c.thumbnail_url,
                         idea_visual: c.idea_visual, voiceover_script: c.voiceover_script, music_mood: c.music_mood,
+                        blotato_visual_media_url: c.blotato_visual_media_url,
                         link_prodotto_finale: c.link_prodotto_finale || c.link_prodotto,
                         brand_name: brand?.brand_name, social_handle: brand?.social_handle,
                       })) } catch {}
@@ -1387,6 +1436,27 @@ function CalendarioInner() {
                 <p className="text-sm text-gray-500">
                   {selected.canale} · {selected.formato} · {formatCategoryLabel(selected.obiettivo)} · {formatDateLabel(selected.data_pubblicazione)} alle {formatTimeLabel(selected.ora_pubblicazione)}
                 </p>
+                {!selected.blotato_post_id
+                  && selected.blotato_status !== 'scheduled'
+                  && selected.blotato_status !== 'published'
+                  && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(selected.status)
+                  && (
+                    <label className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-gray-600">
+                      <CalendarDays className="h-4 w-4" />
+                      <input
+                        type="date"
+                        value={toYmd(selected.data_pubblicazione)}
+                        aria-label="Sposta contenuto a un'altra data"
+                        className="border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700"
+                        onChange={async event => {
+                          const newDate = event.target.value
+                          if (newDate && await handleDrop(selected, newDate)) {
+                            setSelected(current => current ? { ...current, data_pubblicazione: newDate } : current)
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
                 {selected.quality_level && (
                   <span className="inline-flex mt-2 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-violet-100 text-violet-700">
                     Qualità {selected.quality_level}

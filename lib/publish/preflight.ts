@@ -60,7 +60,7 @@ export function preflightRow(row: Record<string, unknown>, tz: string = DEFAULT_
     errors.push({ code: 'carousel', message: `Carosello: servono 2–10 media (attuali: ${media.length})` })
   }
   if (mediaType === 'reel' && media.length > 0 && !media.some(u => VIDEO_RE.test(u))) {
-    warnings.push('Formato video/reel ma nessun media sembra un video')
+    warnings.push(`MP4 assente: ${media.length} ${media.length === 1 ? 'immagine verrà montata' : 'immagini verranno montate'} in un video da approvare prima della pubblicazione`)
   }
 
   // Data/ora deve essere nel FUTURO nel fuso del cliente (Blotato: passato → 422).

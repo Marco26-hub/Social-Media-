@@ -40,6 +40,8 @@ const CALENDARIO_UPDATE_COLUMNS = new Set([
   'errore',
   'note',
   'platform_account_id',
+  'publish_lock_id',
+  'retry_count',
   'media_type',
   'media_validato',
   'errore_tecnico',
@@ -97,6 +99,10 @@ const CALENDARIO_UPDATE_COLUMNS = new Set([
   'checked_alt_text',
   'checked_aspect_ratio',
   'checked_media_valid',
+  'blotato_visual_id',
+  'blotato_visual_status',
+  'blotato_visual_media_url',
+  'blotato_visual_source_hash',
 ])
 
 export async function GET(request: Request) {
@@ -180,6 +186,13 @@ export async function PATCH(request: Request) {
     if (!existingContent.length) {
       return NextResponse.json({ error: 'contenuto non trovato' }, { status: 404 })
     }
+    if (
+      body.data_pubblicazione
+      && (existingContent[0] as Record<string, unknown>).blotato_post_id
+      && body.data_pubblicazione !== toYmd((existingContent[0] as Record<string, unknown>).data_pubblicazione)
+    ) {
+      return NextResponse.json({ error: 'contenuto già sincronizzato con Blotato: rimettilo in coda prima di cambiare data' }, { status: 409 })
+    }
 
     const fields: string[] = []
     const params: unknown[] = [id, cid]
@@ -194,6 +207,15 @@ export async function PATCH(request: Request) {
       fields.push(`${key} = $${params.length}`)
     }
     if (body.status === 'APPROVATO') {
+      // Un Reel creato da foto richiede una seconda approvazione: questa PATCH
+      // è il consenso esplicito dato DOPO aver visto l'MP4 nella Preview.
+      if (
+        calendarioColumns.has('blotato_visual_status')
+        && String((existingContent[0] as Record<string, unknown>).blotato_visual_status || '') === 'ready_for_review'
+      ) {
+        params.push('approved')
+        fields.push(`blotato_visual_status = $${params.length}`)
+      }
       if (calendarioColumns.has('data_approvazione')) {
         params.push(new Date().toISOString())
         fields.push(`data_approvazione = $${params.length}`)
@@ -219,7 +241,7 @@ export async function PATCH(request: Request) {
 
     // Se approvato, schedula su Blotato
     let schedulingError: string | null = null
-    let publishStatus: 'scheduled' | 'dry_run' | 'skipped' | null = null
+    let publishStatus: 'scheduled' | 'visual_pending' | 'visual_review' | 'dry_run' | 'skipped' | null = null
     let publishNote: string | null = null
     if (body.status === 'APPROVATO') {
       try {
@@ -231,6 +253,8 @@ export async function PATCH(request: Request) {
           const outcome = await scheduleOnBlotato(cid, row, timezone)
           publishStatus = outcome.status
           if (outcome.status === 'dry_run') publishNote = 'Pubblicazione disattivata (PUBLISH_ENABLED=false): contenuto approvato ma NON pubblicato. Sarà pubblicato quando abiliti la pubblicazione.'
+          else if (outcome.status === 'visual_pending') publishNote = 'Montaggio Reel in corso. Non è stato pubblicato: aggiorna il sync per completare l’anteprima.'
+          else if (outcome.status === 'visual_review') publishNote = 'Video Reel pronto. Non è stato pubblicato: guardalo in Preview e approvalo di nuovo.'
           else if (outcome.status === 'skipped') publishNote = outcome.reason
         }
       } catch (scheduleError) {

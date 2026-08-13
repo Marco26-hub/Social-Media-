@@ -1,7 +1,7 @@
 // Publish Bridge: invia contenuto a Blotato per pubblicazione social
 // Chiamato quando status → APPROVATO. Supporta tutti i formati.
 
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { q } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 import { validateMediaUrls } from '@/lib/media-validate'
@@ -10,6 +10,7 @@ import { getPinnedAccountId, getPinnedSubaccountId, resolveBlotatoTarget } from 
 import { CANALE_TO_BLOTATO, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
 import { preflightRow } from '@/lib/publish/preflight'
 import { hashtagCount, normalizeHashtagsForPublish, normalizeInstagramPublishPayload, stripHashtags } from '@/lib/hashtags'
+import { createPhotoReel, getPhotoReelStatus, visualIsDone, visualIsFailed } from '@/lib/blotato-visual'
 
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 
@@ -48,8 +49,62 @@ type ContentRow = Record<string, unknown>
 // Il chiamante sa sempre se ha davvero programmato, se è dry-run o se è stato saltato.
 export type PublishOutcome =
   | { status: 'scheduled'; blotatoId: string }
+  | { status: 'visual_pending'; visualId: string }
+  | { status: 'visual_review'; visualId: string; mediaUrl: string }
   | { status: 'dry_run' }
   | { status: 'skipped'; reason: string }
+
+const VIDEO_URL_RE = /\.(mp4|mov|webm|m4v)(\?|$)/i
+
+function isVideoUrl(url: string): boolean {
+  return VIDEO_URL_RE.test(url)
+}
+
+function overlayTexts(row: ContentRow, count: number): string[] {
+  const texts: string[] = []
+  const add = (value: unknown) => {
+    if (typeof value === 'string' && value.trim()) texts.push(value.trim().slice(0, 90))
+  }
+  const raw = row.scenes_json || row.slides_json
+  if (raw) {
+    try {
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+      const items = Array.isArray(parsed)
+        ? parsed
+        : parsed && typeof parsed === 'object'
+          ? (Object.values(parsed as Record<string, unknown>).find(Array.isArray) as unknown[] | undefined) || []
+          : []
+      for (const item of items) {
+        if (!item || typeof item !== 'object') continue
+        const rec = item as Record<string, unknown>
+        add(rec.overlay_testo || rec.testo_overlay || rec.overlay || rec.testo || rec.titolo)
+      }
+    } catch { /* brief non JSON: usa i fallback sotto */ }
+  }
+  if (!texts.length) add(row.overlay_text)
+  if (!texts.length) add(row.hook)
+  if (texts.length < count) add(row.cta)
+  return Array.from({ length: count }, (_, index) => texts[index] || '')
+}
+
+function photoReelPrompt(row: ContentRow): string {
+  const brief = String(row.creative_brief || row.idea_visual || row.tema || row.hook || '').trim()
+  return [
+    'Monta un video verticale social 9:16, output 1080x1920.',
+    'Usa esclusivamente le foto sorgente fornite, senza inventare o modificare il prodotto.',
+    'Adatta foto verticali, quadrate o orizzontali senza deformarle e mantieni il prodotto interamente visibile.',
+    'Transizioni pulite, ritmo naturale e testo dentro la safe area, lontano dai bordi e dai controlli social.',
+    brief ? `Direzione creativa: ${brief.slice(0, 500)}` : '',
+  ].filter(Boolean).join(' ')
+}
+
+function photoReelHash(urls: string[]): string {
+  return createHash('sha256').update(urls.join('\n')).digest('hex')
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 export async function scheduleOnBlotato(
   clienteId: string,
@@ -146,7 +201,7 @@ export async function scheduleOnBlotato(
   }
 
   // Raccogli media disponibili (fino a 10 = max carosello Instagram)
-  const mediaUrls = [
+  let mediaUrls = [
     row.link_media_1, row.link_media_2, row.link_media_3, row.link_media_4, row.link_media_5,
     row.link_media_6, row.link_media_7, row.link_media_8, row.link_media_9, row.link_media_10,
   ].filter((u): u is string => typeof u === 'string' && u.length > 0)
@@ -201,6 +256,154 @@ export async function scheduleOnBlotato(
   }
 
   try {
+  // Reel/short/video: Blotato pubblica un vero video, non una sequenza di JPEG.
+  // Se manca l'MP4, prima componiamo le foto nel template 9:16 e FERMIAMO il
+  // flusso per una seconda approvazione. Il video generato non viene mai inviato
+  // ai social nello stesso click che lo crea.
+  const isVideoFormat = ['reel', 'short', 'video'].includes(formato.toLowerCase())
+  if (isVideoFormat) {
+    const uploadedVideo = mediaUrls.find(isVideoUrl)
+    const sourceImages = mediaUrls.filter(url => !isVideoUrl(url)).slice(0, 5)
+    const storedVisualUrl = String(row.blotato_visual_media_url || '').trim()
+    const storedVisualStatus = String(row.blotato_visual_status || '').trim().toLowerCase()
+
+    if (uploadedVideo) {
+      // Un reel è un singolo video: eventuali immagini restano sorgenti/cover e
+      // non vanno inviate come album insieme all'MP4.
+      mediaUrls = [uploadedVideo]
+    } else if (storedVisualUrl && storedVisualStatus === 'approved') {
+      // Seconda approvazione esplicita: ora il montaggio visto in Preview può
+      // essere programmato sui social.
+      mediaUrls = [storedVisualUrl]
+    } else if (storedVisualUrl) {
+      if (rowId) {
+        await q(
+          `UPDATE calendario
+             SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
+                 blotato_visual_status = 'ready_for_review', publish_lock_id = NULL,
+                 errore_tecnico = NULL, blotato_visual_updated_at = now(), updated_at = now()
+           WHERE id = $1 AND cliente_id = $2 AND publish_lock_id = $3`,
+          [rowId, clienteId, lockId],
+        )
+      }
+      return {
+        status: 'visual_review',
+        visualId: String(row.blotato_visual_id || ''),
+        mediaUrl: storedVisualUrl,
+      }
+    } else {
+      if (!sourceImages.length) throw new Error('Reel senza MP4 e senza foto sorgente: carica un MP4 oppure 1-5 foto Reel/Video')
+
+      const sourceHash = photoReelHash(sourceImages)
+      let visualId = String(row.blotato_visual_id || '').trim()
+      let visualStatus = storedVisualStatus
+      let visualMediaUrl = ''
+
+      // Instagram e Facebook possono condividere lo stesso montaggio. La prima
+      // riga lo genera, la seconda riusa l'ID/MP4 se ha le stesse foto sorgente.
+      if (!visualId && rowId) {
+        const reusable = await q(
+          `SELECT blotato_visual_id, blotato_visual_status, blotato_visual_media_url
+             FROM calendario
+            WHERE cliente_id = $1 AND blotato_visual_source_hash = $2
+              AND id <> $3 AND blotato_visual_id IS NOT NULL
+            ORDER BY blotato_visual_updated_at DESC NULLS LAST
+            LIMIT 1`,
+          [clienteId, sourceHash, rowId],
+        ) as Record<string, unknown>[]
+        if (reusable.length) {
+          visualId = String(reusable[0].blotato_visual_id || '').trim()
+          visualStatus = String(reusable[0].blotato_visual_status || '').trim().toLowerCase()
+          visualMediaUrl = String(reusable[0].blotato_visual_media_url || '').trim()
+        }
+      }
+
+      if (!visualId) {
+        const created = await createPhotoReel({
+          blotatoKey,
+          imageUrls: sourceImages,
+          overlays: overlayTexts(row, sourceImages.length),
+          prompt: photoReelPrompt(row),
+        })
+        visualId = created.id
+        visualStatus = created.status
+        visualMediaUrl = created.mediaUrl
+      }
+
+      // Una breve attesa evita di chiedere subito un secondo click quando il
+      // render è rapido. Se resta in coda salviamo l'ID e il prossimo sync ne
+      // controllerà lo stato senza creare un duplicato.
+      for (let attempt = 0; attempt < 2 && !visualMediaUrl && !visualIsDone(visualStatus) && !visualIsFailed(visualStatus); attempt++) {
+        await wait(1200)
+        const current = await getPhotoReelStatus(blotatoKey, visualId)
+        visualStatus = current.status
+        visualMediaUrl = current.mediaUrl
+      }
+
+      // Salva l'ID anche se il render è ancora in coda o il controllo successivo
+      // fallisce: il retry riprende lo stesso job e non addebita/crea un doppione.
+      if (rowId) {
+        await q(
+          `UPDATE calendario
+             SET blotato_visual_id = $1, blotato_visual_status = $2,
+                 blotato_visual_media_url = NULLIF($3, ''), blotato_visual_source_hash = $4,
+                 blotato_visual_updated_at = now(), updated_at = now()
+           WHERE id = $5 AND cliente_id = $6 AND publish_lock_id = $7`,
+          [visualId, visualStatus || 'queueing', visualMediaUrl, sourceHash, rowId, clienteId, lockId],
+        )
+      }
+
+      if (visualIsFailed(visualStatus)) {
+        throw new Error(`Montaggio Reel Blotato fallito (stato: ${visualStatus})`)
+      }
+
+      if (visualMediaUrl || visualIsDone(visualStatus)) {
+        if (!visualMediaUrl) {
+          const current = await getPhotoReelStatus(blotatoKey, visualId)
+          visualStatus = current.status
+          visualMediaUrl = current.mediaUrl
+        }
+        if (!visualMediaUrl) throw new Error('Montaggio Reel completato ma Blotato non ha restituito il file video')
+        if (rowId) {
+          await q(
+            `UPDATE calendario
+               SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
+                   blotato_visual_id = $1, blotato_visual_status = 'ready_for_review',
+                   blotato_visual_media_url = $2, blotato_visual_source_hash = $3,
+                   blotato_visual_updated_at = now(), publish_lock_id = NULL,
+                   errore_tecnico = NULL, updated_at = now()
+             WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6`,
+            [visualId, visualMediaUrl, sourceHash, rowId, clienteId, lockId],
+          )
+        }
+        return { status: 'visual_review', visualId, mediaUrl: visualMediaUrl }
+      }
+
+      if (rowId) {
+        await q(
+          `UPDATE calendario
+             SET blotato_status = 'visual_pending', blotato_visual_id = $1,
+                 blotato_visual_status = $2, blotato_visual_source_hash = $3,
+                 blotato_visual_updated_at = now(), publish_lock_id = NULL,
+                 errore_tecnico = NULL, updated_at = now()
+           WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6`,
+          [visualId, visualStatus || 'queueing', sourceHash, rowId, clienteId, lockId],
+        )
+      }
+      return { status: 'visual_pending', visualId }
+    }
+  }
+
+  // Con un montaggio già approvato validiamo anche l'URL MP4 finale, non solo
+  // le foto sorgente controllate prima del render.
+  if (isVideoFormat && mediaUrls.length) {
+    const validation = await validateMediaUrls(mediaUrls)
+    if (!validation.ok) {
+      const invalid = validation.errors.map(e => `[video] ${e.url}: ${e.reason}`).join('; ')
+      throw new Error(`Video Reel non accessibile prima del publish: ${invalid}`)
+    }
+  }
+
   // Payload contratto Blotato v2 (POST /v2/posts): post{ accountId, target, content } + scheduledTime.
   // Campi confermati dallo schema MCP blotato_create_post: accountId, platform, text, mediaUrls, scheduledTime.
   const payload: Record<string, unknown> = {

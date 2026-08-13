@@ -13,11 +13,9 @@ import type { PackageSpec } from '@/lib/packages'
 // decise con il committente:
 //   • post / story / pin / video singolo → 1 media
 //   • carosello                          → 5 media (minimo 3, massimo 10)
-//   • reel / short                       → 1 MP4 se c'è, ALTRIMENTI 1 immagine
-//     ATTENZIONE: il sistema NON monta video dalle foto. Senza MP4 il reel resta
-//     con una sola immagine di copertina e il video va prodotto a parte: promettere
-//     "5 immagini per montare le slide" faceva chiedere materiale che nessuno usa
-//     (il backend ne assegna comunque 1 sola).
+//   • reel / short                       → 1 MP4 se c'è, ALTRIMENTI 5 immagini
+//     Le immagini vengono assegnate come scene e trasformate in un MP4 prima
+//     della pubblicazione tramite il template visuale Blotato.
 //
 // Il modulo governa anche la MARCATURA MANUALE (MediaTag): l'utente può dire
 // "questa foto è del carosello, questo MP4 è del reel" e l'assegnazione in
@@ -34,7 +32,7 @@ export type MediaKind = 'immagine' | 'video'
 // Marcatura manuale scelta dall'utente sul singolo media. 'auto' (o assente) =
 // comportamento storico, decide l'AI. Gli altri valori sono VINCOLI: un media
 // marcato non può finire su un formato di un altro gruppo.
-export type MediaTag = 'auto' | 'carosello' | 'reel' | 'post'
+export type MediaTag = 'auto' | 'carosello' | 'reel' | 'story' | 'post'
 
 // Fabbisogno per formato.
 //  - `immagini`: quante IMMAGINI servono se non c'è un MP4 disponibile
@@ -51,12 +49,10 @@ export const MEDIA_PER_FORMATO: Record<string, { immagini: number; video: number
   // accetta Instagram.
   carousel: { immagini: 5, video: 0, min: 3, max: 10 },
   carosello: { immagini: 5, video: 0, min: 3, max: 10 },
-  // Video brevi: 1 MP4 se c'è. Senza MP4 resta 1 sola immagine di copertina:
-  // il video va prodotto fuori dal sistema e caricato.
-  reel: { immagini: 1, video: 1, min: 1, max: 1 },
-  short: { immagini: 1, video: 1, min: 1, max: 1 },
-  // Video singolo: 1 media (l'MP4; senza MP4 resta 1 immagine di copertura).
-  video: { immagini: 1, video: 1, min: 1, max: 1 },
+  // Video brevi: 1 MP4 se c'è; altrimenti fino a 5 immagini diventano scene.
+  reel: { immagini: 5, video: 1, min: 1, max: 5 },
+  short: { immagini: 5, video: 1, min: 1, max: 5 },
+  video: { immagini: 5, video: 1, min: 1, max: 5 },
 }
 
 // Formato sconosciuto → trattato come post (1 immagine, niente video): è il
@@ -104,7 +100,8 @@ export function normalizeMediaTag(value: unknown): MediaTag {
   const v = value.trim().toLowerCase()
   if (v === 'carosello' || v === 'carousel') return 'carosello'
   if (v === 'reel' || v === 'short' || v === 'video') return 'reel'
-  if (v === 'post' || v === 'story' || v === 'pin') return 'post'
+  if (v === 'story' || v === 'stories' || v === 'storia' || v === 'storie') return 'story'
+  if (v === 'post' || v === 'pin') return 'post'
   return 'auto'
 }
 
@@ -174,7 +171,7 @@ export function requisitiMedia(input: {
   if (reelBrevi > 0) {
     dettaglio.push(
       input.conVideo
-        ? `${reelBrevi} reel/short x 1 MP4 = ${video} MP4 (senza MP4 restano con la sola immagine di copertina: il video va caricato)`
+        ? `${reelBrevi} reel/short x 1 MP4 = ${video} MP4 (in alternativa ${perReelImmagini} immagini per Reel, montate automaticamente)`
         : `${reelBrevi} reel/short x ${perReelImmagini} immagini = ${immaginiReel} immagini, oppure ${reelBrevi} MP4`,
     )
   }
@@ -261,7 +258,7 @@ export function verificaMedia(
   // altrimenti l'utente non capisce perché quel media non compare da nessuna parte.
   const videoMarcatiStatici = video.filter(m => {
     const tag = normalizeMediaTag(m.tag)
-    return tag === 'post' || tag === 'carosello'
+    return tag === 'post' || tag === 'story' || tag === 'carosello'
   })
   if (videoMarcatiStatici.length) {
     const n = videoMarcatiStatici.length

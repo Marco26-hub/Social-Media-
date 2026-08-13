@@ -85,6 +85,8 @@ export async function POST() {
   const timezone = String((tzRows[0] as { timezone?: string } | undefined)?.timezone || 'Europe/Rome')
 
   let synced = 0
+  let visualPending = 0
+  let visualReview = 0
   let dryRun = 0
   let skipped = 0
   const errors: { id_contenuto: string; canale: string; error: string }[] = []
@@ -93,6 +95,8 @@ export async function POST() {
     try {
       const outcome = await scheduleOnBlotato(clienteId, row, timezone)
       if (outcome.status === 'scheduled') synced++
+      else if (outcome.status === 'visual_pending') visualPending++
+      else if (outcome.status === 'visual_review') visualReview++
       else if (outcome.status === 'dry_run') dryRun++
       else skipped++
     } catch (e) {
@@ -134,6 +138,8 @@ export async function POST() {
     ok: errors.length === 0,
     candidates: rows.length,
     synced,
+    visual_pending: visualPending,
+    visual_review: visualReview,
     dry_run: dryRun,
     skipped,
     failed: errors.length,

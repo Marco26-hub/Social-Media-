@@ -56,6 +56,18 @@ ${PRO_COPY_STANDARDS}
 
 Non inventare prezzi, stock, sconti o claim non presenti nei dati brand/prodotti.`
 
+// Se il media resta su Auto, il nome/descrizione può comunque dichiararne la
+// destinazione (es. "salotto reel 01.jpg" o "foto per story"). La selezione
+// esplicita dell'utente ha sempre precedenza su questa inferenza.
+function inferMediaTagFromLabel(value: string): MediaTag {
+  const label = value.toLowerCase()
+  if (/\b(reel|reels|video|short|shorts)\b/.test(label)) return 'reel'
+  if (/\b(story|stories|storia|storie)\b/.test(label)) return 'story'
+  if (/\b(carousel|carosello|caroselli)\b/.test(label)) return 'carosello'
+  if (/\b(post|feed|pin)\b/.test(label)) return 'post'
+  return 'auto'
+}
+
 // VISION: stesso principio di generate/content (buildAssetContext) applicato al piano
 // multi-contenuto. Mostriamo alla AI le foto DAVVERO allegate a QUESTO chunk, ciascuna
 // con la descrizione (nome prodotto) data dall'utente, così hook/caption/tema descrivono
@@ -63,20 +75,26 @@ Non inventare prezzi, stock, sconti o claim non presenti nei dati brand/prodotti
 // giusta per ogni contenuto dichiarandone il numero in `media_refs` (vedi schema item).
 // Prima l'assegnazione era posizionale cieca: il modello riordinava gli item e le foto
 // slittavano sul post sbagliato.
-function buildPlanAssetContext(shown: string[], labels: Map<string, string>) {
+function buildPlanAssetContext(shown: string[], labels: Map<string, string>, tags: Map<string, MediaTag>) {
   if (!shown.length) return ''
   const imageUrls = shown.filter(url => !isVideoUrl(url))
   const videoUrls = shown.filter(isVideoUrl)
   return `
 
 MEDIA CARICATI DALL'UTENTE PER QUESTO BLOCCO (numerati — il numero è il valore da usare in media_refs):
-${shown.map((url, index) => `${index + 1}. ${labels.get(url) || 'media'} — ${url}${isVideoUrl(url) ? ' [MP4]' : ''}`).join('\n')}
+${shown.map((url, index) => {
+  const tag = tags.get(url) ?? 'auto'
+  const destination = tag === 'reel' ? 'REEL/VIDEO' : tag === 'carosello' ? 'CAROSELLO' : tag === 'story' ? 'STORY' : tag === 'post' ? 'POST' : 'AUTO'
+  return `${index + 1}. ${labels.get(url) || 'media'} — [DESTINAZIONE: ${destination}] ${url}${isVideoUrl(url) ? ' [MP4]' : ''}`
+}).join('\n')}
 
 ⚠️ VISION + ABBINAMENTO — istruzioni vincolanti:
 - Le immagini (${imageUrls.length}) sono visibili in allegato: guardale e scrivi hook/caption/tema su quello che vedi davvero.
 - Gli MP4 (${videoUrls.length}) sono video finali già caricati: assegnali preferibilmente a formati reel/video/short e non inventare un video alternativo.
-- Per OGNI contenuto scegli la/le foto giuste in base alla descrizione accanto al numero e a ciò che vedi, e indica il/i numero/i nel campo "media_refs": es. "media_refs":[2] per un post/reel singolo, "media_refs":[2,5,7] per un carosello.
-- Usa ogni foto UNA sola volta in questo blocco: non ripetere lo stesso numero su contenuti diversi.
+- Rispetta DESTINAZIONE: REEL/VIDEO, CAROSELLO, STORY e POST sono vincoli scelti dall'utente; AUTO può essere assegnato liberamente.
+- Per un Reel con MP4 usa il solo numero del video. Per un Reel senza MP4 usa 3-5 foto REEL/VIDEO coerenti tra loro in "media_refs", nell'ordine delle scene.
+- Per un post usa una foto; per un carosello usa 3-5 foto.
+- Non ripetere una foto su contenuti diversi dello stesso canale. Per il cross-post dello stesso Reel puoi riusare lo stesso gruppo su Instagram e Facebook.
 - Se un contenuto non ha una foto adatta tra quelle mostrate, lascia "media_refs":[] (verrà completato in automatico).
 - Non inventare dettagli visivi non presenti nei media.
 - ⚠️ IL NOME ACCANTO A OGNI MEDIA È IL NOME UFFICIALE DEL PRODOTTO per quel contenuto: usalo
@@ -203,10 +221,11 @@ function isVideoUrl(url: string) {
 }
 
 // --- Gruppi di formato: il ponte tra il formato scelto dall'AI e i vincoli media
-// I formati del calendario sono 8, ma per i media contano solo tre famiglie:
+// I formati del calendario sono 8, ma per i media contano quattro famiglie:
 //  - 'reel'      → reel/short/video: SONO gli unici che possono ricevere un MP4
 //  - 'carosello' → carousel: blocco di più immagini
-//  - 'post'      → post/story/pin/articolo: una sola immagine, mai un video
+//  - 'story'     → story: una sola immagine dedicata, mai un video
+//  - 'post'      → post/pin/articolo: una sola immagine, mai un video
 // I valori coincidono con MediaTag (meno 'auto'), così la marcatura manuale si
 // confronta direttamente con il gruppo del contenuto.
 type GruppoFormato = Exclude<MediaTag, 'auto'>
@@ -214,6 +233,7 @@ function gruppoFormato(formato: string): GruppoFormato {
   const f = String(formato || '').toLowerCase().trim()
   if (f === 'carousel' || f === 'carosello') return 'carosello'
   if (f === 'reel' || f === 'short' || f === 'video') return 'reel'
+  if (f === 'story') return 'story'
   return 'post'
 }
 
@@ -365,8 +385,11 @@ export async function POST(request: Request) {
         const url = typeof rec.url === 'string' ? rec.url.trim() : ''
         if (!url) continue
         const name = typeof rec.name === 'string' ? rec.name.trim() : ''
-        if (name) assetLabels.set(url, name)
-        const tag = normalizeMediaTag(rec.tag)
+        const description = typeof rec.description === 'string' ? rec.description.trim() : ''
+        const label = [name, description].filter(Boolean).join(' — ')
+        if (label) assetLabels.set(url, label)
+        const explicitTag = normalizeMediaTag(rec.tag)
+        const tag = explicitTag === 'auto' ? inferMediaTagFromLabel(label) : explicitTag
         if (tag !== 'auto') assetTags.set(url, tag)
       }
     }
@@ -594,7 +617,7 @@ Output SOLO JSON array valido:
           // resta una stima che il modello può far saltare con 12 caroselli.
           + buildMixFormatiContext(mixPerChunk.get(chunk) ?? mixFormatiBlocco(pkg, targetMax, chunks.length, chunkIndex))
           + buildChunkDiversitySeed(chunkIndex, chunks.length)
-          + buildPlanAssetContext(chunk.images, assetLabels)
+          + buildPlanAssetContext(chunk.images, assetLabels, assetTags)
         const visionImages = chunk.images.filter(url => !isVideoUrl(url))
 
         try {
@@ -805,7 +828,7 @@ Output SOLO JSON array valido:
       if (gruppoFormato(String(out.formato)) === 'carosello' && chunk.images.length) {
         const quota = mixPerChunk.get(chunk)?.caroselli ?? 0
         const giaUsati = caroselliPerChunk.get(chunk) ?? 0
-        const usati = chunkUsedIdx.get(chunk)
+        const usati = usedMedia(chunk, `carosello:${String(out.canale)}`)
         let liberiPerCarosello = 0
         for (let i = 0; i < chunk.images.length; i++) {
           if (!usati?.has(i) && mediaCompatibile(chunk.images[i], 'carosello')) liberiPerCarosello++
@@ -851,8 +874,8 @@ Output SOLO JSON array valido:
     // `media_refs` (numeri 1-based delle foto mostrate a QUEL blocco). Qui rispettiamo
     // quella scelta invece di distribuire alla cieca in ordine — così il post sulla
     // "T-shirt Lario" prende la foto della T-shirt, non quella dei pantaloni.
-    // Regole invariate: ogni foto usata UNA volta sola (Set indici per-blocco), il
-    // singolo prende 1 foto, il carosello un blocco (min 3, max 10 = limite Instagram).
+    // Statici/caroselli usano ogni foto una volta nel blocco; i Reel consumano
+    // per canale, così lo stesso montaggio può essere cross-postato IG + Facebook.
     // Fallback robusto: se media_refs manca/è invalido, si completa dalle foto libere
     // del blocco in ordine (retrocompatibile). Foto finite → contenuto senza media (null),
     // segnalato — mai riusare la stessa immagine di nascosto.
@@ -865,7 +888,20 @@ Output SOLO JSON array valido:
     // fonte di verità con la schermata che dice all'utente quanti media caricare).
     const CAROUSEL_TARGET = MEDIA_PER_FORMATO.carousel.immagini      // 5, dentro il range 3..10
     const CAROUSEL_MIN = MEDIA_PER_FORMATO.carousel.min ?? 3
-    const chunkUsedIdx = new Map<Chunk, Set<number>>()
+    const chunkUsedIdx = new Map<Chunk, Map<string, Set<number>>>()
+    function usedMedia(chunk: Chunk, scope: string): Set<number> {
+      let scopes = chunkUsedIdx.get(chunk)
+      if (!scopes) {
+        scopes = new Map<string, Set<number>>()
+        chunkUsedIdx.set(chunk, scopes)
+      }
+      let used = scopes.get(scope)
+      if (!used) {
+        used = new Set<number>()
+        scopes.set(scope, used)
+      }
+      return used
+    }
     let photosExhausted = false      // finite le foto → contenuti senza immagine
     let carouselUnderfilled = false  // carosello con meno di 3 foto disponibili
     let mediaScartatiTipo = 0        // MP4 che l'AI aveva messo su post/carosello/story
@@ -876,7 +912,7 @@ Output SOLO JSON array valido:
     // 1) TIPO: un MP4 è un video finale, può stare SOLO su reel/short/video. Il
     //    prompt lo chiedeva come preferenza ("assegnali preferibilmente a...") e
     //    nessuno lo verificava: un MP4 poteva finire su un post statico.
-    // 2) MARCATURA manuale: un media marcato 'carosello'/'reel'/'post' vale solo
+    // 2) MARCATURA manuale: un media marcato 'carosello'/'reel'/'story'/'post' vale solo
     //    per quel gruppo di formati. Se per un contenuto non resta nulla di
     //    compatibile lo slot resta VUOTO: meglio senza foto che con la foto
     //    sbagliata (il calendario mostra il contenuto come da completare).
@@ -887,16 +923,17 @@ Output SOLO JSON array valido:
       return true
     }
 
-    function nextChunkMediaSlots(chunk: Chunk, formato: string, mediaRefs: unknown): (string | null)[] {
+    function nextChunkMediaSlots(chunk: Chunk, canale: string, formato: string, mediaRefs: unknown): (string | null)[] {
       const empty = Array<string | null>(MEDIA_SLOTS).fill(null)
       const total = chunk.images.length
       if (!total) return empty
-      const used = chunkUsedIdx.get(chunk) ?? new Set<number>()
-      chunkUsedIdx.set(chunk, used)
 
       const gruppo = gruppoFormato(formato)
       const isCarousel = gruppo === 'carosello'
       const isVideoFormat = gruppo === 'reel'
+      // Ogni destinazione ha il proprio pool e ogni social può riusare lo stesso
+      // gruppo creativo: IG non deve "consumare" le foto prima di Facebook.
+      const used = usedMedia(chunk, `${gruppo}:${canale}`)
       const compatibile = (idx: number) => mediaCompatibile(chunk.images[idx], gruppo)
 
       // Indici richiesti dal modello (1-based → 0-based): validi, in range, ancora
@@ -938,15 +975,34 @@ Output SOLO JSON array valido:
         }
       }
 
-      // Se il modello ha scelto foto valide, rispettiamo ESATTAMENTE la sua scelta
-      // (singolo = 1 foto, carosello = tutte le foto dichiarate, cap 10): completare
-      // un carosello con foto NON scelte reintrodurrebbe l'abbinamento sbagliato che
-      // stiamo eliminando. Solo se il modello non dichiara nulla di valido si ripiega
-      // sul pool in ordine (fallback retrocompatibile: 1 per singolo, 5 per carosello),
-      // pescando però SOLO tra i media compatibili con questo contenuto.
+      // Reel senza MP4: le foto richieste diventano scene. Completiamo fino a 5
+      // privilegiando stesso nome/descrizione e marcatura esplicita Reel.
+      if (isVideoFormat && !picked.length) {
+        const target = MEDIA_PER_FORMATO.reel.immagini
+        picked.push(...requested.filter(i => !isVideoUrl(chunk.images[i])).slice(0, target))
+        const firstLabel = picked.length ? String(assetLabels.get(chunk.images[picked[0]]) || '').trim().toLowerCase() : ''
+        const candidates = Array.from({ length: total }, (_, i) => i)
+          .filter(i => !used.has(i) && !picked.includes(i) && !isVideoUrl(chunk.images[i]) && compatibile(i))
+          .sort((a, b) => {
+            const labelA = String(assetLabels.get(chunk.images[a]) || '').trim().toLowerCase()
+            const labelB = String(assetLabels.get(chunk.images[b]) || '').trim().toLowerCase()
+            const sameA = firstLabel && labelA === firstLabel ? 0 : 1
+            const sameB = firstLabel && labelB === firstLabel ? 0 : 1
+            if (sameA !== sameB) return sameA - sameB
+            const tagA = (assetTags.get(chunk.images[a]) ?? 'auto') === 'reel' ? 0 : 1
+            const tagB = (assetTags.get(chunk.images[b]) ?? 'auto') === 'reel' ? 0 : 1
+            return tagA - tagB || a - b
+          })
+        for (const idx of candidates) {
+          if (picked.length >= target) break
+          picked.push(idx)
+        }
+      }
+
+      // Statici e caroselli conservano il comportamento precedente.
       if (!picked.length) picked.push(...requested.slice(0, isCarousel ? MEDIA_SLOTS : 1))
       if (!picked.length) {
-        const fallbackTarget = isCarousel ? CAROUSEL_TARGET : 1
+        const fallbackTarget = isCarousel ? CAROUSEL_TARGET : isVideoFormat ? MEDIA_PER_FORMATO.reel.immagini : 1
         for (let i = 0; i < total && picked.length < fallbackTarget; i++) {
           if (!used.has(i) && compatibile(i)) picked.push(i)
         }
@@ -1001,7 +1057,7 @@ Output SOLO JSON array valido:
 
       const id_contenuto = `C${Date.now().toString(36).toUpperCase()}_${inseriti.length}_${scartati.length}`
       const itemQuality = normalizeContentQuality(item.quality_level) ?? contentQuality
-      const [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10] = nextChunkMediaSlots(chunk, String(item.formato || 'post'), item.media_refs)
+      const [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10] = nextChunkMediaSlots(chunk, String(item.canale || ''), String(item.formato || 'post'), item.media_refs)
       // Lookup link prodotto per l'item: se il piano riferisce un product_id valido,
       // persistiamo il link così il publisher può appenderlo al testo Blotato.
       const itemProduct = (products as Array<Record<string, unknown>>).find(p => p.product_id === item.product_id)
