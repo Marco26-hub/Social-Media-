@@ -116,6 +116,7 @@ export default function PianoPage() {
   const [planAssets, setPlanAssets] = useState<PlanAsset[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [fallbackPopup, setFallbackPopup] = useState<{ count: number; completed: number } | null>(null)
   const [clientePkg, setClientePkg] = useState<PackageSpec | null>(null)
   // Quota reale del cliente (clienti.contenuti_mese): l'admin può sovrascrivere
   // il numero di contenuti del pacchetto, e il fabbisogno media deve seguirla.
@@ -240,6 +241,8 @@ export default function PianoPage() {
     // Fase mensile: metà settimane per volta → richiesta più corta, meno rischio timeout.
     const result = await gen.run<{
       count?: number
+      completed_count?: number
+      fallback_slots?: number
       images_provided?: number
       images_insufficient?: boolean
       carousel_underfilled?: boolean
@@ -258,19 +261,26 @@ export default function PianoPage() {
 
     if (result.ok) {
       const data = result.data
+      const fallbackCount = data?.fallback_slots ?? 0
+      if (fallbackCount > 0) {
+        setFallbackPopup({ count: fallbackCount, completed: data?.completed_count ?? 0 })
+      }
       const imgNote = !data?.images_provided
         ? ' Nessun media caricato: i contenuti sono senza foto/video, caricali poi dal calendario.'
         : data.images_insufficient
           ? ` ${data.images_provided} media usati uno per contenuto: sono finiti prima dei post, gli ultimi restano senza media (caricane altri o assegnali dal calendario).`
           : ` ${data.images_provided} media abbinati dall'AI ai contenuti in base alla descrizione (carosello 3-10).`
       const chunkNote = data?.chunks_failed
-        ? ` ⚠️ ${data.chunks_failed} di ${data.chunks_total} blocchi settimanali non ha generato contenuti (riprova per coprire quei giorni).`
+        ? ` ${data.chunks_failed} blocchi AI sono stati recuperati come contenuti da sistemare nel calendario.`
         : ''
       const scartatiNote = data?.items_scartati
         ? ` ⚠️ ${data.items_scartati} contenuti sono stati scartati perché il modello li ha restituiti incompleti (senza testo): rigenera, o passa a un modello più capace dal selettore in alto.`
         : ''
       const faseNote = fase ? ` (fase ${fase}: settimane ${fase === 1 ? '1-2' : '3-4'})` : ''
-      setMsg({ type: 'ok', text: `Piano generato${faseNote} (${data?.count ?? '?'} contenuti). I contenuti sono nel calendario.${imgNote}${chunkNote}${scartatiNote}` })
+      const outcome = fallbackCount > 0
+        ? `${data?.completed_count ?? 0} completati, ${fallbackCount} da sistemare`
+        : `${data?.count ?? '?'} contenuti completati`
+      setMsg({ type: 'ok', text: `Piano generato${faseNote}: ${outcome}. Tutti gli slot del ciclo sono nel calendario.${imgNote}${chunkNote}${scartatiNote}` })
     } else {
       setMsg({ type: 'err', text: result.error || 'Generazione piano fallita' })
     }
@@ -287,7 +297,7 @@ export default function PianoPage() {
       return
     }
     const aiSettings = readAISettings()
-    const result = await gen.run<{ count?: number; articolo_blog?: boolean; pacchetto_troncati?: number; images_provided?: number }>({
+    const result = await gen.run<{ count?: number; completed_count?: number; fallback_slots?: number; articolo_blog?: boolean; pacchetto_troncati?: number; images_provided?: number }>({
       key: 'piano-pacchetto',
       label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
@@ -298,7 +308,14 @@ export default function PianoPage() {
     })
     if (result.ok) {
       const d = result.data
-      setMsg({ type: 'ok', text: `Piano ${periodo} ${clientePkg.nome} generato (${d?.count ?? '?'} contenuti${d?.articolo_blog ? ' + articolo blog collegato' : ''}). Sono nel calendario, in stato Da approvare.` })
+      const fallbackCount = d?.fallback_slots ?? 0
+      if (fallbackCount > 0) {
+        setFallbackPopup({ count: fallbackCount, completed: d?.completed_count ?? 0 })
+      }
+      const outcome = fallbackCount > 0
+        ? `${d?.completed_count ?? 0} completati, ${fallbackCount} da sistemare`
+        : `${d?.count ?? '?'} contenuti completati`
+      setMsg({ type: 'ok', text: `Piano ${periodo} ${clientePkg.nome} generato: ${outcome}${d?.articolo_blog ? ' + articolo blog collegato' : ''}. Il ciclo resta completo nel calendario.` })
     } else {
       setMsg({ type: 'err', text: result.error || 'Generazione piano pacchetto fallita' })
     }
@@ -866,6 +883,37 @@ export default function PianoPage() {
         <p>I contenuti verranno creati in stato <span className="font-mono bg-white px-1 rounded">DA APPROVARE</span>.
         Dal <a href="/dashboard/calendario" className="text-brand-600 hover:underline">calendario</a> li approvi (verde → sync Blotato) o li rifiuti (rosso → Non approvati) prima della pubblicazione.</p>
       </div>
+
+      {fallbackPopup && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="fallback-title">
+          <div className="w-full max-w-md overflow-hidden rounded-xl border border-amber-200 bg-white shadow-2xl">
+            <div className="flex items-start gap-3 border-b border-amber-100 bg-amber-50 p-5">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 id="fallback-title" className="font-bold text-gray-900">{fallbackPopup.count} contenuti da sistemare</h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  {fallbackPopup.completed} contenuti sono pronti. Gli altri mantengono giorno, formato e media assegnati e non interrompono il ciclo.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2 p-5">
+              <a
+                href="/dashboard/calendario?filter=ERRORE_MANUALE"
+                className="btn-primary flex w-full justify-center py-3"
+                onClick={() => setFallbackPopup(null)}
+              >
+                <Calendar className="h-4 w-4" />
+                Apri i {fallbackPopup.count} contenuti da sistemare
+              </a>
+              <button onClick={() => setFallbackPopup(null)} className="btn-secondary w-full justify-center py-2.5">
+                Resta nel piano
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

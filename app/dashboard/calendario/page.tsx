@@ -35,6 +35,25 @@ const CANALE_ICON: Record<string, string> = {
 }
 const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
 
+type PackageReconcile = {
+  month: string
+  reconciled: number
+  checked?: number
+  unchecked?: number
+  remote_errors?: Array<{ id_contenuto: string; error: string }>
+  summary: {
+    included: number
+    planned: number
+    published: number
+    queued: number
+    failed: number
+    not_sent: number
+    missing_to_create: number
+    missing_to_publish: number
+    extra_planned: number
+  }
+}
+
 function isVideoUrl(url?: string | null) {
   if (!url) return false
   return url.split('?')[0].toLowerCase().endsWith('.mp4')
@@ -48,6 +67,10 @@ function asText(value: unknown) {
 
 function hasText(value: unknown) {
   return asText(value).trim().length > 0
+}
+
+function isGenerationFallback(c: Contenuto): boolean {
+  return c.status === 'ERRORE_MANUALE' && String(c.note || '').startsWith('[GENERATION_FALLBACK]')
 }
 
 function formatDateLabel(date: string) {
@@ -84,6 +107,12 @@ function formatShortDate(date: string) {
   const parsed = new Date(`${date}T12:00:00`)
   if (Number.isNaN(parsed.getTime())) return date
   return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: 'short' }).format(parsed)
+}
+
+function formatMonthLabel(month: string) {
+  const parsed = new Date(`${month}-01T12:00:00`)
+  if (Number.isNaN(parsed.getTime())) return month
+  return new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric' }).format(parsed)
 }
 
 function statusTone(status: string) {
@@ -141,6 +170,8 @@ function CalendarioInner() {
   const [comfyMsg, setComfyMsg] = useState<string | null>(null)
   const [dryRun, setDryRun] = useState<boolean | null>(null)
   const [syncing, setSyncing] = useState(false)
+  const [reconciling, setReconciling] = useState(false)
+  const [packageReconcile, setPackageReconcile] = useState<PackageReconcile | null>(null)
   const [requeuing, setRequeuing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [vista, setVista] = useState<'lista' | 'griglia'>('lista')
@@ -363,6 +394,54 @@ function CalendarioInner() {
     setSaving(null)
   }
 
+  async function completaFallbackManuale(c: Contenuto) {
+    if (!hasText(c.hook) && !hasText(c.caption)) {
+      setAdminError('Inserisci almeno un hook o una caption prima di mandare il contenuto in approvazione.')
+      return
+    }
+    setSaving(c.id)
+    setAdminError(null)
+    try {
+      await saveField(c, 'status', 'DA_APPROVARE', {
+        note: null,
+        errore_tecnico: null,
+        retry_count: 0,
+        publish_lock_id: null,
+      })
+      setSyncMsg({ type: 'ok', text: `${c.id_contenuto} sistemato e spostato in Da approvare.` })
+      setSelected(null)
+    } catch (e) {
+      setAdminError((e as Error).message)
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  async function rigeneraFallback(c: Contenuto) {
+    setSaving(c.id)
+    setAdminError(null)
+    setSyncMsg(null)
+    try {
+      const ai = readAISettings()
+      const res = await fetch(`/api/data/calendario/${encodeURIComponent(c.id)}/regenerate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ai),
+      })
+      if (!res.ok) throw new Error(await readApiError(res, 'Rigenerazione contenuto fallita'))
+      const data = await res.json() as { content?: Partial<Contenuto> }
+      const updated = { ...c, ...(data.content || {}), status: 'DA_APPROVARE' as Status, note: null, errore_tecnico: null }
+      if (demo) setDemoData(prev => prev.map(item => item.id === c.id ? updated : item))
+      setContenuti(prev => prev.map(item => item.id === c.id ? updated : item))
+      setSelected(updated)
+      setSyncMsg({ type: 'ok', text: `${c.id_contenuto} rigenerato. Controlla l'anteprima e approvalo solo quando e pronto.` })
+    } catch (e) {
+      setAdminError((e as Error).message)
+    } finally {
+      setSaving(null)
+    }
+  }
+
   // Genera un'immagine AI per il contenuto via OpenRouter (/api/generate/image).
   // Usa il modello selezionato + la key OpenRouter dell'admin. Se il contenuto ha
   // già una foto, la usa come riferimento image-to-image per restare on-brand.
@@ -390,6 +469,35 @@ function CalendarioInner() {
   }
 
   // Sincronizza su Blotato i contenuti APPROVATI non ancora inviati (pubblicazione).
+  async function reconcileBlotato(showMessage = true): Promise<PackageReconcile | null> {
+    setReconciling(true)
+    if (showMessage) setSyncMsg(null)
+    try {
+      const res = await fetch('/api/data/blotato-reconcile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      if (!res.ok) throw new Error(await readApiError(res, 'Verifica Blotato fallita'))
+      const data = await res.json() as PackageReconcile
+      setPackageReconcile(data)
+      if (showMessage) {
+        const errorNote = data.remote_errors?.length ? ` ${data.remote_errors.length} stati non verificati.` : ''
+        setSyncMsg({
+          type: data.remote_errors?.length ? 'err' : 'ok',
+          text: `Blotato verificato: ${data.summary.published} pubblicati, ${data.summary.queued} in coda, ${data.summary.failed} falliti.${errorNote}`,
+        })
+      }
+      await fetchData()
+      return data
+    } catch (e) {
+      if (showMessage) setSyncMsg({ type: 'err', text: (e as Error).message })
+      return null
+    } finally {
+      setReconciling(false)
+    }
+  }
+
   async function syncBlotato() {
     setSyncing(true)
     setSyncMsg(null)
@@ -411,6 +519,9 @@ function CalendarioInner() {
           ? 'Nessun contenuto approvato da sincronizzare.'
           : `${data.synced} contenuti inviati a Blotato${failNote}.${dryNote}${visualNote ? ` ${visualNote}. Nessun video appena generato è stato pubblicato.` : ''}`,
       })
+      // Dopo l'invio rileggi Blotato: scheduled non equivale a pubblicato. Questo
+      // aggiorna anche gli invii dei giorni scorsi rimasti senza webhook.
+      await reconcileBlotato(false)
       await fetchData()
     } catch (e) {
       setSyncMsg({ type: 'err', text: (e as Error).message })
@@ -905,6 +1016,10 @@ function CalendarioInner() {
                 {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
                 <span>{syncing ? 'Sincronizzo...' : 'Sincronizza Blotato'}</span>
               </button>
+              <button onClick={() => reconcileBlotato(true)} disabled={reconciling || syncing} className="rounded-xl bg-emerald-300 px-3 py-2 text-xs font-semibold text-emerald-950 shadow-sm hover:bg-emerald-200 disabled:opacity-60 inline-flex items-center gap-1.5" title="Controlla su Blotato cosa e stato pubblicato davvero e calcola cosa manca al pacchetto">
+                <RefreshCw className={`w-4 h-4 ${reconciling ? 'animate-spin' : ''}`} />
+                <span>{reconciling ? 'Verifico...' : 'Verifica Blotato'}</span>
+              </button>
               <button onClick={downloadBackup} disabled={backuping} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 inline-flex items-center gap-1.5">
                 {backuping ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 <span>Backup</span>
@@ -954,6 +1069,40 @@ function CalendarioInner() {
         <div className={`mb-4 rounded-xl border p-3 text-sm flex items-start gap-2 ${syncMsg.type === 'ok' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
           {syncMsg.type === 'ok' ? <CheckCircle className="w-4 h-4 mt-0.5" /> : <AlertTriangle className="w-4 h-4 mt-0.5" />}
           {syncMsg.text}
+        </div>
+      )}
+
+      {packageReconcile && (
+        <div className="mb-4 overflow-hidden rounded-xl border border-emerald-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-1 border-b border-emerald-100 bg-emerald-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold text-emerald-950">Consuntivo pacchetto · {formatMonthLabel(packageReconcile.month)}</p>
+              <p className="text-xs text-emerald-800">Stati riletti direttamente da Blotato. “Programmato” non viene contato come pubblicato.</p>
+            </div>
+            <span className="text-xs font-medium text-emerald-800">Quota {packageReconcile.summary.included} contenuti</span>
+          </div>
+          <div className="grid grid-cols-2 gap-px bg-gray-100 sm:grid-cols-3 lg:grid-cols-6">
+            {[
+              { label: 'Pubblicati confermati', value: packageReconcile.summary.published, tone: 'text-emerald-700', filter: 'PUBBLICATO' },
+              { label: 'In coda Blotato', value: packageReconcile.summary.queued, tone: 'text-blue-700', filter: 'IN_PUBBLICAZIONE' },
+              { label: 'Non ancora inviati', value: packageReconcile.summary.not_sent, tone: 'text-amber-700', filter: 'DA_APPROVARE' },
+              { label: 'Falliti', value: packageReconcile.summary.failed, tone: 'text-red-700', filter: 'ERRORE' },
+              { label: 'Mancano da creare', value: packageReconcile.summary.missing_to_create, tone: 'text-violet-700', filter: 'tutti' },
+              { label: 'Mancano da pubblicare', value: packageReconcile.summary.missing_to_publish, tone: 'text-fuchsia-700', filter: 'tutti' },
+            ].map(item => (
+              <button key={item.label} type="button" onClick={() => setFilter(item.filter)} className="min-h-20 bg-white p-3 text-left hover:bg-gray-50" title={`Filtra: ${item.label}`}>
+                <p className={`text-xl font-black ${item.tone}`}>{item.value}</p>
+                <p className="text-[10px] font-medium uppercase text-gray-500">{item.label}</p>
+              </button>
+            ))}
+          </div>
+          {(packageReconcile.summary.extra_planned > 0 || Boolean(packageReconcile.remote_errors?.length) || Boolean(packageReconcile.unchecked)) && (
+            <div className="border-t px-4 py-2 text-xs text-amber-800">
+              {packageReconcile.summary.extra_planned > 0 && <span>{packageReconcile.summary.extra_planned} contenuti pianificati oltre quota. </span>}
+              {Boolean(packageReconcile.remote_errors?.length) && <span>{packageReconcile.remote_errors?.length} stati non letti da Blotato; riprova la verifica. </span>}
+              {Boolean(packageReconcile.unchecked) && <span>{packageReconcile.unchecked} contenuti oltre il limite del controllo singolo.</span>}
+            </div>
+          )}
         </div>
       )}
 
@@ -1396,10 +1545,15 @@ function CalendarioInner() {
                       <span className="hidden md:inline">Ripristina</span>
                     </button>
                   )}
-                  {(c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE') && (
+                  {isGenerationFallback(c) ? (
+                    <button onClick={() => setSelected(c)} disabled={saving === c.id} className="btn-secondary py-1.5 px-2 md:px-3 justify-center" title="Modifica il contenuto incompleto">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span className="hidden md:inline">Sistema</span>
+                    </button>
+                  ) : (c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE') && (
                     <button onClick={() => resetErrore(c)} disabled={saving === c.id} className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
                       <RefreshCw className={`w-3.5 h-3.5 ${saving === c.id ? 'animate-spin' : ''}`} />
-                      <span className="hidden md:inline">Riprova</span>
+                      <span className="hidden md:inline">Riprova pubblicazione</span>
                     </button>
                   )}
                   {c.status === 'APPROVATO' && !c.blotato_post_id && (
@@ -1468,6 +1622,12 @@ function CalendarioInner() {
               </button>
             </div>
             <div className="p-6 space-y-4">
+              {isGenerationFallback(selected) && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  <p className="font-semibold">Contenuto da completare</p>
+                  <p className="mt-1 text-xs">Il ciclo ha conservato data, canale, formato e media. Modifica qui sotto hook, caption, hashtag e CTA, poi mandalo in approvazione.</p>
+                </div>
+              )}
               {/* Anteprima visuale post */}
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 -mx-6 -mt-6 px-6 py-6 border-b">
                 <p className="label mb-3">Anteprima {selected.canale}</p>
@@ -1844,7 +2004,21 @@ function CalendarioInner() {
               )}
             </div>
 
-            {(selected.status === 'ERRORE' || selected.status === 'ERRORE_MANUALE') && (
+            {isGenerationFallback(selected) ? (
+              <div className="p-6 border-t bg-amber-50/40">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <button onClick={() => rigeneraFallback(selected)} className="btn-primary w-full justify-center" disabled={saving === selected.id}>
+                    <Sparkles className={`w-4 h-4 ${saving === selected.id ? 'animate-pulse' : ''}`} />
+                    {saving === selected.id ? 'Rigenerazione...' : 'Rigenera con AI'}
+                  </button>
+                  <button onClick={() => completaFallbackManuale(selected)} className="btn-secondary w-full justify-center" disabled={saving === selected.id}>
+                    <CheckCircle className="w-4 h-4" />
+                    Corretto manualmente
+                  </button>
+                </div>
+                <p className="mt-2 text-center text-[11px] text-gray-500">La rigenerazione conserva data, canale, formato e media. Torna sempre in Da approvare: non pubblica nulla.</p>
+              </div>
+            ) : (selected.status === 'ERRORE' || selected.status === 'ERRORE_MANUALE') && (
               <div className="p-6 border-t">
                 <button onClick={() => resetErrore(selected)} className="btn-secondary w-full justify-center" disabled={saving === selected.id}>
                   <RefreshCw className="w-4 h-4" />

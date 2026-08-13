@@ -641,7 +641,7 @@ CADENZA DEL PIANO — vincolante:
     const systemPrompt = `Sei un social media manager, creative strategist e SEO/GEO specialist senior (10+ anni, brand premium). Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Crei piani editoriali dove OGNI contenuto è unico, professionale, moderno e trend-aware: hook diversi, angoli ruotati, funnel bilanciato, keyword SEO/GEO sfruttate, meccaniche native da feed 2026, zero cliché, grammatica italiana impeccabile. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock, canzoni virali, eventi o claim non presenti nei dati.`
 
     async function generateChunk(chunk: Chunk, chunkIndex: number): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
-      async function attempt(targetMin: number, targetMax: number, maxTok: number): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
+      async function attempt(targetMin: number, targetMax: number, maxTok: number, compact = false): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
         const userPrompt = `Agisci come Social Media Manager senior per brand abbigliamento e-commerce.
 Crea contenuti per ${chunk.label}, dal ${chunk.start} al ${chunk.end}, per / ${piattaformeStr} /.
 Genera TRA ${targetMin} E ${targetMax} contenuti (mai meno di ${targetMin}). Ogni data_pubblicazione DEVE cadere dentro il range ${chunk.start}..${chunk.end} incluso — mai fuori, mai un placeholder generico.
@@ -662,7 +662,9 @@ Tono moderno fashion coerente con brand. Ogni contenuto deve sembrare attuale e 
 
 Output SOLO JSON array valido:
 [{"data_pubblicazione":"YYYY-MM-DD (dentro ${chunk.start}..${chunk.end})","ora_pubblicazione":"HH:MM","canale":"USA SOLO un canale tra quelli in / ${piattaformeStr} / (valori ammessi: instagram|facebook|tiktok|pinterest|linkedin|threads|x|youtube_shorts|blog)","formato":"post|carousel|reel|story|pin|short|video|articolo","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","media_refs":[numeri delle foto di QUESTO blocco usate in questo contenuto, in ordine; [] se nessuna adatta],"product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
-          + '\n' + PLAN_STANDARDS + '\n' + qualityPrompt
+          + '\n' + PLAN_STANDARDS + '\n' + (compact
+            ? 'FALLBACK COMPATTO: mantieni ESATTAMENTE il numero richiesto. Compila sempre hook, caption, hashtag, CTA, data, ora, canale e formato; limita i campi strategici opzionali a frasi brevi.'
+            : qualityPrompt)
           + historyContext + temporalContext + trendContext
           + buildPackageContext(pkg, packagePlan, periodoEff, targetMax)
           // Vincolo sui FORMATI: senza, il fabbisogno media annunciato all'utente
@@ -696,12 +698,13 @@ Output SOLO JSON array valido:
       // Primo tentativo: target completo
       const first = await attempt(chunk.targetMin, chunk.targetMax, baseMaxTok)
       if (first.ok) return first
-      // Retry su malformed JSON (troncamento): riduci item e token. Il modello
-      // a volte è più verboso del previsto e sfora anche col bridge 402.
+      // Retry compatto: riduce la verbosità, MAI il numero di contenuti. Per un
+      // pacchetto 6/24 sono un contratto, non un target da dimezzare al fallback.
       if (/malformed|truncat|no json array/i.test(first.error)) {
-        console.warn('[plan retry]', `chunk "${chunk.label}" malformed, retry con ${Math.max(2, Math.floor(chunk.targetMin / 2))}-${Math.max(3, Math.floor(chunk.targetMax / 2))} item`)
-        const retry = await attempt(Math.max(2, Math.floor(chunk.targetMin / 2)), Math.max(3, Math.floor(chunk.targetMax / 2)), Math.floor(baseMaxTok / 2))
+        console.warn('[plan retry]', `chunk "${chunk.label}" incompleto, retry compatto con ${chunk.targetMin}-${chunk.targetMax} item`)
+        const retry = await attempt(chunk.targetMin, chunk.targetMax, baseMaxTok, true)
         if (retry.ok) return retry
+        return retry
       }
       return first
     }
@@ -711,15 +714,59 @@ Output SOLO JSON array valido:
     // mese per un solo blocco sfortunato.
     const chunkResults = await Promise.all(chunks.map((chunk, i) => generateChunk(chunk, i)))
     const failedChunks = chunkResults.filter((r): r is { ok: false; error: string } => !r.ok)
-    // Piano del pacchetto: cap per blocco sul target calcolato dalla ricetta
-    // condivisa, così il totale resta esatto anche con quote non divisibili per 4.
+    // Ciò che l'AI ha generato bene viene conservato. I posti mancanti diventano
+    // slot ERRORE_MANUALE nello stesso ciclo: data/formato/media restano prenotati
+    // e l'utente può modificarli o rigenerarli singolarmente dal calendario.
     const itemChunkPairs: { item: Record<string, unknown>; chunk: Chunk }[] = []
     let pkgTruncated = 0
+    function fallbackFormats(chunk: Chunk): string[] {
+      const mix = mixPerChunk.get(chunk) ?? { caroselli: 0, reel: 0, story: 0, postSingoli: chunk.targetMax, fonte: 'libero' as const }
+      return [
+        ...Array(mix.postSingoli).fill('post'),
+        ...Array(mix.caroselli).fill('carousel'),
+        ...Array(mix.story).fill('story'),
+        ...Array(mix.reel).fill('reel'),
+      ]
+    }
+    function fallbackItem(chunk: Chunk, index: number, reason: string, original?: Record<string, unknown>): Record<string, unknown> {
+      const formats = fallbackFormats(chunk)
+      return {
+        ...(original || {}),
+        data_pubblicazione: original?.data_pubblicazione || '',
+        canale: original?.canale || piattaforme[index % piattaforme.length] || 'instagram',
+        formato: original?.formato || formats[index] || 'post',
+        obiettivo: original?.obiettivo || obiettivo || 'mix',
+        tema: original?.tema || 'Slot del piano da completare',
+        hook: '',
+        caption: '',
+        _generation_fallback: true,
+        _fallback_reason: reason.slice(0, 280),
+      }
+    }
     chunkResults.forEach((r, i) => {
-      if (!r.ok) return
-      const items = pkg ? r.items.slice(0, chunks[i].targetMax) : r.items
+      const chunk = chunks[i]
+      const target = pkg ? chunk.targetMax : chunk.targetMin
+      if (!r.ok) {
+        for (let index = 0; index < target; index++) {
+          itemChunkPairs.push({ item: fallbackItem(chunk, index, r.error), chunk })
+        }
+        return
+      }
+      const items = pkg ? r.items.slice(0, chunk.targetMax) : r.items
       if (pkg) pkgTruncated += Math.max(0, r.items.length - items.length)
-      items.forEach(item => itemChunkPairs.push({ item, chunk: chunks[i] }))
+      items.forEach((item, index) => {
+        const hasCopy = String(item.hook || '').trim() || String(item.caption || '').trim()
+        itemChunkPairs.push({
+          item: hasCopy ? item : fallbackItem(chunk, index, 'La risposta AI non conteneva hook o caption.', item),
+          chunk,
+        })
+      })
+      for (let index = items.length; index < target; index++) {
+        itemChunkPairs.push({
+          item: fallbackItem(chunk, index, `L'AI ha generato ${items.length}/${target} contenuti per questo blocco.`),
+          chunk,
+        })
+      }
     })
 
     if (!itemChunkPairs.length) {
@@ -1086,13 +1133,12 @@ Output SOLO JSON array valido:
 
     const inseriti: { id_contenuto: string; canale: string; data_pubblicazione: string }[] = []
     const scartati: string[] = []
+    let fallbackInseriti = 0
     let schemaFallbackUsed = false
 
-    // Insert per-item con try/catch: un item rotto (constraint violation, tipo
-    // dato inatteso) viene loggato e saltato, MAI abortisce l'intero batch —
-    // prima un solo errore a metà loop faceva perdere anche gli item già validi.
     for (const { item: rawItem, chunk } of itemChunkPairs) {
       const item = sanitizeItem(rawItem, chunk)
+      const isGenerationFallback = rawItem._generation_fallback === true
 
       // Un contenuto senza testo non è un contenuto: i modelli piccoli (tipici del
       // tier gratuito) chiudono a volte il JSON con oggetti che hanno data, canale e
@@ -1100,7 +1146,7 @@ Output SOLO JSON array valido:
       // veri — un piano "da 7" di cui 4 gusci vuoti, senza che nulla lo segnalasse.
       // Ora vengono scartati e contati, così il messaggio finale dice la verità.
       const haTesto = String(item.hook || '').trim() || String(item.caption || '').trim()
-      if (!haTesto) {
+      if (!haTesto && !isGenerationFallback) {
         scartati.push('contenuto senza hook né caption (risposta del modello incompleta)')
         continue
       }
@@ -1115,7 +1161,7 @@ Output SOLO JSON array valido:
       const insertColumns = [
         'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
         'canale', 'formato', 'obiettivo', 'product_id', 'nome_prodotto',
-        'tema', 'hook', 'caption', 'hashtag', 'cta', 'status',
+        'tema', 'hook', 'caption', 'hashtag', 'cta', 'status', 'note', 'errore_tecnico',
         'link_prodotto', 'link_prodotto_finale',
         'visual_preset', 'use_trending_effects', 'visual_effects',
         'link_media_1', 'link_media_2', 'link_media_3', 'link_media_4', 'link_media_5',
@@ -1146,11 +1192,9 @@ Output SOLO JSON array valido:
         item.caption || null,
         item.hashtag || null,
         item.cta || null,
-        // Il piano nasce già "da approvare": così i contenuti appaiono subito nel
-        // filtro default del calendario CON i bottoni Approva/Rifiuta (che si mostrano
-        // solo per DA_APPROVARE). Prima nascevano BOZZA → invisibili e senza azioni,
-        // in disaccordo con gli altri generatori (content/agents) che usano DA_APPROVARE.
-        'DA_APPROVARE',
+        isGenerationFallback ? 'ERRORE_MANUALE' : 'DA_APPROVARE',
+        isGenerationFallback ? `[GENERATION_FALLBACK] ${String(rawItem._fallback_reason || 'Generazione incompleta')}` : null,
+        isGenerationFallback ? `Generazione AI da completare: ${String(rawItem._fallback_reason || 'contenuto mancante')}` : null,
         itemLinkProdotto,
         itemLinkProdotto,
         typeof visual_preset === 'string' ? visual_preset : null,
@@ -1198,6 +1242,7 @@ Output SOLO JSON array valido:
         const usedFallback = await insertCalendario(insertColumns, insertValues)
         if (usedFallback) schemaFallbackUsed = true
         inseriti.push({ id_contenuto, canale: item.canale as string, data_pubblicazione: item.data_pubblicazione as string })
+        if (isGenerationFallback) fallbackInseriti++
       } catch (error) {
         console.warn('[plan] insert item fallito, salto e continuo:', error instanceof Error ? error.message : error)
         scartati.push(error instanceof Error ? error.message : 'errore insert sconosciuto')
@@ -1230,6 +1275,9 @@ Output SOLO JSON array valido:
       ok: true,
       count: pkg ? contenutiSocialInseriti : inseriti.length,
       count_totale: inseriti.length,
+      completed_count: Math.max(0, contenutiSocialInseriti - fallbackInseriti),
+      fallback_slots: fallbackInseriti,
+      partial: fallbackInseriti > 0,
       ...(pkg && { pacchetto: pkg.id, pacchetto_nome: pkg.nome, pacchetto_contenuti: packagePlan?.totale, periodo: periodoEff, articolo_blog: articoloBlogInserito }),
       ...(pkgTruncated && { pacchetto_troncati: pkgTruncated }),
       requested_range: packagePlan ? String(packagePlan.totale) : periodoEff === 'mensile' ? '25-35' : '7-10',
@@ -1260,7 +1308,7 @@ Output SOLO JSON array valido:
       ...(mediaScartatiTipo && { media_scartati_tipo: mediaScartatiTipo }),
       ...(mediaScartatiTag && { media_scartati_tag: mediaScartatiTag }),
       ...(slotSenzaMediaCompatibile && { contenuti_senza_media_compatibile: slotSenzaMediaCompatibile }),
-      ...(schemaFallbackUsed && { schema_fallback: true, warning: 'Eseguire npm run migrate per abilitare tutti i campi qualità e ottimizzazione' }),
+      ...(Boolean(schemaFallbackUsed) ? { schema_fallback: true, warning: 'Eseguire npm run migrate per abilitare tutti i campi qualità e ottimizzazione' } : {}),
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Errore generazione piano'
