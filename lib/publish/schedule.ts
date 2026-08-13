@@ -9,7 +9,7 @@ import { getBlotatoKey } from '@/lib/blotato-key'
 import { getPinnedAccountId, getPinnedSubaccountId, resolveBlotatoTarget } from '@/lib/blotato-accounts'
 import { CANALE_TO_BLOTATO, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
 import { preflightRow } from '@/lib/publish/preflight'
-import { normalizeHashtagsForPublish } from '@/lib/hashtags'
+import { hashtagCount, normalizeHashtagsForPublish, normalizeInstagramPublishPayload, stripHashtags } from '@/lib/hashtags'
 
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 
@@ -123,17 +123,27 @@ export async function scheduleOnBlotato(
   // - link FB: anteprima link per i post Facebook.
   const mediaType = formatoToMediaType(formato)
   if (mediaType && (platform === 'instagram' || platform === 'facebook')) target.mediaType = mediaType
-  const hashtag = normalizeHashtagsForPublish(canale, String(row.hashtag || ''))
-  if (platform === 'instagram' && isStory) {
-    delete target.firstComment
-  } else if (platform === 'instagram' && hashtag) {
-    target.firstComment = hashtag
-  }
   const linkProdottoFinale = String(row.link_prodotto_finale || row.link_prodotto || '').trim()
   if (platform === 'facebook' && linkProdottoFinale && !isStory) target.link = linkProdottoFinale
 
   // Costruisci il contenuto testuale completo per la piattaforma (hook+caption+cta+hashtag).
-  const text = buildPlatformContent(canale, formato, row)
+  let text = buildPlatformContent(canale, formato, row)
+
+  if (platform === 'instagram') {
+    // Il resolver non dovrebbe aggiungerlo, ma cancellarlo sempre evita che un
+    // target riutilizzato o una futura modifica rimetta un commento non valido.
+    delete target.firstComment
+
+    if (isStory) {
+      // Le story non supportano firstComment. Ripuliamo anche gli hashtag dal
+      // testo tecnico, che non viene mostrato come caption nelle story.
+      text = stripHashtags(text)
+    } else {
+      const normalized = normalizeInstagramPublishPayload(text, String(row.hashtag || ''))
+      text = normalized.text
+      if (normalized.firstComment) target.firstComment = normalized.firstComment
+    }
+  }
 
   // Raccogli media disponibili (fino a 10 = max carosello Instagram)
   const mediaUrls = [
@@ -204,6 +214,16 @@ export async function scheduleOnBlotato(
       },
     },
     scheduledTime,
+  }
+
+  if (platform === 'instagram') {
+    const finalHashtagCount = hashtagCount(`${text}\n${String(target.firstComment || '')}`)
+    if (finalHashtagCount > 5) {
+      throw new Error(`Guardia payload Instagram: ${finalHashtagCount} hashtag totali (massimo 5)`)
+    }
+    if (isStory && target.firstComment) {
+      throw new Error('Guardia payload Instagram Story: firstComment non consentito')
+    }
   }
 
   console.log(`[Blotato] Sending ${canale}→${platform} account=${accountId} scheduled at ${scheduledTime}`)

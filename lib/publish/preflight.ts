@@ -44,7 +44,7 @@ export function preflightRow(row: Record<string, unknown>, tz: string = DEFAULT_
   const hashtag = String(row.hashtag || '').trim()
   if (!hook && !caption) warnings.push('Testo vuoto (hook e caption mancanti)')
   if (platform === 'instagram') {
-    const count = hashtagCount(hashtag)
+    const count = hashtagCount([hashtag, hook, caption, String(row.cta || '')].join('\n'))
     if (count > MAX_BLOTATO_INSTAGRAM_HASHTAGS) {
       warnings.push(`Instagram/Blotato accetta massimo ${MAX_BLOTATO_INSTAGRAM_HASHTAGS} hashtag: verranno ridotti da ${count} a ${MAX_BLOTATO_INSTAGRAM_HASHTAGS}`)
     }
