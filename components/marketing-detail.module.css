@@ -63,7 +63,7 @@
 .outcomeBand article:first-child { border-left: 1px solid var(--line); }
 .outcomeBand strong { font: 500 19px Georgia, 'Times New Roman', serif; }
 .outcomeBand span { color: var(--muted); font-size: 12px; line-height: 1.45; }
-.deliverables, .process, .faq { max-width: 1180px; margin: 0 auto; padding: 88px 24px; }
+.deliverables, .portfolio, .process, .faq { max-width: 1180px; margin: 0 auto; padding: 88px 24px; }
 .sectionHeading { max-width: 760px; }
 .sectionHeading h2 { margin: 0; font: 500 43px/1.08 Georgia, 'Times New Roman', serif; text-wrap: balance; }
 .sectionHeading > p:last-child { margin: 18px 0 0; color: var(--muted); font-size: 16px; line-height: 1.65; }
@@ -73,6 +73,18 @@
 .deliverableGrid h3 { margin: 0; font-size: 16px; }
 .deliverableGrid p { margin: 9px 0 0; color: var(--muted); font-size: 13px; line-height: 1.58; }
 .deliverableGrid svg { color: var(--green); }
+.portfolio { max-width: none; padding-right: max(24px, calc((100vw - 1180px) / 2)); padding-left: max(24px, calc((100vw - 1180px) / 2)); border-top: 1px solid var(--line); background: var(--paper); }
+.portfolioGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 44px; }
+.portfolioCard { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: inherit; text-decoration: none; transition: transform .22s ease, box-shadow .22s ease; }
+.portfolioCard:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(15, 45, 35, .12); }
+.portfolioVisual { position: relative; aspect-ratio: 16 / 9; display: block; overflow: hidden; background: #0d1814; }
+.portfolioVisual img { object-fit: cover; object-position: top center; transition: transform .35s ease; }
+.portfolioCard:hover .portfolioVisual img { transform: scale(1.025); }
+.portfolioCopy { min-height: 218px; display: flex; flex-direction: column; padding: 23px; }
+.portfolioCopy small { color: var(--green); font-size: 10px; font-weight: 850; text-transform: uppercase; }
+.portfolioCopy strong { margin-top: 9px; font: 500 24px/1.1 Georgia, 'Times New Roman', serif; }
+.portfolioCopy > span { margin-top: 12px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.portfolioCopy b { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 22px; color: var(--green); font-size: 12px; }
 .process { max-width: none; padding-right: max(24px, calc((100vw - 1180px) / 2)); padding-left: max(24px, calc((100vw - 1180px) / 2)); background: #0d1814; color: white; }
 .process .eyebrow { color: #83dbb9; }
 .process ol { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 44px 0 0; padding: 0; background: rgba(255, 255, 255, .13); list-style: none; }
@@ -106,6 +118,7 @@
 :global(html[data-theme='dark']) .primary { background: #0f6b4f; }
 :global(html[data-theme='dark']) .secondary { border-color: #4b5d56; color: #edf4f1; }
 :global(html[data-theme='dark']) .deliverableGrid article { background: #111713; }
+:global(html[data-theme='dark']) .portfolioCard { background: #111713; }
 :global(html[data-theme='dark']) .faq summary, :global(html[data-theme='dark']) .related a { color: #edf4f1; }
 :global(html[data-theme='dark']) .finalCta { background: #0f6b4f; }
 @media (max-width: 900px) {
@@ -114,6 +127,8 @@
   .faq { grid-template-columns: 1fr; gap: 30px; }
   .faq > .textLink { grid-column: 1; }
   .process ol { grid-template-columns: repeat(2, 1fr); }
+  .portfolioGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portfolioCard:last-child { grid-column: 1 / -1; }
 }
 @media (max-width: 700px) {
   .page { padding-top: 60px; }
@@ -127,10 +142,14 @@
   .signalPanel > p { font-size: 21px; }
   .outcomeBand { grid-template-columns: 1fr; padding: 0 18px; }
   .outcomeBand article, .outcomeBand article:first-child { border-right: 1px solid var(--line); border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-  .deliverables, .process, .faq { padding: 64px 18px; }
+  .deliverables, .portfolio, .process, .faq { padding: 64px 18px; }
   .sectionHeading h2 { font-size: 35px; }
   .deliverableGrid { grid-template-columns: 1fr; }
   .deliverableGrid article { min-height: 0; padding: 21px 17px; }
+  .portfolioGrid { grid-template-columns: 1fr; }
+  .portfolioCard:last-child { grid-column: auto; }
+  .portfolioCopy { min-height: 0; }
+  .portfolioCopy b { margin-top: 20px; padding-top: 0; }
   .process ol { grid-template-columns: 1fr; }
   .process li { min-height: 0; }
   .process h3 { margin-top: 18px; }

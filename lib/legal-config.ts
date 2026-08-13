@@ -31,7 +31,7 @@ export const TITOLARE = {
   // URL pubblico del sito (per riferimenti nei documenti)
   sitoUrl: 'https://socialautomation.app',
   // Data ultimo aggiornamento dei documenti legali (aggiornare a ogni modifica)
-  ultimoAggiornamento: '28 luglio 2026',
+  ultimoAggiornamento: '11 agosto 2026',
 }
 
 // Fornitori/sub-responsabili del trattamento realmente usati dalla piattaforma.

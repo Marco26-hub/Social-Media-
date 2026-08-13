@@ -34,6 +34,10 @@ function RegisterForm() {
   const [email, setEmail] = useState('')
   const [telefono, setTelefono] = useState('')
   const [password, setPassword] = useState('')
+  const [customerType, setCustomerType] = useState<'impresa_professionista' | 'consumatore'>('impresa_professionista')
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [earlyPerformanceRequested, setEarlyPerformanceRequested] = useState(false)
+  const [withdrawalLossAcknowledged, setWithdrawalLossAcknowledged] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -52,7 +56,14 @@ function RegisterForm() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, azienda, email, telefono, password, pacchetto, turnstile_token: turnstileToken, website, elapsed_ms: Date.now() - formOpenedAt }),
+        body: JSON.stringify({
+          nome, azienda, email, telefono, password, pacchetto,
+          customer_type: customerType,
+          terms_accepted: termsAccepted,
+          early_performance_requested: earlyPerformanceRequested,
+          withdrawal_loss_acknowledged: withdrawalLossAcknowledged,
+          turnstile_token: turnstileToken, website, elapsed_ms: Date.now() - formOpenedAt,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -120,14 +131,20 @@ function RegisterForm() {
           ))}
         </div>
 
+        <span className={styles.label}>Acquisti come</span>
+        <div className={styles.customerType} role="group" aria-label="Categoria cliente">
+          <button type="button" aria-pressed={customerType === 'impresa_professionista'} className={customerType === 'impresa_professionista' ? styles.customerTypeActive : ''} onClick={() => setCustomerType('impresa_professionista')}>Impresa o professionista</button>
+          <button type="button" aria-pressed={customerType === 'consumatore'} className={customerType === 'consumatore' ? styles.customerTypeActive : ''} onClick={() => setCustomerType('consumatore')}>Consumatore</button>
+        </div>
+
         <div className={styles.field}>
           <span className={styles.label}>Nome e cognome</span>
           <input className={styles.input} value={nome} onChange={e => setNome(e.target.value)} required autoComplete="name" placeholder="Mario Rossi" />
         </div>
 
         <div className={styles.field}>
-          <span className={styles.label}>Azienda</span>
-          <input className={styles.input} value={azienda} onChange={e => setAzienda(e.target.value)} required autoComplete="organization" placeholder="La tua attività" />
+          <span className={styles.label}>Azienda {customerType === 'consumatore' && '(opzionale)'}</span>
+          <input className={styles.input} value={azienda} onChange={e => setAzienda(e.target.value)} required={customerType === 'impresa_professionista'} autoComplete="organization" placeholder={customerType === 'consumatore' ? 'Se applicabile' : 'La tua attività'} />
         </div>
 
         <div className={styles.row}>
@@ -155,13 +172,32 @@ function RegisterForm() {
 
         <TurnstileWidget onToken={setTurnstileToken} />
 
+        <label className={styles.consent}>
+          <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} required />
+          <span>Accetto i <Link href="/termini" target="_blank">Termini e Condizioni</Link> e dichiaro di aver letto la <Link href="/privacy" target="_blank">Privacy Policy</Link>.</span>
+        </label>
+
+        {customerType === 'consumatore' && (
+          <div className={styles.consumerNotice}>
+            <p>Per attivare il servizio senza attendere la fine dei 14 giorni:</p>
+            <label className={styles.consent}>
+              <input type="checkbox" checked={earlyPerformanceRequested} onChange={e => setEarlyPerformanceRequested(e.target.checked)} required />
+              <span>Chiedo espressamente che l&apos;esecuzione del servizio inizi durante il periodo di recesso. In caso di recesso potra essere dovuto l&apos;importo proporzionale al servizio gia eseguito.</span>
+            </label>
+            <label className={styles.consent}>
+              <input type="checkbox" checked={withdrawalLossAcknowledged} onChange={e => setWithdrawalLossAcknowledged(e.target.checked)} required />
+              <span>Sono consapevole che, dopo la completa esecuzione del servizio, potro perdere il diritto di recesso nei casi previsti dall&apos;art. 59 del Codice del consumo.</span>
+            </label>
+          </div>
+        )}
+
         <button className={styles.submit} type="submit" disabled={loading}>
           {loading ? 'Invio…' : <>Registrati <ArrowRight size={17} /></>}
         </button>
 
         <p className={styles.hint}>
           <ShieldCheck size={15} />
-          La registrazione non addebita nulla. Confermiamo pacchetto e attivazione prima di iniziare; il budget ADS resta separato.
+          Il pagamento avviene nella pagina Stripe successiva. Il budget ADS resta sempre separato.
         </p>
       </form>
 

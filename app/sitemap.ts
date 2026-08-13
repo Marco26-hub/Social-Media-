@@ -8,7 +8,7 @@ type PublishedArticle = { slug: string; updated_at: string | Date | null }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const marketingUpdated = new Date('2026-08-11T00:00:00.000Z')
-  const legalUpdated = new Date('2026-07-28T00:00:00.000Z')
+  const legalUpdated = new Date('2026-08-11T00:00:00.000Z')
 
   const pages: MetadataRoute.Sitemap = [
     {
@@ -51,6 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/privacy`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_URL}/cookie-policy`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_URL}/termini`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/recesso`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_URL}/trasparenza-ai`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.4 },
     {
       url: `${SITE_URL}/blog`,

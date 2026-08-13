@@ -49,6 +49,32 @@ const config = {
     { number: '03', title: 'Sviluppo', text: 'Interfaccia, funzioni, integrazioni e controlli di qualità.' },
     { number: '04', title: 'Lancio', text: 'Analytics, indicizzazione, monitoraggio e miglioramenti.' },
   ],
+  portfolio: [
+    {
+      name: 'SILKinCOM',
+      type: 'E-commerce moda e luxury',
+      text: 'Una maison digitale dedicata alla seta e al cashmere Made in Como, con racconto di marca, collezioni e vendita online.',
+      href: 'https://www.silkincom.com/',
+      image: '/portfolio/silkincom.webp',
+      alt: 'Homepage dell’e-commerce SILKinCOM dedicato a seta e cashmere Made in Como',
+    },
+    {
+      name: 'Studio Legale BCS',
+      type: 'Sito istituzionale professionale',
+      text: 'Un’esperienza autorevole e contemporanea che organizza competenze legali, aree di attività e contatto professionale.',
+      href: 'https://studiodigitale.eu/index.html',
+      image: '/portfolio/studio-digitale.webp',
+      alt: 'Homepage del sito professionale Studio Legale BCS',
+    },
+    {
+      name: 'Borsieri Car Service',
+      type: 'Sito locale orientato ai contatti',
+      text: 'Servizi, lavorazioni e prenotazioni emergono subito in un’interfaccia ad alto contrasto progettata per clienti locali.',
+      href: 'https://borsiericarservice.netlify.app/',
+      image: '/portfolio/borsieri-car-service.webp',
+      alt: 'Homepage del sito Borsieri Car Service con servizi di carrozzeria e officina',
+    },
+  ],
   faq: [
     { q: 'Cosa comprende il prezzo da 19,90 € al mese?', a: 'È il canone tecnologico di partenza della soluzione web. Progettazione iniziale, configurazione, contenuti, catalogo e funzioni avanzate vengono definiti e quotati in base al progetto prima dell’avvio.' },
     { q: 'Dopo 12 mesi il sito diventa davvero mio?', a: 'Sì. Dopo 12 mesi di canone il sito diventa di tua proprietà. Eventuali costi ricorrenti di dominio, hosting, licenze o servizi esterni restano separati e vengono indicati prima dell’avvio.' },

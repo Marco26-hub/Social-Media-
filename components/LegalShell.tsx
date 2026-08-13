@@ -22,6 +22,7 @@ export default function LegalShell({
     { href: '/cookie-policy', label: 'Cookie Policy' },
     { href: '/termini', label: 'Termini e Condizioni' },
     { href: '/trasparenza-ai', label: 'Trasparenza AI' },
+    { href: '/recesso', label: 'Recesso e disdetta' },
   ].filter(r => r.href !== currentPath)
 
   return (

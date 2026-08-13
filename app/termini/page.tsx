@@ -70,8 +70,12 @@ export default function TerminiPage() {
 
       <h2>8. Recesso e cessazione</h2>
       <ul>
-        <li>Puoi disdire l&apos;abbonamento con effetto dal periodo di fatturazione successivo, dal pannello o scrivendo a <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>.</li>
-        <li>Per i consumatori si applica il diritto di recesso di 14 giorni (art. 52 Codice del Consumo), salvo esecuzione anticipata richiesta.</li>
+        <li><strong>Imprese e professionisti:</strong> possono disdire l&apos;abbonamento con effetto dal periodo di fatturazione successivo, dal pannello, tramite la funzione <a href="/recesso">Recesso e disdetta</a> o scrivendo a <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>. Il diritto di recesso previsto dal Codice del consumo non si applica agli acquisti effettuati per finalita imprenditoriali o professionali.</li>
+        <li><strong>Consumatori:</strong> la persona fisica che acquista per scopi estranei alla propria attivita imprenditoriale o professionale puo recedere da un contratto a distanza entro 14 giorni dalla conclusione, senza indicarne il motivo, fatte salve le eccezioni previste dalla legge.</li>
+        <li>Il consumatore puo utilizzare in ogni momento utile la funzione online chiaramente identificata come <a href="/recesso"><strong>Recedere dal contratto qui</strong></a>. Dopo il riepilogo, il comando &quot;Conferma recesso&quot; trasmette la dichiarazione e genera una ricevuta con contenuto, data e ora.</li>
+        <li>Se il consumatore ha chiesto espressamente l&apos;avvio del servizio durante il periodo di recesso e poi recede, puo essere dovuto un importo proporzionale alla parte di servizio gia eseguita, nei casi e limiti dell&apos;art. 57 del Codice del consumo.</li>
+        <li>Il diritto puo essere escluso per un servizio integralmente eseguito quando l&apos;esecuzione e iniziata con il previo consenso espresso del consumatore e con l&apos;accettazione della perdita del diritto dopo la completa esecuzione. Le altre eccezioni dell&apos;art. 59 restano applicabili se pertinenti.</li>
+        <li>La funzione online non limita la possibilita di inviare la dichiarazione con gli altri mezzi consentiti, inclusi email e PEC.</li>
       </ul>
 
       <h2>9. Legge applicabile e foro</h2>

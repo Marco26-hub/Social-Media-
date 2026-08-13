@@ -23,6 +23,10 @@ export async function POST(request: Request) {
     const telefono = String(body.telefono || '').trim()
     const password = String(body.password || '')
     const pacchetto = String(body.pacchetto || '').trim().toLowerCase()
+    const customerType = String(body.customer_type || '').trim()
+    const termsAccepted = body.terms_accepted === true
+    const earlyPerformanceRequested = body.early_performance_requested === true
+    const withdrawalLossAcknowledged = body.withdrawal_loss_acknowledged === true
     const turnstileToken = typeof body.turnstile_token === 'string' ? body.turnstile_token : ''
     const honeypot = typeof body.website === 'string' ? body.website : ''
     const elapsedMs = typeof body.elapsed_ms === 'number' ? body.elapsed_ms : 99999
@@ -44,7 +48,14 @@ export async function POST(request: Request) {
 
     // Validazione input
     if (!nome) return NextResponse.json({ error: 'Nome richiesto' }, { status: 400 })
-    if (!azienda) return NextResponse.json({ error: 'Azienda richiesta' }, { status: 400 })
+    if (customerType !== 'consumatore' && customerType !== 'impresa_professionista') {
+      return NextResponse.json({ error: 'Indica se acquisti come consumatore oppure come impresa/professionista' }, { status: 400 })
+    }
+    if (customerType === 'impresa_professionista' && !azienda) return NextResponse.json({ error: 'Azienda richiesta' }, { status: 400 })
+    if (!termsAccepted) return NextResponse.json({ error: 'Devi accettare Termini e Condizioni' }, { status: 400 })
+    if (customerType === 'consumatore' && (!earlyPerformanceRequested || !withdrawalLossAcknowledged)) {
+      return NextResponse.json({ error: 'Per iniziare subito conferma la richiesta di esecuzione anticipata e la relativa informativa sul recesso' }, { status: 400 })
+    }
     if (!EMAIL_RE.test(email)) return NextResponse.json({ error: 'Email non valida' }, { status: 400 })
     if (password.length < 8) return NextResponse.json({ error: 'La password deve avere almeno 8 caratteri' }, { status: 400 })
     // Tetto lunghezza: bcrypt tronca a 72 byte (oltre non aggiunge sicurezza) e
@@ -82,18 +93,27 @@ export async function POST(request: Request) {
       // Aggiorna i dati e la password del profilo pending, riusandolo.
       const passwordHash = await bcrypt.hash(password, 12)
       await q(
-        `UPDATE profiles SET nome = $2, azienda = $3, telefono = $4, pacchetto = $5, password_hash = $6, updated_at = now()
+        `UPDATE profiles SET nome = $2, azienda = $3, telefono = $4, pacchetto = $5, password_hash = $6,
+          customer_type = $7, terms_accepted_at = now(), terms_version = '2026-08-11',
+          early_performance_requested = $8, withdrawal_loss_acknowledged = $9, updated_at = now()
          WHERE id = $1`,
-        [existing.id, nome, azienda, telefono || null, pacchetto || null, passwordHash],
+        [existing.id, nome, azienda || null, telefono || null, pacchetto || null, passwordHash,
+          customerType, customerType === 'consumatore' && earlyPerformanceRequested,
+          customerType === 'consumatore' && withdrawalLossAcknowledged],
       )
       profileId = String(existing.id)
     } else {
       const passwordHash = await bcrypt.hash(password, 12)
       const inserted = await q1(
-        `INSERT INTO profiles (email, nome, password_hash, ruolo_globale, status, azienda, telefono, pacchetto)
-         VALUES ($1, $2, $3, 'user', 'pending', $4, $5, $6)
+        `INSERT INTO profiles (
+           email, nome, password_hash, ruolo_globale, status, azienda, telefono, pacchetto,
+           customer_type, terms_accepted_at, terms_version,
+           early_performance_requested, withdrawal_loss_acknowledged
+         ) VALUES ($1, $2, $3, 'user', 'pending', $4, $5, $6, $7, now(), '2026-08-11', $8, $9)
          RETURNING id`,
-        [email, nome, passwordHash, azienda, telefono || null, pacchetto || null],
+        [email, nome, passwordHash, azienda || null, telefono || null, pacchetto || null, customerType,
+          customerType === 'consumatore' && earlyPerformanceRequested,
+          customerType === 'consumatore' && withdrawalLossAcknowledged],
       )
       profileId = String((inserted as { id: string }).id)
     }

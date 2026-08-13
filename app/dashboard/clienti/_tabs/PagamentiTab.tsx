@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { AlertTriangle, CheckCircle2, CreditCard, ExternalLink, Filter, Loader2, RefreshCw, Search, ShieldCheck, X } from 'lucide-react'
 import { readApiError } from '@/lib/ai-client'
 import ConsulenzeAdmin from '@/components/ConsulenzeAdmin'
+import RecessiAdmin from '@/components/RecessiAdmin'
 
 type PaymentClient = {
   id: string
@@ -314,6 +315,7 @@ export default function PagamentiAdminPage() {
       </div>
 
       <ConsulenzeAdmin />
+      <RecessiAdmin />
 
       <div className="card overflow-hidden">
         <div className="border-b border-gray-100 p-4">
