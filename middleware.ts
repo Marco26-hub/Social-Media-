@@ -90,8 +90,8 @@ export async function middleware(request: NextRequest) {
     if (!rl.ok) return tooMany(rl.retryAfter)
   }
 
-  // Anti-spam sui form pubblici (consulenza): crea riga DB + Checkout Stripe.
-  if (pathname === '/api/consulenza' && request.method === 'POST') {
+  // Anti-spam sui form pubblici: consulenza e dichiarazioni di recesso/disdetta.
+  if ((pathname === '/api/consulenza' || pathname === '/api/recesso') && request.method === 'POST') {
     const rl = rateLimit(formHits, clientIp(request), FORM_WINDOW_MS, FORM_MAX)
     if (!rl.ok) return tooMany(rl.retryAfter)
   }

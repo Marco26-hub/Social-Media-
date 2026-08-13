@@ -60,6 +60,9 @@ export function safeImageUrl(url: unknown): string | null {
 // JSON-LD: Article + FAQPage. Le AI (ChatGPT/Perplexity) e Google lo usano per citare.
 export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
   const url = a.url_pubblicato || (siteUrl ? `${siteUrl.replace(/\/$/, '')}/blog/${a.slug}` : `/blog/${a.slug}`)
+  const image = a.immagine_cover && siteUrl && a.immagine_cover.startsWith('/')
+    ? `${siteUrl.replace(/\/$/, '')}${a.immagine_cover}`
+    : a.immagine_cover
   const ld: object[] = [{
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -79,7 +82,7 @@ export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
     },
     keywords: a.keywords_target.join(', '),
     inLanguage: 'it-IT',
-    ...(a.immagine_cover ? { image: a.immagine_cover } : {}),
+    ...(image ? { image } : {}),
     ...(a.data_pubblicazione ? { datePublished: a.data_pubblicazione } : {}),
     ...(a.data_pubblicazione ? { dateModified: a.data_pubblicazione } : {}),
     isPartOf: { '@type': 'Blog', '@id': `${siteUrl?.replace(/\/$/, '') || ''}/blog#blog` },

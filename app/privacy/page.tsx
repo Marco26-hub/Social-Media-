@@ -50,6 +50,7 @@ export default function PrivacyPage() {
         <li><strong>Dati di registrazione</strong>: nome, email, azienda, telefono, pacchetto scelto, password (cifrata con bcrypt).</li>
         <li><strong>Dati di contatto</strong>: quando ci scrivi via email, WhatsApp o form.</li>
         <li><strong>Dati di fatturazione</strong>: ragione sociale, P.IVA, indirizzo — gestiti tramite Stripe.</li>
+        <li><strong>Dati di recesso e disdetta</strong>: nome, email, riferimento e data del contratto, categoria della richiesta, dichiarazione trasmessa, data e ora, codice pratica e ricevuta.</li>
         <li><strong>Contenuti caricati</strong>: immagini, testi, dati del brand e dei prodotti che inserisci nella piattaforma.</li>
       </ul>
       <h3>b) Dati raccolti automaticamente</h3>
@@ -68,6 +69,7 @@ export default function PrivacyPage() {
             <tr><td>Assistenza e risposta alle richieste</td><td>Esecuzione di misure precontrattuali — lett. b)</td></tr>
             <tr><td>Sicurezza, prevenzione abusi, log tecnici</td><td>Legittimo interesse — lett. f)</td></tr>
             <tr><td>Invio email transazionali (attivazione, notifiche)</td><td>Esecuzione del contratto — lett. b)</td></tr>
+            <tr><td>Gestione e prova delle dichiarazioni di recesso o disdetta</td><td>Obbligo legale — lett. c) ed esecuzione del contratto — lett. b)</td></tr>
             <tr><td>Marketing e newsletter (se attivati)</td><td>Consenso — lett. a)</td></tr>
           </tbody>
         </table>
@@ -102,6 +104,7 @@ export default function PrivacyPage() {
       <ul>
         <li><strong>Dati account</strong>: per tutta la durata del rapporto e fino a 24 mesi dopo la cessazione.</li>
         <li><strong>Dati di fatturazione</strong>: 10 anni (obbligo civilistico/fiscale).</li>
+        <li><strong>Dichiarazioni di recesso e disdetta</strong>: fino a 10 anni per documentare la richiesta e gestire eventuali contestazioni, salvo diverso obbligo di legge.</li>
         <li><strong>Log tecnici</strong>: massimo 12 mesi.</li>
         <li><strong>Dati marketing</strong>: fino a revoca del consenso.</li>
       </ul>

@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   ArrowRight,
   Check,
   ChevronRight,
   CircleCheck,
+  ExternalLink,
   type LucideIcon,
 } from 'lucide-react'
 import { SITE_URL } from '@/lib/site-config'
@@ -15,6 +17,14 @@ import styles from './marketing-detail.module.css'
 type TextBlock = { title: string; text: string }
 type ProcessBlock = TextBlock & { number: string }
 type FaqBlock = { q: string; a: string }
+type PortfolioBlock = {
+  name: string
+  type: string
+  text: string
+  href: string
+  image: string
+  alt: string
+}
 
 export type MarketingDetailConfig = {
   path: string
@@ -37,6 +47,7 @@ export type MarketingDetailConfig = {
   process: ProcessBlock[]
   faq: FaqBlock[]
   related: { href: string; label: string }[]
+  portfolio?: PortfolioBlock[]
 }
 
 const WHATSAPP_NUMBER = '393477196603'
@@ -93,6 +104,22 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           acceptedAnswer: { '@type': 'Answer', text: item.a },
         })),
       },
+      ...(config.portfolio?.length ? [{
+        '@type': 'ItemList',
+        name: 'Lavori web realizzati da Social Automation',
+        itemListElement: config.portfolio.map((item, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          item: {
+            '@type': 'WebSite',
+            name: item.name,
+            url: item.href,
+            image: `${SITE_URL}${item.image}`,
+            description: item.text,
+            creator: { '@id': `${SITE_URL}/#organization` },
+          },
+        })),
+      }] : []),
     ],
   }
 
@@ -155,6 +182,31 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           ))}
         </div>
       </section>
+
+      {config.portfolio?.length ? (
+        <section className={styles.portfolio} aria-labelledby="portfolio-title">
+          <div className={styles.sectionHeading}>
+            <p className={styles.eyebrow}>Lavori realizzati</p>
+            <h2 id="portfolio-title">Progetti online, non semplici promesse.</h2>
+            <p>Tre identità e tre obiettivi diversi, tradotti in esperienze digitali progettate per il pubblico reale.</p>
+          </div>
+          <div className={styles.portfolioGrid}>
+            {config.portfolio.map(item => (
+              <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer" className={styles.portfolioCard}>
+                <span className={styles.portfolioVisual}>
+                  <Image src={item.image} alt={item.alt} fill sizes="(max-width: 700px) 100vw, (max-width: 1050px) 50vw, 33vw" />
+                </span>
+                <span className={styles.portfolioCopy}>
+                  <small>{item.type}</small>
+                  <strong>{item.name}</strong>
+                  <span>{item.text}</span>
+                  <b>Visita il progetto <ExternalLink size={15} aria-hidden="true" /></b>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className={styles.process} aria-labelledby="process-title">
         <div className={styles.sectionHeading}>
