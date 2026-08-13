@@ -7,7 +7,7 @@ import { isDemo } from '@/lib/demo'
 import { validateMediaUrls } from '@/lib/media-validate'
 import { getBlotatoKey } from '@/lib/blotato-key'
 import { getPinnedAccountId, getPinnedSubaccountId, resolveBlotatoTarget } from '@/lib/blotato-accounts'
-import { CANALE_TO_BLOTATO, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
+import { CANALE_TO_BLOTATO, PLATFORM_REQUIREMENTS, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
 import { preflightRow } from '@/lib/publish/preflight'
 import { hashtagCount, normalizeHashtagsForPublish, normalizeInstagramPublishPayload, stripHashtags } from '@/lib/hashtags'
 import { createPhotoReel, getPhotoReelStatus, visualIsDone, visualIsFailed } from '@/lib/blotato-visual'
@@ -156,19 +156,21 @@ export async function scheduleOnBlotato(
   // Blotato (clienti diversi), è quello di QUESTO post: prima il pin sulla riga, poi la
   // scelta salvata per il cliente. Senza, il resolver fallisce chiuso invece di indovinare.
   const pinnedAccountId = manualAccountId || await getPinnedAccountId(clienteId, canale)
-  try {
-    const pinnedSubaccountId = await getPinnedSubaccountId(clienteId, canale)
-    const resolved = await resolveBlotatoTarget(blotatoKey, canale, row, pinnedAccountId, pinnedSubaccountId)
-    target = resolved.target
-    if (!accountId) accountId = resolved.accountId
-  } catch (e) {
-    // Nessun account risolvibile: se non c'è nemmeno un id manuale, esponi l'errore
-    // azionabile (quale account collegare) invece di un fallback muto.
-    if (!accountId) throw e
-    console.warn(`[Blotato] resolver account fallito per '${canale}', uso platform_account_id manuale:`, (e as Error).message.slice(0, 160))
-  }
+  const pinnedSubaccountId = await getPinnedSubaccountId(clienteId, canale)
+  // Anche quando la riga ha gia platform_account_id dobbiamo risolvere il target
+  // completo. Facebook richiede pageId: proseguire col solo accountId produce un
+  // invio accettato inizialmente ma destinato a fallire lato Meta.
+  const resolved = await resolveBlotatoTarget(blotatoKey, canale, row, pinnedAccountId, pinnedSubaccountId)
+  target = resolved.target
+  accountId = resolved.accountId
   if (!accountId) {
     throw new Error(`Account Blotato non collegato per il canale '${canale}': collega l'account nel workspace Blotato`)
+  }
+
+  const requiredTargetFields = PLATFORM_REQUIREMENTS[platform]?.targetRequired || []
+  const missingTargetFields = requiredTargetFields.filter(field => !String(target[field] || '').trim())
+  if (missingTargetFields.length) {
+    throw new Error(`${platform}: destinazione Blotato incompleta (${missingTargetFields.join(', ')} mancante). Seleziona account e Page corretti nella scheda cliente.`)
   }
 
   // Campi target dipendenti dal FORMATO (non dall'account, quindi qui e non nel resolver):
@@ -176,7 +178,7 @@ export async function scheduleOnBlotato(
   // - firstComment IG: gli hashtag Instagram vanno nel primo commento, tranne nelle
   //   story che non supportano commenti nel payload Blotato.
   // - link FB: anteprima link per i post Facebook.
-  const mediaType = formatoToMediaType(formato)
+  const mediaType = formatoToMediaType(formato, platform)
   if (mediaType && (platform === 'instagram' || platform === 'facebook')) target.mediaType = mediaType
   const linkProdottoFinale = String(row.link_prodotto_finale || row.link_prodotto || '').trim()
   if (platform === 'facebook' && linkProdottoFinale && !isStory) target.link = linkProdottoFinale
@@ -429,7 +431,9 @@ export async function scheduleOnBlotato(
     }
   }
 
-  console.log(`[Blotato] Sending ${canale}→${platform} account=${accountId} scheduled at ${scheduledTime}`)
+  const targetLabel = platform === 'facebook' ? ` page=${String(target.pageId)}` : ''
+  const mediaTypeLabel = target.mediaType ? ` mediaType=${String(target.mediaType)}` : ''
+  console.log(`[Blotato] Sending ${canale}→${platform} account=${accountId}${targetLabel}${mediaTypeLabel} scheduled at ${scheduledTime}`)
 
   const res = await fetch(`${BLOTATO_API_BASE}/v2/posts`, {
     method: 'POST',

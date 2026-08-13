@@ -17,14 +17,22 @@ export const CANALE_TO_BLOTATO: Record<string, string> = {
   youtube_shorts: 'youtube',
 }
 
-// Formato interno → Blotato mediaType. Instagram/Facebook: senza mediaType un video o
-// un contenuto viene trattato come reel di DEFAULT da Blotato → un post-immagine
-// finirebbe reel. Quindi: reel/short/video → 'reel', story → 'story', post/carousel →
-// undefined (immagine singola/carosello, NON reel).
-export function formatoToMediaType(formato: string): 'reel' | 'story' | undefined {
+// Formato interno → Blotato mediaType. Il contratto non e uguale tra piattaforme:
+// Facebook distingue un video classico da un Reel, mentre Instagram pubblica entrambi
+// come Reel. Post e caroselli non devono avere mediaType.
+export function formatoToMediaType(
+  formato: string,
+  platform: string = 'instagram',
+): 'video' | 'reel' | 'story' | undefined {
   const f = String(formato || '').toLowerCase()
+  if (platform === 'facebook') {
+    if (f === 'reel' || f === 'short') return 'reel'
+    if (f === 'video') return 'video'
+    // Lo schema Blotato Facebook non espone mediaType=story.
+    return undefined
+  }
   if (f === 'reel' || f === 'short' || f === 'video') return 'reel'
-  if (f === 'story') return 'story'
+  if (platform === 'instagram' && f === 'story') return 'story'
   return undefined
 }
 

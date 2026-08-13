@@ -215,11 +215,25 @@ export async function PATCH(request: Request) {
       fields.push(`${key} = $${params.length}`)
     }
     if (body.status === 'APPROVATO') {
+      const existing = existingContent[0] as Record<string, unknown>
+      const isPublishRetry = ['ERRORE', 'ERRORE_MANUALE'].includes(String(existing.status || ''))
+        || String(existing.blotato_status || '').toLowerCase() === 'failed'
+
+      // Un errore remoto conserva volutamente il submission id per audit. Quando
+      // l'utente preme "Riprova pubblicazione", pero, quel vecchio id impedirebbe
+      // allo scheduler di acquisire il lock e il contenuto non verrebbe reinviato.
+      // Azzera solo tentativi falliti, mai post scheduled/published.
+      if (isPublishRetry) {
+        for (const column of ['blotato_post_id', 'blotato_status', 'blotato_post_url', 'blotato_scheduled_at', 'blotato_sync_at']) {
+          if (calendarioColumns.has(column)) fields.push(`${column} = NULL`)
+        }
+      }
+
       // Un Reel creato da foto richiede una seconda approvazione: questa PATCH
       // è il consenso esplicito dato DOPO aver visto l'MP4 nella Preview.
       if (
         calendarioColumns.has('blotato_visual_status')
-        && String((existingContent[0] as Record<string, unknown>).blotato_visual_status || '') === 'ready_for_review'
+        && String(existing.blotato_visual_status || '') === 'ready_for_review'
       ) {
         params.push('approved')
         fields.push(`blotato_visual_status = $${params.length}`)

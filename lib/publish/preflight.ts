@@ -38,6 +38,13 @@ export function preflightRow(row: Record<string, unknown>, tz: string = DEFAULT_
   }
   const req = PLATFORM_REQUIREMENTS[platform] || { needsMedia: false, targetRequired: [] as string[] }
 
+  if (platform === 'facebook' && formato === 'story') {
+    errors.push({
+      code: 'facebook_story',
+      message: 'Facebook Story non supportata dal contratto Blotato: usa Reel, Video, Post o Carosello',
+    })
+  }
+
   // Testo
   const hook = String(row.hook || '').trim()
   const caption = String(row.caption || '').trim()
@@ -52,14 +59,14 @@ export function preflightRow(row: Record<string, unknown>, tz: string = DEFAULT_
 
   // Media
   const media = collectMedia(row)
-  const mediaType = formatoToMediaType(formato)
+  const mediaType = formatoToMediaType(formato, platform)
   if (req.needsMedia && media.length === 0) {
     errors.push({ code: 'media', message: `${platform}: serve almeno un media (nessuna immagine/video caricato)` })
   }
   if (formato === 'carousel' && media.length > 0 && (media.length < 2 || media.length > 10)) {
     errors.push({ code: 'carousel', message: `Carosello: servono 2–10 media (attuali: ${media.length})` })
   }
-  if (mediaType === 'reel' && media.length > 0 && !media.some(u => VIDEO_RE.test(u))) {
+  if ((mediaType === 'reel' || mediaType === 'video') && media.length > 0 && !media.some(u => VIDEO_RE.test(u))) {
     warnings.push(`MP4 assente: ${media.length} ${media.length === 1 ? 'immagine verrà montata' : 'immagini verranno montate'} in un video da approvare prima della pubblicazione`)
   }
 

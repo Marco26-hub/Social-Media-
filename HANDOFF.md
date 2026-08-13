@@ -52,7 +52,9 @@ Il workspace Blotato ospita gli account di **più clienti reali insieme** (SILKi
 - **Endpoint corretto**: `GET /v2/users/me/accounts` (non `/v2/accounts`, che risponde 404 — bug trovato e corretto, non era un problema di chiave). Sotto-destinazioni (Facebook Page/Pinterest board/LinkedIn Company Page) via `GET /v2/users/me/accounts/{id}/subaccounts`, chiamata separata per account.
 - **Gate di pubblicazione**: `PUBLISH_ENABLED` (env) + `dry_run` per cliente (settings) — entrambi devono essere sbloccati. Default fail-safe: valore mancante o non `FALSE` esplicito = dry-run.
 - **Payload Instagram:** massimo 5 hashtag applicato anche al payload finale; per le Story `firstComment` è sempre rimosso perché non supportato.
+- **Payload Facebook:** la Page (`target.pageId`) viene sempre risolta e validata anche se la riga conserva gia `platform_account_id`; non esiste piu il fallback col solo account. `video` usa `mediaType=video`, Reel/Short usa `mediaType=reel`, Post/Carosello non impostano `mediaType`. Le Story Facebook sono bloccate dal pre-flight perche il contratto Blotato Facebook non espone quel formato.
 - **Riconciliazione reale:** `POST /api/data/blotato-reconcile` interroga `GET /v2/posts/{postSubmissionId}` per ogni invio del mese e aggiorna `published`, `failed`, `scheduled` o `in-progress`, URL pubblico ed errore. Il pulsante **Verifica Blotato** mostra pubblicati confermati, in coda, non inviati, falliti, mancanti da creare e mancanti da pubblicare rispetto a `clienti.contenuti_mese`. Anche **Sincronizza Blotato** esegue la riconciliazione dopo l'invio. Non contare mai `scheduled` come pubblicato.
+- **Retry pubblicazione:** `Riprova pubblicazione` azzera ID/stato remoto solo quando il tentativo e realmente `failed`/`ERRORE`; poi lo scheduler puo creare una nuova submission. Prima lasciava il vecchio `blotato_post_id`, quindi il click non reinviava nulla. Non azzera mai contenuti ancora `scheduled` o gia `published`.
 - **Pagina Facebook SWA** ("Social Web Automation", account id `44606`) configurata in questa sessione: Pagina business collegata, Instagram, sito aggiuntivo, indirizzo (Via G. Verdi 2/B, Cermenate CO), Impressum (SWA S.r.l.). Nessun post ancora pubblicato — resta da fare.
 - Per gli invii storici usare prima **Verifica Blotato**. Non azzerare un `blotato_post_id` fermo su `scheduled` finché non è stato controllato sul social/Blotato: il requeue può altrimenti duplicare un post già uscito.
 
@@ -60,7 +62,7 @@ Il workspace Blotato ospita gli account di **più clienti reali insieme** (SILKi
 - `npm run build`: passa; restano 6 warning lint preesistenti in moduli non toccati.
 - Playwright: popup fallback → filtro esatto → modifica/rigenerazione → anteprima → `DA_APPROVARE`, senza pubblicazione automatica; consuntivo pacchetto Blotato verificato con API mock.
 - Server locale di prova: `http://127.0.0.1:3108/dashboard/piano` (processo di sviluppo, non URL pubblico).
-- Commit principali: `4014da5`, `9fbaa1e`, `81f9ef3` (quest'ultimo precede questo aggiornamento handoff).
+- Commit principali: `4014da5`, `9fbaa1e`, `81f9ef3`, `da439a5` (quest'ultimo precede la correzione Facebook ancora da committare in questo aggiornamento).
 
 ## Da completare
 1. Deploy Vercel: push del codice + tutte le env Supabase. Il progetto Vercel auto-deploya da `main`. Verificare che la migrazione 042 sia applicata prima del test upload audio Reel.
