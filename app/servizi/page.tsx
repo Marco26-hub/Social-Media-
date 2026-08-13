@@ -9,7 +9,6 @@ import {
   FileSearch,
   Globe2,
   Layers3,
-  LogIn,
   LockKeyhole,
   Megaphone,
   MessageCircle,
@@ -24,9 +23,7 @@ import { PACCHETTI } from '@/lib/pacchetti'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
-import MobileMenu from '@/components/MobileMenu'
-import DesktopMenu from '@/components/DesktopMenu'
-import ThemeToggle from '@/components/ThemeToggle'
+import PublicHeader from '@/components/PublicHeader'
 import site from '../landing.module.css'
 import styles from './servizi-v2.module.css'
 
@@ -92,6 +89,7 @@ const servicesPageJsonLd = {
 const SERVICES = [
   {
     id: 'social',
+    href: '/servizi/gestione-social-media',
     number: '01',
     icon: Megaphone,
     label: 'Gestione social multicanale',
@@ -110,6 +108,7 @@ const SERVICES = [
   },
   {
     id: 'seo-geo',
+    href: '/servizi/seo-geo',
     number: '02',
     icon: ScanSearch,
     label: 'SEO e GEO',
@@ -128,12 +127,13 @@ const SERVICES = [
   },
   {
     id: 'web',
+    href: '/servizi/siti-e-commerce',
     number: '03',
     icon: Globe2,
     label: 'Siti ed e-commerce',
     title: 'Un’esperienza digitale costruita per il contatto e la vendita.',
     description:
-      'Progettiamo siti e negozi online coerenti con campagne e contenuti social. La struttura accompagna l’utente dalla scoperta all’azione, con percorsi semplici su ogni dispositivo.',
+      'Soluzioni web da 19,90 € al mese. Dopo 12 mesi di canone, il sito è tuo: progettato mobile-first e collegato a campagne e contenuti social.',
     included: [
       'Architettura informativa e messaggi',
       'Design responsive e mobile-first',
@@ -208,46 +208,10 @@ export default function ServiziPage() {
       />
       <a className={site.skipLink} href="#main-content">Vai al contenuto</a>
 
-      <header className={site.navbar}>
-        <Link href="/" className={site.brand} aria-label="Social Automation, home">
-          <span className={site.brandLogoShell}>
-            <Image className={site.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
-          </span>
-          <span>Social Automation</span>
-        </Link>
-        <DesktopMenu
-          links={[
-            { href: '#servizi', label: 'Servizi' },
-            { href: '#metodo', label: 'Come funziona' },
-            { href: '#pacchetti', label: 'Pacchetti' },
-            { href: '#legale', label: 'Consulenza legale AI' },
-            { href: '#faq', label: 'FAQ' },
-          ]}
-        />
-        <div className={site.navActions}>
-          <ThemeToggle />
-          <Link href="/portale" className={site.loginLink}><LogIn size={15} aria-hidden="true" /> Area cliente</Link>
-          <a
-            href={waLink('Ciao! Vorrei capire quale servizio Social Automation è adatto alla mia azienda.')}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={site.navCta}
-          >
-            Richiedi una consulenza <ArrowRight size={15} aria-hidden="true" />
-          </a>
-        </div>
-        <MobileMenu
-          links={[
-            { href: '#servizi', label: 'Servizi' },
-            { href: '#metodo', label: 'Come funziona' },
-            { href: '#pacchetti', label: 'Pacchetti' },
-            { href: '#legale', label: 'Consulenza legale AI' },
-            { href: '#faq', label: 'FAQ' },
-          ]}
-          ctaHref={waLink('Ciao! Vorrei capire quale servizio Social Automation è adatto alla mia azienda.')}
-          ctaLabel="Richiedi una consulenza"
-        />
-      </header>
+      <PublicHeader
+        ctaHref={waLink('Ciao! Vorrei capire quale servizio Social Automation è adatto alla mia azienda.')}
+        ctaLabel="Richiedi una consulenza"
+      />
 
       <section className={styles.hero} aria-labelledby="services-hero-title">
         <div className={styles.heroCopy}>
@@ -313,7 +277,7 @@ export default function ServiziPage() {
         </div>
 
         <div className={styles.serviceRows}>
-          {SERVICES.map(({ id, number, icon: Icon, label, title, description, included, outcome }) => (
+          {SERVICES.map(({ id, href, number, icon: Icon, label, title, description, included, outcome }) => (
             <article key={id} id={id} className={styles.serviceRow}>
               <div className={styles.serviceIdentity}>
                 <span>{number}</span>
@@ -327,6 +291,7 @@ export default function ServiziPage() {
                   {included.map(item => <li key={item}><Check size={15} aria-hidden="true" /> {item}</li>)}
                 </ul>
                 <div className={styles.outcome}><Target size={17} aria-hidden="true" /><span><strong>Risultato atteso:</strong> {outcome}</span></div>
+                <Link href={href} className={site.outlineButton}>Pagina del servizio <ArrowRight size={16} aria-hidden="true" /></Link>
               </div>
             </article>
           ))}
@@ -348,6 +313,7 @@ export default function ServiziPage() {
             </li>
           ))}
         </ol>
+        <Link href="/metodo" className={site.outlineButton}>Approfondisci il metodo <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
 
       <section id="legale" className={styles.legalSection} aria-labelledby="legal-title">
@@ -434,6 +400,7 @@ export default function ServiziPage() {
             Richiedi la prova <ArrowRight size={16} aria-hidden="true" />
           </a>
         </div>
+        <Link href="/pacchetti" className={site.outlineButton}>Apri il confronto completo <ArrowRight size={16} aria-hidden="true" /></Link>
         <div className={styles.customPlan}>
           <div><Layers3 size={24} aria-hidden="true" /><span><strong>Configurazione su misura</strong> per e-commerce, agenzie, più brand, automazioni e integrazioni.</span></div>
           <a
@@ -459,6 +426,7 @@ export default function ServiziPage() {
             </details>
           ))}
         </div>
+        <Link href="/faq" className={site.outlineButton}>Tutte le domande frequenti <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
 
       <section className={styles.finalCta}>
@@ -490,6 +458,7 @@ export default function ServiziPage() {
         <div>
           <Link href="/servizi">Servizi</Link>
           <Link href="/chi-siamo">Chi siamo</Link>
+          <Link href="/blog">Journal</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/termini">Termini</Link>
           <Link href="/login">Accesso</Link>

@@ -68,12 +68,20 @@ export async function activateRegistration(opts: {
     const slug = `${base}-${prof.id.slice(0, 6)}`
     const pkgLabel = prof.pacchetto ? (PACCHETTO_LABEL[prof.pacchetto] || prof.pacchetto) : '—'
     const pkgMap = (prof.pacchetto && PACCHETTO_PIANO[prof.pacchetto]) || PACCHETTO_FALLBACK
+    // `pacchetto` va salvato SOLO se è una chiave valida di PACCHETTO_PIANO (catalogo
+    // attuale: 'presenza' | 'crescita'). Prima non veniva salvato affatto: i clienti
+    // storici SILKinCOM/Pino erano stati corretti a mano sul DB, ma ogni nuovo cliente
+    // creato da attivazione registrazione restava con pacchetto=null (rompe il "piano
+    // del pacchetto" in /dashboard/piano e lib/media-requirements.ts). Valori ignoti/
+    // superati (es. 'ecommerce', non più nel catalogo) restano NULL: piano libero,
+    // non inventiamo un pacchetto che non esiste più.
+    const pacchettoValido = prof.pacchetto && PACCHETTO_PIANO[prof.pacchetto] ? prof.pacchetto : null
     const cli = await q1(
-      `INSERT INTO clienti (nome, slug, email, telefono, piano, contenuti_mese, note)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       ON CONFLICT (slug) DO UPDATE SET updated_at = now()
+      `INSERT INTO clienti (nome, slug, email, telefono, piano, contenuti_mese, pacchetto, note)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (slug) DO UPDATE SET pacchetto = EXCLUDED.pacchetto, updated_at = now()
        RETURNING id`,
-      [prof.azienda || prof.nome || 'Cliente', slug, prof.email || null, prof.telefono || null, pkgMap.piano, pkgMap.contenuti, `Pacchetto: ${pkgLabel} · registrazione self-serve`],
+      [prof.azienda || prof.nome || 'Cliente', slug, prof.email || null, prof.telefono || null, pkgMap.piano, pkgMap.contenuti, pacchettoValido, `Pacchetto: ${pkgLabel} · registrazione self-serve`],
     )
     clienteId = (cli as { id: string }).id
     await q(

@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   ChevronRight,
+  Building2,
   CircleHelp,
+  Home,
   LayoutGrid,
   Menu,
+  Newspaper,
   PackageCheck,
   Scale,
   Workflow,
@@ -27,6 +30,16 @@ type MobileMenuProps = {
 }
 
 const MENU_ICONS: Record<string, LucideIcon> = {
+  '/': Home,
+  '/servizi': LayoutGrid,
+  '/servizi/gestione-social-media': LayoutGrid,
+  '/servizi/seo-geo': LayoutGrid,
+  '/servizi/siti-e-commerce': LayoutGrid,
+  '/metodo': Workflow,
+  '/pacchetti': PackageCheck,
+  '/consulenza': Scale,
+  '/blog': Newspaper,
+  '/chi-siamo': Building2,
   '#servizi': LayoutGrid,
   '#metodo': Workflow,
   '#prezzi': PackageCheck,
@@ -107,7 +120,8 @@ export default function MobileMenu({ links, ctaHref, ctaLabel }: MobileMenuProps
           <nav id="mobile-navigation" className={styles.panel} aria-label="Navigazione mobile">
             <div className={styles.links}>
               {links.map(link => {
-                const Icon = MENU_ICONS[link.href] || LayoutGrid
+                const url = new URL(link.href, 'https://socialautomation.app')
+                const Icon = MENU_ICONS[url.hash || url.pathname] || LayoutGrid
                 return (
                   <a key={link.href} href={link.href} onClick={() => setOpen(false)}>
                     <span className={styles.linkIcon}><Icon size={17} strokeWidth={1.9} aria-hidden="true" /></span>

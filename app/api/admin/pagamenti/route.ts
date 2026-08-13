@@ -5,7 +5,7 @@ import { dbReady, q } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
 import { pacchettoFromPiano, pacchettoSlugFromPiano } from '@/lib/pacchetti'
-import { createStripeCheckoutSession, createStripePortalSession, euroStringToCents, stripeConfigured } from '@/lib/stripe'
+import { createStripeCheckoutSession, createStripePortalSession, euroStringToCents, stripeConfigured, stripeSecretLivemode, stripeWebhookConfigured } from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +19,7 @@ function demoPayload() {
   return {
     stripe_configured: false,
     stripe_webhook_configured: false,
+    stripe_mode: 'not_configured',
     webhook_url: 'https://socialautomation.app/api/stripe/webhook',
     needs_migration: false,
     clienti: [
@@ -33,7 +34,7 @@ function demoPayload() {
         attivo: true,
         stripe_customer_id: null,
         stripe_subscription_id: null,
-        subscription_status: 'demo',
+        subscription_status: 'active',
         current_period_end: null,
         last_payment_status: 'paid',
         last_amount_paid: 109000,
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
     try {
       const rows = await q(
         `SELECT
-           c.id, c.nome, c.email, c.piano, c.contenuti_mese, c.attivo,
+           c.id, c.nome, c.email, c.piano, c.pacchetto, c.contenuti_mese, c.attivo,
            c.stripe_customer_id, c.stripe_subscription_id,
            ss.status AS subscription_status,
            ss.current_period_end,
@@ -89,17 +90,25 @@ export async function GET(request: Request) {
 
       return NextResponse.json({
         stripe_configured: stripeConfigured(),
-        stripe_webhook_configured: Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim()),
+        stripe_webhook_configured: stripeWebhookConfigured(),
+        stripe_mode: stripeSecretLivemode() === true ? 'live' : stripeSecretLivemode() === false ? 'test' : 'unknown',
         webhook_url: `${getPublicBaseUrl(request).replace(/\/$/, '')}/api/stripe/webhook`,
         needs_migration: false,
         clienti: rows.map(row => {
           const piano = str(row.piano) || 'free'
-          const pacchetto = pacchettoFromPiano(piano)
+          const configuredSlug = pacchettoSlugFromPiano(str(row.pacchetto) || piano)
+          const subscriptionSlug = str(row.subscription_pacchetto_slug)
+          const subscriptionStatus = str(row.subscription_status)
+          const subscriptionIsCurrent = ['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'].includes(subscriptionStatus)
+          const billedSlug = subscriptionIsCurrent && subscriptionSlug ? pacchettoSlugFromPiano(subscriptionSlug) : configuredSlug
+          const pacchetto = pacchettoFromPiano(billedSlug)
           return {
             ...row,
-            pacchetto_slug: pacchettoSlugFromPiano(piano),
+            pacchetto_slug: billedSlug,
+            configured_pacchetto_slug: configuredSlug,
             pacchetto_nome: pacchetto.nome,
             canone: pacchetto.prezzo,
+            package_mismatch: subscriptionIsCurrent && Boolean(subscriptionSlug) && configuredSlug !== billedSlug,
           }
         }),
       })
@@ -107,7 +116,8 @@ export async function GET(request: Request) {
       if (isMissingPaymentsSchema(error)) {
         return NextResponse.json({
           stripe_configured: stripeConfigured(),
-          stripe_webhook_configured: Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim()),
+          stripe_webhook_configured: stripeWebhookConfigured(),
+          stripe_mode: stripeSecretLivemode() === true ? 'live' : stripeSecretLivemode() === false ? 'test' : 'unknown',
           webhook_url: `${getPublicBaseUrl(request).replace(/\/$/, '')}/api/stripe/webhook`,
           needs_migration: true,
           clienti: [],
@@ -134,9 +144,13 @@ export async function POST(request: Request) {
     if (!clienteId) return NextResponse.json({ error: 'cliente_id richiesto' }, { status: 400 })
 
     const rows = await q(
-      `SELECT id, nome, email, piano, stripe_customer_id
-       FROM clienti
-       WHERE id = $1
+      `SELECT c.id, c.nome, c.email, c.piano, c.pacchetto, c.stripe_customer_id,
+              ss.status AS subscription_status
+       FROM clienti c
+       LEFT JOIN stripe_subscriptions ss
+         ON ss.cliente_id = c.id
+        AND ss.stripe_subscription_id = c.stripe_subscription_id
+       WHERE c.id = $1
        LIMIT 1`,
       [clienteId],
     ) as Row[]
@@ -157,13 +171,23 @@ export async function POST(request: Request) {
 
     if (action !== 'checkout') return NextResponse.json({ error: 'action non valida (checkout | portal)' }, { status: 400 })
 
+    const subscriptionStatus = str(cliente.subscription_status)
+    if (['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'].includes(subscriptionStatus)) {
+      return NextResponse.json(
+        { error: 'Esiste già un abbonamento Stripe per questo cliente. Usa il portale per gestirlo ed evita un doppio addebito.' },
+        { status: 409 },
+      )
+    }
+
     const piano = str(cliente.piano) || 'free'
-    const pacchetto = pacchettoFromPiano(piano)
+    const packageSource = str(cliente.pacchetto) || piano
+    const pacchettoSlug = pacchettoSlugFromPiano(packageSource)
+    const pacchetto = pacchettoFromPiano(pacchettoSlug)
     const session = await createStripeCheckoutSession({
       clienteId,
       clienteNome: str(cliente.nome) || 'Cliente',
       clienteEmail: str(cliente.email) || null,
-      pacchettoSlug: pacchettoSlugFromPiano(piano),
+      pacchettoSlug,
       pacchettoNome: pacchetto.nome,
       amountCents: euroStringToCents(pacchetto.prezzo),
       setupCents: euroStringToCents(pacchetto.setup), // 'Setup incluso' → 0 → nessun addebito

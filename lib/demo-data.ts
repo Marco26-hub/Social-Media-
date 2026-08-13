@@ -234,7 +234,7 @@ export const demoClienti: Cliente[] = [
     piano: 'pro',
     pacchetto: 'crescita',
     timezone: 'Europe/Rome',
-    contenuti_mese: 30,
+    contenuti_mese: 24,
     attivo: true,
     blog_domain: null,
     note: null,

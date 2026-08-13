@@ -425,7 +425,7 @@ export default function IlMioPianoPage() {
           <p className="mt-3 text-sm leading-relaxed text-gray-600">
             Con un pacchetto superiore ottieni più contenuti, più canali e nuovi servizi. Ogni livello include tutto quello del precedente.
           </p>
-          <Link href="/servizi#pacchetti" className="btn-secondary mt-4 w-full justify-center text-sm sm:w-auto sm:self-start">
+          <Link href="/pacchetti" className="btn-secondary mt-4 w-full justify-center text-sm sm:w-auto sm:self-start">
             Confronta i pacchetti
             <ArrowRight className="h-4 w-4" />
           </Link>

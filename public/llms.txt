@@ -22,6 +22,7 @@
 - Programma e pubblica i contenuti approvati.
 - Produce report e priorità di miglioramento.
 - Realizza siti web, landing page ed e-commerce.
+- Offre soluzioni per siti ed e-commerce con canone tecnologico da 19,90 euro al mese; dopo 12 mesi di canone il sito diventa di proprietà del cliente. Progettazione, funzioni ed eventuali servizi esterni sono definiti prima dell'avvio.
 - Esegue attività SEO e GEO per migliorare comprensione, indicizzazione e citabilità.
 - Gestisce campagne ADS; il budget pubblicitario è separato dal canone.
 
@@ -31,6 +32,7 @@ L'intelligenza artificiale supporta analisi e produzione. La decisione editorial
 
 - Presenza: 390 euro al mese, IVA esclusa. Include 16 contenuti mensili e gestione di 2 social.
 - Crescita: 790 euro al mese, IVA esclusa. Include 24 contenuti su 3 social, un articolo SEO e GEO e gestione di una campagna ADS.
+- Web & Commerce: pacchetto separato da 19,90 euro al mese per siti web ed e-commerce mobile-first. Dopo 12 mesi di canone il sito diventa di proprietà del cliente; progettazione e servizi esterni vengono definiti prima dell'avvio.
 - Soluzione personalizzata: preventivo per e-commerce, più brand, volumi elevati, video, automazioni e integrazioni.
 
 Il setup è incluso. Il budget versato alle piattaforme pubblicitarie non è incluso.
@@ -42,8 +44,16 @@ La consulenza su AI Act e GDPR è svolta in collaborazione con lo Studio Legale 
 ## Pagine principali
 
 - Home: https://www.socialautomation.app/
-- Servizi e pacchetti: https://www.socialautomation.app/servizi
+- Servizi: https://www.socialautomation.app/servizi
+- Gestione social media: https://www.socialautomation.app/servizi/gestione-social-media
+- SEO e GEO: https://www.socialautomation.app/servizi/seo-geo
+- Siti ed e-commerce: https://www.socialautomation.app/servizi/siti-e-commerce
+- Metodo: https://www.socialautomation.app/metodo
+- Pacchetti: https://www.socialautomation.app/pacchetti
+- FAQ: https://www.socialautomation.app/faq
 - Chi siamo: https://www.socialautomation.app/chi-siamo
+- SWA Journal: https://www.socialautomation.app/blog
+- Feed RSS del Journal: https://www.socialautomation.app/blog/feed.xml
 - Consulenza AI Act e GDPR: https://www.socialautomation.app/consulenza
 - Trasparenza AI: https://www.socialautomation.app/trasparenza-ai
 - Privacy: https://www.socialautomation.app/privacy

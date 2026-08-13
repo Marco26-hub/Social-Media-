@@ -6,7 +6,7 @@ import { q } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 import { validateMediaUrls } from '@/lib/media-validate'
 import { getBlotatoKey } from '@/lib/blotato-key'
-import { resolveBlotatoTarget } from '@/lib/blotato-accounts'
+import { getPinnedAccountId, getPinnedSubaccountId, resolveBlotatoTarget } from '@/lib/blotato-accounts'
 import { CANALE_TO_BLOTATO, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
 import { preflightRow } from '@/lib/publish/preflight'
 import { normalizeHashtagsForPublish } from '@/lib/hashtags'
@@ -97,8 +97,13 @@ export async function scheduleOnBlotato(
   const manualAccountId = (row.platform_account_id as string | null)?.trim() || ''
   let accountId = manualAccountId
   let target: Record<string, unknown> = { targetType: platform }
+  // Quale account, tra i più account della stessa piattaforma che convivono nel workspace
+  // Blotato (clienti diversi), è quello di QUESTO post: prima il pin sulla riga, poi la
+  // scelta salvata per il cliente. Senza, il resolver fallisce chiuso invece di indovinare.
+  const pinnedAccountId = manualAccountId || await getPinnedAccountId(clienteId, canale)
   try {
-    const resolved = await resolveBlotatoTarget(blotatoKey, canale, row)
+    const pinnedSubaccountId = await getPinnedSubaccountId(clienteId, canale)
+    const resolved = await resolveBlotatoTarget(blotatoKey, canale, row, pinnedAccountId, pinnedSubaccountId)
     target = resolved.target
     if (!accountId) accountId = resolved.accountId
   } catch (e) {

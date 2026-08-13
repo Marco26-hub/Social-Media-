@@ -24,6 +24,16 @@ const required = [
     ok: Boolean(env.OPENROUTER_API_KEY?.trim()),
     hint: 'Almeno una chiave AI reale per generazione contenuti',
   },
+  {
+    name: 'STRIPE_SECRET_KEY live',
+    ok: /^sk_live_/.test(env.STRIPE_SECRET_KEY?.trim() || ''),
+    hint: 'Chiave segreta Stripe live (sk_live_…) per incassare pagamenti reali',
+  },
+  {
+    name: 'STRIPE_WEBHOOK_SECRET',
+    ok: /^whsec_/.test(env.STRIPE_WEBHOOK_SECRET?.trim() || ''),
+    hint: 'Signing secret dell’endpoint Stripe (whsec_…), non un segreto generato manualmente',
+  },
 ]
 
 const recommended = [

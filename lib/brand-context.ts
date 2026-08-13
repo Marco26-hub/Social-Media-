@@ -17,5 +17,5 @@ Parole da EVITARE: ${brand.parole_da_evitare || ''}
 Emoji consentiti: ${brand.emoji_policy || ''}
 Hashtag base: ${brand.hashtag_base || ''}
 CTA base: ${brand.cta_base || ''}
-`
+${brand.note_legali ? `Vincoli legali / claim vietati: ${brand.note_legali}\n` : ''}${brand.disclaimer_text ? `Disclaimer da rispettare: ${brand.disclaimer_text}\n` : ''}`
 }

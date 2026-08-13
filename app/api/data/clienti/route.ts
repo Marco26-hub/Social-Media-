@@ -1,18 +1,26 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
-import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { requireAdmin, requireAuth, requireClienteAccess } from '@/lib/auth-utils'
+import { getPackage } from '@/lib/packages'
+import { pacchettoSlugFromPiano } from '@/lib/pacchetti'
+import { PACCHETTO_PIANO, PACCHETTO_FALLBACK } from '@/lib/provisioning'
 import { isDemo } from '@/lib/demo'
 import { demoClienti } from '@/lib/demo-data'
+import { normalizeBlogDomain } from '@/lib/blog-url'
 
+// Campi operativi: modificabili da chiunque abbia accesso al cliente.
 const CLIENTE_UPDATE_COLUMNS = new Set([
-  'nome', 'settore', 'email', 'telefono', 'piano', 'pacchetto', 'timezone', 'contenuti_mese', 'attivo', 'note', 'blog_domain',
+  'nome', 'settore', 'email', 'telefono', 'timezone', 'note', 'blog_domain',
 ])
 
-// Domini validi: hostname puro (no protocollo/path), lowercase, punti/trattini.
-function isValidDomain(value: string): boolean {
-  return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(value)
-}
+// Campi COMMERCIALI: decidono cosa il cliente ha pagato (livello del pacchetto,
+// quota di contenuti, attivazione) e quindi quanto può consumare. Vanno riservati
+// agli admin dell'agenzia: con il solo accesso al proprio cliente un utente
+// potrebbe altrimenti auto-promuoversi il pacchetto e alzarsi la quota.
+const CLIENTE_ADMIN_COLUMNS = new Set([
+  'piano', 'pacchetto', 'contenuti_mese', 'attivo',
+])
 
 export async function GET() {
   try {
@@ -38,9 +46,18 @@ export async function POST(request: Request) {
     if (!nome) return NextResponse.json({ error: 'nome richiesto' }, { status: 400 })
     if (isDemo() || !dbReady()) return NextResponse.json({ id: `demo-${Date.now().toString(36)}`, demo: true })
     const slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    // Pacchetto e quota derivati dallo STESSO mapping piano->pacchetto che genera
+    // la card "Il tuo pacchetto" in "Il mio piano" (lib/pacchetti.ts), non lasciati
+    // a null: creare un cliente qui e uno via attivazione registrazione con lo
+    // stesso piano deve produrre la stessa quota. Prima questo INSERT non
+    // impostava n\u00e9 pacchetto n\u00e9 contenuti_mese, che restava al default schema 30
+    // \u2014 mai coerente col pacchetto mostrato (es. Presenza dichiara 16).
+    const pianoEff = piano || 'pro'
+    const pacchettoSlug = pacchettoSlugFromPiano(pianoEff)
+    const pkgNumeri = PACCHETTO_PIANO[pacchettoSlug] || PACCHETTO_FALLBACK
     const rows = await q(
-      'INSERT INTO clienti (nome, slug, settore, email, telefono, piano, attivo) VALUES ($1,$2,$3,$4,$5,$6,true) RETURNING id',
-      [nome, slug, settore || null, email || null, telefono || null, piano || 'pro']
+      'INSERT INTO clienti (nome, slug, settore, email, telefono, piano, pacchetto, contenuti_mese, attivo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true) RETURNING id',
+      [nome, slug, settore || null, email || null, telefono || null, pianoEff, pacchettoSlug, pkgNumeri.contenuti]
     )
     const clienteId = (rows[0] as { id: string }).id
     await q(
@@ -63,9 +80,9 @@ export async function PATCH(request: Request) {
     if (isDemo() || !dbReady()) return NextResponse.json({ ok: true, demo: true })
 
     if (typeof body.blog_domain === 'string' && body.blog_domain.trim()) {
-      const domain = body.blog_domain.trim().toLowerCase()
-      if (!isValidDomain(domain)) {
-        return NextResponse.json({ error: 'Dominio non valido: usa solo hostname, es. blog.miosito.com (niente https:// o /path)' }, { status: 400 })
+      const domain = normalizeBlogDomain(body.blog_domain)
+      if (!domain) {
+        return NextResponse.json({ error: 'Link Blog non valido. Usa un dominio o un URL completo, es. https://www.miosito.com/blog' }, { status: 400 })
       }
       const clash = await q('SELECT id, nome FROM clienti WHERE blog_domain = $1 AND id != $2', [domain, id])
       if (clash.length) {
@@ -74,10 +91,24 @@ export async function PATCH(request: Request) {
       body.blog_domain = domain
     }
 
+    // I campi commerciali passano solo se chi scrive è admin dell'agenzia.
+    const wantsAdminFields = Object.keys(body).some(k => CLIENTE_ADMIN_COLUMNS.has(k))
+    if (wantsAdminFields) await requireAdmin()
+
+    // Cambiando pacchetto si allinea anche la quota mensile, a meno che l'admin
+    // la stia impostando a mano nella stessa richiesta (override voluto).
+    // Prima i due dati vivevano separati: la pagina "Il mio piano" mostrava il
+    // pacchetto Presenza (16 contenuti) accanto a "7/30 usati", perché
+    // contenuti_mese era rimasto al default storico di 30.
+    if (typeof body.pacchetto === 'string' && body.contenuti_mese === undefined) {
+      const pkgScelto = getPackage(body.pacchetto)
+      if (pkgScelto) body.contenuti_mese = pkgScelto.contenutiMese
+    }
+
     const fields: string[] = []
     const params: unknown[] = []
     for (const [key, val] of Object.entries(body)) {
-      if (!CLIENTE_UPDATE_COLUMNS.has(key)) continue
+      if (!CLIENTE_UPDATE_COLUMNS.has(key) && !CLIENTE_ADMIN_COLUMNS.has(key)) continue
       params.push(val === '' ? null : val)
       fields.push(`${key} = $${params.length}`)
     }
@@ -85,7 +116,7 @@ export async function PATCH(request: Request) {
 
     params.push(id)
     await q(`UPDATE clienti SET ${fields.join(', ')}, updated_at = now() WHERE id = $${params.length}`, params)
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, blog_domain: body.blog_domain ?? undefined })
   } catch (e) {
     return apiError(e)
   }

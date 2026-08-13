@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { dbReady, q, q1 } from '@/lib/db'
 import { stripeSecretLivemode, verifyStripeWebhookSignature } from '@/lib/stripe'
-import { activateRegistration } from '@/lib/provisioning'
+import { activateRegistration, PACCHETTO_FALLBACK, PACCHETTO_PIANO } from '@/lib/provisioning'
 import { sendAccountActivated } from '@/lib/email'
+import { getPackage } from '@/lib/packages'
 
 export const dynamic = 'force-dynamic'
 
@@ -79,6 +80,35 @@ async function requireStripeClienteId(obj: StripeObject, eventType: string): Pro
   return clienteId
 }
 
+function packageSyncValues(slug: string) {
+  const pkg = getPackage(slug)
+  if (!pkg) return { slug: null, piano: null, contenuti: null }
+  const mapping = PACCHETTO_PIANO[pkg.id] || PACCHETTO_FALLBACK
+  return { slug: pkg.id, piano: mapping.piano, contenuti: pkg.contenutiMese }
+}
+
+async function syncClienteSubscription(
+  clienteId: string,
+  customerId: string,
+  subscriptionId: string,
+  pacchettoSlug: string,
+) {
+  const pkg = packageSyncValues(pacchettoSlug)
+  const rows = await q(
+    `UPDATE clienti
+     SET stripe_customer_id = COALESCE($1, stripe_customer_id),
+         stripe_subscription_id = COALESCE($2, stripe_subscription_id),
+         pacchetto = COALESCE($3, pacchetto),
+         piano = COALESCE($4, piano),
+         contenuti_mese = COALESCE($5, contenuti_mese),
+         updated_at = now()
+     WHERE id = $6
+     RETURNING id`,
+    [customerId || null, subscriptionId || null, pkg.slug, pkg.piano, pkg.contenuti, clienteId],
+  )
+  if (!rows.length) throw new Error(`Cliente ${clienteId} non trovato per checkout Stripe`)
+}
+
 async function handleConsulenzaPaid(obj: StripeObject) {
   const meta = metadata(obj)
   const consulenzaId = str(meta.consulenza_id) || str(meta.ref_id)
@@ -133,16 +163,7 @@ async function handleCheckoutCompleted(obj: StripeObject) {
 
   // Percorso classico: workspace già esistente (es. checkout dall'admin).
   const clienteId = await requireStripeClienteId(obj, 'checkout.session.completed')
-  const rows = await q(
-    `UPDATE clienti
-     SET stripe_customer_id = COALESCE($1, stripe_customer_id),
-         stripe_subscription_id = COALESCE($2, stripe_subscription_id),
-         updated_at = now()
-     WHERE id = $3
-     RETURNING id`,
-    [customerId || null, subscriptionId || null, clienteId],
-  )
-  if (!rows.length) throw new Error(`Cliente ${clienteId} non trovato per checkout Stripe`)
+  await syncClienteSubscription(clienteId, customerId, subscriptionId, str(meta.pacchetto_slug))
 }
 
 async function handleSubscription(obj: StripeObject) {
@@ -197,14 +218,7 @@ async function handleSubscription(obj: StripeObject) {
     ],
   )
 
-  await q(
-    `UPDATE clienti
-     SET stripe_customer_id = COALESCE($1, stripe_customer_id),
-         stripe_subscription_id = COALESCE($2, stripe_subscription_id),
-         updated_at = now()
-     WHERE id = $3`,
-    [customerId || null, subscriptionId || null, clienteId],
-  )
+  await syncClienteSubscription(clienteId, customerId, subscriptionId, str(meta.pacchetto_slug))
 }
 
 async function handleInvoice(obj: StripeObject) {

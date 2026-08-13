@@ -42,6 +42,21 @@ export const PLATFORM_REQUIREMENTS: Record<string, { needsMedia: boolean; target
   youtube: { needsMedia: true, targetRequired: ['title', 'privacyStatus', 'shouldNotifySubscribers'] },
 }
 
+// `calendario.data_pubblicazione` è una colonna `date`: il driver pg la consegna
+// al server come oggetto Date, e al client (dopo JSON) come ISO completo
+// "2026-07-18T00:00:00.000Z". Il resto del codice ragiona invece in 'YYYY-MM-DD',
+// quindi ogni consumatore va normalizzato qui, in un punto solo.
+export function toYmd(value: unknown): string {
+  if (value instanceof Date) {
+    if (!Number.isFinite(value.getTime())) return ''
+    const p = (n: number) => String(n).padStart(2, '0')
+    // Componenti UTC: pg costruisce la Date a mezzanotte UTC del giorno salvato.
+    return `${value.getUTCFullYear()}-${p(value.getUTCMonth() + 1)}-${p(value.getUTCDate())}`
+  }
+  // Copre sia 'YYYY-MM-DD' sia la forma ISO che arriva dal JSON.
+  return String(value ?? '').trim().slice(0, 10)
+}
+
 // Offset (tz − UTC) in ms per un dato istante, calcolato via Intl (nessuna dipendenza).
 function tzOffsetMs(instant: Date, tz: string): number {
   const dtf = new Intl.DateTimeFormat('en-US', {
@@ -63,7 +78,7 @@ function tzOffsetMs(instant: Date, tz: string): number {
 // l'ISO UTC corrispondente. Es. 10:00 Europe/Rome (estate) → 08:00:00.000Z.
 // Due passaggi di offset per gestire correttamente i bordi DST.
 export function zonedToUtcIso(dateStr: unknown, timeStr: unknown, tz: string): string {
-  const d = String(dateStr || '').trim()
+  const d = toYmd(dateStr)
   const t = String(timeStr || '00:00').slice(0, 5)
   if (!d) throw new Error('data_pubblicazione mancante: impossibile programmare il post')
   const [Y, M, D] = d.split('-').map(Number)

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { Fragment, useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid, CalendarClock } from 'lucide-react'
 import CalendarGrid from '@/components/CalendarGrid'
 import { preflightRow } from '@/lib/publish/preflight'
 import { useSearchParams } from 'next/navigation'
@@ -139,6 +139,7 @@ function CalendarioInner() {
   const [comfyMsg, setComfyMsg] = useState<string | null>(null)
   const [dryRun, setDryRun] = useState<boolean | null>(null)
   const [syncing, setSyncing] = useState(false)
+  const [requeuing, setRequeuing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [vista, setVista] = useState<'lista' | 'griglia'>('lista')
   const [clienteTz, setClienteTz] = useState('Europe/Rome')
@@ -261,6 +262,33 @@ function CalendarioInner() {
     setSaving(null)
   }
 
+  // Sincronizza su Blotato UN SOLO contenuto — a differenza di "Sincronizza
+  // Blotato" (tutto il batch APPROVATO non ancora inviato in un colpo), utile
+  // per testare un singolo invio reale senza coinvolgere gli altri.
+  async function syncUno(c: Contenuto) {
+    setSaving(c.id)
+    setSyncMsg(null)
+    try {
+      const res = await fetch(`/api/data/calendario/${c.id}/sync-uno`, { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Sincronizzazione singola fallita')
+      const label = data.status === 'scheduled'
+        ? 'inviato a Blotato: programmato per davvero.'
+        : data.status === 'dry_run'
+          ? 'dry-run: pubblicazione non attiva, nessun invio reale.'
+          : `non inviato: ${data.reason || 'scartato dal pre-flight'}`
+      setSyncMsg({
+        type: data.status === 'scheduled' || data.status === 'dry_run' ? 'ok' : 'err',
+        text: `${c.canale} · ${c.formato} — ${label}`,
+      })
+      await fetchData()
+    } catch (e) {
+      setSyncMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSaving(null)
+    }
+  }
+
   async function rifiuta(c: Contenuto) {
     setSaving(c.id)
     if (demo) {
@@ -367,6 +395,29 @@ function CalendarioInner() {
     }
   }
 
+  // Rimette in coda i contenuti APPROVATI mai sincronizzati la cui data è già
+  // passata: li sposta al prossimo slot libero (SOLO data/ora, niente Blotato).
+  async function requeuePassati() {
+    setRequeuing(true)
+    setSyncMsg(null)
+    try {
+      const res = await fetch('/api/data/calendario/requeue-passati', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.hint || data.error || 'Requeue fallito')
+      setSyncMsg({
+        type: 'ok',
+        text: data.count === 0
+          ? (data.note || 'Nessun contenuto in ritardo da rimettere in coda.')
+          : `${data.count} contenuti rimessi in coda: ${data.requeued.map((r: { canale: string; a: { giorno: string; ora: string } }) => `${r.canale} → ${r.a.giorno} ${r.a.ora}`).join(', ')}.`,
+      })
+      await fetchData()
+    } catch (e) {
+      setSyncMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setRequeuing(false)
+    }
+  }
+
   async function downloadBackup() {
     setBackuping(true)
     setAdminError(null)
@@ -411,7 +462,7 @@ function CalendarioInner() {
       const extraPatch: Partial<Contenuto> = uploaded.kind === 'video' || uploaded.mime?.startsWith('video/')
         ? { media_type: 'video' }
         : {}
-      await saveMediaSlot(c, col, url, extraPatch)
+      await saveField(c, col, url, extraPatch)
     } catch (e) {
       setAdminError((e as Error).message)
     } finally {
@@ -425,7 +476,7 @@ function CalendarioInner() {
     setUploadingPhoto(`${c.id}:${slot}`)
     setAdminError(null)
     try {
-      await saveMediaSlot(c, col, null)
+      await saveField(c, col, null)
     } catch (e) {
       setAdminError((e as Error).message)
     } finally {
@@ -433,8 +484,11 @@ function CalendarioInner() {
     }
   }
 
-  // Persiste un valore (url o null) in una colonna link_media_* e allinea lo stato locale.
-  async function saveMediaSlot(c: Contenuto, col: string, value: string | null, extraPatch: Partial<Contenuto> = {}) {
+  // Persiste un valore in una colonna qualunque (media, hook, caption, hashtag,
+  // cta...) e allinea sia la lista sia la scheda "Dettagli" eventualmente aperta.
+  // Generica di proposito: prima serviva solo ai media, ma il PATCH sottostante
+  // già accettava qualsiasi colonna in whitelist — mancava solo chi la chiamasse.
+  async function saveField(c: Contenuto, col: string, value: string | null, extraPatch: Partial<Contenuto> = {}) {
     if (demo) {
       setDemoData(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...extraPatch } : item))
     } else {
@@ -443,10 +497,56 @@ function CalendarioInner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: c.id, [col]: value, ...extraPatch }),
       })
-      if (!patchRes.ok) throw new Error(await readApiError(patchRes, 'Salvataggio media fallito'))
+      if (!patchRes.ok) throw new Error(await readApiError(patchRes, `Salvataggio ${col} fallito`))
     }
     setContenuti(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...extraPatch } : item))
     setSelected(prev => prev && prev.id === c.id ? { ...prev, [col]: value, ...extraPatch } : prev)
+  }
+
+  async function saveTextField(c: Contenuto, col: 'hook' | 'caption' | 'hashtag' | 'cta', value: string) {
+    setSaving(c.id)
+    setAdminError(null)
+    try {
+      await saveField(c, col, value)
+    } catch (e) {
+      setAdminError((e as Error).message)
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  // Testo/hashtag: editabile finché il contenuto non è mai stato inviato a
+  // Blotato. Dopo, Blotato ha già la sua copia: modificare qui non aggiornerebbe
+  // il post reale già programmato o pubblicato, quindi resta di sola lettura
+  // per non far credere all'admin di aver corretto qualcosa che in realtà è
+  // già partito così com'era.
+  function editableField(c: Contenuto, label: string, col: 'hook' | 'caption' | 'hashtag' | 'cta', multiline = false) {
+    const value = asText(c[col])
+    if (c.blotato_post_id) {
+      if (!hasText(value)) return null
+      return (
+        <div>
+          <p className="label">{label}</p>
+          <p className={`text-sm whitespace-pre-wrap ${col === 'hashtag' ? 'text-brand-600' : 'text-gray-700'}`}>{value}</p>
+        </div>
+      )
+    }
+    const Field = multiline ? 'textarea' : 'input'
+    return (
+      <div>
+        <p className="label flex items-center justify-between">
+          <span>{label}</span>
+          {saving === c.id && <RefreshCw className="w-3 h-3 text-gray-400 animate-spin" />}
+        </p>
+        <Field
+          key={`${c.id}-${col}`}
+          defaultValue={value}
+          onBlur={e => { if (e.target.value !== value) saveTextField(c, col, e.target.value) }}
+          className={`input text-sm w-full mt-1 ${multiline ? 'h-24 resize-none' : ''}`}
+        />
+        {col === 'hashtag' && <p className="text-[10px] text-gray-400 mt-1">Instagram accetta al massimo 5 hashtag nel testo del post.</p>}
+      </div>
+    )
   }
 
   async function deleteContent(c: Contenuto) {
@@ -707,6 +807,13 @@ function CalendarioInner() {
   // modale di conferma bulk per non promettere un rifiuto su post già pubblicati.
   const rejectableSelectedCount = [...selectedIds].filter(id => contenuti.find(c => c.id === id)?.status === 'DA_APPROVARE').length
   const nextContent = calendarItems.find(c => c.data_pubblicazione >= todayIso && c.status !== 'PUBBLICATO')
+  // Inviati a Blotato ma mai confermati: l'orario è passato e lo stato è fermo a
+  // 'scheduled'. Tolleranza di 15' per non allarmare su un ritardo fisiologico.
+  const stalli = contenuti.filter(c => {
+    if (c.blotato_status !== 'scheduled' || !c.blotato_scheduled_at) return false
+    const t = new Date(c.blotato_scheduled_at).getTime()
+    return Number.isFinite(t) && Date.now() - t > 15 * 60 * 1000
+  })
   const channelEntries = Object.entries(
     contenuti.reduce<Record<string, number>>((acc, c) => {
       acc[c.canale] = (acc[c.canale] || 0) + 1
@@ -754,6 +861,10 @@ function CalendarioInner() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button onClick={requeuePassati} disabled={requeuing} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 disabled:opacity-60 inline-flex items-center gap-1.5" title="Sposta i contenuti approvati con data già passata al prossimo slot libero (solo data/ora, non tocca Blotato)">
+                {requeuing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
+                <span>{requeuing ? 'Rimetto in coda...' : 'Rimetti in coda i passati'}</span>
+              </button>
               <button onClick={syncBlotato} disabled={syncing} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm hover:bg-slate-100 disabled:opacity-60 inline-flex items-center gap-1.5" title="Invia i contenuti APPROVATI a Blotato per la pubblicazione">
                 {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
                 <span>{syncing ? 'Sincronizzo...' : 'Sincronizza Blotato'}</span>
@@ -807,6 +918,34 @@ function CalendarioInner() {
         <div className={`mb-4 rounded-xl border p-3 text-sm flex items-start gap-2 ${syncMsg.type === 'ok' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
           {syncMsg.type === 'ok' ? <CheckCircle className="w-4 h-4 mt-0.5" /> : <AlertTriangle className="w-4 h-4 mt-0.5" />}
           {syncMsg.text}
+        </div>
+      )}
+
+      {/* Contenuti "in stallo": inviati a Blotato, orario passato, nessuna conferma
+          di pubblicazione mai arrivata. Senza questo avviso restano invisibili —
+          il campo blotato_status resta 'scheduled' per sempre se il webhook non
+          risponde (in produzione basta che manchi BLOTATO_WEBHOOK_SECRET perché
+          ogni callback venga rifiutato con 401). È successo davvero: un post
+          programmato non è uscito e nessuno se n'è accorto per ore. */}
+      {stalli.length > 0 && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-semibold">
+              {stalli.length === 1 ? '1 contenuto risulta ancora "programmato" ma l\'orario è passato.' : `${stalli.length} contenuti risultano ancora "programmati" ma l'orario è passato.`}
+            </p>
+            <p className="mt-0.5 text-red-700">
+              Blotato non ha confermato la pubblicazione. Verifica sul social se il post è uscito davvero: se non c&apos;è, controlla lo storico Blotato e la API key del cliente.
+            </p>
+            <ul className="mt-1.5 space-y-0.5 text-xs text-red-700">
+              {stalli.slice(0, 5).map(c => (
+                <li key={c.id}>
+                  <span className="font-mono">{c.id_contenuto}</span> · {c.canale} · previsto {formatDateLabel(c.data_pubblicazione)} alle {formatTimeLabel(c.ora_pubblicazione)}
+                </li>
+              ))}
+              {stalli.length > 5 && <li>…e altri {stalli.length - 5}.</li>}
+            </ul>
+          </div>
         </div>
       )}
 
@@ -1211,6 +1350,12 @@ function CalendarioInner() {
                       <span className="hidden md:inline">Riprova</span>
                     </button>
                   )}
+                  {c.status === 'APPROVATO' && !c.blotato_post_id && (
+                    <button onClick={() => syncUno(c)} disabled={saving === c.id} title="Sincronizza SOLO questo contenuto su Blotato (non l'intero batch)" className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
+                      {saving === c.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />}
+                      <span className="hidden md:inline">Sincronizza questo</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => setDeleteTarget(c)}
                     disabled={saving === c.id}
@@ -1256,31 +1401,11 @@ function CalendarioInner() {
                 <PostPreview c={selected} brand={brand} />
               </div>
 
-              {/* Contenuto */}
-              {hasText(selected.hook) && (
-                <div>
-                  <p className="label">Hook</p>
-                  <p className="text-sm text-gray-800 font-medium">{asText(selected.hook)}</p>
-                </div>
-              )}
-              {hasText(selected.caption) && (
-                <div>
-                  <p className="label">Caption</p>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{asText(selected.caption)}</p>
-                </div>
-              )}
-              {hasText(selected.hashtag) && (
-                <div>
-                  <p className="label">Hashtag</p>
-                  <p className="text-sm text-brand-600">{asText(selected.hashtag)}</p>
-                </div>
-              )}
-              {hasText(selected.cta) && (
-                <div>
-                  <p className="label">CTA</p>
-                  <p className="text-sm text-gray-700">{asText(selected.cta)}</p>
-                </div>
-              )}
+              {/* Contenuto — editabile finché non è mai stato inviato a Blotato */}
+              {editableField(selected, 'Hook', 'hook')}
+              {editableField(selected, 'Caption', 'caption', true)}
+              {editableField(selected, 'Hashtag', 'hashtag')}
+              {editableField(selected, 'CTA', 'cta')}
 
               {Boolean(selected.angle || selected.audience_segment || selected.funnel_stage || selected.kpi_target || selected.primary_message || selected.creative_brief || selected.template_id || selected.template_style || selected.production_notes || selected.compliance_notes || selected.expected_outcome || selected.production_cycle_stage || selected.performance_hypothesis || selected.optimization_cycle_json || selected.next_iteration_actions) && (
                 <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-4">

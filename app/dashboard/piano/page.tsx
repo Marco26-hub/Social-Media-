@@ -1,9 +1,9 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { PLATFORM_LIST, type PlatformKey } from '@/lib/social-config'
-import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2 } from 'lucide-react'
+import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
@@ -13,15 +13,86 @@ import { useGeneration } from '@/components/GenerationProvider'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
 import { getPackage, type PackageSpec } from '@/lib/packages'
+import {
+  MEDIA_PER_FORMATO,
+  isVideoMedia,
+  normalizeMediaTag,
+  requisitiDaPacchetto,
+  verificaMedia,
+  type MediaTag,
+} from '@/lib/media-requirements'
 
 type QualitySelection = 'auto' | ContentQuality
-type PlanAsset = { url: string; name: string; mime?: string; kind?: 'image' | 'video' }
+// `tag` = marcatura manuale ("questa foto è del carosello, questo MP4 del reel").
+// Viaggia nel body dentro uploaded_assets e vincola l'assegnazione lato server.
+type PlanAsset = { url: string; name: string; mime?: string; kind?: 'image' | 'video'; tag: MediaTag }
 const MAX_PLAN_IMAGES = 60
 const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
 
-function isVideoUrl(url?: string | null) {
-  if (!url) return false
-  return url.split('?')[0].toLowerCase().endsWith('.mp4')
+// Le 4 destinazioni selezionabili sulla miniatura. 'auto' resta il default
+// (decide l'AI): chi non vuole pensarci non deve toccare niente.
+const TAG_OPTIONS: { value: MediaTag; label: string; menu: string; pill: string }[] = [
+  { value: 'auto',      label: 'Auto',       menu: 'Auto — decide l’AI', pill: 'bg-gray-900/55 text-white' },
+  { value: 'carosello', label: 'Carosello',  menu: 'Carosello',          pill: 'bg-violet-600/90 text-white' },
+  { value: 'reel',      label: 'Reel/Video', menu: 'Reel / Video',       pill: 'bg-rose-600/90 text-white' },
+  { value: 'post',      label: 'Post',       menu: 'Post',               pill: 'bg-sky-600/90 text-white' },
+]
+
+function tagMeta(tag: MediaTag) {
+  return TAG_OPTIONS.find(o => o.value === tag) ?? TAG_OPTIONS[0]
+}
+
+// ── Semaforo media di UN SINGOLO pulsante ────────────────────────────────
+// I due pulsanti generano quantità diverse: il VERDE (piano del pacchetto)
+// fa SEMPRE il mese intero, il VIOLA (piano libero) segue il periodo scelto
+// sopra. Un semaforo unico sul periodo selezionato diceva "media sufficienti"
+// mentre stavi per generare il quadruplo dei contenuti: ora ogni pulsante ha
+// il suo, e possono dire cose diverse nello stesso momento (verde sul libero
+// settimanale, ambra sul pacchetto mensile).
+// Non blocca mai: avvisa e lascia decidere.
+function SemaforoMedia({ titolo, pulsante, requisiti, verifica, caricati }: {
+  titolo: string
+  pulsante: string
+  requisiti: { immagini: number; video: number }
+  verifica: { ok: boolean; mancanti: string[]; avvisi: string[] }
+  caricati: { immagini: number; video: number }
+}) {
+  const richiesti = `${requisiti.immagini} immagini${requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}`
+  const disponibili = `${caricati.immagini} ${caricati.immagini === 1 ? 'immagine' : 'immagini'} e ${caricati.video} MP4`
+  const Icona = verifica.ok ? CheckCircle2 : AlertTriangle
+  return (
+    <div
+      className={`mb-2.5 flex items-start gap-2 rounded-xl border p-2.5 text-xs ${
+        verifica.ok
+          ? 'border-emerald-200 bg-emerald-50/80 text-emerald-800'
+          : 'border-amber-300 bg-amber-50 text-amber-900'
+      }`}
+    >
+      <Icona className="w-4 h-4 mt-0.5 flex-shrink-0" />
+      <div>
+        <p className="font-semibold">
+          {titolo}: {verifica.ok ? 'media sufficienti' : 'media insufficienti'}
+        </p>
+        <p className="mt-0.5">
+          Servono <span className="font-semibold">{richiesti}</span>, hai caricato <span className="font-semibold">{disponibili}</span>.
+          {!verifica.ok && ' Puoi generare comunque, ma i contenuti scoperti restano senza media (li aggiungi poi dal calendario).'}
+        </p>
+        {!verifica.ok && verifica.mancanti.length > 0 && (
+          <ul className="mt-1 space-y-0.5">
+            {verifica.mancanti.map((m, i) => <li key={i}>• {m}</li>)}
+          </ul>
+        )}
+        {verifica.avvisi.length > 0 && (
+          <ul className={`mt-1 space-y-0.5 ${verifica.ok ? 'text-emerald-700/90' : 'text-amber-800/80'}`}>
+            {verifica.avvisi.map((a, i) => <li key={i}>• {a}</li>)}
+          </ul>
+        )}
+        <p className={`mt-1 ${verifica.ok ? 'text-emerald-700/80' : 'text-amber-800/70'}`}>
+          ↓ Questo conto vale per {pulsante}.
+        </p>
+      </div>
+    </div>
+  )
 }
 
 export default function PianoPage() {
@@ -40,6 +111,9 @@ export default function PianoPage() {
   const [uploadingImages, setUploadingImages] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [clientePkg, setClientePkg] = useState<PackageSpec | null>(null)
+  // Quota reale del cliente (clienti.contenuti_mese): l'admin può sovrascrivere
+  // il numero di contenuti del pacchetto, e il fabbisogno media deve seguirla.
+  const [clienteQuota, setClienteQuota] = useState<number | null>(null)
   const { clienteId } = useActiveClienteId()
   const demo = useRuntimeDemo()
   const gen = useGeneration()
@@ -52,16 +126,21 @@ export default function PianoPage() {
     }
   }, [])
 
-  // Pacchetto del cliente attivo: abilita la modalità "piano del pacchetto".
+  // Pacchetto del cliente attivo: abilita la modalità "piano del pacchetto"
+  // e alimenta il calcolo del fabbisogno media (quante foto/MP4 servono).
   useEffect(() => {
     let alive = true
     async function loadPkg() {
-      if (!clienteId) { setClientePkg(null); return }
+      if (!clienteId) { setClientePkg(null); setClienteQuota(null); return }
       try {
         const rows = await fetch('/api/data/clienti').then(r => r.ok ? r.json() : [])
         const c = Array.isArray(rows) ? rows.find((x: { id?: string; slug?: string }) => x.id === clienteId || x.slug === clienteId) : null
-        if (alive) setClientePkg(getPackage(c?.pacchetto))
-      } catch { if (alive) setClientePkg(null) }
+        const quota = Number(c?.contenuti_mese)
+        if (alive) {
+          setClientePkg(getPackage(c?.pacchetto))
+          setClienteQuota(Number.isFinite(quota) && quota > 0 ? quota : null)
+        }
+      } catch { if (alive) { setClientePkg(null); setClienteQuota(null) } }
     }
     loadPkg()
     return () => { alive = false }
@@ -88,6 +167,13 @@ export default function PianoPage() {
     setPlanAssets(prev => prev.map((a, i) => i === index ? { ...a, name: value } : a))
   }
 
+  // Marcatura manuale: vincolo, non consiglio. Lato server un media marcato
+  // "carosello" non finisce su un reel (e viceversa).
+  function retagPlanAsset(index: number, value: string) {
+    const tag = normalizeMediaTag(value)
+    setPlanAssets(prev => prev.map((a, i) => i === index ? { ...a, tag } : a))
+  }
+
   // Upload in blocchi da 14 (limite server per richiesta) finché tutti i media scelti sono caricati.
   async function uploadPlanImages(files: FileList | null) {
     if (!files?.length || !clienteId) return
@@ -101,7 +187,8 @@ export default function PianoPage() {
         form.append('cliente_id', clienteId)
         chunk.forEach(file => form.append('files', file))
         const data = await uploadAssets(form)
-        const uploaded = (data.assets || []).map(a => ({ url: a.url, name: prettyName(a.name), mime: a.mime, kind: a.kind }))
+        // Nuovi media sempre 'auto': la marcatura è una scelta esplicita dell'utente.
+        const uploaded: PlanAsset[] = (data.assets || []).map(a => ({ url: a.url, name: prettyName(a.name), mime: a.mime, kind: a.kind, tag: 'auto' }))
         setPlanAssets(prev => [...prev, ...uploaded])
       }
     } catch (e) {
@@ -152,7 +239,7 @@ export default function PianoPage() {
       key: fase ? `piano-fase-${fase}` : 'piano',
       label: `Piano editoriale ${periodo}${faseLabel}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 50000 : 25000,
       timeoutMs: periodo === 'mensile' ? 130000 : 95000,
@@ -169,7 +256,7 @@ export default function PianoPage() {
         ? ` ⚠️ ${data.chunks_failed} di ${data.chunks_total} blocchi settimanali non ha generato contenuti (riprova per coprire quei giorni).`
         : ''
       const scartatiNote = data?.items_scartati
-        ? ` ${data.items_scartati} contenuti generati sono stati scartati per dati non validi.`
+        ? ` ⚠️ ${data.items_scartati} contenuti sono stati scartati perché il modello li ha restituiti incompleti (senza testo): rigenera, o passa a un modello più capace dal selettore in alto.`
         : ''
       const faseNote = fase ? ` (fase ${fase}: settimane ${fase === 1 ? '1-2' : '3-4'})` : ''
       setMsg({ type: 'ok', text: `Piano generato${faseNote} (${data?.count ?? '?'} contenuti). I contenuti sono nel calendario.${imgNote}${chunkNote}${scartatiNote}` })
@@ -193,7 +280,7 @@ export default function PianoPage() {
       key: 'piano-pacchetto',
       label: `Piano pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo: 'mensile', quality: 'auto', media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind })), include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo: 'mensile', quality: 'auto', media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...aiSettings },
       href: '/dashboard/calendario',
       estMs: 55000,
       timeoutMs: 140000,
@@ -205,6 +292,52 @@ export default function PianoPage() {
       setMsg({ type: 'err', text: result.error || 'Generazione piano pacchetto fallita' })
     }
   }
+
+  // ── Fabbisogno media: quante foto e quanti MP4 servono DAVVERO ──────────
+  // Prima qui c'era una stima statica ("servono circa 10-20 media"). Ora il
+  // numero esce dal pacchetto/quota del cliente e dalle regole per formato
+  // (1 media per post, 5 per carosello, 1 MP4 per reel), e si aggiorna da solo
+  // mentre l'utente carica.
+  // Fabbisogno del PULSANTE VIOLA (piano libero): segue il periodo selezionato.
+  const requisiti = useMemo(
+    () => requisitiDaPacchetto(clientePkg, clienteQuota, periodo),
+    [clientePkg, clienteQuota, periodo],
+  )
+  // Fabbisogno del PULSANTE VERDE (piano del pacchetto): SEMPRE mensile, perché
+  // quel pulsante genera il mese intero anche se sopra è selezionato
+  // "settimanale" (route.ts forza periodo='mensile'). Calcolarlo sul periodo
+  // selezionato mostrava un quarto dei media davvero necessari.
+  const requisitiPacchetto = useMemo(
+    () => (clientePkg ? requisitiDaPacchetto(clientePkg, clienteQuota, 'mensile') : null),
+    [clientePkg, clienteQuota],
+  )
+  // Senza pacchetto né quota il fabbisogno non è calcolabile: niente allarmi,
+  // si mostrano solo le regole per formato.
+  const fabbisognoNoto = requisiti.immagini > 0 || requisiti.video > 0
+  // Conteggio per estensione, la stessa regola usata da verificaMedia e dal
+  // backend: quello che si legge qui è quello che vede l'assegnazione.
+  const caricati = useMemo(() => {
+    const video = planAssets.filter(a => isVideoMedia(a.url)).length
+    return { video, immagini: planAssets.length - video }
+  }, [planAssets])
+  // Due verifiche indipendenti: con 7 foto + 1 MP4 il libero settimanale è
+  // verde e il pacchetto mensile è ambra, ed è giusto vederle entrambe.
+  const verifica = useMemo(
+    () => verificaMedia(planAssets.map(a => ({ url: a.url, tag: a.tag })), requisiti),
+    [planAssets, requisiti],
+  )
+  const verificaPacchetto = useMemo(
+    () => (requisitiPacchetto ? verificaMedia(planAssets.map(a => ({ url: a.url, tag: a.tag })), requisitiPacchetto) : null),
+    [planAssets, requisitiPacchetto],
+  )
+  // Quando il periodo selezionato è già "mensile" i due conti coincidono: va
+  // detto, altrimenti due riquadri identici sembrano un doppione o un errore.
+  const stessoFabbisogno = !!requisitiPacchetto
+    && requisitiPacchetto.immagini === requisiti.immagini
+    && requisitiPacchetto.video === requisiti.video
+  // Contenuti/mese davvero generati dal pulsante verde: la quota del cliente
+  // (clienti.contenuti_mese) può sovrascrivere quella del pacchetto.
+  const contenutiMesePacchetto = clienteQuota && clienteQuota > 0 ? Math.round(clienteQuota) : (clientePkg?.contenutiMese ?? 0)
 
   const numContenuti = periodo === 'mensile' ? '25-35' : '7-10'
   const isFree = aiModel.endsWith(':free')
@@ -420,18 +553,62 @@ export default function PianoPage() {
             <ImagePlus className="w-4 h-4 text-violet-600 mt-0.5 flex-shrink-0" />
             <div className="text-xs text-gray-700 leading-relaxed flex-1">
               <p className="font-semibold text-gray-900">Media per questo piano</p>
-              <p className="mt-0.5">
-                Piano <span className="font-semibold capitalize">{periodo}</span> ({numContenuti} contenuti) → servono circa{' '}
-                <span className="font-bold text-violet-700">{periodo === 'mensile' ? '35-60' : '10-20'} media</span> (foto o MP4).
-                {' '}<span className="font-semibold text-violet-700">{planAssets.length} caricati</span>.
-              </p>
-              <ul className="mt-1.5 space-y-0.5 text-gray-600">
-                <li>• <span className="font-medium">1 media</span> per ogni post/story/reel/video</li>
-                <li>• <span className="font-medium">5 media</span> per ogni carosello</li>
-                <li>• <span className="font-medium">MP4</span> usato direttamente come video/reel quando assegnato a quel formato</li>
-              </ul>
+              {fabbisognoNoto ? (
+                <>
+                  <p className="mt-0.5">
+                    Piano <span className="font-semibold capitalize">{periodo}</span> (pulsante viola): servono{' '}
+                    <span className="font-bold text-violet-700">{requisiti.immagini} immagini</span>
+                    {requisiti.video > 0 && <> + <span className="font-bold text-violet-700">{requisiti.video} MP4</span></>}
+                    {' · '}caricati{' '}
+                    <span className={`font-bold ${caricati.immagini >= requisiti.immagini ? 'text-emerald-700' : 'text-amber-700'}`}>
+                      {caricati.immagini} {caricati.immagini === 1 ? 'immagine' : 'immagini'}
+                    </span>
+                    {' e '}
+                    <span className={`font-bold ${caricati.video >= requisiti.video ? 'text-emerald-700' : 'text-amber-700'}`}>
+                      {caricati.video} MP4
+                    </span>
+                    .
+                  </p>
+                  <ul className="mt-1.5 space-y-0.5 text-gray-600">
+                    {requisiti.dettaglio.map((riga, i) => <li key={i}>• {riga}</li>)}
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p className="mt-0.5">
+                    {requisiti.dettaglio[0]} Piano <span className="font-semibold capitalize">{periodo}</span> ({numContenuti} contenuti):{' '}
+                    <span className="font-semibold text-violet-700">{planAssets.length} media caricati</span> ({caricati.immagini} immagini, {caricati.video} MP4).
+                  </p>
+                  <ul className="mt-1.5 space-y-0.5 text-gray-600">
+                    <li>• <span className="font-medium">{MEDIA_PER_FORMATO.post.immagini} media</span> per ogni post/story/pin/video</li>
+                    <li>• <span className="font-medium">{MEDIA_PER_FORMATO.carousel.immagini} media</span> per ogni carosello (minimo {MEDIA_PER_FORMATO.carousel.min}, massimo {MEDIA_PER_FORMATO.carousel.max})</li>
+                    <li>• <span className="font-medium">1 MP4</span> per ogni reel/short, oppure {MEDIA_PER_FORMATO.reel.immagini} immagini da montare come slide</li>
+                  </ul>
+                </>
+              )}
+              {/* Il pulsante verde genera il MESE INTERO anche col settimanale
+                  selezionato: il suo numero va detto qui, o sorprende chi lo preme. */}
+              {clientePkg && requisitiPacchetto && (
+                <p className="mt-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-2 py-1.5 text-emerald-900">
+                  {stessoFabbisogno ? (
+                    <>
+                      Il pulsante verde <span className="font-semibold">Genera piano del pacchetto {clientePkg.nome}</span> genera il mese intero
+                      ({contenutiMesePacchetto} contenuti): stesso fabbisogno di qui sopra,{' '}
+                      <span className="font-bold">{requisitiPacchetto.immagini} immagini{requisitiPacchetto.video > 0 ? ` + ${requisitiPacchetto.video} MP4` : ''}</span>.
+                    </>
+                  ) : (
+                    <>
+                      Attenzione: il pulsante verde <span className="font-semibold">Genera piano del pacchetto {clientePkg.nome}</span> ignora il periodo
+                      qui sopra e genera <span className="font-semibold">sempre il mese intero</span> ({contenutiMesePacchetto} contenuti): per quello servono{' '}
+                      <span className="font-bold">{requisitiPacchetto.immagini} immagini{requisitiPacchetto.video > 0 ? ` + ${requisitiPacchetto.video} MP4` : ''}</span>,
+                      non {requisiti.immagini} immagini{requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}.
+                    </>
+                  )}
+                </p>
+              )}
               <p className="mt-1.5 text-gray-500">
-                Carica tutto qui sotto in un colpo solo: dai un nome a ogni media e l&apos;AI assegnerà a ogni contenuto la foto giusta in base alla descrizione.
+                Carica tutto qui sotto in un colpo solo: dai un nome a ogni media e scegli la destinazione (Carosello · Reel/Video · Post).
+                Con <span className="font-medium">Auto</span> decide l&apos;AI in base alla descrizione. Gli <span className="font-medium">MP4</span> vanno solo su reel, short o video.
               </p>
             </div>
           </div>
@@ -455,34 +632,56 @@ export default function PianoPage() {
 
           {planAssets.length > 0 && (
             <>
-              <p className="mt-3 text-[11px] text-gray-500">Dai un nome a ogni media col prodotto che contiene — l&apos;AI lo userà per scegliere la foto giusta per ogni contenuto.</p>
+              <p className="mt-3 text-[11px] text-gray-500">Dai un nome a ogni media col prodotto che contiene e marca dove deve finire — l&apos;AI userà nome e marcatura per assegnarlo al contenuto giusto.</p>
               <div className="mt-1.5 grid grid-cols-3 sm:grid-cols-5 gap-2">
-                {planAssets.map((a, i) => (
-                  <div key={a.url + i} className="rounded-lg overflow-hidden border border-gray-200 bg-white">
-                    <div className="relative group aspect-square bg-gray-100">
-                      {a.kind === 'video' || a.mime?.startsWith('video/') || isVideoUrl(a.url) ? (
-                        <video src={a.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => removePlanImage(i)}
-                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 text-red-600 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
-                        aria-label="Rimuovi media"
+                {planAssets.map((a, i) => {
+                  const meta = tagMeta(a.tag)
+                  const isVideo = a.kind === 'video' || a.mime?.startsWith('video/') || isVideoMedia(a.url)
+                  return (
+                    <div key={a.url + i} className="rounded-lg overflow-hidden border border-gray-200 bg-white">
+                      <div className="relative group aspect-square bg-gray-100">
+                        {isVideo ? (
+                          <video src={a.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
+                        )}
+                        {/* MP4 e marcatura leggibili a colpo d'occhio sulla miniatura */}
+                        {isVideo && (
+                          <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full bg-black/65 text-white text-[9px] font-bold leading-none">MP4</span>
+                        )}
+                        <span className={`absolute bottom-1 left-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold leading-none ${meta.pill}`}>
+                          {meta.label}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removePlanImage(i)}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 text-red-600 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Rimuovi media"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <input
+                        value={a.name || ''}
+                        onChange={e => renamePlanAsset(i, e.target.value)}
+                        placeholder="Nome prodotto…"
+                        className="w-full text-[11px] px-2 py-1.5 border-t border-gray-100 focus:outline-none focus:bg-violet-50/40"
+                      />
+                      <select
+                        value={a.tag}
+                        onChange={e => retagPlanAsset(i, e.target.value)}
+                        aria-label={`Destinazione di ${a.name || 'questo media'}`}
+                        title="Dove deve finire questo media"
+                        className="w-full text-[11px] px-1.5 py-1.5 bg-white text-gray-700 border-t border-gray-100 focus:outline-none focus:bg-violet-50/40 cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                        {TAG_OPTIONS.map(o => (
+                          <option key={o.value} value={o.value}>{o.menu}</option>
+                        ))}
+                      </select>
                     </div>
-                    <input
-                      value={a.name || ''}
-                      onChange={e => renamePlanAsset(i, e.target.value)}
-                      placeholder="Nome prodotto…"
-                      className="w-full text-[11px] px-2 py-1.5 border-t border-gray-100 focus:outline-none focus:bg-violet-50/40"
-                    />
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </>
           )}
@@ -494,6 +693,22 @@ export default function PianoPage() {
             <p className="text-xs text-gray-700">
               Cliente con pacchetto <span className="font-bold text-emerald-700">{clientePkg.nome}</span>: {clientePkg.contenutiMese} contenuti/mese ({clientePkg.postCaroselli} post-caroselli + {clientePkg.reelBrevi} reel/short) su {clientePkg.social} social, qualità <span className="uppercase">{clientePkg.quality}</span>{clientePkg.articoloBlog ? ' + articolo blog collegato' : ''}.
             </p>
+            <p className="mt-1 mb-2 text-[11px] font-medium text-emerald-800">
+              Questo pulsante genera sempre il <span className="font-bold">mese intero</span> ({contenutiMesePacchetto} contenuti
+              {contenutiMesePacchetto !== clientePkg.contenutiMese ? ', quota impostata sul cliente' : ''}), qualunque periodo sia selezionato al punto 1.
+            </p>
+            {/* Semaforo del PACCHETTO: fabbisogno del mese intero, non del
+                periodo selezionato. Sta sopra il pulsante perché è l'ultima
+                cosa da sapere prima di premerlo. */}
+            {requisitiPacchetto && verificaPacchetto && (
+              <SemaforoMedia
+                titolo={`Piano del pacchetto ${clientePkg.nome} · mese intero`}
+                pulsante="il pulsante verde qui sotto"
+                requisiti={requisitiPacchetto}
+                verifica={verificaPacchetto}
+                caricati={caricati}
+              />
+            )}
             <button
               onClick={generaPacchetto}
               disabled={runningPkg || running || uploadingImages || piattaforme.length === 0}
@@ -507,6 +722,18 @@ export default function PianoPage() {
         )}
 
         {clientePkg && <p className="text-[11px] text-gray-400 mb-2 text-center">— oppure genera un piano libero (scegli tu i parametri) —</p>}
+
+        {/* Semaforo del PIANO LIBERO: fabbisogno del periodo selezionato al
+            punto 1. Può essere verde mentre quello del pacchetto è ambra. */}
+        {fabbisognoNoto && (
+          <SemaforoMedia
+            titolo={`Piano libero ${periodo}`}
+            pulsante="il pulsante viola qui sotto"
+            requisiti={requisiti}
+            verifica={verifica}
+            caricati={caricati}
+          />
+        )}
 
         <button
           onClick={chiediConferma}

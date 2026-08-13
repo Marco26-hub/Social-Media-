@@ -1,22 +1,40 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { isDemo } from '@/lib/demo'
 import type { Contenuto, Cliente } from '@/lib/types'
+import type { Destination } from '@/lib/blotato-accounts'
 import { PACKAGE_LIST } from '@/lib/packages'
 import {
-  Building2, Calendar, BarChart3, Target, ShoppingBag, FileText,
+  Building2, Calendar, BarChart3, Target, ShoppingBag, FileText, CreditCard,
   TrendingUp, AlertTriangle, CheckCircle, Clock, ArrowLeft,
-  Loader2, Globe, Check, X,
+  Loader2, Globe, Check, X, Send,
 } from 'lucide-react'
 import Link from 'next/link'
 import { demoContenuti, demoClienti } from '@/lib/demo-data'
 import StatusBadge from '@/components/StatusBadge'
+import { publicBlogUrl } from '@/lib/blog-url'
 
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', youtube_shorts: '▶️', linkedin: '💼',
+  threads: '🧵', x: '✖️',
+}
+
+const CANALE_NOME: Record<string, string> = {
+  instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', pinterest: 'Pinterest',
+  youtube_shorts: 'YouTube Shorts', linkedin: 'LinkedIn', threads: 'Threads', x: 'X',
+}
+
+// Prova a vuoto: legge la destinazione REALE di ogni canale senza pubblicare niente.
+// Serve perché il workspace Blotato contiene account di più clienti: senza questa
+// verifica il primo post live potrebbe finire sull'account di qualcun altro.
+async function caricaDestinazioni(clienteId: string): Promise<Destination[]> {
+  const res = await fetch(`/api/data/blotato-accounts?cliente_id=${encodeURIComponent(clienteId)}`)
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Lettura account Blotato fallita')
+  return Array.isArray(data.destinations) ? data.destinations as Destination[] : []
 }
 
 export default function ClienteDetailPage() {
@@ -30,11 +48,19 @@ export default function ClienteDetailPage() {
   const [savingDomain, setSavingDomain] = useState(false)
   const [domainMsg, setDomainMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [pacchetto, setPacchetto] = useState('')
+  const [contenutiMese, setContenutiMese] = useState('')
+  const [savingQuota, setSavingQuota] = useState(false)
+  const [quotaMsg, setQuotaMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [savingPkg, setSavingPkg] = useState(false)
   const [pkgMsg, setPkgMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [timezone, setTimezone] = useState('Europe/Rome')
   const [savingTz, setSavingTz] = useState(false)
   const [tzMsg, setTzMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [destinazioni, setDestinazioni] = useState<Destination[]>([])
+  const [destLoading, setDestLoading] = useState(true)
+  const [destAvviso, setDestAvviso] = useState('')
+  const [savingCanale, setSavingCanale] = useState('')
+  const [destMsg, setDestMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -42,7 +68,9 @@ export default function ClienteDetailPage() {
         const c = demoClienti.find(x => x.id === id || x.slug === id)
         if (c) {
           setCliente(c)
+          setBlogDomain(c.blog_domain || '')
           setPacchetto(c.pacchetto || '')
+          setContenutiMese(String(c.contenuti_mese ?? ''))
           setTimezone(c.timezone || 'Europe/Rome')
           setContenuti(demoContenuti.filter(x => x.cliente_id === c.id).slice(0, 10))
         }
@@ -56,7 +84,7 @@ export default function ClienteDetailPage() {
         ])
         const clienti = Array.isArray(cRes) ? cRes as Cliente[] : []
         const c = clienti.find(x => x.id === id || x.slug === id)
-        if (c) { setCliente(c); setBlogDomain(c.blog_domain || ''); setPacchetto(c.pacchetto || ''); setTimezone(c.timezone || 'Europe/Rome') }
+        if (c) { setCliente(c); setBlogDomain(c.blog_domain || ''); setPacchetto(c.pacchetto || ''); setContenutiMese(String(c.contenuti_mese ?? '')); setTimezone(c.timezone || 'Europe/Rome') }
         setContenuti((Array.isArray(calRes) ? calRes : []).slice(0, 10))
       } catch {}
       setLoading(false)
@@ -76,12 +104,81 @@ export default function ClienteDetailPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
-      setCliente(prev => prev ? { ...prev, blog_domain: blogDomain.trim() || null } : prev)
-      setDomainMsg({ type: 'ok', text: 'Dominio salvato.' })
+      const savedDomain = typeof data.blog_domain === 'string' ? data.blog_domain : blogDomain.trim()
+      setBlogDomain(savedDomain)
+      setCliente(prev => prev ? { ...prev, blog_domain: savedDomain || null } : prev)
+      setDomainMsg({ type: 'ok', text: 'Link Blog salvato.' })
     } catch (e) {
       setDomainMsg({ type: 'err', text: (e as Error).message })
     } finally {
       setSavingDomain(false)
+    }
+  }
+
+  // Anteprima delle destinazioni: sola lettura, non invia nulla a Blotato.
+  const ricaricaDestinazioni = useCallback(async () => {
+    if (!id || isDemo()) { setDestLoading(false); return }
+    setDestLoading(true)
+    setDestAvviso('')
+    try {
+      setDestinazioni(await caricaDestinazioni(String(id)))
+    } catch (e) {
+      setDestinazioni([])
+      setDestAvviso((e as Error).message)
+    } finally {
+      setDestLoading(false)
+    }
+  }, [id])
+
+  useEffect(() => { ricaricaDestinazioni() }, [ricaricaDestinazioni])
+
+  // Fissa account (e pagina/bacheca) per un canale, poi ricarica per mostrare la
+  // destinazione reale risultante invece di fidarsi di quella ottimistica.
+  async function salvaDestinazione(canale: string, accountId: string, subaccountId = '') {
+    if (!cliente) return
+    setSavingCanale(canale)
+    setDestMsg(null)
+    try {
+      const res = await fetch('/api/data/blotato-accounts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente_id: cliente.id, canale, account_id: accountId, subaccount_id: subaccountId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
+      setDestMsg({ type: 'ok', text: 'Destinazione aggiornata.' })
+      await ricaricaDestinazioni()
+    } catch (e) {
+      setDestMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSavingCanale('')
+    }
+  }
+
+  // Quota mensile: override manuale del numero che segue il pacchetto.
+  async function saveContenutiMese() {
+    if (!cliente) return
+    const n = Number(contenutiMese)
+    if (!Number.isFinite(n) || n < 0 || n > 200) {
+      setQuotaMsg({ type: 'err', text: 'Inserisci un numero tra 0 e 200.' })
+      return
+    }
+    setSavingQuota(true)
+    setQuotaMsg(null)
+    try {
+      const res = await fetch('/api/data/clienti', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: cliente.id, contenuti_mese: n }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
+      setCliente(prev => prev ? { ...prev, contenuti_mese: n } : prev)
+      setQuotaMsg({ type: 'ok', text: `Quota aggiornata: ${n} contenuti al mese.` })
+    } catch (e) {
+      setQuotaMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setSavingQuota(false)
     }
   }
 
@@ -99,7 +196,13 @@ export default function ClienteDetailPage() {
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
       const nuovo = (pacchetto === 'presenza' || pacchetto === 'crescita') ? pacchetto : null
-      setCliente(prev => prev ? { ...prev, pacchetto: nuovo } : prev)
+      const packageSpec = PACKAGE_LIST.find(item => item.id === nuovo)
+      if (packageSpec) setContenutiMese(String(packageSpec.contenutiMese))
+      setCliente(prev => prev ? {
+        ...prev,
+        pacchetto: nuovo,
+        contenuti_mese: packageSpec?.contenutiMese ?? prev.contenuti_mese,
+      } : prev)
       setPkgMsg({ type: 'ok', text: 'Pacchetto aggiornato.' })
     } catch (e) {
       setPkgMsg({ type: 'err', text: (e as Error).message })
@@ -207,20 +310,20 @@ export default function ClienteDetailPage() {
       <div className="card p-5 mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Globe className="w-4 h-4 text-sky-600" />
-          <h2 className="font-bold text-gray-900">Blog pubblico</h2>
+          <h2 className="font-bold text-gray-900">Link pagina Blog</h2>
         </div>
         <p className="text-xs text-gray-500 mb-3">
-          Dominio/sottodominio dedicato per il blog pubblico di questo cliente (es. <span className="font-mono">blog.{cliente.slug}.com</span>). Configura anche il DNS e il dominio custom su Render perché funzioni.
+          Incolla il dominio oppure l&apos;URL completo della pagina Blog di questo cliente. Il sistema lo collega agli articoli, ai dati SEO e agli strumenti GEO.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             value={blogDomain}
             onChange={e => setBlogDomain(e.target.value)}
-            placeholder="blog.tuodominio.com"
+            placeholder="https://www.tuodominio.com/blog"
             className="input flex-1 font-mono text-sm"
           />
           <button onClick={saveBlogDomain} disabled={savingDomain} className="btn-primary py-2 px-4 justify-center whitespace-nowrap">
-            {savingDomain ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva dominio'}
+            {savingDomain ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva link Blog'}
           </button>
         </div>
         {domainMsg && (
@@ -229,21 +332,26 @@ export default function ClienteDetailPage() {
             {domainMsg.text}
           </div>
         )}
-        {cliente.blog_domain && (
+        {cliente.blog_domain && publicBlogUrl(cliente.blog_domain) && (
           <p className="text-xs text-gray-400 mt-2">
-            Attivo su: <a href={`https://${cliente.blog_domain}/blog`} target="_blank" rel="noopener" className="text-brand-600 hover:underline">{cliente.blog_domain}/blog</a>
+            Pagina collegata: <a href={publicBlogUrl(cliente.blog_domain)} target="_blank" rel="noopener" className="text-brand-600 hover:underline">{publicBlogUrl(cliente.blog_domain)}</a>
           </p>
         )}
       </div>
 
       {/* Pacchetto acquistato — guida il "piano del pacchetto" nella pagina Piano */}
       <div className="card p-5 mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <ShoppingBag className="w-4 h-4 text-violet-600" />
-          <h2 className="font-bold text-gray-900">Pacchetto acquistato</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4 text-violet-600" />
+            <h2 className="font-bold text-gray-900">Pacchetto acquistato</h2>
+          </div>
+          <Link href="/dashboard/clienti?tab=pagamenti" className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:underline">
+            <CreditCard className="w-3.5 h-3.5" /> Abbonamento e fatture
+          </Link>
         </div>
         <p className="text-xs text-gray-500 mb-3">
-          Il pacchetto del cliente. Il &quot;piano del pacchetto&quot; genera in automatico i contenuti compresi (numero, mix formati, social, qualità). Cambialo qui in caso di upgrade.
+          Il pacchetto del cliente genera in automatico contenuti, formati, social e qualità. Se esiste un abbonamento Stripe attivo, verifica anche il canone nella sezione Pagamenti.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <select
@@ -259,6 +367,33 @@ export default function ClienteDetailPage() {
           <button onClick={savePacchetto} disabled={savingPkg} className="btn-primary py-2 px-4 justify-center whitespace-nowrap">
             {savingPkg ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva pacchetto'}
           </button>
+        </div>
+
+        {/* Quota effettiva: normalmente segue il pacchetto, ma resta modificabile
+            per gli accordi fuori listino (es. contenuti extra concordati). È il
+            numero che il cliente vede in "Il mio piano" come contenuti del mese. */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <label className="text-xs font-medium text-gray-700">Contenuti inclusi al mese</label>
+          <p className="text-[11px] text-gray-500 mt-0.5 mb-2">
+            Si allinea da solo al pacchetto scelto. Modificalo solo per accordi fuori listino: è la quota che il cliente vede nella sua area.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="number"
+              min={0}
+              max={200}
+              value={contenutiMese}
+              onChange={e => setContenutiMese(e.target.value)}
+              className="input flex-1 text-sm"
+              placeholder="16"
+            />
+            <button onClick={saveContenutiMese} disabled={savingQuota} className="btn-secondary py-2 px-4 justify-center whitespace-nowrap">
+              {savingQuota ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva quota'}
+            </button>
+          </div>
+          {quotaMsg && (
+            <p className={`text-xs mt-2 ${quotaMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>{quotaMsg.text}</p>
+          )}
         </div>
         {pkgMsg && (
           <div className={`mt-2 text-xs flex items-center gap-1.5 ${pkgMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>
@@ -291,6 +426,86 @@ export default function ClienteDetailPage() {
           <div className={`mt-2 text-xs flex items-center gap-1.5 ${tzMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>
             {tzMsg.type === 'ok' ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
             {tzMsg.text}
+          </div>
+        )}
+      </div>
+
+      {/* Account Blotato: dove finiranno davvero i post di QUESTO cliente.
+          Il workspace Blotato è condiviso tra più clienti, quindi qui si guarda la
+          destinazione reale prima di pubblicare, e si fissa quando è ambigua. */}
+      <div className="card p-5">
+        <h2 className="font-bold text-gray-900 flex items-center gap-2">
+          <Send className="w-4 h-4 text-brand-600" />
+          Account Blotato — dove verranno pubblicati i contenuti
+        </h2>
+        <p className="text-xs text-gray-500 mt-1 mb-4">
+          Questa è la destinazione reale che verrebbe usata alla pubblicazione. Da qui non viene inviato nulla.
+          Se per un canale ci sono più account collegati, la pubblicazione resta bloccata finché non scegli quello giusto.
+        </p>
+
+        {destLoading ? (
+          <p className="text-sm text-gray-400">Lettura account da Blotato…</p>
+        ) : destAvviso ? (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">{destAvviso}</p>
+        ) : destinazioni.length === 0 ? (
+          <p className="text-sm text-gray-400">Nessun canale da configurare per questo cliente.</p>
+        ) : (
+          <div className="space-y-2">
+            {destinazioni.map(d => (
+              <div
+                key={d.canale}
+                className={`rounded-lg border p-3 ${
+                  d.stato === 'ok' ? 'border-gray-200 bg-white'
+                    : d.stato === 'da_scegliere' ? 'border-amber-300 bg-amber-50'
+                    : 'border-gray-200 bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <span className="text-sm font-medium text-gray-900">
+                    {CANALE_ICON[d.canale] || '📄'} {CANALE_NOME[d.canale] || d.canale}
+                  </span>
+                  {d.stato === 'ok' ? (
+                    <span className="text-sm text-green-700">→ {d.label}</span>
+                  ) : (
+                    <span className="text-xs text-amber-800">{d.motivo}</span>
+                  )}
+                </div>
+
+                {d.opzioni.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <select
+                      value={d.accountId}
+                      disabled={savingCanale === d.canale}
+                      onChange={e => salvaDestinazione(d.canale, e.target.value)}
+                      className="input text-sm max-w-xs"
+                    >
+                      <option value="">— scegli l&apos;account —</option>
+                      {d.opzioni.map(o => (
+                        <option key={o.id} value={o.id}>{o.label}</option>
+                      ))}
+                    </select>
+
+                    {/* Un account può contenere più Pages/board: va scelta anche quella */}
+                    {d.sottoOpzioni && d.sottoOpzioni.length > 0 && (
+                      <select
+                        defaultValue=""
+                        disabled={savingCanale === d.canale || !d.accountId}
+                        onChange={e => salvaDestinazione(d.canale, d.accountId, e.target.value)}
+                        className="input text-sm max-w-xs"
+                      >
+                        <option value="">— scegli pagina/bacheca —</option>
+                        {d.sottoOpzioni.map(o => (
+                          <option key={o.id} value={o.id}>{o.label}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+            {destMsg && (
+              <p className={`text-xs ${destMsg.type === 'ok' ? 'text-green-700' : 'text-red-600'}`}>{destMsg.text}</p>
+            )}
           </div>
         )}
       </div>

@@ -12,7 +12,6 @@ import {
   FileSearch,
   Globe2,
   Layers3,
-  LogIn,
   LockKeyhole,
   Megaphone,
   ScanSearch,
@@ -25,9 +24,7 @@ import { PACCHETTI } from '@/lib/pacchetti'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
-import MobileMenu from '@/components/MobileMenu'
-import DesktopMenu from '@/components/DesktopMenu'
-import ThemeToggle from '@/components/ThemeToggle'
+import PublicHeader from '@/components/PublicHeader'
 import styles from './landing.module.css'
 
 export const metadata: Metadata = {
@@ -74,20 +71,23 @@ const BENEFITS = [
 const SERVICES = [
   {
     icon: Megaphone,
+    href: '/servizi/gestione-social-media',
     title: 'Gestione social multicanale',
     text: 'Piano editoriale, contenuti, adattamento ai formati, approvazione e pubblicazione in un unico flusso.',
     items: ['Strategia e calendario mensile', 'Copy, grafiche, Reel e Short', 'Adattamento per ogni canale', 'Approvazione, pubblicazione e report'],
   },
   {
     icon: ScanSearch,
+    href: '/servizi/seo-geo',
     title: 'Visibilità SEO + GEO',
     text: 'Contenuti strutturati per essere compresi dai motori di ricerca e dai sistemi di risposta basati sull’AI.',
     items: ['Audit tecnico ed editoriale', 'Articoli, FAQ e dati strutturati', 'Analisi di entità, fonti e autorevolezza', 'Monitoraggio e piano di miglioramento'],
   },
   {
     icon: Globe2,
+    href: '/servizi/siti-e-commerce',
     title: 'Siti ed e-commerce',
-    text: 'Esperienze digitali orientate al contatto e alla vendita, integrate con contenuti, prodotti e campagne.',
+    text: 'Soluzioni da 19,90 € al mese, orientate al contatto e alla vendita. Dopo 12 mesi di canone, il sito è tuo.',
     items: ['Architettura e messaggi di conversione', 'Sviluppo responsive e mobile-first', 'Catalogo, pagamenti e tracciamento', 'Integrazione con social, ADS e contenuti'],
   },
 ]
@@ -172,41 +172,7 @@ export default function LandingPage() {
       />
       <a className={styles.skipLink} href="#main-content">Vai al contenuto</a>
 
-      <header className={styles.navbar}>
-        <Link href="/" className={styles.brand} aria-label="Social Automation, home">
-          <span className={styles.brandLogoShell}>
-            <Image className={styles.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
-          </span>
-          <span>Social Automation</span>
-        </Link>
-        <DesktopMenu
-          links={[
-            { href: '#servizi', label: 'Servizi' },
-            { href: '#metodo', label: 'Come funziona' },
-            { href: '#prezzi', label: 'Pacchetti' },
-            { href: '#legale', label: 'Consulenza legale AI' },
-            { href: '#faq', label: 'FAQ' },
-          ]}
-        />
-        <div className={styles.navActions}>
-          <ThemeToggle />
-          <Link href="/portale" className={styles.loginLink}><LogIn size={15} aria-hidden="true" /> Area cliente</Link>
-          <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.navCta}>
-            Richiedi una prova <ArrowRight size={15} aria-hidden="true" />
-          </a>
-        </div>
-        <MobileMenu
-          links={[
-            { href: '#servizi', label: 'Servizi' },
-            { href: '#metodo', label: 'Come funziona' },
-            { href: '#prezzi', label: 'Pacchetti' },
-            { href: '#legale', label: 'Consulenza legale AI' },
-            { href: '#faq', label: 'FAQ' },
-          ]}
-          ctaHref={waLink(TRIAL_MSG)}
-          ctaLabel="Richiedi una prova"
-        />
-      </header>
+      <PublicHeader ctaHref={waLink(TRIAL_MSG)} ctaLabel="Richiedi una prova" />
 
       <section className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.heroCopy}>
@@ -221,7 +187,7 @@ export default function LandingPage() {
             <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.primaryButton}>
               Richiedi un contenuto di prova <ArrowRight size={18} aria-hidden="true" />
             </a>
-            <a href="#prezzi" className={styles.secondaryButton}>Esplora le soluzioni</a>
+            <Link href="/pacchetti" className={styles.secondaryButton}>Esplora le soluzioni</Link>
           </div>
           <p className={styles.microcopy}>Nessuna carta richiesta. Valuta concretamente qualità e processo.</p>
           <ul className={styles.trustList} aria-label="Caratteristiche principali">
@@ -298,7 +264,7 @@ export default function LandingPage() {
           <p>Riduciamo frammentazione, passaggi tra fornitori e attività operative interne.</p>
         </div>
         <div className={styles.serviceGrid}>
-          {SERVICES.map(({ icon: Icon, title, text, items }) => (
+          {SERVICES.map(({ icon: Icon, href, title, text, items }) => (
             <article key={title} className={styles.service}>
               <span><Icon size={22} aria-hidden="true" /></span>
               <h3>{title}</h3>
@@ -306,7 +272,7 @@ export default function LandingPage() {
               <ul className={styles.serviceList}>
                 {items.map(item => <li key={item}><Check size={15} aria-hidden="true" /> {item}</li>)}
               </ul>
-              <Link href="/servizi">Approfondisci <ChevronRight size={16} aria-hidden="true" /></Link>
+              <Link href={href}>Approfondisci <ChevronRight size={16} aria-hidden="true" /></Link>
             </article>
           ))}
         </div>
@@ -327,6 +293,7 @@ export default function LandingPage() {
               </li>
             ))}
           </ol>
+          <Link href="/metodo" className={styles.outlineButton}>Scopri il metodo completo <ArrowRight size={16} aria-hidden="true" /></Link>
         </div>
       </section>
 
@@ -399,7 +366,7 @@ export default function LandingPage() {
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Soluzioni</p>
           <h2 id="pricing-title">Scegli il risultato. Al resto pensiamo noi.</h2>
-          <p>Due pacchetti completi, senza costi di setup. Parti dalla continuità oppure collega social, traffico e campagne.</p>
+          <p>Due pacchetti social completi, senza costi di setup. Per siti ed e-commerce scegli Web & Commerce, il pacchetto separato da 19,90 € al mese.</p>
         </div>
         <div className={styles.pricingGrid}>
           {PACCHETTI.map(plan => (
@@ -435,6 +402,7 @@ export default function LandingPage() {
           <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Prima vuoi verificare la qualità?</strong> Richiedi un contenuto di prova gratuito.</span></div>
           <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer">Richiedi la prova <ArrowRight size={16} aria-hidden="true" /></a>
         </div>
+        <Link href="/pacchetti" className={styles.outlineButton}>Confronto completo dei pacchetti <ArrowRight size={16} aria-hidden="true" /></Link>
         <div className={styles.customPlan}>
           <div>
             <span className={styles.planAudience}>E-commerce, agenzie e organizzazioni</span>
@@ -460,6 +428,7 @@ export default function LandingPage() {
             </details>
           ))}
         </div>
+        <Link href="/faq" className={styles.outlineButton}>Consulta tutte le domande frequenti <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
 
       <section className={styles.finalCta} aria-labelledby="final-title">
@@ -479,6 +448,7 @@ export default function LandingPage() {
         <div>
           <Link href="/servizi">Servizi</Link>
           <Link href="/chi-siamo">Chi siamo</Link>
+          <Link href="/blog">Journal</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/termini">Termini</Link>
           <Link href="/login">Accesso</Link>

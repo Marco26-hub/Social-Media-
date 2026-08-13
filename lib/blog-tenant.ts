@@ -10,9 +10,17 @@ export async function resolveBlogClienteId(): Promise<string | null> {
   if (!dbReady()) return null
   const h = await headers()
   const host = (h.get('host') || '').split(':')[0].toLowerCase().trim()
+  return resolveBlogClienteIdForHost(host)
+}
+
+export async function resolveBlogClienteIdForHost(hostname: string): Promise<string | null> {
+  if (!dbReady()) return null
+  const host = hostname.split(':')[0].toLowerCase().trim()
   if (!host) return null
+  const bareHost = host.startsWith('www.') ? host.slice(4) : host
+  const candidates = Array.from(new Set([host, bareHost, `www.${bareHost}`]))
   try {
-    const rows = await q('SELECT id FROM clienti WHERE blog_domain = $1 LIMIT 1', [host])
+    const rows = await q('SELECT id FROM clienti WHERE LOWER(blog_domain) = ANY($1::text[]) LIMIT 1', [candidates])
     return rows[0] ? (rows[0] as { id: string }).id : null
   } catch {
     return null

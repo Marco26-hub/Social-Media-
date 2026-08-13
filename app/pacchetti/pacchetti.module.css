@@ -1,0 +1,45 @@
+.pricing { max-width:1180px; margin:0 auto; padding:82px 24px; }
+.grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:42px; }
+.card { position:relative; min-width:0; display:flex; flex-direction:column; padding:31px; border:1px solid var(--line); border-radius:7px; background:var(--surface); }
+.featured { border:2px solid var(--green); box-shadow:0 22px 48px rgba(15,107,79,.12); }
+.top { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }
+.audience { color:var(--green); font-size:10px; font-weight:850; text-transform:uppercase; }
+.top h2 { margin:8px 0 0; font:500 34px Georgia,'Times New Roman',serif; }
+.badge { flex:none; white-space:nowrap; padding:6px 8px; border-radius:4px; background:#fff1c9; color:#7a5812; font-size:10px; font-weight:850; text-transform:uppercase; }
+.result { margin:18px 0 0; color:var(--muted); font-size:13px; }
+.price { display:flex; align-items:baseline; gap:5px; margin:24px 0 0; }
+.price strong { font:500 48px Georgia,'Times New Roman',serif; }
+.price span { color:var(--muted); font-size:13px; }
+.setup { margin:4px 0 0; color:var(--green); font-size:11px; font-weight:800; }
+.description { min-height:48px; margin:19px 0 0; color:var(--muted); font-size:13px; line-height:1.55; }
+.fit { margin:20px 0; padding:15px; border-left:3px solid var(--coral); background:var(--paper); }
+.fit strong { font-size:11px; text-transform:uppercase; }
+.fit p { margin:7px 0 0; color:var(--muted); font-size:12px; line-height:1.5; }
+.includes,.listLabel { margin:0 0 11px; color:var(--muted); font-size:11px; font-weight:800; }
+.card ul { display:grid; gap:10px; margin:0 0 26px; padding:0; list-style:none; }
+.card li { display:flex; align-items:flex-start; gap:8px; color:var(--muted); font-size:12px; line-height:1.45; }
+.card li svg { flex:none; color:var(--green); margin-top:1px; }
+.card > a { min-height:48px; display:inline-flex; align-items:center; justify-content:center; gap:8px; margin-top:auto; border:1px solid var(--green); border-radius:4px; color:var(--green); font-size:13px; font-weight:800; text-decoration:none; }
+.featured > a { background:var(--green); color:white; }
+.webCard { border-color:#d2ac4a; }
+.webCard > a { background:#0f6b4f; color:white; }
+.note { margin:10px 0 0; color:#7b8782; font-size:10px; text-align:center; }
+.comparison { margin-top:28px; overflow-x:auto; border:1px solid var(--line); }
+.comparison table { width:100%; min-width:650px; border-collapse:collapse; }
+.comparison caption { padding:18px; background:var(--paper); font:500 21px Georgia,'Times New Roman',serif; text-align:left; }
+.comparison th,.comparison td { padding:14px 18px; border-top:1px solid var(--line); font-size:12px; text-align:left; }
+.comparison th { color:var(--ink); }
+.comparison td { color:var(--muted); }
+.comparison th:not(:first-child),.comparison td:not(:first-child) { text-align:center; }
+.custom { max-width:1132px; margin:0 auto 84px; display:flex; align-items:center; justify-content:space-between; gap:45px; padding:34px; border:1px solid #29453a; border-radius:7px; background:#0d1814; color:white; }
+.custom > div { max-width:760px; }
+.custom span { color:#83dbb9; font-size:10px; font-weight:850; text-transform:uppercase; }
+.custom h2 { margin:9px 0 0; font:500 30px Georgia,'Times New Roman',serif; }
+.custom p { margin:11px 0 0; color:#b8c6c0; font-size:13px; line-height:1.55; }
+.custom a { min-height:48px; display:inline-flex; align-items:center; justify-content:center; gap:8px; flex:none; padding:0 18px; border-radius:4px; background:white; color:#094c39; font-size:13px; font-weight:800; text-decoration:none; }
+:global(html[data-theme='dark']) .card { background:#111713; }
+:global(html[data-theme='dark']) .featured { border-color:#49d6a0; }
+:global(html[data-theme='dark']) .badge { background:#3a311a; color:#f2c85b; }
+:global(html[data-theme='dark']) .featured > a { background:#0f6b4f; color:white; }
+@media(max-width:1050px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.webCard{grid-column:1/-1}}
+@media(max-width:760px){.pricing{padding:64px 18px}.grid{grid-template-columns:1fr}.webCard{grid-column:auto}.card{padding:24px}.top{gap:10px}.description{min-height:0}.custom{align-items:flex-start;flex-direction:column;margin:0 18px 64px;padding:25px}.custom a{width:100%}}

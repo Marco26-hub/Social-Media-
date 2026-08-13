@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
 import type { Contenuto } from '@/lib/types'
 import { preflightRow } from '@/lib/publish/preflight'
+import { toYmd } from '@/lib/publish/blotato-map'
 
 // Vista calendario a griglia mensile (stile Blotato), affiancata alla lista.
 // Ogni giorno mostra i post programmati come mini-card (ora + canale + stato),
@@ -34,15 +35,19 @@ export default function CalendarGrid({ items, tz, onSelect }: {
   onSelect: (c: Contenuto) => void
 }) {
   // Mese iniziale: quello del primo contenuto con data, altrimenti il mese corrente.
-  const firstDated = items.find(i => i.data_pubblicazione)?.data_pubblicazione
-  const init = firstDated ? new Date(`${firstDated}T12:00:00`) : new Date()
+  // `toYmd` perché la data può arrivare come ISO completo: concatenarci 'T12:00:00'
+  // produceva una Date invalida, quindi year/month erano NaN e la griglia esplodeva
+  // con RangeError trascinandosi dietro l'intera pagina calendario.
+  const firstDated = items.map(i => toYmd(i.data_pubblicazione)).find(Boolean)
+  const parsed = firstDated ? new Date(`${firstDated}T12:00:00`) : new Date()
+  const init = Number.isFinite(parsed.getTime()) ? parsed : new Date()
   const [year, setYear] = useState(init.getFullYear())
   const [month, setMonth] = useState(init.getMonth()) // 0-based
 
   // Indicizza i contenuti per giorno (YYYY-MM-DD).
   const byDay = new Map<string, Contenuto[]>()
   for (const it of items) {
-    const d = it.data_pubblicazione
+    const d = toYmd(it.data_pubblicazione)
     if (!d) continue
     const arr = byDay.get(d) || []
     arr.push(it)

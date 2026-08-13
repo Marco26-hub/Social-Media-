@@ -13,8 +13,10 @@ type PaymentClient = {
   piano: string
   attivo: boolean
   pacchetto_slug: string
+  configured_pacchetto_slug: string
   pacchetto_nome: string
   canone: string
+  package_mismatch: boolean
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
   subscription_status: string | null
@@ -31,6 +33,7 @@ type PaymentClient = {
 type PaymentsPayload = {
   stripe_configured: boolean
   stripe_webhook_configured?: boolean
+  stripe_mode?: 'live' | 'test' | 'unknown' | 'not_configured'
   webhook_url?: string
   needs_migration: boolean
   error?: string
@@ -61,6 +64,24 @@ function statusTone(status: string | null) {
   if (['past_due', 'open', 'uncollectible'].includes(status)) return 'bg-amber-100 text-amber-700'
   if (['canceled', 'incomplete_expired', 'void', 'failed'].includes(status)) return 'bg-red-100 text-red-700'
   return 'bg-gray-100 text-gray-600'
+}
+
+function statusLabel(status: string | null) {
+  const labels: Record<string, string> = {
+    active: 'Attivo',
+    trialing: 'In prova',
+    paid: 'Pagato',
+    past_due: 'Pagamento in ritardo',
+    unpaid: 'Non saldato',
+    incomplete: 'Da completare',
+    incomplete_expired: 'Scaduto',
+    canceled: 'Disdetto',
+    paused: 'In pausa',
+    open: 'Aperto',
+    void: 'Annullato',
+    failed: 'Fallito',
+  }
+  return status ? labels[status] || status : 'Non presente'
 }
 
 function matchesSearch(cliente: PaymentClient, query: string) {
@@ -130,6 +151,8 @@ export default function PagamentiAdminPage() {
   useEffect(() => { load() }, [load])
 
   async function runAction(clienteId: string, action: 'checkout' | 'portal') {
+    const popup = window.open('about:blank', '_blank')
+    if (popup) popup.opener = null
     setBusy(`${clienteId}:${action}`)
     setMessage('')
     setError('')
@@ -141,10 +164,13 @@ export default function PagamentiAdminPage() {
       })
       if (!res.ok) throw new Error(await readApiError(res, 'Azione Stripe fallita'))
       const out = await res.json() as { url?: string | null; demo?: boolean }
-      if (out.url) window.open(out.url, '_blank', 'noopener,noreferrer')
+      if (out.url && popup) popup.location.href = out.url
+      else if (out.url) window.location.href = out.url
+      else popup?.close()
       setMessage(out.demo ? 'Demo: azione simulata.' : 'Sessione Stripe creata. Completa il flusso nella nuova scheda.')
       await load()
     } catch (e) {
+      popup?.close()
       setError((e as Error).message)
       setBusy(null)
     }
@@ -163,7 +189,7 @@ export default function PagamentiAdminPage() {
   )
   const hasFilters = Boolean(searchQuery.trim()) || clientStatusFilter !== 'all' || subscriptionFilter !== 'all' || paymentFilter !== 'all'
   const activeSubscriptions = clienti.filter(cliente => cliente.subscription_status === 'active' || cliente.subscription_status === 'trialing').length
-  const paidInvoices = clienti.filter(cliente => cliente.last_payment_status === 'paid').length
+  const paidClients = clienti.filter(cliente => cliente.last_payment_status === 'paid').length
 
   function resetFilters() {
     setSearchQuery('')
@@ -209,13 +235,14 @@ export default function PagamentiAdminPage() {
       {data && (() => {
         const secretOk = Boolean(data.stripe_configured)
         const webhookOk = Boolean(data.stripe_webhook_configured)
-        const ready = secretOk && webhookOk
+        const liveMode = data.stripe_mode === 'live'
+        const ready = secretOk && webhookOk && liveMode
         return (
           <div className={`mb-5 rounded-2xl border p-4 ${ready ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}`}>
             <div className="flex items-center gap-2">
               {ready ? <CheckCircle2 className="h-5 w-5 text-green-600" /> : <AlertTriangle className="h-5 w-5 text-amber-600" />}
               <p className={`font-semibold ${ready ? 'text-green-900' : 'text-amber-900'}`}>
-                {ready ? 'Stripe connesso — pagamenti attivi' : 'Stripe NON ancora attivo'}
+                {ready ? 'Stripe LIVE connesso — pagamenti attivi' : 'Stripe non ancora pronto per il live'}
               </p>
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -224,6 +251,9 @@ export default function PagamentiAdminPage() {
               </span>
               <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold ${webhookOk ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                 {webhookOk ? <CheckCircle2 className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />} STRIPE_WEBHOOK_SECRET
+              </span>
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold ${liveMode ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                {liveMode ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />} Modalità {data.stripe_mode === 'test' ? 'TEST' : data.stripe_mode === 'live' ? 'LIVE' : 'non rilevata'}
               </span>
             </div>
             {!ready && (
@@ -236,6 +266,7 @@ export default function PagamentiAdminPage() {
                     eventi: checkout.session.completed, customer.subscription.*, invoice.*
                   </li>
                   <li>Copia il signing secret in <code className="rounded bg-amber-100 px-1">STRIPE_WEBHOOK_SECRET</code> {webhookOk && '✓'}</li>
+                  {!liveMode && <li>Per gli incassi reali usa la chiave Stripe <code className="rounded bg-amber-100 px-1">sk_live_…</code>; la modalità test non addebita carte reali.</li>}
                 </ol>
               </div>
             )}
@@ -277,8 +308,8 @@ export default function PagamentiAdminPage() {
           <p className="mt-2 text-3xl font-bold text-gray-900">{activeSubscriptions}</p>
         </div>
         <div className="card p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Ultime fatture pagate</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{paidInvoices}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Clienti in regola</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900">{paidClients}</p>
         </div>
       </div>
 
@@ -354,6 +385,7 @@ export default function PagamentiAdminPage() {
             {filteredClienti.map(cliente => {
               const checkoutBusy = busy === `${cliente.id}:checkout`
               const portalBusy = busy === `${cliente.id}:portal`
+              const hasCurrentSubscription = ['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'].includes(cliente.subscription_status || '')
               return (
                 <div key={cliente.id} className="grid gap-4 p-4 lg:grid-cols-[1.15fr_0.8fr_0.9fr_auto] lg:items-center">
                   <div className="min-w-0">
@@ -365,12 +397,13 @@ export default function PagamentiAdminPage() {
                     </div>
                     <p className="mt-1 text-xs text-gray-500">{cliente.email || 'Email non indicata'}</p>
                     <p className="mt-2 text-sm text-gray-700">{cliente.pacchetto_nome} · {cliente.canone}/mese</p>
+                    {cliente.package_mismatch && <p className="mt-1 text-xs font-semibold text-amber-700">Pacchetto operativo e abbonamento Stripe non allineati</p>}
                   </div>
 
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Subscription</p>
                     <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(cliente.subscription_status)}`}>
-                      {cliente.subscription_status || 'non creata'}
+                      {statusLabel(cliente.subscription_status)}
                     </span>
                     <p className="mt-2 text-xs text-gray-500">Rinnovo: {formatDate(cliente.current_period_end)}</p>
                   </div>
@@ -379,7 +412,7 @@ export default function PagamentiAdminPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Ultimo pagamento</p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(cliente.last_payment_status)}`}>
-                        {cliente.last_payment_status || 'nessuno'}
+                        {statusLabel(cliente.last_payment_status)}
                       </span>
                       <span className="text-sm font-semibold text-gray-900">{formatMoney(cliente.last_amount_paid, cliente.last_payment_currency || 'eur')}</span>
                     </div>
@@ -392,11 +425,11 @@ export default function PagamentiAdminPage() {
                   <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
                     <button
                       onClick={() => runAction(cliente.id, 'checkout')}
-                      disabled={Boolean(busy) || !data?.stripe_configured || data?.needs_migration}
+                      disabled={Boolean(busy) || hasCurrentSubscription || !data?.stripe_configured || data?.needs_migration}
                       className="btn-primary justify-center text-xs disabled:opacity-50"
                     >
                       {checkoutBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                      Checkout
+                      {hasCurrentSubscription ? 'Già attivo' : 'Crea checkout'}
                     </button>
                     <button
                       onClick={() => runAction(cliente.id, 'portal')}
