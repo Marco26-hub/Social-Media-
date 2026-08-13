@@ -379,22 +379,38 @@ function CalendarioInner() {
 
   async function resetErrore(c: Contenuto) {
     setSaving(c.id)
+    setSyncMsg(null)
     if (demo) {
       setDemoData(prev => prev.map(x => x.id === c.id ? {
         ...x, status: 'APPROVATO' as Status, errore_tecnico: null, retry_count: 0, publish_lock_id: null,
       } : x))
     } else {
-      await fetch('/api/data/calendario', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: c.id,
-          status: 'APPROVATO',
-          errore_tecnico: null,
-          retry_count: 0,
-          publish_lock_id: null,
-        }),
-      })
+      try {
+        const res = await fetch('/api/data/calendario', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: c.id,
+            status: 'APPROVATO',
+            errore_tecnico: null,
+            retry_count: 0,
+            publish_lock_id: null,
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || 'Riprova pubblicazione fallita')
+        if (data.scheduling_error || data.scheduled === false) {
+          setSyncMsg({
+            type: 'err',
+            text: data.scheduling_error || data.publish_note || 'Contenuto ripristinato, ma Blotato non lo ha programmato.',
+          })
+        } else {
+          setSyncMsg({ type: 'ok', text: `${c.canale} · ${c.formato} reinviato a Blotato e programmato.` })
+        }
+      } catch (e) {
+        setSyncMsg({ type: 'err', text: (e as Error).message })
+      }
+      await fetchData()
     }
     setSaving(null)
   }
