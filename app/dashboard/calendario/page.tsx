@@ -395,9 +395,12 @@ function CalendarioInner() {
     }
   }
 
-  // Rimette in coda i contenuti APPROVATI mai sincronizzati la cui data è già
-  // passata: li sposta al prossimo slot libero (SOLO data/ora, niente Blotato).
+  // Rimette in coda i contenuti approvati in ritardo e recupera gli invii
+  // Blotato rimasti scheduled dopo conferma esplicita dell'utente.
   async function requeuePassati() {
+    if (stalli.length > 0 && !window.confirm(
+      `${stalli.length} contenuti risultano inviati a Blotato ma non confermati. Hai verificato che NON siano già stati pubblicati sui social? Proseguendo verranno riprogrammati e potrebbero essere pubblicati di nuovo.`,
+    )) return
     setRequeuing(true)
     setSyncMsg(null)
     try {
@@ -861,7 +864,7 @@ function CalendarioInner() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button onClick={requeuePassati} disabled={requeuing} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 disabled:opacity-60 inline-flex items-center gap-1.5" title="Sposta i contenuti approvati con data già passata al prossimo slot libero (solo data/ora, non tocca Blotato)">
+              <button onClick={requeuePassati} disabled={requeuing} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 disabled:opacity-60 inline-flex items-center gap-1.5" title="Sposta i contenuti approvati in ritardo e recupera gli invii Blotato rimasti programmati">
                 {requeuing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
                 <span>{requeuing ? 'Rimetto in coda...' : 'Rimetti in coda i passati'}</span>
               </button>

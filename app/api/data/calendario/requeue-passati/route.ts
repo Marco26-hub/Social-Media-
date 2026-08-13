@@ -11,15 +11,12 @@ function todayInTz(tz: string): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
 }
 
-// POST — Rimette in coda i contenuti APPROVATI mai sincronizzati su Blotato la
-// cui data/ora è già passata: li sposta al primo slot FUTURO libero per il loro
-// canale (stesse fasce orarie di sempre, lib/scheduling.ts), senza ammucchiarli
-// sullo stesso giorno e senza sovrapporsi a contenuti già pianificati.
+// POST — Rimette in coda sia i contenuti APPROVATI mai sincronizzati, sia quelli
+// inviati a Blotato ma rimasti "scheduled" oltre l'orario previsto. Li sposta al
+// primo slot FUTURO libero per il loro canale, senza sovrapposizioni.
 //
-// Tocca SOLO data_pubblicazione/ora_pubblicazione in locale: non chiama Blotato
-// e non cambia lo status. L'invio vero resta il passo separato "Sincronizza
-// Blotato", a scelta dell'utente, con i suoi gate (PUBLISH_ENABLED + dry_run)
-// invariati.
+// Non chiama Blotato. Per uno stallo azzera il vecchio riferimento remoto e lo
+// riporta ad APPROVATO; l'invio vero resta il passo separato "Sincronizza Blotato".
 export async function POST() {
   let cid: string
   try {
@@ -37,11 +34,16 @@ export async function POST() {
   const today = todayInTz(timezone)
   const now = Date.now()
 
-  // Candidati: approvati, mai inviati a Blotato (blotato_post_id nullo).
+  // Candidati: approvati mai inviati oppure invii rimasti scheduled. Il secondo
+  // caso viene poi filtrato con una tolleranza di 15 minuti.
   const rows = await q(
-    `SELECT id, id_contenuto, canale, formato, obiettivo, data_pubblicazione, ora_pubblicazione
+    `SELECT id, id_contenuto, canale, formato, obiettivo, status,
+            data_pubblicazione, ora_pubblicazione, blotato_post_id,
+            blotato_status, blotato_scheduled_at
      FROM calendario
-     WHERE cliente_id = $1 AND status = 'APPROVATO' AND blotato_post_id IS NULL
+     WHERE cliente_id = $1
+       AND status IN ('APPROVATO', 'IN_PUBBLICAZIONE')
+       AND (blotato_post_id IS NULL OR blotato_status = 'scheduled')
      ORDER BY data_pubblicazione ASC, ora_pubblicazione ASC`,
     [cid],
   ) as Record<string, unknown>[]
@@ -50,7 +52,12 @@ export async function POST() {
   // non un confronto ingenuo di stringhe data che ignorerebbe il fuso del cliente.
   const passati = rows.filter(r => {
     try {
-      return new Date(zonedToUtcIso(r.data_pubblicazione, r.ora_pubblicazione, timezone)).getTime() <= now
+      const localSchedule = new Date(zonedToUtcIso(r.data_pubblicazione, r.ora_pubblicazione, timezone)).getTime()
+      if (!r.blotato_post_id) return localSchedule <= now
+      const remoteSchedule = new Date(String(r.blotato_scheduled_at || '')).getTime()
+      return r.blotato_status === 'scheduled'
+        && Number.isFinite(remoteSchedule)
+        && now - remoteSchedule > 15 * 60 * 1000
     } catch {
       return false
     }
@@ -96,11 +103,24 @@ export async function POST() {
     const obiettivo = row.obiettivo ? String(row.obiettivo) : undefined
     const { giorno, ora } = nextAvailableSlot({ canale, formato, obiettivo, daGiorno }, usati)
 
-    await q(
-      `UPDATE calendario SET data_pubblicazione = $1, ora_pubblicazione = $2, updated_at = now()
-       WHERE id = $3 AND cliente_id = $4`,
-      [giorno, ora, row.id, cid],
-    )
+    const recuperaStallo = Boolean(row.blotato_post_id)
+    if (recuperaStallo) {
+      await q(
+        `UPDATE calendario
+         SET data_pubblicazione = $1, ora_pubblicazione = $2, status = 'APPROVATO',
+             blotato_post_id = NULL, blotato_status = NULL,
+             blotato_scheduled_at = NULL, blotato_sync_at = NULL,
+             errore_tecnico = NULL, publish_lock_id = NULL, updated_at = now()
+         WHERE id = $3 AND cliente_id = $4`,
+        [giorno, ora, row.id, cid],
+      )
+    } else {
+      await q(
+        `UPDATE calendario SET data_pubblicazione = $1, ora_pubblicazione = $2, updated_at = now()
+         WHERE id = $3 AND cliente_id = $4`,
+        [giorno, ora, row.id, cid],
+      )
+    }
 
     const entry = {
       id: String(row.id),
@@ -117,7 +137,7 @@ export async function POST() {
       await q(
         `INSERT INTO log_pubblicazioni (cliente_id, id_contenuto, canale, formato, status_finale, messaggio)
          VALUES ($1, $2, $3, $4, 'RIMESSO_IN_CODA', $5)`,
-        [cid, entry.id_contenuto, canale, formato, `Spostato da ${entry.da.giorno} ${entry.da.ora} a ${entry.a.giorno} ${entry.a.ora} (data passata, mai sincronizzato)`],
+        [cid, entry.id_contenuto, canale, formato, `Spostato da ${entry.da.giorno} ${entry.da.ora} a ${entry.a.giorno} ${entry.a.ora} (${recuperaStallo ? 'invio Blotato scheduled non confermato, riferimento azzerato' : 'data passata, mai sincronizzato'})`],
       )
     } catch (logErr) {
       console.warn('[requeue-passati] log_pubblicazioni insert fallito:', (logErr as Error).message.slice(0, 120))
