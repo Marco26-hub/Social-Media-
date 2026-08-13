@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useMemo } from 'react'
 import { PLATFORM_LIST, type PlatformKey } from '@/lib/social-config'
-import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2, Image as ImageIcon, Film, Layers, Smartphone } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
@@ -12,12 +12,13 @@ import { uploadAssets } from '@/lib/asset-upload'
 import { useGeneration } from '@/components/GenerationProvider'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
-import { getPackage, type PackageSpec } from '@/lib/packages'
+import { getPackage, packageContentCount, packageMixForPeriod, type PackageSpec } from '@/lib/packages'
 import {
   MEDIA_PER_FORMATO,
   isVideoMedia,
   normalizeMediaTag,
   requisitiDaPacchetto,
+  requisitiMedia,
   verificaMedia,
   type MediaTag,
 } from '@/lib/media-requirements'
@@ -40,11 +41,11 @@ const TAG_OPTIONS: { value: MediaTag; label: string; menu: string; pill: string 
   { value: 'post',      label: 'Post',       menu: 'Post',               pill: 'bg-sky-600/90 text-white' },
 ]
 
-const DESTINATION_UPLOADS: { tag: Exclude<MediaTag, 'auto'>; title: string; detail: string; accept: string; style: string }[] = [
-  { tag: 'post', title: 'Foto Post', detail: 'IG/FB 4:5 · Pin 2:3', accept: IMAGE_ACCEPT, style: 'border-sky-300 text-sky-800 hover:bg-sky-50' },
-  { tag: 'story', title: 'Foto Story', detail: 'Verticale 9:16', accept: IMAGE_ACCEPT, style: 'border-amber-300 text-amber-800 hover:bg-amber-50' },
-  { tag: 'carosello', title: 'Foto Carosello', detail: '3-10 slide, stesso rapporto', accept: IMAGE_ACCEPT, style: 'border-violet-300 text-violet-800 hover:bg-violet-50' },
-  { tag: 'reel', title: 'Reel / Video', detail: 'MP4 o 3-5 foto 9:16', accept: MEDIA_ACCEPT, style: 'border-rose-300 text-rose-800 hover:bg-rose-50' },
+const DESTINATION_UPLOADS: { tag: Exclude<MediaTag, 'auto'>; title: string; detail: string; accept: string; style: string; iconStyle: string }[] = [
+  { tag: 'post', title: 'Foto Post', detail: 'IG/FB 4:5 · Pin 2:3', accept: IMAGE_ACCEPT, style: 'border-sky-200 hover:border-sky-400 hover:bg-sky-50/50', iconStyle: 'bg-sky-100 text-sky-700' },
+  { tag: 'story', title: 'Foto Story', detail: 'Verticale 9:16', accept: IMAGE_ACCEPT, style: 'border-amber-200 hover:border-amber-400 hover:bg-amber-50/50', iconStyle: 'bg-amber-100 text-amber-700' },
+  { tag: 'carosello', title: 'Foto Carosello', detail: '3-10 slide · stesso rapporto', accept: IMAGE_ACCEPT, style: 'border-violet-200 hover:border-violet-400 hover:bg-violet-50/50', iconStyle: 'bg-violet-100 text-violet-700' },
+  { tag: 'reel', title: 'Reel / Video', detail: 'MP4 o 5 foto · verticale 9:16', accept: MEDIA_ACCEPT, style: 'border-rose-200 hover:border-rose-400 hover:bg-rose-50/50', iconStyle: 'bg-rose-100 text-rose-700' },
 ]
 
 function tagMeta(tag: MediaTag) {
@@ -52,12 +53,8 @@ function tagMeta(tag: MediaTag) {
 }
 
 // ── Semaforo media di UN SINGOLO pulsante ────────────────────────────────
-// I due pulsanti generano quantità diverse: il VERDE (piano del pacchetto)
-// fa SEMPRE il mese intero, il VIOLA (piano libero) segue il periodo scelto
-// sopra. Un semaforo unico sul periodo selezionato diceva "media sufficienti"
-// mentre stavi per generare il quadruplo dei contenuti: ora ogni pulsante ha
-// il suo, e possono dire cose diverse nello stesso momento (verde sul libero
-// settimanale, ambra sul pacchetto mensile).
+// I due pulsanti possono generare quantità diverse. Entrambi seguono il periodo
+// selezionato, ma pacchetto e piano libero mantengono conteggi e controlli propri.
 // Non blocca mai: avvisa e lascia decidere.
 function SemaforoMedia({ titolo, pulsante, requisiti, verifica, caricati }: {
   titolo: string
@@ -280,28 +277,28 @@ export default function PianoPage() {
   }
 
   // Modalità "piano del pacchetto": numero/mix/social/qualità imposti dal pacchetto
-  // acquistato dal cliente. Sempre mensile. Le altre scelte manuali sono ignorate.
+  // acquistato dal cliente. Il periodo selezionato governa anche il pacchetto.
   async function generaPacchetto() {
     setMsg(null)
     if (!clientePkg) return
     if (!demo && !clienteId) { setMsg({ type: 'err', text: 'Cliente non selezionato' }); return }
-    if (piattaforme.length === 0) {
-      setMsg({ type: 'err', text: `Seleziona i ${clientePkg.social} social del pacchetto ${clientePkg.nome}` })
+    if (piattaforme.length !== clientePkg.social) {
+      setMsg({ type: 'err', text: `Il pacchetto ${clientePkg.nome} include ${clientePkg.social} social: selezionane esattamente ${clientePkg.social}.` })
       return
     }
     const aiSettings = readAISettings()
     const result = await gen.run<{ count?: number; articolo_blog?: boolean; pacchetto_troncati?: number; images_provided?: number }>({
       key: 'piano-pacchetto',
-      label: `Piano pacchetto ${clientePkg.nome}`,
+      label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo: 'mensile', quality: 'auto', media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...aiSettings },
       href: '/dashboard/calendario',
-      estMs: 55000,
-      timeoutMs: 140000,
+      estMs: periodo === 'mensile' ? 55000 : 30000,
+      timeoutMs: periodo === 'mensile' ? 140000 : 100000,
     })
     if (result.ok) {
       const d = result.data
-      setMsg({ type: 'ok', text: `Piano ${clientePkg.nome} generato (${d?.count ?? '?'} contenuti${d?.articolo_blog ? ' + articolo blog collegato' : ''}). Sono nel calendario, in stato Da approvare.` })
+      setMsg({ type: 'ok', text: `Piano ${periodo} ${clientePkg.nome} generato (${d?.count ?? '?'} contenuti${d?.articolo_blog ? ' + articolo blog collegato' : ''}). Sono nel calendario, in stato Da approvare.` })
     } else {
       setMsg({ type: 'err', text: result.error || 'Generazione piano pacchetto fallita' })
     }
@@ -317,14 +314,6 @@ export default function PianoPage() {
     () => requisitiDaPacchetto(clientePkg, clienteQuota, periodo),
     [clientePkg, clienteQuota, periodo],
   )
-  // Fabbisogno del PULSANTE VERDE (piano del pacchetto): SEMPRE mensile, perché
-  // quel pulsante genera il mese intero anche se sopra è selezionato
-  // "settimanale" (route.ts forza periodo='mensile'). Calcolarlo sul periodo
-  // selezionato mostrava un quarto dei media davvero necessari.
-  const requisitiPacchetto = useMemo(
-    () => (clientePkg ? requisitiDaPacchetto(clientePkg, clienteQuota, 'mensile') : null),
-    [clientePkg, clienteQuota],
-  )
   // Senza pacchetto né quota il fabbisogno non è calcolabile: niente allarmi,
   // si mostrano solo le regole per formato.
   const fabbisognoNoto = requisiti.immagini > 0 || requisiti.video > 0
@@ -334,28 +323,38 @@ export default function PianoPage() {
     const video = planAssets.filter(a => isVideoMedia(a.url)).length
     return { video, immagini: planAssets.length - video }
   }, [planAssets])
-  // Due verifiche indipendenti: con 7 foto + 1 MP4 il libero settimanale è
-  // verde e il pacchetto mensile è ambra, ed è giusto vederle entrambe.
+  // Piano pacchetto e piano libero hanno verifiche indipendenti.
   const verifica = useMemo(
     () => verificaMedia(planAssets.map(a => ({ url: a.url, tag: a.tag })), requisiti),
     [planAssets, requisiti],
   )
-  const verificaPacchetto = useMemo(
-    () => (requisitiPacchetto ? verificaMedia(planAssets.map(a => ({ url: a.url, tag: a.tag })), requisitiPacchetto) : null),
-    [planAssets, requisitiPacchetto],
-  )
-  // Quando il periodo selezionato è già "mensile" i due conti coincidono: va
-  // detto, altrimenti due riquadri identici sembrano un doppione o un errore.
-  const stessoFabbisogno = !!requisitiPacchetto
-    && requisitiPacchetto.immagini === requisiti.immagini
-    && requisitiPacchetto.video === requisiti.video
-  // Contenuti/mese davvero generati dal pulsante verde: la quota del cliente
-  // (clienti.contenuti_mese) può sovrascrivere quella del pacchetto.
-  const contenutiMesePacchetto = clienteQuota && clienteQuota > 0 ? Math.round(clienteQuota) : (clientePkg?.contenutiMese ?? 0)
-
+  const contenutiPacchettoPeriodo = clientePkg ? packageContentCount(clientePkg, periodo, clienteQuota) : 0
+  const mixPacchettoPeriodo = clientePkg ? packageMixForPeriod(clientePkg, periodo, clienteQuota) : null
+  const uploadTargets = mixPacchettoPeriodo ? {
+    post: { main: `${mixPacchettoPeriodo.postSingoli} foto richieste`, note: `${mixPacchettoPeriodo.postSingoli} post/pin` },
+    story: { main: `${mixPacchettoPeriodo.stories} foto richieste`, note: `${mixPacchettoPeriodo.stories} Story` },
+    carosello: {
+      main: `${mixPacchettoPeriodo.caroselli * MEDIA_PER_FORMATO.carousel.immagini} foto richieste`,
+      note: `${mixPacchettoPeriodo.caroselli} caroselli × ${MEDIA_PER_FORMATO.carousel.immagini}`,
+    },
+    reel: {
+      main: `${mixPacchettoPeriodo.reelVideo} MP4 richiesti`,
+      note: `oppure ${mixPacchettoPeriodo.reelVideo * MEDIA_PER_FORMATO.reel.immagini} foto 9:16`,
+    },
+  } : null
   const numContenuti = periodo === 'mensile' ? '25-35' : '7-10'
+  const numeroRiepilogo = clientePkg ? String(contenutiPacchettoPeriodo) : numContenuti
+  const contenutiLiberiStimati = periodo === 'mensile' ? 30 : 8
+  const requisitiLiberi = useMemo(
+    () => requisitiMedia({ contenuti: contenutiLiberiStimati, postCaroselli: 0, reelBrevi: 0, conVideo: true }),
+    [contenutiLiberiStimati],
+  )
+  const verificaLibera = useMemo(
+    () => verificaMedia(planAssets.map(a => ({ url: a.url, tag: a.tag })), requisitiLiberi),
+    [planAssets, requisitiLiberi],
+  )
   const isFree = aiModel.endsWith(':free')
-  const stimaContenuti = periodo === 'mensile' ? 30 : 8
+  const stimaContenuti = contenutiLiberiStimati
   const tokenStima = {
     input:  stimaContenuti * 800,    // ~800 token input per contenuto
     output: stimaContenuti * 600,    // ~600 token output per contenuto
@@ -437,7 +436,7 @@ export default function PianoPage() {
             onChange={e => setUseWebTrends(e.target.checked)}
             className="rounded border-gray-300"
           />
-          <span className="text-sm text-gray-700">Trend dal web reali (ricerca i format del momento per il settore — solo piano mensile/pacchetto; +qualche secondo e piccolo costo)</span>
+          <span className="text-sm text-gray-700">Trend dal web reali (ricerca i format del momento per il settore — solo piano mensile; +qualche secondo e piccolo costo)</span>
         </label>
         <p className="text-xs text-gray-500 mt-2">
           Vale per i template visual di reel e caroselli. Con Auto decide l’AI in base al brand.
@@ -453,6 +452,7 @@ export default function PianoPage() {
         <div className="grid grid-cols-2 gap-3">
           {(['settimanale', 'mensile'] as const).map(p => {
             const Icon = p === 'settimanale' ? Calendar : CalendarRange
+            const conteggioPeriodo = clientePkg && periodo === p ? packageContentCount(clientePkg, p, clienteQuota) : null
             return (
               <button
                 key={p}
@@ -466,7 +466,11 @@ export default function PianoPage() {
                 <Icon className={`w-5 h-5 mb-2 ${periodo === p ? 'text-brand-600' : 'text-gray-400'}`} />
                 <p className="font-semibold text-sm text-gray-900 capitalize">{p}</p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {p === 'settimanale' ? '7-10 contenuti / 7 giorni' : '25-35 contenuti / 30 giorni'}
+                  {conteggioPeriodo
+                    ? `${conteggioPeriodo} contenuti · pacchetto ${clientePkg?.nome}`
+                    : periodo === p
+                      ? p === 'settimanale' ? '7-10 contenuti / 7 giorni' : '25-35 contenuti / 30 giorni'
+                      : 'Seleziona questo periodo'}
                 </p>
               </button>
             )
@@ -513,6 +517,16 @@ export default function PianoPage() {
             )
           })}
         </div>
+        {clientePkg && (
+          <p className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+            piattaforme.length === clientePkg.social
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-amber-200 bg-amber-50 text-amber-900'
+          }`}>
+            Pacchetto {clientePkg.nome}: selezionati <span className="font-bold">{piattaforme.length}/{clientePkg.social}</span> social.
+            {piattaforme.length === clientePkg.social ? ' Numero corretto.' : ` Selezionane esattamente ${clientePkg.social} per generare il piano del pacchetto.`}
+          </p>
+        )}
       </div>
 
       {/* Step 3 — Obiettivo */}
@@ -551,26 +565,34 @@ export default function PianoPage() {
           <div>
             <p className="font-semibold text-gray-900">Riepilogo</p>
             <p className="text-sm text-gray-600 mt-1">
-              <span className="font-mono font-bold text-violet-700">{numContenuti}</span> contenuti
+              <span className="font-mono font-bold text-violet-700">{numeroRiepilogo}</span> contenuti
               {' '}<span className="capitalize">{periodo}</span> distribuiti su
               {' '}<span className="font-semibold">{piattaforme.length}</span> piattaforme
               ({piattaforme.map(p => PLATFORM_LIST.find(x => x.key === p)?.emoji).join(' ')})
               {' '}con obiettivo <span className="font-semibold">{obiettivo}</span>
-              {' '}e qualità <span className="font-semibold uppercase">{quality}</span>.
+              {' '}e qualità <span className="font-semibold uppercase">{clientePkg?.quality ?? quality}</span>
+              {clientePkg ? ` · pacchetto ${clientePkg.nome}` : ''}.
             </p>
           </div>
         </div>
 
         {/* Upload media: caricali tutti in un colpo, il piano li distribuisce sui contenuti */}
-        <div className="mb-4 p-3 rounded-xl bg-white/70 border border-violet-100">
+        <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex items-start gap-2.5">
-            <ImagePlus className="w-4 h-4 text-violet-600 mt-0.5 flex-shrink-0" />
+            <Layers className="w-4 h-4 text-gray-700 mt-0.5 flex-shrink-0" />
             <div className="text-xs text-gray-700 leading-relaxed flex-1">
-              <p className="font-semibold text-gray-900">Media per questo piano</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold text-gray-950">Media kit del piano</p>
+                {clientePkg && (
+                  <span className="rounded-md bg-gray-900 px-2 py-1 text-[10px] font-semibold text-white">
+                    {clientePkg.nome} · <span className="capitalize">{periodo}</span>
+                  </span>
+                )}
+              </div>
               {fabbisognoNoto ? (
                 <>
                   <p className="mt-0.5">
-                    Piano <span className="font-semibold capitalize">{periodo}</span> (pulsante viola): servono{' '}
+                    Piano <span className="font-semibold capitalize">{periodo}</span> del pacchetto {clientePkg?.nome}: servono{' '}
                     <span className="font-bold text-violet-700">{requisiti.immagini} immagini</span>
                     {requisiti.video > 0 && <> + <span className="font-bold text-violet-700">{requisiti.video} MP4</span></>}
                     {' · '}caricati{' '}
@@ -600,47 +622,50 @@ export default function PianoPage() {
                   </ul>
                 </>
               )}
-              {/* Il pulsante verde genera il MESE INTERO anche col settimanale
-                  selezionato: il suo numero va detto qui, o sorprende chi lo preme. */}
-              {clientePkg && requisitiPacchetto && (
+              {clientePkg && mixPacchettoPeriodo && (
                 <p className="mt-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-2 py-1.5 text-emerald-900">
-                  {stessoFabbisogno ? (
-                    <>
-                      Il pulsante verde <span className="font-semibold">Genera piano del pacchetto {clientePkg.nome}</span> genera il mese intero
-                      ({contenutiMesePacchetto} contenuti): stesso fabbisogno di qui sopra,{' '}
-                      <span className="font-bold">{requisitiPacchetto.immagini} immagini{requisitiPacchetto.video > 0 ? ` + ${requisitiPacchetto.video} MP4` : ''}</span>.
-                    </>
-                  ) : (
-                    <>
-                      Attenzione: il pulsante verde <span className="font-semibold">Genera piano del pacchetto {clientePkg.nome}</span> ignora il periodo
-                      qui sopra e genera <span className="font-semibold">sempre il mese intero</span> ({contenutiMesePacchetto} contenuti): per quello servono{' '}
-                      <span className="font-bold">{requisitiPacchetto.immagini} immagini{requisitiPacchetto.video > 0 ? ` + ${requisitiPacchetto.video} MP4` : ''}</span>,
-                      non {requisiti.immagini} immagini{requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}.
-                    </>
-                  )}
+                  Il pulsante verde genera esattamente <span className="font-bold">{mixPacchettoPeriodo.totale} contenuti</span> per il periodo selezionato:
+                  {' '}{mixPacchettoPeriodo.postSingoli} post/pin + {mixPacchettoPeriodo.caroselli} caroselli + {mixPacchettoPeriodo.stories} Story + {mixPacchettoPeriodo.reelVideo} Reel/short.
+                  Fabbisogno collegato: <span className="font-bold">{requisiti.immagini} immagini{requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}</span>.
                 </p>
               )}
-              <p className="mt-1.5 text-gray-500">
-                Carica i file direttamente nella loro destinazione. Gli <span className="font-medium">MP4</span> sono accettati solo in Reel/Video;
-                senza MP4, 3-5 foto Reel vengono montate in un video 9:16 da vedere prima della pubblicazione.
-              </p>
             </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label="Caricamento media separato per formato">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2" aria-label="Caricamento media separato per formato">
             {DESTINATION_UPLOADS.map(destination => {
-              const count = planAssets.filter(asset => asset.tag === destination.tag).length
+              const destinationAssets = planAssets.filter(asset => asset.tag === destination.tag)
+              const imageCount = destinationAssets.filter(asset => !isVideoMedia(asset.url)).length
+              const videoCount = destinationAssets.length - imageCount
+              const target = uploadTargets?.[destination.tag]
+              const DestinationIcon = destination.tag === 'post'
+                ? ImageIcon
+                : destination.tag === 'story'
+                  ? Smartphone
+                  : destination.tag === 'carosello'
+                    ? Layers
+                    : Film
               return (
                 <label
                   key={destination.tag}
-                  className={`flex min-h-[62px] cursor-pointer items-center gap-2 border-2 border-dashed px-3 py-2 text-xs transition-colors ${destination.style} ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}
+                  className={`relative flex min-h-[98px] cursor-pointer items-center gap-3 rounded-lg border bg-white p-3 text-xs shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${destination.style} ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}
                 >
-                  {uploadingImages ? <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin" /> : <ImagePlus className="h-4 w-4 flex-shrink-0" />}
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-semibold">{destination.title}</span>
-                    <span className="block text-[10px] opacity-75">{destination.detail}</span>
+                  <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md ${destination.iconStyle}`}>
+                    {uploadingImages ? <Loader2 className="h-5 w-5 animate-spin" /> : <DestinationIcon className="h-5 w-5" />}
                   </span>
-                  <span className="font-mono text-sm font-bold" aria-label={`${count} media caricati`}>{count}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold text-gray-950">{destination.title}</span>
+                    <span className="mt-0.5 block text-[10px] text-gray-500">{destination.detail}</span>
+                    {target && (
+                      <span className="mt-2 block">
+                        <span className="block font-semibold text-gray-900">{target.main}</span>
+                        <span className="block text-[10px] text-gray-500">{target.note}</span>
+                      </span>
+                    )}
+                  </span>
+                  <span className="self-start rounded-md bg-gray-100 px-2 py-1 text-right font-mono text-[10px] font-semibold text-gray-700" aria-label={`${destinationAssets.length} media caricati`}>
+                    {destination.tag === 'reel' ? `${videoCount} MP4 · ${imageCount} foto` : `${imageCount} foto`}
+                  </span>
                   <input
                     type="file"
                     multiple
@@ -654,7 +679,7 @@ export default function PianoPage() {
             })}
           </div>
 
-          <label className={`mt-2 flex cursor-pointer items-center justify-center gap-2 border border-dashed border-gray-300 px-3 py-2 text-[11px] text-gray-600 hover:bg-gray-50 ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}>
+          <label className={`mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-[11px] text-gray-600 hover:border-gray-400 hover:bg-gray-50 ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}>
             <ImagePlus className="h-3.5 w-3.5" />
             Auto / destinazione dal nome o dalla descrizione ({planAssets.filter(asset => asset.tag === 'auto').length})
             <input
@@ -732,31 +757,33 @@ export default function PianoPage() {
         {clientePkg && (
           <div className="mb-3 p-3 rounded-xl bg-white/70 border border-emerald-200">
             <p className="text-xs text-gray-700">
-              Cliente con pacchetto <span className="font-bold text-emerald-700">{clientePkg.nome}</span>: {clientePkg.contenutiMese} contenuti/mese ({clientePkg.postCaroselli} post-caroselli + {clientePkg.reelBrevi} reel/short) su {clientePkg.social} social, qualità <span className="uppercase">{clientePkg.quality}</span>{clientePkg.articoloBlog ? ' + articolo blog collegato' : ''}.
+              Piano <span className="font-bold capitalize text-emerald-700">{periodo}</span> del pacchetto <span className="font-bold text-emerald-700">{clientePkg.nome}</span>
+              {' '}su {clientePkg.social} social, qualità <span className="uppercase">{clientePkg.quality}</span>.
             </p>
-            <p className="mt-1 mb-2 text-[11px] font-medium text-emerald-800">
-              Questo pulsante genera sempre il <span className="font-bold">mese intero</span> ({contenutiMesePacchetto} contenuti
-              {contenutiMesePacchetto !== clientePkg.contenutiMese ? ', quota impostata sul cliente' : ''}), qualunque periodo sia selezionato al punto 1.
-            </p>
-            {/* Semaforo del PACCHETTO: fabbisogno del mese intero, non del
-                periodo selezionato. Sta sopra il pulsante perché è l'ultima
-                cosa da sapere prima di premerlo. */}
-            {requisitiPacchetto && verificaPacchetto && (
+            {mixPacchettoPeriodo && (
+              <p className="mt-1 mb-2 text-[11px] font-medium text-emerald-800">
+                Periodo <span className="font-bold capitalize">{periodo}</span>: {mixPacchettoPeriodo.totale} contenuti
+                {' '}({mixPacchettoPeriodo.postSingoli} post/pin + {mixPacchettoPeriodo.caroselli} caroselli + {mixPacchettoPeriodo.stories} Story + {mixPacchettoPeriodo.reelVideo} Reel/short)
+                {clienteQuota && clienteQuota !== clientePkg.contenutiMese ? ' · quota personalizzata del cliente' : ''}.
+                {clientePkg.articoloBlog && periodo === 'mensile' ? ' Include l’articolo blog collegato.' : ''}
+              </p>
+            )}
+            {verifica && (
               <SemaforoMedia
-                titolo={`Piano del pacchetto ${clientePkg.nome} · mese intero`}
+                titolo={`Piano ${periodo} del pacchetto ${clientePkg.nome}`}
                 pulsante="il pulsante verde qui sotto"
-                requisiti={requisitiPacchetto}
-                verifica={verificaPacchetto}
+                requisiti={requisiti}
+                verifica={verifica}
                 caricati={caricati}
               />
             )}
             <button
               onClick={generaPacchetto}
-              disabled={runningPkg || running || uploadingImages || piattaforme.length === 0}
+              disabled={runningPkg || running || uploadingImages || piattaforme.length !== clientePkg.social}
               className="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
             >
               {runningPkg ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-              {runningPkg ? 'Generazione pacchetto...' : `Genera piano del pacchetto ${clientePkg.nome}`}
+              {runningPkg ? 'Generazione pacchetto...' : `Genera piano ${periodo} · pacchetto ${clientePkg.nome}`}
             </button>
             <p className="mt-1.5 text-[11px] text-gray-500 text-center">Numero, mix formati e qualità imposti dal pacchetto. Seleziona i {clientePkg.social} social sopra.</p>
           </div>
@@ -766,15 +793,13 @@ export default function PianoPage() {
 
         {/* Semaforo del PIANO LIBERO: fabbisogno del periodo selezionato al
             punto 1. Può essere verde mentre quello del pacchetto è ambra. */}
-        {fabbisognoNoto && (
-          <SemaforoMedia
-            titolo={`Piano libero ${periodo}`}
-            pulsante="il pulsante viola qui sotto"
-            requisiti={requisiti}
-            verifica={verifica}
-            caricati={caricati}
-          />
-        )}
+        <SemaforoMedia
+          titolo={`Piano libero ${periodo}`}
+          pulsante="il pulsante viola qui sotto"
+          requisiti={requisitiLiberi}
+          verifica={verificaLibera}
+          caricati={caricati}
+        />
 
         <button
           onClick={chiediConferma}

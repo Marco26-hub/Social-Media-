@@ -25,6 +25,20 @@ export type PackageSpec = {
   descrizione: string
 }
 
+export type PackagePeriod = 'settimanale' | 'mensile'
+export type PackagePeriodMix = {
+  totale: number
+  postCaroselli: number
+  reelBrevi: number
+  caroselli: number
+  postSingoli: number
+  stories: number
+  reelVideo: number
+}
+
+const SETTIMANE_PER_MESE = 4.33
+const CAROSELLI_OGNI = 3
+
 export const PACKAGES: Record<PackageId, PackageSpec> = {
   presenza: {
     id: 'presenza',
@@ -59,4 +73,33 @@ export function getPackage(id: unknown): PackageSpec | null {
   if (typeof id !== 'string') return null
   const key = id.trim().toLowerCase()
   return (PACKAGES as Record<string, PackageSpec>)[key] ?? null
+}
+
+// Unica aritmetica condivisa da UI, fabbisogno media e backend generativo.
+// `quotaMensile` permette alla scheda cliente di sovrascrivere il default del
+// pacchetto senza creare numeri diversi tra riepilogo e contenuti inseriti.
+export function packageContentCount(pkg: PackageSpec, periodo: PackagePeriod, quotaMensile?: number | null): number {
+  const mensile = Number.isFinite(quotaMensile) && Number(quotaMensile) > 0
+    ? Math.round(Number(quotaMensile))
+    : pkg.contenutiMese
+  return periodo === 'mensile' ? mensile : Math.ceil(mensile / SETTIMANE_PER_MESE)
+}
+
+export function packageMixForPeriod(pkg: PackageSpec, periodo: PackagePeriod, quotaMensile?: number | null): PackagePeriodMix {
+  const totale = packageContentCount(pkg, periodo, quotaMensile)
+  const reelBrevi = Math.min(totale, Math.round((pkg.reelBrevi / pkg.contenutiMese) * totale))
+  const postCaroselli = Math.max(0, totale - reelBrevi)
+  const caroselli = Math.floor(postCaroselli / CAROSELLI_OGNI)
+  // Una quota stabile dei contenuti brevi diventa Story; il resto Reel/Short.
+  // La regola è condivisa con UI, media e prompt: mai più un gruppo ambiguo.
+  const stories = reelBrevi > 1 ? Math.max(1, Math.round(reelBrevi / 3)) : 0
+  return {
+    totale,
+    postCaroselli,
+    reelBrevi,
+    caroselli,
+    postSingoli: postCaroselli - caroselli,
+    stories,
+    reelVideo: reelBrevi - stories,
+  }
 }

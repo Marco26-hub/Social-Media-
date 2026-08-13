@@ -494,14 +494,14 @@ export function cadenzaDaPacchetto(
   const giorniDisponibili = includeWeekend ? 7 : 5
 
   let contenutiSettimana: number
-  if (pkg) {
-    // Il pacchetto è mensile per definizione: la cadenza settimanale si
-    // ricava dal totale mese, non dal `periodo` richiesto.
-    contenutiSettimana = Math.round(pkg.contenutiMese / SETTIMANE_PER_MESE)
-  } else if (typeof contenutiRichiesti === 'number' && Number.isFinite(contenutiRichiesti) && contenutiRichiesti > 0) {
+  if (typeof contenutiRichiesti === 'number' && Number.isFinite(contenutiRichiesti) && contenutiRichiesti > 0) {
+    // Il chiamante può passare il totale già calcolato dalla ricetta condivisa
+    // (pacchetto, quota cliente e periodo): ha precedenza sul default commerciale.
     contenutiSettimana = periodo === 'mensile'
       ? Math.round(contenutiRichiesti / SETTIMANE_PER_MESE)
       : Math.round(contenutiRichiesti)
+  } else if (pkg) {
+    contenutiSettimana = Math.round(pkg.contenutiMese / SETTIMANE_PER_MESE)
   } else {
     contenutiSettimana = CONTENUTI_SETTIMANA_DEFAULT
   }

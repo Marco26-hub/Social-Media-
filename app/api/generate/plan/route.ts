@@ -17,7 +17,14 @@ import {
 import { getClientGenerationContext } from '@/lib/client-context'
 import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS, DIVERSITY_STANDARDS, FUNNEL_STANDARDS, HOOK_FORMULAS, COPY_FRAMEWORKS, COPY_ANGLES } from '@/lib/prompt-standards'
 import { fetchSectorTrends, buildTrendContext } from '@/lib/trends'
-import { getPackage, type PackageSpec } from '@/lib/packages'
+import {
+  getPackage,
+  packageContentCount,
+  packageMixForPeriod,
+  type PackagePeriod,
+  type PackagePeriodMix,
+  type PackageSpec,
+} from '@/lib/packages'
 // Fabbisogno e vincoli media: quante slide vuole un carosello, quali formati
 // possono ricevere un MP4 e come si legge la marcatura manuale dell'utente.
 import { MEDIA_PER_FORMATO, normalizeMediaTag, type MediaTag } from '@/lib/media-requirements'
@@ -198,13 +205,13 @@ FOCUS DI QUESTO BLOCCO (i blocchi del piano NON devono somigliarsi tra loro):
 // Vincoli del pacchetto acquistato iniettati nel prompt. `perBlocco` è il numero di
 // contenuti da generare in QUESTO blocco settimanale: va tenuto distinto dal totale
 // mensile, altrimenti il modello si ancora al totale e sovraproduce per blocco.
-function buildPackageContext(pkg: PackageSpec | null, perBlocco: number): string {
-  if (!pkg) return ''
+function buildPackageContext(pkg: PackageSpec | null, piano: PackagePeriodMix | null, periodo: PackagePeriod, perBlocco: number): string {
+  if (!pkg || !piano) return ''
   return `
 
 PACCHETTO ${pkg.nome.toUpperCase()} — VINCOLI DEL CLIENTE (ha acquistato questo pacchetto):
 - In QUESTO blocco genera ESATTAMENTE ${perBlocco} contenuti, non di più.
-- Contesto (NON generarlo tutto qui): nel mese il piano completo avrà ${pkg.contenutiMese} contenuti social = ${pkg.postCaroselli} tra POST/CAROSELLI + ${pkg.reelBrevi} tra REEL/STORY/SHORT; rispetta questo mix di formati nell'insieme del mese.
+- Il piano ${periodo} completo ha ESATTAMENTE ${piano.totale} contenuti social: ${piano.postSingoli} POST/PIN + ${piano.caroselli} CAROSELLI + ${piano.stories} STORY + ${piano.reelVideo} REEL/SHORT/VIDEO.
 - Distribuisci i contenuti sui ${pkg.social} social selezionati.
 - Mantieni lo standard qualità del pacchetto su ogni contenuto.`
 }
@@ -298,7 +305,7 @@ const CAROSELLI_OGNI = 3
 // Quota reel del piano libero: stessa proporzione di QUOTA_REEL in
 // lib/media-requirements.ts, usata quando non c'è un pacchetto che detti il mix.
 const QUOTA_REEL_LIBERO = 0.25
-type MixFormati = { caroselli: number; reel: number; postSingoli: number; fonte: 'pacchetto' | 'libero' }
+type MixFormati = { caroselli: number; reel: number; story: number; postSingoli: number; fonte: 'pacchetto' | 'libero' }
 
 // Ripartizione intera di un totale su N blocchi senza perdere né inventare unità
 // (6 reel su 4 settimane → 1,2,1,2 = 6): gli arrotondamenti per blocco farebbero
@@ -309,20 +316,21 @@ function quotaBlocco(totale: number, blocchi: number, indice: number): number {
   return Math.floor(((indice + 1) * t) / blocchi) - Math.floor((indice * t) / blocchi)
 }
 
-function mixFormatiBlocco(pkg: PackageSpec | null, perBlocco: number, blocchi: number, indice: number): MixFormati {
+function mixFormatiBlocco(piano: PackagePeriodMix | null, perBlocco: number, blocchi: number, indice: number): MixFormati {
   const totale = Math.max(0, Math.round(perBlocco))
-  if (pkg) {
+  if (piano) {
     // Pacchetto: il mix è quello venduto (postCaroselli + reelBrevi), spalmato
     // sui blocchi con la stessa aritmetica del fabbisogno mostrato a schermo.
-    const reel = quotaBlocco(pkg.reelBrevi, blocchi, indice)
-    const caroselli = quotaBlocco(Math.floor(pkg.postCaroselli / CAROSELLI_OGNI), blocchi, indice)
-    return { caroselli, reel, postSingoli: Math.max(0, totale - reel - caroselli), fonte: 'pacchetto' }
+    const reel = quotaBlocco(piano.reelVideo, blocchi, indice)
+    const story = quotaBlocco(piano.stories, blocchi, indice)
+    const caroselli = quotaBlocco(piano.caroselli, blocchi, indice)
+    return { caroselli, reel, story, postSingoli: Math.max(0, totale - reel - story - caroselli), fonte: 'pacchetto' }
   }
   // Piano libero: proporzione dichiarata (25% reel, 1 carosello ogni 3 statici).
   const reel = Math.round(totale * QUOTA_REEL_LIBERO)
   const statici = Math.max(0, totale - reel)
   const caroselli = Math.floor(statici / CAROSELLI_OGNI)
-  return { caroselli, reel, postSingoli: statici - caroselli, fonte: 'libero' }
+  return { caroselli, reel, story: 0, postSingoli: statici - caroselli, fonte: 'libero' }
 }
 
 function buildMixFormatiContext(mix: MixFormati): string {
@@ -335,7 +343,8 @@ function buildMixFormatiContext(mix: MixFormati): string {
 MIX DEI FORMATI IN QUESTO BLOCCO — vincolante (${mix.fonte === 'pacchetto' ? 'è il mix del pacchetto acquistato' : 'proporzione dichiarata: ~1 contenuto su 4 in formato reel, 1 carosello ogni 3 contenuti statici'}; il materiale che l'utente ha caricato è stato calcolato ESATTAMENTE su questi numeri):
 ${rigaCaroselli}
 - ${mix.reel} ${mix.reel === 1 ? 'contenuto' : 'contenuti'} in formato reel/short/video (sono gli unici che possono usare un MP4).
-- I restanti ${mix.postSingoli} ${mix.postSingoli === 1 ? 'contenuto' : 'contenuti'}: post/story/pin, una sola immagine ciascuno.
+- ${mix.story} ${mix.story === 1 ? 'contenuto' : 'contenuti'} in formato story, una immagine verticale 9:16 ciascuno.
+- I restanti ${mix.postSingoli} ${mix.postSingoli === 1 ? 'contenuto' : 'contenuti'}: post/pin, una sola immagine ciascuno.
 - Nel dubbio scegli "post": un post in più non rompe il piano, un carosello in più sì (vale 5 immagini).`
 }
 
@@ -367,7 +376,7 @@ export async function POST(request: Request) {
     // chiunque potrebbe chiedere il pacchetto superiore e scavalcare il cap di
     // qualità del proprio piano.
     const pkgRequested: PackageSpec | null = getPackage(pacchetto)
-    const periodoEff = pkgRequested ? 'mensile' : periodo
+    const periodoEff: PackagePeriod = periodo === 'mensile' ? 'mensile' : 'settimanale'
     const mediaPool: string[] = Array.isArray(media_urls) ? media_urls.filter((u): u is string => typeof u === 'string' && u.length > 0) : []
     // Descrizione per foto (nome prodotto) dal client: mappa url→label. Serve al prompt
     // per far scegliere al modello la foto giusta per numero (media_refs). Opzionale:
@@ -411,9 +420,14 @@ export async function POST(request: Request) {
     const requestedQuality = quality ?? quality_level ?? post_quality ?? qualita
 
     if (isDemo() || !dbReady()) {
-      const demoQuality = resolveContentQuality({ requestedQuality })
+      const demoQuality = pkgRequested?.quality ?? resolveContentQuality({ requestedQuality })
       const selectedPlatforms = new Set<string>(piattaforme)
-      const count = demoContenuti.filter((item) => selectedPlatforms.has(item.canale)).length || (periodo === 'mensile' ? 30 : 7)
+      if (pkgRequested && selectedPlatforms.size !== pkgRequested.social) {
+        return NextResponse.json({ error: `Il pacchetto ${pkgRequested.nome} richiede esattamente ${pkgRequested.social} social.` }, { status: 400 })
+      }
+      const demoPackagePlan = pkgRequested ? packageMixForPeriod(pkgRequested, periodoEff) : null
+      const count = demoPackagePlan?.totale
+        ?? (demoContenuti.filter((item) => selectedPlatforms.has(item.canale)).length || (periodoEff === 'mensile' ? 30 : 7))
       return NextResponse.json({
         ok: true,
         demo: true,
@@ -441,6 +455,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Questo cliente non ha un pacchetto attivo: usa il piano libero oppure assegna il pacchetto dalla scheda cliente.' },
         { status: 403 },
+      )
+    }
+    const quotaCliente = Number(client?.contenuti_mese)
+    const quotaMensile = Number.isFinite(quotaCliente) && quotaCliente > 0 ? quotaCliente : null
+    const packagePlan = pkg ? packageMixForPeriod(pkg, periodoEff, quotaMensile) : null
+    if (pkg && new Set<string>(piattaforme).size !== pkg.social) {
+      return NextResponse.json(
+        { error: `Il pacchetto ${pkg.nome} include ${pkg.social} social: selezionane esattamente ${pkg.social}.` },
+        { status: 400 },
       )
     }
 
@@ -480,26 +503,54 @@ ${buildExtendedOutputSchema(contentQuality)}
     // `images` nasce vuoto: la ripartizione vera avviene una sola volta sotto
     // (distribuisciMediaSuBlocchi), quando il numero di blocchi è definitivo.
     // Prima ogni ramo faceva la sua slice e poi veniva comunque sovrascritta.
-    // Piano del pacchetto: numero ESATTO di contenuti al mese, distribuito sulle 4
-    // settimane (16→4/sett, 24→6/sett). targetMin=targetMax forza il modello sul numero.
-    const pkgPerWeek = pkg ? Math.round(pkg.contenutiMese / 4) : 0
+    // Piano del pacchetto: numero ESATTO del periodo selezionato. Lo stesso
+    // `packagePlan` alimenta UI, fabbisogno media, prompt, cap e risposta API.
     const chunks: Chunk[] = []
     if (periodoEff === 'mensile') {
       // Mensile: 4 chunk settimanali. Per medium/high riduciamo il targetMax
       // (7 invece di 9) perché lo schema esteso + credito limitato troncherebbe.
-      const maxPerWeek = pkg ? pkgPerWeek : (contentQuality === 'soft' ? 9 : 7)
-      const minPerWeek = pkg ? pkgPerWeek : 6
-      // Pacchetto = sempre le 4 settimane (numero esatto). Altrimenti rispetta la fase.
+      const maxPerWeek = contentQuality === 'soft' ? 9 : 7
+      const minPerWeek = 6
+      // Il pacchetto copre sempre le 4 settimane; il piano libero può usare le fasi.
       const settimane = pkg ? [0, 1, 2, 3] : (faseNum === 1 ? [0, 1] : faseNum === 2 ? [2, 3] : [0, 1, 2, 3])
-      for (const i of settimane) {
+      settimane.forEach((i, indice) => {
+        const targetPacchetto = packagePlan ? quotaBlocco(packagePlan.totale, settimane.length, indice) : null
         chunks.push({
           start: fmtDate(addDays(today, i * 7)),
           end: fmtDate(addDays(today, i * 7 + 6)),
           label: `Settimana ${i + 1} del piano mensile`,
-          targetMin: minPerWeek, targetMax: maxPerWeek,
+          targetMin: targetPacchetto ?? minPerWeek,
+          targetMax: targetPacchetto ?? maxPerWeek,
           images: [],
         })
-      }
+      })
+    } else if (packagePlan && packagePlan.totale > 4 && (contentQuality === 'high' || contentQuality === 'medium')) {
+      // Crescita settimanale = 6 contenuti: due blocchi da 3 evitano JSON
+      // troncati mantenendo il totale esatto e il mix condiviso.
+      const primaMeta = quotaBlocco(packagePlan.totale, 2, 0)
+      const secondaMeta = quotaBlocco(packagePlan.totale, 2, 1)
+      chunks.push({
+        start: fmtDate(today),
+        end: fmtDate(addDays(today, 3)),
+        label: 'Prima metà piano settimanale del pacchetto (giorni 1-4)',
+        targetMin: primaMeta, targetMax: primaMeta,
+        images: [],
+      })
+      chunks.push({
+        start: fmtDate(addDays(today, 4)),
+        end: fmtDate(addDays(today, 6)),
+        label: 'Seconda metà piano settimanale del pacchetto (giorni 5-7)',
+        targetMin: secondaMeta, targetMax: secondaMeta,
+        images: [],
+      })
+    } else if (packagePlan) {
+      chunks.push({
+        start: fmtDate(today),
+        end: fmtDate(addDays(today, 6)),
+        label: 'Piano settimanale del pacchetto',
+        targetMin: packagePlan.totale, targetMax: packagePlan.totale,
+        images: [],
+      })
     } else if (contentQuality === 'high' || contentQuality === 'medium') {
       // Quality medium/high: schema esteso (campi strategia, scenes, A/B, KPI...)
       // con 7-10 item in un solo chunk il JSON tronca anche a 12000 token, e su
@@ -544,7 +595,7 @@ ${buildExtendedOutputSchema(contentQuality)}
     // sanitizeItem (degrado del carosello eccedente quando le foto non bastano).
     const mixPerChunk = new Map<Chunk, MixFormati>()
     chunks.forEach((chunk, ci) => {
-      mixPerChunk.set(chunk, mixFormatiBlocco(pkg, pkg ? pkgPerWeek : chunk.targetMax, chunks.length, ci))
+      mixPerChunk.set(chunk, mixFormatiBlocco(packagePlan, chunk.targetMax, chunks.length, ci))
     })
 
     // Contesto stagionale calcolato sull'intero range del piano (comune a tutti i blocchi).
@@ -556,10 +607,11 @@ ${buildExtendedOutputSchema(contentQuality)}
     // Ora il modello riceve: quante uscite a settimana, su quanti giorni, quante
     // al massimo nello stesso giorno (cadenza del pacchetto) e le fasce reali di
     // ogni canale selezionato. L'enforcement resta comunque deterministico sotto.
-    // Passiamo un target PER SETTIMANA (i blocchi del mensile sono settimanali),
-    // quindi periodo 'settimanale'; con pacchetto il 4° parametro è ignorato.
+    // Passiamo un target PER SETTIMANA (i blocchi del mensile sono settimanali).
     const targetPerSettimana = pkg
-      ? pkgPerWeek
+      ? periodoEff === 'mensile'
+        ? packageContentCount(pkg, 'settimanale', quotaMensile)
+        : packagePlan?.totale ?? chunks.reduce((sum, c) => sum + c.targetMax, 0)
       : periodoEff === 'mensile'
         ? chunks[0].targetMax
         : chunks.reduce((sum, c) => sum + c.targetMax, 0)
@@ -574,8 +626,8 @@ CADENZA DEL PIANO — vincolante:
     // Trend web reali (opt-in): una sola ricerca prima dei blocchi, iniettata in tutti.
     // SOLO per il mensile: la ricerca è awaited sul path critico (i blocchi la usano nel
     // prompt) e il mensile ha budget timeout ampio (130-140s); il settimanale (95s, con
-    // chunk fino a 90s) non ha margine per +10s serial → il piano del pacchetto (sempre
-    // mensile) la sfrutta, il settimanale libero no. Fail-safe: errore/timeout → '' e prosegue.
+    // chunk fino a 90s) non ha margine per +10s serial. Fail-safe: errore/timeout
+    // restituisce contesto vuoto e la generazione prosegue.
     let trendContext = ''
     if (use_web_trends === true && periodoEff === 'mensile') {
       const startMonth = new Date(`${chunks[0].start}T00:00:00Z`).getUTCMonth() + 1
@@ -612,10 +664,10 @@ Output SOLO JSON array valido:
 [{"data_pubblicazione":"YYYY-MM-DD (dentro ${chunk.start}..${chunk.end})","ora_pubblicazione":"HH:MM","canale":"USA SOLO un canale tra quelli in / ${piattaformeStr} / (valori ammessi: instagram|facebook|tiktok|pinterest|linkedin|threads|x|youtube_shorts|blog)","formato":"post|carousel|reel|story|pin|short|video|articolo","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","media_refs":[numeri delle foto di QUESTO blocco usate in questo contenuto, in ordine; [] se nessuna adatta],"product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
           + '\n' + PLAN_STANDARDS + '\n' + qualityPrompt
           + historyContext + temporalContext + trendContext
-          + buildPackageContext(pkg, pkgPerWeek)
+          + buildPackageContext(pkg, packagePlan, periodoEff, targetMax)
           // Vincolo sui FORMATI: senza, il fabbisogno media annunciato all'utente
           // resta una stima che il modello può far saltare con 12 caroselli.
-          + buildMixFormatiContext(mixPerChunk.get(chunk) ?? mixFormatiBlocco(pkg, targetMax, chunks.length, chunkIndex))
+          + buildMixFormatiContext(mixPerChunk.get(chunk) ?? mixFormatiBlocco(packagePlan, targetMax, chunks.length, chunkIndex))
           + buildChunkDiversitySeed(chunkIndex, chunks.length)
           + buildPlanAssetContext(chunk.images, assetLabels, assetTags)
         const visionImages = chunk.images.filter(url => !isVideoUrl(url))
@@ -659,15 +711,13 @@ Output SOLO JSON array valido:
     // mese per un solo blocco sfortunato.
     const chunkResults = await Promise.all(chunks.map((chunk, i) => generateChunk(chunk, i)))
     const failedChunks = chunkResults.filter((r): r is { ok: false; error: string } => !r.ok)
-    // Piano del pacchetto: cap PER-BLOCCO a pkgPerWeek, non troncamento globale dalla
-    // coda. Troncare in coda svuoterebbe le ultime settimane (mese front-loaded su
-    // sett. 1-2); cappare ogni blocco mantiene la distribuzione su tutto il mese e
-    // rispetta comunque il totale pagato (4 blocchi × pkgPerWeek = contenutiMese).
+    // Piano del pacchetto: cap per blocco sul target calcolato dalla ricetta
+    // condivisa, così il totale resta esatto anche con quote non divisibili per 4.
     const itemChunkPairs: { item: Record<string, unknown>; chunk: Chunk }[] = []
     let pkgTruncated = 0
     chunkResults.forEach((r, i) => {
       if (!r.ok) return
-      const items = pkg ? r.items.slice(0, pkgPerWeek) : r.items
+      const items = pkg ? r.items.slice(0, chunks[i].targetMax) : r.items
       if (pkg) pkgTruncated += Math.max(0, r.items.length - items.length)
       items.forEach(item => itemChunkPairs.push({ item, chunk: chunks[i] }))
     })
@@ -1157,8 +1207,9 @@ Output SOLO JSON array valido:
     // Pacchetto Crescita: l'articolo SEO+GEO non si genera qui (resta nella sezione
     // Blog), ma inseriamo nel calendario una VOCE DI COLLEGAMENTO così è chiaro che
     // fa parte del piano del mese e con il link per generarlo/gestirlo nel Blog.
+    const contenutiSocialInseriti = inseriti.length
     let articoloBlogInserito = false
-    if (pkg?.articoloBlog) {
+    if (pkg?.articoloBlog && periodoEff === 'mensile') {
       try {
         // Anche la voce blog esce dal governo orari: mattina di un feriale del
         // primo blocco (il blog nel weekend perde la giornata di indicizzazione).
@@ -1177,10 +1228,11 @@ Output SOLO JSON array valido:
 
     return NextResponse.json({
       ok: true,
-      count: inseriti.length,
-      ...(pkg && { pacchetto: pkg.id, pacchetto_nome: pkg.nome, pacchetto_contenuti: pkg.contenutiMese, articolo_blog: articoloBlogInserito }),
+      count: pkg ? contenutiSocialInseriti : inseriti.length,
+      count_totale: inseriti.length,
+      ...(pkg && { pacchetto: pkg.id, pacchetto_nome: pkg.nome, pacchetto_contenuti: packagePlan?.totale, periodo: periodoEff, articolo_blog: articoloBlogInserito }),
       ...(pkgTruncated && { pacchetto_troncati: pkgTruncated }),
-      requested_range: pkg ? String(pkg.contenutiMese) : periodo === 'mensile' ? '25-35' : '7-10',
+      requested_range: packagePlan ? String(packagePlan.totale) : periodoEff === 'mensile' ? '25-35' : '7-10',
       chunks_total: chunks.length,
       chunks_failed: failedChunks.length,
       ...(failedChunks.length && { chunks_failed_detail: failedChunks.map(f => f.error) }),

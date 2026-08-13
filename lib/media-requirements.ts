@@ -1,4 +1,4 @@
-import type { PackageSpec } from '@/lib/packages'
+import { packageContentCount, packageMixForPeriod, type PackageSpec } from '@/lib/packages'
 
 // ─────────────────────────────────────────────────────────────────────────
 // FABBISOGNO MEDIA DEL PIANO EDITORIALE
@@ -142,11 +142,15 @@ export function requisitiMedia(input: {
   contenuti: number
   postCaroselli: number
   reelBrevi: number
+  stories?: number
+  reelVideo?: number
   conVideo: boolean
 }): Requisiti {
   const { post: postCaroselli, reel: reelBrevi } = normalizzaMix(input.contenuti, input.postCaroselli, input.reelBrevi)
   const caroselli = Math.floor(postCaroselli / CAROSELLI_OGNI)
   const postSingoli = postCaroselli - caroselli
+  const stories = Math.min(reelBrevi, Math.max(0, Math.round(input.stories ?? 0)))
+  const reelVideo = Math.min(reelBrevi - stories, Math.max(0, Math.round(input.reelVideo ?? (reelBrevi - stories))))
 
   const perPost = MEDIA_PER_FORMATO.post.immagini
   const perCarosello = MEDIA_PER_FORMATO.carousel.immagini
@@ -154,25 +158,29 @@ export function requisitiMedia(input: {
   const perReelVideo = MEDIA_PER_FORMATO.reel.video
 
   const immaginiPost = postSingoli * perPost
+  const immaginiStory = stories * MEDIA_PER_FORMATO.story.immagini
   const immaginiCaroselli = caroselli * perCarosello
-  const immaginiReel = input.conVideo ? 0 : reelBrevi * perReelImmagini
-  const video = input.conVideo ? reelBrevi * perReelVideo : 0
+  const immaginiReel = input.conVideo ? 0 : reelVideo * perReelImmagini
+  const video = input.conVideo ? reelVideo * perReelVideo : 0
 
-  const immagini = immaginiPost + immaginiCaroselli + immaginiReel
+  const immagini = immaginiPost + immaginiStory + immaginiCaroselli + immaginiReel
   const dettaglio: string[] = []
   if (postSingoli > 0) {
-    dettaglio.push(`${postSingoli} post/story/pin x ${perPost} immagine = ${immaginiPost} ${plur(immaginiPost, 'immagine', 'immagini')}`)
+    dettaglio.push(`${postSingoli} post/pin x ${perPost} immagine = ${immaginiPost} ${plur(immaginiPost, 'immagine', 'immagini')}`)
+  }
+  if (stories > 0) {
+    dettaglio.push(`${stories} ${plur(stories, 'Story', 'Story')} x 1 immagine 9:16 = ${immaginiStory} ${plur(immaginiStory, 'immagine', 'immagini')}`)
   }
   if (caroselli > 0) {
     dettaglio.push(
       `${caroselli} ${plur(caroselli, 'carosello', 'caroselli')} x ${perCarosello} immagini = ${immaginiCaroselli} immagini (minimo ${MEDIA_PER_FORMATO.carousel.min} e massimo ${MEDIA_PER_FORMATO.carousel.max} per carosello)`,
     )
   }
-  if (reelBrevi > 0) {
+  if (reelVideo > 0) {
     dettaglio.push(
       input.conVideo
-        ? `${reelBrevi} reel/short x 1 MP4 = ${video} MP4 (in alternativa ${perReelImmagini} immagini per Reel, montate automaticamente)`
-        : `${reelBrevi} reel/short x ${perReelImmagini} immagini = ${immaginiReel} immagini, oppure ${reelBrevi} MP4`,
+        ? `${reelVideo} reel/short x 1 MP4 = ${video} MP4 (in alternativa ${perReelImmagini} immagini per Reel, montate automaticamente)`
+        : `${reelVideo} reel/short x ${perReelImmagini} immagini = ${immaginiReel} immagini, oppure ${reelVideo} MP4`,
     )
   }
   if (!dettaglio.length) {
@@ -201,17 +209,25 @@ export function requisitiDaPacchetto(
     }
   }
   const divisore = periodo === 'settimanale' ? SETTIMANE_PER_MESE : 1
-  const contenuti = Math.ceil(mensile / divisore)
-  const postCaroselli = pkg ? Math.ceil(pkg.postCaroselli / divisore) : 0
-  const reelBrevi = pkg ? Math.ceil(pkg.reelBrevi / divisore) : 0
+  const contenuti = pkg ? packageContentCount(pkg, periodo, quotaMensile) : Math.ceil(mensile / divisore)
+  const mix = pkg ? packageMixForPeriod(pkg, periodo, quotaMensile) : null
+  const postCaroselli = mix?.postCaroselli ?? 0
+  const reelBrevi = mix?.reelBrevi ?? 0
 
   // conVideo = true: si ipotizza che i reel siano coperti da MP4 (lo scenario
   // "senza MP4" resta scritto nella riga di dettaglio del reel, così l'utente
   // vede subito quante immagini in più gli servirebbero).
-  const req = requisitiMedia({ contenuti, postCaroselli, reelBrevi, conVideo: true })
+  const req = requisitiMedia({
+    contenuti,
+    postCaroselli,
+    reelBrevi,
+    stories: mix?.stories,
+    reelVideo: mix?.reelVideo,
+    conVideo: true,
+  })
   const intestazione = pkg
-    ? `Pacchetto ${pkg.nome}: ${mensile} contenuti/mese → ${contenuti} contenuti in questo piano ${periodo}`
-    : `Quota cliente: ${mensile} contenuti/mese → ${contenuti} contenuti in questo piano ${periodo}`
+    ? `Piano ${periodo} del pacchetto ${pkg.nome}: ${contenuti} contenuti`
+    : `Piano ${periodo}: ${contenuti} contenuti calcolati dalla quota cliente`
   return { ...req, dettaglio: [intestazione, ...req.dettaglio] }
 }
 
@@ -249,9 +265,17 @@ export function verificaMedia(
   }
   if (video.length < serveVideo) {
     const diff = serveVideo - video.length
-    mancanti.push(
-      `${plur(diff, 'Manca', 'Mancano')} ${diff} MP4: ne servono ${serveVideo}, ne hai caricati ${video.length}. In alternativa carica ${diff * MEDIA_PER_FORMATO.reel.immagini} immagini in più: i reel scoperti verranno montati come slide.`,
-    )
+    const immaginiExtra = Math.max(0, immagini.length - serveImmagini)
+    const reelCopertiDaFoto = Math.min(diff, Math.floor(immaginiExtra / MEDIA_PER_FORMATO.reel.immagini))
+    const reelScoperti = diff - reelCopertiDaFoto
+    if (reelScoperti > 0) {
+      const coperturaFoto = reelCopertiDaFoto > 0
+        ? ` ${reelCopertiDaFoto} Reel ${plur(reelCopertiDaFoto, 'è già coperto', 'sono già coperti')} dalle foto caricate.`
+        : ''
+      mancanti.push(
+        `${plur(reelScoperti, 'Manca', 'Mancano')} ${reelScoperti} MP4 oppure ${reelScoperti * MEDIA_PER_FORMATO.reel.immagini} foto Reel 9:16.${coperturaFoto}`,
+      )
+    }
   }
 
   // Marcature incoerenti col tipo di file: non bloccano il piano ma vanno dette,
@@ -277,7 +301,7 @@ export function verificaMedia(
   if (marcateCarosello > 0 && marcateCarosello < minCarosello) {
     avvisi.push(`Solo ${marcateCarosello} media ${plur(marcateCarosello, 'marcato', 'marcati')} "carosello": un carosello ne richiede almeno ${minCarosello}.`)
   }
-  if (!video.length && serveVideo > 0) {
+  if (!video.length && serveVideo > 0 && immagini.length >= serveImmagini + serveVideo * MEDIA_PER_FORMATO.reel.immagini) {
     avvisi.push('Nessun MP4 caricato: i reel del piano verranno montati dalle immagini.')
   }
   const nonMarcati = lista.filter(m => normalizeMediaTag(m.tag) === 'auto').length
