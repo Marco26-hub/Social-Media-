@@ -7,7 +7,7 @@ import { AUTH_SECRET } from '@/lib/auth-secret'
 
 export const dynamic = 'force-dynamic'
 
-const LATEST_REQUIRED_MIGRATION = '028_profiles_status_default.sql'
+const LATEST_REQUIRED_MIGRATION = '041_blotato_visual_reels.sql'
 
 function hasEnv(name: string) {
   return Boolean(process.env[name]?.trim())
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
     status,
     mode: demo ? 'demo' : 'production',
     version,
-    database: 'neon-postgres',
+    database: 'supabase-postgres',
     checked_at: new Date().toISOString(),
     checks,
     database_details: {

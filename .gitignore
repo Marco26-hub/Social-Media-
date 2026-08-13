@@ -21,3 +21,4 @@ COPY-SUGGESTIONS.md
 
 # stray local env dumps — never commit
 env.download
+.vercel
