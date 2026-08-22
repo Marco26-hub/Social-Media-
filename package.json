@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test": "playwright test lib/*.test.ts --workers=1",
     "start": "node scripts/render-start.mjs",
     "lint": "eslint .",
     "migrate": "node scripts/run-migrations.mjs",
