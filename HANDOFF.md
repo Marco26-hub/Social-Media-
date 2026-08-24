@@ -72,11 +72,13 @@ Il workspace Blotato ospita gli account di **più clienti reali insieme** (SILKi
 - Landing pubblica verificata con Playwright su Home, Servizi, Pacchetti e Blog a 1440×1000 e 390×844: tutte le route rispondono 200, nessun errore console e nessun overflow orizzontale.
 - Playwright: popup fallback → filtro esatto → modifica/rigenerazione → anteprima → `DA_APPROVARE`, senza pubblicazione automatica; consuntivo pacchetto Blotato verificato con API mock.
 - Checkout/Home/Chi siamo/Pilot Lead verificati con Playwright a 1440 px e mobile: nessun errore console e nessun overflow orizzontale.
+- Deploy produzione commit `5d10c7c` online su `https://www.socialautomation.app`: Home, Chi siamo, pagina Pilot e i tre checkout rispondono 200. La migration 043 è applicata e la tabella ordini risponde correttamente.
+- **Gate pagamenti:** nel progetto Vercel LIVE mancano ancora `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`; il backend fallisce chiuso con HTTP 503 prima di creare l'ordine. Non dichiarare i checkout operativi finché entrambe le env non sono configurate e il webhook Stripe non è testato.
 - Server locale di prova: `http://127.0.0.1:3110` (processo di sviluppo, non URL pubblico).
 - Commit principali: `4014da5`, `9fbaa1e`, `81f9ef3`, `da439a5`, `d0869de`, `70d9ef6`.
 
 ## Da completare
-1. Deploy Vercel: push del codice + tutte le env Supabase. Il progetto Vercel auto-deploya da `main`. Verificare che la migrazione 042 sia applicata prima del test upload audio Reel.
+1. **Blocco go-live pagamenti:** aggiungere su Vercel `STRIPE_SECRET_KEY` LIVE e `STRIPE_WEBHOOK_SECRET`, configurare in Stripe l'endpoint `https://www.socialautomation.app/api/stripe/webhook`, quindi eseguire un acquisto reale controllato e verificare ordine, email e Customer Portal.
 2. GitHub → repo variable `APP_BASE_URL` = dominio Vercel (per il cron).
 3. **Sicurezza:** gli account `admin` e `cliente` usano ancora la password di default `1234567` — cambiarle prima del go-live.
 4. Spegnere Render solo dopo che Vercel è verificato (media e dati sono già su Supabase).
