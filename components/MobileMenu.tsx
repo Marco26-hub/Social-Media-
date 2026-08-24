@@ -34,6 +34,7 @@ const MENU_ICONS: Record<string, LucideIcon> = {
   '/servizi': LayoutGrid,
   '/servizi/gestione-social-media': LayoutGrid,
   '/servizi/seo-geo': LayoutGrid,
+  '/servizi/blog-seo': Newspaper,
   '/servizi/siti-e-commerce': LayoutGrid,
   '/metodo': Workflow,
   '/pacchetti': PackageCheck,

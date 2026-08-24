@@ -54,6 +54,7 @@ const jsonLd = {
         'Content marketing',
         'SEO',
         'Generative Engine Optimization',
+        'Blog SEO',
         'Siti web',
         'E-commerce',
         'AI compliance',
@@ -108,6 +109,29 @@ const jsonLd = {
               areaServed: { '@type': 'Country', name: 'Italia' },
               description:
                 'Gestione di tre social, 24 contenuti mensili, articolo SEO e GEO, analisi competitor, gestione di una campagna ADS e report avanzato.',
+            },
+          },
+          {
+            '@type': 'Offer',
+            name: 'Blog SEO + GEO',
+            url: `${SITE_URL}/servizi/blog-seo`,
+            price: '29.90',
+            priceCurrency: 'EUR',
+            priceSpecification: {
+              '@type': 'UnitPriceSpecification',
+              price: '29.90',
+              priceCurrency: 'EUR',
+              unitText: 'MONTH',
+              valueAddedTaxIncluded: false,
+            },
+            itemOffered: {
+              '@type': 'Service',
+              '@id': `${SITE_URL}/#blog-service`,
+              name: 'Blog SEO + GEO',
+              serviceType: 'Produzione e pubblicazione articoli blog',
+              provider: { '@id': `${SITE_URL}/#organization` },
+              areaServed: { '@type': 'Country', name: 'Italia' },
+              description: 'Dodici articoli SEO e GEO al mese con piano editoriale, revisione umana e pubblicazione sul blog collegato o consegna per CMS.',
             },
           },
           {

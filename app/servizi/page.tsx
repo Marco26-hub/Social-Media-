@@ -12,6 +12,7 @@ import {
   LockKeyhole,
   Megaphone,
   MessageCircle,
+  Newspaper,
   Scale,
   ScanSearch,
   ShieldCheck,
@@ -20,6 +21,7 @@ import {
   Target,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { BLOG_SERVICE } from '@/lib/blog-service'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
@@ -27,9 +29,9 @@ import PublicHeader from '@/components/PublicHeader'
 import site from '../landing.module.css'
 import styles from './servizi-v2.module.css'
 
-const META_TITLE = 'Gestione Social Media, SEO e Siti per PMI | SWA'
+const META_TITLE = 'Social Media, Blog SEO e Siti per PMI | SWA'
 const META_DESCRIPTION =
-  'Scopri i pacchetti SWA da 390 €/mese: gestione di 2 o 3 social, contenuti, pubblicazione, SEO, GEO, siti, e-commerce e consulenza AI compliance.'
+  'Scopri i servizi SWA: gestione social, Blog SEO + GEO con 12 articoli al mese, siti, e-commerce e consulenza AI compliance.'
 
 const WHATSAPP_NUMERO = '393477196603'
 const EMAIL_CONTATTO = 'swsdautomation@gmail.com'
@@ -71,8 +73,9 @@ const servicesPageJsonLd = {
         itemListElement: [
           { '@type': 'ListItem', position: 1, item: { '@id': `${SITE_URL}/#social-media-management` } },
           { '@type': 'ListItem', position: 2, item: { '@id': `${SITE_URL}/#digital-growth` } },
-          { '@type': 'ListItem', position: 3, item: { '@id': `${SITE_URL}/#web-development` } },
-          { '@type': 'ListItem', position: 4, item: { '@id': `${SITE_URL}/#legal-ai-consulting` } },
+          { '@type': 'ListItem', position: 3, item: { '@id': `${SITE_URL}/#blog-service` } },
+          { '@type': 'ListItem', position: 4, item: { '@id': `${SITE_URL}/#web-development` } },
+          { '@type': 'ListItem', position: 5, item: { '@id': `${SITE_URL}/#legal-ai-consulting` } },
         ],
       },
     },
@@ -126,9 +129,28 @@ const SERVICES = [
     outcome: 'Una base organica più solida, utile nel tempo e misurabile senza promesse di ranking.',
   },
   {
+    id: 'blog-seo',
+    href: BLOG_SERVICE.path,
+    number: '03',
+    icon: Newspaper,
+    label: BLOG_SERVICE.name,
+    title: 'Dodici articoli al mese, con una direzione editoriale precisa.',
+    description:
+      'Trasformiamo servizi, competenze e domande reali del pubblico in un calendario di articoli SEO + GEO, controllati prima della pubblicazione.',
+    included: [
+      '12 articoli completi ogni mese',
+      'Piano editoriale basato sugli intenti di ricerca',
+      'Title, meta description e collegamenti interni',
+      'FAQ visibili e dati strutturati',
+      'Revisione umana prima della pubblicazione',
+      'Blog collegato o consegna pronta per CMS',
+    ],
+    outcome: 'Un patrimonio editoriale continuo che amplia copertura organica e autorevolezza.',
+  },
+  {
     id: 'web',
     href: '/servizi/siti-e-commerce',
-    number: '03',
+    number: '04',
     icon: Globe2,
     label: 'Siti ed e-commerce',
     title: 'Un’esperienza digitale costruita per il contatto e la vendita.',
@@ -253,6 +275,10 @@ export default function ServiziPage() {
           <div className={`${styles.mapNode} ${styles.mapNodeSeo}`}>
             <FileSearch size={19} aria-hidden="true" />
             <span>SEO + GEO</span>
+          </div>
+          <div className={`${styles.mapNode} ${styles.mapNodeBlog}`}>
+            <Newspaper size={19} aria-hidden="true" />
+            <span>Blog</span>
           </div>
           <div className={`${styles.mapNode} ${styles.mapNodeWeb}`}>
             <ShoppingBag size={19} aria-hidden="true" />
@@ -389,6 +415,20 @@ export default function ServiziPage() {
               <small className={styles.ctaNote}>Setup incluso · IVA esclusa · rinnovo mensile</small>
             </article>
           ))}
+        </div>
+        <div className={styles.autonomousGrid}>
+          <Link href={BLOG_SERVICE.path} className={styles.autonomousOffer}>
+            <Newspaper size={21} aria-hidden="true" />
+            <span><small>Servizio autonomo</small><strong>{BLOG_SERVICE.name}</strong><em>{BLOG_SERVICE.articlesPerMonth} articoli/mese</em></span>
+            <b>{BLOG_SERVICE.displayPrice}<small>/mese</small></b>
+            <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+          <Link href="/servizi/siti-e-commerce" className={styles.autonomousOffer}>
+            <Globe2 size={21} aria-hidden="true" />
+            <span><small>Servizio autonomo</small><strong>Web &amp; Commerce</strong><em>Sito tuo dopo 12 mesi</em></span>
+            <b>€19,90<small>/mese</small></b>
+            <ArrowRight size={17} aria-hidden="true" />
+          </Link>
         </div>
         <div className={styles.pricingAssurance}>
           <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Valuta prima di acquistare.</strong> Richiedi un contenuto di prova gratuito e verifica metodo e qualità.</span></div>

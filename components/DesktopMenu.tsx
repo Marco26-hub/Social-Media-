@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronRight,
   Globe2,
+  BookOpenText,
   Layers3,
   Megaphone,
   Newspaper,
@@ -38,6 +39,12 @@ const SOLUTIONS: SolutionLink[] = [
     label: 'SEO + GEO',
     description: 'Visibilità su ricerca e sistemi AI.',
     icon: ScanSearch,
+  },
+  {
+    href: '/servizi/blog-seo',
+    label: 'Blog SEO + GEO',
+    description: '12 articoli al mese, pronti per il sito.',
+    icon: BookOpenText,
   },
   {
     href: '/servizi/siti-e-commerce',

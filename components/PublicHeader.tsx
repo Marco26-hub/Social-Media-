@@ -13,6 +13,7 @@ const MOBILE_LINKS = [
   { href: '/servizi', label: 'Tutti i servizi' },
   { href: '/servizi/gestione-social-media', label: 'Gestione social' },
   { href: '/servizi/seo-geo', label: 'SEO + GEO' },
+  { href: '/servizi/blog-seo', label: 'Blog SEO + GEO' },
   { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
   { href: '/metodo', label: 'Metodo' },
   { href: '/pacchetti', label: 'Pacchetti' },

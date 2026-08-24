@@ -14,6 +14,7 @@ import {
   Layers3,
   LockKeyhole,
   Megaphone,
+  Newspaper,
   ScanSearch,
   Scale,
   ShieldCheck,
@@ -21,6 +22,7 @@ import {
   Target,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { BLOG_SERVICE } from '@/lib/blog-service'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
@@ -82,6 +84,13 @@ const SERVICES = [
     title: 'Visibilità SEO + GEO',
     text: 'Contenuti strutturati per essere compresi dai motori di ricerca e dai sistemi di risposta basati sull’AI.',
     items: ['Audit tecnico ed editoriale', 'Articoli, FAQ e dati strutturati', 'Analisi di entità, fonti e autorevolezza', 'Monitoraggio e piano di miglioramento'],
+  },
+  {
+    icon: Newspaper,
+    href: BLOG_SERVICE.path,
+    title: BLOG_SERVICE.name,
+    text: `${BLOG_SERVICE.articlesPerMonth} articoli al mese, pianificati e revisionati per costruire copertura organica con continuità.`,
+    items: ['Piano editoriale mensile', 'SEO on-page, FAQ e dati strutturati', 'Controllo umano prima della pubblicazione', 'Pubblicazione collegata o consegna per CMS'],
   },
   {
     icon: Globe2,
@@ -366,7 +375,7 @@ export default function LandingPage() {
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Soluzioni</p>
           <h2 id="pricing-title">Scegli il risultato. Al resto pensiamo noi.</h2>
-          <p>Due pacchetti social completi, senza costi di setup. Per siti ed e-commerce scegli Web & Commerce, il pacchetto separato da 19,90 € al mese.</p>
+          <p>Due pacchetti social completi e due servizi autonomi: Blog SEO + GEO e Web & Commerce.</p>
         </div>
         <div className={styles.pricingGrid}>
           {PACCHETTI.map(plan => (
@@ -397,6 +406,40 @@ export default function LandingPage() {
               <small className={styles.ctaNote}>Setup incluso · IVA esclusa · rinnovo mensile</small>
             </article>
           ))}
+        </div>
+        <div className={styles.standaloneGrid} aria-label="Servizi autonomi">
+          <article className={styles.standaloneOffer}>
+            <div className={styles.standaloneIcon}><Newspaper size={22} aria-hidden="true" /></div>
+            <div className={styles.standaloneCopy}>
+              <span>Contenuti organici</span>
+              <h3>{BLOG_SERVICE.name}</h3>
+              <p>{BLOG_SERVICE.articlesPerMonth} articoli al mese con piano editoriale, SEO, GEO, FAQ e controllo umano.</p>
+              <ul>
+                <li><Check size={15} aria-hidden="true" /> {BLOG_SERVICE.trialDays} giorni per valutare il servizio</li>
+                <li><Check size={15} aria-hidden="true" /> Pubblicazione sul blog collegato o consegna per CMS</li>
+              </ul>
+            </div>
+            <div className={styles.standaloneAction}>
+              <p><strong>{BLOG_SERVICE.displayPrice}</strong><span>/mese</span></p>
+              <Link href={BLOG_SERVICE.path}>Scopri Blog <ArrowRight size={16} aria-hidden="true" /></Link>
+            </div>
+          </article>
+          <article className={`${styles.standaloneOffer} ${styles.webOffer}`}>
+            <div className={styles.standaloneIcon}><Globe2 size={22} aria-hidden="true" /></div>
+            <div className={styles.standaloneCopy}>
+              <span>Presenza proprietaria</span>
+              <h3>Web &amp; Commerce</h3>
+              <p>Landing page, sito aziendale o e-commerce mobile-first collegato a contenuti, campagne e analytics.</p>
+              <ul>
+                <li><Check size={15} aria-hidden="true" /> Architettura, design responsive e SEO tecnica</li>
+                <li><Check size={15} aria-hidden="true" /> Dopo 12 mesi di canone, il sito è tuo</li>
+              </ul>
+            </div>
+            <div className={styles.standaloneAction}>
+              <p><small>da</small><strong>€19,90</strong><span>/mese</span></p>
+              <Link href="/servizi/siti-e-commerce">Scopri Web <ArrowRight size={16} aria-hidden="true" /></Link>
+            </div>
+          </article>
         </div>
         <div className={styles.pricingAssurance}>
           <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Prima vuoi verificare la qualità?</strong> Richiedi un contenuto di prova gratuito.</span></div>

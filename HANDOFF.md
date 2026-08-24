@@ -1,6 +1,6 @@
 # HANDOFF — Social Automation
 
-Stato al 2026-08-13. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+Stato al 2026-08-24. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
 
 ## Stack
 - **Frontend/Backend:** Next.js 15.5 (App Router), React 19, Tailwind. Deploy su **Vercel**.
@@ -36,6 +36,13 @@ Vecchie pagine unificate in poche pagine-contenitore con tab, vecchie URL vive v
 - `/dashboard/clienti` — Clienti · Registrazioni · Pagamenti · Onboarding
 - `/dashboard/settings` — Impostazioni · Profilo Brand · Prodotti · Setup Produzione
 
+## Sito pubblico e offerta commerciale
+- La vetrina usa una tassonomia unica su Home, `/servizi`, `/pacchetti`, menu desktop/mobile, sitemap e dati strutturati: **Presenza**, **Crescita**, **Blog SEO + GEO**, **Web & Commerce**.
+- Presenza e Crescita sono i due pacchetti social. Blog e Web sono servizi autonomi e combinabili, non pacchetti social impliciti.
+- **Blog SEO + GEO:** `/servizi/blog-seo`, 12 articoli al mese a 29,90 euro/mese, 14 giorni iniziali. Include piano editoriale, SEO on-page, GEO/FAQ, revisione umana e pubblicazione sul blog SWA collegato oppure consegna/integrazione per CMS esterni. Non promette ranking o traffico garantiti.
+- **Web & Commerce:** `/servizi/siti-e-commerce`, da 19,90 euro/mese; dopo 12 mesi di canone il sito diventa del cliente. La stessa formula è ora esposta anche in Home e nella pagina Pacchetti.
+- Le CTA dei servizi autonomi portano alla pagina dedicata e poi alla valutazione/attivazione via WhatsApp. Non esiste ancora un checkout Stripe diretto per Blog o Web.
+
 ## Piano editoriale — generazione con AI
 - **`lib/scheduling.ts`**: orari e giorni non più a caso. Fasce per canale (`CHANNEL_SLOTS`, con motivazione per ciascuna), cadenza dal pacchetto (`cadenzaDaPacchetto`), niente più default fisso `10:00`.
 - **`lib/media-requirements.ts`**: calcola le quantità esatte per Post, Story, Caroselli e Reel dal pacchetto/quota e dal periodo. I caricamenti sono separati per destinazione. Un Reel accetta 1 MP4 oppure 5 foto verticali 9:16.
@@ -58,11 +65,12 @@ Il workspace Blotato ospita gli account di **più clienti reali insieme** (SILKi
 - **Pagina Facebook SWA** ("Social Web Automation", account id `44606`) configurata in questa sessione: Pagina business collegata, Instagram, sito aggiuntivo, indirizzo (Via G. Verdi 2/B, Cermenate CO), Impressum (SWA S.r.l.). Nessun post ancora pubblicato — resta da fare.
 - Per gli invii storici usare prima **Verifica Blotato**. Non azzerare un `blotato_post_id` fermo su `scheduled` finché non è stato controllato sul social/Blotato: il requeue può altrimenti duplicare un post già uscito.
 
-## Verifiche 2026-08-13
+## Verifiche 2026-08-24
 - `npm run build`: passa; restano 6 warning lint preesistenti in moduli non toccati.
+- Landing pubblica verificata con Playwright su Home, Servizi, Pacchetti e Blog a 1440×1000 e 390×844: tutte le route rispondono 200, nessun errore console e nessun overflow orizzontale.
 - Playwright: popup fallback → filtro esatto → modifica/rigenerazione → anteprima → `DA_APPROVARE`, senza pubblicazione automatica; consuntivo pacchetto Blotato verificato con API mock.
 - Server locale di prova: `http://127.0.0.1:3108/dashboard/piano` (processo di sviluppo, non URL pubblico).
-- Commit principali: `4014da5`, `9fbaa1e`, `81f9ef3`, `da439a5` (quest'ultimo precede la correzione Facebook ancora da committare in questo aggiornamento).
+- Commit principali: `4014da5`, `9fbaa1e`, `81f9ef3`, `da439a5`, `d0869de`, `70d9ef6`.
 
 ## Da completare
 1. Deploy Vercel: push del codice + tutte le env Supabase. Il progetto Vercel auto-deploya da `main`. Verificare che la migrazione 042 sia applicata prima del test upload audio Reel.
