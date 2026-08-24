@@ -28,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/servizi/seo-geo',
       '/servizi/blog-seo',
       '/servizi/siti-e-commerce',
+      '/servizi/ricerca-clienti-b2b',
       '/metodo',
       '/pacchetti',
       '/faq',

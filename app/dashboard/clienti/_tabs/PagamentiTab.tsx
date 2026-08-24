@@ -6,6 +6,7 @@ import { AlertTriangle, CheckCircle2, CreditCard, ExternalLink, Filter, Loader2,
 import { readApiError } from '@/lib/ai-client'
 import ConsulenzeAdmin from '@/components/ConsulenzeAdmin'
 import RecessiAdmin from '@/components/RecessiAdmin'
+import StandaloneServiceOrdersAdmin from '@/components/StandaloneServiceOrdersAdmin'
 
 type PaymentClient = {
   id: string
@@ -261,7 +262,7 @@ export default function PagamentiAdminPage() {
               <div className="mt-3 space-y-1.5 text-xs text-amber-800">
                 <p>Per attivare pagamenti pacchetti <strong>e</strong> consulenze €150:</p>
                 <ol className="ml-4 list-decimal space-y-1">
-                  <li>Su Render aggiungi <code className="rounded bg-amber-100 px-1">STRIPE_SECRET_KEY</code> (sk_live_…) {secretOk && '✓'}</li>
+                  <li>Su Vercel aggiungi <code className="rounded bg-amber-100 px-1">STRIPE_SECRET_KEY</code> (sk_live_…) {secretOk && '✓'}</li>
                   <li>Su Stripe → Webhooks crea un endpoint verso:<br />
                     <code className="mt-1 inline-block break-all rounded bg-amber-100 px-1.5 py-0.5">{data.webhook_url || '/api/stripe/webhook'}</code><br />
                     eventi: checkout.session.completed, customer.subscription.*, invoice.*
@@ -314,6 +315,7 @@ export default function PagamentiAdminPage() {
         </div>
       </div>
 
+      <StandaloneServiceOrdersAdmin />
       <ConsulenzeAdmin />
       <RecessiAdmin />
 

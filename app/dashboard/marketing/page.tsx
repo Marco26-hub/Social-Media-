@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic'
 
 import nextDynamic from 'next/dynamic'
-import { PenLine, TrendingUp, Search, Magnet, Eye, Activity, BarChart3, FileText, Coins } from 'lucide-react'
+import { PenLine, TrendingUp, Search, Eye, Activity, BarChart3, FileText, Coins } from 'lucide-react'
 import TabbedPage, { type TabDef } from '@/components/TabbedPage'
 
 const Loading = () => <div className="p-8 text-sm text-gray-400">Caricamento…</div>
@@ -18,8 +18,6 @@ const TABS: TabDef[] = [
     Component: nextDynamic(() => import('./_tabs/AdsTab'), { loading: Loading }) },
   { key: 'seo', label: 'SEO + GEO', icon: Search, adminOnly: true,
     Component: nextDynamic(() => import('./_tabs/SeoTab'), { loading: Loading }) },
-  { key: 'leads', label: 'Leads', icon: Magnet, adminOnly: true,
-    Component: nextDynamic(() => import('./_tabs/LeadsTab'), { loading: Loading }) },
   { key: 'competitor', label: 'Competitor', icon: Eye, adminOnly: true,
     Component: nextDynamic(() => import('./_tabs/CompetitorTab'), { loading: Loading }) },
   { key: 'performance', label: 'Performance', icon: Activity,

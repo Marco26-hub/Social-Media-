@@ -1,4 +1,3 @@
-import { tabRedirect } from '@/lib/tab-redirect'
+import { redirect } from 'next/navigation'
 
-// Vecchia URL: questa pagina è ora il tab "leads" di /dashboard/marketing.
-export default tabRedirect('/dashboard/marketing', 'leads')
+export default function LegacyMarketPage() { redirect('/dashboard/marketing') }

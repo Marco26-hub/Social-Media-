@@ -375,7 +375,7 @@ export default function LandingPage() {
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Soluzioni</p>
           <h2 id="pricing-title">Scegli il risultato. Al resto pensiamo noi.</h2>
-          <p>Due pacchetti social completi e due servizi autonomi: Blog SEO + GEO e Web & Commerce.</p>
+          <p>Due pacchetti social e tre servizi autonomi: Blog SEO + GEO, Web & Commerce e Ricerca Clienti B2B.</p>
         </div>
         <div className={styles.pricingGrid}>
           {PACCHETTI.map(plan => (
@@ -440,6 +440,22 @@ export default function LandingPage() {
               <Link href="/servizi/siti-e-commerce">Scopri Web <ArrowRight size={16} aria-hidden="true" /></Link>
             </div>
           </article>
+          <article className={`${styles.standaloneOffer} ${styles.leadOffer}`}>
+            <div className={styles.standaloneIcon}><Target size={22} aria-hidden="true" /></div>
+            <div className={styles.standaloneCopy}>
+              <span>Ricerca commerciale assistita</span>
+              <h3>Ricerca Clienti B2B</h3>
+              <p>Un Pilot per definire il cliente ideale, analizzare fino a 30 aziende e ricevere una lista verificata e prioritaria.</p>
+              <ul>
+                <li><Check size={15} aria-hidden="true" /> Fonti pubbliche tracciabili e criteri concordati</li>
+                <li><Check size={15} aria-hidden="true" /> Nessun invio automatico o risultato commerciale garantito</li>
+              </ul>
+            </div>
+            <div className={styles.standaloneAction}>
+              <p><strong>€149</strong><span>una tantum</span></p>
+              <Link href="/servizi/ricerca-clienti-b2b">Scopri il Pilot <ArrowRight size={16} aria-hidden="true" /></Link>
+            </div>
+          </article>
         </div>
         <div className={styles.pricingAssurance}>
           <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Prima vuoi verificare la qualità?</strong> Richiedi un contenuto di prova gratuito.</span></div>
@@ -499,7 +515,7 @@ export default function LandingPage() {
         <p>
           © 2026 {TITOLARE.brand}<br />
           {TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}<br />
-          Cermenate (CO) · Servizi in tutta Italia
+          Sede a Cermenate (CO) · Servizi in Italia e nel mondo
         </p>
       </footer>
 

@@ -27,6 +27,7 @@ const config = {
   priceNote: `IVA esclusa. ${BLOG_SERVICE.trialDays} giorni per valutare il servizio.`,
   offerHighlight: `${BLOG_SERVICE.articlesPerMonth} articoli al mese`,
   primaryCtaLabel: 'Attiva Blog SEO + GEO',
+  primaryCtaHref: '/acquista?servizio=blog-seo',
   icon: Newspaper,
   signals: ['Piano di 12 articoli mensili', 'Revisione prima della pubblicazione', 'SEO, GEO e dati strutturati inclusi'],
   outcomes: [

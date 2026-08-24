@@ -687,6 +687,8 @@
 .standaloneAction a { min-height: 40px; display: inline-flex; align-items: center; gap: 6px; padding: 0 13px; border-radius: 4px; background: var(--sa-green); color: white; font-size: 11px; font-weight: 800; text-decoration: none; }
 .webOffer { border-color: #e0c36d; background: #fff8e5; }
 .webOffer .standaloneIcon, .webOffer .standaloneAction a { background: var(--sa-ink); }
+.leadOffer { grid-column: 1 / -1; border-color: #bfc9e9; background: #f2f4fb; }
+.leadOffer .standaloneIcon, .leadOffer .standaloneAction a { background: #314a8a; }
 .pricingAssurance > div,
 .pricingAssurance > a { display: flex; align-items: center; gap: 9px; }
 .pricingAssurance > div { color: #3e4d47; font-size: 12px; }
@@ -911,6 +913,7 @@
 }
 :global(html[data-theme='dark']) .standaloneOffer { border-color: #2f4a40; background: #11241d; }
 :global(html[data-theme='dark']) .webOffer { border-color: #5d4d25; background: #211c0f; }
+:global(html[data-theme='dark']) .leadOffer { border-color: #394a75; background: #151c31; }
 :global(html[data-theme='dark']) .standaloneCopy li { color: #c0cbc7; }
 
 :global(html[data-theme='dark']) .darkButton {

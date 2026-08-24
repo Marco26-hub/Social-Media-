@@ -120,7 +120,7 @@ export default function PacchettiPage() {
             <div className={styles.fit}><strong>È adatto a te se</strong><p>Vuoi rispondere alle ricerche dei clienti con continuità, senza gestire internamente il calendario editoriale.</p></div>
             <p className={styles.listLabel}>Nel canone trovi</p>
             <ul>{BLOG_SERVICE.features.map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
-            <Link href={BLOG_SERVICE.path}><Newspaper size={16} /> Attiva Blog <ArrowRight size={16} /></Link>
+            <Link href="/acquista?servizio=blog-seo"><Newspaper size={16} /> Attiva Blog <ArrowRight size={16} /></Link>
             <p className={styles.note}>IVA esclusa · rinnovo mensile</p>
           </article>
 
@@ -133,7 +133,7 @@ export default function PacchettiPage() {
             <div className={styles.fit}><strong>E adatto a te se</strong><p>Ti serve una landing, un sito aziendale o un e-commerce collegato a campagne, contenuti e analytics.</p></div>
             <p className={styles.listLabel}>Nel progetto trovi</p>
             <ul>{['Architettura, UX e design responsive', 'Landing page, sito o catalogo e-commerce', 'SEO tecnica, sitemap e dati strutturati', 'Moduli, checkout, analytics e integrazioni', 'Collegamento a social e campagne', 'Proprietà del sito dopo 12 mesi'].map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
-            <Link href="/servizi/siti-e-commerce"><Globe2 size={16} /> Configura Web &amp; Commerce <ArrowRight size={16} /></Link>
+            <Link href="/acquista?servizio=web-commerce"><Globe2 size={16} /> Attiva Web &amp; Commerce <ArrowRight size={16} /></Link>
             <p className={styles.note}>IVA esclusa · dominio e servizi esterni separati</p>
           </article>
         </div>

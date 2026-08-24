@@ -1,7 +1,7 @@
 // Invio email transazionali via Resend REST (nessun SDK extra, come lib/stripe.ts).
 // No-op sicuro se RESEND_API_KEY manca: logga e ritorna { sent:false } senza
 // rompere il flusso (registrazione/attivazione funzionano comunque). Appena la
-// key è su Render, le email partono senza altre modifiche.
+// key è su Vercel, le email partono senza altre modifiche.
 //
 // Env:
 //   RESEND_API_KEY   — key Resend (re_...)
@@ -75,6 +75,36 @@ export async function sendAccountActivated(to: string, nome: string, loginUrl: s
     to,
     subject: 'Il tuo account è attivo — Social Automation',
     html: `<p>Ciao ${escapeHtml(nome)},</p><p>il tuo account è stato attivato. Puoi accedere al pannello qui:</p><p><a href="${escapeHtml(loginUrl)}">${escapeHtml(loginUrl)}</a></p><p>— Social Automation</p>`,
+  })
+}
+
+export async function sendStandaloneOrderConfirmed(
+  to: string,
+  nome: string,
+  serviceName: string,
+): Promise<EmailResult> {
+  return sendEmail({
+    to,
+    subject: `Pagamento confermato - ${serviceName}`,
+    html: `<p>Ciao ${escapeHtml(nome)},</p><p>il pagamento per <strong>${escapeHtml(serviceName)}</strong> e stato confermato.</p><p>Ti contatteremo per raccogliere materiali, accessi e priorita operative necessarie all'avvio del servizio.</p><p>Social Automation</p>`,
+    text: `Ciao ${nome},\n\nil pagamento per ${serviceName} e stato confermato. Ti contatteremo per raccogliere materiali, accessi e priorita operative necessarie all'avvio del servizio.\n\nSocial Automation`,
+  })
+}
+
+export async function notifyStandaloneOrderPaid(p: {
+  orderId: string
+  serviceName: string
+  nome: string
+  azienda?: string | null
+  email: string
+  amountCents: number
+}): Promise<EmailResult> {
+  const to = process.env.AGENCY_NOTIFY_EMAIL?.trim()
+  if (!to) return { sent: false, skipped: true }
+  return sendEmail({
+    to,
+    subject: `Nuovo ordine pagato: ${p.serviceName}`,
+    text: `Ordine: ${p.orderId}\nServizio: ${p.serviceName}\nCliente: ${p.nome}\nAzienda: ${p.azienda || '-'}\nEmail: ${p.email}\nImporto: EUR ${(p.amountCents / 100).toFixed(2)}\n\nGestisci l'ordine dall'area Pagamenti.`,
   })
 }
 

@@ -506,7 +506,7 @@ export default function ServiziPage() {
         <p>
           © 2026 {TITOLARE.brand}<br />
           {TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}<br />
-          Cermenate (CO) · Servizi in tutta Italia
+          Sede a Cermenate (CO) · Servizi in Italia e nel mondo
         </p>
       </footer>
 
