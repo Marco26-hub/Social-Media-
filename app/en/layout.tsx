@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
@@ -5,9 +6,33 @@ import styles from './english.module.css'
 
 const WA_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Hello, I would like to discuss Social Web Automation services.')}`
 
+export const metadata: Metadata = {
+  keywords: [
+    'managed social media for SMEs',
+    'SEO and GEO strategy',
+    'SEO blog writing service',
+    'B2B lead research',
+    'website and e-commerce services',
+    'AI Act compliance',
+  ],
+  openGraph: {
+    title: 'Social Web Automation',
+    description: 'Managed social, SEO, websites, B2B lead research and AI compliance for SMEs.',
+    type: 'website',
+    siteName: 'Social Web Automation',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Social Web Automation',
+    description: 'Managed social, SEO, websites, B2B lead research and AI compliance for SMEs.',
+  },
+}
+
 export default function EnglishLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} lang="en">
+      <script dangerouslySetInnerHTML={{ __html: `document.documentElement.lang='en'` }} />
       <header className={styles.header}>
         <Link href="/en" className={styles.brand} aria-label="Social Web Automation, English home">
           <span className={styles.logo}><Image src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority /></span>

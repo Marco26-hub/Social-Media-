@@ -96,6 +96,12 @@ export async function middleware(request: NextRequest) {
     if (!rl.ok) return tooMany(rl.retryAfter)
   }
 
+  if (pathname === '/en' || pathname.startsWith('/en/')) {
+    const response = NextResponse.next()
+    response.headers.set('Content-Language', 'en')
+    return response
+  }
+
   if (isDemo()) return NextResponse.next()
   const token = await getToken({ req: request, secret: AUTH_SECRET })
   const isAuthPage = pathname === '/login'

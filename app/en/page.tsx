@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     languages: { 'it-IT': SITE_URL, en: `${SITE_URL}/en`, 'x-default': SITE_URL },
   },
   openGraph: { title, description, url: `${SITE_URL}/en`, locale: 'en' },
+  twitter: { title, description },
 }
 
 const services = [
