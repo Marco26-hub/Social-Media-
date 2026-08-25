@@ -29,9 +29,9 @@ import PublicHeader from '@/components/PublicHeader'
 import site from '../landing.module.css'
 import styles from './servizi-v2.module.css'
 
-const META_TITLE = 'Social Media, Blog SEO e Siti per PMI | SWA'
+const META_TITLE = 'Servizi Digitali per PMI: Social, SEO, Web e Lead | SWA'
 const META_DESCRIPTION =
-  'Scopri i servizi SWA: gestione social, Blog SEO + GEO con 12 articoli al mese, siti, e-commerce e consulenza AI compliance.'
+  'Servizi digitali integrati per PMI: gestione social, strategia SEO + GEO, Blog con 12 articoli, siti, e-commerce, ricerca clienti B2B e compliance AI.'
 
 const WHATSAPP_NUMERO = '393477196603'
 const EMAIL_CONTATTO = 'swsdautomation@gmail.com'
@@ -43,7 +43,10 @@ function waLink(message: string) {
 export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/servizi` },
+  alternates: {
+    canonical: `${SITE_URL}/servizi`,
+    languages: { 'it-IT': `${SITE_URL}/servizi`, en: `${SITE_URL}/en/services`, 'x-default': `${SITE_URL}/servizi` },
+  },
   openGraph: {
     title: META_TITLE,
     description: META_DESCRIPTION,
@@ -75,7 +78,8 @@ const servicesPageJsonLd = {
           { '@type': 'ListItem', position: 2, item: { '@id': `${SITE_URL}/#digital-growth` } },
           { '@type': 'ListItem', position: 3, item: { '@id': `${SITE_URL}/#blog-service` } },
           { '@type': 'ListItem', position: 4, item: { '@id': `${SITE_URL}/#web-development` } },
-          { '@type': 'ListItem', position: 5, item: { '@id': `${SITE_URL}/#legal-ai-consulting` } },
+          { '@type': 'ListItem', position: 5, item: { '@id': `${SITE_URL}/#lead-research-pilot` } },
+          { '@type': 'ListItem', position: 6, item: { '@id': `${SITE_URL}/#legal-ai-consulting` } },
         ],
       },
     },
@@ -117,11 +121,11 @@ const SERVICES = [
     label: 'SEO e GEO',
     title: 'Contenuti progettati per essere trovati e compresi.',
     description:
-      'Miglioriamo struttura, contenuti e segnali di autorevolezza per aiutare motori di ricerca e sistemi di risposta AI a comprendere correttamente azienda, servizi e competenze.',
+      'Analizziamo e miglioriamo struttura tecnica, architettura informativa, intenti e segnali di autorevolezza. Qui si definisce la strategia organica; la produzione continuativa degli articoli appartiene al servizio Blog.',
     included: [
       'Audit tecnico ed editoriale del sito',
       'Architettura dei contenuti e keyword intent',
-      'Articoli, FAQ e dati strutturati',
+      'Priorità per pagine, FAQ e dati strutturati',
       'Entità, fonti e segnali di autorevolezza',
       'Analisi della citabilità nei sistemi AI',
       'Monitoraggio e priorità di miglioramento',
@@ -165,6 +169,25 @@ const SERVICES = [
       'Integrazione con social, ADS e CRM',
     ],
     outcome: 'Un punto di arrivo credibile per trasformare attenzione, traffico e campagne in opportunità.',
+  },
+  {
+    id: 'lead-b2b',
+    href: '/servizi/ricerca-clienti-b2b',
+    number: '05',
+    icon: Target,
+    label: 'Ricerca Clienti B2B',
+    title: 'Aziende in target, fonti verificabili e priorità operative.',
+    description:
+      'Definiamo il profilo cliente ideale, analizziamo fino a 30 aziende e consegniamo una lista qualificata. Il Pilot riguarda ricerca e verifica: non invia messaggi automatici e non promette appuntamenti.',
+    included: [
+      'Profilo cliente ideale e criteri di esclusione',
+      'Ricerca fino a 30 aziende coerenti',
+      'Fonti pubbliche tracciabili',
+      'Motivazione e priorità per ogni azienda',
+      'Pulizia di duplicati e profili fuori target',
+      'Consegna strutturata per valutazione o CRM',
+    ],
+    outcome: 'Una base commerciale ordinata per decidere chi approfondire, senza confondere una lista con una vendita garantita.',
   },
 ]
 
@@ -219,6 +242,10 @@ const FAQ = [
     q: 'SEO e GEO garantiscono risultati o citazioni?',
     a: 'No. Miglioriamo struttura, qualità e reperibilità, ma nessun fornitore può garantire ranking o citazioni da parte dei sistemi AI.',
   },
+  {
+    q: 'Qual è la differenza tra SEO + GEO e Blog SEO + GEO?',
+    a: 'SEO + GEO analizza struttura, intenti, pagine, dati e priorità del sito. Blog SEO + GEO esegue la produzione continuativa: piano editoriale e 12 articoli al mese.',
+  },
 ]
 
 export default function ServiziPage() {
@@ -238,11 +265,11 @@ export default function ServiziPage() {
       <section className={styles.hero} aria-labelledby="services-hero-title">
         <div className={styles.heroCopy}>
           <p className={site.kicker}><Sparkles size={16} aria-hidden="true" /> Servizi digitali integrati</p>
-          <h1 id="services-hero-title">Gestione social, SEO e siti in un’unica regia digitale.</h1>
+          <h1 id="services-hero-title">Social, SEO, siti e ricerca clienti in un’unica regia digitale.</h1>
           <p>
-            Social, contenuti organici, sito ed e-commerce lavorano nello stesso
-            sistema. Coordiniamo strategia, produzione e misurazione, così ogni
-            punto di contatto sostiene lo stesso obiettivo.
+            Costruiamo attenzione con social e Blog, rendiamo l’azienda reperibile
+            con SEO + GEO, convertiamo sul sito e qualifichiamo nuove opportunità
+            B2B. Compliance e controllo umano proteggono l’intero processo.
           </p>
           <div className={site.heroActions}>
             <a
@@ -284,15 +311,20 @@ export default function ServiziPage() {
             <ShoppingBag size={19} aria-hidden="true" />
             <span>Web + Shop</span>
           </div>
+          <div className={`${styles.mapNode} ${styles.mapNodeLead}`}>
+            <Target size={19} aria-hidden="true" />
+            <span>Lead B2B</span>
+          </div>
           <div className={styles.mapStatus}><i /> Sistema operativo mensile</div>
         </div>
       </section>
 
       <section className={styles.valueBand} aria-label="Valore del servizio">
-        <span>Strategia condivisa</span>
-        <span>Produzione coordinata</span>
-        <span>Controllo centralizzato</span>
-        <span>Risultati leggibili</span>
+        <span>Farsi conoscere</span>
+        <span>Essere trovati</span>
+        <span>Convertire</span>
+        <span>Trovare opportunità</span>
+        <span>Operare correttamente</span>
       </section>
 
       <section id="servizi" className={styles.servicesSection} aria-labelledby="services-title">
@@ -427,6 +459,12 @@ export default function ServiziPage() {
             <Globe2 size={21} aria-hidden="true" />
             <span><small>Servizio autonomo</small><strong>Web &amp; Commerce</strong><em>Sito tuo dopo 12 mesi</em></span>
             <b>€19,90<small>/mese</small></b>
+            <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+          <Link href="/servizi/ricerca-clienti-b2b" className={`${styles.autonomousOffer} ${styles.leadAutonomousOffer}`}>
+            <Target size={21} aria-hidden="true" />
+            <span><small>Pilot una tantum</small><strong>Ricerca Clienti B2B</strong><em>Fino a 30 aziende verificate</em></span>
+            <b>€149<small>una tantum</small></b>
             <ArrowRight size={17} aria-hidden="true" />
           </Link>
         </div>

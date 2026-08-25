@@ -4,7 +4,7 @@ import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/Ma
 import { SITE_URL } from '@/lib/site-config'
 
 const title = 'Consulenza SEO e GEO per PMI e Visibilità AI | SWA'
-const description = 'SEO e GEO per PMI: audit, architettura dei contenuti, articoli, FAQ, dati strutturati, entità e segnali utili a motori di ricerca e sistemi AI.'
+const description = 'Consulenza SEO e GEO per PMI: audit, strategia, architettura, dati strutturati ed entità. La produzione continuativa degli articoli è nel servizio Blog.'
 
 export const metadata: Metadata = {
   title,
@@ -34,7 +34,7 @@ const config = {
   deliverables: [
     { title: 'Audit tecnico ed editoriale', text: 'Verifichiamo indicizzazione, metadati, gerarchie, performance, contenuti esistenti e ostacoli alla comprensione.' },
     { title: 'Mappa degli intenti', text: 'Associamo bisogni e query a pagine precise, evitando che più URL competano per lo stesso argomento.' },
-    { title: 'Pagine e articoli autorevoli', text: 'Creiamo contenuti completi, leggibili e orientati a una decisione, con risposte dirette e approfondimenti verificabili.' },
+    { title: 'Specifiche di ottimizzazione', text: 'Definiamo struttura, priorità e indicazioni operative per pagine e contenuti, con risposte dirette e fonti verificabili.' },
     { title: 'Schema e dati strutturati', text: 'Organizziamo Organization, Service, Article, FAQ e breadcrumb per descrivere correttamente le entità del sito.' },
     { title: 'Fonti, entità e segnali GEO', text: 'Rafforziamo identità, relazioni, attribuzione e passaggi citabili utili ai motori generativi.' },
     { title: 'Monitoraggio e priorità', text: 'Osserviamo copertura, query, pagine, menzioni e opportunità per definire il lavoro successivo.' },
@@ -42,13 +42,14 @@ const config = {
   process: [
     { number: '01', title: 'Scansione', text: 'Tecnica, contenuti, query, entità e presenza del brand.' },
     { number: '02', title: 'Architettura', text: 'Una URL e una gerarchia chiare per ogni intento strategico.' },
-    { number: '03', title: 'Produzione', text: 'Pagine, articoli, FAQ, collegamenti e dati strutturati.' },
+    { number: '03', title: 'Ottimizzazione', text: 'Pagine strategiche, FAQ, collegamenti e dati strutturati.' },
     { number: '04', title: 'Misurazione', text: 'Copertura, traffico qualificato, conversioni e segnali AI.' },
   ],
   faq: [
     { q: 'Qual è la differenza tra SEO e GEO?', a: 'La SEO migliora comprensione e visibilità nei motori di ricerca. La GEO lavora anche sulla possibilità che contenuti ed entità siano utilizzati nei sistemi di risposta generativa. Condividono molte fondamenta, ma non sono la stessa metrica.' },
     { q: 'Potete garantire la prima posizione su Google?', a: 'No. Nessun fornitore serio può garantire una posizione organica o una citazione AI. Possiamo migliorare struttura, qualità, autorevolezza e misurazione con un piano verificabile.' },
     { q: 'Serve un blog per fare SEO e GEO?', a: 'Non sempre, ma un Journal editoriale consente di coprire domande e intenti che le pagine commerciali non possono approfondire. Deve essere collegato ai servizi e mantenuto con continuità.' },
+    { q: 'SEO + GEO include i 12 articoli mensili?', a: 'No. SEO + GEO è il lavoro di audit, strategia, struttura e ottimizzazione. Il piano Blog SEO + GEO è il servizio operativo continuativo che produce e pubblica 12 articoli al mese.' },
     { q: 'Quanto tempo serve per vedere risultati?', a: 'Dipende da stato tecnico, concorrenza, autorevolezza e frequenza di pubblicazione. Le correzioni tecniche possono essere recepite rapidamente; la crescita organica richiede normalmente osservazione su più mesi.' },
   ],
   related: [

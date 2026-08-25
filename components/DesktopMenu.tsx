@@ -15,6 +15,7 @@ import {
   PackageCheck,
   Scale,
   ScanSearch,
+  Target,
   Workflow,
   type LucideIcon,
 } from 'lucide-react'
@@ -51,6 +52,12 @@ const SOLUTIONS: SolutionLink[] = [
     label: 'Siti ed e-commerce',
     description: 'Esperienze pensate per convertire.',
     icon: Globe2,
+  },
+  {
+    href: '/servizi/ricerca-clienti-b2b',
+    label: 'Ricerca Clienti B2B',
+    description: 'Aziende in target, verificate e prioritarie.',
+    icon: Target,
   },
   {
     href: '/consulenza',

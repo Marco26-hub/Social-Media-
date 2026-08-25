@@ -37,13 +37,16 @@ Vecchie pagine unificate in poche pagine-contenitore con tab, vecchie URL vive v
 - `/dashboard/settings` — Impostazioni · Profilo Brand · Prodotti · Setup Produzione
 
 ## Sito pubblico e offerta commerciale
-- La vetrina usa una tassonomia unica per **Presenza**, **Crescita**, **Blog SEO + GEO** e **Web & Commerce**. Il **Pilot Ricerca Clienti B2B** è promosso solo in Home e nella pagina dedicata, non nei menu generali.
+- La vetrina usa una tassonomia unica per **Presenza**, **Crescita**, **Blog SEO + GEO**, **Web & Commerce** e **Pilot Ricerca Clienti B2B**. Lead B2B è presente in Home, menu Soluzioni, Servizi, Pacchetti, metadata, JSON-LD e sitemap.
 - Presenza e Crescita sono i due pacchetti social. Blog e Web sono servizi autonomi e combinabili, non pacchetti social impliciti.
 - **Blog SEO + GEO:** `/servizi/blog-seo`, 12 articoli al mese a 29,90 euro/mese, 14 giorni iniziali. Include piano editoriale, SEO on-page, GEO/FAQ, revisione umana e pubblicazione sul blog SWA collegato oppure consegna/integrazione per CMS esterni. Non promette ranking o traffico garantiti.
 - **Web & Commerce:** `/servizi/siti-e-commerce`, da 19,90 euro/mese; dopo 12 mesi di canone il sito diventa del cliente. La stessa formula è ora esposta anche in Home e nella pagina Pacchetti.
 - Checkout Stripe LIVE autonomo in `/acquista`: Blog €29,90/mese e Web Base €19,90/mese sono abbonamenti; Pilot Lead €149 è un pagamento una tantum. Gli ordini non creano workspace o quote social, vengono sincronizzati dal webhook e sono visibili nel tab Admin Pagamenti con fatture e Customer Portal.
 - **Ricerca Clienti B2B:** `/servizi/ricerca-clienti-b2b`, fino a 30 aziende analizzate, fonti verificabili e lista prioritaria. In questo repository non gira il motore di ricerca e non esistono dati demo; il motore operativo resta nel progetto separato.
-- SEO internazionale: Social Web Automation comunica copertura in Italia e mercati internazionali; Cermenate resta sede legale nei dati aziendali e non limita l’area servita nei dati strutturati.
+- **Architettura commerciale:** farsi conoscere (Social e Blog), essere trovati (SEO + GEO), convertire (Web & Commerce), trovare opportunità (Lead B2B), operare correttamente (AI Act, GDPR e compliance).
+- **SEO + GEO** è audit, strategia, architettura e ottimizzazione; **Blog SEO + GEO** è la produzione continuativa di 12 articoli mensili. Questa distinzione è esplicita in Home, Servizi, Pacchetti e nelle due pagine dedicate.
+- **SEO internazionale:** `/en`, `/en/services` e `/en/pricing` sono pagine inglesi reali con URL localizzati, canonical e hreflang reciproci. Cermenate resta sede legale e non limita l’area servita.
+- **Social ufficiali:** Instagram `https://www.instagram.com/socialwebautomation/`; Facebook `https://www.facebook.com/profile.php?id=61592835840985`. I link sono presenti nel footer e nei dati strutturati Organization.
 
 ## Piano editoriale — generazione con AI
 - **`lib/scheduling.ts`**: orari e giorni non più a caso. Fasce per canale (`CHANNEL_SLOTS`, con motivazione per ciascuna), cadenza dal pacchetto (`cadenzaDaPacchetto`), niente più default fisso `10:00`.
@@ -64,17 +67,17 @@ Il workspace Blotato ospita gli account di **più clienti reali insieme** (SILKi
 - **Payload Facebook:** la Page (`target.pageId`) viene sempre risolta e validata anche se la riga conserva gia `platform_account_id`; non esiste piu il fallback col solo account. `video` usa `mediaType=video`, Reel/Short usa `mediaType=reel`, Post/Carosello non impostano `mediaType`. Le Story Facebook sono bloccate dal pre-flight perche il contratto Blotato Facebook non espone quel formato.
 - **Riconciliazione reale:** `POST /api/data/blotato-reconcile` interroga `GET /v2/posts/{postSubmissionId}` per ogni invio del mese e aggiorna `published`, `failed`, `scheduled` o `in-progress`, URL pubblico ed errore. Il pulsante **Verifica Blotato** mostra pubblicati confermati, in coda, non inviati, falliti, mancanti da creare e mancanti da pubblicare rispetto a `clienti.contenuti_mese`. Anche **Sincronizza Blotato** esegue la riconciliazione dopo l'invio. Non contare mai `scheduled` come pubblicato.
 - **Retry pubblicazione:** `Riprova pubblicazione` azzera ID/stato remoto solo quando il tentativo e realmente `failed`/`ERRORE`; poi lo scheduler puo creare una nuova submission. Prima lasciava il vecchio `blotato_post_id`, quindi il click non reinviava nulla. Non azzera mai contenuti ancora `scheduled` o gia `published`.
-- **Pagina Facebook SWA** ("Social Web Automation", account id `44606`) configurata in questa sessione: Pagina business collegata, Instagram, sito aggiuntivo, indirizzo (Via G. Verdi 2/B, Cermenate CO), Impressum (SWA S.r.l.). Nessun post ancora pubblicato — resta da fare.
+- **Pagina Facebook SWA** ("Social Web Automation", account id `44606`) configurata in questa sessione: Pagina business collegata, Instagram, sito aggiuntivo e indirizzo. La denominazione pubblica e legale da usare è **Social Web Automation di Marco Dibenedetto**. Verificare che l'Impressum Meta non conservi la vecchia dicitura.
 - Per gli invii storici usare prima **Verifica Blotato**. Non azzerare un `blotato_post_id` fermo su `scheduled` finché non è stato controllato sul social/Blotato: il requeue può altrimenti duplicare un post già uscito.
 
-## Verifiche 2026-08-24
+## Verifiche 2026-08-25
 - `npm run build`: passa; restano 2 warning lint preesistenti in moduli non toccati.
-- Landing pubblica verificata con Playwright su Home, Servizi, Pacchetti e Blog a 1440×1000 e 390×844: tutte le route rispondono 200, nessun errore console e nessun overflow orizzontale.
+- Landing verificata con Playwright su Home, Servizi, Pacchetti, `/en`, `/en/services` e `/en/pricing` a 1440×1000 e 390×844: tutte le route rispondono 200, nessun errore console e nessun overflow orizzontale.
 - Playwright: popup fallback → filtro esatto → modifica/rigenerazione → anteprima → `DA_APPROVARE`, senza pubblicazione automatica; consuntivo pacchetto Blotato verificato con API mock.
 - Checkout/Home/Chi siamo/Pilot Lead verificati con Playwright a 1440 px e mobile: nessun errore console e nessun overflow orizzontale.
 - Deploy produzione commit `5d10c7c` online su `https://www.socialautomation.app`: Home, Chi siamo, pagina Pilot e i tre checkout rispondono 200. La migration 043 è applicata e la tabella ordini risponde correttamente.
 - **Gate pagamenti:** nel progetto Vercel LIVE mancano ancora `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`; il backend fallisce chiuso con HTTP 503 prima di creare l'ordine. Non dichiarare i checkout operativi finché entrambe le env non sono configurate e il webhook Stripe non è testato.
-- Server locale di prova: `http://127.0.0.1:3110` (processo di sviluppo, non URL pubblico).
+- Server locale di prova della sessione: `http://127.0.0.1:3112` (processo temporaneo, non URL pubblico).
 - Commit principali: `4014da5`, `9fbaa1e`, `81f9ef3`, `da439a5`, `d0869de`, `70d9ef6`.
 
 ## Da completare

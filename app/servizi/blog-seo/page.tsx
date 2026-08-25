@@ -52,6 +52,7 @@ const config = {
     { number: '04', title: 'Controllo', text: 'Revisione, approvazione e pubblicazione sul canale concordato.' },
   ],
   faq: [
+    { q: 'Qual è la differenza rispetto alla consulenza SEO + GEO?', a: 'La consulenza SEO + GEO definisce audit, strategia, architettura e priorità. Blog SEO + GEO esegue il ciclo editoriale continuativo: 12 articoli al mese, revisione e pubblicazione.' },
     { q: 'Gli articoli vengono pubblicati automaticamente sul mio sito?', a: 'Sul blog collegato alla piattaforma SWA si. Per WordPress, Shopify o altri CMS verifichiamo prima l’integrazione disponibile; in alternativa consegniamo HTML e metadati pronti per la pubblicazione.' },
     { q: 'Sono davvero inclusi 12 articoli ogni mese?', a: 'Sì. Il piano prevede 12 articoli mensili, distribuiti secondo il calendario editoriale concordato e sottoposti a controllo prima della pubblicazione.' },
     { q: 'Potete garantire traffico o prima posizione?', a: 'No. La frequenza e la qualità migliorano copertura e possibilità di posizionamento, ma ranking, traffico e citazioni dipendono anche da concorrenza, autorevolezza e stato tecnico del sito.' },

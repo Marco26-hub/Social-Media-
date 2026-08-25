@@ -19,7 +19,11 @@ const jsonLd = {
       },
       image: { '@id': `${SITE_URL}/#logo` },
       description:
-        'Servizio gestito di social media management per PMI e professionisti, con strategia, contenuti, pubblicazione multicanale, siti, e-commerce, SEO e GEO.',
+        'Servizi digitali integrati per PMI e professionisti: social media management, Blog SEO e GEO, siti, e-commerce, ricerca clienti B2B e compliance AI.',
+      sameAs: [
+        'https://www.instagram.com/socialwebautomation/',
+        'https://www.facebook.com/profile.php?id=61592835840985',
+      ],
       founder: {
         '@type': 'Person',
         name: 'Marco Dibenedetto',
@@ -54,6 +58,8 @@ const jsonLd = {
         'Blog SEO',
         'Siti web',
         'E-commerce',
+        'B2B lead research',
+        'Lead qualification',
         'AI compliance',
       ],
       hasOfferCatalog: {
@@ -197,7 +203,7 @@ const jsonLd = {
       '@id': `${SITE_URL}/#website`,
       name: 'Social Web Automation',
       url: SITE_URL,
-      inLanguage: 'it-IT',
+      inLanguage: ['it-IT', 'en'],
       publisher: { '@id': `${SITE_URL}/#organization` },
     },
   ],

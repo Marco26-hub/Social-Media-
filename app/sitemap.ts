@@ -23,6 +23,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
+    ...['/en', '/en/services', '/en/pricing'].map(path => ({
+      url: `${SITE_URL}${path}`,
+      lastModified: marketingUpdated,
+      changeFrequency: 'monthly' as const,
+      priority: path === '/en' ? 0.85 : 0.75,
+    })),
     ...[
       '/servizi/gestione-social-media',
       '/servizi/seo-geo',

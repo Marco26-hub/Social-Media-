@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, CircleCheck, Globe2, Newspaper } from 'lucide-react'
+import { ArrowRight, CircleCheck, Globe2, Newspaper, Target } from 'lucide-react'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
@@ -10,14 +10,17 @@ import { SITE_URL } from '@/lib/site-config'
 import base from '../content-page.module.css'
 import styles from './pacchetti.module.css'
 
-const title = 'Pacchetti Social, Blog SEO, Siti ed E-commerce | SWA'
-const description = 'Confronta Presenza, Crescita, Blog SEO + GEO e Web & Commerce: social gestiti, 12 articoli al mese e siti da 19,90 €/mese.'
+const title = 'Pacchetti Social, Blog, Web e Lead B2B | SWA'
+const description = 'Confronta Presenza, Crescita, Blog SEO + GEO, Web & Commerce e Pilot Lead B2B: servizi gestiti per visibilità, conversione e opportunità.'
 const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei capire quale pacchetto Social Web Automation è adatto alla mia azienda.')}`
 
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: `${SITE_URL}/pacchetti` },
+  alternates: {
+    canonical: `${SITE_URL}/pacchetti`,
+    languages: { 'it-IT': `${SITE_URL}/pacchetti`, en: `${SITE_URL}/en/pricing`, 'x-default': `${SITE_URL}/pacchetti` },
+  },
   openGraph: { title, description, url: `${SITE_URL}/pacchetti` },
   twitter: { title, description },
 }
@@ -28,18 +31,22 @@ const faq = [
   { q: 'Il budget ADS e compreso nel piano Crescita?', a: 'La gestione di una campagna e inclusa; il budget versato alla piattaforma pubblicitaria e separato e resta sotto il controllo del cliente.' },
   { q: 'Blog SEO + GEO è incluso nei pacchetti social?', a: 'Crescita include un articolo al mese. Il servizio Blog autonomo comprende invece 12 articoli mensili e può essere combinato con qualsiasi piano.' },
   { q: 'Sito web ed e-commerce sono inclusi nei pacchetti social?', a: 'No. Web & Commerce è un servizio separato, combinabile con gli altri. Il canone parte da 19,90 euro al mese e dopo 12 mesi il sito diventa tuo.' },
+  { q: 'Cosa comprende il Pilot Ricerca Clienti B2B?', a: 'È un servizio una tantum da 149 euro: definiamo il profilo ideale, analizziamo fino a 30 aziende e consegniamo una lista verificata e prioritaria. Non comprende invii automatici e non garantisce appuntamenti o vendite.' },
+  { q: 'Qual è la differenza tra SEO + GEO e Blog SEO + GEO?', a: 'SEO + GEO definisce audit, struttura, intenti e priorità. Blog SEO + GEO produce con continuità il piano editoriale e 12 articoli al mese.' },
   { q: 'Posso richiedere una configurazione diversa?', a: 'Sì. Più brand, canali, volumi, video, automazioni e integrazioni vengono quotati dopo una valutazione iniziale.' },
 ]
 
 const comparisonRows = [
-  ['Canali social', '2', '3', '—', '—'],
-  ['Contenuti social mensili', '16', '24', '—', '—'],
-  ['Reel, Story o Short', '4', '6', '—', '—'],
-  ['Articoli SEO + GEO', '—', '1/mese', '12/mese', 'SEO tecnica'],
-  ['Gestione campagna ADS', '—', '1', '—', 'Tracking'],
-  ['Pubblicazione blog', '—', '1 articolo', 'Inclusa o export CMS', 'Integrazione'],
-  ['Sito / e-commerce', '—', '—', '—', 'Da €19,90/mese'],
-  ['Proprietà dopo 12 mesi', '—', '—', '—', 'Sì'],
+  ['Canali social', '2', '3', '—', '—', '—'],
+  ['Contenuti social mensili', '16', '24', '—', '—', '—'],
+  ['Reel, Story o Short', '4', '6', '—', '—', '—'],
+  ['Articoli SEO + GEO', '—', '1/mese', '12/mese', 'SEO tecnica', '—'],
+  ['Gestione campagna ADS', '—', '1', '—', 'Tracking', '—'],
+  ['Pubblicazione blog', '—', '1 articolo', 'Inclusa o export CMS', 'Integrazione', '—'],
+  ['Sito / e-commerce', '—', '—', '—', 'Da €19,90/mese', '—'],
+  ['Aziende B2B analizzate', '—', '—', '—', '—', 'Fino a 30'],
+  ['Fonti e priorità', '—', '—', '—', '—', 'Incluse'],
+  ['Proprietà dopo 12 mesi', '—', '—', '—', 'Sì', '—'],
 ]
 
 export default function PacchettiPage() {
@@ -63,6 +70,10 @@ export default function PacchettiPage() {
             '@type': 'Offer', name: 'Web & Commerce', price: '19.90', priceCurrency: 'EUR',
             url: `${SITE_URL}/servizi/siti-e-commerce`, description: 'Siti ed e-commerce mobile-first. Dopo 12 mesi di canone il sito diventa del cliente.',
           },
+          {
+            '@type': 'Offer', name: 'Pilot Ricerca Clienti B2B', price: '149', priceCurrency: 'EUR',
+            url: `${SITE_URL}/servizi/ricerca-clienti-b2b`, description: 'Profilo ideale, ricerca fino a 30 aziende, fonti verificabili e lista prioritaria.',
+          },
         ],
       },
       { '@type': 'FAQPage', mainEntity: faq.map(item => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } })) },
@@ -78,9 +89,9 @@ export default function PacchettiPage() {
 
       <section className={base.hero}>
         <nav className={base.breadcrumbs}><Link href="/">Home</Link><span>/</span><span>Pacchetti</span></nav>
-        <p className={base.eyebrow}>Soluzioni mensili trasparenti</p>
-        <h1>Quattro soluzioni chiare. Una configurazione su misura quando serve.</h1>
-        <p className={base.lead}>Presenza e Crescita gestiscono i social. Blog SEO + GEO costruisce copertura organica. Web & Commerce realizza il punto di conversione digitale.</p>
+        <p className={base.eyebrow}>Soluzioni e prezzi trasparenti</p>
+        <h1>Cinque soluzioni chiare. Una configurazione su misura quando serve.</h1>
+        <p className={base.lead}>Presenza e Crescita gestiscono i social. Blog costruisce copertura organica, Web realizza il punto di conversione e il Pilot B2B qualifica nuove aziende in target.</p>
         <div className={base.heroActions}>
           <a href="#confronto" className={base.primary}>Confronta le soluzioni <ArrowRight size={17} /></a>
           <a href={wa} target="_blank" rel="noopener noreferrer" className={base.secondary}>Aiutami a scegliere</a>
@@ -89,9 +100,9 @@ export default function PacchettiPage() {
 
       <section id="confronto" className={styles.pricing}>
         <div className={base.sectionHeading}>
-          <p className={base.eyebrow}>Social, contenuti o presenza web</p>
+          <p className={base.eyebrow}>Social, contenuti, Web o opportunità B2B</p>
           <h2>Scegli in base al risultato, non al numero di funzioni.</h2>
-          <p>I servizi autonomi Blog e Web possono essere attivati da soli oppure affiancati a Presenza e Crescita.</p>
+          <p>Blog, Web e Pilot B2B possono essere attivati da soli oppure affiancati a Presenza e Crescita.</p>
         </div>
 
         <div className={styles.grid}>
@@ -136,19 +147,32 @@ export default function PacchettiPage() {
             <Link href="/acquista?servizio=web-commerce"><Globe2 size={16} /> Attiva Web &amp; Commerce <ArrowRight size={16} /></Link>
             <p className={styles.note}>IVA esclusa · dominio e servizi esterni separati</p>
           </article>
+
+          <article className={`${styles.card} ${styles.leadCard}`}>
+            <div className={styles.top}><div><span className={styles.audience}>Imprese che cercano aziende in target</span><h2>Pilot Ricerca Clienti B2B</h2></div><span className={styles.badge}>Una tantum</span></div>
+            <p className={styles.result}>Una lista verificata per decidere chi approfondire.</p>
+            <p className={styles.price}><strong>€149</strong><span>una tantum</span></p>
+            <p className={styles.setup}>Fino a 30 aziende analizzate</p>
+            <p className={styles.description}>Ricerca e qualificazione con fonti pubbliche tracciabili. Nessun invio automatico e nessuna promessa di appuntamenti o vendite.</p>
+            <div className={styles.fit}><strong>È adatto a te se</strong><p>Hai un’offerta B2B chiara e vuoi una base commerciale ordinata prima di investire tempo nel contatto.</p></div>
+            <p className={styles.listLabel}>Nel Pilot trovi</p>
+            <ul>{['Profilo cliente ideale e criteri di esclusione', 'Ricerca fino a 30 aziende coerenti', 'Fonti pubbliche consultabili', 'Priorità e motivazione per ogni azienda', 'Rimozione di duplicati e profili fuori target', 'Consegna strutturata per valutazione o CRM'].map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
+            <Link href="/acquista?servizio=lead-pilot"><Target size={16} /> Attiva il Pilot B2B <ArrowRight size={16} /></Link>
+            <p className={styles.note}>IVA esclusa · servizio una tantum</p>
+          </article>
         </div>
 
         <div className={styles.comparison}>
           <table>
             <caption>Confronto rapido</caption>
-            <thead><tr><th>Servizio</th><th>Presenza</th><th>Crescita</th><th>Blog SEO + GEO</th><th>Web &amp; Commerce</th></tr></thead>
+            <thead><tr><th>Servizio</th><th>Presenza</th><th>Crescita</th><th>Blog SEO + GEO</th><th>Web &amp; Commerce</th><th>Pilot B2B</th></tr></thead>
             <tbody>{comparisonRows.map(row => <tr key={row[0]}>{row.map((cell, index) => index === 0 ? <td key={cell}>{cell}</td> : <td key={`${row[0]}-${index}`}>{cell}</td>)}</tr>)}</tbody>
           </table>
         </div>
       </section>
 
       <section className={styles.custom}>
-        <div><span>Configurazione personalizzata</span><h2>Più brand, volumi elevati o integrazioni.</h2><p>Costruiamo un perimetro dedicato quando le quattro soluzioni standard non rappresentano il processo reale dell’azienda.</p></div>
+        <div><span>Configurazione personalizzata</span><h2>Più brand, volumi elevati o integrazioni.</h2><p>Costruiamo un perimetro dedicato quando le cinque soluzioni standard non rappresentano il processo reale dell’azienda.</p></div>
         <a href={wa} target="_blank" rel="noopener noreferrer">Progettiamo la soluzione <ArrowRight size={17} /></a>
       </section>
       <section className={`${base.section} ${base.faqLayout}`}><div className={base.sectionHeading}><p className={base.eyebrow}>FAQ pacchetti</p><h2>Costi e condizioni in chiaro.</h2></div><div className={base.faqList}>{faq.map(item => <details key={item.q}><summary>{item.q}<span>+</span></summary><p>{item.a}</p></details>)}</div></section>

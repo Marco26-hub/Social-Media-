@@ -25,9 +25,12 @@
 .webCard > a { background:#0f6b4f; color:white; }
 .blogCard { border-color:#77b89f; }
 .blogCard > a { background:#0f6b4f; color:white; }
+.leadCard { grid-column:1 / -1; border-color:#9ba9d5; }
+.leadCard ul { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.leadCard > a { background:#314a8a; border-color:#314a8a; color:white; }
 .note { margin:10px 0 0; color:#7b8782; font-size:10px; text-align:center; }
 .comparison { margin-top:28px; overflow-x:auto; border:1px solid var(--line); }
-.comparison table { width:100%; min-width:850px; border-collapse:collapse; }
+.comparison table { width:100%; min-width:1050px; border-collapse:collapse; }
 .comparison caption { padding:18px; background:var(--paper); font:500 21px Georgia,'Times New Roman',serif; text-align:left; }
 .comparison th,.comparison td { padding:14px 18px; border-top:1px solid var(--line); font-size:12px; text-align:left; }
 .comparison th { color:var(--ink); }
@@ -43,4 +46,4 @@
 :global(html[data-theme='dark']) .featured { border-color:#49d6a0; }
 :global(html[data-theme='dark']) .badge { background:#3a311a; color:#f2c85b; }
 :global(html[data-theme='dark']) .featured > a { background:#0f6b4f; color:white; }
-@media(max-width:760px){.pricing{padding:64px 18px}.grid{grid-template-columns:1fr}.card{padding:24px}.top{gap:10px}.description{min-height:0}.custom{align-items:flex-start;flex-direction:column;margin:0 18px 64px;padding:25px}.custom a{width:100%}}
+@media(max-width:760px){.pricing{padding:64px 18px}.grid{grid-template-columns:1fr}.card{padding:24px}.top{gap:10px}.description{min-height:0}.leadCard{grid-column:auto}.leadCard ul{grid-template-columns:1fr}.custom{align-items:flex-start;flex-direction:column;margin:0 18px 64px;padding:25px}.custom a{width:100%}}

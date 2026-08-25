@@ -10,14 +10,14 @@ const socialProfiles = [
   {
     name: 'Instagram',
     description: 'Idee, lavori e dietro le quinte della regia digitale.',
-    url: process.env.NEXT_PUBLIC_INSTAGRAM_URL?.trim(),
+    url: process.env.NEXT_PUBLIC_INSTAGRAM_URL?.trim() || 'https://www.instagram.com/socialwebautomation/',
     icon: Instagram,
     className: styles.instagram,
   },
   {
     name: 'Facebook',
     description: 'Guide pratiche, novita editoriali e contenuti per imprese e professionisti.',
-    url: process.env.NEXT_PUBLIC_FACEBOOK_URL?.trim(),
+    url: process.env.NEXT_PUBLIC_FACEBOOK_URL?.trim() || 'https://www.facebook.com/profile.php?id=61592835840985',
     icon: Facebook,
     className: styles.facebook,
   },
@@ -80,6 +80,7 @@ export default function PublicFooter() {
           <Link href="/blog">Journal</Link>
           <Link href="/chi-siamo">Azienda</Link>
           <Link href="/faq">FAQ</Link>
+          <Link href="/en" hrefLang="en">English</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/termini">Termini</Link>
           <Link href="/recesso" className={styles.withdrawalLink}><Undo2 size={14} aria-hidden="true" /> Recedere dal contratto qui</Link>
