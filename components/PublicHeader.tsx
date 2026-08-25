@@ -26,11 +26,11 @@ const MOBILE_LINKS = [
 export default function PublicHeader({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
   return (
     <header className={styles.navbar}>
-      <Link href="/" className={styles.brand} aria-label="Social Automation, home">
+      <Link href="/" className={styles.brand} aria-label="Social Web Automation, home">
         <span className={styles.logoShell}>
           <Image src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
         </span>
-        <span>Social Automation</span>
+        <span>Social Web Automation</span>
       </Link>
       <DesktopMenu />
       <div className={styles.actions}>
