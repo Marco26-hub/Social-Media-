@@ -118,8 +118,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         if (textValue(d.caption)) setCaption(textValue(d.caption))
         if (textValue(d.hashtag)) setHashtag(textValue(d.hashtag))
         if (textValue(d.cta)) setCta(textValue(d.cta))
-        if (textValue(d.blotato_visual_media_url) || textValue(d.link_media_1)) {
-          setMediaUrl(textValue(d.blotato_visual_media_url) || textValue(d.link_media_1))
+        if (textValue(d.blotato_audio_visual_media_url) || textValue(d.blotato_visual_media_url) || textValue(d.link_media_1)) {
+          setMediaUrl(textValue(d.blotato_audio_visual_media_url) || textValue(d.blotato_visual_media_url) || textValue(d.link_media_1))
         }
         if (textValue(d.brand_name)) setBrandName(textValue(d.brand_name))
         if (textValue(d.social_handle)) setSocialHandle(textValue(d.social_handle))
@@ -127,7 +127,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         const localCanale = canaleValue(d.canale)
         const localFormato = formatoValue(d.formato)
         const localMediaSlots = mediaSlotValues(d)
-        if (textValue(d.blotato_visual_media_url)) localMediaSlots[0] = textValue(d.blotato_visual_media_url)
+        const localRenderedVideo = textValue(d.blotato_audio_visual_media_url) || textValue(d.blotato_visual_media_url)
+        if (localRenderedVideo) localMediaSlots[0] = localRenderedVideo
         if (localCanale) setCanale(localCanale)
         if (localFormato) setFormato(localFormato)
         if (localMediaSlots.some(Boolean)) setMediaSlots(localMediaSlots)
@@ -177,7 +178,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setCaption(s(d.caption))
         setHashtag(s(d.hashtag))
         setCta(s(d.cta))
-        setMediaUrl(s(d.blotato_visual_media_url) || s(d.link_media_1))
+        setMediaUrl(s(d.blotato_audio_visual_media_url) || s(d.blotato_visual_media_url) || s(d.link_media_1))
         if (s(d.brand_name)) setBrandName(s(d.brand_name))
         if (s(d.social_handle)) setSocialHandle(s(d.social_handle))
         const dbCanale = canaleValue(d.canale)
@@ -185,7 +186,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         if (dbCanale) setCanale(dbCanale)
         if (dbFormato) setFormato(dbFormato)
         const dbMediaSlots = mediaSlotValues(d)
-        if (s(d.blotato_visual_media_url)) dbMediaSlots[0] = s(d.blotato_visual_media_url)
+        const dbRenderedVideo = s(d.blotato_audio_visual_media_url) || s(d.blotato_visual_media_url)
+        if (dbRenderedVideo) dbMediaSlots[0] = dbRenderedVideo
         setMediaSlots(dbMediaSlots)
         setLinkProdotto(s(d.link_prodotto_finale) || s(d.link_prodotto))
         setNomeProdotto(s(d.nome_prodotto))
@@ -310,10 +312,10 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
               <label className="text-[10px] text-gray-400">URL Media</label>
               <input value={mediaUrl} onChange={e => setMediaUrl(e.target.value)} className="input text-xs mt-0.5" />
             </div>
-            {['reel', 'short', 'video'].includes(formato) && (
+            {['post', 'pin', 'story', 'carousel', 'reel', 'short', 'video'].includes(formato) && (
               <div className="md:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                 <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-emerald-900">
-                  <Music2 className="h-4 w-4" /> Audio Reel
+                  <Music2 className="h-4 w-4" /> Audio {formato === 'carousel' ? 'Carosello' : formato === 'story' ? 'Story' : formato === 'post' || formato === 'pin' ? 'Post' : 'Reel'}
                 </div>
                 {reelAudioUrl ? (
                   <>

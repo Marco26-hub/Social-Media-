@@ -238,6 +238,13 @@ export async function PATCH(request: Request) {
         params.push('approved')
         fields.push(`blotato_visual_status = $${params.length}`)
       }
+      if (
+        calendarioColumns.has('blotato_audio_visual_status')
+        && String(existing.blotato_audio_visual_status || '') === 'ready_for_review'
+      ) {
+        params.push('approved')
+        fields.push(`blotato_audio_visual_status = $${params.length}`)
+      }
       if (calendarioColumns.has('data_approvazione')) {
         params.push(new Date().toISOString())
         fields.push(`data_approvazione = $${params.length}`)
@@ -275,8 +282,8 @@ export async function PATCH(request: Request) {
           const outcome = await scheduleOnBlotato(cid, row, timezone)
           publishStatus = outcome.status
           if (outcome.status === 'dry_run') publishNote = 'Pubblicazione disattivata (PUBLISH_ENABLED=false): contenuto approvato ma NON pubblicato. Sarà pubblicato quando abiliti la pubblicazione.'
-          else if (outcome.status === 'visual_pending') publishNote = 'Montaggio Reel in corso. Non è stato pubblicato: aggiorna il sync per completare l’anteprima.'
-          else if (outcome.status === 'visual_review') publishNote = 'Video Reel pronto. Non è stato pubblicato: guardalo in Preview e approvalo di nuovo.'
+          else if (outcome.status === 'visual_pending') publishNote = 'Montaggio video in corso. Non è stato pubblicato: aggiorna il sync per completare l’anteprima.'
+          else if (outcome.status === 'visual_review') publishNote = 'Video pronto. Non è stato pubblicato: guardalo in Preview e approvalo di nuovo.'
           else if (outcome.status === 'skipped') publishNote = outcome.reason
         }
       } catch (scheduleError) {

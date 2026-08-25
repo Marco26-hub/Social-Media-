@@ -15,6 +15,13 @@ export const dynamic = 'force-dynamic'
 
 type Row = Record<string, unknown>
 const str = (v: unknown) => (typeof v === 'string' ? v : '')
+const readable = (v: unknown) => {
+  if (typeof v === 'string') return v
+  if (v && typeof v === 'object') {
+    try { return JSON.stringify(v) } catch { return '' }
+  }
+  return ''
+}
 
 // Genera un'immagine AI per un contenuto tramite OPENROUTER (/api/v1/images) e la
 // salva nel primo slot media libero. Se il contenuto ha già una foto prodotto
@@ -97,13 +104,25 @@ function buildPrompt(row: Row, brand: Row): string {
   const nome = str(row.nome_prodotto)
   const tema = str(row.tema)
   const hook = str(row.hook)
-  const settore = str(brand.settore) || 'fashion'
-  const colori = str(brand.colori_brand)
+  const settore = str(brand.settore) || 'brand locale'
+  const colori = readable(brand.colori_brand)
+  const ideaVisual = str(row.idea_visual)
+  const creativeBrief = str(row.creative_brief)
+  const layout = readable(row.layout_spec_json)
+  const productionNotes = str(row.production_notes)
+  const formato = str(row.formato) || 'post'
   const soggetto = nome || tema || hook || `prodotto ${settore}`
   return [
     `Fotografia editoriale professionale di ${soggetto}`,
-    `stile ${settore}, luce naturale morbida, composizione pulita, alta qualità, dettagli nitidi`,
+    `settore: ${settore}; formato social: ${formato}`,
+    ideaVisual ? `direzione visuale: ${ideaVisual}` : '',
+    creativeBrief ? `brief creativo vincolante: ${creativeBrief}` : '',
+    layout ? `layout e zona sicura: ${layout}` : '',
+    productionNotes ? `note di produzione: ${productionNotes}` : '',
     colori ? `palette colori: ${colori}` : '',
-    'sfondo lifestyle elegante, marketing premium, fotorealistico',
+    'alta qualita cinematografica, fotorealistico, dettagli plausibili per il settore, anatomia corretta',
+    'composizione coerente con la griglia del profilo, soggetto e spazio copy protetti nel ritaglio Instagram 3:4',
+    'immagine completa e luminosa, nessuna banda nera, nessun bordo nero, nessun collage',
+    'non generare testo, numeri, watermark o loghi: saranno applicati in composizione',
   ].filter(Boolean).join(', ')
 }

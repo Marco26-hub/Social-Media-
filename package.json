@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run remotion:browser && next build",
+    "remotion:browser": "node scripts/ensure-remotion-browser.mjs",
     "test": "playwright test lib/*.test.ts --workers=1",
     "start": "node scripts/render-start.mjs",
     "lint": "eslint .",
@@ -19,6 +20,8 @@
     "demo:video": "node scripts/demo-walkthrough.mjs"
   },
   "dependencies": {
+    "@remotion/bundler": "^4.0.516",
+    "@remotion/renderer": "^4.0.516",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -33,6 +36,7 @@
     "postcss": "8.5.26",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "remotion": "^4.0.516",
     "swr": "^2.4.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"

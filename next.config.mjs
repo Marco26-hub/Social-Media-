@@ -45,6 +45,9 @@ const noIndexHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Il renderer Remotion usa binari e Chromium lato server: Next deve lasciarlo
+  // come dipendenza Node esterna invece di inglobarlo nel bundle delle route.
+  serverExternalPackages: ['@remotion/bundler', '@remotion/renderer'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'drive.google.com' },

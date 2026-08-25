@@ -2,11 +2,40 @@ import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 
 import {
+  AUDIO_MIX_TEMPLATE_UUID,
+  createAudioMixedVideo,
   createPhotoReel,
   PHOTO_REEL_TEMPLATE_ID,
   PHOTO_REEL_TEMPLATE_UUID,
   selectPhotoReelTemplateId,
 } from './blotato-visual'
+
+test('createAudioMixedVideo sends exact video and audio URLs to Combine Clips', async () => {
+  const originalFetch = globalThis.fetch
+  let requestBody: Record<string, unknown> = {}
+
+  try {
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>
+      return new Response(JSON.stringify({ item: { id: 'audio-visual-123', status: 'queueing' } }), { status: 201 })
+    }) as typeof fetch
+
+    const result = await createAudioMixedVideo({
+      blotatoKey: 'test-key',
+      videoUrl: 'https://example.com/reel.mp4',
+      audioUrl: 'https://example.com/music.mp3',
+      title: 'Pixabay 12345',
+    })
+
+    assert.equal(result.id, 'audio-visual-123')
+    assert.equal(requestBody.templateId, AUDIO_MIX_TEMPLATE_UUID)
+    assert.match(String(requestBody.prompt), /https:\/\/example\.com\/reel\.mp4/)
+    assert.match(String(requestBody.prompt), /https:\/\/example\.com\/music\.mp3/)
+    assert.equal(requestBody.render, true)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
 
 test('selectPhotoReelTemplateId prefers the exact catalog ID', () => {
   const catalogId = `/base/v2/image-slideshow/${PHOTO_REEL_TEMPLATE_UUID}/v1`

@@ -49,6 +49,13 @@ const DESTINATION_UPLOADS: { tag: Exclude<MediaTag, 'auto'>; title: string; deta
   { tag: 'reel', title: 'Reel / Video', detail: 'MP4 o 5 foto · verticale 9:16', accept: MEDIA_ACCEPT, style: 'border-rose-200 hover:border-rose-400 hover:bg-rose-50/50', iconStyle: 'bg-rose-100 text-rose-700' },
 ]
 
+const AUDIO_DESTINATIONS: { tag: 'post' | 'story' | 'carosello' | 'reel'; title: string; detail: string; style: string }[] = [
+  { tag: 'post', title: 'Audio Post', detail: 'Crea versione video musicale', style: 'border-sky-200 hover:border-sky-400 hover:bg-sky-50/50' },
+  { tag: 'story', title: 'Audio Story', detail: 'Story video 9:16 / Reel FB', style: 'border-amber-200 hover:border-amber-400 hover:bg-amber-50/50' },
+  { tag: 'carosello', title: 'Audio Carosello', detail: 'Crea slideshow video musicale', style: 'border-violet-200 hover:border-violet-400 hover:bg-violet-50/50' },
+  { tag: 'reel', title: 'Audio Reel', detail: 'Traccia da incorporare nel MP4', style: 'border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/50' },
+]
+
 function tagMeta(tag: MediaTag) {
   return TAG_OPTIONS.find(o => o.value === tag) ?? TAG_OPTIONS[0]
 }
@@ -104,15 +111,15 @@ function SemaforoMedia({ titolo, pulsante, requisiti, verifica, caricati }: {
 
 export default function PianoPage() {
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
-  const [piattaforme, setPiattaforme] = useState<PlatformKey[]>(['instagram','facebook','tiktok','pinterest'])
+  const [piattaforme, setPiattaforme] = useState<PlatformKey[]>(['instagram', 'facebook'])
   const [obiettivo, setObiettivo] = useState('mix')
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [aiModel, setAiModel] = useState('google/gemma-4-31b-it:free')
   const [quality, setQuality] = useState<QualitySelection>('auto')
   const [visualPreset, setVisualPreset] = useState<'' | 'trending' | 'premium' | 'minimal' | 'classico'>('')
-  const [useTrendingEffects, setUseTrendingEffects] = useState(false)
-  const [useWebTrends, setUseWebTrends] = useState(false)
+  const [useTrendingEffects, setUseTrendingEffects] = useState(true)
+  const [useWebTrends, setUseWebTrends] = useState(true)
   const [includeWeekend, setIncludeWeekend] = useState(true)
   const [planAssets, setPlanAssets] = useState<PlanAsset[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
@@ -293,8 +300,8 @@ export default function PianoPage() {
     setMsg(null)
     if (!clientePkg) return
     if (!demo && !clienteId) { setMsg({ type: 'err', text: 'Cliente non selezionato' }); return }
-    if (piattaforme.length !== clientePkg.social) {
-      setMsg({ type: 'err', text: `Il pacchetto ${clientePkg.nome} include ${clientePkg.social} social: selezionane esattamente ${clientePkg.social}.` })
+    if (piattaforme.length > clientePkg.social) {
+      setMsg({ type: 'err', text: `Il pacchetto ${clientePkg.nome} include fino a ${clientePkg.social} social: riduci la selezione.` })
       return
     }
     const aiSettings = readAISettings()
@@ -302,7 +309,7 @@ export default function PianoPage() {
       key: 'piano-pacchetto',
       label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: true, include_weekend: includeWeekend, use_web_trends: true, pacchetto: clientePkg.id, ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 55000 : 30000,
       timeoutMs: periodo === 'mensile' ? 140000 : 100000,
@@ -411,7 +418,7 @@ export default function PianoPage() {
         </p>
       </div>
 
-      {/* Stile visual (template Blotato per reel/carosello) */}
+      {/* Stile visual e motion per la produzione del piano */}
       <div className="card p-5 mb-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 font-bold text-xs flex items-center justify-center">V</div>
@@ -442,24 +449,59 @@ export default function PianoPage() {
         <label className="flex items-center gap-2 mt-3 cursor-pointer">
           <input
             type="checkbox"
-            checked={useTrendingEffects}
+            checked={clientePkg ? true : useTrendingEffects}
             onChange={e => setUseTrendingEffects(e.target.checked)}
+            disabled={Boolean(clientePkg)}
             className="rounded border-gray-300"
           />
-          <span className="text-sm text-gray-700">Effetti virali su reel e video (transizioni rapide, hook aggressivo)</span>
+          <span className="text-sm text-gray-700">Effetti e animazioni recenti, calibrati per formato e brand{clientePkg ? ' · attivi nella skill' : ''}</span>
         </label>
         <label className="flex items-center gap-2 mt-2 cursor-pointer">
           <input
             type="checkbox"
-            checked={useWebTrends}
+            checked={clientePkg ? true : useWebTrends}
             onChange={e => setUseWebTrends(e.target.checked)}
+            disabled={Boolean(clientePkg)}
             className="rounded border-gray-300"
           />
-          <span className="text-sm text-gray-700">Trend dal web reali (ricerca i format del momento per il settore — solo piano mensile; +qualche secondo e piccolo costo)</span>
+          <span className="text-sm text-gray-700">Trend reali dal web: format, motion, transizioni e meccaniche del momento{clientePkg ? ' · obbligatori nella skill' : ''}</span>
         </label>
         <p className="text-xs text-gray-500 mt-2">
-          Vale per i template visual di reel e caroselli. Con Auto decide l’AI in base al brand.
+          La skill usa i trend solo quando pertinenti e li alterna per non rendere il profilo confuso o ripetitivo.
         </p>
+      </div>
+
+      {/* La skill e automatica: nessun selettore puo scavalcare il pacchetto acquistato. */}
+      <div className="card p-5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center">S</div>
+          <div>
+            <h2 className="font-semibold text-gray-900">Skill editoriale</h2>
+            <p className="text-xs text-gray-500">Regia del piano, delle immagini e della griglia.</p>
+          </div>
+        </div>
+        <div className={`flex items-start gap-3 rounded-lg border p-3 ${
+          clientePkg ? 'border-emerald-300 bg-emerald-50' : 'border-gray-200 bg-gray-50'
+        }`}>
+          {clientePkg
+            ? <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-700" />
+            : <Info className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-500" />}
+          <div>
+            <p className="font-semibold text-sm text-gray-900">
+              {clientePkg ? `Skill SWA ${clientePkg.nome} attiva automaticamente` : 'Piano libero: generazione standard'}
+            </p>
+            <p className="text-xs text-gray-600 mt-1">
+              {clientePkg
+                ? `Il pacchetto acquistato attiva la ricetta ${clientePkg.nome}: strategia, storyboard, griglia e brief immagini. Numero, mix, social e qualità restano quelli contrattuali.`
+                : 'Assegna al cliente il pacchetto Presenza o Crescita per applicare automaticamente la relativa skill SWA.'}
+            </p>
+            {clientePkg && (
+              <p className="mt-2 text-[10px] font-medium leading-relaxed text-emerald-800">
+                Brief e offerta → ricerca recente → strategia e funnel → regia e griglia → produzione → QA → approvazione → distribuzione e ottimizzazione
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Step 1 — Periodo */}
@@ -538,12 +580,12 @@ export default function PianoPage() {
         </div>
         {clientePkg && (
           <p className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
-            piattaforme.length === clientePkg.social
+            piattaforme.length > 0 && piattaforme.length <= clientePkg.social
               ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
               : 'border-amber-200 bg-amber-50 text-amber-900'
           }`}>
-            Pacchetto {clientePkg.nome}: selezionati <span className="font-bold">{piattaforme.length}/{clientePkg.social}</span> social.
-            {piattaforme.length === clientePkg.social ? ' Numero corretto.' : ` Selezionane esattamente ${clientePkg.social} per generare il piano del pacchetto.`}
+            Pacchetto {clientePkg.nome}: selezionati <span className="font-bold">{piattaforme.length}/{clientePkg.social}</span> social disponibili.
+            {piattaforme.length > 0 && piattaforme.length <= clientePkg.social ? ' Selezione valida.' : ` Puoi usarne al massimo ${clientePkg.social}.`}
           </p>
         )}
       </div>
@@ -642,11 +684,16 @@ export default function PianoPage() {
                 </>
               )}
               {clientePkg && mixPacchettoPeriodo && (
-                <p className="mt-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-2 py-1.5 text-emerald-900">
-                  Il pulsante verde genera esattamente <span className="font-bold">{mixPacchettoPeriodo.totale} contenuti</span> per il periodo selezionato:
-                  {' '}{mixPacchettoPeriodo.postSingoli} post/pin + {mixPacchettoPeriodo.caroselli} caroselli + {mixPacchettoPeriodo.stories} Story + {mixPacchettoPeriodo.reelVideo} Reel/short.
-                  Fabbisogno collegato: <span className="font-bold">{requisiti.immagini} immagini{requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}</span>.
-                </p>
+                <div className="mt-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-2 py-1.5 text-emerald-900">
+                  <p>
+                    Ricetta automatica <span className="font-bold">{clientePkg.nome} · {periodo}</span>: il pulsante verde genera esattamente <span className="font-bold">{mixPacchettoPeriodo.totale} contenuti</span>,
+                    {' '}{mixPacchettoPeriodo.postSingoli} post/pin + {mixPacchettoPeriodo.caroselli} caroselli + {mixPacchettoPeriodo.stories} Story + {mixPacchettoPeriodo.reelVideo} Reel/short.
+                    Fabbisogno collegato: <span className="font-bold">{requisiti.immagini} immagini{requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}</span>.
+                  </p>
+                  <p className="mt-1 text-[10px] text-emerald-800">
+                    I conteggi seguono il pacchetto del cliente, non il numero di file gia caricati. Se il materiale e stato prodotto con una ricetta diversa, correggi prima il pacchetto nella scheda cliente.
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -698,26 +745,36 @@ export default function PianoPage() {
             })}
           </div>
 
-          <label className={`mt-3 flex min-h-[78px] cursor-pointer items-center gap-3 rounded-lg border border-emerald-200 bg-white p-3 text-xs shadow-sm transition-all hover:border-emerald-400 hover:bg-emerald-50/50 hover:shadow-md ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}>
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
-              {uploadingImages ? <Loader2 className="h-5 w-5 animate-spin" /> : <Music2 className="h-5 w-5" />}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-gray-950">Audio Reel</span>
-              <span className="mt-0.5 block text-[10px] text-gray-500">MP3, WAV, M4A o OGG · massimo 25 MB · solo Reel/Video</span>
-            </span>
-            <span className="rounded-md bg-emerald-50 px-2 py-1 font-mono text-[10px] font-semibold text-emerald-800">
-              {planAssets.filter(asset => asset.kind === 'audio').length} audio
-            </span>
-            <input
-              type="file"
-              multiple
-              accept={AUDIO_ACCEPT}
-              className="hidden"
-              disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
-              onChange={e => { uploadPlanImages(e.target.files, 'reel'); e.target.value = '' }}
-            />
-          </label>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Caricamento audio separato per formato">
+            {AUDIO_DESTINATIONS.map(destination => (
+              <label
+                key={destination.tag}
+                className={`flex min-h-[82px] cursor-pointer items-center gap-3 rounded-lg border bg-white p-3 text-xs shadow-sm transition-all hover:shadow-md ${destination.style} ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}
+              >
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
+                  {uploadingImages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Music2 className="h-4 w-4" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold text-gray-950">{destination.title}</span>
+                  <span className="mt-0.5 block text-[10px] text-gray-500">{destination.detail}</span>
+                </span>
+                <span className="rounded-md bg-emerald-50 px-2 py-1 font-mono text-[10px] font-semibold text-emerald-800">
+                  {planAssets.filter(asset => asset.kind === 'audio' && asset.tag === destination.tag).length}
+                </span>
+                <input
+                  type="file"
+                  multiple
+                  accept={AUDIO_ACCEPT}
+                  className="hidden"
+                  disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+                  onChange={e => { uploadPlanImages(e.target.files, destination.tag); e.target.value = '' }}
+                />
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-[10px] text-gray-500">
+            MP3, WAV, M4A o OGG, massimo 25 MB. Remotion incorpora la traccia in un MP4 SWA prima del passaggio a Blotato. Reel e Instagram Story mantengono il formato video; Post, Caroselli e Facebook Story vengono adattati a Reel/slideshow video e richiedono una nuova approvazione.
+          </p>
 
           <label className={`mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-[11px] text-gray-600 hover:border-gray-400 hover:bg-gray-50 ${uploadingImages ? 'pointer-events-none opacity-50' : ''}`}>
             <ImagePlus className="h-3.5 w-3.5" />
@@ -750,7 +807,7 @@ export default function PianoPage() {
                         {isAudio ? (
                           <div className="flex h-full flex-col items-center justify-center gap-2 bg-emerald-50 px-2 text-center text-emerald-800">
                             <Music2 className="h-8 w-8" />
-                            <span className="line-clamp-2 text-[10px] font-semibold">Audio Reel</span>
+                            <span className="line-clamp-2 text-[10px] font-semibold">Audio {meta.label}</span>
                             <audio src={a.url} controls preload="metadata" className="h-7 w-full" />
                           </div>
                         ) : isVideo ? (
@@ -786,10 +843,9 @@ export default function PianoPage() {
                         onChange={e => retagPlanAsset(i, e.target.value)}
                         aria-label={`Destinazione di ${a.name || 'questo media'}`}
                         title="Dove deve finire questo media"
-                        disabled={isAudio}
-                        className="w-full text-[11px] px-1.5 py-1.5 bg-white text-gray-700 border-t border-gray-100 focus:outline-none focus:bg-violet-50/40 cursor-pointer disabled:bg-emerald-50 disabled:text-emerald-800"
+                        className="w-full text-[11px] px-1.5 py-1.5 bg-white text-gray-700 border-t border-gray-100 focus:outline-none focus:bg-violet-50/40 cursor-pointer"
                       >
-                        {(isAudio ? TAG_OPTIONS.filter(o => o.value === 'reel') : TAG_OPTIONS).map(o => (
+                        {(isAudio ? TAG_OPTIONS.filter(o => ['post', 'story', 'carosello', 'reel'].includes(o.value)) : TAG_OPTIONS).map(o => (
                           <option key={o.value} value={o.value}>{o.menu}</option>
                         ))}
                       </select>
@@ -807,6 +863,9 @@ export default function PianoPage() {
             <p className="text-xs text-gray-700">
               Piano <span className="font-bold capitalize text-emerald-700">{periodo}</span> del pacchetto <span className="font-bold text-emerald-700">{clientePkg.nome}</span>
               {' '}su {clientePkg.social} social, qualità <span className="uppercase">{clientePkg.quality}</span>.
+            </p>
+            <p className="mt-1 text-[11px] font-semibold text-emerald-800">
+              Skill SWA {clientePkg.nome} applicata automaticamente: strategia, storyboard immagini e coerenza della griglia.
             </p>
             {mixPacchettoPeriodo && (
               <p className="mt-1 mb-2 text-[11px] font-medium text-emerald-800">
@@ -827,13 +886,13 @@ export default function PianoPage() {
             )}
             <button
               onClick={generaPacchetto}
-              disabled={runningPkg || running || uploadingImages || piattaforme.length !== clientePkg.social}
+              disabled={runningPkg || running || uploadingImages || piattaforme.length === 0 || piattaforme.length > clientePkg.social}
               className="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
             >
               {runningPkg ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
               {runningPkg ? 'Generazione pacchetto...' : `Genera piano ${periodo} · pacchetto ${clientePkg.nome}`}
             </button>
-            <p className="mt-1.5 text-[11px] text-gray-500 text-center">Numero, mix formati e qualità imposti dal pacchetto. Seleziona i {clientePkg.social} social sopra.</p>
+            <p className="mt-1.5 text-[11px] text-gray-500 text-center">Numero, mix formati e qualità seguono il pacchetto. Puoi usare fino a {clientePkg.social} social.</p>
           </div>
         )}
 

@@ -5,6 +5,7 @@ const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato
 // sempre l'ID esatto restituito dal catalogo /videos/templates.
 export const PHOTO_REEL_TEMPLATE_UUID = '5903b592-1255-43b4-b9ac-f8ed7cbf6a5f'
 export const PHOTO_REEL_TEMPLATE_ID = `/base/v2/image-slideshow/${PHOTO_REEL_TEMPLATE_UUID}/v1`
+export const AUDIO_MIX_TEMPLATE_UUID = 'c306ae43-1dcc-4f45-ac2b-88e75430ffd8'
 
 const TEMPLATE_CACHE_TTL_MS = 5 * 60 * 1000
 let photoReelTemplateCache: { id: string; expiresAt: number } | null = null
@@ -157,6 +158,44 @@ export async function createPhotoReel(args: {
   }
   const result = parseVisual(await res.json())
   if (!result.id) throw new Error('Blotato visual creato senza ID')
+  return result
+}
+
+// Replica il flusso usato dagli agenti Blotato: la traccia non viene allegata al
+// post, ma incorporata in un nuovo MP4 tramite il template Combine Clips. Usiamo
+// il prompt con URL esatti perche gli input del template sono versionati nel
+// catalogo Blotato; il template li compila e restituisce un visual asincrono.
+export async function createAudioMixedVideo(args: {
+  blotatoKey: string
+  videoUrl: string
+  audioUrl: string
+  title?: string
+}): Promise<VisualResult> {
+  const prompt = [
+    'Combine exactly one existing vertical social video with one audio/music track.',
+    `VIDEO URL (use exactly this file): ${args.videoUrl}`,
+    `AUDIO/MUSIC URL (use exactly this file): ${args.audioUrl}`,
+    'Keep the original 9:16 framing, full video duration and original visual quality.',
+    'Start the music at 00:00, trim it to the video duration, add a short fade-out, and do not add titles, captions, watermarks, black frames or extra clips.',
+    args.title ? `Track reference: ${args.title}` : '',
+  ].filter(Boolean).join('\n')
+
+  const res = await fetch(`${BLOTATO_API_BASE}/v2/videos/from-templates`, {
+    method: 'POST',
+    headers: headers(args.blotatoKey),
+    body: JSON.stringify({
+      templateId: AUDIO_MIX_TEMPLATE_UUID,
+      inputs: {},
+      prompt,
+      render: true,
+    }),
+  })
+  if (!res.ok) {
+    const error = await res.text().catch(() => 'Errore sconosciuto')
+    throw new Error(`Blotato audio visual ${res.status}: ${error.slice(0, 250)}`)
+  }
+  const result = parseVisual(await res.json())
+  if (!result.id) throw new Error('Blotato audio visual creato senza ID')
   return result
 }
 
