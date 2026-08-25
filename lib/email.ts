@@ -135,7 +135,7 @@ export async function sendWithdrawalReceipt(receipt: WithdrawalReceipt): Promise
   return sendEmail({
     to: receipt.email,
     subject: `Ricevuta ${receipt.requestLabel.toLowerCase()} ${receipt.referenceCode} - Social Web Automation`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#15231f"><h1 style="font-size:24px">Dichiarazione ricevuta</h1><p>Questa email costituisce avviso di ricevimento su supporto durevole. Conserva il codice pratica.</p><table style="width:100%;border-collapse:collapse">${rows}</table><h2 style="font-size:17px;margin-top:24px">Contenuto trasmesso</h2><p style="padding:16px;background:#f3f7f5;border-left:4px solid #0f7b5a">${escapeHtml(receipt.declarationText)}</p><p>La ricezione registra la dichiarazione al momento indicato. L'esito delle verifiche e gli eventuali rimborsi saranno comunicati separatamente.</p><p>Social Automation di Marco Dibenedetto</p></div>`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#15231f"><h1 style="font-size:24px">Dichiarazione ricevuta</h1><p>Questa email costituisce avviso di ricevimento su supporto durevole. Conserva il codice pratica.</p><table style="width:100%;border-collapse:collapse">${rows}</table><h2 style="font-size:17px;margin-top:24px">Contenuto trasmesso</h2><p style="padding:16px;background:#f3f7f5;border-left:4px solid #0f7b5a">${escapeHtml(receipt.declarationText)}</p><p>La ricezione registra la dichiarazione al momento indicato. L'esito delle verifiche e gli eventuali rimborsi saranno comunicati separatamente.</p><p>Social Web Automation di Marco Dibenedetto</p></div>`,
     text: withdrawalReceiptText(receipt),
   })
 }

@@ -5,7 +5,7 @@
 
 export const TITOLARE = {
   // Ragione sociale completa (o nome e cognome se ditta individuale/freelance)
-  ragioneSociale: 'Social Automation di Marco Dibenedetto',
+  ragioneSociale: 'Social Web Automation di Marco Dibenedetto',
   // Nome commerciale mostrato al pubblico
   brand: 'Social Web Automation',
   // Partita IVA
@@ -31,7 +31,7 @@ export const TITOLARE = {
   // URL pubblico del sito (per riferimenti nei documenti)
   sitoUrl: 'https://socialautomation.app',
   // Data ultimo aggiornamento dei documenti legali (aggiornare a ogni modifica)
-  ultimoAggiornamento: '11 agosto 2026',
+  ultimoAggiornamento: '25 agosto 2026',
 }
 
 // Fornitori/sub-responsabili del trattamento realmente usati dalla piattaforma.
