@@ -12,7 +12,7 @@ import styles from './pacchetti.module.css'
 
 const title = 'Pacchetti Social, Blog SEO, Siti ed E-commerce | SWA'
 const description = 'Confronta Presenza, Crescita, Blog SEO + GEO e Web & Commerce: social gestiti, 12 articoli al mese e siti da 19,90 €/mese.'
-const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei capire quale pacchetto Social Automation è adatto alla mia azienda.')}`
+const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei capire quale pacchetto Social Web Automation è adatto alla mia azienda.')}`
 
 export const metadata: Metadata = {
   title,
@@ -49,7 +49,7 @@ export default function PacchettiPage() {
       { '@type': 'WebPage', url: `${SITE_URL}/pacchetti`, name: title, description, inLanguage: 'it-IT' },
       {
         '@type': 'OfferCatalog',
-        name: 'Pacchetti Social Automation',
+        name: 'Pacchetti Social Web Automation',
         itemListElement: [
           ...PACCHETTI.map(plan => ({
             '@type': 'Offer', name: plan.nome, price: plan.prezzo.replace(/[^0-9]/g, ''), priceCurrency: 'EUR',

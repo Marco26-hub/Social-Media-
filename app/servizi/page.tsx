@@ -69,7 +69,7 @@ const servicesPageJsonLd = {
       about: { '@id': `${SITE_URL}/#organization` },
       mainEntity: {
         '@type': 'ItemList',
-        name: 'Servizi Social Automation',
+        name: 'Servizi Social Web Automation',
         itemListElement: [
           { '@type': 'ListItem', position: 1, item: { '@id': `${SITE_URL}/#social-media-management` } },
           { '@type': 'ListItem', position: 2, item: { '@id': `${SITE_URL}/#digital-growth` } },
@@ -200,7 +200,7 @@ const METHOD = [
 
 const FAQ = [
   {
-    q: 'Quanto costa affidare la gestione dei social a Social Automation?',
+    q: 'Quanto costa affidare la gestione dei social a Social Web Automation?',
     a: 'Il piano Presenza costa 390 € al mese per 2 social e 16 contenuti. Il piano Crescita costa 790 € al mese per 3 social e 24 contenuti, con articolo SEO + GEO e gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
   },
   {
@@ -231,7 +231,7 @@ export default function ServiziPage() {
       <a className={site.skipLink} href="#main-content">Vai al contenuto</a>
 
       <PublicHeader
-        ctaHref={waLink('Ciao! Vorrei capire quale servizio Social Automation è adatto alla mia azienda.')}
+        ctaHref={waLink('Ciao! Vorrei capire quale servizio Social Web Automation è adatto alla mia azienda.')}
         ctaLabel="Richiedi una consulenza"
       />
 
@@ -246,7 +246,7 @@ export default function ServiziPage() {
           </p>
           <div className={site.heroActions}>
             <a
-              href={waLink('Ciao! Vorrei una consulenza sui servizi Social Automation.')}
+              href={waLink('Ciao! Vorrei una consulenza sui servizi Social Web Automation.')}
               target="_blank"
               rel="noopener noreferrer"
               className={site.primaryButton}
@@ -262,7 +262,7 @@ export default function ServiziPage() {
           </ul>
         </div>
 
-        <div className={styles.serviceMap} aria-label="Ecosistema dei servizi Social Automation">
+        <div className={styles.serviceMap} aria-label="Ecosistema dei servizi Social Web Automation">
           <div className={styles.mapCore}>
             <span>SWA</span>
             <strong>Regia digitale</strong>
@@ -433,7 +433,7 @@ export default function ServiziPage() {
         <div className={styles.pricingAssurance}>
           <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Valuta prima di acquistare.</strong> Richiedi un contenuto di prova gratuito e verifica metodo e qualità.</span></div>
           <a
-            href={waLink('Ciao! Vorrei ricevere un contenuto di prova gratuito di Social Automation.')}
+            href={waLink('Ciao! Vorrei ricevere un contenuto di prova gratuito di Social Web Automation.')}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -444,7 +444,7 @@ export default function ServiziPage() {
         <div className={styles.customPlan}>
           <div><Layers3 size={24} aria-hidden="true" /><span><strong>Configurazione su misura</strong> per e-commerce, agenzie, più brand, automazioni e integrazioni.</span></div>
           <a
-            href={waLink('Ciao! Vorrei progettare una configurazione Social Automation su misura.')}
+            href={waLink('Ciao! Vorrei progettare una configurazione Social Web Automation su misura.')}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -477,7 +477,7 @@ export default function ServiziPage() {
         </div>
         <div>
           <a
-            href={waLink('Ciao! Vorrei una consulenza iniziale per Social Automation.')}
+            href={waLink('Ciao! Vorrei una consulenza iniziale per Social Web Automation.')}
             target="_blank"
             rel="noopener noreferrer"
             className={site.lightButton}
@@ -493,7 +493,7 @@ export default function ServiziPage() {
       <footer className={site.footer}>
         <Link href="/" className={site.brand}>
           <Image className={site.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} />
-          <span>Social Automation</span>
+          <span>Social Web Automation</span>
         </Link>
         <div>
           <Link href="/servizi">Servizi</Link>
@@ -511,7 +511,7 @@ export default function ServiziPage() {
       </footer>
 
       <a
-        href={waLink('Ciao! Vorrei informazioni sui servizi Social Automation.')}
+        href={waLink('Ciao! Vorrei informazioni sui servizi Social Web Automation.')}
         target="_blank"
         rel="noopener noreferrer"
         className={site.mobileCta}

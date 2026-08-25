@@ -19,10 +19,10 @@ export const metadata: Metadata = {
     'siti ed e-commerce',
     'consulenza AI Act',
   ],
-  authors: [{ name: 'Social Automation' }],
-  creator: 'Social Automation',
-  publisher: 'Social Automation',
-  applicationName: 'Social Automation',
+  authors: [{ name: 'Social Web Automation' }],
+  creator: 'Social Web Automation',
+  publisher: 'Social Web Automation',
+  applicationName: 'Social Web Automation',
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
     other: process.env.BING_SITE_VERIFICATION
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     type: 'website',
-    siteName: 'Social Automation',
+    siteName: 'Social Web Automation',
     locale: 'it_IT',
   },
   twitter: {

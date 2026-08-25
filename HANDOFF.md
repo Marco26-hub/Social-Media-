@@ -1,4 +1,4 @@
-# HANDOFF — Social Automation
+# HANDOFF — Social Web Automation
 
 Stato al 2026-08-24. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
 
@@ -43,7 +43,7 @@ Vecchie pagine unificate in poche pagine-contenitore con tab, vecchie URL vive v
 - **Web & Commerce:** `/servizi/siti-e-commerce`, da 19,90 euro/mese; dopo 12 mesi di canone il sito diventa del cliente. La stessa formula è ora esposta anche in Home e nella pagina Pacchetti.
 - Checkout Stripe LIVE autonomo in `/acquista`: Blog €29,90/mese e Web Base €19,90/mese sono abbonamenti; Pilot Lead €149 è un pagamento una tantum. Gli ordini non creano workspace o quote social, vengono sincronizzati dal webhook e sono visibili nel tab Admin Pagamenti con fatture e Customer Portal.
 - **Ricerca Clienti B2B:** `/servizi/ricerca-clienti-b2b`, fino a 30 aziende analizzate, fonti verificabili e lista prioritaria. In questo repository non gira il motore di ricerca e non esistono dati demo; il motore operativo resta nel progetto separato.
-- SEO internazionale: Social Automation comunica copertura in Italia e mercati internazionali; Cermenate resta sede legale nei dati aziendali e non limita l’area servita nei dati strutturati.
+- SEO internazionale: Social Web Automation comunica copertura in Italia e mercati internazionali; Cermenate resta sede legale nei dati aziendali e non limita l’area servita nei dati strutturati.
 
 ## Piano editoriale — generazione con AI
 - **`lib/scheduling.ts`**: orari e giorni non più a caso. Fasce per canale (`CHANNEL_SLOTS`, con motivazione per ciascuna), cadenza dal pacchetto (`cadenzaDaPacchetto`), niente più default fisso `10:00`.

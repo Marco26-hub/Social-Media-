@@ -1,4 +1,4 @@
-# Social Automation V2 — Admin Dashboard
+# Social Web Automation V2 — Admin Dashboard
 
 Next.js 15 + Neon/Postgres. Sostituisce Google Sheets con dashboard web full.
 
@@ -131,20 +131,20 @@ Il file `PACCHETTI-VENDITA.md` contiene i pacchetti consigliati per vendere il s
 - E-commerce Attivo
 - Dominio Digitale
 
-Regola base: Social Automation vende il servizio gestito, non il motore interno. Workflow, prompt, chiavi API e automazioni restano proprieta Social Automation.
+Regola base: Social Web Automation vende il servizio gestito, non il motore interno. Workflow, prompt, chiavi API e automazioni restano proprieta Social Web Automation.
 
 Il file `CHECKLIST-VENDITA.md` contiene la checklist operativa: accesso admin, demo call, cosa configurare prima di vendere e cosa non promettere finché Blotato non è testato end-to-end.
 
 ## Brand
 
-- **Software / prodotto**: Social Automation (servizio gestito SaaS-as-a-service)
+- **Software / prodotto**: Social Web Automation (servizio gestito SaaS-as-a-service)
 - **Primo cliente test**: SILKinCOM (seedato in `db/migrations/002_seed.sql` — fashion e-commerce, piano `pro`, 30 contenuti/mese)
-- I documenti commerciali (brochure, landing, pacchetti) usano il brand **Social Automation**
+- I documenti commerciali (brochure, landing, pacchetti) usano il brand **Social Web Automation**
 - Il cliente test SILKinCOM resta nel DB come esempio operativo per QA e demo
 
 ## Brochure
 
-Materiali commerciali pronti (brand: Social Automation):
+Materiali commerciali pronti (brand: Social Web Automation):
 
 - `BROCHURE.md` testo modificabile.
 - `brochure.html` brochure grafica stampabile A4.

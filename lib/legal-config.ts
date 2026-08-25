@@ -7,7 +7,7 @@ export const TITOLARE = {
   // Ragione sociale completa (o nome e cognome se ditta individuale/freelance)
   ragioneSociale: 'Social Automation di Marco Dibenedetto',
   // Nome commerciale mostrato al pubblico
-  brand: 'Social Automation',
+  brand: 'Social Web Automation',
   // Partita IVA
   partitaIva: '03786790133',
   // Codice fiscale (se diverso dalla P.IVA)

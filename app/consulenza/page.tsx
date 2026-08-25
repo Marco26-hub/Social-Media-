@@ -98,7 +98,7 @@ export default function ConsulenzaPage() {
       <section className={styles.hero}>
         <div className={styles.copy}>
           <nav className={styles.breadcrumbs}><Link href="/">Home</Link><span>/</span><span>Consulenza legale AI</span></nav>
-          <p className={styles.eyebrow}>Studio Legale BCS × Social Automation</p>
+          <p className={styles.eyebrow}>Studio Legale BCS × Social Web Automation</p>
           <h1>Consulenza legale su AI Act, GDPR e tecnologie digitali.</h1>
           <p className={styles.lead}>Un confronto individuale per inquadrare obblighi, rischi e prossimi passi. L’attività legale è svolta dall’Avv. Vincenzo Sapone, Cassazionista dello Studio Legale BCS.</p>
           <div className={styles.areas}>

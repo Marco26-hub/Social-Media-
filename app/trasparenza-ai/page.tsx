@@ -3,7 +3,7 @@ import LegalShell from '@/components/LegalShell'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 
-const META_TITLE = 'Trasparenza AI — Social Automation'
+const META_TITLE = 'Trasparenza AI — Social Web Automation'
 const META_DESCRIPTION =
   'Nota di trasparenza sull’uso dell’intelligenza artificiale ai sensi del Regolamento UE 2024/1689 (AI Act).'
 

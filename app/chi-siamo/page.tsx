@@ -19,8 +19,8 @@ import styles from './chi-siamo.module.css'
 
 const META_TITLE = 'Chi siamo | Agenzia social, SEO e web per PMI'
 const META_DESCRIPTION =
-  'Social Automation coordina gestione social media, contenuti, SEO, GEO, blog e siti web per PMI e professionisti in Italia e nei mercati internazionali.'
-const WHATSAPP_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei conoscere meglio Social Automation e valutare un progetto.')}`
+  'Social Web Automation coordina gestione social media, contenuti, SEO, GEO, blog e siti web per PMI e professionisti in Italia e nei mercati internazionali.'
+const WHATSAPP_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei conoscere meglio Social Web Automation e valutare un progetto.')}`
 
 export const metadata: Metadata = {
   title: META_TITLE,
@@ -75,7 +75,7 @@ export default function ChiSiamoPage() {
           <p className={styles.eyebrow}><Building2 size={16} aria-hidden="true" /> Strategia digitale senza confini</p>
           <h1 id="about-title">Una regia digitale concreta per PMI e professionisti.</h1>
           <p className={styles.lead}>
-            Social Automation coordina strategia digitale, gestione social media,
+            Social Web Automation coordina strategia digitale, gestione social media,
             contenuti, pubblicazione, SEO, GEO, blog, siti ed e-commerce per imprese
             e professionisti in Italia e nel mondo. Un unico processo operativo
             collega visibilità, presenza online e opportunità commerciali nei
@@ -91,8 +91,8 @@ export default function ChiSiamoPage() {
           </div>
         </div>
 
-        <div className={styles.identity} aria-label="Dati principali Social Automation">
-          <Image src="/brand/swa-logo-official.png" alt="Logo SWA Social Automation" width={260} height={119} priority />
+        <div className={styles.identity} aria-label="Dati principali Social Web Automation">
+          <Image src="/brand/swa-logo-official.png" alt="Logo SWA Social Web Automation" width={260} height={119} priority />
           <dl>
             <div><dt>Impresa</dt><dd>{TITOLARE.ragioneSociale}</dd></div>
             <div><dt>Fondatore</dt><dd>Marco Dibenedetto</dd></div>

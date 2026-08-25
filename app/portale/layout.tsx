@@ -5,7 +5,7 @@ import styles from './portale.module.css'
 import PortaleLogout from './PortaleLogout'
 
 export const metadata: Metadata = {
-  title: 'Area cliente | Social Automation',
+  title: 'Area cliente | Social Web Automation',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -29,7 +29,7 @@ export default function PortaleLayout({ children }: { children: React.ReactNode 
               />
             </span>
             <span className={styles.brandName}>
-              <b>Social Automation</b>
+              <b>Social Web Automation</b>
               <span>Area cliente</span>
             </span>
           </Link>

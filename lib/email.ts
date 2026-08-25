@@ -5,7 +5,7 @@
 //
 // Env:
 //   RESEND_API_KEY   — key Resend (re_...)
-//   EMAIL_FROM       — mittente verificato, es. "Social Automation <no-reply@tuodominio.it>"
+//   EMAIL_FROM       — mittente verificato, es. "Social Web Automation <no-reply@tuodominio.it>"
 //   AGENCY_NOTIFY_EMAIL — dove ricevere le notifiche interne (nuove registrazioni)
 
 const RESEND_API = 'https://api.resend.com/emails'
@@ -64,8 +64,8 @@ export async function notifyNewRegistration(p: { nome: string; email: string; az
 export async function sendRegistrationReceived(to: string, nome: string): Promise<EmailResult> {
   return sendEmail({
     to,
-    subject: 'Richiesta ricevuta — Social Automation',
-    html: `<p>Ciao ${escapeHtml(nome)},</p><p>abbiamo ricevuto la tua richiesta di registrazione. Ti attiviamo a breve e ti avvisiamo via email appena l'account è pronto.</p><p>— Social Automation</p>`,
+    subject: 'Richiesta ricevuta — Social Web Automation',
+    html: `<p>Ciao ${escapeHtml(nome)},</p><p>abbiamo ricevuto la tua richiesta di registrazione. Ti attiviamo a breve e ti avvisiamo via email appena l'account è pronto.</p><p>— Social Web Automation</p>`,
   })
 }
 
@@ -73,8 +73,8 @@ export async function sendRegistrationReceived(to: string, nome: string): Promis
 export async function sendAccountActivated(to: string, nome: string, loginUrl: string): Promise<EmailResult> {
   return sendEmail({
     to,
-    subject: 'Il tuo account è attivo — Social Automation',
-    html: `<p>Ciao ${escapeHtml(nome)},</p><p>il tuo account è stato attivato. Puoi accedere al pannello qui:</p><p><a href="${escapeHtml(loginUrl)}">${escapeHtml(loginUrl)}</a></p><p>— Social Automation</p>`,
+    subject: 'Il tuo account è attivo — Social Web Automation',
+    html: `<p>Ciao ${escapeHtml(nome)},</p><p>il tuo account è stato attivato. Puoi accedere al pannello qui:</p><p><a href="${escapeHtml(loginUrl)}">${escapeHtml(loginUrl)}</a></p><p>— Social Web Automation</p>`,
   })
 }
 
@@ -86,8 +86,8 @@ export async function sendStandaloneOrderConfirmed(
   return sendEmail({
     to,
     subject: `Pagamento confermato - ${serviceName}`,
-    html: `<p>Ciao ${escapeHtml(nome)},</p><p>il pagamento per <strong>${escapeHtml(serviceName)}</strong> e stato confermato.</p><p>Ti contatteremo per raccogliere materiali, accessi e priorita operative necessarie all'avvio del servizio.</p><p>Social Automation</p>`,
-    text: `Ciao ${nome},\n\nil pagamento per ${serviceName} e stato confermato. Ti contatteremo per raccogliere materiali, accessi e priorita operative necessarie all'avvio del servizio.\n\nSocial Automation`,
+    html: `<p>Ciao ${escapeHtml(nome)},</p><p>il pagamento per <strong>${escapeHtml(serviceName)}</strong> e stato confermato.</p><p>Ti contatteremo per raccogliere materiali, accessi e priorita operative necessarie all'avvio del servizio.</p><p>Social Web Automation</p>`,
+    text: `Ciao ${nome},\n\nil pagamento per ${serviceName} e stato confermato. Ti contatteremo per raccogliere materiali, accessi e priorita operative necessarie all'avvio del servizio.\n\nSocial Web Automation`,
   })
 }
 
@@ -134,7 +134,7 @@ export async function sendWithdrawalReceipt(receipt: WithdrawalReceipt): Promise
 
   return sendEmail({
     to: receipt.email,
-    subject: `Ricevuta ${receipt.requestLabel.toLowerCase()} ${receipt.referenceCode} - Social Automation`,
+    subject: `Ricevuta ${receipt.requestLabel.toLowerCase()} ${receipt.referenceCode} - Social Web Automation`,
     html: `<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#15231f"><h1 style="font-size:24px">Dichiarazione ricevuta</h1><p>Questa email costituisce avviso di ricevimento su supporto durevole. Conserva il codice pratica.</p><table style="width:100%;border-collapse:collapse">${rows}</table><h2 style="font-size:17px;margin-top:24px">Contenuto trasmesso</h2><p style="padding:16px;background:#f3f7f5;border-left:4px solid #0f7b5a">${escapeHtml(receipt.declarationText)}</p><p>La ricezione registra la dichiarazione al momento indicato. L'esito delle verifiche e gli eventuali rimborsi saranno comunicati separatamente.</p><p>Social Automation di Marco Dibenedetto</p></div>`,
     text: withdrawalReceiptText(receipt),
   })

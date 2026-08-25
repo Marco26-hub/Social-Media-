@@ -262,7 +262,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
       <div className="max-w-6xl mx-auto">
         {/* Navigazione: indietro + calendario */}
         <div className="flex items-center justify-between gap-3 mb-4">
-          <Link href="/" className="inline-flex h-10 w-[86px] items-center justify-center rounded bg-[#0f6b4f]" aria-label="Social Automation, home">
+          <Link href="/" className="inline-flex h-10 w-[86px] items-center justify-center rounded bg-[#0f6b4f]" aria-label="Social Web Automation, home">
             <Image src="/brand/swa-logo-official.png" alt="SWA" width={74} height={34} className="h-[34px] w-[74px] object-contain" priority />
           </Link>
           <div className="flex items-center gap-2">
@@ -334,7 +334,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
           <div className="flex flex-wrap gap-2">
             {/* WhatsApp */}
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(`📱 Anteprima contenuto per ${DEMO_DATA.cliente_nome}\n\nHook: ${hook}\n\n${shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}\n\n---\nSocial Automation V2`)}`}
+              href={`https://wa.me/?text=${encodeURIComponent(`📱 Anteprima contenuto per ${DEMO_DATA.cliente_nome}\n\nHook: ${hook}\n\n${shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}\n\n---\nSocial Web Automation V2`)}`}
               target="_blank" rel="noopener"
               className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white text-xs font-medium rounded-full hover:bg-green-600 transition-colors"
             >
@@ -354,7 +354,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
 
             {/* Email */}
             <a
-              href={`mailto:?subject=${encodeURIComponent(`Anteprima contenuto - ${DEMO_DATA.cliente_nome}`)}&body=${encodeURIComponent(`Ciao,\n\nti inviamo l'anteprima del contenuto per ${DEMO_DATA.cliente_nome}.\n\nHook: ${hook}\n\nLink: ${shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}\n\n---\nSocial Automation V2`)}`}
+              href={`mailto:?subject=${encodeURIComponent(`Anteprima contenuto - ${DEMO_DATA.cliente_nome}`)}&body=${encodeURIComponent(`Ciao,\n\nti inviamo l'anteprima del contenuto per ${DEMO_DATA.cliente_nome}.\n\nHook: ${hook}\n\nLink: ${shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}\n\n---\nSocial Web Automation V2`)}`}
               className="flex items-center gap-1.5 px-4 py-2 bg-gray-600 text-white text-xs font-medium rounded-full hover:bg-gray-700 transition-colors"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 8L2 4"/></svg>

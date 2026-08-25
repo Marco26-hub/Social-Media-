@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: article.meta_description || undefined,
       type: 'article',
       url,
-      siteName: 'Social Automation',
+      siteName: 'Social Web Automation',
       locale: 'it_IT',
       publishedTime: article.data_pubblicazione || undefined,
       authors: [article.autore],

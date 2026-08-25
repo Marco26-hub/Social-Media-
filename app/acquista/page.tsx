@@ -85,9 +85,9 @@ function CheckoutForm() {
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
-        <Link href="/" aria-label="Social Automation, home">
+        <Link href="/" aria-label="Social Web Automation, home">
           <Image src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
-          <span>Social Automation</span>
+          <span>Social Web Automation</span>
         </Link>
         <span><LockKeyhole size={15} /> Checkout protetto da Stripe</span>
       </header>

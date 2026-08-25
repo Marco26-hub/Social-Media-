@@ -45,7 +45,7 @@ export const metadata: Metadata = {
 }
 
 const WHATSAPP_NUMERO = '393477196603'
-const TRIAL_MSG = 'Ciao! Vorrei richiedere un contenuto di prova gratuito di Social Automation.'
+const TRIAL_MSG = 'Ciao! Vorrei richiedere un contenuto di prova gratuito di Social Web Automation.'
 const CUSTOM_MSG = 'Ciao! Vorrei valutare una soluzione personalizzata per la mia azienda.'
 
 function waLink(message: string) {
@@ -137,7 +137,7 @@ const FAQ = [
   },
   {
     q: 'Devo imparare a utilizzare un nuovo software?',
-    a: 'No. Social Automation è un servizio gestito. Il portale semplifica approvazioni e consultazione dei risultati; strategia, produzione e pubblicazione restano a nostro carico.',
+    a: 'No. Social Web Automation è un servizio gestito. Il portale semplifica approvazioni e consultazione dei risultati; strategia, produzione e pubblicazione restano a nostro carico.',
   },
   {
     q: 'Posso approvare i contenuti prima della pubblicazione?',
@@ -502,7 +502,7 @@ export default function LandingPage() {
       <footer className={styles.footer}>
         <Link href="/" className={styles.brand}>
           <Image className={styles.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} />
-          <span>Social Automation</span>
+          <span>Social Web Automation</span>
         </Link>
         <div>
           <Link href="/servizi">Servizi</Link>

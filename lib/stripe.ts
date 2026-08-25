@@ -142,7 +142,7 @@ export async function createStripeCheckoutSession(args: {
   appendForm(params, 'line_items[0][price_data][currency]', 'eur')
   appendForm(params, 'line_items[0][price_data][unit_amount]', args.amountCents)
   appendForm(params, 'line_items[0][price_data][recurring][interval]', 'month')
-  appendForm(params, 'line_items[0][price_data][product_data][name]', `Social Automation — ${args.pacchettoNome}`)
+  appendForm(params, 'line_items[0][price_data][product_data][name]', `Social Web Automation — ${args.pacchettoNome}`)
   appendForm(params, 'line_items[0][price_data][product_data][metadata][cliente_id]', args.clienteId)
   appendForm(params, 'line_items[0][price_data][product_data][metadata][pacchetto_slug]', args.pacchettoSlug)
 
@@ -193,7 +193,7 @@ export async function createStandaloneServiceCheckoutSession(args: {
   appendForm(params, 'line_items[0][quantity]', 1)
   appendForm(params, 'line_items[0][price_data][currency]', 'eur')
   appendForm(params, 'line_items[0][price_data][unit_amount]', args.amountCents)
-  appendForm(params, 'line_items[0][price_data][product_data][name]', `Social Automation — ${args.serviceName}`)
+  appendForm(params, 'line_items[0][price_data][product_data][name]', `Social Web Automation — ${args.serviceName}`)
   appendForm(params, 'line_items[0][price_data][product_data][metadata][service_order_id]', args.orderId)
   appendForm(params, 'line_items[0][price_data][product_data][metadata][service_slug]', args.serviceSlug)
 

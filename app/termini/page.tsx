@@ -3,8 +3,8 @@ import LegalShell, { PH } from '@/components/LegalShell'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 
-const META_TITLE = 'Termini e Condizioni — Social Automation'
-const META_DESCRIPTION = 'Condizioni generali di utilizzo del servizio Social Automation.'
+const META_TITLE = 'Termini e Condizioni — Social Web Automation'
+const META_DESCRIPTION = 'Condizioni generali di utilizzo del servizio Social Web Automation.'
 
 export const metadata: Metadata = {
   title: META_TITLE,

@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-export const alt = 'Social Automation: gestione social, siti, SEO e GEO per PMI e professionisti'
+export const alt = 'Social Web Automation: gestione social, siti, SEO e GEO per PMI e professionisti'
 export const size = {
   width: 1200,
   height: 630,
@@ -33,7 +33,7 @@ export default async function OpenGraphImage() {
           {/* The dimensions preserve the official 958:438 aspect ratio. */}
           <img src={logoDataUrl} width="192" height="88" alt="" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 34, fontWeight: 700 }}>Social Automation</span>
+            <span style={{ fontSize: 34, fontWeight: 700 }}>Social Web Automation</span>
             <span style={{ marginTop: 8, color: '#dbe7df', fontSize: 22 }}>Servizio digitale gestito</span>
           </div>
         </div>

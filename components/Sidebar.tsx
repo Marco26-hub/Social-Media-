@@ -71,11 +71,11 @@ export default function Sidebar() {
     <>
       {/* Mobile top bar */}
       <header className="md:hidden sticky top-0 z-30 bg-sidebar text-white flex items-center justify-between px-4 py-3 border-b border-white/10">
-        <Link href="/" className="flex items-center gap-2" aria-label="Social Automation, home">
+        <Link href="/" className="flex items-center gap-2" aria-label="Social Web Automation, home">
           <span className="w-[76px] h-9 bg-[#0f6b4f] rounded flex items-center justify-center flex-shrink-0">
             <Image src="/brand/swa-logo-official.png" alt="SWA" width={66} height={30} className="w-[66px] h-[30px] object-contain" priority />
           </span>
-          <span className="font-semibold text-sm">Social Automation</span>
+          <span className="font-semibold text-sm">Social Web Automation</span>
         </Link>
         <div className="flex items-center gap-1">
           <Link
@@ -108,11 +108,11 @@ export default function Sidebar() {
       `}>
         {/* Logo */}
         <div className="flex items-center justify-between gap-3 px-5 py-5 border-b border-white/10">
-          <Link href="/" className="flex items-center gap-2.5 min-w-0" aria-label="Social Automation, home">
+          <Link href="/" className="flex items-center gap-2.5 min-w-0" aria-label="Social Web Automation, home">
             <span className="w-[76px] h-9 bg-[#0f6b4f] rounded flex items-center justify-center flex-shrink-0">
               <Image src="/brand/swa-logo-official.png" alt="SWA" width={66} height={30} className="w-[66px] h-[30px] object-contain" priority />
             </span>
-            <span className="text-white font-semibold text-sm">Social Automation</span>
+            <span className="text-white font-semibold text-sm">Social Web Automation</span>
           </Link>
           <button onClick={() => setOpen(false)} className="md:hidden text-white/60 hover:text-white p-1">
             <X className="w-5 h-5" />

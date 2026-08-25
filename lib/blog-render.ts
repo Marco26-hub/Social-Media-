@@ -71,7 +71,7 @@ export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
     author: { '@type': 'Organization', name: a.autore },
     publisher: {
       '@type': 'Organization',
-      name: 'Social Automation',
+      name: 'Social Web Automation',
       ...(siteUrl ? {
         url: siteUrl.replace(/\/$/, ''),
         logo: {

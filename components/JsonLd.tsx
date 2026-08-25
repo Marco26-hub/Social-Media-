@@ -58,7 +58,7 @@ const jsonLd = {
       ],
       hasOfferCatalog: {
         '@type': 'OfferCatalog',
-        name: 'Servizi e pacchetti Social Automation',
+        name: 'Servizi e pacchetti Social Web Automation',
         itemListElement: [
           {
             '@type': 'Offer',
@@ -195,7 +195,7 @@ const jsonLd = {
     {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
-      name: 'Social Automation',
+      name: 'Social Web Automation',
       url: SITE_URL,
       inLanguage: 'it-IT',
       publisher: { '@id': `${SITE_URL}/#organization` },

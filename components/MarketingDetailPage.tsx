@@ -56,7 +56,7 @@ const WHATSAPP_NUMBER = '393477196603'
 export default function MarketingDetailPage({ config }: { config: MarketingDetailConfig }) {
   const Icon = config.icon
   const pageUrl = `${SITE_URL}${config.path}`
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Automation.`)}`
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Web Automation.`)}`
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -107,7 +107,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       },
       ...(config.portfolio?.length ? [{
         '@type': 'ItemList',
-        name: 'Lavori web realizzati da Social Automation',
+        name: 'Lavori web realizzati da Social Web Automation',
         itemListElement: config.portfolio.map((item, index) => ({
           '@type': 'ListItem',
           position: index + 1,

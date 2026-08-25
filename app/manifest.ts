@@ -3,7 +3,7 @@ import { SITE_URL } from '@/lib/site-config'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Social Automation',
+    name: 'Social Web Automation',
     short_name: 'SWA',
     description: 'Gestione social media, SEO, GEO e siti per PMI e professionisti.',
     start_url: SITE_URL,

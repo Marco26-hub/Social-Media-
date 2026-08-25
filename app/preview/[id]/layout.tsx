@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Anteprima contenuto | Social Automation',
+  title: 'Anteprima contenuto | Social Web Automation',
   robots: { index: false, follow: false, noarchive: true },
 }
 
