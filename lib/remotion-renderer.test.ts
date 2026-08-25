@@ -20,6 +20,9 @@ test('custom audio participates in the deterministic Remotion render identity', 
 
   const trending = remotionSourceHash({ ...base, audioUrl: 'https://example.com/track-a.mp3', motionPreset: 'trending' })
   assert.notEqual(first, trending)
+
+  const replaceOriginalAudio = remotionSourceHash({ ...base, audioUrl: 'https://example.com/track-a.mp3', keepOriginalAudio: false })
+  assert.notEqual(first, replaceOriginalAudio)
 })
 
 test('copy, logo and brand participate in the deterministic render identity', () => {

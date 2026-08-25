@@ -88,6 +88,9 @@ async function remotionBundle(): Promise<string> {
 export async function renderSwaSocialVideo(input: SwaRenderInput): Promise<SwaRenderResult> {
   const mediaUrls = input.mediaUrls.filter(Boolean).slice(0, MAX_IMAGES)
   if (!mediaUrls.length) throw new Error('Remotion richiede almeno una foto o un video sorgente')
+  if (process.env.NODE_ENV === 'production' && !isStorageConfigured()) {
+    throw new Error('Storage persistente non configurato: il render non viene creato per evitare un MP4 perso al riavvio')
+  }
 
   const sourceVideoUrl = mediaUrls.find(url => /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url))
   const imageUrls = sourceVideoUrl ? [] : mediaUrls

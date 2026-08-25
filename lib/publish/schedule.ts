@@ -208,7 +208,9 @@ export async function scheduleOnBlotato(
     const locked = await q(
       `UPDATE calendario
          SET publish_lock_id = $1, updated_at = now()
-       WHERE id = $2 AND cliente_id = $3 AND publish_lock_id IS NULL AND blotato_post_id IS NULL
+       WHERE id = $2 AND cliente_id = $3
+         AND (publish_lock_id IS NULL OR updated_at < now() - interval '15 minutes')
+         AND blotato_post_id IS NULL
        RETURNING id`,
       [lockId, rowId, clienteId],
     )
@@ -227,6 +229,9 @@ export async function scheduleOnBlotato(
     const sourceImages = mediaUrls.filter(url => !isVideoUrl(url)).slice(0, 10)
     const renderSources = uploadedVideo ? [uploadedVideo] : sourceImages
     const hasAudio = Boolean(attachedAudioUrl)
+    // Una traccia caricata dall'utente e la colonna sonora finale: tenere anche
+    // l'audio del filmato crea due piste concorrenti e risultati imprevedibili.
+    const keepOriginalAudio = !hasAudio
     const requestedPreset = String(row.visual_preset || '').trim().toLowerCase()
     const motionPreset = ['trending', 'premium', 'minimal', 'classico'].includes(requestedPreset)
       ? requestedPreset as 'trending' | 'premium' | 'minimal' | 'classico'
@@ -242,7 +247,7 @@ export async function scheduleOnBlotato(
       const sourceHash = remotionSourceHash({
         mediaUrls: renderSources,
         audioUrl: attachedAudioUrl || undefined,
-        keepOriginalAudio: true,
+        keepOriginalAudio,
         motionPreset,
         hook: String(row.hook || '').trim() || undefined,
         cta: String(row.cta || '').trim() || undefined,
@@ -306,7 +311,7 @@ export async function scheduleOnBlotato(
             clienteId,
             mediaUrls: renderSources,
             audioUrl: attachedAudioUrl || undefined,
-            keepOriginalAudio: true,
+            keepOriginalAudio,
             motionPreset,
             hook: String(row.hook || '').trim() || undefined,
             cta: String(row.cta || '').trim() || undefined,
@@ -449,7 +454,7 @@ export async function scheduleOnBlotato(
            SET publish_lock_id = NULL, blotato_status = 'failed',
                errore_tecnico = $1, blotato_sync_at = now(), updated_at = now()
            WHERE id = $2 AND cliente_id = $3 AND publish_lock_id = $4`,
-          [`Blotato: ${message.slice(0, 500)}`, rowId, clienteId, lockId],
+          [`Pipeline pubblicazione: ${message.slice(0, 500)}`, rowId, clienteId, lockId],
         )
       } catch (persistError) {
         console.warn('[Blotato] rilascio publish_lock fallito:', (persistError as Error).message.slice(0, 160))

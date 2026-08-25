@@ -26,6 +26,14 @@ export type SwaSocialVideoProps = {
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const
 
+function fitCopy(value: string | undefined, maxLength: number): string {
+  const clean = String(value || '').replace(/\s+/g, ' ').trim()
+  if (clean.length <= maxLength) return clean
+  const shortened = clean.slice(0, maxLength + 1)
+  const lastSpace = shortened.lastIndexOf(' ')
+  return `${shortened.slice(0, lastSpace > maxLength * 0.65 ? lastSpace : maxLength).trim()}...`
+}
+
 function StillLayer({ src, opacity, progress, direction, motionPreset }: {
   src: string
   opacity: number
@@ -90,6 +98,10 @@ function EditorialOverlay({ hook, cta, logoUrl, brandName }: {
   const hookOpacity = Math.min(hookIn, hookOut)
   const ctaStart = Math.max(0, durationInFrames - Math.round(fps * 3.1))
   const ctaIn = spring({ frame: frame - ctaStart, fps, config: { damping: 18, stiffness: 120 }, durationInFrames: 24 })
+  const hookCopy = fitCopy(hook, 96)
+  const ctaCopy = fitCopy(cta, 84)
+  const hookFontSize = hookCopy.length > 72 ? 46 : hookCopy.length > 48 ? 54 : 64
+  const ctaFontSize = ctaCopy.length > 64 ? 46 : ctaCopy.length > 42 ? 54 : 64
 
   return (
     <AbsoluteFill style={{ pointerEvents: 'none', fontFamily: 'Arial, Helvetica, sans-serif' }}>
@@ -101,7 +113,7 @@ function EditorialOverlay({ hook, cta, logoUrl, brandName }: {
           )}
         </div>
       )}
-      {hook && (
+      {hookCopy && (
         <div style={{
           position: 'absolute',
           bottom: 285,
@@ -111,12 +123,12 @@ function EditorialOverlay({ hook, cta, logoUrl, brandName }: {
           transform: `translateY(${interpolate(hookIn, [0, 1], [32, 0], clamp)}px)`,
         }}>
           <div style={{ width: 82, height: 8, backgroundColor: '#ff3d6e', marginBottom: 24 }} />
-          <div style={{ color: '#fff', fontSize: 64, lineHeight: 1.06, fontWeight: 900, letterSpacing: 0, textShadow: '0 4px 24px rgba(0,0,0,0.82)' }}>
-            {hook}
+          <div style={{ color: '#fff', fontSize: hookFontSize, lineHeight: 1.06, fontWeight: 900, letterSpacing: 0, overflowWrap: 'anywhere', textShadow: '0 4px 24px rgba(0,0,0,0.82)' }}>
+            {hookCopy}
           </div>
         </div>
       )}
-      {cta && frame >= ctaStart && (
+      {ctaCopy && frame >= ctaStart && (
         <>
           <AbsoluteFill style={{ background: 'linear-gradient(to top, rgba(4,7,12,0.88), rgba(4,7,12,0) 45%)', opacity: ctaIn }} />
           <div style={{
@@ -128,8 +140,8 @@ function EditorialOverlay({ hook, cta, logoUrl, brandName }: {
             transform: `translateY(${interpolate(ctaIn, [0, 1], [40, 0], clamp)}px)`,
           }}>
             <div style={{ color: '#ff4f7b', fontSize: 30, lineHeight: 1, fontWeight: 900, marginBottom: 18 }}>TOCCA A TE</div>
-            <div style={{ color: '#fff', fontSize: 64, lineHeight: 1.08, fontWeight: 900, letterSpacing: 0, textShadow: '0 4px 24px rgba(0,0,0,0.82)' }}>
-              {cta}
+            <div style={{ color: '#fff', fontSize: ctaFontSize, lineHeight: 1.08, fontWeight: 900, letterSpacing: 0, overflowWrap: 'anywhere', textShadow: '0 4px 24px rgba(0,0,0,0.82)' }}>
+              {ctaCopy}
             </div>
           </div>
         </>
@@ -237,7 +249,7 @@ export function SwaSocialVideo({
       {audioUrl && (
         <Audio
           src={audioUrl}
-          loop
+          endAt={durationInFrames}
           volume={() => Math.min(fadeIn, fadeOut)}
           name="SWA custom soundtrack"
         />
