@@ -117,6 +117,7 @@ const JOURNEY = [
   { number: '03', title: 'Convertire', text: 'Siti ed e-commerce trasformano attenzione e traffico in azioni misurabili.', href: '/servizi/siti-e-commerce' },
   { number: '04', title: 'Trovare opportunità', text: 'Il Pilot B2B ricerca aziende in target, fonti e priorità commerciali.', href: '/servizi/ricerca-clienti-b2b' },
   { number: '05', title: 'Operare correttamente', text: 'AI Act, GDPR e controllo umano proteggono processo e responsabilità.', href: '/consulenza' },
+  { number: '06', title: 'Misurare e migliorare', text: 'Report e risultati indicano cosa funziona e guidano le priorità del ciclo successivo.', href: '/metodo' },
 ]
 
 const EVIDENCE = [
