@@ -843,7 +843,7 @@ export default function PianoPage() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-gray-950">Cartella campagna SWA</p>
-                <p className="mt-0.5 text-[10px] text-gray-500">Importazione per fase, social, formato e contenuto</p>
+                <p className="mt-0.5 text-[10px] text-gray-500">Importa media e audio per fase, social, formato e contenuto</p>
               </div>
               <button
                 type="button"

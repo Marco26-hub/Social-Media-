@@ -89,3 +89,18 @@ test('orders campaign groups by editorial number instead of format name', () => 
     'carosello_07',
   ])
 })
+
+test('assigns an audio inside a campaign content folder to its exact creative', () => {
+  const parsed = parseCampaignFolderFile({
+    name: 'AUDIO_REEL_19_PIXABAY_SPIDER_THE_BAND.mp3',
+    type: 'audio/mpeg',
+    relativePath: 'Instagram/04_AZIONE/REEL_19_DAL_DIVANO_ALLA_PISTA/AUDIO_REEL_19_PIXABAY_SPIDER_THE_BAND.mp3',
+  })
+
+  assert.equal(parsed.kind, 'audio')
+  assert.equal(parsed.week, 4)
+  assert.equal(parsed.platform, 'instagram')
+  assert.equal(parsed.tag, 'reel')
+  assert.equal(parsed.contentKey, 'reel_19')
+  assert.deepEqual(parsed.errors, [])
+})
