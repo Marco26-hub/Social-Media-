@@ -22,7 +22,7 @@ import {
   verificaMedia,
   type MediaTag,
 } from '@/lib/media-requirements'
-import { folderGroupKey, parseCampaignFolderFile, type CampaignFolderAsset } from '@/lib/campaign-folder'
+import { compareCampaignFolderGroups, folderGroupKey, parseCampaignFolderFile, type CampaignFolderAsset } from '@/lib/campaign-folder'
 
 type QualitySelection = 'auto' | ContentQuality
 // `tag` = marcatura manuale ("questa foto è del carosello, questo MP4 del reel").
@@ -235,6 +235,9 @@ export default function PianoPage() {
         }),
       }))
       .filter(entry => entry.assignment.kind !== 'unsupported')
+      .sort((left, right) => compareCampaignFolderGroups(left.assignment, right.assignment)
+        || (left.assignment.sequence ?? Number.MAX_SAFE_INTEGER) - (right.assignment.sequence ?? Number.MAX_SAFE_INTEGER)
+        || left.assignment.relativePath.localeCompare(right.assignment.relativePath, 'it', { numeric: true }))
 
     const occupied = new Map<string, FolderCandidate[]>()
     for (const candidate of candidates) {
@@ -889,7 +892,7 @@ export default function PianoPage() {
                 map.set(key, current)
                 return map
               }, new Map<string, { key: string; week: number; platform: string; tag: MediaTag; contentKey: string; count: number; sequences: number[] }>()).values())
-                .sort((left, right) => left.week - right.week || left.platform.localeCompare(right.platform) || left.contentKey.localeCompare(right.contentKey, 'it', { numeric: true }))
+                .sort(compareCampaignFolderGroups)
               const incompleteGroups = groupRows.filter(group => group.count < Math.min(expectedMediaForFolderTag(group.tag), group.tag === 'carosello' ? MEDIA_PER_FORMATO.carousel.min ?? 3 : expectedMediaForFolderTag(group.tag)))
               const underTargetGroups = groupRows.filter(group => group.count < expectedMediaForFolderTag(group.tag))
               const exceedsLimit = valid.length > MAX_PLAN_IMAGES - planAssets.length

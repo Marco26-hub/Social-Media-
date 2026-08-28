@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 
-import { folderGroupKey, parseCampaignFolderFile } from './campaign-folder'
+import { compareCampaignFolderGroups, folderGroupKey, parseCampaignFolderFile } from './campaign-folder'
 
 test('reads week, social, format, content and frame from an SWA campaign path', () => {
   const parsed = parseCampaignFolderFile({
@@ -68,4 +68,24 @@ test('ignores strategy documents as unsupported media', () => {
 
   assert.equal(parsed.kind, 'unsupported')
   assert.deepEqual(parsed.errors, [])
+})
+
+test('orders campaign groups by editorial number instead of format name', () => {
+  const groups = [
+    { week: 2, platform: 'facebook' as const, tag: 'carosello' as const, contentKey: 'carosello_07' },
+    { week: 1, platform: 'facebook' as const, tag: 'reel' as const, contentKey: 'reel_04' },
+    { week: 2, platform: 'facebook' as const, tag: 'post' as const, contentKey: 'post_05' },
+    { week: 1, platform: 'facebook' as const, tag: 'story' as const, contentKey: 'story_03' },
+    { week: 2, platform: 'facebook' as const, tag: 'reel' as const, contentKey: 'reel_06' },
+  ]
+
+  groups.sort(compareCampaignFolderGroups)
+
+  assert.deepEqual(groups.map(group => group.contentKey), [
+    'story_03',
+    'reel_04',
+    'post_05',
+    'reel_06',
+    'carosello_07',
+  ])
 })

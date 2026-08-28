@@ -1421,8 +1421,12 @@ function CalendarioInner() {
         <CalendarGrid items={calendarItems} tz={clienteTz} onSelect={setSelected} onMove={handleDrop} />
       ) : (
         <div className="space-y-3">
-          {/* Barra selezione multipla — seleziona tutto + elimina in blocco */}
-          <div className="flex items-center justify-between gap-3 px-1 py-2">
+          {/* Barra selezione multipla — seleziona tutto + elimina in blocco.
+              STICKY: con un piano da oltre 100 contenuti la barra usciva subito dallo
+              schermo e per selezionare tutto o eliminare bisognava risalire in cima.
+              Sta sopra le intestazioni dei giorni (z-30 contro z-10), che infatti
+              si agganciano piu in basso (top-14). */}
+          <div className="sticky top-0 z-30 -mx-1 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -1431,8 +1435,12 @@ function CalendarioInner() {
                 onChange={toggleSelectAll}
                 className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
               />
-              <span className="text-xs text-gray-500">
-                {selectedIds.size > 0 ? `${selectedIds.size} selezionati` : 'Seleziona tutti'}
+              <span className="text-xs font-medium text-gray-600">
+                {selectedIds.size === 0
+                  ? `Seleziona tutti (${visibleCalendarItems.length})`
+                  : selectedIds.size === visibleCalendarItems.length
+                    ? `Tutti selezionati (${selectedIds.size}) — clicca per deselezionare`
+                    : `${selectedIds.size} di ${visibleCalendarItems.length} selezionati`}
               </span>
             </label>
             {selectedIds.size > 0 && (
@@ -1494,7 +1502,7 @@ function CalendarioInner() {
                     setDragOverDate(null)
                     if (content) void handleDrop(content, toYmd(c.data_pubblicazione))
                   }}
-                  className={`sticky top-0 z-10 rounded-2xl border bg-white/95 p-3 shadow-sm backdrop-blur transition-colors md:p-4 ${dragOverDate === toYmd(c.data_pubblicazione) ? 'border-brand-500 bg-brand-50/95 ring-2 ring-brand-200' : 'border-slate-200'}`}
+                  className={`sticky top-14 z-10 rounded-2xl border bg-white/95 p-3 shadow-sm backdrop-blur transition-colors md:p-4 ${dragOverDate === toYmd(c.data_pubblicazione) ? 'border-brand-500 bg-brand-50/95 ring-2 ring-brand-200' : 'border-slate-200'}`}
                 >
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>

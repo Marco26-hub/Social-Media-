@@ -39,6 +39,8 @@ import {
 } from '@/lib/editorial-variation'
 import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage } from '@/lib/production-cycle'
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
+import { SETTIMANE_DEL_MESE, quotaBlocco, settimaneDellaFase } from '@/lib/plan-quota'
+import { compareCampaignFolderGroups } from '@/lib/campaign-folder'
 // Governo di ORARI (e del solo vincolo di giorno che dipende dal canale): il
 // piano non deve più affidarsi a un default fisso '10:00' né agli orari a caso
 // del modello. Fasce per canale + cadenza dal pacchetto vivono in lib/scheduling.
@@ -322,11 +324,6 @@ type MixFormati = { caroselli: number; reel: number; story: number; postSingoli:
 // Ripartizione intera di un totale su N blocchi senza perdere né inventare unità
 // (6 reel su 4 settimane → 1,2,1,2 = 6): gli arrotondamenti per blocco farebbero
 // sballare il totale del mese in un verso o nell'altro.
-function quotaBlocco(totale: number, blocchi: number, indice: number): number {
-  if (blocchi <= 0) return 0
-  const t = Math.max(0, Math.round(totale))
-  return Math.floor(((indice + 1) * t) / blocchi) - Math.floor((indice * t) / blocchi)
-}
 
 function mixFormatiBlocco(piano: PackagePeriodMix | null, perBlocco: number, blocchi: number, indice: number): MixFormati {
   const totale = Math.max(0, Math.round(perBlocco))
@@ -572,10 +569,19 @@ ${buildExtendedOutputSchema(contentQuality)}
       // (7 invece di 9) perché lo schema esteso + credito limitato troncherebbe.
       const maxPerWeek = contentQuality === 'soft' ? 9 : 7
       const minPerWeek = 6
-      // Il pacchetto copre sempre le 4 settimane; il piano libero può usare le fasi.
-      const settimane = pkg ? [0, 1, 2, 3] : (faseNum === 1 ? [0, 1] : faseNum === 2 ? [2, 3] : [0, 1, 2, 3])
-      settimane.forEach((i, indice) => {
-        const targetPacchetto = packagePlan ? quotaBlocco(packagePlan.totale, settimane.length, indice) : null
+      // La fase vale ANCHE con un pacchetto attivo. Prima veniva ignorata quando
+      // c'era un pacchetto: i bottoni "Fase 1 · settimane 1-2" e "Fase 2 ·
+      // settimane 3-4" generavano entrambi il mese INTERO con la quota mensile
+      // piena, e cliccandoli tutti e due si otteneva il doppio dei contenuti
+      // (la generazione e un INSERT puro, non sostituisce nulla).
+      //
+      // La quota resta calcolata sulle QUATTRO settimane del mese e poi si
+      // emettono solo i blocchi della fase richiesta: cosi fase 1 e fase 2 danno
+      // meta quota ciascuna e insieme ricompongono esattamente il totale mensile.
+      const settimane = settimaneDellaFase(faseNum)
+      SETTIMANE_DEL_MESE.forEach(i => {
+        if (!settimane.includes(i)) return
+        const targetPacchetto = packagePlan ? quotaBlocco(packagePlan.totale, SETTIMANE_DEL_MESE.length, i) : null
         chunks.push({
           start: fmtDate(addDays(today, i * 7)),
           end: fmtDate(addDays(today, i * 7 + 6)),
@@ -653,6 +659,10 @@ ${buildExtendedOutputSchema(contentQuality)}
     // i video finivano tutti nell'ultimo blocco), ma a round-robin dentro ogni
     // gruppo (marcatura, tipo): ogni blocco riceve la sua quota di MP4, di media
     // marcati e di foto libere. Unicità globale invariata: un media, un blocco.
+    // Gruppi della cartella che appartengono a settimane non generate in questo run
+    // (es. settimane 3-4 quando si genera la fase 1). Servono a dirlo nella risposta
+    // invece di farli sparire in silenzio.
+    const mediaFuoriPeriodo: { settimana: number; gruppo: string; media: number }[] = []
     if (mediaPool.length) {
       const folderAssigned = new Set<string>()
       // Un media importato da cartella appartiene a UN SOLO blocco. Il filtro per
@@ -682,9 +692,18 @@ ${buildExtendedOutputSchema(contentQuality)}
       groupsByWeek.forEach((groups, week) => {
         const blocchiSettimana = chunks.filter(c => c.week === week)
         if (!blocchiSettimana.length) {
-          // Settimana senza blocco (piano mensile per fasi: 3-4 fuori dalla fase 1).
-          // I media tornano nel pool generico invece di sparire.
-          groups.forEach(urls => urls.forEach(url => folderAssigned.delete(url)))
+          // Settimana non coperta da questo run: tipicamente si carica la cartella
+          // dell'INTERO mese e si genera la sola fase 1 (settimane 1-2), quindi le
+          // settimane 3-4 non hanno un blocco.
+          //
+          // Questi media NON vanno rimessi nel pool generico: finirebbero spalmati
+          // a round-robin dentro le settimane della fase corrente, e siccome il
+          // target del blocco viene poi derivato dai gruppi importati, la fase 1
+          // produrrebbe quasi tutto il mese. Restano invece da parte: li usera la
+          // generazione della fase 2, che e esattamente il loro periodo.
+          groups.forEach((urls, chiave) => {
+            mediaFuoriPeriodo.push({ settimana: week, gruppo: chiave, media: urls.length })
+          })
           return
         }
         ;[...groups.values()].forEach((urls, i) => {
@@ -780,14 +799,15 @@ CADENZA DEL PIANO — vincolante:
 
     const systemPrompt = `Sei un social media manager, creative strategist, visual director e SEO/GEO specialist senior (10+ anni, brand premium). Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Crei piani editoriali dove OGNI contenuto è unico, professionale, moderno e trend-aware: hook diversi, angoli ruotati, funnel bilanciato, keyword SEO/GEO sfruttate, meccaniche native da feed 2026, zero cliché, grammatica italiana impeccabile. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock, canzoni virali, eventi o claim non presenti nei dati.`
 
-    type FolderCampaignRule = { platform: string; contentKey: string; tag: MediaTag; refs: number[] }
+    type FolderCampaignRule = { week: number | null; platform: string; contentKey: string; tag: MediaTag; refs: number[] }
     function folderCampaignRules(chunk: Chunk): FolderCampaignRule[] {
-      const groups = new Map<string, { platform: string; contentKey: string; tag: MediaTag; refs: number[] }>()
+      const groups = new Map<string, FolderCampaignRule>()
       chunk.images.forEach((url, index) => {
         const placement = assetPlacements.get(url)
         if (!placement) return
         const key = `${placement.week}:${placement.platform}:${placement.contentKey}`
         const group = groups.get(key) || {
+          week: placement.week,
           platform: placement.platform,
           contentKey: placement.contentKey,
           tag: assetTags.get(url) ?? inferMediaTagFromLabel(placement.contentKey),
@@ -797,7 +817,7 @@ CADENZA DEL PIANO — vincolante:
         groups.set(key, group)
       })
       return [...groups.values()]
-        .sort((left, right) => `${left.platform}:${left.contentKey}`.localeCompare(`${right.platform}:${right.contentKey}`, 'it', { numeric: true }))
+        .sort(compareCampaignFolderGroups)
     }
 
     function buildFolderCampaignContext(chunk: Chunk): string {
@@ -1635,6 +1655,15 @@ Output SOLO JSON array valido:
       // Contenuti a cui è stato assegnato un gruppo cartella diverso da quello
       // richiesto: i media appartengono a un altro concept, vanno ricontrollati.
       ...(folderGroupMismatch && { items_gruppo_cartella_diverso: folderGroupMismatch }),
+      // Settimane generate in questo run: con `fase` sono solo 2 su 4.
+      settimane_generate: chunks.map(c => c.week).filter((w, i, a) => a.indexOf(w) === i),
+      // Gruppi della cartella lasciati fuori perche appartengono a settimane non
+      // generate ora (li prendera la fase successiva). Senza questo campo
+      // sparivano senza dirlo.
+      ...(mediaFuoriPeriodo.length && {
+        media_fuori_periodo: mediaFuoriPeriodo.length,
+        media_fuori_periodo_dettaglio: mediaFuoriPeriodo,
+      }),
       cadenza: { contenuti_settimana: cadenza.contenutiSettimana, giorni_attivi: cadenza.giorniAttivi, max_per_giorno: cadenza.maxPerGiorno },
       quality_level: contentQuality,
       editorial_skill: activeEditorialSkill,

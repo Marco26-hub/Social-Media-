@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { Setting } from '@/lib/types'
 import { Save, RefreshCw, KeyRound, Check, Sparkles } from 'lucide-react'
 import { demoSettings } from '@/lib/demo-data'
+import CambioPasswordCard from './CambioPasswordCard'
 
 import { isDemo } from '@/lib/demo'
 
@@ -218,6 +219,10 @@ export default function SettingsPage() {
         </div>
       ) : (
         <div className="max-w-2xl space-y-3">
+          {/* Password dell'utente loggato: unico punto dell'app da cui si puo
+              cambiare. Riguarda l'account, non il cliente attivo. */}
+          <CambioPasswordCard />
+
           {/* Blotato API key — per-cliente (ogni cliente il suo account Blotato) */}
           <div className="card p-4">
             <div className="flex items-center gap-2 mb-1">

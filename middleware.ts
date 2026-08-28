@@ -82,10 +82,13 @@ export async function middleware(request: NextRequest) {
     if (!rl.ok) return tooMany(rl.retryAfter)
   }
 
-  // Anti brute-force / spam su login e registrazione.
+  // Anti brute-force / spam su login, registrazione e cambio password.
+  // Il cambio password verifica quella ATTUALE: senza rate limit sarebbe un
+  // oracolo per indovinarla partendo da una sessione rubata.
   const isLoginPost = pathname === '/api/auth/callback/credentials' && request.method === 'POST'
   const isRegisterPost = pathname === '/api/auth/register' && request.method === 'POST'
-  if (isLoginPost || isRegisterPost) {
+  const isPasswordChangePost = pathname === '/api/account/password' && request.method === 'POST'
+  if (isLoginPost || isRegisterPost || isPasswordChangePost) {
     const rl = rateLimit(authHits, clientIp(request), AUTH_WINDOW_MS, AUTH_MAX)
     if (!rl.ok) return tooMany(rl.retryAfter)
   }

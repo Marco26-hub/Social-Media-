@@ -125,3 +125,24 @@ export function parseCampaignFolderFile(file: CampaignFolderFile): CampaignFolde
 export function folderGroupKey(asset: Pick<CampaignFolderAsset, 'week' | 'platform' | 'tag' | 'contentKey'>): string {
   return [asset.week || 0, asset.platform || 'senza-social', asset.tag, asset.contentKey || 'senza-contenuto'].join(':')
 }
+
+type CampaignFolderGroupOrder = {
+  week: number | null
+  platform: string | null
+  tag: MediaTag
+  contentKey: string | null
+}
+
+function contentNumber(contentKey: string | null): number {
+  const match = String(contentKey || '').match(/(\d+)(?!.*\d)/)
+  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER
+}
+
+/** Ordina i contenuti secondo la sequenza editoriale, indipendentemente dal formato. */
+export function compareCampaignFolderGroups(left: CampaignFolderGroupOrder, right: CampaignFolderGroupOrder): number {
+  return (left.week || 0) - (right.week || 0)
+    || String(left.platform || '').localeCompare(String(right.platform || ''), 'it')
+    || contentNumber(left.contentKey) - contentNumber(right.contentKey)
+    || left.tag.localeCompare(right.tag, 'it')
+    || String(left.contentKey || '').localeCompare(String(right.contentKey || ''), 'it', { numeric: true })
+}
