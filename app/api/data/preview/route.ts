@@ -65,6 +65,7 @@ export async function GET(request: Request) {
       'reel_audio_source_url',
       'reel_audio_license',
       'blotato_visual_media_url',
+      'blotato_audio_visual_media_url',
     ].map(optionalText).join(',\n              ')
     const tokenSelect = hasPreviewToken ? 'c.preview_token::text AS preview_token,' : ''
     const rows = await q(

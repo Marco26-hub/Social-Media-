@@ -35,6 +35,14 @@ const CANALE_ICON: Record<string, string> = {
 }
 const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
 const AUDIO_ACCEPT = 'audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/ogg,.mp3,.wav,.m4a,.ogg'
+const AUDIO_FORMATS = new Set(['post', 'pin', 'story', 'carousel', 'reel', 'short', 'video'])
+
+function audioFormatLabel(formato: string) {
+  if (formato === 'carousel') return 'Carosello'
+  if (formato === 'story') return 'Story'
+  if (formato === 'post' || formato === 'pin') return 'Post'
+  return 'Reel'
+}
 
 type PackageReconcile = {
   month: string
@@ -643,7 +651,7 @@ function CalendarioInner() {
     }
   }
 
-  async function attachReelAudio(c: Contenuto, file: File) {
+  async function attachContentAudio(c: Contenuto, file: File) {
     if (!clienteId) return
     setUploadingPhoto(`${c.id}:audio`)
     setAdminError(null)
@@ -677,18 +685,28 @@ function CalendarioInner() {
   // Generica di proposito: prima serviva solo ai media, ma il PATCH sottostante
   // già accettava qualsiasi colonna in whitelist — mancava solo chi la chiamasse.
   async function saveField(c: Contenuto, col: string, value: string | null, extraPatch: Partial<Contenuto> = {}) {
+    const renderReset: Partial<Contenuto> = col.startsWith('link_media_') ? {
+      blotato_visual_id: null,
+      blotato_visual_status: null,
+      blotato_visual_media_url: null,
+      blotato_visual_source_hash: null,
+      blotato_audio_visual_id: null,
+      blotato_audio_visual_status: null,
+      blotato_audio_visual_media_url: null,
+    } : {}
+    const patch = { ...renderReset, ...extraPatch }
     if (demo) {
-      setDemoData(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...extraPatch } : item))
+      setDemoData(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...patch } : item))
     } else {
       const patchRes = await fetch('/api/data/calendario', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: c.id, [col]: value, ...extraPatch }),
+        body: JSON.stringify({ id: c.id, [col]: value, ...patch }),
       })
       if (!patchRes.ok) throw new Error(await readApiError(patchRes, `Salvataggio ${col} fallito`))
     }
-    setContenuti(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...extraPatch } : item))
-    setSelected(prev => prev && prev.id === c.id ? { ...prev, [col]: value, ...extraPatch } : prev)
+    setContenuti(prev => prev.map(item => item.id === c.id ? { ...item, [col]: value, ...patch } : item))
+    setSelected(prev => prev && prev.id === c.id ? { ...prev, [col]: value, ...patch } : prev)
   }
 
   async function saveTextField(c: Contenuto, col: 'hook' | 'caption' | 'hashtag' | 'cta', value: string) {
@@ -1638,7 +1656,7 @@ function CalendarioInner() {
                       try { localStorage.setItem(`preview_${c.id_contenuto}`, JSON.stringify({
                         hook: c.hook, caption: c.caption, hashtag: c.hashtag, cta: c.cta,
                         canale: c.canale, formato: c.formato,
-                        link_media_1: c.blotato_visual_media_url || c.link_media_1, link_media_2: c.link_media_2, link_media_3: c.link_media_3,
+                        link_media_1: c.blotato_audio_visual_media_url || c.blotato_visual_media_url || c.link_media_1, link_media_2: c.link_media_2, link_media_3: c.link_media_3,
                         link_media_4: c.link_media_4, link_media_5: c.link_media_5, link_media_6: c.link_media_6,
                         link_media_7: c.link_media_7, link_media_8: c.link_media_8, link_media_9: c.link_media_9,
                         link_media_10: c.link_media_10,
@@ -1648,6 +1666,7 @@ function CalendarioInner() {
                         idea_visual: c.idea_visual, voiceover_script: c.voiceover_script, music_mood: c.music_mood,
                         reel_audio_url: c.reel_audio_url, reel_audio_title: c.reel_audio_title,
                         blotato_visual_media_url: c.blotato_visual_media_url,
+                        blotato_audio_visual_media_url: c.blotato_audio_visual_media_url,
                         link_prodotto_finale: c.link_prodotto_finale || c.link_prodotto,
                         brand_name: brand?.brand_name, social_handle: brand?.social_handle,
                       })) } catch {}
@@ -2095,12 +2114,12 @@ function CalendarioInner() {
                 )
               })()}
 
-              {['reel', 'short', 'video'].includes(selected.formato) && (
+              {AUDIO_FORMATS.has(selected.formato) && (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <Music2 className="h-4 w-4 text-emerald-700" />
-                      <p className="text-sm font-bold text-emerald-950">Audio Reel</p>
+                      <p className="text-sm font-bold text-emerald-950">Audio {audioFormatLabel(selected.formato)}</p>
                     </div>
                     <span className="text-[10px] font-bold uppercase text-emerald-700">MP3 · WAV · M4A · OGG</span>
                   </div>
@@ -2112,15 +2131,40 @@ function CalendarioInner() {
                   )}
                   <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-emerald-400 bg-white px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-50">
                     {uploadingPhoto === `${selected.id}:audio` ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Music2 className="h-4 w-4" />}
-                    {selected.reel_audio_url ? 'Sostituisci audio' : 'Carica audio Reel'}
+                    {selected.reel_audio_url ? 'Sostituisci audio' : `Carica audio ${audioFormatLabel(selected.formato)}`}
                     <input
                       type="file"
                       accept={AUDIO_ACCEPT}
                       className="hidden"
                       disabled={uploadingPhoto === `${selected.id}:audio`}
-                      onChange={e => { const file = e.target.files?.[0]; if (file) attachReelAudio(selected, file); e.target.value = '' }}
+                      onChange={e => { const file = e.target.files?.[0]; if (file) attachContentAudio(selected, file); e.target.value = '' }}
                     />
                   </label>
+                  {selected.formato === 'carousel' && (
+                    <p className="mt-2 text-[10px] text-emerald-800">
+                      Con questa traccia il carosello viene adattato a slideshow video/Reel: le slide restano in ordine, ma non sara pubblicato come carosello statico.
+                    </p>
+                  )}
+                  {['post', 'pin'].includes(selected.formato) && (
+                    <p className="mt-2 text-[10px] text-emerald-800">
+                      Con questa traccia il post viene adattato a video/Reel. La foto resta il visual principale e la pubblicazione richiede una nuova approvazione.
+                    </p>
+                  )}
+                  {selected.formato === 'story' && selected.canale === 'instagram' && (
+                    <p className="mt-2 text-[10px] text-emerald-800">
+                      Alla prima approvazione Remotion trasforma la Story in un MP4 9:16 e incorpora questa traccia. Il risultato richiede una nuova approvazione.
+                    </p>
+                  )}
+                  {selected.formato === 'story' && selected.canale === 'facebook' && (
+                    <p className="mt-2 text-[10px] text-emerald-800">
+                      Blotato non pubblica Facebook Story via API: con questa traccia SWA la adatta automaticamente a Reel Facebook.
+                    </p>
+                  )}
+                  {['reel', 'short', 'video'].includes(selected.formato) && (
+                    <p className="mt-2 text-[10px] text-emerald-800">
+                      Alla prima approvazione Remotion incorpora questa traccia in un nuovo MP4. Il video torna in Anteprima e richiede una seconda approvazione prima della pubblicazione.
+                    </p>
+                  )}
                 </div>
               )}
 

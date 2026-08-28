@@ -29,6 +29,14 @@ import {
 // possono ricevere un MP4 e come si legge la marcatura manuale dell'utente.
 import { MEDIA_PER_FORMATO, normalizeMediaTag, type MediaTag } from '@/lib/media-requirements'
 import { buildBrandContext } from '@/lib/brand-context'
+import { buildEditorialSkillContext, resolveEditorialSkill } from '@/lib/editorial-skills'
+import {
+  buildEditorialHistoryContext,
+  createMonthlyCreativeDirection,
+  EDITORIAL_HISTORY_COLUMNS,
+  findCreativeNearDuplicate,
+  type CreativeRecord,
+} from '@/lib/editorial-variation'
 import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage } from '@/lib/production-cycle'
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
 // Governo di ORARI (e del solo vincolo di giorno che dipende dal canale): il
@@ -82,7 +90,20 @@ function inferMediaTagFromLabel(value: string): MediaTag {
 // giusta per ogni contenuto dichiarandone il numero in `media_refs` (vedi schema item).
 // Prima l'assegnazione era posizionale cieca: il modello riordinava gli item e le foto
 // slittavano sul post sbagliato.
-function buildPlanAssetContext(shown: string[], labels: Map<string, string>, tags: Map<string, MediaTag>) {
+type FolderPlacement = {
+  week: number | null
+  platform: string
+  contentKey: string
+  sequence: number | null
+  relativePath: string
+}
+
+function buildPlanAssetContext(
+  shown: string[],
+  labels: Map<string, string>,
+  tags: Map<string, MediaTag>,
+  placements: Map<string, FolderPlacement>,
+) {
   if (!shown.length) return ''
   const imageUrls = shown.filter(url => !isVideoUrl(url))
   const videoUrls = shown.filter(isVideoUrl)
@@ -92,13 +113,18 @@ MEDIA CARICATI DALL'UTENTE PER QUESTO BLOCCO (numerati — il numero è il valor
 ${shown.map((url, index) => {
   const tag = tags.get(url) ?? 'auto'
   const destination = tag === 'reel' ? 'REEL/VIDEO' : tag === 'carosello' ? 'CAROSELLO' : tag === 'story' ? 'STORY' : tag === 'post' ? 'POST' : 'AUTO'
-  return `${index + 1}. ${labels.get(url) || 'media'} — [DESTINAZIONE: ${destination}] ${url}${isVideoUrl(url) ? ' [MP4]' : ''}`
+  const placement = placements.get(url)
+  const folderLabel = placement
+    ? ` [GRUPPO: ${placement.contentKey}; SOCIAL: ${placement.platform}; ORDINE: ${placement.sequence ?? 'n/d'}]`
+    : ''
+  return `${index + 1}. ${labels.get(url) || 'media'} — [DESTINAZIONE: ${destination}]${folderLabel} ${url}${isVideoUrl(url) ? ' [MP4]' : ''}`
 }).join('\n')}
 
 ⚠️ VISION + ABBINAMENTO — istruzioni vincolanti:
 - Le immagini (${imageUrls.length}) sono visibili in allegato: guardale e scrivi hook/caption/tema su quello che vedi davvero.
 - Gli MP4 (${videoUrls.length}) sono video finali già caricati: assegnali preferibilmente a formati reel/video/short e non inventare un video alternativo.
 - Rispetta DESTINAZIONE: REEL/VIDEO, CAROSELLO, STORY e POST sono vincoli scelti dall'utente; AUTO può essere assegnato liberamente.
+- Quando compare GRUPPO, usa insieme soltanto i media dello stesso gruppo e dello stesso SOCIAL. Non mescolare mai ID contenuto o piattaforme.
 - Per un Reel con MP4 usa il solo numero del video. Per un Reel senza MP4 usa 3-5 foto REEL/VIDEO coerenti tra loro in "media_refs", nell'ordine delle scene.
 - Per un post usa una foto; per un carosello usa 3-5 foto.
 - Non ripetere una foto su contenuti diversi dello stesso canale. Per il cross-post dello stesso Reel puoi riusare lo stesso gruppo su Instagram e Facebook.
@@ -123,21 +149,6 @@ function addDays(d: Date, days: number): Date {
   const copy = new Date(d)
   copy.setDate(copy.getDate() + days)
   return copy
-}
-
-// --- Memoria anti-ripetizione ----------------------------------------------
-// Additivo: il piano riceve gli ultimi contenuti già in calendario e l'ordine di
-// NON ricalcarli. È la leva che spezza la ripetitività TRA una generazione e la
-// successiva (la diversità intra-piano è già coperta da DIVERSITY_STANDARDS).
-function buildHistoryContext(rows: Record<string, unknown>[]): string {
-  if (!rows.length) return ''
-  const hooks = rows.map(r => (typeof r.hook === 'string' ? r.hook.trim() : '')).filter(Boolean).slice(0, 25)
-  const temi = [...new Set(rows.map(r => (typeof r.tema === 'string' ? r.tema.trim() : '')).filter(Boolean))].slice(0, 15)
-  if (!hooks.length && !temi.length) return ''
-  return `
-
-CONTENUTI GIÀ IN CALENDARIO (evita di ripeterli — devi essere diverso da questi):
-${hooks.length ? `Hook già usati:\n${hooks.map(h => `- ${h.slice(0, 90)}`).join('\n')}\n` : ''}${temi.length ? `Temi già battuti: ${temi.map(t => t.slice(0, 50)).join(' · ')}\n` : ''}Genera hook, angoli e temi NUOVI: non ricalcare quelli sopra, cambia apertura e prospettiva.`
 }
 
 // --- Contesto temporale/stagionale (deterministico, zero costo AI) ----------
@@ -186,13 +197,14 @@ ${events.length ? `- Ricorrenze/momenti nel periodo: ${events.join(' · ')}. Sfr
 // blocco pilastri editoriali e angoli creativi DIVERSI (rotazione deterministica
 // sull'indice), i 4 blocchi risultano distinti pur restando paralleli. Additivo.
 const EDITORIAL_PILLARS = ['Prodotto', 'Educativo/Styling', 'Brand/Valori', 'Community/UGC', 'Dietro le quinte', 'Trend']
-function buildChunkDiversitySeed(chunkIndex: number, totalChunks: number): string {
+function buildChunkDiversitySeed(chunkIndex: number, totalChunks: number, creativeCode = ''): string {
   if (totalChunks <= 1) return ''   // un solo blocco: DIVERSITY_STANDARDS è sufficiente
+  const monthlyOffset = [...creativeCode].reduce((sum, char) => sum + char.charCodeAt(0), 0)
   const p = EDITORIAL_PILLARS.length
-  const pStart = (chunkIndex * 2) % p
+  const pStart = (chunkIndex * 2 + monthlyOffset) % p
   const pillars = [EDITORIAL_PILLARS[pStart], EDITORIAL_PILLARS[(pStart + 1) % p], EDITORIAL_PILLARS[(pStart + 2) % p]]
   const a = COPY_ANGLES.length
-  const aStart = (chunkIndex * 3) % a
+  const aStart = (chunkIndex * 3 + monthlyOffset) % a
   const angles = [COPY_ANGLES[aStart], COPY_ANGLES[(aStart + 1) % a], COPY_ANGLES[(aStart + 2) % a]]
   return `
 
@@ -212,7 +224,7 @@ function buildPackageContext(pkg: PackageSpec | null, piano: PackagePeriodMix | 
 PACCHETTO ${pkg.nome.toUpperCase()} — VINCOLI DEL CLIENTE (ha acquistato questo pacchetto):
 - In QUESTO blocco genera ESATTAMENTE ${perBlocco} contenuti, non di più.
 - Il piano ${periodo} completo ha ESATTAMENTE ${piano.totale} contenuti social: ${piano.postSingoli} POST/PIN + ${piano.caroselli} CAROSELLI + ${piano.stories} STORY + ${piano.reelVideo} REEL/SHORT/VIDEO.
-- Distribuisci i contenuti sui ${pkg.social} social selezionati.
+- Distribuisci i contenuti sui social selezionati, entro il massimo contrattuale di ${pkg.social}.
 - Mantieni lo standard qualità del pacchetto su ogni contenuto.`
 }
 
@@ -221,7 +233,7 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 const VALID_CANALI = new Set(['instagram', 'facebook', 'tiktok', 'pinterest', 'linkedin', 'threads', 'x', 'youtube_shorts', 'blog'])
 const VALID_FORMATI = new Set(['post', 'carousel', 'reel', 'story', 'pin', 'short', 'video', 'articolo'])
 
-type Chunk = { start: string; end: string; label: string; targetMin: number; targetMax: number; images: string[] }
+type Chunk = { start: string; end: string; label: string; targetMin: number; targetMax: number; images: string[]; week?: number }
 
 function isVideoUrl(url: string) {
   return url.split('?')[0].toLowerCase().endsWith('.mp4')
@@ -305,7 +317,7 @@ const CAROSELLI_OGNI = 3
 // Quota reel del piano libero: stessa proporzione di QUOTA_REEL in
 // lib/media-requirements.ts, usata quando non c'è un pacchetto che detti il mix.
 const QUOTA_REEL_LIBERO = 0.25
-type MixFormati = { caroselli: number; reel: number; story: number; postSingoli: number; fonte: 'pacchetto' | 'libero' }
+type MixFormati = { caroselli: number; reel: number; story: number; postSingoli: number; fonte: 'pacchetto' | 'libero' | 'cartella' }
 
 // Ripartizione intera di un totale su N blocchi senza perdere né inventare unità
 // (6 reel su 4 settimane → 1,2,1,2 = 6): gli arrotondamenti per blocco farebbero
@@ -340,7 +352,7 @@ function buildMixFormatiContext(mix: MixFormati): string {
     : '- NESSUN carosello in questo blocco: il materiale caricato non ne prevede. Usa post/story/pin e reel.'
   return `
 
-MIX DEI FORMATI IN QUESTO BLOCCO — vincolante (${mix.fonte === 'pacchetto' ? 'è il mix del pacchetto acquistato' : 'proporzione dichiarata: ~1 contenuto su 4 in formato reel, 1 carosello ogni 3 contenuti statici'}; il materiale che l'utente ha caricato è stato calcolato ESATTAMENTE su questi numeri):
+MIX DEI FORMATI IN QUESTO BLOCCO — vincolante (${mix.fonte === 'cartella' ? 'deriva dai gruppi finali della cartella campagna' : mix.fonte === 'pacchetto' ? 'è il mix del pacchetto acquistato' : 'proporzione dichiarata: ~1 contenuto su 4 in formato reel, 1 carosello ogni 3 contenuti statici'}; il materiale che l'utente ha caricato è stato calcolato ESATTAMENTE su questi numeri):
 ${rigaCaroselli}
 - ${mix.reel} ${mix.reel === 1 ? 'contenuto' : 'contenuti'} in formato reel/short/video (sono gli unici che possono usare un MP4).
 - ${mix.story} ${mix.story === 1 ? 'contenuto' : 'contenuti'} in formato story, una immagine verticale 9:16 ciascuno.
@@ -382,7 +394,9 @@ export async function POST(request: Request) {
     // per far scegliere al modello la foto giusta per numero (media_refs). Opzionale:
     // se manca, il piano ripiega sull'assegnazione posizionale (retrocompatibile).
     const assetLabels = new Map<string, string>()
-    const reelAudioAssets: { url: string; title: string }[] = []
+    type ContentAudioAsset = { url: string; title: string; tag: 'post' | 'story' | 'carosello' | 'reel'; placement?: FolderPlacement }
+    const contentAudioAssets: ContentAudioAsset[] = []
+    const assetPlacements = new Map<string, FolderPlacement>()
     // Marcatura manuale del media (`tag` in uploaded_assets): l'utente può dire
     // "questa foto è del carosello, questo MP4 è del reel". È un VINCOLO, non un
     // suggerimento: un media marcato non finisce mai su un altro gruppo di
@@ -398,8 +412,28 @@ export async function POST(request: Request) {
         const description = typeof rec.description === 'string' ? rec.description.trim() : ''
         const kind = typeof rec.kind === 'string' ? rec.kind.trim().toLowerCase() : ''
         const mime = typeof rec.mime === 'string' ? rec.mime.trim().toLowerCase() : ''
+        const weekRaw = Number(rec.week)
+        const placement: FolderPlacement | undefined = Number.isInteger(weekRaw) && weekRaw >= 1 && weekRaw <= 5
+          && (rec.platform === 'instagram' || rec.platform === 'facebook')
+          && typeof rec.content_key === 'string' && rec.content_key.trim()
+          ? {
+              week: weekRaw,
+              platform: rec.platform,
+              contentKey: rec.content_key.trim().toLowerCase(),
+              sequence: rec.sequence !== null && rec.sequence !== undefined && Number.isInteger(Number(rec.sequence))
+                ? Number(rec.sequence)
+                : null,
+              relativePath: typeof rec.relative_path === 'string' ? rec.relative_path.trim() : '',
+            }
+          : undefined
         if (kind === 'audio' || mime.startsWith('audio/')) {
-          reelAudioAssets.push({ url, title: name || 'Audio Reel' })
+          const requestedTag = normalizeMediaTag(rec.tag)
+          const inferredTag = inferMediaTagFromLabel([name, description].filter(Boolean).join(' — '))
+          const candidateTag = requestedTag === 'auto' ? inferredTag : requestedTag
+          const tag = candidateTag === 'post' || candidateTag === 'story' || candidateTag === 'carosello' || candidateTag === 'reel'
+            ? candidateTag
+            : 'reel'
+          contentAudioAssets.push({ url, title: name || `Audio ${tag}`, tag, placement })
           continue
         }
         const label = [name, description].filter(Boolean).join(' — ')
@@ -407,6 +441,7 @@ export async function POST(request: Request) {
         const explicitTag = normalizeMediaTag(rec.tag)
         const tag = explicitTag === 'auto' ? inferMediaTagFromLabel(label) : explicitTag
         if (tag !== 'auto') assetTags.set(url, tag)
+        if (placement) assetPlacements.set(url, placement)
       }
     }
     // Weekend nel piano: default INCLUSO. Se false, il piano usa solo lun-ven
@@ -428,11 +463,16 @@ export async function POST(request: Request) {
 
     if (isDemo() || !dbReady()) {
       const demoQuality = pkgRequested?.quality ?? resolveContentQuality({ requestedQuality })
+      const demoCreativeDirection = createMonthlyCreativeDirection({
+        clienteId: effectiveClienteId,
+        startISO: fmtDate(new Date()),
+      })
       const selectedPlatforms = new Set<string>(piattaforme)
-      if (pkgRequested && selectedPlatforms.size !== pkgRequested.social) {
-        return NextResponse.json({ error: `Il pacchetto ${pkgRequested.nome} richiede esattamente ${pkgRequested.social} social.` }, { status: 400 })
+      if (pkgRequested && selectedPlatforms.size > pkgRequested.social) {
+        return NextResponse.json({ error: `Il pacchetto ${pkgRequested.nome} include fino a ${pkgRequested.social} social.` }, { status: 400 })
       }
       const demoPackagePlan = pkgRequested ? packageMixForPeriod(pkgRequested, periodoEff) : null
+      const demoEditorialSkill = resolveEditorialSkill(pkgRequested)
       const count = demoPackagePlan?.totale
         ?? (demoContenuti.filter((item) => selectedPlatforms.has(item.canale)).length || (periodoEff === 'mensile' ? 30 : 7))
       return NextResponse.json({
@@ -440,18 +480,23 @@ export async function POST(request: Request) {
         demo: true,
         count,
         quality_level: demoQuality,
+        editorial_skill: demoEditorialSkill,
+        creative_direction: demoCreativeDirection,
         quality_downgraded: isQualityDowngraded(requestedQuality, demoQuality),
         warning: 'Fallback demo: DATABASE_URL non configurato, piano non persistito su Neon.',
       })
     }
 
+    const calendarioColumns = await getTableColumns('calendario')
+    const historyColumns = EDITORIAL_HISTORY_COLUMNS.filter(column => calendarioColumns.has(column))
+    const historySelect = historyColumns.length ? historyColumns.join(', ') : 'hook, tema'
     const [brandRows, products, clientRows, recentRows] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [effectiveClienteId]),
       q('SELECT * FROM prodotti WHERE cliente_id = $1', [effectiveClienteId]),
       q('SELECT * FROM clienti WHERE id = $1 LIMIT 1', [effectiveClienteId]),
-      // Storico per l'anti-ripetizione: solo hook/tema, ordinati dal più recente.
-      // Colonne base garantite da 001_full_schema (nessun rischio su DB non migrati).
-      q("SELECT hook, tema FROM calendario WHERE cliente_id = $1 AND (hook IS NOT NULL OR tema IS NOT NULL) ORDER BY created_at DESC LIMIT 30", [effectiveClienteId]),
+      // Fino a tre mesi circa di memoria creativa. La selezione e dinamica per
+      // restare compatibile anche con database non ancora aggiornati.
+      q(`SELECT ${historySelect} FROM calendario WHERE cliente_id = $1 AND (hook IS NOT NULL OR tema IS NOT NULL) ORDER BY created_at DESC LIMIT 96`, [effectiveClienteId]),
     ])
     const brand = brandRows[0] ?? null
     const client = (clientRows[0] ?? null) as Record<string, unknown> | null
@@ -467,9 +512,12 @@ export async function POST(request: Request) {
     const quotaCliente = Number(client?.contenuti_mese)
     const quotaMensile = Number.isFinite(quotaCliente) && quotaCliente > 0 ? quotaCliente : null
     const packagePlan = pkg ? packageMixForPeriod(pkg, periodoEff, quotaMensile) : null
-    if (pkg && new Set<string>(piattaforme).size !== pkg.social) {
+    // La skill non e una scelta del browser: deriva sempre dal pacchetto reale
+    // letto a DB. I piani liberi senza pacchetto restano in modalita standard.
+    const activeEditorialSkill = resolveEditorialSkill(pkg)
+    if (pkg && new Set<string>(piattaforme).size > pkg.social) {
       return NextResponse.json(
-        { error: `Il pacchetto ${pkg.nome} include ${pkg.social} social: selezionane esattamente ${pkg.social}.` },
+        { error: `Il pacchetto ${pkg.nome} include fino a ${pkg.social} social: riduci la selezione.` },
         { status: 400 },
       )
     }
@@ -482,7 +530,13 @@ export async function POST(request: Request) {
     // non più un dump JSON grezzo. Vuoto se il brand non è configurato → nota esplicita.
     const brandContext = buildBrandContext(brand)
     const productsJson = JSON.stringify(products || [], null, 2)
-    const historyContext = buildHistoryContext(recentRows as Record<string, unknown>[])
+    const historyRecords = recentRows as CreativeRecord[]
+    const historyContext = buildEditorialHistoryContext(historyRecords)
+    const creativeDirection = createMonthlyCreativeDirection({
+      clienteId: effectiveClienteId,
+      startISO: fmtDate(new Date()),
+      brandName: typeof brand?.brand_name === 'string' ? brand.brand_name : '',
+    })
 
     const qualityPrompt = `
 
@@ -529,6 +583,7 @@ ${buildExtendedOutputSchema(contentQuality)}
           targetMin: targetPacchetto ?? minPerWeek,
           targetMax: targetPacchetto ?? maxPerWeek,
           images: [],
+          week: i + 1,
         })
       })
     } else if (packagePlan && packagePlan.totale > 4 && (contentQuality === 'high' || contentQuality === 'medium')) {
@@ -542,6 +597,7 @@ ${buildExtendedOutputSchema(contentQuality)}
         label: 'Prima metà piano settimanale del pacchetto (giorni 1-4)',
         targetMin: primaMeta, targetMax: primaMeta,
         images: [],
+        week: 1,
       })
       chunks.push({
         start: fmtDate(addDays(today, 4)),
@@ -549,6 +605,7 @@ ${buildExtendedOutputSchema(contentQuality)}
         label: 'Seconda metà piano settimanale del pacchetto (giorni 5-7)',
         targetMin: secondaMeta, targetMax: secondaMeta,
         images: [],
+        week: 1,
       })
     } else if (packagePlan) {
       chunks.push({
@@ -557,6 +614,7 @@ ${buildExtendedOutputSchema(contentQuality)}
         label: 'Piano settimanale del pacchetto',
         targetMin: packagePlan.totale, targetMax: packagePlan.totale,
         images: [],
+        week: 1,
       })
     } else if (contentQuality === 'high' || contentQuality === 'medium') {
       // Quality medium/high: schema esteso (campi strategia, scenes, A/B, KPI...)
@@ -569,6 +627,7 @@ ${buildExtendedOutputSchema(contentQuality)}
         label: 'Prima metà piano settimanale (giorni 1-4)',
         targetMin: 4, targetMax: 5,
         images: [],
+        week: 1,
       })
       chunks.push({
         start: fmtDate(addDays(today, 4)),
@@ -576,6 +635,7 @@ ${buildExtendedOutputSchema(contentQuality)}
         label: 'Seconda metà piano settimanale (giorni 5-7)',
         targetMin: 3, targetMax: 5,
         images: [],
+        week: 1,
       })
     } else {
       chunks.push({
@@ -584,6 +644,7 @@ ${buildExtendedOutputSchema(contentQuality)}
         label: 'Piano settimanale',
         targetMin: 7, targetMax: 10,
         images: [],
+        week: 1,
       })
     }
 
@@ -593,16 +654,59 @@ ${buildExtendedOutputSchema(contentQuality)}
     // gruppo (marcatura, tipo): ogni blocco riceve la sua quota di MP4, di media
     // marcati e di foto libere. Unicità globale invariata: un media, un blocco.
     if (mediaPool.length) {
-      const perBlocco = distribuisciMediaSuBlocchi(mediaPool, chunks.length, url => assetTags.get(url) ?? 'auto')
-      chunks.forEach((chunk, ci) => { chunk.images = perBlocco[ci] })
+      const folderAssigned = new Set<string>()
+      chunks.forEach(chunk => {
+        chunk.images = mediaPool.filter(url => {
+          const placement = assetPlacements.get(url)
+          const belongs = Boolean(placement && chunk.week === placement.week)
+          if (belongs) folderAssigned.add(url)
+          return belongs
+        })
+      })
+      const remaining = mediaPool.filter(url => !folderAssigned.has(url))
+      const perBlocco = distribuisciMediaSuBlocchi(remaining, chunks.length, url => assetTags.get(url) ?? 'auto')
+      chunks.forEach((chunk, ci) => { chunk.images.push(...perBlocco[ci]) })
     }
+
+    function importedGroupsForChunk(chunk: Chunk): Map<string, MediaTag> {
+      const groups = new Map<string, MediaTag>()
+      chunk.images.forEach(url => {
+        const placement = assetPlacements.get(url)
+        if (!placement) return
+        const key = `${placement.week}:${placement.platform}:${placement.contentKey}`
+        groups.set(key, assetTags.get(url) ?? inferMediaTagFromLabel(placement.contentKey))
+      })
+      return groups
+    }
+
+    // Una campagna gia prodotta e una distinta esecutiva, non un semplice pool:
+    // ogni gruppo social/contenuto deve generare una card. Nel caso reale sono
+    // 16 concept adattati su 2 social, quindi 32 pubblicazioni senza perdere meta
+    // del materiale per rispettare un conteggio concettuale di 16.
+    chunks.forEach(chunk => {
+      const imported = importedGroupsForChunk(chunk)
+      if (!imported.size) return
+      chunk.targetMin = imported.size
+      chunk.targetMax = imported.size
+    })
 
     // Mix dei formati per blocco (difetto C): calcolato UNA volta qui perché
     // serve in due punti — al prompt (vincolo scritto per il modello) e a
     // sanitizeItem (degrado del carosello eccedente quando le foto non bastano).
     const mixPerChunk = new Map<Chunk, MixFormati>()
     chunks.forEach((chunk, ci) => {
-      mixPerChunk.set(chunk, mixFormatiBlocco(packagePlan, chunk.targetMax, chunks.length, ci))
+      const imported = [...importedGroupsForChunk(chunk).values()]
+      if (imported.length) {
+        mixPerChunk.set(chunk, {
+          caroselli: imported.filter(tag => tag === 'carosello').length,
+          reel: imported.filter(tag => tag === 'reel').length,
+          story: imported.filter(tag => tag === 'story').length,
+          postSingoli: imported.filter(tag => tag === 'post' || tag === 'auto').length,
+          fonte: 'cartella',
+        })
+      } else {
+        mixPerChunk.set(chunk, mixFormatiBlocco(packagePlan, chunk.targetMax, chunks.length, ci))
+      }
     })
 
     // Contesto stagionale calcolato sull'intero range del piano (comune a tutti i blocchi).
@@ -645,11 +749,45 @@ CADENZA DEL PIANO — vincolante:
       trendContext = buildTrendContext(trends)
     }
 
-    const systemPrompt = `Sei un social media manager, creative strategist e SEO/GEO specialist senior (10+ anni, brand premium). Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Crei piani editoriali dove OGNI contenuto è unico, professionale, moderno e trend-aware: hook diversi, angoli ruotati, funnel bilanciato, keyword SEO/GEO sfruttate, meccaniche native da feed 2026, zero cliché, grammatica italiana impeccabile. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock, canzoni virali, eventi o claim non presenti nei dati.`
+    const systemPrompt = `Sei un social media manager, creative strategist, visual director e SEO/GEO specialist senior (10+ anni, brand premium). Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Crei piani editoriali dove OGNI contenuto è unico, professionale, moderno e trend-aware: hook diversi, angoli ruotati, funnel bilanciato, keyword SEO/GEO sfruttate, meccaniche native da feed 2026, zero cliché, grammatica italiana impeccabile. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock, canzoni virali, eventi o claim non presenti nei dati.`
+
+    type FolderCampaignRule = { platform: string; contentKey: string; tag: MediaTag; refs: number[] }
+    function folderCampaignRules(chunk: Chunk): FolderCampaignRule[] {
+      const groups = new Map<string, { platform: string; contentKey: string; tag: MediaTag; refs: number[] }>()
+      chunk.images.forEach((url, index) => {
+        const placement = assetPlacements.get(url)
+        if (!placement) return
+        const key = `${placement.week}:${placement.platform}:${placement.contentKey}`
+        const group = groups.get(key) || {
+          platform: placement.platform,
+          contentKey: placement.contentKey,
+          tag: assetTags.get(url) ?? inferMediaTagFromLabel(placement.contentKey),
+          refs: [],
+        }
+        group.refs.push(index + 1)
+        groups.set(key, group)
+      })
+      return [...groups.values()]
+        .sort((left, right) => `${left.platform}:${left.contentKey}`.localeCompare(`${right.platform}:${right.contentKey}`, 'it', { numeric: true }))
+    }
+
+    function buildFolderCampaignContext(chunk: Chunk): string {
+      const rules = folderCampaignRules(chunk)
+      if (!rules.length) return ''
+      const lines = rules
+        .map(group => `- ${group.contentKey} | canale=${group.platform} | formato=${group.tag === 'carosello' ? 'carousel' : group.tag} | media_refs=[${group.refs.join(',')}]`)
+      return `
+
+CAMPAGNA SWA IMPORTATA DA CARTELLA — DISTINTA VINCOLANTE:
+- Genera ESATTAMENTE una card per ciascuna riga seguente, senza saltarla e senza crearne altre.
+- Copia content_key, canale, formato e media_refs esattamente come indicati.
+- Instagram e Facebook sono adattamenti distinti dello stesso concept: mantieni la promessa coerente, ma adatta caption, CTA e hashtag al canale.
+${lines.join('\n')}`
+    }
 
     async function generateChunk(chunk: Chunk, chunkIndex: number): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
       async function attempt(targetMin: number, targetMax: number, maxTok: number, compact = false): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
-        const userPrompt = `Agisci come Social Media Manager senior per brand abbigliamento e-commerce.
+        const userPrompt = `Agisci come Social Media Manager e Visual Director senior per il brand o l'attivita descritta nel contesto.
 Crea contenuti per ${chunk.label}, dal ${chunk.start} al ${chunk.end}, per / ${piattaformeStr} /.
 Genera TRA ${targetMin} E ${targetMax} contenuti (mai meno di ${targetMin}). Ogni data_pubblicazione DEVE cadere dentro il range ${chunk.start}..${chunk.end} incluso — mai fuori, mai un placeholder generico.
 
@@ -665,20 +803,30 @@ Non concentrare prodotti in pochi giorni.
 DATE — vincolante: usa date REALI dentro ${chunk.start}..${chunk.end}, distribuite su GIORNI DIVERSI (spalma i contenuti sull'intero range, non ammucchiarli sullo stesso giorno e soprattutto NON metterli tutti su ${chunk.start}). Mai placeholder "YYYY-MM-DD".
 
 ${orariCadenzaPrompt}
-Tono moderno fashion coerente con brand. Ogni contenuto deve sembrare attuale e social-native: POV, micro-storia, swipe tension, behind-the-scenes, myth-busting o creator-style voice quando coerente; mai copy statico/corporate.
+Tono moderno coerente con settore e brand. Ogni contenuto deve sembrare attuale e social-native: POV, micro-storia, swipe tension, behind-the-scenes, myth-busting o creator-style voice quando coerente; mai copy statico/corporate.
 
 Output SOLO JSON array valido:
-[{"data_pubblicazione":"YYYY-MM-DD (dentro ${chunk.start}..${chunk.end})","ora_pubblicazione":"HH:MM","canale":"USA SOLO un canale tra quelli in / ${piattaformeStr} / (valori ammessi: instagram|facebook|tiktok|pinterest|linkedin|threads|x|youtube_shorts|blog)","formato":"post|carousel|reel|story|pin|short|video|articolo","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","media_refs":[numeri delle foto di QUESTO blocco usate in questo contenuto, in ordine; [] se nessuna adatta],"product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
+[{"content_key":"compila solo se fornito dalla distinta cartella","data_pubblicazione":"YYYY-MM-DD (dentro ${chunk.start}..${chunk.end})","ora_pubblicazione":"HH:MM","canale":"USA SOLO un canale tra quelli in / ${piattaformeStr} / (valori ammessi: instagram|facebook|tiktok|pinterest|linkedin|threads|x|youtube_shorts|blog)","formato":"post|carousel|reel|story|pin|short|video|articolo","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","media_refs":[numeri delle foto di QUESTO blocco usate in questo contenuto, in ordine; [] se nessuna adatta],"product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
           + '\n' + PLAN_STANDARDS + '\n' + (compact
             ? 'FALLBACK COMPATTO: mantieni ESATTAMENTE il numero richiesto. Compila sempre hook, caption, hashtag, CTA, data, ora, canale e formato; limita i campi strategici opzionali a frasi brevi.'
             : qualityPrompt)
-          + historyContext + temporalContext + trendContext
-          + buildPackageContext(pkg, packagePlan, periodoEff, targetMax)
+          + historyContext + creativeDirection.context + temporalContext + trendContext
+          + (assetPlacements.size ? '' : buildPackageContext(pkg, packagePlan, periodoEff, targetMax))
           // Vincolo sui FORMATI: senza, il fabbisogno media annunciato all'utente
           // resta una stima che il modello può far saltare con 12 caroselli.
           + buildMixFormatiContext(mixPerChunk.get(chunk) ?? mixFormatiBlocco(packagePlan, targetMax, chunks.length, chunkIndex))
-          + buildChunkDiversitySeed(chunkIndex, chunks.length)
-          + buildPlanAssetContext(chunk.images, assetLabels, assetTags)
+          + buildEditorialSkillContext({
+            skill: activeEditorialSkill,
+            pkg,
+            piano: packagePlan,
+            periodo: periodoEff,
+            chunkIndex,
+            totalChunks: chunks.length,
+            target: targetMax,
+          })
+          + buildChunkDiversitySeed(chunkIndex, chunks.length, creativeDirection.code)
+          + buildPlanAssetContext(chunk.images, assetLabels, assetTags, assetPlacements)
+          + buildFolderCampaignContext(chunk)
         const visionImages = chunk.images.filter(url => !isVideoUrl(url))
 
         try {
@@ -737,11 +885,14 @@ Output SOLO JSON array valido:
     }
     function fallbackItem(chunk: Chunk, index: number, reason: string, original?: Record<string, unknown>): Record<string, unknown> {
       const formats = fallbackFormats(chunk)
+      const folderRule = folderCampaignRules(chunk)[index]
       return {
         ...(original || {}),
+        content_key: folderRule?.contentKey || original?.content_key,
         data_pubblicazione: original?.data_pubblicazione || '',
-        canale: original?.canale || piattaforme[index % piattaforme.length] || 'instagram',
-        formato: original?.formato || formats[index] || 'post',
+        canale: folderRule?.platform || original?.canale || piattaforme[index % piattaforme.length] || 'instagram',
+        formato: folderRule ? (folderRule.tag === 'carosello' ? 'carousel' : folderRule.tag) : original?.formato || formats[index] || 'post',
+        media_refs: folderRule?.refs || original?.media_refs || [],
         obiettivo: original?.obiettivo || obiettivo || 'mix',
         tema: original?.tema || 'Slot del piano da completare',
         hook: '',
@@ -759,7 +910,21 @@ Output SOLO JSON array valido:
         }
         return
       }
-      const items = pkg ? r.items.slice(0, chunk.targetMax) : r.items
+      const folderRules = folderCampaignRules(chunk)
+      const rawItems = pkg ? r.items.slice(0, chunk.targetMax) : r.items
+      const items = folderRules.length
+        ? rawItems.map((item, index) => {
+            const rule = folderRules[index]
+            if (!rule) return item
+            return {
+              ...item,
+              content_key: rule.contentKey,
+              canale: rule.platform,
+              formato: rule.tag === 'carosello' ? 'carousel' : rule.tag,
+              media_refs: rule.refs,
+            }
+          })
+        : rawItems
       if (pkg) pkgTruncated += Math.max(0, r.items.length - items.length)
       items.forEach((item, index) => {
         const hasCopy = String(item.hook || '').trim() || String(item.caption || '').trim()
@@ -1020,14 +1185,17 @@ Output SOLO JSON array valido:
     //    per quel gruppo di formati. Se per un contenuto non resta nulla di
     //    compatibile lo slot resta VUOTO: meglio senza foto che con la foto
     //    sbagliata (il calendario mostra il contenuto come da completare).
-    function mediaCompatibile(url: string, gruppo: GruppoFormato): boolean {
+    function mediaCompatibile(url: string, gruppo: GruppoFormato, canale?: string): boolean {
       const tag = assetTags.get(url) ?? 'auto'
       if (tag !== 'auto' && tag !== gruppo) return false
+      const placement = assetPlacements.get(url)
+      if (placement && canale && placement.platform !== canale) return false
       if (isVideoUrl(url) && gruppo !== 'reel') return false
       return true
     }
 
-    function nextChunkMediaSlots(chunk: Chunk, canale: string, formato: string, mediaRefs: unknown): (string | null)[] {
+    const claimedFolderGroups = new Set<string>()
+    function nextChunkMediaSlots(chunk: Chunk, canale: string, formato: string, mediaRefs: unknown, contentKey?: unknown): (string | null)[] {
       const empty = Array<string | null>(MEDIA_SLOTS).fill(null)
       const total = chunk.images.length
       if (!total) return empty
@@ -1038,7 +1206,63 @@ Output SOLO JSON array valido:
       // Ogni destinazione ha il proprio pool e ogni social può riusare lo stesso
       // gruppo creativo: IG non deve "consumare" le foto prima di Facebook.
       const used = usedMedia(chunk, `${gruppo}:${canale}`)
-      const compatibile = (idx: number) => mediaCompatibile(chunk.images[idx], gruppo)
+      const compatibile = (idx: number) => mediaCompatibile(chunk.images[idx], gruppo, canale)
+
+      // Import da cartella SWA: ogni contenuto e gia un gruppo editoriale.
+      // Assegniamo il gruppo intero prima dei fallback, senza mescolare social,
+      // cover, scene o slide appartenenti a ID diversi.
+      const folderGroups = new Map<string, number[]>()
+      chunk.images.forEach((url, idx) => {
+        const placement = assetPlacements.get(url)
+        if (!placement || placement.platform !== canale || !compatibile(idx)) return
+        const key = `${placement.week}:${placement.platform}:${placement.contentKey}`
+        const indices = folderGroups.get(key) || []
+        indices.push(idx)
+        folderGroups.set(key, indices)
+      })
+      if (folderGroups.size) {
+        const requestedPlacements = Array.isArray(mediaRefs)
+          ? mediaRefs
+              .map(ref => Number(ref) - 1)
+              .filter(idx => Number.isInteger(idx) && idx >= 0 && idx < total)
+              .map(idx => assetPlacements.get(chunk.images[idx]))
+          : []
+        const requestedPlacement = requestedPlacements.find(placement => placement?.platform === canale)
+        const requestedKey = requestedPlacement
+          ? `${requestedPlacement.week}:${requestedPlacement.platform}:${requestedPlacement.contentKey}`
+          : ''
+        const normalizedContentKey = typeof contentKey === 'string' ? contentKey.trim().toLowerCase() : ''
+        const contentKeyMatch = normalizedContentKey
+          ? [...folderGroups.keys()].find(key => key === `${chunk.week}:${canale}:${normalizedContentKey}`)
+          : ''
+        const availableKeys = [...folderGroups.keys()]
+          .filter(key => !claimedFolderGroups.has(key))
+          .sort((left, right) => left.localeCompare(right, 'it', { numeric: true }))
+        const preferredKey = contentKeyMatch || requestedKey
+        const selectedKey = preferredKey && availableKeys.includes(preferredKey) ? preferredKey : availableKeys[0]
+        if (selectedKey) {
+          const ordered = (folderGroups.get(selectedKey) || [])
+            .filter(idx => !used.has(idx))
+            .sort((left, right) => {
+              const sequenceLeft = assetPlacements.get(chunk.images[left])?.sequence ?? 999
+              const sequenceRight = assetPlacements.get(chunk.images[right])?.sequence ?? 999
+              return sequenceLeft - sequenceRight || left - right
+            })
+          const video = ordered.find(idx => isVideoUrl(chunk.images[idx]))
+          const target = isCarousel || gruppo === 'story'
+            ? MEDIA_SLOTS
+            : isVideoFormat ? MEDIA_PER_FORMATO.reel.immagini : 1
+          const picked = video !== undefined && isVideoFormat
+            ? [video]
+            : ordered.filter(idx => !isVideoUrl(chunk.images[idx])).slice(0, target)
+          if (picked.length) {
+            claimedFolderGroups.add(selectedKey)
+            picked.forEach(idx => used.add(idx))
+            const urls = picked.map(idx => chunk.images[idx])
+            return [...urls, ...Array(MEDIA_SLOTS - urls.length).fill(null)]
+          }
+        }
+      }
 
       // Indici richiesti dal modello (1-based → 0-based): validi, in range, ancora
       // liberi in questo blocco, in ordine e senza duplicati. In più ora devono
@@ -1141,13 +1365,33 @@ Output SOLO JSON array valido:
     const inseriti: { id_contenuto: string; canale: string; data_pubblicazione: string }[] = []
     const scartati: string[] = []
     let fallbackInseriti = 0
+    let noveltyReviewCount = 0
     let schemaFallbackUsed = false
-    let nextReelAudio = 0
-    const audioByCreative = new Map<string, { url: string; title: string }>()
+    const nextAudioByFormat: Record<'post' | 'story' | 'carosello' | 'reel', number> = { post: 0, story: 0, carosello: 0, reel: 0 }
+    const audioByCreative = new Map<string, ContentAudioAsset>()
+    const acceptedCreativeItems: CreativeRecord[] = []
 
     for (const { item: rawItem, chunk } of itemChunkPairs) {
       const item = sanitizeItem(rawItem, chunk)
       const isGenerationFallback = rawItem._generation_fallback === true
+      const historyDuplicate = findCreativeNearDuplicate(item, historyRecords)
+      const batchDuplicate = historyDuplicate ? null : findCreativeNearDuplicate(item, acceptedCreativeItems)
+      const duplicate = historyDuplicate || batchDuplicate
+      const noveltyReason = duplicate
+        ? `Somiglianza creativa ${Math.round(duplicate.score * 100)}% con "${duplicate.hook || 'un contenuto precedente'}"`
+        : ''
+      if (noveltyReason) noveltyReviewCount++
+      else acceptedCreativeItems.push(item)
+      const existingProductionNotes = pickText(item, ['production_notes', 'note_produzione'])
+        .split('\n')
+        .filter(line => !/^\s*(MONTHLY_DNA|NOVELTY_GATE):/i.test(line))
+        .join('\n')
+      item.production_notes = [
+        existingProductionNotes,
+        `MONTHLY_DNA: ${creativeDirection.code}`,
+        noveltyReason ? `NOVELTY_GATE: REVISE ${noveltyReason}` : 'NOVELTY_GATE: PASS',
+      ].filter(Boolean).join('\n')
+      const needsManualReview = isGenerationFallback || Boolean(noveltyReason)
 
       // Un contenuto senza testo non è un contenuto: i modelli piccoli (tipici del
       // tier gratuito) chiudono a volte il JSON con oggetti che hanno data, canale e
@@ -1162,17 +1406,29 @@ Output SOLO JSON array valido:
 
       const id_contenuto = `C${Date.now().toString(36).toUpperCase()}_${inseriti.length}_${scartati.length}`
       const itemQuality = normalizeContentQuality(item.quality_level) ?? contentQuality
-      const [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10] = nextChunkMediaSlots(chunk, String(item.canale || ''), String(item.formato || 'post'), item.media_refs)
+      const [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10] = nextChunkMediaSlots(chunk, String(item.canale || ''), String(item.formato || 'post'), item.media_refs, item.content_key)
       // Lookup link prodotto per l'item: se il piano riferisce un product_id valido,
       // persistiamo il link così il publisher può appenderlo al testo Blotato.
       const itemProduct = (products as Array<Record<string, unknown>>).find(p => p.product_id === item.product_id)
       const itemLinkProdotto = (itemProduct?.link_prodotto as string) || null
-      const isReelFormat = ['reel', 'short', 'video'].includes(String(item.formato || '').toLowerCase())
+      const audioGroup = gruppoFormato(String(item.formato || ''))
       const creativeKey = [item.data_pubblicazione, item.ora_pubblicazione, item.tema, item.hook].map(value => String(value || '')).join('|')
-      let reelAudio: { url: string; title: string } | null = null
-      if (isReelFormat && reelAudioAssets.length) {
-        reelAudio = audioByCreative.get(creativeKey) || reelAudioAssets[nextReelAudio++ % reelAudioAssets.length]
-        audioByCreative.set(creativeKey, reelAudio)
+      let contentAudio: ContentAudioAsset | null = null
+      if (audioGroup === 'post' || audioGroup === 'story' || audioGroup === 'carosello' || audioGroup === 'reel') {
+        const audioKey = `${audioGroup}|${creativeKey}`
+        const assignedPlacement = media1 ? assetPlacements.get(media1) : undefined
+        const candidates = contentAudioAssets.filter(asset => {
+          if (asset.tag !== audioGroup) return false
+          if (!asset.placement) return true
+          return Boolean(assignedPlacement
+            && asset.placement.week === assignedPlacement.week
+            && asset.placement.platform === assignedPlacement.platform
+            && asset.placement.contentKey === assignedPlacement.contentKey)
+        })
+        if (candidates.length) {
+          contentAudio = audioByCreative.get(audioKey) || candidates[nextAudioByFormat[audioGroup]++ % candidates.length]
+          audioByCreative.set(audioKey, contentAudio)
+        }
       }
       const insertColumns = [
         'cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione',
@@ -1192,7 +1448,14 @@ Output SOLO JSON array valido:
         'ab_variants_json', 'kpi_target', 'expected_outcome', 'production_cycle_stage',
         'optimization_cycle_json', 'performance_hypothesis', 'next_iteration_actions',
         'missing_inputs', 'content_checklist',
+        'campaign_content_key', 'campaign_week', 'campaign_source_paths',
       ]
+      const assignedFolderPlacement = media1 ? assetPlacements.get(media1) : undefined
+      const isCampaignFolderImport = assetPlacements.size > 0
+      const campaignSourcePaths = [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10]
+        .filter((url): url is string => Boolean(url))
+        .map(url => assetPlacements.get(url)?.relativePath || '')
+        .filter(Boolean)
       const insertValues = [
         effectiveClienteId,
         id_contenuto,
@@ -1209,9 +1472,13 @@ Output SOLO JSON array valido:
         item.caption || null,
         item.hashtag || null,
         item.cta || null,
-        isGenerationFallback ? 'ERRORE_MANUALE' : 'DA_APPROVARE',
-        isGenerationFallback ? `[GENERATION_FALLBACK] ${String(rawItem._fallback_reason || 'Generazione incompleta')}` : null,
-        isGenerationFallback ? `Generazione AI da completare: ${String(rawItem._fallback_reason || 'contenuto mancante')}` : null,
+        needsManualReview ? 'ERRORE_MANUALE' : 'DA_APPROVARE',
+        isGenerationFallback
+          ? `[GENERATION_FALLBACK] ${String(rawItem._fallback_reason || 'Generazione incompleta')}`
+          : noveltyReason ? `[NOVELTY_GATE] ${noveltyReason}` : null,
+        isGenerationFallback
+          ? `Generazione AI da completare: ${String(rawItem._fallback_reason || 'contenuto mancante')}`
+          : noveltyReason ? `Contenuto da differenziare: ${noveltyReason}` : null,
         itemLinkProdotto,
         itemLinkProdotto,
         typeof visual_preset === 'string' ? visual_preset : null,
@@ -1227,10 +1494,10 @@ Output SOLO JSON array valido:
         pickText(item, ['idea_visual', 'visual']) || null,
         pickText(item, ['voiceover_script', 'voiceover']) || null,
         pickText(item, ['music_mood', 'musica_mood']) || null,
-        reelAudio?.url || null,
-        reelAudio?.title || null,
+        contentAudio?.url || null,
+        contentAudio?.title || null,
         null,
-        reelAudio ? 'Licenza dichiarata dal caricante; conservare la prova di origine' : null,
+        contentAudio ? 'Licenza dichiarata dal caricante; conservare la prova di origine' : null,
         itemQuality,
         pickText(item, ['audience_segment', 'audience', 'target_segment']) || null,
         pickText(item, ['funnel_stage', 'fase_funnel']) || null,
@@ -1258,6 +1525,11 @@ Output SOLO JSON array valido:
         jsonbParam(pickJson(item, ['next_iteration_actions', 'azioni_prossima_iterazione', 'next_actions'])),
         jsonbParam(pickJson(item, ['missing_inputs', 'input_mancanti'])),
         jsonbParam(pickJson(item, ['content_checklist', 'checklist'])),
+        isCampaignFolderImport
+          ? pickText(item, ['content_key']) || assignedFolderPlacement?.contentKey || null
+          : null,
+        isCampaignFolderImport ? assignedFolderPlacement?.week || chunk.week || null : null,
+        jsonbParam(campaignSourcePaths.length ? campaignSourcePaths : null),
       ]
       try {
         const usedFallback = await insertCalendario(insertColumns, insertValues)
@@ -1296,9 +1568,11 @@ Output SOLO JSON array valido:
       ok: true,
       count: pkg ? contenutiSocialInseriti : inseriti.length,
       count_totale: inseriti.length,
-      completed_count: Math.max(0, contenutiSocialInseriti - fallbackInseriti),
+      completed_count: Math.max(0, contenutiSocialInseriti - fallbackInseriti - noveltyReviewCount),
       fallback_slots: fallbackInseriti,
-      partial: fallbackInseriti > 0,
+      novelty_review_count: noveltyReviewCount,
+      review_slots: fallbackInseriti + noveltyReviewCount,
+      partial: fallbackInseriti > 0 || noveltyReviewCount > 0,
       ...(pkg && { pacchetto: pkg.id, pacchetto_nome: pkg.nome, pacchetto_contenuti: packagePlan?.totale, periodo: periodoEff, articolo_blog: articoloBlogInserito }),
       ...(pkgTruncated && { pacchetto_troncati: pkgTruncated }),
       requested_range: packagePlan ? String(packagePlan.totale) : periodoEff === 'mensile' ? '25-35' : '7-10',
@@ -1314,6 +1588,8 @@ Output SOLO JSON array valido:
       ...(itemsOraFuoriFascia && { items_ora_fuori_fascia: itemsOraFuoriFascia }),
       cadenza: { contenuti_settimana: cadenza.contenutiSettimana, giorni_attivi: cadenza.giorniAttivi, max_per_giorno: cadenza.maxPerGiorno },
       quality_level: contentQuality,
+      editorial_skill: activeEditorialSkill,
+      creative_direction: creativeDirection,
       quality_downgraded: isQualityDowngraded(requestedQuality, contentQuality),
       images_provided: mediaPool.length,
       // Foto finite prima dei contenuti → alcuni post restano senza immagine.

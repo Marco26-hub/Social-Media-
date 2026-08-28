@@ -25,6 +25,16 @@ const required = [
     hint: 'Almeno una chiave AI reale per generazione contenuti',
   },
   {
+    name: 'STORAGE_* persistente',
+    ok: Boolean(
+      env.STORAGE_ENDPOINT?.trim()
+      && env.STORAGE_ACCESS_KEY_ID?.trim()
+      && env.STORAGE_SECRET_ACCESS_KEY?.trim()
+      && env.STORAGE_BUCKET?.trim()
+    ),
+    hint: 'Endpoint, access key, secret e bucket S3-compatible: obbligatori per non perdere immagini e Reel ai restart',
+  },
+  {
     name: 'STRIPE_SECRET_KEY live',
     ok: /^sk_live_/.test(env.STRIPE_SECRET_KEY?.trim() || ''),
     hint: 'Chiave segreta Stripe live (sk_live_…) per incassare pagamenti reali',

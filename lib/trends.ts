@@ -53,7 +53,7 @@ export async function fetchSectorTrends(opts: FetchTrendsOptions): Promise<strin
     opts.periodoLabel ? `periodo: ${String(opts.periodoLabel).slice(0, 40)}` : '',
   ].filter(Boolean).join(', ')
 
-  const userPrompt = `Cerca sul web i TREND social attuali (formati video, meccaniche di contenuto, mood, hashtag) realmente in voga ORA per il settore "${settore}" in Italia${extra ? ` (${extra})` : ''}.
+  const userPrompt = `Cerca sul web i TREND social attuali (formati video, pattern interrupt, animazioni, transizioni, camera movement, typography motion, meccaniche native, mood e audio) realmente in voga ORA per il settore "${settore}" in Italia${extra ? ` (${extra})` : ''}.
 Rispondi SOLO con 4-6 bullet brevi (una riga ciascuno, max ~15 parole), ognuno un trend/format concreto e sfruttabile in un piano social. Niente introduzione, niente link, niente numeri di paragrafo.`
 
   const controller = new AbortController()
@@ -96,5 +96,5 @@ export function buildTrendContext(trends: string[]): string {
 
 TREND SOCIAL ATTUALI (dal web, sfruttali dove pertinenti — NON forzarli se non c'entrano col brand):
 ${trends.map(t => `- ${t}`).join('\n')}
-Usa questi trend reali come ispirazione per format/meccaniche/mood; adattali al brand, non copiarli pedissequamente.`
+Usa questi trend reali come ispirazione per format, motion, transizioni, meccaniche e mood; adattali al brand, non copiarli pedissequamente. Assegna a ogni contenuto almeno una scelta visuale o di movimento concreta e diversa dalle due pubblicazioni precedenti.`
 }

@@ -56,6 +56,7 @@ function itemText(item: VisualItem | undefined, keys: string[]): string {
 
 function mediaUrls(c: Contenuto): string[] {
   return [
+    c.blotato_audio_visual_media_url,
     c.blotato_visual_media_url,
     c.link_media_1, c.link_media_2, c.link_media_3, c.link_media_4, c.link_media_5,
     c.link_media_6, c.link_media_7, c.link_media_8, c.link_media_9, c.link_media_10,

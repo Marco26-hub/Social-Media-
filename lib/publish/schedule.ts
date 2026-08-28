@@ -1,7 +1,7 @@
 // Publish Bridge: invia contenuto a Blotato per pubblicazione social
 // Chiamato quando status → APPROVATO. Supporta tutti i formati.
 
-import { createHash, randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
 import { q } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 import { validateMediaUrls } from '@/lib/media-validate'
@@ -10,7 +10,7 @@ import { getPinnedAccountId, getPinnedSubaccountId, resolveBlotatoTarget } from 
 import { CANALE_TO_BLOTATO, PLATFORM_REQUIREMENTS, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
 import { preflightRow } from '@/lib/publish/preflight'
 import { hashtagCount, normalizeHashtagsForPublish, normalizeInstagramPublishPayload, stripHashtags } from '@/lib/hashtags'
-import { createPhotoReel, getPhotoReelStatus, visualIsDone, visualIsFailed } from '@/lib/blotato-visual'
+import { remotionSourceHash, renderSwaSocialVideo } from '@/lib/remotion-renderer'
 
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 
@@ -60,52 +60,6 @@ function isVideoUrl(url: string): boolean {
   return VIDEO_URL_RE.test(url)
 }
 
-function overlayTexts(row: ContentRow, count: number): string[] {
-  const texts: string[] = []
-  const add = (value: unknown) => {
-    if (typeof value === 'string' && value.trim()) texts.push(value.trim().slice(0, 90))
-  }
-  const raw = row.scenes_json || row.slides_json
-  if (raw) {
-    try {
-      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
-      const items = Array.isArray(parsed)
-        ? parsed
-        : parsed && typeof parsed === 'object'
-          ? (Object.values(parsed as Record<string, unknown>).find(Array.isArray) as unknown[] | undefined) || []
-          : []
-      for (const item of items) {
-        if (!item || typeof item !== 'object') continue
-        const rec = item as Record<string, unknown>
-        add(rec.overlay_testo || rec.testo_overlay || rec.overlay || rec.testo || rec.titolo)
-      }
-    } catch { /* brief non JSON: usa i fallback sotto */ }
-  }
-  if (!texts.length) add(row.overlay_text)
-  if (!texts.length) add(row.hook)
-  if (texts.length < count) add(row.cta)
-  return Array.from({ length: count }, (_, index) => texts[index] || '')
-}
-
-function photoReelPrompt(row: ContentRow): string {
-  const brief = String(row.creative_brief || row.idea_visual || row.tema || row.hook || '').trim()
-  return [
-    'Monta un video verticale social 9:16, output 1080x1920.',
-    'Usa esclusivamente le foto sorgente fornite, senza inventare o modificare il prodotto.',
-    'Adatta foto verticali, quadrate o orizzontali senza deformarle e mantieni il prodotto interamente visibile.',
-    'Transizioni pulite, ritmo naturale e testo dentro la safe area, lontano dai bordi e dai controlli social.',
-    brief ? `Direzione creativa: ${brief.slice(0, 500)}` : '',
-  ].filter(Boolean).join(' ')
-}
-
-function photoReelHash(urls: string[]): string {
-  return createHash('sha256').update(urls.join('\n')).digest('hex')
-}
-
-function wait(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
 export async function scheduleOnBlotato(
   clienteId: string,
   row: ContentRow,
@@ -137,6 +91,7 @@ export async function scheduleOnBlotato(
   const canale = row.canale as string
   const formato = row.formato as string
   const isStory = formato.toLowerCase() === 'story'
+  const attachedAudioUrl = String(row.reel_audio_url || '').trim()
 
   // 'blog' non è una piattaforma Blotato: va pubblicato altrove (CMS), non qui.
   const platform = CANALE_TO_BLOTATO[canale]
@@ -178,7 +133,13 @@ export async function scheduleOnBlotato(
   // - firstComment IG: gli hashtag Instagram vanno nel primo commento, tranne nelle
   //   story che non supportano commenti nel payload Blotato.
   // - link FB: anteprima link per i post Facebook.
-  const mediaType = formatoToMediaType(formato, platform)
+  // Un file audio separato puo diventare pubblicabile solo se incorporato in un
+  // video. I formati statici con audio sono quindi adattamenti video espliciti:
+  // IG Story resta Story video; Post/Carosello e Facebook Story diventano Reel.
+  const staticAudioVideo = Boolean(attachedAudioUrl) && ['post', 'pin', 'carousel'].includes(formato.toLowerCase())
+  const facebookAudioStory = Boolean(attachedAudioUrl) && platform === 'facebook' && isStory
+  const effectiveFormato = staticAudioVideo || facebookAudioStory ? 'reel' : formato
+  const mediaType = formatoToMediaType(effectiveFormato, platform)
   if (mediaType && (platform === 'instagram' || platform === 'facebook')) target.mediaType = mediaType
   const linkProdottoFinale = String(row.link_prodotto_finale || row.link_prodotto || '').trim()
   if (platform === 'facebook' && linkProdottoFinale && !isStory) target.link = linkProdottoFinale
@@ -222,7 +183,7 @@ export async function scheduleOnBlotato(
   // PRE-FLIGHT: "avvisa + blocca solo il sync". Se la riga non è pubblicabile su
   // Blotato (es. data nel passato, media mancanti, carosello fuori 2–10), NON tentiamo
   // il POST che fallirebbe: scriviamo il motivo e usciamo come skipped.
-  const pf = preflightRow(row, timezone)
+  const pf = preflightRow(effectiveFormato === formato ? row : { ...row, formato: effectiveFormato }, timezone)
   if (!pf.ok) {
     const reason = pf.errors.map(e => e.message).join('; ')
     if (row.id) {
@@ -247,7 +208,9 @@ export async function scheduleOnBlotato(
     const locked = await q(
       `UPDATE calendario
          SET publish_lock_id = $1, updated_at = now()
-       WHERE id = $2 AND cliente_id = $3 AND publish_lock_id IS NULL AND blotato_post_id IS NULL
+       WHERE id = $2 AND cliente_id = $3
+         AND (publish_lock_id IS NULL OR updated_at < now() - interval '15 minutes')
+         AND blotato_post_id IS NULL
        RETURNING id`,
       [lockId, rowId, clienteId],
     )
@@ -258,147 +221,135 @@ export async function scheduleOnBlotato(
   }
 
   try {
-  // Reel/short/video: Blotato pubblica un vero video, non una sequenza di JPEG.
-  // Se manca l'MP4, prima componiamo le foto nel template 9:16 e FERMIAMO il
-  // flusso per una seconda approvazione. Il video generato non viene mai inviato
-  // ai social nello stesso click che lo crea.
   const isVideoFormat = ['reel', 'short', 'video'].includes(formato.toLowerCase())
-  if (isVideoFormat) {
+  const isInstagramAudioStory = platform === 'instagram' && isStory && Boolean(attachedAudioUrl)
+  const needsVideoRender = isVideoFormat || isInstagramAudioStory || staticAudioVideo || facebookAudioStory
+  if (needsVideoRender) {
     const uploadedVideo = mediaUrls.find(isVideoUrl)
-    const sourceImages = mediaUrls.filter(url => !isVideoUrl(url)).slice(0, 5)
-    const storedVisualUrl = String(row.blotato_visual_media_url || '').trim()
-    const storedVisualStatus = String(row.blotato_visual_status || '').trim().toLowerCase()
+    const sourceImages = mediaUrls.filter(url => !isVideoUrl(url)).slice(0, 10)
+    const renderSources = uploadedVideo ? [uploadedVideo] : sourceImages
+    const hasAudio = Boolean(attachedAudioUrl)
+    // Una traccia caricata dall'utente e la colonna sonora finale: tenere anche
+    // l'audio del filmato crea due piste concorrenti e risultati imprevedibili.
+    const keepOriginalAudio = !hasAudio
+    const requestedPreset = String(row.visual_preset || '').trim().toLowerCase()
+    const motionPreset = ['trending', 'premium', 'minimal', 'classico'].includes(requestedPreset)
+      ? requestedPreset as 'trending' | 'premium' | 'minimal' | 'classico'
+      : row.use_trending_effects === true || String(row.use_trending_effects).toLowerCase() === 'true'
+        ? 'trending' as const
+        : 'premium' as const
 
-    if (uploadedVideo) {
-      // Un reel è un singolo video: eventuali immagini restano sorgenti/cover e
-      // non vanno inviate come album insieme all'MP4.
+    if (uploadedVideo && !hasAudio) {
       mediaUrls = [uploadedVideo]
-    } else if (storedVisualUrl && storedVisualStatus === 'approved') {
-      // Seconda approvazione esplicita: ora il montaggio visto in Preview può
-      // essere programmato sui social.
-      mediaUrls = [storedVisualUrl]
-    } else if (storedVisualUrl) {
-      if (rowId) {
-        await q(
-          `UPDATE calendario
-             SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
-                 blotato_visual_status = 'ready_for_review', publish_lock_id = NULL,
-                 errore_tecnico = NULL, blotato_visual_updated_at = now(), updated_at = now()
-           WHERE id = $1 AND cliente_id = $2 AND publish_lock_id = $3`,
-          [rowId, clienteId, lockId],
-        )
-      }
-      return {
-        status: 'visual_review',
-        visualId: String(row.blotato_visual_id || ''),
-        mediaUrl: storedVisualUrl,
-      }
     } else {
-      if (!sourceImages.length) throw new Error('Reel senza MP4 e senza foto sorgente: carica un MP4 oppure 1-5 foto Reel/Video')
+      if (!renderSources.length) throw new Error('Contenuto video senza sorgenti: carica un MP4 oppure 1-10 immagini')
 
-      const sourceHash = photoReelHash(sourceImages)
-      let visualId = String(row.blotato_visual_id || '').trim()
-      let visualStatus = storedVisualStatus
-      let visualMediaUrl = ''
+      const sourceHash = remotionSourceHash({
+        mediaUrls: renderSources,
+        audioUrl: attachedAudioUrl || undefined,
+        keepOriginalAudio,
+        motionPreset,
+        hook: String(row.hook || '').trim() || undefined,
+        cta: String(row.cta || '').trim() || undefined,
+      })
+      const storedSourceHash = String(row.blotato_visual_source_hash || '').trim()
+      const storedVisualId = String((hasAudio ? row.blotato_audio_visual_id : row.blotato_visual_id) || '').trim()
+      const storedVisualStatus = String((hasAudio ? row.blotato_audio_visual_status : row.blotato_visual_status) || '').trim().toLowerCase()
+      const storedVisualUrl = String((hasAudio ? row.blotato_audio_visual_media_url : row.blotato_visual_media_url) || '').trim()
+      const storedMatches = storedSourceHash === sourceHash
 
-      // Instagram e Facebook possono condividere lo stesso montaggio. La prima
-      // riga lo genera, la seconda riusa l'ID/MP4 se ha le stesse foto sorgente.
-      if (!visualId && rowId) {
-        const reusable = await q(
-          `SELECT blotato_visual_id, blotato_visual_status, blotato_visual_media_url
-             FROM calendario
-            WHERE cliente_id = $1 AND blotato_visual_source_hash = $2
-              AND id <> $3 AND blotato_visual_id IS NOT NULL
-            ORDER BY blotato_visual_updated_at DESC NULLS LAST
-            LIMIT 1`,
-          [clienteId, sourceHash, rowId],
-        ) as Record<string, unknown>[]
-        if (reusable.length) {
-          visualId = String(reusable[0].blotato_visual_id || '').trim()
-          visualStatus = String(reusable[0].blotato_visual_status || '').trim().toLowerCase()
-          visualMediaUrl = String(reusable[0].blotato_visual_media_url || '').trim()
-        }
-      }
-
-      if (!visualId) {
-        const created = await createPhotoReel({
-          blotatoKey,
-          imageUrls: sourceImages,
-          overlays: overlayTexts(row, sourceImages.length),
-          prompt: photoReelPrompt(row),
-        })
-        visualId = created.id
-        visualStatus = created.status
-        visualMediaUrl = created.mediaUrl
-      }
-
-      // Una breve attesa evita di chiedere subito un secondo click quando il
-      // render è rapido. Se resta in coda salviamo l'ID e il prossimo sync ne
-      // controllerà lo stato senza creare un duplicato.
-      for (let attempt = 0; attempt < 2 && !visualMediaUrl && !visualIsDone(visualStatus) && !visualIsFailed(visualStatus); attempt++) {
-        await wait(1200)
-        const current = await getPhotoReelStatus(blotatoKey, visualId)
-        visualStatus = current.status
-        visualMediaUrl = current.mediaUrl
-      }
-
-      // Salva l'ID anche se il render è ancora in coda o il controllo successivo
-      // fallisce: il retry riprende lo stesso job e non addebita/crea un doppione.
-      if (rowId) {
-        await q(
-          `UPDATE calendario
-             SET blotato_visual_id = $1, blotato_visual_status = $2,
-                 blotato_visual_media_url = NULLIF($3, ''), blotato_visual_source_hash = $4,
-                 blotato_visual_updated_at = now(), updated_at = now()
-           WHERE id = $5 AND cliente_id = $6 AND publish_lock_id = $7`,
-          [visualId, visualStatus || 'queueing', visualMediaUrl, sourceHash, rowId, clienteId, lockId],
-        )
-      }
-
-      if (visualIsFailed(visualStatus)) {
-        throw new Error(`Montaggio Reel Blotato fallito (stato: ${visualStatus})`)
-      }
-
-      if (visualMediaUrl || visualIsDone(visualStatus)) {
-        if (!visualMediaUrl) {
-          const current = await getPhotoReelStatus(blotatoKey, visualId)
-          visualStatus = current.status
-          visualMediaUrl = current.mediaUrl
-        }
-        if (!visualMediaUrl) throw new Error('Montaggio Reel completato ma Blotato non ha restituito il file video')
+      if (storedMatches && storedVisualUrl && storedVisualStatus === 'approved') {
+        mediaUrls = [storedVisualUrl]
+      } else if (storedMatches && storedVisualUrl) {
         if (rowId) {
-          await q(
-            `UPDATE calendario
-               SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
-                   blotato_visual_id = $1, blotato_visual_status = 'ready_for_review',
-                   blotato_visual_media_url = $2, blotato_visual_source_hash = $3,
-                   blotato_visual_updated_at = now(), publish_lock_id = NULL,
-                   errore_tecnico = NULL, updated_at = now()
-             WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6`,
-            [visualId, visualMediaUrl, sourceHash, rowId, clienteId, lockId],
-          )
+          if (hasAudio) {
+            await q(
+              `UPDATE calendario
+                 SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
+                     blotato_audio_visual_status = 'ready_for_review', publish_lock_id = NULL,
+                     errore_tecnico = NULL, blotato_audio_visual_updated_at = now(), updated_at = now()
+               WHERE id = $1 AND cliente_id = $2 AND publish_lock_id = $3`,
+              [rowId, clienteId, lockId],
+            )
+          } else {
+            await q(
+              `UPDATE calendario
+                 SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
+                     blotato_visual_status = 'ready_for_review', publish_lock_id = NULL,
+                     errore_tecnico = NULL, blotato_visual_updated_at = now(), updated_at = now()
+               WHERE id = $1 AND cliente_id = $2 AND publish_lock_id = $3`,
+              [rowId, clienteId, lockId],
+            )
+          }
         }
-        return { status: 'visual_review', visualId, mediaUrl: visualMediaUrl }
-      }
+        return { status: 'visual_review', visualId: storedVisualId, mediaUrl: storedVisualUrl }
+      } else {
+        let reusableId = ''
+        let reusableUrl = ''
+        if (rowId) {
+          const reusable = await q(
+            hasAudio
+              ? `SELECT blotato_audio_visual_id AS visual_id, blotato_audio_visual_media_url AS media_url
+                   FROM calendario
+                  WHERE cliente_id = $1 AND blotato_visual_source_hash = $2
+                    AND id <> $3 AND blotato_audio_visual_media_url IS NOT NULL
+                  ORDER BY blotato_audio_visual_updated_at DESC NULLS LAST LIMIT 1`
+              : `SELECT blotato_visual_id AS visual_id, blotato_visual_media_url AS media_url
+                   FROM calendario
+                  WHERE cliente_id = $1 AND blotato_visual_source_hash = $2
+                    AND id <> $3 AND blotato_visual_media_url IS NOT NULL
+                  ORDER BY blotato_visual_updated_at DESC NULLS LAST LIMIT 1`,
+            [clienteId, sourceHash, rowId],
+          ) as Record<string, unknown>[]
+          reusableId = String(reusable[0]?.visual_id || '').trim()
+          reusableUrl = String(reusable[0]?.media_url || '').trim()
+        }
 
-      if (rowId) {
-        await q(
-          `UPDATE calendario
-             SET blotato_status = 'visual_pending', blotato_visual_id = $1,
-                 blotato_visual_status = $2, blotato_visual_source_hash = $3,
-                 blotato_visual_updated_at = now(), publish_lock_id = NULL,
-                 errore_tecnico = NULL, updated_at = now()
-           WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6`,
-          [visualId, visualStatus || 'queueing', sourceHash, rowId, clienteId, lockId],
-        )
+        const rendered = reusableUrl
+          ? { id: reusableId || `remotion:${sourceHash}`, mediaUrl: reusableUrl, sourceHash }
+          : await renderSwaSocialVideo({
+            clienteId,
+            mediaUrls: renderSources,
+            audioUrl: attachedAudioUrl || undefined,
+            keepOriginalAudio,
+            motionPreset,
+            hook: String(row.hook || '').trim() || undefined,
+            cta: String(row.cta || '').trim() || undefined,
+          })
+
+        if (rowId) {
+          if (hasAudio) {
+            await q(
+              `UPDATE calendario
+                 SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
+                     blotato_audio_visual_id = $1, blotato_audio_visual_status = 'ready_for_review',
+                     blotato_audio_visual_media_url = $2, blotato_visual_source_hash = $3,
+                     blotato_audio_visual_updated_at = now(), publish_lock_id = NULL,
+                     errore_tecnico = NULL, updated_at = now()
+               WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6`,
+              [rendered.id, rendered.mediaUrl, rendered.sourceHash, rowId, clienteId, lockId],
+            )
+          } else {
+            await q(
+              `UPDATE calendario
+                 SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
+                     blotato_visual_id = $1, blotato_visual_status = 'ready_for_review',
+                     blotato_visual_media_url = $2, blotato_visual_source_hash = $3,
+                     blotato_visual_updated_at = now(), publish_lock_id = NULL,
+                     errore_tecnico = NULL, updated_at = now()
+               WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6`,
+              [rendered.id, rendered.mediaUrl, rendered.sourceHash, rowId, clienteId, lockId],
+            )
+          }
+        }
+        return { status: 'visual_review', visualId: rendered.id, mediaUrl: rendered.mediaUrl }
       }
-      return { status: 'visual_pending', visualId }
     }
   }
 
   // Con un montaggio già approvato validiamo anche l'URL MP4 finale, non solo
   // le foto sorgente controllate prima del render.
-  if (isVideoFormat && mediaUrls.length) {
+  if (needsVideoRender && mediaUrls.length) {
     const validation = await validateMediaUrls(mediaUrls)
     if (!validation.ok) {
       const invalid = validation.errors.map(e => `[video] ${e.url}: ${e.reason}`).join('; ')
@@ -503,7 +454,7 @@ export async function scheduleOnBlotato(
            SET publish_lock_id = NULL, blotato_status = 'failed',
                errore_tecnico = $1, blotato_sync_at = now(), updated_at = now()
            WHERE id = $2 AND cliente_id = $3 AND publish_lock_id = $4`,
-          [`Blotato: ${message.slice(0, 500)}`, rowId, clienteId, lockId],
+          [`Pipeline pubblicazione: ${message.slice(0, 500)}`, rowId, clienteId, lockId],
         )
       } catch (persistError) {
         console.warn('[Blotato] rilascio publish_lock fallito:', (persistError as Error).message.slice(0, 160))

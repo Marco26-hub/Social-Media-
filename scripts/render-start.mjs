@@ -10,6 +10,12 @@ const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 const isPublishingLive = process.env.PUBLISH_ENABLED === 'true'
 const adminEmail = process.env.ADMIN_EMAIL?.trim() || ''
 const adminPassword = process.env.ADMIN_PASSWORD?.trim() || ''
+const hasPersistentStorage = Boolean(
+  process.env.STORAGE_ENDPOINT?.trim()
+  && process.env.STORAGE_ACCESS_KEY_ID?.trim()
+  && process.env.STORAGE_SECRET_ACCESS_KEY?.trim()
+  && process.env.STORAGE_BUCKET?.trim()
+)
 
 // Gate admin hardening ANCORATO al go-live reale (PUBLISH_ENABLED=true), non a
 // ogni deploy di produzione. Motivazione: durante setup/test l'app gira in prod
@@ -27,11 +33,12 @@ function assertAdminCredentialsIfNeeded() {
   if (!adminEmail) missing.push('ADMIN_EMAIL')
   if (!adminPassword) missing.push('ADMIN_PASSWORD')
   if (adminPassword && adminPassword.length < 8) missing.push('ADMIN_PASSWORD (min 8 char)')
+  if (requireAdminHardening && !hasPersistentStorage) missing.push('STORAGE_* persistente')
   if (!missing.length) return
 
   if (requireAdminHardening) {
-    console.error(`[render-start] FATAL: PUBLISH_ENABLED=true ma mancano env admin: ${missing.join(', ')}.`)
-    console.error('[render-start] In go-live reale ADMIN_EMAIL e ADMIN_PASSWORD (>=8 char) sono obbligatorie. Settale nel dashboard Render.')
+    console.error(`[render-start] FATAL: PUBLISH_ENABLED=true ma mancano env obbligatorie: ${missing.join(', ')}.`)
+    console.error('[render-start] In go-live reale servono credenziali admin sicure e storage S3 persistente. Configurale nel dashboard Render.')
     process.exit(1)
   }
   console.warn(`[render-start] ⚠️  ${missing.join(', ')} non impostate: il default 'admin'/'1234567' resta attivo per il setup.`)
