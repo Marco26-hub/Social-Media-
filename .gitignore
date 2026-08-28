@@ -29,3 +29,6 @@ playwright-report
 
 # bundle Remotion pre-buildato (artefatto di build)
 .remotion-bundle
+
+# scratch locali
+sc-tmp.mjs
