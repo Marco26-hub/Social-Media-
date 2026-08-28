@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { bundle } from '@remotion/bundler'
@@ -60,24 +60,49 @@ export function imageVideoDurationInSeconds(imageCount: number): number {
   return Math.min(20, Math.max(7, imageCount * 3))
 }
 
+// Il path immagini è già limitato a 20s. Quello video accettava invece qualunque
+// durata del sorgente: un MP4 da 8 minuti (il limite di upload è 100MB) diventava
+// un render 1080x1920 h264 da decine di minuti dentro una request HTTP. 90s copre
+// abbondantemente Reel e Short, che è tutto ciò che pubblichiamo.
+export const MAX_SOURCE_VIDEO_SECONDS = 90
+
 async function resolveDuration(sourceVideoUrl: string | undefined, imageCount: number): Promise<number> {
   if (!sourceVideoUrl) return imageVideoDurationInSeconds(imageCount)
   const metadata = await getVideoMetadata(sourceVideoUrl, { logLevel: 'warn' })
   if (!metadata.durationInSeconds || metadata.durationInSeconds <= 0) {
     throw new Error('Remotion non riesce a leggere la durata del video sorgente')
   }
+  if (metadata.durationInSeconds > MAX_SOURCE_VIDEO_SECONDS) {
+    throw new Error(`Video sorgente troppo lungo (${Math.round(metadata.durationInSeconds)}s): il massimo per il montaggio è ${MAX_SOURCE_VIDEO_SECONDS}s. Taglia il video prima di caricarlo.`)
+  }
   return metadata.durationInSeconds
 }
 
+// Bundle costruito in fase di build da scripts/ensure-remotion-browser.mjs e
+// spedito dentro la funzione serverless (outputFileTracingIncludes).
+const PREBUILT_BUNDLE_DIR = path.join(process.cwd(), '.remotion-bundle')
+
 async function remotionBundle(): Promise<string> {
   if (!bundlePromise) {
-    bundlePromise = bundle({
-      entryPoint: path.join(process.cwd(), 'remotion', 'index.tsx'),
-      publicDir: null,
-      rootDir: process.cwd(),
-      enableCaching: true,
-      onProgress: () => {},
-    }).catch(error => {
+    bundlePromise = (async () => {
+      // Percorso normale in produzione: il bundle esiste gia, niente webpack a
+      // runtime. Prima veniva ricompilato a ogni cold start, dentro la richiesta e
+      // su disco effimero — il punto piu fragile dell'intera pipeline.
+      try {
+        await access(path.join(PREBUILT_BUNDLE_DIR, 'index.html'))
+        return PREBUILT_BUNDLE_DIR
+      } catch {
+        // Nessun bundle pre-buildato (dev locale senza `npm run remotion:browser`):
+        // si ricade sulla compilazione al volo.
+      }
+      return bundle({
+        entryPoint: path.join(process.cwd(), 'remotion', 'index.tsx'),
+        publicDir: null,
+        rootDir: process.cwd(),
+        enableCaching: true,
+        onProgress: () => {},
+      })
+    })().catch(error => {
       bundlePromise = null
       throw error
     })

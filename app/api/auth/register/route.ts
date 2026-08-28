@@ -83,6 +83,11 @@ export async function POST(request: Request) {
     // Email già usata? Se il profilo è già ATTIVO/rifiutato → 409. Se è PENDING
     // (registrato ma checkout non completato) → riusa il profilo e rigenera un
     // checkout, così chi ha abbandonato il pagamento può riprovare senza bloccarsi.
+    //
+    // Il 409 esplicito consente user enumeration, ed è una scelta deliberata: qui
+    // si sta per pagare, e una risposta generica porterebbe l'utente a completare
+    // un secondo acquisto invece di fare login. Mitigazione: rate-limit 10/5min
+    // su questa route (middleware.ts). Non "correggere" senza considerare questo.
     const existing = await q1('SELECT id, status FROM profiles WHERE email = $1 LIMIT 1', [email]) as
       { id: string; status: string } | null
     let profileId: string
@@ -90,14 +95,18 @@ export async function POST(request: Request) {
       if (existing.status !== 'pending') {
         return NextResponse.json({ error: 'Esiste già un account con questa email. Accedi.' }, { status: 409 })
       }
-      // Aggiorna i dati e la password del profilo pending, riusandolo.
-      const passwordHash = await bcrypt.hash(password, 12)
+      // Aggiorna i dati del profilo pending, riusandolo. La password NON viene
+      // toccata: non c'è verifica email in questo flow, quindi riscrivere l'hash
+      // permetteva a chiunque conoscesse l'indirizzo di ri-registrarlo con una
+      // propria password e prendersi l'account quando la vittima completava il
+      // pagamento. Chi riprende un checkout abbandonato accede con la password
+      // che ha scelto alla prima registrazione (o usa il recupero password).
       await q(
-        `UPDATE profiles SET nome = $2, azienda = $3, telefono = $4, pacchetto = $5, password_hash = $6,
-          customer_type = $7, terms_accepted_at = now(), terms_version = '2026-08-11',
-          early_performance_requested = $8, withdrawal_loss_acknowledged = $9, updated_at = now()
+        `UPDATE profiles SET nome = $2, azienda = $3, telefono = $4, pacchetto = $5,
+          customer_type = $6, terms_accepted_at = now(), terms_version = '2026-08-11',
+          early_performance_requested = $7, withdrawal_loss_acknowledged = $8, updated_at = now()
          WHERE id = $1`,
-        [existing.id, nome, azienda || null, telefono || null, pacchetto || null, passwordHash,
+        [existing.id, nome, azienda || null, telefono || null, pacchetto || null,
           customerType, customerType === 'consumatore' && earlyPerformanceRequested,
           customerType === 'consumatore' && withdrawalLossAcknowledged],
       )

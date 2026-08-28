@@ -16,6 +16,13 @@ async function dataUrl(filePath: string, mime: string): Promise<string> {
 }
 
 test('render requested Remotion demo', async () => {
+  // Test MANUALE: monta un video con asset reali passati via env. Senza quelli non
+  // c'e niente da renderizzare, quindi si salta invece di fallire — cosi
+  // `npm run test:render` resta verde quando si vuole solo la smoke del renderer.
+  test.skip(
+    !process.env.DEMO_IMAGE_PATHS?.trim() || !process.env.DEMO_AUDIO_PATH?.trim(),
+    'DEMO_IMAGE_PATHS e DEMO_AUDIO_PATH non impostate: demo su asset reali saltata',
+  )
   test.setTimeout(240_000)
   const imagePaths = required('DEMO_IMAGE_PATHS').split(path.delimiter).filter(Boolean)
   const audioPath = required('DEMO_AUDIO_PATH')

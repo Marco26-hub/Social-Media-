@@ -22,3 +22,10 @@ COPY-SUGGESTIONS.md
 # stray local env dumps — never commit
 env.download
 .vercel
+
+# output dei run Playwright (npm test / npm run test:render)
+test-results
+playwright-report
+
+# bundle Remotion pre-buildato (artefatto di build)
+.remotion-bundle

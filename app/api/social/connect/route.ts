@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 import { getPublicBaseUrl } from '@/lib/base-url'
 import { metaConfigured, getOAuthUrl } from '@/lib/meta-insights'
+import { issueOAuthState } from '@/lib/oauth-state'
 import { apiError } from '@/lib/api-error'
 
 // Avvia il collegamento OAuth Instagram/Facebook per il cliente attivo.
@@ -16,8 +17,9 @@ export async function GET(request: Request) {
       )
     }
     const redirectUri = `${getPublicBaseUrl(request)}/api/social/callback`
-    // state porta il cliente: sul callback verifichiamo l'accesso.
-    const url = getOAuthUrl(redirectUri, encodeURIComponent(clienteId))
+    // state = nonce monouso; il clienteId resta nel cookie httpOnly (anti-CSRF).
+    const state = await issueOAuthState(clienteId)
+    const url = getOAuthUrl(redirectUri, state)
     return NextResponse.redirect(url)
   } catch (e) {
     return apiError(e)

@@ -655,14 +655,43 @@ ${buildExtendedOutputSchema(contentQuality)}
     // marcati e di foto libere. Unicità globale invariata: un media, un blocco.
     if (mediaPool.length) {
       const folderAssigned = new Set<string>()
-      chunks.forEach(chunk => {
-        chunk.images = mediaPool.filter(url => {
-          const placement = assetPlacements.get(url)
-          const belongs = Boolean(placement && chunk.week === placement.week)
-          if (belongs) folderAssigned.add(url)
-          return belongs
+      // Un media importato da cartella appartiene a UN SOLO blocco. Il filtro per
+      // `week` girava indipendentemente su ogni chunk: quando due blocchi
+      // condividono la stessa settimana (piano settimanale spezzato in due metà,
+      // rami Crescita e medium/high qui sopra) lo stesso asset finiva in entrambi,
+      // e il modello generava il concept due volte con gli stessi identici URL.
+      // Distribuiamo quindi i GRUPPI (settimana+social+contenuto) a round-robin tra
+      // i blocchi di quella settimana, tenendo uniti i media di uno stesso gruppo:
+      // le slide di un carosello non vanno spezzate su due blocchi.
+      const groupsByWeek = new Map<number, Map<string, string[]>>()
+      mediaPool.forEach(url => {
+        const placement = assetPlacements.get(url)
+        // Senza settimana non c'è un blocco di destinazione: come prima, l'asset
+        // resta nel pool generico distribuito a round-robin più sotto.
+        if (!placement || placement.week === null) return
+        const week = placement.week
+        if (!groupsByWeek.has(week)) groupsByWeek.set(week, new Map())
+        const groups = groupsByWeek.get(week)!
+        const key = `${week}:${placement.platform}:${placement.contentKey}`
+        if (!groups.has(key)) groups.set(key, [])
+        groups.get(key)!.push(url)
+        folderAssigned.add(url)
+      })
+
+      chunks.forEach(chunk => { chunk.images = [] })
+      groupsByWeek.forEach((groups, week) => {
+        const blocchiSettimana = chunks.filter(c => c.week === week)
+        if (!blocchiSettimana.length) {
+          // Settimana senza blocco (piano mensile per fasi: 3-4 fuori dalla fase 1).
+          // I media tornano nel pool generico invece di sparire.
+          groups.forEach(urls => urls.forEach(url => folderAssigned.delete(url)))
+          return
+        }
+        ;[...groups.values()].forEach((urls, i) => {
+          blocchiSettimana[i % blocchiSettimana.length].images.push(...urls)
         })
       })
+
       const remaining = mediaPool.filter(url => !folderAssigned.has(url))
       const perBlocco = distribuisciMediaSuBlocchi(remaining, chunks.length, url => assetTags.get(url) ?? 'auto')
       chunks.forEach((chunk, ci) => { chunk.images.push(...perBlocco[ci]) })
@@ -1196,6 +1225,10 @@ Output SOLO JSON array valido:
     }
 
     const claimedFolderGroups = new Set<string>()
+    // Quante volte abbiamo dovuto ripiegare su un gruppo cartella diverso da
+    // quello indicato dal modello: prima succedeva in silenzio, ora finisce nella
+    // risposta API come gli altri contatori di correzione forzata.
+    let folderGroupMismatch = 0
     function nextChunkMediaSlots(chunk: Chunk, canale: string, formato: string, mediaRefs: unknown, contentKey?: unknown): (string | null)[] {
       const empty = Array<string | null>(MEDIA_SLOTS).fill(null)
       const total = chunk.images.length
@@ -1233,14 +1266,26 @@ Output SOLO JSON array valido:
           ? `${requestedPlacement.week}:${requestedPlacement.platform}:${requestedPlacement.contentKey}`
           : ''
         const normalizedContentKey = typeof contentKey === 'string' ? contentKey.trim().toLowerCase() : ''
+        // La chiave va confrontata sulla SETTIMANA DEL PLACEMENT, non su
+        // `chunk.week`: dopo la ridistribuzione dei gruppi un asset può trovarsi
+        // in un blocco con week diverso dal proprio placement, e ricostruire la
+        // chiave con `chunk.week` faceva fallire il match ogni volta, mandando
+        // tutto nel fallback.
         const contentKeyMatch = normalizedContentKey
-          ? [...folderGroups.keys()].find(key => key === `${chunk.week}:${canale}:${normalizedContentKey}`)
+          ? [...folderGroups.keys()].find(key => {
+            const parts = key.split(':')
+            return parts[1] === canale && parts.slice(2).join(':') === normalizedContentKey
+          })
           : ''
         const availableKeys = [...folderGroups.keys()]
           .filter(key => !claimedFolderGroups.has(key))
           .sort((left, right) => left.localeCompare(right, 'it', { numeric: true }))
         const preferredKey = contentKeyMatch || requestedKey
         const selectedKey = preferredKey && availableKeys.includes(preferredKey) ? preferredKey : availableKeys[0]
+        // Il fallback accoppia il copy di un contenuto ai media di un ALTRO
+        // gruppo (es. un reel che riceve le slide di un carosello). Resta come
+        // rete di sicurezza, ma va contato: prima era invisibile.
+        if (selectedKey && preferredKey && selectedKey !== preferredKey) folderGroupMismatch++
         if (selectedKey) {
           const ordered = (folderGroups.get(selectedKey) || [])
             .filter(idx => !used.has(idx))
@@ -1587,6 +1632,9 @@ Output SOLO JSON array valido:
       // Quanti orari proposti dal modello erano fuori dalle fasce del canale
       // (l'orario finale è comunque quello governato da pickSlot).
       ...(itemsOraFuoriFascia && { items_ora_fuori_fascia: itemsOraFuoriFascia }),
+      // Contenuti a cui è stato assegnato un gruppo cartella diverso da quello
+      // richiesto: i media appartengono a un altro concept, vanno ricontrollati.
+      ...(folderGroupMismatch && { items_gruppo_cartella_diverso: folderGroupMismatch }),
       cadenza: { contenuti_settimana: cadenza.contenutiSettimana, giorni_attivi: cadenza.giorniAttivi, max_per_giorno: cadenza.maxPerGiorno },
       quality_level: contentQuality,
       editorial_skill: activeEditorialSkill,

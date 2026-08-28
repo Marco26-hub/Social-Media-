@@ -86,15 +86,24 @@ export async function uploadToStorage(
  * Genera un URL PRESIGNED per un PUT diretto dal browser sul bucket (SigV4 in
  * query string). Serve per aggirare il limite ~4.5MB del body delle serverless
  * function di Vercel: il file NON passa dal nostro server, il browser lo carica
- * dritto su S3/Storage. Firma solo host+metodo+path+query (Content-Type resta
- * header non firmato: il browser lo manda comunque e lo storage lo memorizza).
+ * dritto su S3/Storage.
+ *
+ * SICUREZZA — `contentType` entra negli SignedHeaders: lo storage rifiuta il PUT
+ * se il browser manda un Content-Type diverso da quello che abbiamo autorizzato.
+ * Senza questo vincolo il client poteva dichiarare `image/png` al presign e poi
+ * caricare `text/html`, ottenendo HTML servito dalla nostra origine (stored XSS).
  * `expiresIn` in secondi (default 10 min).
  */
-export async function presignPutUrl(key: string, expiresIn = 600): Promise<string> {
+export async function presignPutUrl(key: string, contentType: string, expiresIn = 600): Promise<string> {
   if (!isStorageConfigured()) throw new Error('Storage non configurato')
+  if (!contentType) throw new Error('Content-Type richiesto per il presign')
   const url = new URL(`${STORAGE_ENDPOINT}/${STORAGE_BUCKET}/${key}`)
   url.searchParams.set('X-Amz-Expires', String(expiresIn))
-  const signed = await storageClient().sign(url.toString(), { method: 'PUT', aws: { signQuery: true } })
+  const signed = await storageClient().sign(url.toString(), {
+    method: 'PUT',
+    headers: { 'Content-Type': contentType },
+    aws: { signQuery: true, allHeaders: true },
+  })
   return signed.url
 }
 
@@ -110,6 +119,36 @@ export function publicUrlForKey(key: string): string | null {
  * Scarica un oggetto dal bucket privato (per il proxy /api/assets/file).
  * Ritorna byte + content-type, o null se non trovato/errore.
  */
+/**
+ * GET con header Range inoltrato allo storage: restituisce SOLO i byte chiesti.
+ * Serve al proxy /api/assets/file, che prima scaricava l'oggetto intero e poi ne
+ * affettava una porzione: su un MP4 da 60MB, i ~20 Range che fa un player (o
+ * Blotato) significavano oltre 1GB scaricato e allocato in heap per un singolo
+ * video. `status` è 206 con contenuto parziale, 416 se il range non è valido.
+ */
+export async function downloadRangeFromStorage(
+  key: string,
+  range: string,
+): Promise<{ bytes: Buffer; contentType: string; contentRange: string | null; status: number } | null> {
+  if (!isStorageConfigured()) return null
+  try {
+    const endpoint = `${STORAGE_ENDPOINT}/${STORAGE_BUCKET}/${key}`
+    const res = await storageClient().fetch(endpoint, { method: 'GET', headers: { Range: range } })
+    if (res.status === 416) {
+      return { bytes: Buffer.alloc(0), contentType: '', contentRange: res.headers.get('content-range'), status: 416 }
+    }
+    if (!res.ok) return null
+    return {
+      bytes: Buffer.from(await res.arrayBuffer()),
+      contentType: res.headers.get('content-type') || 'application/octet-stream',
+      contentRange: res.headers.get('content-range'),
+      status: res.status,
+    }
+  } catch {
+    return null
+  }
+}
+
 export async function downloadFromStorage(
   key: string,
 ): Promise<{ bytes: Buffer; contentType: string } | null> {

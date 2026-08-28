@@ -260,8 +260,25 @@ export default function PianoPage() {
   function folderUploadName(candidate: FolderCandidate): string {
     const ext = candidate.file.name.match(/\.[a-z0-9]+$/i)?.[0] || ''
     const a = candidate.assignment
-    const sequence = a.sequence ? String(a.sequence).padStart(2, '0') : '00'
+    // `a.sequence === 0` è la cover ed è falsy: con `a.sequence ? ... : '00'`
+    // finiva nello stesso nome dei file senza sequenza, e nella mappa dei
+    // metadati sopravviveva solo l'ultimo dei due (ordinamento slide sbagliato).
+    const sequence = a.sequence === null || a.sequence === undefined
+      ? 'xx'
+      : String(a.sequence).padStart(2, '0')
     return `w${a.week}-${a.platform}-${a.contentKey}-${sequence}${ext}`
+  }
+
+  // Due file possono comunque produrre lo stesso nome (entrambi senza sequenza
+  // nello stesso contenuto): la mappa nome→entry ne perderebbe uno.
+  function nomeUnico(name: string, taken: Map<string, unknown>): string {
+    if (!taken.has(name)) return name
+    const dot = name.lastIndexOf('.')
+    const base = dot > 0 ? name.slice(0, dot) : name
+    const ext = dot > 0 ? name.slice(dot) : ''
+    let i = 2
+    while (taken.has(`${base}-${i}${ext}`)) i++
+    return `${base}-${i}${ext}`
   }
 
   // Upload in blocchi da 14 (limite server per richiesta) finché tutti i media scelti sono caricati.
@@ -270,18 +287,32 @@ export default function PianoPage() {
     setUploadError(null)
     setUploadingImages(true)
     try {
-      const selected = entries.slice(0, MAX_PLAN_IMAGES - planAssets.length)
+      // Con il limite già saturo `slice(0, 0)` restituiva un array vuoto e
+      // l'upload terminava senza caricare nulla e senza dirlo.
+      const capienza = MAX_PLAN_IMAGES - planAssets.length
+      if (capienza <= 0) {
+        setUploadError(`Limite di ${MAX_PLAN_IMAGES} media per piano già raggiunto: rimuovi qualche file prima di caricarne altri.`)
+        return
+      }
+      const selected = entries.slice(0, capienza)
       const skippedMessages: string[] = []
+      if (selected.length < entries.length) {
+        skippedMessages.push(`${entries.length - selected.length} file oltre il limite di ${MAX_PLAN_IMAGES} media per piano`)
+      }
       for (let i = 0; i < selected.length; i += 14) {
         const chunk = selected.slice(i, i + 14)
         const form = new FormData()
         form.append('cliente_id', clienteId)
         const uploadedNames = new Map<string, typeof chunk[number]>()
         chunk.forEach(entry => {
-          const uploadFile = entry.assignment
-            ? new File([entry.file], folderUploadName({ file: entry.file, assignment: entry.assignment }), { type: entry.file.type, lastModified: entry.file.lastModified })
-            : entry.file
-          uploadedNames.set(uploadFile.name, entry)
+          const baseName = entry.assignment
+            ? folderUploadName({ file: entry.file, assignment: entry.assignment })
+            : entry.file.name
+          const finalName = nomeUnico(baseName, uploadedNames)
+          const uploadFile = finalName === entry.file.name
+            ? entry.file
+            : new File([entry.file], finalName, { type: entry.file.type, lastModified: entry.file.lastModified })
+          uploadedNames.set(finalName, entry)
           form.append('files', uploadFile)
         })
         const data = await uploadAssets(form)

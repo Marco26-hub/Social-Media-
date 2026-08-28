@@ -6,6 +6,8 @@ import { scheduleOnBlotato } from '@/lib/publish/schedule'
 import { DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
 
 export const dynamic = 'force-dynamic'
+// Può innescare un render Remotion: il default 10-15s non basta.
+export const maxDuration = 300
 
 // POST — Sincronizza su Blotato UN SOLO contenuto (non l'intero batch di
 // "Sincronizza Blotato"). Serve a poter testare un singolo invio reale senza

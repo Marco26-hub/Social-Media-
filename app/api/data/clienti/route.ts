@@ -44,6 +44,11 @@ export async function POST(request: Request) {
     const user = await requireAuth()
     const { nome, settore, email, telefono, piano } = await request.json()
     if (!nome) return NextResponse.json({ error: 'nome richiesto' }, { status: 400 })
+    // `piano` è un campo commerciale (CLIENTE_ADMIN_COLUMNS): determina pacchetto e
+    // contenuti_mese. La PATCH lo proteggeva già con requireAdmin, la POST no —
+    // un cliente su Presenza poteva creare workspace illimitati dichiarandosi
+    // "crescita" e generare contenuti AI fuori da qualsiasi quota o fatturazione.
+    if (piano !== undefined && piano !== null && piano !== '') await requireAdmin()
     if (isDemo() || !dbReady()) return NextResponse.json({ id: `demo-${Date.now().toString(36)}`, demo: true })
     const slug = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     // Pacchetto e quota derivati dallo STESSO mapping piano->pacchetto che genera

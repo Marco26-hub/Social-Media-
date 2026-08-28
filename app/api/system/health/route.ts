@@ -81,7 +81,20 @@ async function getDatabaseChecks(enabled: boolean) {
 export async function GET(request: NextRequest) {
   const demo = isDemo()
   const hasDatabaseUrl = dbReady()
-  if (!demo && hasDatabaseUrl) {
+
+  // Il ruolo va risolto PRIMA di toccare il database: l'endpoint è pubblico e
+  // senza rate-limit, e la init di schema qui sotto è una DDL. Eseguirla a ogni
+  // richiesta anonima permetteva di saturare il pool pg (max 5 per istanza) e di
+  // far cadere l'app per gli utenti reali. Il decode del token non deve mai far
+  // fallire l'endpoint (health deve rispondere anche a DB/JWT rotti).
+  let isAdmin = false
+  try {
+    const token = await getToken({ req: request, secret: AUTH_SECRET })
+    const ruolo = (token?.ruolo as string | undefined) || ''
+    isAdmin = ruolo === 'admin' || ruolo === 'super_admin'
+  } catch { /* health resta pubblico e robusto */ }
+
+  if (!demo && hasDatabaseUrl && isAdmin) {
     await ensureStandaloneServiceOrdersSchema().catch(error => {
       console.error('[system health] standalone service schema init failed:', error instanceof Error ? error.message : error)
     })
@@ -130,15 +143,8 @@ export async function GET(request: NextRequest) {
   // e cosa manca. Mostra il dettaglio solo ad admin (o in demo, dove è tutto finto);
   // agli altri restituisci il minimo che login page e demo-client consumano
   // (mode + checks.databaseUrl). Lo status HTTP 200/503 resta invariato: l'healthcheck
-  // Render guarda solo il codice, non il body. Il decode del token non deve mai far
-  // fallire l'endpoint (health deve rispondere anche a DB/JWT rotti).
-  let isAdmin = false
-  try {
-    const token = await getToken({ req: request, secret: AUTH_SECRET })
-    const ruolo = (token?.ruolo as string | undefined) || ''
-    isAdmin = ruolo === 'admin' || ruolo === 'super_admin'
-  } catch { /* health resta pubblico e robusto */ }
-
+  // Render guarda solo il codice, non il body. `isAdmin` è già stato risolto in
+  // cima alla funzione, prima di qualunque accesso al database.
   if (!demo && !isAdmin) {
     return NextResponse.json({
       status,

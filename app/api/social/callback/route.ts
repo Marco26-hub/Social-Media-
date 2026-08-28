@@ -3,6 +3,7 @@ import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { getPublicBaseUrl } from '@/lib/base-url'
 import { exchangeCodeForToken, getInstagramAccounts, META_SCOPES } from '@/lib/meta-insights'
+import { consumeOAuthState } from '@/lib/oauth-state'
 
 // Callback OAuth Meta: scambia il code, trova gli account IG Business e li salva.
 export async function GET(request: Request) {
@@ -16,7 +17,9 @@ export async function GET(request: Request) {
     if (fbError) return NextResponse.redirect(`${base}/dashboard/marketing?tab=performance&connect=error&msg=${encodeURIComponent(fbError)}`)
     if (!code || !state) return NextResponse.redirect(`${base}/dashboard/marketing?tab=performance&connect=error&msg=parametri_mancanti`)
 
-    const clienteId = await requireClienteAccess(decodeURIComponent(state))
+    // Il clienteId arriva dal cookie httpOnly emesso da /connect, non dall'URL:
+    // lo `state` è solo il nonce che dimostra che il flow è partito da noi.
+    const clienteId = await requireClienteAccess(await consumeOAuthState(state))
     const redirectUri = `${base}/api/social/callback`
 
     const userToken = await exchangeCodeForToken(code, redirectUri)
