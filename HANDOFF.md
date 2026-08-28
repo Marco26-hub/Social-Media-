@@ -59,6 +59,23 @@ Vecchie pagine unificate in poche pagine-contenitore con tab, vecchie URL vive v
 - **`lib/pacchetti.ts`** (vetrina commerciale, campo `piano`) e **`lib/packages.ts`** (generazione, campo `pacchetto`) sono **due sistemi paralleli** che oggi coincidono solo perché allineati a mano — da unificare prima di avere molti clienti.
 - Ogni punto di creazione cliente (`lib/provisioning.ts` per l'attivazione registrazione, `app/api/data/clienti` POST per l'onboarding manuale) deve impostare `pacchetto`+`contenuti_mese` derivandoli dallo stesso mapping piano→pacchetto — trovati e corretti bug identici in entrambi i punti (quota rimasta al default schema 30 invece che 16/24).
 
+## Punto di ripristino (2026-08-28)
+
+Prima dei fix dell'audit, lo stato di produzione funzionante era il commit **`c437f64`**.
+Due vie di ritorno, indipendenti:
+
+- **Git:** tag `backup-pre-audit-2026-08-28` su `c437f64`, pushato su origin.
+  Ripristino: `git checkout backup-pre-audit-2026-08-28` (oppure `git reset --hard` di `main` su quel tag).
+- **Vercel:** deployment di produzione `dpl_8rN3iy5XZkDScY5arqdMgdHmZAGM`
+  (`social-media-1wt52nuz5`), marcato `isRollbackCandidate: true`.
+  Ripristino istantaneo dal dashboard Vercel → Deployments → Promote to Production,
+  senza passare da un nuovo build.
+
+Env var aggiunte in questa sessione (non sono nel repo): `VERCEL_SUPPORT_LARGE_FUNCTIONS=1`
+su Production e sul branch di preview `fix/audit-sicurezza-e-render-remotion`. Alza il tetto
+del bundle della funzione da 250 MB a 5 GB: serve perche il Chromium di Remotion pesa 193 MB.
+Rimuoverla fa tornare l'errore di dimensione, non un errore di codice.
+
 ## Pipeline editoriale premium — Remotion + import campagne (2026-08-27/28)
 - **Rendering video Remotion:** `lib/remotion-renderer.ts` sostituisce il montaggio via Blotato per i Reel generati dalla pipeline premium. Bundle Remotion (`@remotion/bundler`) + `renderMedia`/`selectComposition` (`@remotion/renderer`), composizione in `remotion/SwaSocialVideo.tsx` (max 10 immagini, preset motion `trending|premium|minimal|classico`, hook/CTA/logo/brand testuali, audio opzionale con volume musica configurabile). Output caricato su Supabase Storage (`lib/storage.ts`). Hash sorgente deterministico (`remotionSourceHash`) per evitare re-render identici. Build ora richiede `npm run remotion:browser` (`scripts/ensure-remotion-browser.mjs`) prima di `next build` — verificare che l'ambiente Vercel scarichi il browser headless Remotion senza timeout.
 - **Import cartelle campagna:** `lib/campaign-folder.ts` interpreta nomi file caricati in blocco (settimana, piattaforma, tag media, chiave contenuto, sequenza) e li assegna agli slot calendario corretti; gestisce anche audio ed errori di parsing per file non riconosciuti. Integrato in `app/dashboard/piano/page.tsx` (upload cartella) e `app/api/generate/plan/route.ts` (creazione slot dai file importati).
