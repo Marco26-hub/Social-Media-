@@ -10,6 +10,9 @@ import { demoContenuti } from '@/lib/demo-data'
 import { getTableColumns } from '@/lib/db-schema'
 import { toYmd } from '@/lib/publish/blotato-map'
 
+// La PATCH di approvazione può innescare un montaggio Remotion sincrono.
+export const maxDuration = 300
+
 const CALENDARIO_UPDATE_COLUMNS = new Set([
   'data_pubblicazione',
   'ora_pubblicazione',
@@ -122,7 +125,10 @@ export async function GET(request: Request) {
     const formato = searchParams.get('formato')
     const obiettivo = searchParams.get('obiettivo')
     const search = searchParams.get('q')?.trim()
-    const limit = parseInt(searchParams.get('limit') || '50')
+    // Clamp esplicito: `?limit=abc` finiva come NaN nel LIMIT $n (errore driver →
+    // 500) e `?limit=999999999` restituiva l'intero calendario in una risposta.
+    const limitRichiesto = Number(searchParams.get('limit') ?? 50)
+    const limit = Number.isFinite(limitRichiesto) ? Math.min(Math.max(Math.trunc(limitRichiesto), 1), 500) : 50
 
     if (isDemo() || !dbReady()) {
       let rows = demoContenuti

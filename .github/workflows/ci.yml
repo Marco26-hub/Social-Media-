@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   verify:
-    name: CI 6 checks
+    name: CI 7 checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -31,7 +31,10 @@ jobs:
       - name: 1. Lint
         run: npm run lint
 
-      - name: 2. Build
+      - name: 2. Unit test
+        run: npm test
+
+      - name: 3. Build
         env:
           AUTH_SECRET: ci-secret
           NEXTAUTH_URL: http://localhost:3000
@@ -39,13 +42,13 @@ jobs:
           NEXT_PUBLIC_DEMO_MODE: "true"
         run: npm run build
 
-      - name: 3. Security audit
+      - name: 4. Security audit
         run: npm audit --audit-level=moderate
 
-      - name: 4. Migration dry-run
+      - name: 5. Migration dry-run
         run: npm run migrate:dry
 
-      - name: 5. Smoke test demo runtime
+      - name: 6. Smoke test demo runtime
         env:
           PORT: 3000
           AUTH_SECRET: ci-secret
@@ -64,7 +67,7 @@ jobs:
           done
           bash scripts/smoke-test.sh http://localhost:3000
 
-      - name: 6. Production env guard
+      - name: 7. Production env guard
         env:
           DATABASE_URL: postgresql://user:pass@example.com/neondb?sslmode=require
           AUTH_SECRET: ci-secret

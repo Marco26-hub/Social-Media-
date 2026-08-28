@@ -1,7 +1,7 @@
 import { readFile, stat } from 'fs/promises'
 import path from 'path'
 import { NextResponse } from 'next/server'
-import { isStorageConfigured, hasPublicStorageUrl, downloadFromStorage } from '@/lib/storage'
+import { isStorageConfigured, hasPublicStorageUrl, downloadFromStorage, downloadRangeFromStorage } from '@/lib/storage'
 
 export const runtime = 'nodejs'
 
@@ -35,12 +35,27 @@ function safeSegment(value: string) {
   return /^[a-zA-Z0-9._-]+$/.test(value) ? value : ''
 }
 
-function bytesResponse(bytes: Buffer, contentType: string, request: Request) {
+// SICUREZZA — mai riflettere il Content-Type salvato sullo storage: è scelto dal
+// client al momento del PUT. Un'estensione fuori da MIME_BY_EXT viene servita
+// come octet-stream + attachment, così non può diventare contenuto attivo
+// sull'origine dell'app anche se qualcosa fosse finito nel bucket.
+function serveHeadersFor(ext: string) {
+  const known = MIME_BY_EXT[ext]
+  return {
+    contentType: known || 'application/octet-stream',
+    disposition: known ? null : 'attachment',
+  }
+}
+
+function bytesResponse(bytes: Buffer, ext: string, request: Request) {
+  const { contentType, disposition } = serveHeadersFor(ext)
   const range = request.headers.get('range')
-  const commonHeaders = {
+  const commonHeaders: Record<string, string> = {
     'Content-Type': contentType,
     'Cache-Control': 'public, max-age=31536000, immutable',
     'Accept-Ranges': 'bytes',
+    'X-Content-Type-Options': 'nosniff',
+    ...(disposition ? { 'Content-Disposition': disposition } : {}),
   }
 
   if (!range) {
@@ -105,9 +120,34 @@ export async function GET(
   // Se il bucket è pubblico gli URL puntano già al provider e questo proxy non è usato.
   if (isStorageConfigured() && !hasPublicStorageUrl()) {
     const key = `uploads/${safeClienteId}/${safeFilename}`
+
+    // Range inoltrato allo storage: scarichiamo solo la porzione richiesta invece
+    // dell'oggetto intero (i player e Blotato fanno molte Range su uno stesso MP4).
+    const range = request.headers.get('range')
+    if (range) {
+      const partial = await downloadRangeFromStorage(key, range)
+      if (partial) {
+        const { contentType, disposition } = serveHeadersFor(ext)
+        const headers: Record<string, string> = {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Accept-Ranges': 'bytes',
+          'X-Content-Type-Options': 'nosniff',
+          ...(disposition ? { 'Content-Disposition': disposition } : {}),
+          ...(partial.contentRange ? { 'Content-Range': partial.contentRange } : {}),
+        }
+        if (partial.status === 416) return new NextResponse(null, { status: 416, headers })
+        return new NextResponse(partial.bytes as unknown as BodyInit, {
+          status: 206,
+          headers: { ...headers, 'Content-Length': String(partial.bytes.length) },
+        })
+      }
+      return NextResponse.json({ error: 'asset non trovato' }, { status: 404 })
+    }
+
     const obj = await downloadFromStorage(key)
     if (obj) {
-      return bytesResponse(obj.bytes, MIME_BY_EXT[ext] || obj.contentType, request)
+      return bytesResponse(obj.bytes, ext, request)
     }
     return NextResponse.json({ error: 'asset non trovato' }, { status: 404 })
   }
@@ -118,7 +158,7 @@ export async function GET(
     const info = await stat(filePath)
     if (!info.isFile()) return NextResponse.json({ error: 'asset non trovato' }, { status: 404 })
     const bytes = await readFile(filePath)
-    return bytesResponse(bytes, MIME_BY_EXT[ext] || 'application/octet-stream', request)
+    return bytesResponse(bytes, ext, request)
   } catch {
     return NextResponse.json({ error: 'asset non trovato' }, { status: 404 })
   }

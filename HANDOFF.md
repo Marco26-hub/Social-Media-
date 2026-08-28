@@ -1,6 +1,6 @@
 # HANDOFF — Social Web Automation
 
-Stato al 2026-08-24. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+Stato al 2026-08-28. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
 
 ## Stack
 - **Frontend/Backend:** Next.js 15.5 (App Router), React 19, Tailwind. Deploy su **Vercel**.
@@ -11,7 +11,7 @@ Stato al 2026-08-24. Piattaforma SaaS di social media automation con AI (Next.js
 - **Scheduling:** GitHub Actions cron (`.github/workflows/agenti-cron.yml`, lun 07:00 UTC) → chiama `/api/agents/*` con `CRON_SECRET`.
 
 ## Database
-- Migrazioni in **`db/migrations/`** (001–043). Runner: `npm run migrate` (usa `DIRECT_DATABASE_URL`, invia ogni file intero a Postgres). `npm run migrate:dry` per il dry-run. La 043 crea gli ordini autonomi Blog/Web/Lead; il backend può inizializzarla in modo idempotente tramite `lib/standalone-service-schema.ts` usando la connessione runtime Vercel, senza esportare segreti di produzione.
+- Migrazioni in **`db/migrations/`** (001–044; la **003 non esiste**: buco storico nella numerazione, il runner ordina per nome file e non se ne accorge — non reintrodurla, la prossima migration parte da 045). Runner: `npm run migrate` (usa `DIRECT_DATABASE_URL`, invia ogni file intero a Postgres). `npm run migrate:dry` per il dry-run. La 043 crea gli ordini autonomi Blog/Web/Lead; il backend può inizializzarla in modo idempotente tramite `lib/standalone-service-schema.ts` usando la connessione runtime Vercel, senza esportare segreti di produzione.
 - **⚠️ Vercel NON applica le migrazioni al deploy.** Push del codice e stato del DB sono due cose separate: dopo ogni push (anche del socio) controllare `schema_migrations` prima di assumere che lo schema sia allineato al codice live. Successo passato: codice per pacchetti/timezone in produzione per ore con le colonne ancora assenti (silenzioso finché non si guarda).
 - **Due connection string** (pooler Supavisor, IPv4):
   - `DATABASE_URL` — transaction pooler **:6543** (runtime app serverless).
@@ -59,6 +59,18 @@ Vecchie pagine unificate in poche pagine-contenitore con tab, vecchie URL vive v
 - **`lib/pacchetti.ts`** (vetrina commerciale, campo `piano`) e **`lib/packages.ts`** (generazione, campo `pacchetto`) sono **due sistemi paralleli** che oggi coincidono solo perché allineati a mano — da unificare prima di avere molti clienti.
 - Ogni punto di creazione cliente (`lib/provisioning.ts` per l'attivazione registrazione, `app/api/data/clienti` POST per l'onboarding manuale) deve impostare `pacchetto`+`contenuti_mese` derivandoli dallo stesso mapping piano→pacchetto — trovati e corretti bug identici in entrambi i punti (quota rimasta al default schema 30 invece che 16/24).
 
+## Pipeline editoriale premium — Remotion + import campagne (2026-08-27/28)
+- **Rendering video Remotion:** `lib/remotion-renderer.ts` sostituisce il montaggio via Blotato per i Reel generati dalla pipeline premium. Bundle Remotion (`@remotion/bundler`) + `renderMedia`/`selectComposition` (`@remotion/renderer`), composizione in `remotion/SwaSocialVideo.tsx` (max 10 immagini, preset motion `trending|premium|minimal|classico`, hook/CTA/logo/brand testuali, audio opzionale con volume musica configurabile). Output caricato su Supabase Storage (`lib/storage.ts`). Hash sorgente deterministico (`remotionSourceHash`) per evitare re-render identici. Build ora richiede `npm run remotion:browser` (`scripts/ensure-remotion-browser.mjs`) prima di `next build` — verificare che l'ambiente Vercel scarichi il browser headless Remotion senza timeout.
+- **Import cartelle campagna:** `lib/campaign-folder.ts` interpreta nomi file caricati in blocco (settimana, piattaforma, tag media, chiave contenuto, sequenza) e li assegna agli slot calendario corretti; gestisce anche audio ed errori di parsing per file non riconosciuti. Integrato in `app/dashboard/piano/page.tsx` (upload cartella) e `app/api/generate/plan/route.ts` (creazione slot dai file importati).
+- **Migration 044** (`db/migrations/044_campaign_folder_import.sql`): aggiunge a `calendario` le colonne `campaign_content_key`, `campaign_week`, `campaign_source_paths` (tutte nullable, compatibili con piani creati a mano) + indice su `(cliente_id, campaign_week, campaign_content_key)`. **Applicata in produzione il 2026-08-28** sul progetto Supabase `npxtaciwuzkzgiqonhgo`, e registrata in `schema_migrations` col checksum del runner: colonne, constraint `calendario_campaign_week_check` e indice verificati presenti.
+- **Fix correlati:** `lib/blotato-visual.ts` — risoluzione corretta del template visual Blotato (bug su template sbagliato in certi casi); `components/PostPreview.tsx` e `lib/publish/schedule.ts` — assegnazione asset campagna e anteprima social allineate al nuovo flusso import.
+- Nuovi test: `lib/campaign-folder.test.ts`, `lib/remotion-renderer.test.ts`, `lib/blotato-visual.test.ts`, `lib/editorial-skills.test.ts`, `lib/editorial-variation.test.ts`, `scripts/remotion-demo.test.ts`, `scripts/remotion-smoke.test.ts`.
+
+## Rebrand e SEO internazionale (2026-08-25)
+- Prodotto rinominato **Social Web Automation** in tutta l'app pubblica (header, footer, email, JSON-LD, checkout, blog) — denominazione legale **Social Web Automation di Marco Dibenedetto**.
+- `/en`, `/en/services`, `/en/pricing`: metadata corretti per pagina (prima servivano metadata italiani sulle route inglesi), hreflang reciproci in `middleware.ts`.
+- Griglia percorso commerciale in Home completata (`app/page.tsx`).
+
 ## Blotato (pubblicazione social) — multi-cliente, workspace condiviso
 Il workspace Blotato ospita gli account di **più clienti reali insieme** (SILKinCOM, Studio Legale BCS, SWA — l'agenzia stessa) più altri brand gestiti dallo stesso studio. **Mai scegliere un account implicitamente**: `lib/blotato-accounts.ts` fallisce chiuso (`pickAccount`/`pickSubaccount`) se per una piattaforma ci sono più account/Pagine senza una scelta esplicita salvata (`settings.blotato_account_<canale>` / `blotato_subaccount_<canale>`). Anteprima sola-lettura in scheda cliente ("Account Blotato — dove verranno pubblicati i contenuti") prima di qualunque test live.
 - **Endpoint corretto**: `GET /v2/users/me/accounts` (non `/v2/accounts`, che risponde 404 — bug trovato e corretto, non era un problema di chiave). Sotto-destinazioni (Facebook Page/Pinterest board/LinkedIn Company Page) via `GET /v2/users/me/accounts/{id}/subaccounts`, chiamata separata per account.
@@ -76,14 +88,16 @@ Il workspace Blotato ospita gli account di **più clienti reali insieme** (SILKi
 - Playwright: popup fallback → filtro esatto → modifica/rigenerazione → anteprima → `DA_APPROVARE`, senza pubblicazione automatica; consuntivo pacchetto Blotato verificato con API mock.
 - Checkout/Home/Chi siamo/Pilot Lead verificati con Playwright a 1440 px e mobile: nessun errore console e nessun overflow orizzontale.
 - Deploy produzione commit `5d10c7c` online su `https://www.socialautomation.app`: Home, Chi siamo, pagina Pilot e i tre checkout rispondono 200. La migration 043 è applicata e la tabella ordini risponde correttamente.
-- **Gate pagamenti:** nel progetto Vercel LIVE mancano ancora `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`; il backend fallisce chiuso con HTTP 503 prima di creare l'ordine. Non dichiarare i checkout operativi finché entrambe le env non sono configurate e il webhook Stripe non è testato.
+- **Gate pagamenti:** `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` ora configurate su Vercel LIVE (confermato 2026-08-28). Resta da fare un acquisto reale controllato per verificare ordine, email e Customer Portal end-to-end prima di dichiarare i checkout pienamente operativi.
 - Server locale di prova della sessione: `http://127.0.0.1:3112` (processo temporaneo, non URL pubblico).
 - Commit principali: `4014da5`, `9fbaa1e`, `81f9ef3`, `da439a5`, `d0869de`, `70d9ef6`.
 
 ## Da completare
-1. **Blocco go-live pagamenti:** aggiungere su Vercel `STRIPE_SECRET_KEY` LIVE e `STRIPE_WEBHOOK_SECRET`, configurare in Stripe l'endpoint `https://www.socialautomation.app/api/stripe/webhook`, quindi eseguire un acquisto reale controllato e verificare ordine, email e Customer Portal.
+1. **Pagamenti:** chiavi Stripe configurate su Vercel. Resta da eseguire un acquisto reale controllato e verificare ordine, email e Customer Portal.
 2. GitHub → repo variable `APP_BASE_URL` = dominio Vercel (per il cron).
 3. **Sicurezza:** gli account `admin` e `cliente` usano ancora la password di default `1234567` — cambiarle prima del go-live.
 4. Spegnere Render solo dopo che Vercel è verificato (media e dati sono già su Supabase).
 5. Eseguire **Verifica Blotato** sul mese corrente e risolvere gli stati `failed`/`scheduled` passati prima di rimetterli in coda.
 6. Verificare `PUBLISH_ENABLED=true`, `dry_run=FALSE`, API key e account/subaccount fissati per cliente prima di una pubblicazione reale. Il primo test va fatto con **Sincronizza questo** su un solo contenuto.
+7. ~~Migration 044 da applicare in produzione~~ — fatto il 2026-08-28, verificata. Nota: `LATEST_REQUIRED_MIGRATION` in `app/api/system/health/route.ts` punta ancora a `043_standalone_service_orders.sql`; va alzato a 044 quando si vuole che l'health check lo pretenda.
+8. Verificare che il build Vercel completi `npm run remotion:browser` senza timeout/errori (dipendenza nuova nella pipeline di build, non testata ancora su deploy live).

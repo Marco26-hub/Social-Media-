@@ -7,6 +7,7 @@
     "build": "npm run remotion:browser && next build",
     "remotion:browser": "node scripts/ensure-remotion-browser.mjs",
     "test": "playwright test lib/*.test.ts --workers=1",
+    "test:render": "playwright test scripts/remotion-*.test.ts --workers=1",
     "start": "node scripts/render-start.mjs",
     "lint": "eslint .",
     "migrate": "node scripts/run-migrations.mjs",
@@ -15,7 +16,7 @@
     "prod:check:strict": "node scripts/render-production-check.mjs --strict",
     "seo:indexnow": "node scripts/submit-indexnow.mjs",
     "render:sync-env": "node scripts/render-sync-env.mjs",
-    "ci:verify": "npm run lint && npm run build && npm audit --audit-level=moderate && npm run migrate:dry",
+    "ci:verify": "npm run lint && npm test && npm run build && npm audit --audit-level=moderate && npm run migrate:dry",
     "next:start": "next start",
     "demo:video": "node scripts/demo-walkthrough.mjs"
   },

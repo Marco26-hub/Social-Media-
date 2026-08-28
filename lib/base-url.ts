@@ -16,11 +16,53 @@ function sanitize(url: string | undefined | null): string | null {
   return trimmed
 }
 
+function hostOf(url: string | undefined | null): string {
+  const clean = sanitize(url)
+  if (!clean) return ''
+  try {
+    return new URL(clean).host.toLowerCase()
+  } catch {
+    return ''
+  }
+}
+
+// Host accettabili in `x-forwarded-host`. Il commento sopra dice il vero SOLO
+// finché davanti all'app c'è un proxy che riscrive gli header (Render, Vercel):
+// basta interporre un CDN che li propaga perché un `x-forwarded-host: evil.com`
+// finisca negli URL dei media SALVATI IN DB, riusati dallo scheduler giorni dopo.
+// Allowlist: i domini configurati via env, i domini di preview delle piattaforme,
+// localhost in sviluppo, più un eventuale elenco esplicito in ALLOWED_HOSTS.
+function hostConsentito(host: string): boolean {
+  const bare = host.toLowerCase().split(':')[0]
+  if (!bare) return false
+
+  const daEnv = [
+    hostOf(process.env.NEXT_PUBLIC_SITE_URL),
+    hostOf(process.env.NEXTAUTH_URL),
+  ].filter(Boolean).map(h => h.split(':')[0])
+  if (daEnv.includes(bare)) return true
+
+  const extra = (process.env.ALLOWED_HOSTS || '')
+    .split(',')
+    .map(h => h.trim().toLowerCase().split(':')[0])
+    .filter(Boolean)
+  if (extra.includes(bare)) return true
+
+  // Domini di preview/deploy delle piattaforme: sono sotto il nostro account e
+  // sono il motivo per cui l'header ha priorità sulle env.
+  if (/\.vercel\.app$/.test(bare) || /\.onrender\.com$/.test(bare)) return true
+
+  if (process.env.NODE_ENV !== 'production' && (bare === 'localhost' || bare === '127.0.0.1')) return true
+
+  return false
+}
+
 export function getPublicBaseUrl(request: Request): string {
-  // 1. Host reale dietro proxy (validato) — è il dominio che funziona davvero.
+  // 1. Host reale dietro proxy (validato + in allowlist) — il dominio che funziona
+  //    davvero, senza però fidarsi di un header che il client può controllare.
   const fwdHost = request.headers.get('x-forwarded-host') || request.headers.get('host')
   const fwdProto = request.headers.get('x-forwarded-proto') || 'https'
-  if (fwdHost && /^[a-zA-Z0-9.-]+(:\d+)?$/.test(fwdHost)) {
+  if (fwdHost && /^[a-zA-Z0-9.-]+(:\d+)?$/.test(fwdHost) && hostConsentito(fwdHost)) {
     return `${fwdProto}://${fwdHost}`
   }
 

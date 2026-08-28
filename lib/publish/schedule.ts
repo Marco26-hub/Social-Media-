@@ -318,28 +318,38 @@ export async function scheduleOnBlotato(
           })
 
         if (rowId) {
-          if (hasAudio) {
-            await q(
+          // Il render può durare più dei 15 minuti di scadenza del lock (vedi
+          // acquisizione sopra): in quel caso un altro processo lo ha già rubato e
+          // questo UPDATE non tocca nessuna riga. Senza controllare il rowcount
+          // ritornavamo 'visual_review' come se fosse riuscito, lasciando l'MP4
+          // orfano sullo storage e la riga in DA_APPROVARE senza visual da approvare.
+          const saved = hasAudio
+            ? await q(
               `UPDATE calendario
                  SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
                      blotato_audio_visual_id = $1, blotato_audio_visual_status = 'ready_for_review',
                      blotato_audio_visual_media_url = $2, blotato_visual_source_hash = $3,
                      blotato_audio_visual_updated_at = now(), publish_lock_id = NULL,
                      errore_tecnico = NULL, updated_at = now()
-               WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6`,
+               WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6
+               RETURNING id`,
               [rendered.id, rendered.mediaUrl, rendered.sourceHash, rowId, clienteId, lockId],
             )
-          } else {
-            await q(
+            : await q(
               `UPDATE calendario
                  SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
                      blotato_visual_id = $1, blotato_visual_status = 'ready_for_review',
                      blotato_visual_media_url = $2, blotato_visual_source_hash = $3,
                      blotato_visual_updated_at = now(), publish_lock_id = NULL,
                      errore_tecnico = NULL, updated_at = now()
-               WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6`,
+               WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6
+               RETURNING id`,
               [rendered.id, rendered.mediaUrl, rendered.sourceHash, rowId, clienteId, lockId],
             )
+
+          if (!saved.length) {
+            console.warn(`[Blotato] lock perso durante il render di ${rowId}: montaggio ${rendered.id} non salvato (un altro processo ha ripreso la riga).`)
+            return { status: 'skipped', reason: 'Lock di pubblicazione perso durante il montaggio: il contenuto verrà ripreso al prossimo tentativo.' }
           }
         }
         return { status: 'visual_review', visualId: rendered.id, mediaUrl: rendered.mediaUrl }
@@ -465,6 +475,11 @@ export async function scheduleOnBlotato(
 }
 
 function buildPlatformContent(canale: string, formato: string, row: ContentRow): string {
+  // Il chiamante calcola `isStory` con toLowerCase(); qui i confronti erano sul
+  // valore grezzo. Con un `formato` scritto 'Story' (possibile via PATCH manuale)
+  // il payload veniva trattato come story ma il testo riceveva CTA e link, che
+  // nelle story non sono cliccabili. Una sola normalizzazione per entrambi.
+  const formatoNorm = formato.trim().toLowerCase()
   const hook = (row.hook || '') as string
   const caption = (row.caption || '') as string
   const cta = (row.cta || '') as string
@@ -478,21 +493,21 @@ function buildPlatformContent(canale: string, formato: string, row: ContentRow):
 
   if (caption && caption !== hook) {
     // Per reel/short/story: caption breve
-    if (['reel', 'short', 'story'].includes(formato)) {
+    if (['reel', 'short', 'story'].includes(formatoNorm)) {
       parts.push(caption.slice(0, 300))
     } else {
       parts.push(caption)
     }
   }
 
-  if (cta && !['story'].includes(formato)) {
+  if (cta && formatoNorm !== 'story') {
     parts.push(`\n${cta}`)
   }
 
   // Link prodotto: la story lo passa come sticker link (payload separato), non nel testo.
   // Tutti gli altri formati lo appendono in fondo così è cliccabile su ogni canale
   // (Instagram post/carousel non ha link cliccabile in caption, ma resta visibile).
-  if (linkProdotto && formato !== 'story' && !parts.some(p => p.includes(linkProdotto))) {
+  if (linkProdotto && formatoNorm !== 'story' && !parts.some(p => p.includes(linkProdotto))) {
     parts.push(`\n👉 ${linkProdotto}`)
   }
 

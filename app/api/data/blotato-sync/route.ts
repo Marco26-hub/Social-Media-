@@ -6,6 +6,10 @@ import { getBlotatoKey } from '@/lib/blotato-key'
 import { listBlotatoAccounts } from '@/lib/blotato-accounts'
 
 export const dynamic = 'force-dynamic'
+// Il montaggio Remotion avviene dentro questa richiesta e i contenuti sono
+// processati in serie: col default (10-15s) il batch viene killato a metà,
+// lasciando il publish_lock_id impostato per 15 minuti.
+export const maxDuration = 300
 
 // GET — Verifica connessione Blotato SENZA pubblicare: key presente? account
 // collegati? pubblicazione live? Serve per confermare il setup prima del go-live.

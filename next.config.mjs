@@ -48,6 +48,18 @@ const nextConfig = {
   // Il renderer Remotion usa binari e Chromium lato server: Next deve lasciarlo
   // come dipendenza Node esterna invece di inglobarlo nel bundle delle route.
   serverExternalPackages: ['@remotion/bundler', '@remotion/renderer'],
+  // Il bundler Remotion compila remotion/index.tsx A RUNTIME, quindi nessun import
+  // statico raggiunge la composizione: il file tracing di Next includeva solo
+  // index.tsx e non i moduli che importa. In produzione il render moriva con
+  // "Can't resolve './SwaSocialVideo' in '/var/task/remotion'". Includiamo tutta
+  // la cartella esplicitamente.
+  // `.remotion-bundle` e il bundle gia compilato in fase di build: senza di esso la
+  // funzione ricadrebbe sulla compilazione webpack a runtime.
+  outputFileTracingIncludes: {
+    '/api/data/calendario': ['./remotion/**/*', './.remotion-bundle/**/*'],
+    '/api/data/calendario/[id]/sync-uno': ['./remotion/**/*', './.remotion-bundle/**/*'],
+    '/api/data/blotato-sync': ['./remotion/**/*', './.remotion-bundle/**/*'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'drive.google.com' },

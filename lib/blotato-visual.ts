@@ -1,4 +1,14 @@
+// STATO (2026-08-28): questo modulo NON è più referenziato dalla pipeline di
+// pubblicazione — il montaggio dei Reel passa da lib/remotion-renderer.ts (vedi
+// lib/publish/schedule.ts). Gli unici import restanti sono quelli del suo test.
+// È quindi codice morto in attesa di una decisione: rimuoverlo, oppure ricablare
+// createAudioMixedVideo se il mix audio via Blotato serve ancora. I difetti noti
+// qui sotto sono stati corretti comunque, per non lasciare trappole se venisse
+// riattivato.
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
+
+// Numero di slide che il template "Image Slideshow with Text Overlays" accetta.
+export const PHOTO_REEL_MAX_SLIDES = 5
 
 // Template ufficiale "Image Slideshow with Text Overlays". Blotato ha usato
 // sia il solo UUID sia il percorso completo: per le richieste nuove preferiamo
@@ -8,7 +18,10 @@ export const PHOTO_REEL_TEMPLATE_ID = `/base/v2/image-slideshow/${PHOTO_REEL_TEM
 export const AUDIO_MIX_TEMPLATE_UUID = 'c306ae43-1dcc-4f45-ac2b-88e75430ffd8'
 
 const TEMPLATE_CACHE_TTL_MS = 5 * 60 * 1000
-let photoReelTemplateCache: { id: string; expiresAt: number } | null = null
+// Cache indicizzata per API key: era una singola variabile di modulo, quindi il
+// primo cliente che risolveva il catalogo fissava l'ID per 5 minuti per TUTTI i
+// workspace serviti dallo stesso processo.
+const photoReelTemplateCache = new Map<string, { id: string; expiresAt: number }>()
 
 type VisualResult = {
   id: string
@@ -74,8 +87,9 @@ export function selectPhotoReelTemplateId(value: unknown): string {
 }
 
 async function resolvePhotoReelTemplateId(blotatoKey: string, force = false): Promise<string> {
-  if (!force && photoReelTemplateCache && photoReelTemplateCache.expiresAt > Date.now()) {
-    return photoReelTemplateCache.id
+  const cached = photoReelTemplateCache.get(blotatoKey)
+  if (!force && cached && cached.expiresAt > Date.now()) {
+    return cached.id
   }
 
   try {
@@ -87,10 +101,10 @@ async function resolvePhotoReelTemplateId(blotatoKey: string, force = false): Pr
     if (res.ok) {
       const templateId = selectPhotoReelTemplateId(await res.json())
       if (templateId) {
-        photoReelTemplateCache = {
+        photoReelTemplateCache.set(blotatoKey, {
           id: templateId,
           expiresAt: Date.now() + TEMPLATE_CACHE_TTL_MS,
-        }
+        })
         return templateId
       }
     }
@@ -107,10 +121,14 @@ function photoReelBody(args: {
   overlays: string[]
   prompt: string
 }, templateId: string): string {
-  const slides = args.imageUrls.slice(0, 5).map((imageSource, index) => ({
+  const slides = args.imageUrls.slice(0, PHOTO_REEL_MAX_SLIDES).map((imageSource, index) => ({
     imageSource,
     textOverlay: args.overlays[index] || '',
   }))
+  if (args.imageUrls.length > PHOTO_REEL_MAX_SLIDES) {
+    // Il chiamante non poteva distinguere "montate tutte" da "montate 5 su 10".
+    console.warn(`[Blotato] photo reel: ${args.imageUrls.length} immagini fornite, il template ne accetta ${PHOTO_REEL_MAX_SLIDES}: le altre ${args.imageUrls.length - PHOTO_REEL_MAX_SLIDES} sono state scartate.`)
+  }
   return JSON.stringify({
     templateId,
     inputs: {
@@ -144,7 +162,7 @@ export async function createPhotoReel(args: {
   // Se Blotato ha ruotato il catalogo tra due richieste, aggiorna l'ID e riprova
   // una sola volta. Non si ritentano altri 4xx/5xx per evitare doppie creazioni.
   if (res.status === 404 && /unknown template id/i.test(error)) {
-    photoReelTemplateCache = null
+    photoReelTemplateCache.delete(args.blotatoKey)
     const refreshedTemplateId = await resolvePhotoReelTemplateId(args.blotatoKey, true)
     if (refreshedTemplateId !== templateId) {
       templateId = refreshedTemplateId

@@ -27,6 +27,17 @@ function mediaKind(mime: string): 'video' | 'image' | 'audio' | null {
   return null
 }
 
+// SICUREZZA — l'estensione finisce nella key e quindi nell'URL servito da
+// /api/assets/file, che sceglie il Content-Type in base ad essa. Un'estensione
+// fuori da questa mappa (.html, .svg, .xhtml) diventerebbe contenuto attivo
+// servito dalla nostra origine. La mappa è allineata a MIME_BY_EXT del proxy:
+// tenerle in sync.
+const ALLOWED_EXT_BY_KIND: Record<'image' | 'video' | 'audio', Set<string>> = {
+  image: new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif']),
+  video: new Set(['.mp4']),
+  audio: new Set(['.mp3', '.wav', '.m4a', '.ogg']),
+}
+
 type InFile = { name?: unknown; mime?: unknown; size?: unknown }
 type OutItem =
   | { name: string; ok: true; uploadUrl: string; url: string; path: string; key: string; mime: string; kind: 'video' | 'image' | 'audio' }
@@ -63,13 +74,12 @@ export async function POST(request: Request) {
         items.push({ name, ok: false, motivo: isHeic ? 'formato HEIC iPhone non supportato — converti in JPG' : `formato non supportato (${mime || 'sconosciuto'})` })
         continue
       }
-      if (kind === 'video' && path.extname(name).toLowerCase() !== '.mp4') {
-        items.push({ name, ok: false, motivo: 'video: supportato solo .mp4' })
-        continue
-      }
-      const audioExtensions = new Set(['.mp3', '.wav', '.m4a', '.ogg'])
-      if (kind === 'audio' && !audioExtensions.has(path.extname(name).toLowerCase())) {
-        items.push({ name, ok: false, motivo: 'audio: supportati MP3, WAV, M4A e OGG' })
+      // L'estensione va validata per OGNI kind, immagini incluse: è lei a
+      // determinare il Content-Type con cui il proxy servirà il file.
+      const ext = path.extname(name).toLowerCase()
+      if (!ALLOWED_EXT_BY_KIND[kind].has(ext)) {
+        const attese = [...ALLOWED_EXT_BY_KIND[kind]].join(', ')
+        items.push({ name, ok: false, motivo: `estensione ${ext || 'assente'} non ammessa per ${kind}: usa ${attese}` })
         continue
       }
       const maxSize = kind === 'video' ? MAX_VIDEO_FILE_SIZE : kind === 'audio' ? MAX_AUDIO_FILE_SIZE : MAX_IMAGE_FILE_SIZE
@@ -80,7 +90,9 @@ export async function POST(request: Request) {
 
       const filename = safeFilename(name)
       const key = `uploads/${clienteId}/${filename}`
-      const uploadUrl = await presignPutUrl(key)
+      // Il Content-Type entra nella firma: il browser DEVE mandare esattamente
+      // questo `mime` nel PUT, altrimenti lo storage rifiuta.
+      const uploadUrl = await presignPutUrl(key, mime)
       // Bucket pubblico → URL diretto; privato → proxy same-origin /api/assets/file.
       const url = publicUrlForKey(key) || `/api/assets/file/${encodeURIComponent(clienteId)}/${encodeURIComponent(filename)}`
       items.push({ name, ok: true, uploadUrl, url, path: url, key, mime, kind })

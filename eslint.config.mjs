@@ -17,6 +17,10 @@ const eslintConfig = [
       'out/**',
       'coverage/**',
       'next-env.d.ts',
+      // Artefatti di build, non codice sorgente.
+      '.remotion-bundle/**',
+      'test-results/**',
+      'playwright-report/**',
     ],
   },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
