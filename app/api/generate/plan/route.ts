@@ -913,9 +913,10 @@ Output SOLO JSON array valido:
       const folderRules = folderCampaignRules(chunk)
       const rawItems = pkg ? r.items.slice(0, chunk.targetMax) : r.items
       const items = folderRules.length
-        ? rawItems.map((item, index) => {
-            const rule = folderRules[index]
-            if (!rule) return item
+        ? folderRules.map((rule, index) => {
+            const expectedKey = String(rule.contentKey || '').trim().toLowerCase()
+            const matched = rawItems.find(item => String(item.content_key || '').trim().toLowerCase() === expectedKey)
+            const item = matched || rawItems[index] || fallbackItem(chunk, index, `L'AI ha generato ${rawItems.length}/${folderRules.length} contenuti per questo blocco.`)
             return {
               ...item,
               content_key: rule.contentKey,

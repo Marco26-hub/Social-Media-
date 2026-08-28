@@ -63,6 +63,13 @@ function mediaUrls(c: Contenuto): string[] {
   ].filter((url, index, all): url is string => Boolean(url) && all.indexOf(url) === index)
 }
 
+function hasCampaignFinalAssets(c: Contenuto): boolean {
+  const paths = c.campaign_source_paths
+  if (Array.isArray(paths) && paths.length > 0) return true
+  if (typeof paths === 'string' && paths.trim().startsWith('[')) return true
+  return /MONTHLY_DNA:|asset\s+final|cartella/i.test(String(c.production_notes || ''))
+}
+
 function VisualBriefCard({ icon, title, description, accent = 'from-gray-700 to-gray-950' }: {
   icon: string
   title: string
@@ -78,7 +85,7 @@ function VisualBriefCard({ icon, title, description, accent = 'from-gray-700 to-
   )
 }
 
-function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, canale, formato, canaleIcon }: {
+function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, canale, formato, canaleIcon, finalAssetMode }: {
   imgs: string[]
   storyboard?: VisualItem[]
   handle: string
@@ -89,6 +96,7 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
   canale: string
   formato: string
   canaleIcon: string
+  finalAssetMode?: boolean
 }) {
   const videoUrl = useMemo(() => imgs.find(isVideoUrl), [imgs])
   const stills = useMemo(() => imgs.filter(u => !isVideoUrl(u)), [imgs])
@@ -198,15 +206,22 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
           </div>
         )}
 
-        {/* Caption sovrapposta in fondo */}
-        <div className="absolute bottom-3 left-3 right-12 text-white text-xs z-10">
-          <p className="font-semibold mb-1 drop-shadow">{handle}</p>
-          <p className="line-clamp-3 leading-snug drop-shadow">{caption ?? hook ?? currentFrameTitle}</p>
-          {hashtag && <p className="text-[10px] opacity-90 mt-1 truncate drop-shadow">{hashtag}</p>}
-          <p className="text-[10px] mt-1.5 flex items-center gap-1 opacity-90">
-            <Music2 className="w-3 h-3" /> audio originale · {handle}
-          </p>
-        </div>
+        {!finalAssetMode && (
+          <div className="absolute bottom-3 left-3 right-12 text-white text-[11px] z-10">
+            <p className="line-clamp-2 leading-snug drop-shadow">{caption ?? hook ?? currentFrameTitle}</p>
+            {hashtag && <p className="text-[9px] opacity-90 mt-1 truncate drop-shadow">{hashtag}</p>}
+            <p className="text-[9px] mt-1.5 flex items-center gap-1 opacity-90">
+              <Music2 className="w-3 h-3" /> audio originale
+            </p>
+          </div>
+        )}
+        {finalAssetMode && (
+          <div className="absolute bottom-3 left-3 right-12 text-white text-[9px] z-10">
+            <p className="flex items-center gap-1 opacity-90 drop-shadow">
+              <Music2 className="w-3 h-3" /> audio originale
+            </p>
+          </div>
+        )}
 
         {/* Sidebar azioni */}
         <div className="absolute right-2 bottom-24 flex flex-col gap-3.5 items-center text-white z-10">
@@ -397,6 +412,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
   const media = mediaUrls(c)
   const slideItems = parseVisualItems(c.slides_json)
   const sceneItems = parseVisualItems(c.scenes_json)
+  const finalAssetMode = hasCampaignFinalAssets(c)
   const fallbackVisualTitle = c.overlay_text || c.hook || c.idea_visual || c.nome_prodotto || `${c.canale} ${c.formato}`
   const fallbackVisualDescription = c.idea_visual || c.alt_text || c.caption
 
@@ -435,7 +451,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
             <span className="text-white/60 text-[10px]">2h</span>
           </div>
           {/* Sticker hook */}
-          {c.hook && (
+          {c.hook && !finalAssetMode && (
             <div className="absolute top-1/3 left-3 right-3">
               <div className="bg-white text-black text-sm font-bold p-3 rounded-lg shadow-lg leading-tight transform -rotate-2">
                 {c.hook}
@@ -443,14 +459,14 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
             </div>
           )}
           {/* Sticker link cliccabile (nativo IG, nessuna soglia follower dal 2023) */}
-          {linkUrl ? (
+          {!finalAssetMode && linkUrl ? (
             <div className="absolute bottom-16 left-0 right-0 flex justify-center">
               <div className="inline-flex items-center gap-1.5 bg-white text-black text-xs font-bold px-4 py-2 rounded-full shadow-lg">
                 <Link2 className="w-3.5 h-3.5" />
                 {domainLabel(linkUrl)}
               </div>
             </div>
-          ) : c.cta && (
+          ) : !finalAssetMode && c.cta && (
             <div className="absolute bottom-16 left-0 right-0 text-center">
               <div className="inline-flex flex-col items-center text-white">
                 <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center animate-bounce">
@@ -536,6 +552,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
         canale={c.canale}
         formato={c.formato}
         canaleIcon={CANALE_ICON[c.canale] || '📸'}
+        finalAssetMode={finalAssetMode}
       />
     )
   }

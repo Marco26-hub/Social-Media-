@@ -141,6 +141,9 @@ export interface Contenuto {
   next_iteration_actions?: unknown | null
   missing_inputs?: unknown | null
   content_checklist?: unknown | null
+  campaign_content_key?: string | null
+  campaign_week?: number | null
+  campaign_source_paths?: unknown | null
   // Pre-publish checklist
   checked_alt_text: 'SI' | 'NO' | null
   checked_aspect_ratio: 'SI' | 'NO' | null

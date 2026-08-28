@@ -74,6 +74,13 @@ function tagMeta(tag: MediaTag) {
   return TAG_OPTIONS.find(o => o.value === tag) ?? TAG_OPTIONS[0]
 }
 
+function expectedMediaForFolderTag(tag: MediaTag): number {
+  if (tag === 'carosello') return MEDIA_PER_FORMATO.carousel.immagini
+  if (tag === 'reel') return MEDIA_PER_FORMATO.reel.immagini
+  if (tag === 'story' || tag === 'post') return 1
+  return 1
+}
+
 // ── Semaforo media di UN SINGOLO pulsante ────────────────────────────────
 // I due pulsanti possono generare quantità diverse. Entrambi seguono il periodo
 // selezionato, ma pacchetto e piano libero mantengono conteggi e controlli propri.
@@ -834,6 +841,26 @@ export default function PianoPage() {
               const platformCount = (platform: 'instagram' | 'facebook') => valid.filter(candidate => candidate.assignment.platform === platform).length
               const formatCount = (tag: MediaTag) => valid.filter(candidate => candidate.assignment.tag === tag && candidate.assignment.kind !== 'audio').length
               const audioCount = valid.filter(candidate => candidate.assignment.kind === 'audio').length
+              const groupRows = Array.from(valid.reduce((map, candidate) => {
+                if (candidate.assignment.kind === 'audio') return map
+                const key = folderGroupKey(candidate.assignment)
+                const current = map.get(key) || {
+                  key,
+                  week: candidate.assignment.week || 0,
+                  platform: candidate.assignment.platform || 'senza-social',
+                  tag: candidate.assignment.tag,
+                  contentKey: candidate.assignment.contentKey || 'senza-contenuto',
+                  count: 0,
+                  sequences: [] as number[],
+                }
+                current.count += 1
+                if (candidate.assignment.sequence !== null) current.sequences.push(candidate.assignment.sequence)
+                map.set(key, current)
+                return map
+              }, new Map<string, { key: string; week: number; platform: string; tag: MediaTag; contentKey: string; count: number; sequences: number[] }>()).values())
+                .sort((left, right) => left.week - right.week || left.platform.localeCompare(right.platform) || left.contentKey.localeCompare(right.contentKey, 'it', { numeric: true }))
+              const incompleteGroups = groupRows.filter(group => group.count < Math.min(expectedMediaForFolderTag(group.tag), group.tag === 'carosello' ? MEDIA_PER_FORMATO.carousel.min ?? 3 : expectedMediaForFolderTag(group.tag)))
+              const underTargetGroups = groupRows.filter(group => group.count < expectedMediaForFolderTag(group.tag))
               const exceedsLimit = valid.length > MAX_PLAN_IMAGES - planAssets.length
               return (
                 <div className={`mt-3 rounded-lg border p-3 ${blocked.length || exceedsLimit ? 'border-amber-300 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
@@ -846,6 +873,11 @@ export default function PianoPage() {
                       <p className="mt-1 text-[10px] text-gray-600">
                         Reel {formatCount('reel')} · Caroselli {formatCount('carosello')} · Post {formatCount('post')} · Story {formatCount('story')} · Audio {audioCount}
                       </p>
+                      {groupRows.length > 0 && (
+                        <p className={`mt-1 text-[10px] font-medium ${incompleteGroups.length ? 'text-red-700' : underTargetGroups.length ? 'text-amber-800' : 'text-emerald-800'}`}>
+                          Audit card: {groupRows.length - underTargetGroups.length}/{groupRows.length} contenuti completi al target. {incompleteGroups.length > 0 ? `${incompleteGroups.length} sotto il minimo.` : underTargetGroups.length > 0 ? `${underTargetGroups.length} sotto target ma pubblicabili.` : 'Tutto coerente.'}
+                        </p>
+                      )}
                       {folderPreview.ignored > 0 && <p className="mt-1 text-[10px] text-gray-500">{folderPreview.ignored} file non editoriali o copie ignorati</p>}
                     </div>
                     <div className="flex items-center gap-2">
@@ -868,6 +900,29 @@ export default function PianoPage() {
                     </div>
                   </div>
                   {exceedsLimit && <p className="mt-2 text-[11px] font-medium text-amber-900">La cartella supera i {MAX_PLAN_IMAGES} media disponibili nel piano. Rimuovi i caricamenti precedenti o riduci la cartella.</p>}
+                  {groupRows.length > 0 && (
+                    <div className="mt-2 border-t border-white/70 pt-2">
+                      <p className="text-[11px] font-semibold text-gray-950">Controllo per contenuto</p>
+                      <div className="mt-1 max-h-32 overflow-auto rounded-md border border-gray-200 bg-white/70">
+                        {groupRows.slice(0, 40).map(group => {
+                          const expected = expectedMediaForFolderTag(group.tag)
+                          const min = group.tag === 'carosello' ? MEDIA_PER_FORMATO.carousel.min ?? 3 : Math.min(1, expected)
+                          const state = group.count >= expected ? 'ok' : group.count >= min ? 'warn' : 'bad'
+                          return (
+                            <div key={group.key} className="grid grid-cols-[1fr_auto] gap-2 border-b border-gray-100 px-2 py-1.5 text-[10px] last:border-b-0">
+                              <span className="truncate text-gray-700">
+                                Sett. {group.week} · {group.platform} · {group.tag} · {group.contentKey}
+                              </span>
+                              <span className={`font-mono font-semibold ${state === 'ok' ? 'text-emerald-700' : state === 'warn' ? 'text-amber-700' : 'text-red-700'}`}>
+                                {group.count}/{expected}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {groupRows.length > 40 && <p className="mt-1 text-[10px] text-gray-500">Mostrati i primi 40 gruppi; il totale resta incluso nel conteggio sopra.</p>}
+                    </div>
+                  )}
                   {blocked.length > 0 && (
                     <div className="mt-2 border-t border-amber-200 pt-2">
                       <p className="text-[11px] font-semibold text-amber-950">{blocked.length} file da correggere prima del caricamento</p>
