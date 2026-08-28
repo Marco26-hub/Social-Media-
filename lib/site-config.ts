@@ -1,4 +1,4 @@
 export const SITE_URL = 'https://www.socialautomation.app'
-export const SITE_TITLE = 'Gestione Social Media per PMI | Social Automation'
+export const SITE_TITLE = 'Social, SEO, Siti e Lead B2B per PMI | SWA'
 export const SITE_DESCRIPTION =
-  'Gestione social media per PMI e professionisti: strategia, contenuti, pubblicazione e approvazione umana. Pacchetti da 390 €/mese, SEO, GEO e siti.'
+  'Social Web Automation integra gestione social, Blog SEO + GEO, siti ed e-commerce, ricerca clienti B2B e compliance AI per PMI e professionisti.'

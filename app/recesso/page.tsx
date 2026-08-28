@@ -8,7 +8,7 @@ import WithdrawalForm from '@/components/WithdrawalForm'
 import { SITE_URL } from '@/lib/site-config'
 import styles from './recesso.module.css'
 
-const META_TITLE = 'Recedere dal contratto qui | Social Automation'
+const META_TITLE = 'Recedere dal contratto qui | Social Web Automation'
 const META_DESCRIPTION = 'Funzione online per comunicare il recesso consumer o la disdetta contrattuale e ricevere una ricevuta con data e ora.'
 
 export const metadata: Metadata = {
@@ -28,7 +28,7 @@ export default function RecessoPage() {
     name: META_TITLE,
     description: META_DESCRIPTION,
     url: `${SITE_URL}/recesso`,
-    isPartOf: { '@type': 'WebSite', name: 'Social Automation', url: SITE_URL },
+    isPartOf: { '@type': 'WebSite', name: 'Social Web Automation', url: SITE_URL },
   }
 
   return (

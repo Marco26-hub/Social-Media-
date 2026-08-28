@@ -13,26 +13,32 @@ const MOBILE_LINKS = [
   { href: '/servizi', label: 'Tutti i servizi' },
   { href: '/servizi/gestione-social-media', label: 'Gestione social' },
   { href: '/servizi/seo-geo', label: 'SEO + GEO' },
+  { href: '/servizi/blog-seo', label: 'Blog SEO + GEO' },
   { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
+  { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B' },
   { href: '/metodo', label: 'Metodo' },
   { href: '/pacchetti', label: 'Pacchetti' },
   { href: '/consulenza', label: 'Consulenza legale AI' },
   { href: '/blog', label: 'SWA Journal' },
   { href: '/chi-siamo', label: 'Azienda' },
   { href: '/faq', label: 'FAQ' },
+  { href: '/en', label: 'English' },
 ]
 
 export default function PublicHeader({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
   return (
     <header className={styles.navbar}>
-      <Link href="/" className={styles.brand} aria-label="Social Automation, home">
+      <Link href="/" className={styles.brand} aria-label="Social Web Automation, home">
         <span className={styles.logoShell}>
           <Image src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
         </span>
-        <span>Social Automation</span>
+        <span>Social Web Automation</span>
       </Link>
       <DesktopMenu />
       <div className={styles.actions}>
+        <Link href="/en" className={styles.language} lang="en" aria-label="English version">
+          EN
+        </Link>
         <ThemeToggle />
         <Link href="/portale" className={styles.account}>
           <LogIn size={15} aria-hidden="true" /> Area cliente

@@ -25,7 +25,8 @@ const config = {
   startingPrice: '19.90',
   offerHighlight: 'Dopo 12 mesi di canone, il sito è tuo.',
   priceNote: 'Canone tecnologico di partenza. Progettazione, configurazione e funzioni vengono definite prima dell’avvio. Dominio e servizi esterni restano separati, se previsti.',
-  primaryCtaLabel: 'Richiedi il tuo sito',
+  primaryCtaLabel: 'Attiva Web & Commerce',
+  primaryCtaHref: '/acquista?servizio=web-commerce',
   icon: Globe2,
   signals: ['Soluzioni web da €19,90 al mese', 'Proprietà del sito dopo 12 mesi', 'Esperienza mobile-first'],
   outcomes: [

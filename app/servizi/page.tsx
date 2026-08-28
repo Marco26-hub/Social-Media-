@@ -12,6 +12,7 @@ import {
   LockKeyhole,
   Megaphone,
   MessageCircle,
+  Newspaper,
   Scale,
   ScanSearch,
   ShieldCheck,
@@ -20,6 +21,7 @@ import {
   Target,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { BLOG_SERVICE } from '@/lib/blog-service'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
@@ -27,9 +29,9 @@ import PublicHeader from '@/components/PublicHeader'
 import site from '../landing.module.css'
 import styles from './servizi-v2.module.css'
 
-const META_TITLE = 'Gestione Social Media, SEO e Siti per PMI | SWA'
+const META_TITLE = 'Servizi Digitali per PMI: Social, SEO, Web e Lead | SWA'
 const META_DESCRIPTION =
-  'Scopri i pacchetti SWA da 390 €/mese: gestione di 2 o 3 social, contenuti, pubblicazione, SEO, GEO, siti, e-commerce e consulenza AI compliance.'
+  'Servizi digitali integrati per PMI: gestione social, strategia SEO + GEO, Blog con 12 articoli, siti, e-commerce, ricerca clienti B2B e compliance AI.'
 
 const WHATSAPP_NUMERO = '393477196603'
 const EMAIL_CONTATTO = 'swsdautomation@gmail.com'
@@ -41,7 +43,10 @@ function waLink(message: string) {
 export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/servizi` },
+  alternates: {
+    canonical: `${SITE_URL}/servizi`,
+    languages: { 'it-IT': `${SITE_URL}/servizi`, en: `${SITE_URL}/en/services`, 'x-default': `${SITE_URL}/servizi` },
+  },
   openGraph: {
     title: META_TITLE,
     description: META_DESCRIPTION,
@@ -67,12 +72,14 @@ const servicesPageJsonLd = {
       about: { '@id': `${SITE_URL}/#organization` },
       mainEntity: {
         '@type': 'ItemList',
-        name: 'Servizi Social Automation',
+        name: 'Servizi Social Web Automation',
         itemListElement: [
           { '@type': 'ListItem', position: 1, item: { '@id': `${SITE_URL}/#social-media-management` } },
           { '@type': 'ListItem', position: 2, item: { '@id': `${SITE_URL}/#digital-growth` } },
-          { '@type': 'ListItem', position: 3, item: { '@id': `${SITE_URL}/#web-development` } },
-          { '@type': 'ListItem', position: 4, item: { '@id': `${SITE_URL}/#legal-ai-consulting` } },
+          { '@type': 'ListItem', position: 3, item: { '@id': `${SITE_URL}/#blog-service` } },
+          { '@type': 'ListItem', position: 4, item: { '@id': `${SITE_URL}/#web-development` } },
+          { '@type': 'ListItem', position: 5, item: { '@id': `${SITE_URL}/#lead-research-pilot` } },
+          { '@type': 'ListItem', position: 6, item: { '@id': `${SITE_URL}/#legal-ai-consulting` } },
         ],
       },
     },
@@ -114,11 +121,11 @@ const SERVICES = [
     label: 'SEO e GEO',
     title: 'Contenuti progettati per essere trovati e compresi.',
     description:
-      'Miglioriamo struttura, contenuti e segnali di autorevolezza per aiutare motori di ricerca e sistemi di risposta AI a comprendere correttamente azienda, servizi e competenze.',
+      'Analizziamo e miglioriamo struttura tecnica, architettura informativa, intenti e segnali di autorevolezza. Qui si definisce la strategia organica; la produzione continuativa degli articoli appartiene al servizio Blog.',
     included: [
       'Audit tecnico ed editoriale del sito',
       'Architettura dei contenuti e keyword intent',
-      'Articoli, FAQ e dati strutturati',
+      'Priorità per pagine, FAQ e dati strutturati',
       'Entità, fonti e segnali di autorevolezza',
       'Analisi della citabilità nei sistemi AI',
       'Monitoraggio e priorità di miglioramento',
@@ -126,9 +133,28 @@ const SERVICES = [
     outcome: 'Una base organica più solida, utile nel tempo e misurabile senza promesse di ranking.',
   },
   {
+    id: 'blog-seo',
+    href: BLOG_SERVICE.path,
+    number: '03',
+    icon: Newspaper,
+    label: BLOG_SERVICE.name,
+    title: 'Dodici articoli al mese, con una direzione editoriale precisa.',
+    description:
+      'Trasformiamo servizi, competenze e domande reali del pubblico in un calendario di articoli SEO + GEO, controllati prima della pubblicazione.',
+    included: [
+      '12 articoli completi ogni mese',
+      'Piano editoriale basato sugli intenti di ricerca',
+      'Title, meta description e collegamenti interni',
+      'FAQ visibili e dati strutturati',
+      'Revisione umana prima della pubblicazione',
+      'Blog collegato o consegna pronta per CMS',
+    ],
+    outcome: 'Un patrimonio editoriale continuo che amplia copertura organica e autorevolezza.',
+  },
+  {
     id: 'web',
     href: '/servizi/siti-e-commerce',
-    number: '03',
+    number: '04',
     icon: Globe2,
     label: 'Siti ed e-commerce',
     title: 'Un’esperienza digitale costruita per il contatto e la vendita.',
@@ -143,6 +169,25 @@ const SERVICES = [
       'Integrazione con social, ADS e CRM',
     ],
     outcome: 'Un punto di arrivo credibile per trasformare attenzione, traffico e campagne in opportunità.',
+  },
+  {
+    id: 'lead-b2b',
+    href: '/servizi/ricerca-clienti-b2b',
+    number: '05',
+    icon: Target,
+    label: 'Ricerca Clienti B2B',
+    title: 'Aziende in target, fonti verificabili e priorità operative.',
+    description:
+      'Definiamo il profilo cliente ideale, analizziamo fino a 30 aziende e consegniamo una lista qualificata. Il Pilot riguarda ricerca e verifica: non invia messaggi automatici e non promette appuntamenti.',
+    included: [
+      'Profilo cliente ideale e criteri di esclusione',
+      'Ricerca fino a 30 aziende coerenti',
+      'Fonti pubbliche tracciabili',
+      'Motivazione e priorità per ogni azienda',
+      'Pulizia di duplicati e profili fuori target',
+      'Consegna strutturata per valutazione o CRM',
+    ],
+    outcome: 'Una base commerciale ordinata per decidere chi approfondire, senza confondere una lista con una vendita garantita.',
   },
 ]
 
@@ -178,7 +223,7 @@ const METHOD = [
 
 const FAQ = [
   {
-    q: 'Quanto costa affidare la gestione dei social a Social Automation?',
+    q: 'Quanto costa affidare la gestione dei social a Social Web Automation?',
     a: 'Il piano Presenza costa 390 € al mese per 2 social e 16 contenuti. Il piano Crescita costa 790 € al mese per 3 social e 24 contenuti, con articolo SEO + GEO e gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
   },
   {
@@ -197,6 +242,10 @@ const FAQ = [
     q: 'SEO e GEO garantiscono risultati o citazioni?',
     a: 'No. Miglioriamo struttura, qualità e reperibilità, ma nessun fornitore può garantire ranking o citazioni da parte dei sistemi AI.',
   },
+  {
+    q: 'Qual è la differenza tra SEO + GEO e Blog SEO + GEO?',
+    a: 'SEO + GEO analizza struttura, intenti, pagine, dati e priorità del sito. Blog SEO + GEO esegue la produzione continuativa: piano editoriale e 12 articoli al mese.',
+  },
 ]
 
 export default function ServiziPage() {
@@ -209,22 +258,22 @@ export default function ServiziPage() {
       <a className={site.skipLink} href="#main-content">Vai al contenuto</a>
 
       <PublicHeader
-        ctaHref={waLink('Ciao! Vorrei capire quale servizio Social Automation è adatto alla mia azienda.')}
+        ctaHref={waLink('Ciao! Vorrei capire quale servizio Social Web Automation è adatto alla mia azienda.')}
         ctaLabel="Richiedi una consulenza"
       />
 
       <section className={styles.hero} aria-labelledby="services-hero-title">
         <div className={styles.heroCopy}>
           <p className={site.kicker}><Sparkles size={16} aria-hidden="true" /> Servizi digitali integrati</p>
-          <h1 id="services-hero-title">Gestione social, SEO e siti in un’unica regia digitale.</h1>
+          <h1 id="services-hero-title">Social, SEO, siti e ricerca clienti in un’unica regia digitale.</h1>
           <p>
-            Social, contenuti organici, sito ed e-commerce lavorano nello stesso
-            sistema. Coordiniamo strategia, produzione e misurazione, così ogni
-            punto di contatto sostiene lo stesso obiettivo.
+            Costruiamo attenzione con social e Blog, rendiamo l’azienda reperibile
+            con SEO + GEO, convertiamo sul sito e qualifichiamo nuove opportunità
+            B2B. Compliance e controllo umano proteggono l’intero processo.
           </p>
           <div className={site.heroActions}>
             <a
-              href={waLink('Ciao! Vorrei una consulenza sui servizi Social Automation.')}
+              href={waLink('Ciao! Vorrei una consulenza sui servizi Social Web Automation.')}
               target="_blank"
               rel="noopener noreferrer"
               className={site.primaryButton}
@@ -240,7 +289,7 @@ export default function ServiziPage() {
           </ul>
         </div>
 
-        <div className={styles.serviceMap} aria-label="Ecosistema dei servizi Social Automation">
+        <div className={styles.serviceMap} aria-label="Ecosistema dei servizi Social Web Automation">
           <div className={styles.mapCore}>
             <span>SWA</span>
             <strong>Regia digitale</strong>
@@ -254,19 +303,28 @@ export default function ServiziPage() {
             <FileSearch size={19} aria-hidden="true" />
             <span>SEO + GEO</span>
           </div>
+          <div className={`${styles.mapNode} ${styles.mapNodeBlog}`}>
+            <Newspaper size={19} aria-hidden="true" />
+            <span>Blog</span>
+          </div>
           <div className={`${styles.mapNode} ${styles.mapNodeWeb}`}>
             <ShoppingBag size={19} aria-hidden="true" />
             <span>Web + Shop</span>
+          </div>
+          <div className={`${styles.mapNode} ${styles.mapNodeLead}`}>
+            <Target size={19} aria-hidden="true" />
+            <span>Lead B2B</span>
           </div>
           <div className={styles.mapStatus}><i /> Sistema operativo mensile</div>
         </div>
       </section>
 
       <section className={styles.valueBand} aria-label="Valore del servizio">
-        <span>Strategia condivisa</span>
-        <span>Produzione coordinata</span>
-        <span>Controllo centralizzato</span>
-        <span>Risultati leggibili</span>
+        <span>Farsi conoscere</span>
+        <span>Essere trovati</span>
+        <span>Convertire</span>
+        <span>Trovare opportunità</span>
+        <span>Operare correttamente</span>
       </section>
 
       <section id="servizi" className={styles.servicesSection} aria-labelledby="services-title">
@@ -390,10 +448,30 @@ export default function ServiziPage() {
             </article>
           ))}
         </div>
+        <div className={styles.autonomousGrid}>
+          <Link href={BLOG_SERVICE.path} className={styles.autonomousOffer}>
+            <Newspaper size={21} aria-hidden="true" />
+            <span><small>Servizio autonomo</small><strong>{BLOG_SERVICE.name}</strong><em>{BLOG_SERVICE.articlesPerMonth} articoli/mese</em></span>
+            <b>{BLOG_SERVICE.displayPrice}<small>/mese</small></b>
+            <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+          <Link href="/servizi/siti-e-commerce" className={styles.autonomousOffer}>
+            <Globe2 size={21} aria-hidden="true" />
+            <span><small>Servizio autonomo</small><strong>Web &amp; Commerce</strong><em>Sito tuo dopo 12 mesi</em></span>
+            <b>€19,90<small>/mese</small></b>
+            <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+          <Link href="/servizi/ricerca-clienti-b2b" className={`${styles.autonomousOffer} ${styles.leadAutonomousOffer}`}>
+            <Target size={21} aria-hidden="true" />
+            <span><small>Pilot una tantum</small><strong>Ricerca Clienti B2B</strong><em>Fino a 30 aziende verificate</em></span>
+            <b>€149<small>una tantum</small></b>
+            <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+        </div>
         <div className={styles.pricingAssurance}>
           <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Valuta prima di acquistare.</strong> Richiedi un contenuto di prova gratuito e verifica metodo e qualità.</span></div>
           <a
-            href={waLink('Ciao! Vorrei ricevere un contenuto di prova gratuito di Social Automation.')}
+            href={waLink('Ciao! Vorrei ricevere un contenuto di prova gratuito di Social Web Automation.')}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -404,7 +482,7 @@ export default function ServiziPage() {
         <div className={styles.customPlan}>
           <div><Layers3 size={24} aria-hidden="true" /><span><strong>Configurazione su misura</strong> per e-commerce, agenzie, più brand, automazioni e integrazioni.</span></div>
           <a
-            href={waLink('Ciao! Vorrei progettare una configurazione Social Automation su misura.')}
+            href={waLink('Ciao! Vorrei progettare una configurazione Social Web Automation su misura.')}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -437,7 +515,7 @@ export default function ServiziPage() {
         </div>
         <div>
           <a
-            href={waLink('Ciao! Vorrei una consulenza iniziale per Social Automation.')}
+            href={waLink('Ciao! Vorrei una consulenza iniziale per Social Web Automation.')}
             target="_blank"
             rel="noopener noreferrer"
             className={site.lightButton}
@@ -453,7 +531,7 @@ export default function ServiziPage() {
       <footer className={site.footer}>
         <Link href="/" className={site.brand}>
           <Image className={site.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} />
-          <span>Social Automation</span>
+          <span>Social Web Automation</span>
         </Link>
         <div>
           <Link href="/servizi">Servizi</Link>
@@ -466,12 +544,12 @@ export default function ServiziPage() {
         <p>
           © 2026 {TITOLARE.brand}<br />
           {TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}<br />
-          Cermenate (CO) · Servizi in tutta Italia
+          Sede a Cermenate (CO) · Servizi in Italia e nel mondo
         </p>
       </footer>
 
       <a
-        href={waLink('Ciao! Vorrei informazioni sui servizi Social Automation.')}
+        href={waLink('Ciao! Vorrei informazioni sui servizi Social Web Automation.')}
         target="_blank"
         rel="noopener noreferrer"
         className={site.mobileCta}

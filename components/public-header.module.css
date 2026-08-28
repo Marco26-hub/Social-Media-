@@ -45,6 +45,14 @@
   border-left: 1px solid #dbe2de;
 }
 
+.language {
+  color: #51605b;
+  font: 800 12px/1 Arial, Helvetica, sans-serif;
+  text-decoration: none;
+}
+
+.language:hover { color: #0f6b4f; }
+
 .account {
   display: inline-flex;
   align-items: center;
@@ -75,6 +83,7 @@
 
 .cta:hover { background: #094c39; transform: translateY(-1px); }
 .brand:focus-visible,
+.language:focus-visible,
 .account:focus-visible,
 .cta:focus-visible { outline: 3px solid #d8aa35; outline-offset: 3px; }
 
@@ -103,6 +112,7 @@
 :global(html[data-theme='dark']) .logoShell,
 :global(html[data-theme='dark']) .cta { background: #0f6b4f; }
 :global(html[data-theme='dark']) .brand,
+:global(html[data-theme='dark']) .language,
 :global(html[data-theme='dark']) .account { color: #dce6e1; }
 :global(html[data-theme='dark']) .actions { border-color: #293b35; }
 :global(html[data-theme='dark']) .account:hover { color: #64d7aa; }

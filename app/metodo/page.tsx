@@ -8,8 +8,8 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from '../content-page.module.css'
 
 const title = 'Metodo di Gestione Digitale SWA | Strategia, Produzione e Controllo'
-const description = 'Scopri il metodo operativo Social Automation: analisi, strategia, produzione, approvazione, pubblicazione e misurazione per PMI e professionisti.'
-const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei capire come applicare il metodo Social Automation alla mia azienda.')}`
+const description = 'Scopri il metodo operativo Social Web Automation: analisi, strategia, produzione, approvazione, pubblicazione e misurazione per PMI e professionisti.'
+const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei capire come applicare il metodo Social Web Automation alla mia azienda.')}`
 
 export const metadata: Metadata = { title, description, alternates:{canonical:`${SITE_URL}/metodo`}, openGraph:{title,description,url:`${SITE_URL}/metodo`}, twitter:{title,description} }
 
@@ -21,7 +21,7 @@ const steps = [
 ]
 
 const faq = [
-  {q:'Il metodo richiede un software da imparare?',a:'No. Social Automation è un servizio gestito. Il portale semplifica approvazioni e risultati, mentre strategia e attività operative restano a nostro carico.'},
+  {q:'Il metodo richiede un software da imparare?',a:'No. Social Web Automation è un servizio gestito. Il portale semplifica approvazioni e risultati, mentre strategia e attività operative restano a nostro carico.'},
   {q:'Chi approva i contenuti?',a:'Il cliente mantiene il controllo editoriale. I contenuti vengono sottoposti al flusso di approvazione concordato prima della pubblicazione.'},
   {q:'Come vengono scelti i canali?',a:'Partiamo da pubblico, obiettivi, formato dell’offerta e sostenibilità produttiva. Essere presenti ovunque non è automaticamente la scelta migliore.'},
   {q:'Come misurate il lavoro?',a:'Definiamo indicatori coerenti con l’obiettivo: continuità, copertura qualificata, interazioni utili, traffico, lead o azioni sul sito. Le metriche di vanità non sostituiscono i risultati.'},
@@ -41,7 +41,7 @@ export default function MetodoPage(){
     </section>
     <nav className={styles.anchorBand} aria-label="Fasi del metodo">{steps.map(x=><a key={x.n} href={`#fase-${x.n}`}>{x.n} · {x.title.split(' ')[0]}</a>)}</nav>
     <section className={styles.section}><div className={styles.sectionHeading}><p className={styles.eyebrow}>Le quattro fasi</p><h2>Un flusso unico, dall’analisi al report.</h2><p>Ogni fase ha un risultato atteso e prepara quella successiva. Così strategia e produzione non procedono su binari separati.</p></div><div className={styles.stepGrid}>{steps.map(({n,icon:Icon,title:textTitle,text,items})=><article id={`fase-${n}`} key={n}><span><Icon size={17}/> Fase {n}</span><h3>{textTitle}</h3><p>{text}</p><ul>{items.map(i=><li key={i}><Check size={14}/>{i}</li>)}</ul></article>)}</div></section>
-    <section className={`${styles.section} ${styles.darkSection}`}><div className={styles.sectionHeading}><p className={styles.eyebrow}>Responsabilità chiare</p><h2>AI, specialisti e cliente lavorano con ruoli distinti.</h2><p>L’automazione accelera il lavoro, ma non sostituisce direzione, verifica o responsabilità.</p></div><div className={styles.roleGrid}><article><h3>Social Automation</h3><p>Coordina strategia, produzione, pubblicazione, controllo qualità e report.</p></article><article><h3>Cliente</h3><p>Condivide informazioni corrette, approva e mantiene la responsabilità sulle decisioni aziendali.</p></article><article><h3>Intelligenza artificiale</h3><p>Supporta analisi e produzione entro un processo supervisionato e trasparente.</p></article></div></section>
+    <section className={`${styles.section} ${styles.darkSection}`}><div className={styles.sectionHeading}><p className={styles.eyebrow}>Responsabilità chiare</p><h2>AI, specialisti e cliente lavorano con ruoli distinti.</h2><p>L’automazione accelera il lavoro, ma non sostituisce direzione, verifica o responsabilità.</p></div><div className={styles.roleGrid}><article><h3>Social Web Automation</h3><p>Coordina strategia, produzione, pubblicazione, controllo qualità e report.</p></article><article><h3>Cliente</h3><p>Condivide informazioni corrette, approva e mantiene la responsabilità sulle decisioni aziendali.</p></article><article><h3>Intelligenza artificiale</h3><p>Supporta analisi e produzione entro un processo supervisionato e trasparente.</p></article></div></section>
     <section className={`${styles.section} ${styles.faqLayout}`}><div className={styles.sectionHeading}><p className={styles.eyebrow}>FAQ sul metodo</p><h2>Come funziona nella pratica.</h2></div><div className={styles.faqList}>{faq.map(x=><details key={x.q}><summary>{x.q}<span>+</span></summary><p>{x.a}</p></details>)}</div></section>
     <section className={styles.finalCta}><div><p className={styles.eyebrow}>Prima valutazione</p><h2>Partiamo dal tuo punto di partenza reale.</h2><p>Canali, obiettivi e risorse disponibili determinano il metodo più sostenibile.</p></div><a href={wa} target="_blank" rel="noopener noreferrer">Parliamo del progetto <ArrowRight size={17}/></a></section>
     <PublicFooter/><FloatingNavigation/>

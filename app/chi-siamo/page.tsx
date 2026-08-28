@@ -3,8 +3,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   ArrowRight,
+  Building2,
   CheckCircle2,
-  MapPin,
   MessageCircle,
   Scale,
   ShieldCheck,
@@ -17,10 +17,10 @@ import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
 import styles from './chi-siamo.module.css'
 
-const META_TITLE = 'Chi siamo | Social Automation, Cermenate (Como)'
+const META_TITLE = 'Chi siamo | Agenzia social, SEO e web per PMI'
 const META_DESCRIPTION =
-  'Conosci Social Automation di Marco Dibenedetto: gestione social media, SEO, GEO e siti per PMI, da Cermenate (Como) in tutta Italia.'
-const WHATSAPP_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei conoscere meglio Social Automation e valutare un progetto.')}`
+  'Social Web Automation coordina gestione social media, contenuti, SEO, GEO, blog e siti web per PMI e professionisti in Italia e nei mercati internazionali.'
+const WHATSAPP_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei conoscere meglio Social Web Automation e valutare un progetto.')}`
 
 export const metadata: Metadata = {
   title: META_TITLE,
@@ -37,21 +37,25 @@ export const metadata: Metadata = {
   },
 }
 
-const breadcrumbJsonLd = {
+const pageJsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
+  '@graph': [
     {
-      '@type': 'ListItem',
-      position: 1,
-      name: 'Home',
-      item: SITE_URL,
+      '@type': 'AboutPage',
+      '@id': `${SITE_URL}/chi-siamo#webpage`,
+      url: `${SITE_URL}/chi-siamo`,
+      name: META_TITLE,
+      description: META_DESCRIPTION,
+      inLanguage: 'it-IT',
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      about: { '@id': `${SITE_URL}/#organization` },
     },
     {
-      '@type': 'ListItem',
-      position: 2,
-      name: 'Chi siamo',
-      item: `${SITE_URL}/chi-siamo`,
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+        { '@type': 'ListItem', position: 2, name: 'Chi siamo', item: `${SITE_URL}/chi-siamo` },
+      ],
     },
   ],
 }
@@ -61,20 +65,21 @@ export default function ChiSiamoPage() {
     <main className={styles.page}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd).replace(/</g, '\\u003c') }}
       />
 
       <PublicHeader ctaHref={WHATSAPP_URL} ctaLabel="Conosciamoci" />
 
       <section className={styles.hero} aria-labelledby="about-title">
         <div>
-          <p className={styles.eyebrow}><MapPin size={16} aria-hidden="true" /> Cermenate, provincia di Como</p>
+          <p className={styles.eyebrow}><Building2 size={16} aria-hidden="true" /> Strategia digitale senza confini</p>
           <h1 id="about-title">Una regia digitale concreta per PMI e professionisti.</h1>
           <p className={styles.lead}>
-            Social Automation è il servizio di gestione social media fondato da
-            Marco Dibenedetto. Da Cermenate lavoriamo con imprese e professionisti
-            in tutta Italia, coordinando strategia, contenuti, pubblicazione, SEO,
-            GEO, siti ed e-commerce.
+            Social Web Automation coordina strategia digitale, gestione social media,
+            contenuti, pubblicazione, SEO, GEO, blog, siti ed e-commerce per imprese
+            e professionisti in Italia e nel mondo. Un unico processo operativo
+            collega visibilità, presenza online e opportunità commerciali nei
+            mercati di riferimento del cliente.
           </p>
           <div className={styles.actions}>
             <Link href="/servizi" className={styles.primary}>
@@ -86,8 +91,8 @@ export default function ChiSiamoPage() {
           </div>
         </div>
 
-        <div className={styles.identity} aria-label="Dati principali Social Automation">
-          <Image src="/brand/swa-logo-official.png" alt="Logo SWA Social Automation" width={260} height={119} priority />
+        <div className={styles.identity} aria-label="Dati principali Social Web Automation">
+          <Image src="/brand/swa-logo-official.png" alt="Logo SWA Social Web Automation" width={260} height={119} priority />
           <dl>
             <div><dt>Impresa</dt><dd>{TITOLARE.ragioneSociale}</dd></div>
             <div><dt>Fondatore</dt><dd>Marco Dibenedetto</dd></div>

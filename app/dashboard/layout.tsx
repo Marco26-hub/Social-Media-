@@ -7,7 +7,7 @@ import GenerationBar from '@/components/GenerationBar'
 import BackToTop from '@/components/BackToTop'
 
 export const metadata: Metadata = {
-  title: 'Area operativa | Social Automation',
+  title: 'Area operativa | Social Web Automation',
   robots: { index: false, follow: false, noarchive: true },
 }
 

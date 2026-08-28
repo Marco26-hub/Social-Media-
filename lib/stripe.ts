@@ -142,7 +142,7 @@ export async function createStripeCheckoutSession(args: {
   appendForm(params, 'line_items[0][price_data][currency]', 'eur')
   appendForm(params, 'line_items[0][price_data][unit_amount]', args.amountCents)
   appendForm(params, 'line_items[0][price_data][recurring][interval]', 'month')
-  appendForm(params, 'line_items[0][price_data][product_data][name]', `Social Automation — ${args.pacchettoNome}`)
+  appendForm(params, 'line_items[0][price_data][product_data][name]', `Social Web Automation — ${args.pacchettoNome}`)
   appendForm(params, 'line_items[0][price_data][product_data][metadata][cliente_id]', args.clienteId)
   appendForm(params, 'line_items[0][price_data][product_data][metadata][pacchetto_slug]', args.pacchettoSlug)
 
@@ -164,6 +164,53 @@ export async function createStripeCheckoutSession(args: {
   const idempotencyKey = crypto
     .createHash('sha256')
     .update(`${args.clienteId}:${args.pacchettoSlug}:${hourBucket}`)
+    .digest('hex')
+
+  return stripeRequest<StripeCheckoutSession>('/checkout/sessions', params, { idempotencyKey })
+}
+
+export async function createStandaloneServiceCheckoutSession(args: {
+  orderId: string
+  serviceSlug: string
+  serviceName: string
+  amountCents: number
+  billingMode: 'subscription' | 'payment'
+  customerEmail: string
+  successUrl: string
+  cancelUrl: string
+}): Promise<StripeCheckoutSession> {
+  if (args.amountCents <= 0) throw new Error('Importo servizio non valido')
+
+  const params = new URLSearchParams()
+  appendForm(params, 'mode', args.billingMode)
+  appendForm(params, 'success_url', args.successUrl)
+  appendForm(params, 'cancel_url', args.cancelUrl)
+  appendForm(params, 'client_reference_id', args.orderId)
+  appendForm(params, 'customer_email', args.customerEmail)
+  appendForm(params, 'metadata[tipo]', 'standalone_service_order')
+  appendForm(params, 'metadata[service_order_id]', args.orderId)
+  appendForm(params, 'metadata[service_slug]', args.serviceSlug)
+  appendForm(params, 'line_items[0][quantity]', 1)
+  appendForm(params, 'line_items[0][price_data][currency]', 'eur')
+  appendForm(params, 'line_items[0][price_data][unit_amount]', args.amountCents)
+  appendForm(params, 'line_items[0][price_data][product_data][name]', `Social Web Automation — ${args.serviceName}`)
+  appendForm(params, 'line_items[0][price_data][product_data][metadata][service_order_id]', args.orderId)
+  appendForm(params, 'line_items[0][price_data][product_data][metadata][service_slug]', args.serviceSlug)
+
+  if (args.billingMode === 'subscription') {
+    appendForm(params, 'line_items[0][price_data][recurring][interval]', 'month')
+    appendForm(params, 'subscription_data[metadata][tipo]', 'standalone_service_order')
+    appendForm(params, 'subscription_data[metadata][service_order_id]', args.orderId)
+    appendForm(params, 'subscription_data[metadata][service_slug]', args.serviceSlug)
+  } else {
+    appendForm(params, 'payment_intent_data[metadata][tipo]', 'standalone_service_order')
+    appendForm(params, 'payment_intent_data[metadata][service_order_id]', args.orderId)
+    appendForm(params, 'payment_intent_data[metadata][service_slug]', args.serviceSlug)
+  }
+
+  const idempotencyKey = crypto
+    .createHash('sha256')
+    .update(`standalone-service:${args.orderId}:${args.serviceSlug}`)
     .digest('hex')
 
   return stripeRequest<StripeCheckoutSession>('/checkout/sessions', params, { idempotencyKey })

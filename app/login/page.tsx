@@ -102,7 +102,7 @@ export default function LoginPage() {
           </span>
           <span className={styles.loader} aria-hidden="true" />
           <h1>Accesso demo in corso</h1>
-          <p>Stiamo preparando l’area operativa Social Automation.</p>
+          <p>Stiamo preparando l’area operativa Social Web Automation.</p>
           <div className={styles.demoCredentials}>
             <strong>Accesso Admin Demo</strong>
             <span>Utente: <b>{accessHint?.username || 'admin'}</b></span>
@@ -116,12 +116,12 @@ export default function LoginPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="Social Automation, torna alla home">
+        <Link href="/" className={styles.brand} aria-label="Social Web Automation, torna alla home">
           <span className={styles.logoShell}>
             <Image src="/brand/swa-logo-official.png" alt="SWA" width={118} height={55} priority />
           </span>
           <span>
-            <strong>Social Automation</strong>
+            <strong>Social Web Automation</strong>
             <small>Area riservata</small>
           </span>
         </Link>

@@ -13,11 +13,11 @@ import styles from './register.module.css'
 
 function RegisterBrand() {
   return (
-    <Link href="/" className={styles.brand} aria-label="Social Automation, home">
+    <Link href="/" className={styles.brand} aria-label="Social Web Automation, home">
       <span className={styles.brandMark}>
         <Image src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
       </span>
-      <span>Social Automation</span>
+      <span>Social Web Automation</span>
     </Link>
   )
 }

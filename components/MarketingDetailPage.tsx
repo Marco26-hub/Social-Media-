@@ -38,6 +38,7 @@ export type MarketingDetailConfig = {
   priceNote?: string
   offerHighlight?: string
   primaryCtaLabel?: string
+  primaryCtaHref?: string
   icon: LucideIcon
   signals: string[]
   outcomes: TextBlock[]
@@ -55,7 +56,7 @@ const WHATSAPP_NUMBER = '393477196603'
 export default function MarketingDetailPage({ config }: { config: MarketingDetailConfig }) {
   const Icon = config.icon
   const pageUrl = `${SITE_URL}${config.path}`
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Automation.`)}`
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Web Automation.`)}`
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -76,7 +77,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         serviceType: config.serviceType,
         description: config.lead,
         provider: { '@id': `${SITE_URL}/#organization` },
-        areaServed: { '@type': 'Country', name: 'Italia' },
+        areaServed: { '@type': 'Place', name: 'Worldwide' },
         url: pageUrl,
         ...(config.startingPrice ? {
           offers: {
@@ -106,7 +107,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       },
       ...(config.portfolio?.length ? [{
         '@type': 'ItemList',
-        name: 'Lavori web realizzati da Social Automation',
+        name: 'Lavori web realizzati da Social Web Automation',
         itemListElement: config.portfolio.map((item, index) => ({
           '@type': 'ListItem',
           position: index + 1,
@@ -138,9 +139,15 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           <h1 id="detail-title">{config.title}</h1>
           <p className={styles.lead}>{config.lead}</p>
           <div className={styles.actions}>
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={styles.primary}>
-              {config.primaryCtaLabel ?? 'Richiedi una valutazione'} <ArrowRight size={17} aria-hidden="true" />
-            </a>
+            {config.primaryCtaHref ? (
+              <Link href={config.primaryCtaHref} className={styles.primary}>
+                {config.primaryCtaLabel ?? 'Richiedi una valutazione'} <ArrowRight size={17} aria-hidden="true" />
+              </Link>
+            ) : (
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={styles.primary}>
+                {config.primaryCtaLabel ?? 'Richiedi una valutazione'} <ArrowRight size={17} aria-hidden="true" />
+              </a>
+            )}
             <Link href="/pacchetti" className={styles.secondary}>Confronta i pacchetti</Link>
           </div>
         </div>
@@ -248,7 +255,11 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
 
       <section className={styles.finalCta}>
         <div><p className={styles.eyebrow}>Prossimo passo</p><h2>Trasformiamo l’obiettivo in un perimetro operativo.</h2><p>Una prima valutazione chiarisce priorità, attività, responsabilità e costi.</p></div>
-        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Parliamo del progetto <ArrowRight size={17} aria-hidden="true" /></a>
+        {config.primaryCtaHref ? (
+          <Link href={config.primaryCtaHref}>{config.primaryCtaLabel ?? 'Attiva il servizio'} <ArrowRight size={17} aria-hidden="true" /></Link>
+        ) : (
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Parliamo del progetto <ArrowRight size={17} aria-hidden="true" /></a>
+        )}
       </section>
 
       <PublicFooter />

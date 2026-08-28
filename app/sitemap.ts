@@ -7,7 +7,7 @@ import { SWA_BLOG_ARTICLES } from '@/lib/swa-blog-content'
 type PublishedArticle = { slug: string; updated_at: string | Date | null }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const marketingUpdated = new Date('2026-08-11T00:00:00.000Z')
+  const marketingUpdated = new Date('2026-08-24T00:00:00.000Z')
   const legalUpdated = new Date('2026-08-11T00:00:00.000Z')
 
   const pages: MetadataRoute.Sitemap = [
@@ -23,10 +23,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
+    ...['/en', '/en/services', '/en/pricing'].map(path => ({
+      url: `${SITE_URL}${path}`,
+      lastModified: marketingUpdated,
+      changeFrequency: 'monthly' as const,
+      priority: path === '/en' ? 0.85 : 0.75,
+    })),
     ...[
       '/servizi/gestione-social-media',
       '/servizi/seo-geo',
+      '/servizi/blog-seo',
       '/servizi/siti-e-commerce',
+      '/servizi/ricerca-clienti-b2b',
       '/metodo',
       '/pacchetti',
       '/faq',

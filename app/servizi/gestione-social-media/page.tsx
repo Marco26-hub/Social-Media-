@@ -18,7 +18,7 @@ const config = {
   path: '/servizi/gestione-social-media',
   eyebrow: 'Social media management per PMI',
   title: 'Gestione social media che trasforma il calendario in continuità commerciale.',
-  lead: 'Coordiniamo strategia, produzione, approvazione e pubblicazione su 2 o 3 canali. La tua azienda mantiene il controllo; il lavoro operativo resta a Social Automation.',
+  lead: 'Coordiniamo strategia, produzione, approvazione e pubblicazione su 2 o 3 canali. La tua azienda mantiene il controllo; il lavoro operativo resta a Social Web Automation.',
   serviceName: 'Gestione social media',
   serviceType: 'Social media management per PMI e professionisti',
   promise: 'Una presenza riconoscibile ogni settimana, senza costruire un reparto interno.',
@@ -47,7 +47,7 @@ const config = {
   ],
   faq: [
     { q: 'Quanti social sono inclusi?', a: 'Il piano Presenza include 2 social coordinati; il piano Crescita ne include 3. I canali vengono scelti in base a pubblico, obiettivi e capacità di produrre materiali utili.' },
-    { q: 'Devo preparare io i contenuti?', a: 'No. Social Automation gestisce piano editoriale, copy e produzione prevista dal pacchetto. La collaborazione del cliente serve per informazioni, materiali originali e approvazioni.' },
+    { q: 'Devo preparare io i contenuti?', a: 'No. Social Web Automation gestisce piano editoriale, copy e produzione prevista dal pacchetto. La collaborazione del cliente serve per informazioni, materiali originali e approvazioni.' },
     { q: 'I contenuti vengono pubblicati automaticamente?', a: 'La programmazione avviene solo dopo il flusso di controllo concordato. Il cliente può approvare e richiedere le revisioni incluse prima della pubblicazione.' },
     { q: 'La gestione dei messaggi è inclusa?', a: 'Il monitoraggio operativo di commenti e messaggi può essere inserito in una configurazione personalizzata. Nei piani standard il perimetro principale è produzione, approvazione, pubblicazione e report.' },
   ],

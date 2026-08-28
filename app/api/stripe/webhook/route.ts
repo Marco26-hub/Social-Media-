@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { dbReady, q, q1 } from '@/lib/db'
 import { stripeSecretLivemode, verifyStripeWebhookSignature } from '@/lib/stripe'
 import { activateRegistration, PACCHETTO_FALLBACK, PACCHETTO_PIANO } from '@/lib/provisioning'
-import { sendAccountActivated } from '@/lib/email'
+import { notifyStandaloneOrderPaid, sendAccountActivated, sendStandaloneOrderConfirmed } from '@/lib/email'
 import { getPackage } from '@/lib/packages'
 
 export const dynamic = 'force-dynamic'
@@ -37,6 +37,48 @@ function ts(value: unknown): string | null {
 function metadata(obj: StripeObject): Record<string, unknown> {
   const meta = obj.metadata
   return meta && typeof meta === 'object' ? meta as Record<string, unknown> : {}
+}
+
+function objectId(value: unknown): string {
+  return typeof value === 'string' ? value : str((value as StripeObject | undefined)?.id)
+}
+
+function stripeSubscriptionId(obj: StripeObject): string {
+  const direct = objectId(obj.subscription)
+  if (direct) return direct
+  const parent = obj.parent && typeof obj.parent === 'object' ? obj.parent as StripeObject : null
+  const details = parent?.subscription_details && typeof parent.subscription_details === 'object'
+    ? parent.subscription_details as StripeObject
+    : null
+  return objectId(details?.subscription)
+}
+
+function standaloneOrderId(obj: StripeObject): string {
+  const meta = metadata(obj)
+  if (str(meta.tipo) === 'standalone_service_order') return str(meta.service_order_id)
+  const parent = obj.parent && typeof obj.parent === 'object' ? obj.parent as StripeObject : null
+  const parentDetails = parent?.subscription_details && typeof parent.subscription_details === 'object'
+    ? parent.subscription_details as StripeObject
+    : null
+  const parentMeta = parentDetails ? metadata(parentDetails) : {}
+  if (str(parentMeta.tipo) === 'standalone_service_order') return str(parentMeta.service_order_id)
+  const details = obj.subscription_details && typeof obj.subscription_details === 'object'
+    ? obj.subscription_details as StripeObject
+    : null
+  const detailsMeta = details ? metadata(details) : {}
+  return str(detailsMeta.service_order_id)
+}
+
+async function findStandaloneOrder(obj: StripeObject) {
+  const orderId = standaloneOrderId(obj)
+  if (orderId) {
+    return q1('SELECT * FROM standalone_service_orders WHERE id = $1 LIMIT 1', [orderId])
+  }
+  const subscriptionId = stripeSubscriptionId(obj) || (str(obj.object) === 'subscription' ? str(obj.id) : '')
+  if (subscriptionId) {
+    return q1('SELECT * FROM standalone_service_orders WHERE stripe_subscription_id = $1 LIMIT 1', [subscriptionId])
+  }
+  return null
 }
 
 async function resolveClienteId(obj: StripeObject): Promise<string | null> {
@@ -116,7 +158,7 @@ async function handleConsulenzaPaid(obj: StripeObject) {
   const paymentIntent = typeof obj.payment_intent === 'string'
     ? obj.payment_intent
     : str((obj.payment_intent as StripeObject | undefined)?.id)
-  const paid = str(obj.payment_status) === 'paid' || str(obj.status) === 'complete'
+  const paid = ['paid', 'no_payment_required'].includes(str(obj.payment_status))
   const rows = await q(
     `UPDATE consulenze
        SET status = $2, stripe_payment_intent_id = COALESCE($3, stripe_payment_intent_id),
@@ -128,12 +170,103 @@ async function handleConsulenzaPaid(obj: StripeObject) {
   if (!rows.length) throw new Error(`Consulenza ${consulenzaId} non trovata`)
 }
 
+async function handleStandaloneCheckoutCompleted(obj: StripeObject) {
+  const orderId = standaloneOrderId(obj)
+  if (!orderId) throw new Error('Checkout servizio senza service_order_id')
+  const customerId = objectId(obj.customer)
+  const subscriptionId = stripeSubscriptionId(obj)
+  const paymentIntentId = objectId(obj.payment_intent)
+  const paid = str(obj.payment_status) === 'paid' || str(obj.status) === 'complete'
+  const order = await q1(
+    `UPDATE standalone_service_orders
+        SET status = $2,
+            stripe_session_id = COALESCE($3, stripe_session_id),
+            stripe_customer_id = COALESCE($4, stripe_customer_id),
+            stripe_subscription_id = COALESCE($5, stripe_subscription_id),
+            stripe_payment_intent_id = COALESCE($6, stripe_payment_intent_id),
+            paid_at = CASE WHEN $2 = 'paid' THEN COALESCE(paid_at, now()) ELSE paid_at END,
+            updated_at = now()
+      WHERE id = $1
+      RETURNING id, service_name, nome, azienda, email, amount_cents, paid_at`,
+    [orderId, paid ? 'paid' : 'checkout_complete', str(obj.id) || null, customerId || null,
+      subscriptionId || null, paymentIntentId || null],
+  )
+  if (!order) throw new Error(`Ordine servizio ${orderId} non trovato`)
+
+  if (paid) {
+    await Promise.allSettled([
+      sendStandaloneOrderConfirmed(String(order.email), String(order.nome), String(order.service_name)),
+      notifyStandaloneOrderPaid({
+        orderId: String(order.id),
+        serviceName: String(order.service_name),
+        nome: String(order.nome),
+        azienda: order.azienda ? String(order.azienda) : null,
+        email: String(order.email),
+        amountCents: int(order.amount_cents),
+      }),
+    ])
+  }
+}
+
+async function handleStandaloneSubscription(obj: StripeObject, order: Record<string, unknown>) {
+  const subscriptionId = str(obj.id)
+  const customerId = objectId(obj.customer)
+  const status = str(obj.status) || 'unknown'
+  await q(
+    `UPDATE standalone_service_orders
+        SET status = $2,
+            stripe_customer_id = COALESCE($3, stripe_customer_id),
+            stripe_subscription_id = COALESCE($4, stripe_subscription_id),
+            current_period_start = $5,
+            current_period_end = $6,
+            cancel_at_period_end = $7,
+            metadata = metadata || $8::jsonb,
+            updated_at = now()
+      WHERE id = $1`,
+    [String(order.id), status, customerId || null, subscriptionId || null,
+      ts(obj.current_period_start), ts(obj.current_period_end), bool(obj.cancel_at_period_end), JSON.stringify(metadata(obj))],
+  )
+}
+
+async function handleStandaloneInvoice(obj: StripeObject, order: Record<string, unknown>) {
+  const lines = obj.lines && typeof obj.lines === 'object' ? obj.lines as { data?: StripeObject[] } : null
+  const period = lines?.data?.[0]?.period && typeof lines.data[0].period === 'object'
+    ? lines.data[0].period as StripeObject
+    : {}
+  const invoiceStatus = str(obj.status) || 'unknown'
+  const paid = invoiceStatus === 'paid' || int(obj.amount_paid) >= int(obj.amount_due)
+  const nextStatus = paid ? 'active' : invoiceStatus === 'open' ? 'past_due' : invoiceStatus
+  await q(
+    `UPDATE standalone_service_orders
+        SET status = $2,
+            stripe_customer_id = COALESCE($3, stripe_customer_id),
+            stripe_subscription_id = COALESCE($4, stripe_subscription_id),
+            stripe_payment_intent_id = COALESCE($5, stripe_payment_intent_id),
+            last_invoice_id = COALESCE($6, last_invoice_id),
+            last_invoice_url = COALESCE($7, last_invoice_url),
+            last_invoice_pdf = COALESCE($8, last_invoice_pdf),
+            current_period_start = COALESCE($9, current_period_start),
+            current_period_end = COALESCE($10, current_period_end),
+            paid_at = CASE WHEN $11 THEN COALESCE(paid_at, now()) ELSE paid_at END,
+            updated_at = now()
+      WHERE id = $1`,
+    [String(order.id), nextStatus, objectId(obj.customer) || null, stripeSubscriptionId(obj) || null,
+      objectId(obj.payment_intent) || null, str(obj.id) || null, str(obj.hosted_invoice_url) || null,
+      str(obj.invoice_pdf) || null, ts(period.start), ts(period.end), paid],
+  )
+}
+
 async function handleCheckoutCompleted(obj: StripeObject) {
   const meta = metadata(obj)
 
   // One-off consulenza: pagamento singolo, nessun workspace da attivare.
   if (str(meta.tipo) === 'consulenza') {
     await handleConsulenzaPaid(obj)
+    return
+  }
+
+  if (str(meta.tipo) === 'standalone_service_order') {
+    await handleStandaloneCheckoutCompleted(obj)
     return
   }
 
@@ -167,6 +300,11 @@ async function handleCheckoutCompleted(obj: StripeObject) {
 }
 
 async function handleSubscription(obj: StripeObject) {
+  const standaloneOrder = await findStandaloneOrder(obj)
+  if (standaloneOrder) {
+    await handleStandaloneSubscription(obj, standaloneOrder)
+    return
+  }
   const clienteId = await requireStripeClienteId(obj, 'customer.subscription')
   const subscriptionId = str(obj.id)
   const customerId = str(obj.customer)
@@ -222,6 +360,11 @@ async function handleSubscription(obj: StripeObject) {
 }
 
 async function handleInvoice(obj: StripeObject) {
+  const standaloneOrder = await findStandaloneOrder(obj)
+  if (standaloneOrder) {
+    await handleStandaloneInvoice(obj, standaloneOrder)
+    return
+  }
   const clienteId = await requireStripeClienteId(obj, 'invoice')
   const invoiceId = str(obj.id)
   const existing = invoiceId

@@ -215,7 +215,7 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
           )}
         </div>
 
-        <p className="text-center text-[10px] text-gray-400 mt-4">Link valido 7 giorni · Social Automation V2</p>
+        <p className="text-center text-[10px] text-gray-400 mt-4">Link valido 7 giorni · Social Web Automation V2</p>
       </div>
     </div>
   )

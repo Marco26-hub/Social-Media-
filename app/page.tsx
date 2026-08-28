@@ -14,6 +14,7 @@ import {
   Layers3,
   LockKeyhole,
   Megaphone,
+  Newspaper,
   ScanSearch,
   Scale,
   ShieldCheck,
@@ -21,6 +22,7 @@ import {
   Target,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { BLOG_SERVICE } from '@/lib/blog-service'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
@@ -30,7 +32,10 @@ import styles from './landing.module.css'
 export const metadata: Metadata = {
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
-  alternates: { canonical: SITE_URL },
+  alternates: {
+    canonical: SITE_URL,
+    languages: { 'it-IT': SITE_URL, en: `${SITE_URL}/en`, 'x-default': SITE_URL },
+  },
   openGraph: {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
@@ -43,7 +48,7 @@ export const metadata: Metadata = {
 }
 
 const WHATSAPP_NUMERO = '393477196603'
-const TRIAL_MSG = 'Ciao! Vorrei richiedere un contenuto di prova gratuito di Social Automation.'
+const TRIAL_MSG = 'Ciao! Vorrei richiedere un contenuto di prova gratuito di Social Web Automation.'
 const CUSTOM_MSG = 'Ciao! Vorrei valutare una soluzione personalizzata per la mia azienda.'
 
 function waLink(message: string) {
@@ -80,8 +85,15 @@ const SERVICES = [
     icon: ScanSearch,
     href: '/servizi/seo-geo',
     title: 'Visibilità SEO + GEO',
-    text: 'Contenuti strutturati per essere compresi dai motori di ricerca e dai sistemi di risposta basati sull’AI.',
-    items: ['Audit tecnico ed editoriale', 'Articoli, FAQ e dati strutturati', 'Analisi di entità, fonti e autorevolezza', 'Monitoraggio e piano di miglioramento'],
+    text: 'Audit, strategia, struttura e priorità per rendere sito e offerta comprensibili ai motori di ricerca e ai sistemi AI.',
+    items: ['Audit tecnico ed editoriale', 'Architettura, intenti e priorità', 'Entità, fonti e dati strutturati', 'Monitoraggio e piano di miglioramento'],
+  },
+  {
+    icon: Newspaper,
+    href: BLOG_SERVICE.path,
+    title: BLOG_SERVICE.name,
+    text: `${BLOG_SERVICE.articlesPerMonth} articoli al mese, pianificati e revisionati per costruire copertura organica con continuità.`,
+    items: ['Piano editoriale mensile', 'SEO on-page, FAQ e dati strutturati', 'Controllo umano prima della pubblicazione', 'Pubblicazione collegata o consegna per CMS'],
   },
   {
     icon: Globe2,
@@ -90,6 +102,29 @@ const SERVICES = [
     text: 'Soluzioni da 19,90 € al mese, orientate al contatto e alla vendita. Dopo 12 mesi di canone, il sito è tuo.',
     items: ['Architettura e messaggi di conversione', 'Sviluppo responsive e mobile-first', 'Catalogo, pagamenti e tracciamento', 'Integrazione con social, ADS e contenuti'],
   },
+  {
+    icon: Target,
+    href: '/servizi/ricerca-clienti-b2b',
+    title: 'Ricerca Clienti B2B',
+    text: 'Un Pilot per definire il cliente ideale, analizzare fino a 30 aziende e ricevere una lista verificata e prioritaria.',
+    items: ['Profilo ideale e criteri concordati', 'Fonti pubbliche tracciabili', 'Priorità motivata per ogni azienda', 'Nessun invio o cliente garantito'],
+  },
+]
+
+const JOURNEY = [
+  { number: '01', title: 'Farsi conoscere', text: 'Social e Blog costruiscono presenza, continuità e autorevolezza.', href: '/servizi/gestione-social-media' },
+  { number: '02', title: 'Essere trovati', text: 'SEO + GEO organizza struttura, intenti, entità e priorità del sito.', href: '/servizi/seo-geo' },
+  { number: '03', title: 'Convertire', text: 'Siti ed e-commerce trasformano attenzione e traffico in azioni misurabili.', href: '/servizi/siti-e-commerce' },
+  { number: '04', title: 'Trovare opportunità', text: 'Il Pilot B2B ricerca aziende in target, fonti e priorità commerciali.', href: '/servizi/ricerca-clienti-b2b' },
+  { number: '05', title: 'Operare correttamente', text: 'AI Act, GDPR e controllo umano proteggono processo e responsabilità.', href: '/consulenza' },
+  { number: '06', title: 'Misurare e migliorare', text: 'Report e risultati indicano cosa funziona e guidano le priorità del ciclo successivo.', href: '/metodo' },
+]
+
+const EVIDENCE = [
+  { title: 'Processo social visibile', text: 'Piano, produzione, approvazione e pubblicazione sono descritti passaggio per passaggio.', href: '/metodo', label: 'Verifica il metodo' },
+  { title: 'Journal pubblico', text: 'Articoli, struttura editoriale, FAQ e collegamenti mostrano concretamente l’approccio SEO + GEO.', href: '/blog', label: 'Apri il Journal' },
+  { title: 'Portfolio Web reale', text: 'SILKinCOM, Studio Legale BCS e Borsieri Car Service sono progetti pubblici consultabili.', href: '/servizi/siti-e-commerce', label: 'Guarda i progetti' },
+  { title: 'Pilot B2B delimitato', text: 'Deliverable, limiti, prezzo e checkout sono dichiarati prima dell’acquisto.', href: '/servizi/ricerca-clienti-b2b', label: 'Esamina il Pilot' },
 ]
 
 const LEGAL_SERVICES = [
@@ -128,7 +163,7 @@ const FAQ = [
   },
   {
     q: 'Devo imparare a utilizzare un nuovo software?',
-    a: 'No. Social Automation è un servizio gestito. Il portale semplifica approvazioni e consultazione dei risultati; strategia, produzione e pubblicazione restano a nostro carico.',
+    a: 'No. Social Web Automation è un servizio gestito. Il portale semplifica approvazioni e consultazione dei risultati; strategia, produzione e pubblicazione restano a nostro carico.',
   },
   {
     q: 'Posso approvare i contenuti prima della pubblicazione?',
@@ -176,24 +211,24 @@ export default function LandingPage() {
 
       <section className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.heroCopy}>
-          <p className={styles.kicker}><Sparkles size={16} aria-hidden="true" /> Gestione social media per PMI</p>
-          <h1 id="hero-title">Gestione social media per PMI, con metodo.</h1>
+          <p className={styles.kicker}><Sparkles size={16} aria-hidden="true" /> Servizi digitali integrati per PMI</p>
+          <h1 id="hero-title">Social, SEO, siti e ricerca clienti per PMI.</h1>
           <p className={styles.heroLead}>
-            Un servizio gestito per PMI e professionisti: strategia, contenuti e
-            pubblicazione multicanale. L’intelligenza artificiale accelera la
-            produzione; il controllo umano tutela qualità e coerenza.
+            Un’unica regia collega contenuti social, visibilità organica, Blog,
+            presenza Web e ricerca di opportunità B2B. L’intelligenza artificiale
+            accelera il lavoro; specialisti e controllo umano proteggono qualità e responsabilità.
           </p>
           <div className={styles.heroActions}>
-            <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.primaryButton}>
-              Richiedi un contenuto di prova <ArrowRight size={18} aria-hidden="true" />
-            </a>
-            <Link href="/pacchetti" className={styles.secondaryButton}>Esplora le soluzioni</Link>
+            <Link href="/servizi" className={styles.primaryButton}>
+              Trova la soluzione <ArrowRight size={18} aria-hidden="true" />
+            </Link>
+            <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.secondaryButton}>Richiedi una prova social</a>
           </div>
-          <p className={styles.microcopy}>Nessuna carta richiesta. Valuta concretamente qualità e processo.</p>
+          <p className={styles.microcopy}>Servizi autonomi o coordinati. Perimetro, costi e responsabilità dichiarati prima dell’avvio.</p>
           <ul className={styles.trustList} aria-label="Caratteristiche principali">
             <li><Check size={16} aria-hidden="true" /> Approvazione prima della pubblicazione</li>
             <li><Check size={16} aria-hidden="true" /> Nessun software complesso da gestire</li>
-            <li><Check size={16} aria-hidden="true" /> Budget ADS sempre separato</li>
+            <li><Check size={16} aria-hidden="true" /> Servizi disponibili in Italia e all’estero</li>
           </ul>
         </div>
 
@@ -232,6 +267,24 @@ export default function LandingPage() {
             <span>Pubblicazione</span>
           </div>
         </div>
+      </section>
+
+      <section className={styles.journeySection} aria-labelledby="journey-title">
+        <div className={styles.sectionHeading}>
+          <p className={styles.eyebrow}>Un percorso commerciale unico</p>
+          <h2 id="journey-title">Dalla visibilità all’opportunità, senza pezzi scollegati.</h2>
+          <p>Ogni servizio ha un compito preciso. Puoi attivarlo da solo oppure inserirlo in un sistema coordinato.</p>
+        </div>
+        <ol className={styles.journeyGrid}>
+          {JOURNEY.map(item => (
+            <li key={item.number}>
+              <span>{item.number}</span>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+              <Link href={item.href} aria-label={`Approfondisci: ${item.title}`}><ChevronRight size={17} aria-hidden="true" /></Link>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section className={styles.signalBand} aria-label="Posizionamento del servizio">
@@ -294,6 +347,24 @@ export default function LandingPage() {
             ))}
           </ol>
           <Link href="/metodo" className={styles.outlineButton}>Scopri il metodo completo <ArrowRight size={16} aria-hidden="true" /></Link>
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.evidenceSection}`} aria-labelledby="evidence-title">
+        <div className={styles.sectionHeading}>
+          <p className={styles.eyebrow}>Prove verificabili</p>
+          <h2 id="evidence-title">Controlla il lavoro prima di credere alle promesse.</h2>
+          <p>Niente percentuali senza fonte: mostriamo processi, contenuti, progetti pubblici e limiti dell’offerta.</p>
+        </div>
+        <div className={styles.evidenceGrid}>
+          {EVIDENCE.map(item => (
+            <article key={item.title}>
+              <CircleCheck size={21} aria-hidden="true" />
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+              <Link href={item.href}>{item.label} <ArrowRight size={15} aria-hidden="true" /></Link>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -366,7 +437,7 @@ export default function LandingPage() {
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Soluzioni</p>
           <h2 id="pricing-title">Scegli il risultato. Al resto pensiamo noi.</h2>
-          <p>Due pacchetti social completi, senza costi di setup. Per siti ed e-commerce scegli Web & Commerce, il pacchetto separato da 19,90 € al mese.</p>
+          <p>Due pacchetti social e tre servizi autonomi: Blog SEO + GEO, Web & Commerce e Ricerca Clienti B2B.</p>
         </div>
         <div className={styles.pricingGrid}>
           {PACCHETTI.map(plan => (
@@ -397,6 +468,56 @@ export default function LandingPage() {
               <small className={styles.ctaNote}>Setup incluso · IVA esclusa · rinnovo mensile</small>
             </article>
           ))}
+        </div>
+        <div className={styles.standaloneGrid} aria-label="Servizi autonomi">
+          <article className={styles.standaloneOffer}>
+            <div className={styles.standaloneIcon}><Newspaper size={22} aria-hidden="true" /></div>
+            <div className={styles.standaloneCopy}>
+              <span>Contenuti organici</span>
+              <h3>{BLOG_SERVICE.name}</h3>
+              <p>{BLOG_SERVICE.articlesPerMonth} articoli al mese con piano editoriale, SEO, GEO, FAQ e controllo umano.</p>
+              <ul>
+                <li><Check size={15} aria-hidden="true" /> {BLOG_SERVICE.trialDays} giorni per valutare il servizio</li>
+                <li><Check size={15} aria-hidden="true" /> Pubblicazione sul blog collegato o consegna per CMS</li>
+              </ul>
+            </div>
+            <div className={styles.standaloneAction}>
+              <p><strong>{BLOG_SERVICE.displayPrice}</strong><span>/mese</span></p>
+              <Link href={BLOG_SERVICE.path}>Scopri Blog <ArrowRight size={16} aria-hidden="true" /></Link>
+            </div>
+          </article>
+          <article className={`${styles.standaloneOffer} ${styles.webOffer}`}>
+            <div className={styles.standaloneIcon}><Globe2 size={22} aria-hidden="true" /></div>
+            <div className={styles.standaloneCopy}>
+              <span>Presenza proprietaria</span>
+              <h3>Web &amp; Commerce</h3>
+              <p>Landing page, sito aziendale o e-commerce mobile-first collegato a contenuti, campagne e analytics.</p>
+              <ul>
+                <li><Check size={15} aria-hidden="true" /> Architettura, design responsive e SEO tecnica</li>
+                <li><Check size={15} aria-hidden="true" /> Dopo 12 mesi di canone, il sito è tuo</li>
+              </ul>
+            </div>
+            <div className={styles.standaloneAction}>
+              <p><small>da</small><strong>€19,90</strong><span>/mese</span></p>
+              <Link href="/servizi/siti-e-commerce">Scopri Web <ArrowRight size={16} aria-hidden="true" /></Link>
+            </div>
+          </article>
+          <article className={`${styles.standaloneOffer} ${styles.leadOffer}`}>
+            <div className={styles.standaloneIcon}><Target size={22} aria-hidden="true" /></div>
+            <div className={styles.standaloneCopy}>
+              <span>Ricerca commerciale assistita</span>
+              <h3>Ricerca Clienti B2B</h3>
+              <p>Un Pilot per definire il cliente ideale, analizzare fino a 30 aziende e ricevere una lista verificata e prioritaria.</p>
+              <ul>
+                <li><Check size={15} aria-hidden="true" /> Fonti pubbliche tracciabili e criteri concordati</li>
+                <li><Check size={15} aria-hidden="true" /> Nessun invio automatico o risultato commerciale garantito</li>
+              </ul>
+            </div>
+            <div className={styles.standaloneAction}>
+              <p><strong>€149</strong><span>una tantum</span></p>
+              <Link href="/servizi/ricerca-clienti-b2b">Scopri il Pilot <ArrowRight size={16} aria-hidden="true" /></Link>
+            </div>
+          </article>
         </div>
         <div className={styles.pricingAssurance}>
           <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Prima vuoi verificare la qualità?</strong> Richiedi un contenuto di prova gratuito.</span></div>
@@ -443,7 +564,7 @@ export default function LandingPage() {
       <footer className={styles.footer}>
         <Link href="/" className={styles.brand}>
           <Image className={styles.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} />
-          <span>Social Automation</span>
+          <span>Social Web Automation</span>
         </Link>
         <div>
           <Link href="/servizi">Servizi</Link>
@@ -456,7 +577,7 @@ export default function LandingPage() {
         <p>
           © 2026 {TITOLARE.brand}<br />
           {TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}<br />
-          Cermenate (CO) · Servizi in tutta Italia
+          Sede a Cermenate (CO) · Servizi in Italia e nel mondo
         </p>
       </footer>
 

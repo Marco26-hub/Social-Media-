@@ -3,8 +3,8 @@ import LegalShell, { PH } from '@/components/LegalShell'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 
-const META_TITLE = 'Termini e Condizioni — Social Automation'
-const META_DESCRIPTION = 'Condizioni generali di utilizzo del servizio Social Automation.'
+const META_TITLE = 'Termini e Condizioni — Social Web Automation'
+const META_DESCRIPTION = 'Condizioni generali di utilizzo del servizio Social Web Automation.'
 
 export const metadata: Metadata = {
   title: META_TITLE,
@@ -44,6 +44,9 @@ export default function TerminiPage() {
       <ul>
         <li>I canoni e gli eventuali costi iniziali sono indicati nella pagina <a href="/pacchetti">Pacchetti</a>. I prezzi sono mensili e IVA esclusa, salvo diversa indicazione.</li>
         <li>La fatturazione degli abbonamenti è gestita tramite Stripe, con rinnovo automatico mensile salvo disdetta.</li>
+        <li><strong>Blog SEO + GEO:</strong> il canone di €29,90/mese comprende il ciclo editoriale descritto nella relativa pagina. Tempi, accessi al CMS e modalità di pubblicazione vengono definiti nell&apos;onboarding.</li>
+        <li><strong>Web &amp; Commerce Base:</strong> il canone parte da €19,90/mese e copre la componente tecnologica base indicata nell&apos;offerta. Progettazione, configurazioni, dominio, licenze e funzioni ulteriori vengono definite e approvate prima di eventuali costi aggiuntivi.</li>
+        <li><strong>Pilot Ricerca Clienti B2B:</strong> il prezzo di €149 è una tantum e comprende la definizione del profilo ideale, la ricerca e la qualificazione di un massimo di 30 aziende. Non include invii automatici, campagne outbound, garanzie di risposta, appuntamenti o vendite.</li>
         <li>Il budget destinato alle campagne pubblicitarie è sempre separato dal canone del servizio.</li>
         <li>Le consulenze legali (€150/30 min) sono erogate dallo Studio Legale BCS e regolate anche dalle condizioni dello Studio.</li>
       </ul>

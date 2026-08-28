@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Smoke Test — Social Automation V2
+# Smoke Test — Social Web Automation V2
 # Verifica che pagine e API rispondano. Lancia: bash scripts/smoke-test.sh
 
 HOST="${1:-http://localhost:3000}"
@@ -11,7 +11,7 @@ red()   { printf "  ❌ %s\n" "$1"; ((FAIL++)); }
 sep()   { printf "  ───────────────────────────\n"; }
 
 echo ""
-echo "  🔥 SMOKE TEST — Social Automation V2"
+echo "  🔥 SMOKE TEST — Social Web Automation V2"
 echo "  Target: $HOST"
 echo ""
 

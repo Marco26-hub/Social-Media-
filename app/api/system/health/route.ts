@@ -4,10 +4,11 @@ import { isDemo } from '@/lib/demo'
 import { dbReady, q } from '@/lib/db'
 import { isR2Configured } from '@/lib/storage'
 import { AUTH_SECRET } from '@/lib/auth-secret'
+import { ensureStandaloneServiceOrdersSchema } from '@/lib/standalone-service-schema'
 
 export const dynamic = 'force-dynamic'
 
-const LATEST_REQUIRED_MIGRATION = '042_reel_audio.sql'
+const LATEST_REQUIRED_MIGRATION = '043_standalone_service_orders.sql'
 
 function hasEnv(name: string) {
   return Boolean(process.env[name]?.trim())
@@ -80,6 +81,11 @@ async function getDatabaseChecks(enabled: boolean) {
 export async function GET(request: NextRequest) {
   const demo = isDemo()
   const hasDatabaseUrl = dbReady()
+  if (!demo && hasDatabaseUrl) {
+    await ensureStandaloneServiceOrdersSchema().catch(error => {
+      console.error('[system health] standalone service schema init failed:', error instanceof Error ? error.message : error)
+    })
+  }
   const databaseChecks = await getDatabaseChecks(hasDatabaseUrl)
   const checks = {
     databaseUrl: hasDatabaseUrl,

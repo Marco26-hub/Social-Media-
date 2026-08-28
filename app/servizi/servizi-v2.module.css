@@ -144,11 +144,14 @@
 .mapNodeSocial { top: 36px; left: 34px; }
 .mapNodeSeo { top: 42px; right: 28px; animation-delay: .5s; }
 .mapNodeWeb { right: 36px; bottom: 42px; animation-delay: 1s; }
+.mapNodeBlog { left: 38px; bottom: 42px; animation-delay: 1.4s; }
+.mapNodeLead { left: calc(50% - 62px); bottom: 20px; animation-delay: 1.8s; }
 
 .mapStatus {
   position: absolute;
-  bottom: 36px;
-  left: 34px;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -167,7 +170,7 @@
 
 .valueBand {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 1px;
   padding: 0 max(24px, calc((100vw - 1180px) / 2));
   background: var(--ink);
@@ -257,6 +260,8 @@
 
 .serviceRow:nth-child(2) .serviceIdentity svg { background: #fff0eb; color: #b64c33; }
 .serviceRow:nth-child(3) .serviceIdentity svg { background: #fff5d8; color: #8a6516; }
+.serviceRow:nth-child(4) .serviceIdentity svg { background: #eaf4fb; color: #246b9f; }
+.serviceRow:nth-child(5) .serviceIdentity svg { background: #eef0fa; color: #314a8a; }
 .serviceIdentity p { max-width: 180px; margin: 24px 0 0; font: 500 24px/1.15 Georgia, serif; }
 
 .serviceBody { min-width: 0; padding: 34px; }
@@ -360,6 +365,19 @@
 .pricingAssurance > a:hover { color: var(--green-dark); }
 
 .customPlan { display: flex; align-items: center; justify-content: space-between; gap: 30px; margin-top: 18px; padding: 27px 30px; border-radius: 7px; background: #e4b757; }
+.autonomousGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+.autonomousOffer { min-width: 0; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto 18px; align-items: center; gap: 14px; padding: 20px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); color: var(--ink); text-decoration: none; transition: transform .2s ease, border-color .2s ease; }
+.autonomousOffer:hover { transform: translateY(-3px); border-color: var(--green); }
+.autonomousOffer > svg:first-child { box-sizing: content-box; padding: 10px; border-radius: 6px; background: var(--mint); color: var(--green); }
+.autonomousOffer > span { min-width: 0; display: grid; gap: 4px; }
+.autonomousOffer small { color: var(--green); font-size: 9px; font-style: normal; font-weight: 850; text-transform: uppercase; }
+.autonomousOffer strong { font: 500 20px Georgia, serif; }
+.autonomousOffer em { overflow: hidden; color: var(--muted); font-size: 11px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.autonomousOffer > b { white-space: nowrap; font: 500 24px Georgia, serif; }
+.autonomousOffer > b small { margin-left: 3px; color: var(--muted); font: 10px Arial, sans-serif; text-transform: none; }
+.autonomousOffer > svg:last-child { color: var(--green); }
+.leadAutonomousOffer { grid-column: 1 / -1; border-color: #bfc9e9; background: #f2f4fb; }
+.leadAutonomousOffer > svg:first-child { background: #314a8a; color: white; }
 .customPlan > div { display: flex; align-items: center; gap: 12px; color: #4d4025; font-size: 13px; }
 .customPlan > a { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 4px; background: var(--ink); color: white; font-size: 12px; font-weight: 800; text-decoration: none; }
 .customPlan > a:hover { background: black; }
@@ -525,7 +543,10 @@
   .mapNodeSocial { top: 28px; left: 16px; }
   .mapNodeSeo { top: 32px; right: 14px; }
   .mapNodeWeb { right: 17px; bottom: 35px; }
-  .mapStatus { bottom: 33px; left: 17px; max-width: 115px; }
+  .mapNodeBlog { left: 17px; bottom: 35px; }
+  .mapNodeWeb, .mapNodeBlog { bottom: 98px; }
+  .mapNodeLead { left: calc(50% - 52px); bottom: 20px; }
+  .mapStatus { display: none; }
   .valueBand { grid-template-columns: repeat(2, 1fr); padding: 0 18px; }
   .servicesSection, .methodSection, .pricingSection, .faqSection { padding: 64px 18px; }
   .sectionHeading h2, .legalIntro h2, .finalCta h2 { font-size: 36px; }
@@ -547,12 +568,16 @@
   .legalPrice { padding: 15px 0 0; border: 0; border-top: 1px solid rgba(255,255,255,.15); }
   .partnerCta { grid-column: auto; width: 100%; }
   .pricingGrid { grid-template-columns: 1fr; }
+  .autonomousGrid { grid-template-columns: 1fr; }
   .priceCard { padding: 25px; }
   .planDescription { min-height: auto; }
   .planFit { min-height: auto; }
   .pricingAssurance { align-items: flex-start; flex-direction: column; }
   .customPlan, .finalCta { align-items: flex-start; flex-direction: column; }
   .customPlan > a { width: 100%; justify-content: center; }
+  .autonomousOffer { grid-template-columns: 42px minmax(0, 1fr) 18px; }
+  .autonomousOffer > b { grid-column: 2; grid-row: 2; }
+  .autonomousOffer > svg:last-child { grid-column: 3; grid-row: 1 / 3; }
   .faqSection { gap: 32px; }
   .finalCta { padding: 64px 18px 92px; }
   .finalCta > div:last-child { width: 100%; }
