@@ -1,9 +1,9 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { PLATFORM_LIST, type PlatformKey } from '@/lib/social-config'
-import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2, Image as ImageIcon, Film, Layers, Smartphone, Music2 } from 'lucide-react'
+import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2, Image as ImageIcon, Film, Layers, Smartphone, Music2, FolderUp } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
@@ -22,12 +22,26 @@ import {
   verificaMedia,
   type MediaTag,
 } from '@/lib/media-requirements'
+import { folderGroupKey, parseCampaignFolderFile, type CampaignFolderAsset } from '@/lib/campaign-folder'
 
 type QualitySelection = 'auto' | ContentQuality
 // `tag` = marcatura manuale ("questa foto è del carosello, questo MP4 del reel").
 // Viaggia nel body dentro uploaded_assets e vincola l'assegnazione lato server.
-type PlanAsset = { url: string; name: string; mime?: string; kind?: 'image' | 'video' | 'audio'; tag: MediaTag }
-const MAX_PLAN_IMAGES = 60
+type PlanAsset = {
+  url: string
+  name: string
+  mime?: string
+  kind?: 'image' | 'video' | 'audio'
+  tag: MediaTag
+  relativePath?: string
+  week?: number | null
+  platform?: 'instagram' | 'facebook' | null
+  contentKey?: string | null
+  sequence?: number | null
+}
+type FolderCandidate = { file: File; assignment: CampaignFolderAsset }
+type FolderPreview = { root: string; candidates: FolderCandidate[]; ignored: number }
+const MAX_PLAN_IMAGES = 160
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif'
 const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
 const AUDIO_ACCEPT = 'audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/ogg,.mp3,.wav,.m4a,.ogg'
@@ -124,6 +138,8 @@ export default function PianoPage() {
   const [planAssets, setPlanAssets] = useState<PlanAsset[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [folderPreview, setFolderPreview] = useState<FolderPreview | null>(null)
+  const folderInputRef = useRef<HTMLInputElement | null>(null)
   const [fallbackPopup, setFallbackPopup] = useState<{ count: number; completed: number } | null>(null)
   const [clientePkg, setClientePkg] = useState<PackageSpec | null>(null)
   // Quota reale del cliente (clienti.contenuti_mese): l'admin può sovrascrivere
@@ -139,6 +155,11 @@ export default function PianoPage() {
     if (typeof window !== 'undefined') {
       setAiModel(localStorage.getItem('ai_model') ?? 'google/gemma-4-31b-it:free')
     }
+  }, [])
+
+  useEffect(() => {
+    folderInputRef.current?.setAttribute('webkitdirectory', '')
+    folderInputRef.current?.setAttribute('directory', '')
   }, [])
 
   // Pacchetto del cliente attivo: abilita la modalità "piano del pacchetto"
@@ -189,33 +210,112 @@ export default function PianoPage() {
     setPlanAssets(prev => prev.map((a, i) => i === index ? { ...a, tag } : a))
   }
 
+  function inspectCampaignFolder(files: FileList | null) {
+    if (!files?.length) return
+    setUploadError(null)
+    const all = Array.from(files)
+    // Le campagne SWA contengono anche sorgenti, anteprime e copie per comodita.
+    // Quando esiste il ramo Per_Strategia, quello e la fonte editoriale canonica.
+    const strategyFiles = all.filter(file => /\/(?:\d+_)?(?:presenza|crescita)_per_strategia\//i.test(`/${file.webkitRelativePath}`))
+    const sourceFiles = strategyFiles.length ? strategyFiles : all
+    const candidates = sourceFiles
+      .map(file => ({
+        file,
+        assignment: parseCampaignFolderFile({
+          name: file.name,
+          relativePath: file.webkitRelativePath || file.name,
+          type: file.type,
+        }),
+      }))
+      .filter(entry => entry.assignment.kind !== 'unsupported')
+
+    const occupied = new Map<string, FolderCandidate[]>()
+    for (const candidate of candidates) {
+      if (candidate.assignment.sequence === null || candidate.assignment.errors.length) continue
+      const key = `${folderGroupKey(candidate.assignment)}:${candidate.assignment.sequence}`
+      const peers = occupied.get(key) || []
+      peers.push(candidate)
+      occupied.set(key, peers)
+    }
+    for (const peers of occupied.values()) {
+      if (peers.length < 2) continue
+      peers.forEach(peer => peer.assignment.errors.push(`posizione duplicata nel contenuto (file ${peer.assignment.sequence})`))
+    }
+
+    const firstPath = candidates[0]?.assignment.relativePath || all[0]?.webkitRelativePath || all[0]?.name || 'Cartella campagna'
+    setFolderPreview({
+      root: firstPath.split('/')[0] || 'Cartella campagna',
+      candidates,
+      ignored: all.length - candidates.length,
+    })
+  }
+
+  function folderUploadName(candidate: FolderCandidate): string {
+    const ext = candidate.file.name.match(/\.[a-z0-9]+$/i)?.[0] || ''
+    const a = candidate.assignment
+    const sequence = a.sequence ? String(a.sequence).padStart(2, '0') : '00'
+    return `w${a.week}-${a.platform}-${a.contentKey}-${sequence}${ext}`
+  }
+
   // Upload in blocchi da 14 (limite server per richiesta) finché tutti i media scelti sono caricati.
-  async function uploadPlanImages(files: FileList | null, destination: MediaTag = 'auto') {
-    if (!files?.length || !clienteId) return
+  async function uploadPlanEntries(entries: { file: File; destination: MediaTag; assignment?: CampaignFolderAsset }[]) {
+    if (!entries.length || !clienteId) return
     setUploadError(null)
     setUploadingImages(true)
     try {
-      const selected = Array.from(files).slice(0, MAX_PLAN_IMAGES - planAssets.length)
+      const selected = entries.slice(0, MAX_PLAN_IMAGES - planAssets.length)
+      const skippedMessages: string[] = []
       for (let i = 0; i < selected.length; i += 14) {
         const chunk = selected.slice(i, i + 14)
         const form = new FormData()
         form.append('cliente_id', clienteId)
-        chunk.forEach(file => form.append('files', file))
+        const uploadedNames = new Map<string, typeof chunk[number]>()
+        chunk.forEach(entry => {
+          const uploadFile = entry.assignment
+            ? new File([entry.file], folderUploadName({ file: entry.file, assignment: entry.assignment }), { type: entry.file.type, lastModified: entry.file.lastModified })
+            : entry.file
+          uploadedNames.set(uploadFile.name, entry)
+          form.append('files', uploadFile)
+        })
         const data = await uploadAssets(form)
         const uploaded: PlanAsset[] = (data.assets || []).map(a => ({
           url: a.url,
-          name: a.kind === 'audio' ? a.name : prettyName(a.name),
+          name: (() => {
+            const source = uploadedNames.get(a.name)
+            if (a.kind === 'audio') return source?.file.name || a.name
+            if (source?.assignment) return `${source.assignment.contentKey} · ${prettyName(source.file.name)}`
+            return prettyName(a.name)
+          })(),
           mime: a.mime,
           kind: a.kind,
-          tag: destination,
+          tag: uploadedNames.get(a.name)?.assignment?.tag || uploadedNames.get(a.name)?.destination || 'auto',
+          relativePath: uploadedNames.get(a.name)?.assignment?.relativePath,
+          week: uploadedNames.get(a.name)?.assignment?.week,
+          platform: uploadedNames.get(a.name)?.assignment?.platform,
+          contentKey: uploadedNames.get(a.name)?.assignment?.contentKey,
+          sequence: uploadedNames.get(a.name)?.assignment?.sequence,
         }))
         setPlanAssets(prev => [...prev, ...uploaded])
+        skippedMessages.push(...(data.skipped || []).map(item => `${item.name}: ${item.motivo}`))
       }
+      setFolderPreview(null)
+      if (skippedMessages.length) setUploadError(`Alcuni file non sono stati caricati: ${skippedMessages.join(' · ')}`)
     } catch (e) {
       setUploadError((e as Error).message)
     } finally {
       setUploadingImages(false)
     }
+  }
+
+  async function uploadPlanImages(files: FileList | null, destination: MediaTag = 'auto') {
+    if (!files?.length) return
+    await uploadPlanEntries(Array.from(files).map(file => ({ file, destination })))
+  }
+
+  async function confirmCampaignFolder() {
+    if (!folderPreview) return
+    const valid = folderPreview.candidates.filter(candidate => candidate.assignment.errors.length === 0)
+    await uploadPlanEntries(valid.map(candidate => ({ file: candidate.file, destination: candidate.assignment.tag, assignment: candidate.assignment })))
   }
 
   function removePlanImage(index: number) {
@@ -261,7 +361,7 @@ export default function PianoPage() {
       key: fase ? `piano-fase-${fase}` : 'piano',
       label: `Piano editoriale ${periodo}${faseLabel}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 50000 : 25000,
       timeoutMs: periodo === 'mensile' ? 130000 : 95000,
@@ -309,7 +409,7 @@ export default function PianoPage() {
       key: 'piano-pacchetto',
       label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: true, include_weekend: includeWeekend, use_web_trends: true, pacchetto: clientePkg.id, ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: true, include_weekend: includeWeekend, use_web_trends: true, pacchetto: clientePkg.id, ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 55000 : 30000,
       timeoutMs: periodo === 'mensile' ? 140000 : 100000,
@@ -696,6 +796,91 @@ export default function PianoPage() {
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="mt-4 border-y border-gray-200 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-gray-950">Cartella campagna SWA</p>
+                <p className="mt-0.5 text-[10px] text-gray-500">Importazione per fase, social, formato e contenuto</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => folderInputRef.current?.click()}
+                disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-800 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {uploadingImages ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderUp className="h-4 w-4" />}
+                Carica cartella campagna
+              </button>
+              <input
+                ref={folderInputRef}
+                type="file"
+                multiple
+                accept={`${MEDIA_ACCEPT},${AUDIO_ACCEPT}`}
+                className="hidden"
+                disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+                onChange={event => {
+                  inspectCampaignFolder(event.target.files)
+                  event.target.value = ''
+                }}
+              />
+            </div>
+
+            {folderPreview && (() => {
+              const valid = folderPreview.candidates.filter(candidate => candidate.assignment.errors.length === 0)
+              const blocked = folderPreview.candidates.filter(candidate => candidate.assignment.errors.length > 0)
+              const groups = new Set(valid.map(candidate => folderGroupKey(candidate.assignment))).size
+              const platformCount = (platform: 'instagram' | 'facebook') => valid.filter(candidate => candidate.assignment.platform === platform).length
+              const formatCount = (tag: MediaTag) => valid.filter(candidate => candidate.assignment.tag === tag && candidate.assignment.kind !== 'audio').length
+              const audioCount = valid.filter(candidate => candidate.assignment.kind === 'audio').length
+              const exceedsLimit = valid.length > MAX_PLAN_IMAGES - planAssets.length
+              return (
+                <div className={`mt-3 rounded-lg border p-3 ${blocked.length || exceedsLimit ? 'border-amber-300 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-950">{folderPreview.root}</p>
+                      <p className="mt-1 text-[11px] text-gray-700">
+                        {valid.length} asset finali · {groups} contenuti · {platformCount('instagram')} Instagram · {platformCount('facebook')} Facebook
+                      </p>
+                      <p className="mt-1 text-[10px] text-gray-600">
+                        Reel {formatCount('reel')} · Caroselli {formatCount('carosello')} · Post {formatCount('post')} · Story {formatCount('story')} · Audio {audioCount}
+                      </p>
+                      {folderPreview.ignored > 0 && <p className="mt-1 text-[10px] text-gray-500">{folderPreview.ignored} file non editoriali o copie ignorati</p>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFolderPreview(null)}
+                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
+                      >
+                        <X className="h-3.5 w-3.5" /> Annulla
+                      </button>
+                      <button
+                        type="button"
+                        onClick={confirmCampaignFolder}
+                        disabled={uploadingImages || blocked.length > 0 || exceedsLimit || valid.length === 0}
+                        className="inline-flex h-8 items-center gap-1.5 rounded-md bg-emerald-700 px-3 text-[11px] font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {uploadingImages ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                        Carica e assegna
+                      </button>
+                    </div>
+                  </div>
+                  {exceedsLimit && <p className="mt-2 text-[11px] font-medium text-amber-900">La cartella supera i {MAX_PLAN_IMAGES} media disponibili nel piano. Rimuovi i caricamenti precedenti o riduci la cartella.</p>}
+                  {blocked.length > 0 && (
+                    <div className="mt-2 border-t border-amber-200 pt-2">
+                      <p className="text-[11px] font-semibold text-amber-950">{blocked.length} file da correggere prima del caricamento</p>
+                      <ul className="mt-1 max-h-28 space-y-1 overflow-auto text-[10px] text-amber-900">
+                        {blocked.slice(0, 12).map(candidate => (
+                          <li key={candidate.assignment.relativePath}>{candidate.assignment.relativePath}: {candidate.assignment.errors.join(', ')}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2" aria-label="Caricamento media separato per formato">
