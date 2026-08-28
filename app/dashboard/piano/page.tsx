@@ -3,11 +3,11 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { PLATFORM_LIST, type PlatformKey } from '@/lib/social-config'
-import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2, Image as ImageIcon, Film, Layers, Smartphone, Music2, FolderUp } from 'lucide-react'
+import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2, Image as ImageIcon, Film, Layers, Smartphone, Music2, FolderUp, RefreshCw } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
-import { readAISettings } from '@/lib/ai-client'
+import { readAISettings, readApiError } from '@/lib/ai-client'
 import { uploadAssets } from '@/lib/asset-upload'
 import { useGeneration } from '@/components/GenerationProvider'
 import { useRuntimeDemo } from '@/lib/demo-client'
@@ -146,6 +146,7 @@ export default function PianoPage() {
   const [uploadingImages, setUploadingImages] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [folderPreview, setFolderPreview] = useState<FolderPreview | null>(null)
+  const [repairingCalendar, setRepairingCalendar] = useState(false)
   const folderInputRef = useRef<HTMLInputElement | null>(null)
   const [fallbackPopup, setFallbackPopup] = useState<{ count: number; completed: number } | null>(null)
   const [clientePkg, setClientePkg] = useState<PackageSpec | null>(null)
@@ -265,10 +266,11 @@ export default function PianoPage() {
   }
 
   // Upload in blocchi da 14 (limite server per richiesta) finché tutti i media scelti sono caricati.
-  async function uploadPlanEntries(entries: { file: File; destination: MediaTag; assignment?: CampaignFolderAsset }[]) {
-    if (!entries.length || !clienteId) return
+  async function uploadPlanEntries(entries: { file: File; destination: MediaTag; assignment?: CampaignFolderAsset }[]): Promise<PlanAsset[]> {
+    if (!entries.length || !clienteId) return []
     setUploadError(null)
     setUploadingImages(true)
+    const uploadedAll: PlanAsset[] = []
     try {
       const selected = entries.slice(0, MAX_PLAN_IMAGES - planAssets.length)
       const skippedMessages: string[] = []
@@ -302,6 +304,7 @@ export default function PianoPage() {
           contentKey: uploadedNames.get(a.name)?.assignment?.contentKey,
           sequence: uploadedNames.get(a.name)?.assignment?.sequence,
         }))
+        uploadedAll.push(...uploaded)
         setPlanAssets(prev => [...prev, ...uploaded])
         skippedMessages.push(...(data.skipped || []).map(item => `${item.name}: ${item.motivo}`))
       }
@@ -312,6 +315,7 @@ export default function PianoPage() {
     } finally {
       setUploadingImages(false)
     }
+    return uploadedAll
   }
 
   async function uploadPlanImages(files: FileList | null, destination: MediaTag = 'auto') {
@@ -323,6 +327,70 @@ export default function PianoPage() {
     if (!folderPreview) return
     const valid = folderPreview.candidates.filter(candidate => candidate.assignment.errors.length === 0)
     await uploadPlanEntries(valid.map(candidate => ({ file: candidate.file, destination: candidate.assignment.tag, assignment: candidate.assignment })))
+  }
+
+  async function repairCampaignCalendar() {
+    if (!folderPreview || !clienteId) return
+    const valid = folderPreview.candidates.filter(candidate => candidate.assignment.errors.length === 0)
+    if (!valid.length) return
+    setRepairingCalendar(true)
+    setMsg(null)
+    try {
+      const uploaded = await uploadPlanEntries(valid.map(candidate => ({
+        file: candidate.file,
+        destination: candidate.assignment.tag,
+        assignment: candidate.assignment,
+      })))
+      if (!uploaded.length) throw new Error('Nessun asset caricato: il calendario non è stato modificato')
+      const assets = uploaded.map(asset => ({
+        url: asset.url,
+        relative_path: asset.relativePath,
+        week: asset.week,
+        platform: asset.platform,
+        content_key: asset.contentKey,
+        sequence: asset.sequence,
+        tag: asset.tag,
+        kind: asset.kind,
+      }))
+      const previewResponse = await fetch('/api/data/calendario/repair-campaign-media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assets, confirm: false }),
+      })
+      if (!previewResponse.ok) throw new Error(await readApiError(previewResponse, 'Controllo calendario fallito'))
+      const preview = await previewResponse.json() as { editable?: number; locked?: number; unmatched?: number; exact?: number; inferred?: number }
+      if (!preview.editable) {
+        setMsg({
+          type: 'err',
+          text: `Nessuna card modificabile riconosciuta. Bloccate su Blotato: ${preview.locked || 0}; gruppi non associati: ${preview.unmatched || 0}. Nessuna foto è stata sostituita.`,
+        })
+        return
+      }
+      const accepted = window.confirm(
+        `Riallineare ${preview.editable} card del calendario?\n\n` +
+        `${preview.exact || 0} riconosciute dall'ID file, ${preview.inferred || 0} dalla sequenza mensile completa.\n` +
+        `${preview.locked || 0} già su Blotato resteranno intatte; ${preview.unmatched || 0} gruppi non riconosciuti non saranno toccati.`,
+      )
+      if (!accepted) {
+        setMsg({ type: 'ok', text: 'Controllo completato: nessuna card è stata modificata.' })
+        return
+      }
+      const applyResponse = await fetch('/api/data/calendario/repair-campaign-media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assets, confirm: true }),
+      })
+      if (!applyResponse.ok) throw new Error(await readApiError(applyResponse, 'Riallineamento calendario fallito'))
+      const result = await applyResponse.json() as { updated?: number; locked?: number; unmatched?: number }
+      setMsg({
+        type: 'ok',
+        text: `Calendario riallineato: ${result.updated || 0} card aggiornate con tutti i file del contenuto. ${result.locked || 0} card già inviate a Blotato non modificate; ${result.unmatched || 0} gruppi da controllare.`,
+      })
+    } catch (error) {
+      setMsg({ type: 'err', text: (error as Error).message })
+    } finally {
+      setRepairingCalendar(false)
+    }
   }
 
   function removePlanImage(index: number) {
@@ -880,7 +948,7 @@ export default function PianoPage() {
                       )}
                       {folderPreview.ignored > 0 && <p className="mt-1 text-[10px] text-gray-500">{folderPreview.ignored} file non editoriali o copie ignorati</p>}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => setFolderPreview(null)}
@@ -896,6 +964,16 @@ export default function PianoPage() {
                       >
                         {uploadingImages ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                         Carica e assegna
+                      </button>
+                      <button
+                        type="button"
+                        onClick={repairCampaignCalendar}
+                        disabled={uploadingImages || repairingCalendar || blocked.length > 0 || exceedsLimit || valid.length === 0}
+                        className="inline-flex h-8 items-center gap-1.5 rounded-md bg-violet-700 px-3 text-[11px] font-semibold text-white hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        title="Sostituisce solo i media delle card esistenti riconosciute, senza rigenerare copy e strategia"
+                      >
+                        {repairingCalendar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                        Riallinea calendario
                       </button>
                     </div>
                   </div>

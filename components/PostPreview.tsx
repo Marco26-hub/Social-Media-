@@ -215,13 +215,6 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
             </p>
           </div>
         )}
-        {finalAssetMode && (
-          <div className="absolute bottom-3 left-3 right-12 text-white text-[9px] z-10">
-            <p className="flex items-center gap-1 opacity-90 drop-shadow">
-              <Music2 className="w-3 h-3" /> audio originale
-            </p>
-          </div>
-        )}
 
         {/* Sidebar azioni */}
         <div className="absolute right-2 bottom-24 flex flex-col gap-3.5 items-center text-white z-10">
