@@ -130,7 +130,7 @@ export async function POST(request: Request) {
           )
         } else {
           await q(
-            `UPDATE calendario SET status = 'IN_PUBBLICAZIONE', blotato_status = $1,
+            `UPDATE calendario SET status = 'PUBBLICATO', blotato_status = $1,
                errore_tecnico = NULL, blotato_sync_at = now(), updated_at = now()
              WHERE id = $2 AND cliente_id = $3`,
             [status, row.id, cid],

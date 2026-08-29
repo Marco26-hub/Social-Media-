@@ -42,7 +42,7 @@ export async function POST() {
             blotato_status, blotato_scheduled_at
      FROM calendario
      WHERE cliente_id = $1
-       AND status IN ('APPROVATO', 'IN_PUBBLICAZIONE')
+       AND status IN ('APPROVATO', 'PUBBLICATO')
        AND (blotato_post_id IS NULL OR blotato_status = 'scheduled')
      ORDER BY data_pubblicazione ASC, ora_pubblicazione ASC`,
     [cid],

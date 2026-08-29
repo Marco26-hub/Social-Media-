@@ -1,6 +1,6 @@
 export type Status =
   | 'BOZZA' | 'IDEA' | 'DA_APPROVARE' | 'APPROVATO'
-  | 'IN_PUBBLICAZIONE' | 'PUBBLICATO' | 'ERRORE'
+  | 'PUBBLICATO' | 'ERRORE'
   | 'ERRORE_MANUALE' | 'DRY_RUN_OK' | 'ARCHIVIATO' | 'NON_APPROVATO'
 
 export type Canale = 'instagram' | 'facebook' | 'tiktok' | 'pinterest' | 'linkedin' | 'youtube_shorts' | 'blog' | 'threads' | 'x'

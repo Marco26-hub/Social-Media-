@@ -29,7 +29,7 @@ const CATEGORIE = [
   ['trending', 'Trending'],
   ['seo', 'SEO / Blog'],
 ]
-const STATI: Status[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','NON_APPROVATO','IN_PUBBLICAZIONE','PUBBLICATO','ERRORE','ERRORE_MANUALE']
+const STATI: Status[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','NON_APPROVATO','PUBBLICATO','ERRORE','ERRORE_MANUALE']
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', linkedin: '💼', threads: '🧵', x: '✖️', youtube_shorts: '▶️', blog: '📝'
 }
@@ -126,7 +126,7 @@ function formatMonthLabel(month: string) {
 
 function statusTone(status: string) {
   if (status === 'PUBBLICATO') return 'bg-green-500'
-  if (status === 'APPROVATO' || status === 'IN_PUBBLICAZIONE') return 'bg-blue-500'
+  if (status === 'APPROVATO') return 'bg-blue-500'
   if (status === 'ERRORE' || status === 'ERRORE_MANUALE') return 'bg-red-500'
   if (status === 'NON_APPROVATO') return 'bg-rose-400'
   if (status === 'DA_APPROVARE') return 'bg-amber-500'
@@ -813,7 +813,7 @@ function CalendarioInner() {
   // contenuti davvero passati (fonte di verità), come fa bulkDelete.
   async function bulkReject() {
     // GUARD: solo i contenuti DA_APPROVARE sono rifiutabili (come il tasto rosso
-    // singolo). Mai toccare post APPROVATO/IN_PUBBLICAZIONE/PUBBLICATO (già inviati o
+    // singolo). Mai toccare post APPROVATO/PUBBLICATO (già inviati o
     // live su Blotato) né già NON_APPROVATO: li rifiuteremmo desincronizzando lo stato
     // reale della pubblicazione.
     const rejectableIds = [...selectedIds].filter(id => contenuti.find(c => c.id === id)?.status === 'DA_APPROVARE')
@@ -862,7 +862,7 @@ function CalendarioInner() {
     const movable = selectedRows.filter(item => !item.blotato_post_id
       && item.blotato_status !== 'scheduled'
       && item.blotato_status !== 'published'
-      && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(item.status))
+      && !['PUBBLICATO', 'ARCHIVIATO'].includes(item.status))
     const skipped = selectedRows.length - movable.length
     if (!movable.length) {
       setAdminError('I contenuti selezionati sono già sincronizzati o pubblicati: rimettili in coda prima di spostarli.')
@@ -1030,7 +1030,7 @@ function CalendarioInner() {
   async function handleDrop(c: Contenuto, newDate: string): Promise<boolean> {
     setDragOverDate(null)
     if (toYmd(c.data_pubblicazione) === newDate) return true
-    if (c.blotato_post_id || c.blotato_status === 'scheduled' || c.blotato_status === 'published' || ['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(c.status)) {
+    if (c.blotato_post_id || c.blotato_status === 'scheduled' || c.blotato_status === 'published' || ['PUBBLICATO', 'ARCHIVIATO'].includes(c.status)) {
       setSyncMsg({ type: 'err', text: 'Contenuto già sincronizzato con Blotato: rimettilo prima in coda, poi potrai spostarlo.' })
       return false
     }
@@ -1075,7 +1075,7 @@ function CalendarioInner() {
   const stats = {
     total: contenuti.length,
     daApprovare: contenuti.filter(c => c.status === 'DA_APPROVARE').length,
-    approvati: contenuti.filter(c => c.status === 'APPROVATO' || c.status === 'IN_PUBBLICAZIONE').length,
+    approvati: contenuti.filter(c => c.status === 'APPROVATO').length,
     nonApprovati: contenuti.filter(c => c.status === 'NON_APPROVATO').length,
     pubblicati: contenuti.filter(c => c.status === 'PUBBLICATO' || c.blotato_status === 'published').length,
     errori: contenuti.filter(c => c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE' || c.blotato_status === 'failed' || Boolean(c.errore_tecnico)).length,
@@ -1217,7 +1217,7 @@ function CalendarioInner() {
           <div className="grid grid-cols-2 gap-px bg-gray-100 sm:grid-cols-3 lg:grid-cols-6">
             {[
               { label: 'Pubblicati confermati', value: packageReconcile.summary.published, tone: 'text-emerald-700', filter: 'PUBBLICATO' },
-              { label: 'In coda Blotato', value: packageReconcile.summary.queued, tone: 'text-blue-700', filter: 'IN_PUBBLICAZIONE' },
+              { label: 'In coda Blotato', value: packageReconcile.summary.queued, tone: 'text-blue-700', filter: 'PUBBLICATO' },
               { label: 'Non ancora inviati', value: packageReconcile.summary.not_sent, tone: 'text-amber-700', filter: 'DA_APPROVARE' },
               { label: 'Falliti', value: packageReconcile.summary.failed, tone: 'text-red-700', filter: 'ERRORE' },
               { label: 'Mancano da creare', value: packageReconcile.summary.missing_to_create, tone: 'text-violet-700', filter: 'tutti' },
@@ -1525,7 +1525,7 @@ function CalendarioInner() {
               <div className={`mb-3 h-1 rounded-full ${statusTone(c.status)}`} />
               <div className="flex flex-wrap items-start gap-3 md:gap-4">
                 {(() => {
-                  const movable = !c.blotato_post_id && c.blotato_status !== 'scheduled' && c.blotato_status !== 'published' && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(c.status)
+                  const movable = !c.blotato_post_id && c.blotato_status !== 'scheduled' && c.blotato_status !== 'published' && !['PUBBLICATO', 'ARCHIVIATO'].includes(c.status)
                   return (
                     <span
                       draggable={movable}
@@ -1774,7 +1774,7 @@ function CalendarioInner() {
                 {!selected.blotato_post_id
                   && selected.blotato_status !== 'scheduled'
                   && selected.blotato_status !== 'published'
-                  && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(selected.status)
+                  && !['PUBBLICATO', 'ARCHIVIATO'].includes(selected.status)
                   && (
                     <label className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-gray-600">
                       <CalendarDays className="h-4 w-4" />

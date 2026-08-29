@@ -470,7 +470,7 @@ export async function scheduleOnBlotato(
     if (!manualAccountId && accountId) {
       await q(
         `UPDATE calendario
-         SET blotato_post_id = $1, blotato_status = 'scheduled', blotato_scheduled_at = $2,
+         SET status = 'PUBBLICATO', blotato_post_id = $1, blotato_status = 'scheduled', blotato_scheduled_at = $2,
              blotato_sync_at = now(), publish_lock_id = NULL, errore_tecnico = NULL, platform_account_id = $5
          WHERE id = $3 AND cliente_id = $4`,
         [String(blotatoId), scheduledTime, row.id, clienteId, accountId],
@@ -478,7 +478,7 @@ export async function scheduleOnBlotato(
     } else {
       await q(
         `UPDATE calendario
-         SET blotato_post_id = $1, blotato_status = 'scheduled', blotato_scheduled_at = $2,
+         SET status = 'PUBBLICATO', blotato_post_id = $1, blotato_status = 'scheduled', blotato_scheduled_at = $2,
              blotato_sync_at = now(), publish_lock_id = NULL, errore_tecnico = NULL
          WHERE id = $3 AND cliente_id = $4`,
         [String(blotatoId), scheduledTime, row.id, clienteId],

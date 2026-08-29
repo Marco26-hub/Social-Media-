@@ -5,7 +5,6 @@ const config: Record<string, { bg: string; text: string; label: string }> = {
   IDEA:             { bg: 'bg-purple-100', text: 'text-purple-700',label: 'Idea' },
   DA_APPROVARE:     { bg: 'bg-yellow-100', text: 'text-yellow-800',label: 'Da approvare' },
   APPROVATO:        { bg: 'bg-blue-100',   text: 'text-blue-800',  label: 'Approvato' },
-  IN_PUBBLICAZIONE: { bg: 'bg-indigo-100', text: 'text-indigo-800',label: 'In pubblicazione' },
   PUBBLICATO:       { bg: 'bg-green-100',  text: 'text-green-800', label: 'Pubblicato' },
   ERRORE:           { bg: 'bg-red-100',    text: 'text-red-800',   label: 'Errore' },
   ERRORE_MANUALE:   { bg: 'bg-red-200',    text: 'text-red-900',   label: 'Errore manuale' },

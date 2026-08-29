@@ -17,7 +17,7 @@ const CANALE_ICON: Record<string, string> = {
 
 function statusDot(status: string): string {
   if (status === 'PUBBLICATO') return 'bg-green-500'
-  if (status === 'APPROVATO' || status === 'IN_PUBBLICAZIONE') return 'bg-blue-500'
+  if (status === 'APPROVATO') return 'bg-blue-500'
   if (status === 'ERRORE' || status === 'ERRORE_MANUALE') return 'bg-red-500'
   if (status === 'DA_APPROVARE') return 'bg-amber-500'
   if (status === 'NON_APPROVATO') return 'bg-rose-400'
@@ -124,7 +124,7 @@ export default function CalendarGrid({ items, tz, onSelect, onMove }: {
                       const movable = !it.blotato_post_id
                         && it.blotato_status !== 'scheduled'
                         && it.blotato_status !== 'published'
-                        && !['PUBBLICATO', 'IN_PUBBLICAZIONE', 'ARCHIVIATO'].includes(it.status)
+                        && !['PUBBLICATO', 'ARCHIVIATO'].includes(it.status)
                       return (
                         <button
                           key={it.id}
