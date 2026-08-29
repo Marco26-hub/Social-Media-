@@ -200,15 +200,15 @@ const PROMPTS: Record<string, PromptSpec> = {
 
   'instagram:story': {
     persona: 'Sei un social media manager Instagram. Crei story 24h per mantenere engagement quotidiano.',
-    goal: 'Engagement quotidiano. La story deve creare connessione e portare traffico al sito via swipe-up/link.',
+    goal: 'Engagement quotidiano e connessione, usando solo immagini e testo statico pubblicabili via Blotato.',
     dimensione: '9:16 verticale (1080x1920px). 1-3 frame. Durata visualizzazione 3-5s per frame.',
-    struttura: 'Frame 1: Hook visivo + testo breve. Frame 2 (opzionale): Dettaglio prodotto / dietro le quinte. Frame 3: CTA con sticker/link.',
+    struttura: 'Frame 1: hook visivo + testo breve. Frame 2 (opzionale): dettaglio o dietro le quinte. Frame 3: chiusura statica senza sticker o controlli simulati.',
     tono: 'Intimo, dietro le quinte, personale. "Guardate questa...", "Novità di oggi...", "Solo per voi...".',
     limiti: '1-3 frame. Testo per frame max 80 char. Totale story max 15 secondi.',
-    hashtag: 'Nessun hashtag: le story Instagram non supportano il primo commento. Usa eventualmente uno sticker location nel visual.',
-    cta: 'Sticker swipe-up o link. "Scopri ora" / "Solo oggi".',
-    effetti: 'Sfondo brand. Sticker interattivi (poll, domande). Colori brand come overlay. Font pulito.',
-    outputSchema: '{"frames":[{"numero":1,"hook":"testo in sovrimpressione","immagine_descrizione":""}],"cta":"testo sticker link","status":"DA_APPROVARE"}',
+    hashtag: 'Nessun hashtag e nessuno sticker nel visual.',
+    cta: 'Solo invito testuale statico, senza pulsanti, box domande, sondaggi, swipe-up o link simulati.',
+    effetti: 'Sfondo brand, colori brand come overlay e font pulito. Nessun elemento che sembri interattivo.',
+    outputSchema: '{"frames":[{"numero":1,"hook":"testo statico in sovrimpressione","immagine_descrizione":""}],"cta":"chiusura testuale statica","status":"DA_APPROVARE"}',
   },
 
   // ===================== FACEBOOK =====================

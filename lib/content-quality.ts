@@ -61,7 +61,7 @@ const PLATFORM_RULES: Record<string, string[]> = {
     'Formato mobile-first; per Reel e Story usa 9:16, testo leggibile e hook immediato.',
     'Per Reel: apertura visiva nei primi 2-3 secondi, ritmo rapido, caption corta ma utile, CTA non invadente.',
     'Per carousel: slide 1 salva-scroll, una promessa per slide, finale con CTA e motivo per salvare/condividere.',
-    'Per Story: 3-5 frame con sticker/interazione, link o DM trigger, testo breve in safe zone.',
+    'Per Story via Blotato: 1-3 frame 9:16 con testo breve in safe zone; non simulare sticker, box domande, sondaggi o link interattivi.',
   ],
   facebook: [
     'Copy più esplicativo di Instagram, CTA chiara e link diretto quando disponibile.',
@@ -109,7 +109,7 @@ const FORMAT_RULES: Record<string, string[]> = {
   post: ['Hook forte, caption leggibile, CTA chiara, visual direction e alt text.'],
   carousel: ['Slide-by-slide: cover, promessa, valore progressivo, prova, recap, CTA finale.'],
   reel: ['Storyboard con timing, hook 0-2s, overlay, voiceover, transizioni, CTA e caption video.'],
-  story: ['Sequenza frame, sticker/interazione, copy corto, link/DM trigger, safe-zone.'],
+  story: ['Sequenza di 1-3 frame, copy corto e safe-zone; solo elementi statici supportati dalla pubblicazione Blotato.'],
   video: ['Script con scene, voiceover, sottotitoli/overlay, proof e CTA visiva.'],
   short: ['Hook 0-3s, payoff veloce, title SEO, descrizione e tag.'],
   pin: ['Titolo visual, keyword, layout 2:3, CTA salvataggio/traffico e descrizione SEO.'],

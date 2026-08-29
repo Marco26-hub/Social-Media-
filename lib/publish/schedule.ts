@@ -504,7 +504,8 @@ function buildPlatformContent(canale: string, formato: string, row: ContentRow):
     parts.push(`\n${cta}`)
   }
 
-  // Link prodotto: la story lo passa come sticker link (payload separato), non nel testo.
+  // Blotato non espone sticker link/interattivi per le Story: il link resta fuori
+  // dal testo per non simulare nell'anteprima una funzione assente in pubblicazione.
   // Tutti gli altri formati lo appendono in fondo così è cliccabile su ogni canale
   // (Instagram post/carousel non ha link cliccabile in caption, ma resta visibile).
   if (linkProdotto && formatoNorm !== 'story' && !parts.some(p => p.includes(linkProdotto))) {

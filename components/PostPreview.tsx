@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, Pause, Volume2, Link2, ChevronLeft, ChevronRight, Music2 } from 'lucide-react'
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, Pause, Volume2, ChevronLeft, ChevronRight, Music2 } from 'lucide-react'
 import type { Contenuto } from '@/lib/types'
 import { resolveHandle } from '@/lib/social-handle'
 
@@ -450,25 +450,6 @@ function StoryMediaSequence({ imgs }: { imgs: string[] }) {
   )
 }
 
-// Testo sticker link stile IG: dominio nudo maiuscolo ("https://silkincom.com/x" -> "SILKINCOM.COM")
-function domainLabel(url: string): string {
-  try {
-    const host = new URL(url.includes('://') ? url : `https://${url}`).hostname
-    return host.replace(/^www\./, '').toUpperCase()
-  } catch {
-    return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '').toUpperCase()
-  }
-}
-
-function safeExternalUrl(value: string): string {
-  try {
-    const url = new URL(value)
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : ''
-  } catch {
-    return ''
-  }
-}
-
 function socialInteractionUrls(canale: string, rawHandle: string | null | undefined) {
   const slug = String(rawHandle || '').trim().replace(/^@/, '')
   if (!/^[a-zA-Z0-9._-]{1,75}$/.test(slug)) return { profile: '', message: '' }
@@ -519,7 +500,6 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
   const key = `${c.canale}-${c.formato}`
   const aspect = ASPECT[key] ?? 'aspect-square'
   const handle = resolveHandle(c.canale, brand)
-  const linkUrl = safeExternalUrl(c.link_prodotto_finale || c.link_prodotto || brand?.sito_url || '')
   const socialUrls = socialInteractionUrls(c.canale, brand?.social_handle)
   const media = mediaUrls(c)
   const slideItems = parseVisualItems(c.slides_json)
@@ -575,36 +555,6 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
             <div className="absolute bottom-28 left-3 right-9 flex justify-start">
               <div className="max-w-[88%] rounded-md border border-white/20 bg-black/45 px-2.5 py-2 text-[11px] font-semibold leading-snug text-white shadow-lg backdrop-blur-md">
                 {c.hook}
-              </div>
-            </div>
-          )}
-          {finalAssetMode && linkUrl && (
-            <a
-              href={linkUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={c.cta || `Apri ${domainLabel(linkUrl)}`}
-              title={`Apri ${domainLabel(linkUrl)}`}
-              className="absolute bottom-[7.65rem] left-9 right-9 z-30 h-8 rounded-full outline-none ring-white/0 transition hover:ring-2 hover:ring-white/70 focus:ring-2 focus:ring-white"
-            >
-              <span className="sr-only">{c.cta || `Apri ${domainLabel(linkUrl)}`}</span>
-            </a>
-          )}
-          {/* Sticker link cliccabile (nativo IG, nessuna soglia follower dal 2023) */}
-          {!finalAssetMode && linkUrl ? (
-            <div className="absolute bottom-16 left-0 right-0 flex justify-center">
-              <div className="inline-flex items-center gap-1.5 bg-white text-black text-xs font-bold px-4 py-2 rounded-full shadow-lg">
-                <Link2 className="w-3.5 h-3.5" />
-                {domainLabel(linkUrl)}
-              </div>
-            </div>
-          ) : !finalAssetMode && c.cta && (
-            <div className="absolute bottom-16 left-0 right-0 text-center">
-              <div className="inline-flex flex-col items-center text-white">
-                <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center animate-bounce">
-                  <span className="text-xs">↑</span>
-                </div>
-                <span className="text-xs font-semibold mt-1">{c.cta}</span>
               </div>
             </div>
           )}

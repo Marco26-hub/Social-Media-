@@ -76,7 +76,7 @@ const FORMAT_SPECS: Record<string, { struttura: string; schema: string }> = {
     schema: '"hook":"titolo pin keyword-rich","caption":"descrizione con keyword long-tail","hashtag":"","cta":"","idea_visual":"immagine verticale 2:3"',
   },
   story: {
-    struttura: '9:16, 1-3 frame, 3-5s per frame. Frame 1 hook + testo breve; frame 2 dettaglio/dietro le quinte; frame 3 CTA con sticker/link.',
+    struttura: '9:16, 1-3 frame, 3-5s per frame. Frame 1 hook + testo breve; frame 2 dettaglio/dietro le quinte; frame 3 chiusura statica. Non generare sticker, box domande, sondaggi o link interattivi: Blotato non li pubblica.',
     schema: '"hook":"","caption":"","hashtag":"","cta":"","slides":[{"numero":1,"testo":"testo in sovrimpressione","visual":""}]',
   },
 }
