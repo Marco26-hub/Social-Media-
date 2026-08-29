@@ -186,7 +186,7 @@ function CalendarioInner() {
   const [reconciling, setReconciling] = useState(false)
   const [packageReconcile, setPackageReconcile] = useState<PackageReconcile | null>(null)
   const [requeuing, setRequeuing] = useState(false)
-  const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'warn' | 'err'; text: string } | null>(null)
   const [vista, setVista] = useState<'lista' | 'griglia'>('lista')
   const [clienteTz, setClienteTz] = useState('Europe/Rome')
   const demo = useRuntimeDemo()
@@ -308,13 +308,13 @@ function CalendarioInner() {
         setSyncMsg({ type: 'err', text: data.error || 'Approvazione non riuscita' })
       } else if (data.publish_status === 'visual_pending' || data.publish_status === 'visual_review') {
         setSyncMsg({
-          type: 'ok',
+          type: 'warn',
           text: data.publish_status === 'visual_review'
-            ? 'Montaggio Reel pronto: apri Preview, controlla il video e approvalo di nuovo per pubblicarlo.'
-            : 'Montaggio Reel in corso: nessuna pubblicazione è partita. Premi Sincronizza per aggiornarne lo stato.',
+            ? 'Montaggio video pronto: apri Preview, controllalo e approvalo di nuovo per pubblicarlo.'
+            : 'Montaggio video in corso: nessuna pubblicazione è partita. Premi Sincronizza per aggiornarne lo stato.',
         })
       } else if (data.publish_note) {
-        setSyncMsg({ type: data.publish_status === 'skipped' ? 'err' : 'ok', text: data.publish_note })
+        setSyncMsg({ type: data.publish_status === 'skipped' ? 'err' : 'warn', text: data.publish_note })
       }
       await fetchData()
     }
@@ -342,7 +342,7 @@ function CalendarioInner() {
           ? 'dry-run: pubblicazione non attiva, nessun invio reale.'
           : `non inviato: ${data.reason || 'scartato dal pre-flight'}`
       setSyncMsg({
-        type: ['scheduled', 'dry_run', 'visual_pending', 'visual_review'].includes(data.status) ? 'ok' : 'err',
+        type: data.status === 'scheduled' ? 'ok' : ['dry_run', 'visual_pending', 'visual_review'].includes(data.status) ? 'warn' : 'err',
         text: `${c.canale} · ${c.formato} — ${label}`,
       })
       await fetchData()
@@ -543,7 +543,7 @@ function CalendarioInner() {
         data.visual_review ? `${data.visual_review} video pronti da vedere e approvare` : '',
       ].filter(Boolean).join(', ')
       setSyncMsg({
-        type: data.failed ? 'err' : 'ok',
+        type: data.failed ? 'err' : (data.dry_run || data.visual_pending || data.visual_review) ? 'warn' : 'ok',
         text: data.candidates === 0
           ? 'Nessun contenuto approvato da sincronizzare.'
           : `${data.synced} contenuti inviati a Blotato${failNote}.${dryNote}${visualNote ? ` ${visualNote}. Nessun video appena generato è stato pubblicato.` : ''}`,
@@ -1199,7 +1199,7 @@ function CalendarioInner() {
       </div>
 
       {syncMsg && (
-        <div className={`mb-4 rounded-xl border p-3 text-sm flex items-start gap-2 ${syncMsg.type === 'ok' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
+        <div className={`mb-4 rounded-xl border p-3 text-sm flex items-start gap-2 ${syncMsg.type === 'ok' ? 'border-green-200 bg-green-50 text-green-800' : syncMsg.type === 'warn' ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
           {syncMsg.type === 'ok' ? <CheckCircle className="w-4 h-4 mt-0.5" /> : <AlertTriangle className="w-4 h-4 mt-0.5" />}
           {syncMsg.text}
         </div>

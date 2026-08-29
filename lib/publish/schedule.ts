@@ -11,6 +11,7 @@ import { CANALE_TO_BLOTATO, PLATFORM_REQUIREMENTS, formatoToMediaType, zonedToUt
 import { preflightRow } from '@/lib/publish/preflight'
 import { hashtagCount, normalizeHashtagsForPublish, normalizeInstagramPublishPayload, stripHashtags } from '@/lib/hashtags'
 import { remotionSourceHash, renderSwaSocialVideo } from '@/lib/remotion-renderer'
+import { hasFinalCampaignAsset, requiresRenderedVisualReview } from '@/lib/publish/visual-review'
 
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 
@@ -241,13 +242,10 @@ export async function scheduleOnBlotato(
     // I media provenienti da una cartella campagna sono creativita finali: hook
     // e CTA sono gia impaginati. Non ridisegnarli sopra l'immagine e abilita il
     // percorso ffmpeg rapido quando il Reel e una sola foto con musica.
-    const rawCampaignPaths = row.campaign_source_paths
-    const hasCampaignPaths = Array.isArray(rawCampaignPaths)
-      ? rawCampaignPaths.length > 0
-      : !['', '[]', 'null'].includes(String(rawCampaignPaths || '').trim().toLowerCase())
-    const hasFinalCampaignAsset = Boolean(String(row.campaign_content_key || '').trim()) || hasCampaignPaths
-    const renderHook = hasFinalCampaignAsset ? undefined : String(row.hook || '').trim() || undefined
-    const renderCta = hasFinalCampaignAsset ? undefined : String(row.cta || '').trim() || undefined
+    const finalCampaignAsset = hasFinalCampaignAsset(row)
+    const requireVisualReview = requiresRenderedVisualReview(row)
+    const renderHook = finalCampaignAsset ? undefined : String(row.hook || '').trim() || undefined
+    const renderCta = finalCampaignAsset ? undefined : String(row.cta || '').trim() || undefined
 
     if (uploadedVideo && !hasAudio) {
       mediaUrls = [uploadedVideo]
@@ -268,8 +266,25 @@ export async function scheduleOnBlotato(
       const storedVisualUrl = String((hasAudio ? row.blotato_audio_visual_media_url : row.blotato_visual_media_url) || '').trim()
       const storedMatches = storedSourceHash === sourceHash
 
-      if (storedMatches && storedVisualUrl && storedVisualStatus === 'approved') {
+      if (storedMatches && storedVisualUrl && (storedVisualStatus === 'approved' || !requireVisualReview)) {
         mediaUrls = [storedVisualUrl]
+        if (!requireVisualReview && storedVisualStatus !== 'approved' && rowId) {
+          const promoted = await q(
+            hasAudio
+              ? `UPDATE calendario
+                   SET blotato_audio_visual_status = 'approved', errore_tecnico = NULL, updated_at = now()
+                 WHERE id = $1 AND cliente_id = $2 AND publish_lock_id = $3
+                 RETURNING id`
+              : `UPDATE calendario
+                   SET blotato_visual_status = 'approved', errore_tecnico = NULL, updated_at = now()
+                 WHERE id = $1 AND cliente_id = $2 AND publish_lock_id = $3
+                 RETURNING id`,
+            [rowId, clienteId, lockId],
+          )
+          if (!promoted.length) {
+            return { status: 'skipped', reason: 'Lock di pubblicazione perso durante la promozione del video finale.' }
+          }
+        }
       } else if (storedMatches && storedVisualUrl) {
         if (rowId) {
           if (hasAudio) {
@@ -333,28 +348,32 @@ export async function scheduleOnBlotato(
           // questo UPDATE non tocca nessuna riga. Senza controllare il rowcount
           // ritornavamo 'visual_review' come se fosse riuscito, lasciando l'MP4
           // orfano sullo storage e la riga in DA_APPROVARE senza visual da approvare.
+          const visualStatus = requireVisualReview ? 'ready_for_review' : 'approved'
+          const reviewFields = requireVisualReview
+            ? `status = 'DA_APPROVARE', blotato_status = 'visual_review', publish_lock_id = NULL,`
+            : ''
           const saved = hasAudio
             ? await q(
               `UPDATE calendario
-                 SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
-                     blotato_audio_visual_id = $1, blotato_audio_visual_status = 'ready_for_review',
-                     blotato_audio_visual_media_url = $2, blotato_visual_source_hash = $3,
-                     blotato_audio_visual_updated_at = now(), publish_lock_id = NULL,
+                 SET ${reviewFields}
+                     blotato_audio_visual_id = $1, blotato_audio_visual_status = $2,
+                     blotato_audio_visual_media_url = $3, blotato_visual_source_hash = $4,
+                     blotato_audio_visual_updated_at = now(),
                      errore_tecnico = NULL, updated_at = now()
-               WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6
+               WHERE id = $5 AND cliente_id = $6 AND publish_lock_id = $7
                RETURNING id`,
-              [rendered.id, rendered.mediaUrl, rendered.sourceHash, rowId, clienteId, lockId],
+              [rendered.id, visualStatus, rendered.mediaUrl, rendered.sourceHash, rowId, clienteId, lockId],
             )
             : await q(
               `UPDATE calendario
-                 SET status = 'DA_APPROVARE', blotato_status = 'visual_review',
-                     blotato_visual_id = $1, blotato_visual_status = 'ready_for_review',
-                     blotato_visual_media_url = $2, blotato_visual_source_hash = $3,
-                     blotato_visual_updated_at = now(), publish_lock_id = NULL,
+                 SET ${reviewFields}
+                     blotato_visual_id = $1, blotato_visual_status = $2,
+                     blotato_visual_media_url = $3, blotato_visual_source_hash = $4,
+                     blotato_visual_updated_at = now(),
                      errore_tecnico = NULL, updated_at = now()
-               WHERE id = $4 AND cliente_id = $5 AND publish_lock_id = $6
+               WHERE id = $5 AND cliente_id = $6 AND publish_lock_id = $7
                RETURNING id`,
-              [rendered.id, rendered.mediaUrl, rendered.sourceHash, rowId, clienteId, lockId],
+              [rendered.id, visualStatus, rendered.mediaUrl, rendered.sourceHash, rowId, clienteId, lockId],
             )
 
           if (!saved.length) {
@@ -362,7 +381,10 @@ export async function scheduleOnBlotato(
             return { status: 'skipped', reason: 'Lock di pubblicazione perso durante il montaggio: il contenuto verrà ripreso al prossimo tentativo.' }
           }
         }
-        return { status: 'visual_review', visualId: rendered.id, mediaUrl: rendered.mediaUrl }
+        if (requireVisualReview) {
+          return { status: 'visual_review', visualId: rendered.id, mediaUrl: rendered.mediaUrl }
+        }
+        mediaUrls = [rendered.mediaUrl]
       }
     }
   }
@@ -373,7 +395,7 @@ export async function scheduleOnBlotato(
     const validation = await validateMediaUrls(mediaUrls)
     if (!validation.ok) {
       const invalid = validation.errors.map(e => `[video] ${e.url}: ${e.reason}`).join('; ')
-      throw new Error(`Video Reel non accessibile prima del publish: ${invalid}`)
+      throw new Error(`Video non accessibile prima del publish: ${invalid}`)
     }
   }
 

@@ -16,6 +16,7 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://drive.google.com https://lh3.googleusercontent.com https://images.unsplash.com https://*.supabase.co",
+  "media-src 'self' blob: https://*.supabase.co",
   "font-src 'self' data:",
   // connect-src: 'self' per le chiamate AI (proxate dal server) + host Supabase per
   // l'UPLOAD DIRETTO browser→Storage (presigned PUT). Necessario perché Vercel

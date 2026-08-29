@@ -9,6 +9,7 @@
 
 import { CANALE_TO_BLOTATO, PLATFORM_REQUIREMENTS, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from './blotato-map'
 import { MAX_BLOTATO_INSTAGRAM_HASHTAGS, hashtagCount } from '@/lib/hashtags'
+import { hasFinalCampaignAsset } from './visual-review'
 
 export type PreflightIssue = { code: string; message: string }
 export type PreflightResult = { ok: boolean; errors: PreflightIssue[]; warnings: string[] }
@@ -67,7 +68,10 @@ export function preflightRow(row: Record<string, unknown>, tz: string = DEFAULT_
     errors.push({ code: 'carousel', message: `Carosello: servono 2–10 media (attuali: ${media.length})` })
   }
   if ((mediaType === 'reel' || mediaType === 'video') && media.length > 0 && !media.some(u => VIDEO_RE.test(u))) {
-    warnings.push(`MP4 assente: ${media.length} ${media.length === 1 ? 'immagine verrà montata' : 'immagini verranno montate'} in un video da approvare prima della pubblicazione`)
+    const action = hasFinalCampaignAsset(row)
+      ? 'in un video finale durante la sincronizzazione'
+      : 'in un video da approvare prima della pubblicazione'
+    warnings.push(`MP4 assente: ${media.length} ${media.length === 1 ? 'immagine verrà montata' : 'immagini verranno montate'} ${action}`)
   }
 
   // Data/ora deve essere nel FUTURO nel fuso del cliente (Blotato: passato → 422).
