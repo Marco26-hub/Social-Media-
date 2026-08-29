@@ -67,12 +67,24 @@ export async function GET(request: Request) {
       'blotato_visual_media_url',
       'blotato_audio_visual_media_url',
     ].map(optionalText).join(',\n              ')
+    const finalAssetChecks = [
+      calendarioColumns.has('campaign_source_paths')
+        ? `NULLIF(c.campaign_source_paths::text, '') IS NOT NULL AND c.campaign_source_paths::text <> '[]'`
+        : '',
+      calendarioColumns.has('production_notes')
+        ? `c.production_notes ~* 'MONTHLY_DNA:|asset\\s+final|cartella'`
+        : '',
+    ].filter(Boolean)
+    const finalAssetSelect = finalAssetChecks.length
+      ? `(${finalAssetChecks.map(check => `(${check})`).join(' OR ')}) AS has_campaign_final_assets,`
+      : 'false AS has_campaign_final_assets,'
     const tokenSelect = hasPreviewToken ? 'c.preview_token::text AS preview_token,' : ''
     const rows = await q(
       `SELECT c.canale, c.formato, c.hook, c.caption, c.hashtag, c.cta, c.nome_prodotto,
               ${mediaSelect},
               c.link_prodotto, c.link_prodotto_finale,
               ${visualSelect},
+              ${finalAssetSelect}
               ${tokenSelect}
               b.brand_name, b.social_handle, b.sito_url
        FROM calendario c

@@ -105,6 +105,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
   const [reelAudioTitle, setReelAudioTitle] = useState('')
   const [campaignSourcePaths, setCampaignSourcePaths] = useState<unknown>(null)
   const [productionNotes, setProductionNotes] = useState('')
+  const [hasCampaignFinalAssets, setHasCampaignFinalAssets] = useState(false)
   // Link condivisibile basato sul preview_token opaco (non sull'id enumerabile).
   const [shareUrl, setShareUrl] = useState('')
 
@@ -159,6 +160,10 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setReelAudioTitle(textValue(d.reel_audio_title))
         setCampaignSourcePaths(d.campaign_source_paths ?? null)
         setProductionNotes(textValue(d.production_notes))
+        setHasCampaignFinalAssets(Boolean(
+          (Array.isArray(d.campaign_source_paths) && d.campaign_source_paths.length)
+          || /MONTHLY_DNA:|asset\s+final|cartella/i.test(textValue(d.production_notes))
+        ))
         if (Array.isArray(d.tags)) setTags(d.tags.filter((tag): tag is string => typeof tag === 'string'))
       }
       const exRaw = localStorage.getItem(`preview_${id}_excluded`)
@@ -219,6 +224,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setReelAudioTitle(s(d.reel_audio_title))
         setCampaignSourcePaths(d.campaign_source_paths ?? null)
         setProductionNotes(s(d.production_notes))
+        setHasCampaignFinalAssets(d.has_campaign_final_assets === true)
         if (Array.isArray(d.tags)) setTags(d.tags.filter((tag): tag is string => typeof tag === 'string'))
       })
       .catch(() => {})
@@ -271,7 +277,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     alt_text: altText, tags, thumbnail_url: thumbnailUrl,
     idea_visual: ideaVisual, voiceover_script: voiceoverScript, music_mood: musicMood,
     reel_audio_url: reelAudioUrl || null, reel_audio_title: reelAudioTitle || null,
-    campaign_source_paths: campaignSourcePaths as Contenuto['campaign_source_paths'],
+    campaign_source_paths: hasCampaignFinalAssets ? ['asset-finale'] : campaignSourcePaths as Contenuto['campaign_source_paths'],
     production_notes: productionNotes || null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
     created_at: '', updated_at: '',

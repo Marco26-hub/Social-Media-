@@ -366,6 +366,82 @@ function StructuredCarouselGallery({ items, canale }: { items: VisualItem[]; can
 
 type BrandHandleInfo = { brand_name?: string | null; social_handle?: string | null; sito_url?: string | null } | null
 
+function StoryMediaSequence({ imgs }: { imgs: string[] }) {
+  const videoUrl = imgs.find(isVideoUrl)
+  const slides = videoUrl ? [videoUrl] : imgs.filter(url => !isVideoUrl(url))
+  const [index, setIndex] = useState(0)
+  const [progress, setProgress] = useState(0)
+  const slideDurationMs = 5000
+
+  useEffect(() => {
+    if (videoUrl || slides.length < 2) return
+    const startedAt = Date.now()
+    const timer = window.setInterval(() => {
+      const nextProgress = Math.min(1, (Date.now() - startedAt) / slideDurationMs)
+      setProgress(nextProgress)
+      if (nextProgress >= 1) {
+        window.clearInterval(timer)
+        setIndex(current => (current + 1) % slides.length)
+      }
+    }, 50)
+    return () => window.clearInterval(timer)
+  }, [index, slides.length, videoUrl])
+
+  useEffect(() => setProgress(0), [index])
+
+  const current = slides[index]
+  if (!current) return null
+
+  return (
+    <>
+      {isVideoUrl(current) ? (
+        <video src={current} className="h-full w-full object-cover" muted controls playsInline preload="metadata" />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={current} src={current} alt="" className="h-full w-full object-cover transition-opacity duration-300" />
+      )}
+
+      <div className="absolute left-2 right-2 top-2 z-20 flex gap-1">
+        {slides.map((_, slideIndex) => (
+          <div key={slideIndex} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/40">
+            <div
+              className="h-full rounded-full bg-white"
+              style={{
+                width: slideIndex < index
+                  ? '100%'
+                  : slideIndex === index
+                    ? `${videoUrl ? 100 : Math.round(progress * 100)}%`
+                    : '0%',
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {slides.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={() => setIndex(currentIndex => (currentIndex - 1 + slides.length) % slides.length)}
+            aria-label="Immagine Story precedente"
+            className="absolute left-2 top-1/2 z-20 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white opacity-0 backdrop-blur-sm transition-opacity hover:bg-black/55 focus:opacity-100 group-hover:opacity-100"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIndex(currentIndex => (currentIndex + 1) % slides.length)}
+            aria-label="Immagine Story successiva"
+            className="absolute right-2 top-1/2 z-20 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white opacity-0 backdrop-blur-sm transition-opacity hover:bg-black/55 focus:opacity-100 group-hover:opacity-100"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </>
+      )}
+    </>
+  )
+}
+
 // Testo sticker link stile IG: dominio nudo maiuscolo ("https://silkincom.com/x" -> "SILKINCOM.COM")
 function domainLabel(url: string): string {
   try {
@@ -420,12 +496,9 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
   if (c.formato === 'story') {
     return (
       <div className="max-w-[260px] mx-auto">
-        <div className="relative aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-xl">
-          {c.link_media_1 && isVideoUrl(c.link_media_1) ? (
-            <video src={c.link_media_1} className="w-full h-full object-cover" muted controls playsInline preload="metadata" />
-          ) : c.link_media_1 ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={c.link_media_1} alt="" className="w-full h-full object-cover" />
+        <div className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-black shadow-xl">
+          {media.length ? (
+            <StoryMediaSequence imgs={media} />
           ) : sceneItems[0] || slideItems[0] ? (
             <VisualBriefCard
               icon={CANALE_ICON[c.canale] || '📸'}
@@ -436,12 +509,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-700 flex items-center justify-center text-5xl">📸</div>
           )}
-          {/* Progress bar */}
-          <div className="absolute top-2 left-2 right-2 flex gap-1">
-            {[1,2,3].map(i => (
-              <div key={i} className={`flex-1 h-0.5 rounded-full ${i === 1 ? 'bg-white' : 'bg-white/40'}`} />
-            ))}
-          </div>
+          {!media.length && <div className="absolute left-2 right-2 top-2 h-0.5 rounded-full bg-white" />}
           {/* Profile header */}
           <div className="absolute top-5 left-3 right-3 flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-0.5">
