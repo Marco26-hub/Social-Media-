@@ -403,18 +403,26 @@ function StoryMediaSequence({ imgs }: { imgs: string[] }) {
 
       <div className="absolute left-2 right-2 top-2 z-20 flex gap-1">
         {slides.map((_, slideIndex) => (
-          <div key={slideIndex} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/40">
-            <div
-              className="h-full rounded-full bg-white"
-              style={{
-                width: slideIndex < index
-                  ? '100%'
-                  : slideIndex === index
-                    ? `${videoUrl ? 100 : Math.round(progress * 100)}%`
-                    : '0%',
-              }}
-            />
-          </div>
+          <button
+            key={slideIndex}
+            type="button"
+            onClick={() => setIndex(slideIndex)}
+            aria-label={`Vai all'immagine Story ${slideIndex + 1}`}
+            className="h-2 flex-1 overflow-hidden rounded-full bg-transparent py-[3px]"
+          >
+            <span className="block h-0.5 overflow-hidden rounded-full bg-white/40">
+              <span
+                className="block h-full rounded-full bg-white"
+                style={{
+                  width: slideIndex < index
+                    ? '100%'
+                    : slideIndex === index
+                      ? `${videoUrl ? 100 : Math.round(progress * 100)}%`
+                      : '0%',
+                }}
+              />
+            </span>
+          </button>
         ))}
       </div>
 
@@ -461,6 +469,24 @@ function safeExternalUrl(value: string): string {
   }
 }
 
+function socialInteractionUrls(canale: string, rawHandle: string | null | undefined) {
+  const slug = String(rawHandle || '').trim().replace(/^@/, '')
+  if (!/^[a-zA-Z0-9._-]{1,75}$/.test(slug)) return { profile: '', message: '' }
+  if (canale === 'instagram') {
+    return {
+      profile: `https://www.instagram.com/${slug}/`,
+      message: `https://ig.me/m/${slug}`,
+    }
+  }
+  if (canale === 'facebook') {
+    return {
+      profile: `https://www.facebook.com/${slug}`,
+      message: `https://m.me/${slug}`,
+    }
+  }
+  return { profile: '', message: '' }
+}
+
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', youtube_shorts: '▶️',
   linkedin: '💼', threads: '🧵', x: '✖️', blog: '✍️',
@@ -494,6 +520,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
   const aspect = ASPECT[key] ?? 'aspect-square'
   const handle = resolveHandle(c.canale, brand)
   const linkUrl = safeExternalUrl(c.link_prodotto_finale || c.link_prodotto || brand?.sito_url || '')
+  const socialUrls = socialInteractionUrls(c.canale, brand?.social_handle)
   const media = mediaUrls(c)
   const slideItems = parseVisualItems(c.slides_json)
   const sceneItems = parseVisualItems(c.scenes_json)
@@ -520,13 +547,29 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
           )}
           {!media.length && <div className="absolute left-2 right-2 top-2 h-0.5 rounded-full bg-white" />}
           {/* Profile header */}
-          <div className="absolute top-5 left-3 right-3 flex items-center gap-2">
+          {socialUrls.profile ? (
+            <a
+              href={socialUrls.profile}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Apri il profilo ${handle}`}
+              className="absolute left-3 right-3 top-5 z-30 flex items-center gap-2 rounded outline-none focus:ring-2 focus:ring-white"
+            >
+              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-0.5">
+                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-xs">📸</div>
+              </div>
+              <span className="text-white text-xs font-semibold">{handle}</span>
+              <span className="text-white/60 text-[10px]">2h</span>
+            </a>
+          ) : (
+            <div className="absolute left-3 right-3 top-5 z-30 flex items-center gap-2" aria-disabled="true">
             <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-0.5">
               <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-xs">📸</div>
             </div>
             <span className="text-white text-xs font-semibold">{handle}</span>
             <span className="text-white/60 text-[10px]">2h</span>
-          </div>
+            </div>
+          )}
           {/* Sticker hook */}
           {c.hook && !finalAssetMode && (
             <div className="absolute bottom-28 left-3 right-9 flex justify-start">
@@ -567,9 +610,20 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
           )}
           {/* Reply input */}
           <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent">
-            <div className="border border-white/40 rounded-full px-3 py-1.5 text-white/70 text-xs">
-              Invia messaggio...
-            </div>
+            {socialUrls.message ? (
+              <a
+                href={socialUrls.message}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-full border border-white/40 px-3 py-1.5 text-xs text-white/70 outline-none transition hover:border-white/70 hover:text-white focus:ring-2 focus:ring-white"
+              >
+                Invia messaggio...
+              </a>
+            ) : (
+              <div className="rounded-full border border-white/25 px-3 py-1.5 text-xs text-white/45" aria-disabled="true" title="Configura l'handle social del brand">
+                Invia messaggio...
+              </div>
+            )}
           </div>
         </div>
         <p className="text-center text-xs text-gray-400 mt-2">Preview {c.canale} story</p>
