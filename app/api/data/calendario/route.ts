@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
 import { requireAdmin, requireAuth, requireClienteId } from '@/lib/auth-utils'
-import { scheduleOnBlotato } from '@/lib/publish/schedule'
 import { validateMediaUrls, formatMediaError } from '@/lib/media-validate'
 import { notifyAgency } from '@/lib/notifications'
 import { isDemo } from '@/lib/demo'
@@ -10,7 +9,9 @@ import { demoContenuti } from '@/lib/demo-data'
 import { getTableColumns } from '@/lib/db-schema'
 import { toYmd } from '@/lib/publish/blotato-map'
 
-// La PATCH di approvazione può innescare un montaggio Remotion sincrono.
+// L'approvazione non innesca piu alcun montaggio (l'invio a Blotato e il render
+// avvengono solo dalle route di sincronizzazione). Il tetto resta alto perche la
+// GET del calendario puo restituire molte righe con molte colonne.
 export const maxDuration = 300
 
 const CALENDARIO_UPDATE_COLUMNS = new Set([
@@ -300,34 +301,23 @@ export async function PATCH(request: Request) {
     }
     await q(`UPDATE calendario SET ${fields.join(', ')} WHERE id = $1 AND cliente_id = $2`, params)
 
-    // Se approvato, schedula su Blotato
-    let schedulingError: string | null = null
-    let publishStatus: 'scheduled' | 'visual_pending' | 'visual_review' | 'dry_run' | 'skipped' | null = null
-    let publishNote: string | null = null
-    if (body.status === 'APPROVATO') {
-      try {
-        const content = await q('SELECT * FROM calendario WHERE id = $1 AND cliente_id = $2', [id, cid])
-        if (content.length) {
-          const row = content[0] as Record<string, unknown>
-          const tzRows = await q("SELECT timezone FROM clienti WHERE id = $1 LIMIT 1", [cid])
-          const timezone = String((tzRows[0] as { timezone?: string } | undefined)?.timezone || 'Europe/Rome')
-          const outcome = await scheduleOnBlotato(cid, row, timezone)
-          publishStatus = outcome.status
-          if (outcome.status === 'dry_run') publishNote = 'Pubblicazione disattivata (PUBLISH_ENABLED=false): contenuto approvato ma NON pubblicato. Sarà pubblicato quando abiliti la pubblicazione.'
-          else if (outcome.status === 'visual_pending') publishNote = 'Montaggio video in corso. Non è stato pubblicato: aggiorna il sync per completare l’anteprima.'
-          else if (outcome.status === 'visual_review') publishNote = 'Video pronto. Non è stato pubblicato: guardalo in Preview e approvalo di nuovo.'
-          else if (outcome.status === 'skipped') publishNote = outcome.reason
-        }
-      } catch (scheduleError) {
-        console.error('Blotato scheduling failed:', scheduleError)
-        schedulingError = (scheduleError as Error).message.slice(0, 300)
-        await q('UPDATE calendario SET errore_tecnico = $1 WHERE id = $2 AND cliente_id = $3', [
-          `Blotato: ${schedulingError}`,
-          id,
-          cid,
-        ])
-      }
-    }
+    // APPROVAZIONE E INVIO SONO DUE PASSI DISTINTI.
+    //
+    // Prima l'approvazione chiamava scheduleOnBlotato immediatamente: cliccare
+    // "Approva" mandava il contenuto in coda su Blotato nello stesso istante, e il
+    // pulsante "Sincronizza Blotato" restava solo un recupero per i falliti. Chi
+    // approvava per dare l'ok editoriale si trovava il post gia programmato sui
+    // social, senza un secondo passaggio volontario — ed e successo davvero: un
+    // carosello e uscito su Instagram prima che ci si accorgesse dell'invio.
+    //
+    // Ora "Approva" cambia SOLO lo stato. Il trasferimento a Blotato avviene
+    // esclusivamente da "Sincronizza Blotato" (POST /api/data/blotato-sync) o da
+    // "Sincronizza questo" (sync-uno), che restano gli unici punti di invio.
+    const schedulingError: string | null = null
+    const publishStatus: 'scheduled' | 'visual_pending' | 'visual_review' | 'dry_run' | 'skipped' | null = null
+    const publishNote: string | null = body.status === 'APPROVATO'
+      ? 'Contenuto approvato. Non e stato inviato ai social: usa "Sincronizza Blotato" quando vuoi trasferirlo.'
+      : null
 
     // Notifiche Telegram
     if (body.status) {
