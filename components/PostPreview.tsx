@@ -132,16 +132,42 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
   // la attiva.
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [audioAttivo, setAudioAttivo] = useState(false)
+  const [audioErrore, setAudioErrore] = useState<string | null>(null)
   const haAudio = Boolean(audioUrl) && !videoUrl
 
+  // play() DEVE partire dentro il gestore del click. Chiamandolo da un useEffect
+  // — che gira in modo asincrono dopo il render — il browser non lo riconosce
+  // piu come conseguenza di un gesto dell'utente e lo rifiuta: la traccia
+  // restava muta senza nessun segnale. Anche `muted` va impostato sulla
+  // PROPRIETA del nodo, non via attributo JSX, altrimenti puo non essere
+  // applicato dopo l'idratazione.
+  function alternaAudio() {
+    const el = audioRef.current
+    if (!el) return
+    if (audioAttivo) {
+      el.pause()
+      setAudioAttivo(false)
+      return
+    }
+    el.muted = false
+    el.volume = 1
+    setAudioErrore(null)
+    el.play()
+      .then(() => setAudioAttivo(true))
+      .catch((e: unknown) => {
+        // Niente fallimenti silenziosi: se il browser o la rete rifiutano, si vede.
+        setAudioAttivo(false)
+        setAudioErrore(e instanceof Error ? e.message.slice(0, 80) : 'riproduzione non consentita')
+      })
+  }
+
+  // La pausa dello slideshow mette in pausa anche la traccia, ma non la riattiva
+  // da sola: riattivarla richiede un nuovo gesto.
   useEffect(() => {
     const el = audioRef.current
-    if (!el || !haAudio) return
-    if (playing && audioAttivo) {
-      el.play().catch(() => { /* il browser puo rifiutare: resta in pausa */ })
-    } else {
-      el.pause()
-    }
+    if (!el || !haAudio || !audioAttivo) return
+    if (playing) el.play().catch(() => { /* gia gestito da alternaAudio */ })
+    else el.pause()
   }, [playing, audioAttivo, haAudio])
 
   // Slideshow autoplay per multipli still (mock reel). Il video vero non serve
@@ -220,9 +246,18 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
           </div>
         </div>
 
-        {/* Traccia audio reale del contenuto: quella che finira nell'MP4. */}
+        {/* Traccia audio reale del contenuto: quella che finira nell'MP4.
+            Nessun `muted` via JSX: lo imposta alternaAudio sulla proprieta del
+            nodo. `preload="metadata"` perche con "none" il primo play() deve
+            prima scaricare, e su una connessione lenta la promise puo scadere. */}
         {haAudio && (
-          <audio ref={audioRef} src={audioUrl ?? undefined} loop preload="none" muted={!audioAttivo} />
+          <audio
+            ref={audioRef}
+            src={audioUrl ?? undefined}
+            loop
+            preload="metadata"
+            onError={() => setAudioErrore('traccia non caricabile')}
+          />
         )}
 
         {/* Attiva/disattiva l'audio. Serve un gesto dell'utente: senza, il browser
@@ -230,13 +265,13 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
         {haAudio && (
           <button
             type="button"
-            onClick={() => setAudioAttivo(a => !a)}
+            onClick={alternaAudio}
             aria-label={audioAttivo ? 'Disattiva audio anteprima' : 'Ascolta la traccia del contenuto'}
-            title={audioTitle || 'Traccia del contenuto'}
-            className={`absolute top-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-[10px] font-semibold backdrop-blur-sm transition-colors ${audioAttivo ? 'bg-white text-gray-900' : 'bg-brand-600 text-white animate-pulse'}`}
+            title={audioErrore || audioTitle || 'Traccia del contenuto'}
+            className={`absolute top-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-[10px] font-semibold backdrop-blur-sm transition-colors ${audioErrore ? 'bg-red-600 text-white' : audioAttivo ? 'bg-white text-gray-900' : 'bg-brand-600 text-white animate-pulse'}`}
           >
             <Volume2 className="w-4 h-4" />
-            {audioAttivo ? 'Audio' : 'Ascolta'}
+            {audioErrore ? 'Audio KO' : audioAttivo ? 'Audio' : 'Ascolta'}
           </button>
         )}
 
@@ -245,10 +280,9 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
           <button
             type="button"
             onClick={() => {
-              // Il click sul player e gia un gesto dell'utente: ne approfittiamo
-              // per sbloccare l'audio, che i browser tengono muto finche non ce
-              // n'e uno. Senza, bisognava sapere di dover premere l'altoparlante.
-              if (haAudio && !audioAttivo) setAudioAttivo(true)
+              // Il click sul player e un gesto valido: si sblocca anche l'audio,
+              // chiamando play() da qui dentro e non da un effetto.
+              if (haAudio && !audioAttivo) alternaAudio()
               setPlaying(p => !p)
             }}
             aria-label={playing ? 'Pausa' : 'Riproduci'}
@@ -440,14 +474,29 @@ function StoryMediaSequence({ imgs, audioUrl, audioTitle }: { imgs: string[]; au
   // Remotion, con la musica dentro: l'anteprima muta non mostrerebbe cio che esce.
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [audioAttivo, setAudioAttivo] = useState(false)
+  const [audioErrore, setAudioErrore] = useState<string | null>(null)
   const haAudio = Boolean(audioUrl) && !videoUrl
 
-  useEffect(() => {
+  // Come nel ReelPlayer: play() va chiamato DENTRO il gestore del click, non da
+  // un effetto, altrimenti il browser non lo lega piu al gesto e lo rifiuta.
+  function alternaAudio() {
     const el = audioRef.current
-    if (!el || !haAudio) return
-    if (audioAttivo) el.play().catch(() => { /* autoplay negato: resta in pausa */ })
-    else el.pause()
-  }, [audioAttivo, haAudio])
+    if (!el) return
+    if (audioAttivo) {
+      el.pause()
+      setAudioAttivo(false)
+      return
+    }
+    el.muted = false
+    el.volume = 1
+    setAudioErrore(null)
+    el.play()
+      .then(() => setAudioAttivo(true))
+      .catch((e: unknown) => {
+        setAudioAttivo(false)
+        setAudioErrore(e instanceof Error ? e.message.slice(0, 80) : 'riproduzione non consentita')
+      })
+  }
 
   // Se la lista si accorcia mentre siamo su un indice alto, `current` sarebbe
   // undefined e il riquadro resterebbe nero per sempre.
@@ -485,15 +534,22 @@ function StoryMediaSequence({ imgs, audioUrl, audioTitle }: { imgs: string[]; au
 
       {haAudio && (
         <>
-          <audio ref={audioRef} src={audioUrl ?? undefined} loop preload="none" muted={!audioAttivo} />
+          <audio
+            ref={audioRef}
+            src={audioUrl ?? undefined}
+            loop
+            preload="metadata"
+            onError={() => setAudioErrore('traccia non caricabile')}
+          />
           <button
             type="button"
-            onClick={() => setAudioAttivo(a => !a)}
+            onClick={alternaAudio}
             aria-label={audioAttivo ? 'Disattiva audio anteprima' : 'Ascolta la traccia della story'}
-            title={audioTitle || 'Traccia della story'}
-            className={`absolute top-9 right-2 z-30 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors ${audioAttivo ? 'bg-white text-gray-900' : 'bg-black/55 text-white'}`}
+            title={audioErrore || audioTitle || 'Traccia della story'}
+            className={`absolute top-9 right-2 z-30 inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-[10px] font-semibold backdrop-blur-sm transition-colors ${audioErrore ? 'bg-red-600 text-white' : audioAttivo ? 'bg-white text-gray-900' : 'bg-brand-600 text-white animate-pulse'}`}
           >
             <Volume2 className="w-4 h-4" />
+            {audioErrore ? 'Audio KO' : audioAttivo ? 'Audio' : 'Ascolta'}
           </button>
         </>
       )}
