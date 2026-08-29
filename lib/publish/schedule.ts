@@ -209,7 +209,7 @@ export async function scheduleOnBlotato(
       `UPDATE calendario
          SET publish_lock_id = $1, updated_at = now()
        WHERE id = $2 AND cliente_id = $3
-         AND (publish_lock_id IS NULL OR updated_at < now() - interval '15 minutes')
+         AND (publish_lock_id IS NULL OR updated_at < now() - interval '6 minutes')
          AND blotato_post_id IS NULL
        RETURNING id`,
       [lockId, rowId, clienteId],
@@ -241,7 +241,11 @@ export async function scheduleOnBlotato(
     // I media provenienti da una cartella campagna sono creativita finali: hook
     // e CTA sono gia impaginati. Non ridisegnarli sopra l'immagine e abilita il
     // percorso ffmpeg rapido quando il Reel e una sola foto con musica.
-    const hasFinalCampaignAsset = Boolean(String(row.campaign_content_key || '').trim())
+    const rawCampaignPaths = row.campaign_source_paths
+    const hasCampaignPaths = Array.isArray(rawCampaignPaths)
+      ? rawCampaignPaths.length > 0
+      : !['', '[]', 'null'].includes(String(rawCampaignPaths || '').trim().toLowerCase())
+    const hasFinalCampaignAsset = Boolean(String(row.campaign_content_key || '').trim()) || hasCampaignPaths
     const renderHook = hasFinalCampaignAsset ? undefined : String(row.hook || '').trim() || undefined
     const renderCta = hasFinalCampaignAsset ? undefined : String(row.cta || '').trim() || undefined
 
@@ -324,7 +328,7 @@ export async function scheduleOnBlotato(
           })
 
         if (rowId) {
-          // Il render può durare più dei 15 minuti di scadenza del lock (vedi
+          // Il render può durare più dei 6 minuti di scadenza del lock (vedi
           // acquisizione sopra): in quel caso un altro processo lo ha già rubato e
           // questo UPDATE non tocca nessuna riga. Senza controllare il rowcount
           // ritornavamo 'visual_review' come se fosse riuscito, lasciando l'MP4

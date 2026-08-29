@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 
-import { canUseStaticImageAudioFastPath, imageVideoDurationInSeconds, remotionConcurrency, remotionSourceHash } from './remotion-renderer'
+import { canUseStaticImagesAudioFastPath, imageVideoDurationInSeconds, remotionConcurrency, remotionSourceHash } from './remotion-renderer'
 
 test('image video duration always ends on a full visible frame', () => {
   assert.equal(imageVideoDurationInSeconds(1), 8)
@@ -14,18 +14,26 @@ test('serverless rendering never rounds concurrency down to zero', () => {
   assert.equal(remotionConcurrency(false), '25%')
 })
 
-test('single final image with audio uses the fast ffmpeg path', () => {
-  assert.equal(canUseStaticImageAudioFastPath({
+test('final static campaign images with audio use the fast ffmpeg path', () => {
+  assert.equal(canUseStaticImagesAudioFastPath({
     mediaUrls: ['https://example.com/final.png'],
     audioUrl: 'https://example.com/music.mp3',
   }), true)
-  assert.equal(canUseStaticImageAudioFastPath({
+  assert.equal(canUseStaticImagesAudioFastPath({
+    mediaUrls: [
+      'https://example.com/scene-01.png',
+      'https://example.com/scene-02.png',
+      'https://example.com/scene-03.png',
+    ],
+    audioUrl: 'https://example.com/music.mp3',
+  }), true)
+  assert.equal(canUseStaticImagesAudioFastPath({
     mediaUrls: ['https://example.com/final.png'],
     audioUrl: 'https://example.com/music.mp3',
     hook: 'Overlay da disegnare',
   }), false)
-  assert.equal(canUseStaticImageAudioFastPath({
-    mediaUrls: ['https://example.com/final.mp4'],
+  assert.equal(canUseStaticImagesAudioFastPath({
+    mediaUrls: ['https://example.com/scene.png', 'https://example.com/final.mp4'],
     audioUrl: 'https://example.com/music.mp3',
   }), false)
 })

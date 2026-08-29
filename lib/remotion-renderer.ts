@@ -53,7 +53,7 @@ export function remotionSourceHash(input: Omit<SwaRenderInput, 'clienteId'>): st
     cta: input.cta || '',
     logoUrl: input.logoUrl || '',
     brandName: input.brandName || '',
-    renderer: 'remotion-v2',
+    renderer: 'remotion-v3',
   })).digest('hex')
 }
 
@@ -75,30 +75,74 @@ export function remotionConcurrency(isServerless = Boolean(process.env.VERCEL)):
   return isServerless ? 1 : '25%'
 }
 
-export function canUseStaticImageAudioFastPath(input: Pick<SwaRenderInput, 'mediaUrls' | 'audioUrl' | 'hook' | 'cta' | 'logoUrl' | 'brandName'>): boolean {
-  return input.mediaUrls.length === 1
+export function canUseStaticImagesAudioFastPath(input: Pick<SwaRenderInput, 'mediaUrls' | 'audioUrl' | 'hook' | 'cta' | 'logoUrl' | 'brandName'>): boolean {
+  return input.mediaUrls.length > 0
     && Boolean(input.audioUrl)
-    && !/\.(mp4|mov|webm|m4v)(\?|$)/i.test(input.mediaUrls[0])
+    && input.mediaUrls.every(url => !/\.(mp4|mov|webm|m4v)(\?|$)/i.test(url))
     && !input.hook
     && !input.cta
     && !input.logoUrl
     && !input.brandName
 }
 
-async function renderStaticImageAudio(args: {
-  imageUrl: string
+function mediaExtension(url: string, fallback: string): string {
+  try {
+    const extension = path.extname(new URL(url, configuredBaseUrl()).pathname).toLowerCase()
+    return /^\.[a-z0-9]{2,5}$/.test(extension) ? extension : fallback
+  } catch {
+    return fallback
+  }
+}
+
+async function downloadRenderInput(url: string, destination: string): Promise<string> {
+  if (path.isAbsolute(url) && !/^https?:/i.test(url)) return url
+
+  const response = await fetch(new URL(url, configuredBaseUrl()), {
+    signal: AbortSignal.timeout(30_000),
+  })
+  if (!response.ok) {
+    throw new Error(`Download media per montaggio fallito (${response.status}): ${url}`)
+  }
+  await writeFile(destination, Buffer.from(await response.arrayBuffer()))
+  return destination
+}
+
+async function renderStaticImagesAudio(args: {
+  imageUrls: string[]
   audioUrl: string
   durationInSeconds: number
+  renderDir: string
   outputLocation: string
 }): Promise<void> {
-  const ffmpegArgs = [
-    '-y',
+  const imageFiles = await Promise.all(args.imageUrls.map((url, index) => downloadRenderInput(
+    url,
+    path.join(args.renderDir, `image-${index}${mediaExtension(url, '.jpg')}`),
+  )))
+  const audioFile = await downloadRenderInput(
+    args.audioUrl,
+    path.join(args.renderDir, `audio${mediaExtension(args.audioUrl, '.mp3')}`),
+  )
+  const slideDuration = args.durationInSeconds / imageFiles.length
+  const imageInputs = imageFiles.flatMap(file => [
     '-loop', '1',
     '-framerate', '24',
-    '-i', args.imageUrl,
-    '-i', args.audioUrl,
+    '-t', String(slideDuration),
+    '-i', file,
+  ])
+  const preparedFrames = imageFiles.map((_, index) => (
+    `[${index}:v]scale=1080:1920:force_original_aspect_ratio=increase,`
+    + `crop=1080:1920,format=yuv420p[v${index}]`
+  ))
+  const concat = `${imageFiles.map((_, index) => `[v${index}]`).join('')}concat=n=${imageFiles.length}:v=1:a=0[video]`
+  const ffmpegArgs = [
+    '-y',
+    ...imageInputs,
+    '-stream_loop', '-1',
+    '-i', audioFile,
+    '-filter_complex', [...preparedFrames, concat].join(';'),
+    '-map', '[video]',
+    '-map', `${imageFiles.length}:a:0`,
     '-t', String(args.durationInSeconds),
-    '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p',
     '-r', '24',
     '-c:v', 'libx264',
     '-preset', 'veryfast',
@@ -106,8 +150,8 @@ async function renderStaticImageAudio(args: {
     '-crf', '20',
     '-c:a', 'aac',
     '-b:a', '160k',
-    '-shortest',
     '-movflags', '+faststart',
+    '-map_metadata', '-1',
     args.outputLocation,
   ]
 
@@ -217,11 +261,13 @@ export async function renderSwaSocialVideo(input: SwaRenderInput): Promise<SwaRe
       logoUrl: input.logoUrl,
       brandName: input.brandName,
     }
-    if (canUseStaticImageAudioFastPath(input)) {
-      await renderStaticImageAudio({
-        imageUrl: mediaUrls[0],
+    if (canUseStaticImagesAudioFastPath(input)) {
+      console.info(`[Remotion] percorso ffmpeg rapido: ${mediaUrls.length} immagini, ${durationInSeconds}s`)
+      await renderStaticImagesAudio({
+        imageUrls: mediaUrls,
         audioUrl: input.audioUrl!,
         durationInSeconds,
+        renderDir,
         outputLocation,
       })
     } else {
