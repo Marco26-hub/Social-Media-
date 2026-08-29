@@ -44,7 +44,13 @@ type PlanAsset = {
 }
 type FolderCandidate = { file: File; assignment: CampaignFolderAsset }
 type FolderPreview = { root: string; candidates: FolderCandidate[]; ignored: number }
+// Tetto sui media VISIVI (foto e MP4). Le tracce audio non lo consumano: sono
+// una per contenuto, accompagnano un media invece di sostituirlo, e facendole
+// pesare sul limite una cartella mensile completa arrivava a sfiorarlo.
 const MAX_PLAN_IMAGES = 160
+function contaVisivi(assets: { kind?: 'image' | 'video' | 'audio' }[]): number {
+  return assets.filter(a => a.kind !== 'audio').length
+}
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif'
 const MEDIA_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4'
 const AUDIO_ACCEPT = 'audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/ogg,.mp3,.wav,.m4a,.ogg'
@@ -321,7 +327,7 @@ export default function PianoPage() {
     try {
       // Con il limite già saturo `slice(0, 0)` restituiva un array vuoto e
       // l'upload terminava senza caricare nulla e senza dirlo.
-      const capienza = MAX_PLAN_IMAGES - planAssets.length
+      const capienza = MAX_PLAN_IMAGES - contaVisivi(planAssets)
       if (capienza <= 0) {
         setUploadError(`Limite di ${MAX_PLAN_IMAGES} media per piano già raggiunto: rimuovi qualche file prima di caricarne altri.`)
         return
@@ -917,7 +923,7 @@ export default function PianoPage() {
               <button
                 type="button"
                 onClick={() => folderInputRef.current?.click()}
-                disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+                disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
                 className="inline-flex h-9 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-800 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {uploadingImages ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderUp className="h-4 w-4" />}
@@ -929,7 +935,7 @@ export default function PianoPage() {
                 multiple
                 accept={`${MEDIA_ACCEPT},${AUDIO_ACCEPT}`}
                 className="hidden"
-                disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+                disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
                 onChange={event => {
                   inspectCampaignFolder(event.target.files)
                   event.target.value = ''
@@ -940,8 +946,24 @@ export default function PianoPage() {
             {/* Media gia nello storage: evita di ricaricare la stessa cartella,
                 che duplicherebbe centinaia di MB con nomi nuovi. */}
             {recuperoFatto && assetRecuperabili.length > 0 && planAssets.length === 0 && (() => {
-              const ultimoGiorno = assetRecuperabili[0]?.updatedAt?.slice(0, 10) || ''
-              const ultimoCaricamento = assetRecuperabili.filter(a => (a.updatedAt || '').slice(0, 10) === ultimoGiorno)
+              // Un "caricamento" e un gruppo di file vicini nel tempo, NON un
+              // giorno: nello stesso giorno possono essercene due (e successo:
+              // 296 file il 29/08, alle 09:03 e alle 11:10). Raggruppando per
+              // data si mescolavano due copie diverse della stessa campagna.
+              const SEPARAZIONE_MS = 30 * 60 * 1000
+              const ordinati = [...assetRecuperabili]
+                .filter(a => a.updatedAt)
+                .sort((x, y) => String(y.updatedAt).localeCompare(String(x.updatedAt)))
+              const ultimoCaricamento: PlanAsset[] = []
+              let precedente = 0
+              for (const asset of ordinati) {
+                const t = new Date(String(asset.updatedAt)).getTime()
+                if (!Number.isFinite(t)) continue
+                if (ultimoCaricamento.length && precedente - t > SEPARAZIONE_MS) break
+                ultimoCaricamento.push(asset)
+                precedente = t
+              }
+              const audio = ultimoCaricamento.filter(a => a.kind === 'audio').length
               const settimane = [...new Set(ultimoCaricamento.map(a => a.week).filter(Boolean))].sort()
               return (
                 <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50/70 p-3">
@@ -949,15 +971,23 @@ export default function PianoPage() {
                     Hai già {assetRecuperabili.length} media caricati per questo cliente
                   </p>
                   <p className="mt-0.5 text-[11px] text-sky-800">
-                    L’ultimo caricamento ({ultimoCaricamento.length} file
-                    {settimane.length ? `, settimane ${settimane.join(', ')}` : ''}) è ancora nello storage:
-                    riusalo invece di ricaricare la cartella, così non occupi spazio due volte.
+                    L’ultimo caricamento è ancora nello storage: {ultimoCaricamento.length - audio} media
+                    {audio > 0 ? ` + ${audio} tracce audio` : ''}
+                    {settimane.length ? `, settimane ${settimane.join(', ')}` : ''}.
+                    Riusalo invece di ricaricare la cartella, così non occupi spazio due volte.
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => {
-                        setPlanAssets(ultimoCaricamento.slice(0, MAX_PLAN_IMAGES))
+                        // Il taglio vale sui soli media visivi: l'audio segue il
+                        // suo contenuto e non deve far scartare una foto.
+                        let visivi = 0
+                        setPlanAssets(ultimoCaricamento.filter(a => {
+                          if (a.kind === 'audio') return true
+                          visivi++
+                          return visivi <= MAX_PLAN_IMAGES
+                        }))
                         setUploadError(null)
                       }}
                       className="inline-flex h-8 items-center gap-1.5 rounded-md bg-sky-600 px-3 text-xs font-semibold text-white hover:bg-sky-700"
@@ -1003,7 +1033,7 @@ export default function PianoPage() {
                 .sort(compareCampaignFolderGroups)
               const incompleteGroups = groupRows.filter(group => group.count < Math.min(expectedMediaForFolderTag(group.tag), group.tag === 'carosello' ? MEDIA_PER_FORMATO.carousel.min ?? 3 : expectedMediaForFolderTag(group.tag)))
               const underTargetGroups = groupRows.filter(group => group.count < expectedMediaForFolderTag(group.tag))
-              const exceedsLimit = valid.length > MAX_PLAN_IMAGES - planAssets.length
+              const exceedsLimit = valid.filter(c => c.assignment.kind !== 'audio').length > MAX_PLAN_IMAGES - contaVisivi(planAssets)
               return (
                 <div className={`mt-3 rounded-lg border p-3 ${blocked.length || exceedsLimit ? 'border-amber-300 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1119,7 +1149,7 @@ export default function PianoPage() {
                     multiple
                     accept={destination.accept}
                     className="hidden"
-                    disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+                    disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
                     onChange={e => { uploadPlanImages(e.target.files, destination.tag); e.target.value = '' }}
                   />
                 </label>
@@ -1148,7 +1178,7 @@ export default function PianoPage() {
                   multiple
                   accept={AUDIO_ACCEPT}
                   className="hidden"
-                  disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+                  disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
                   onChange={e => { uploadPlanImages(e.target.files, destination.tag); e.target.value = '' }}
                 />
               </label>
@@ -1166,12 +1196,12 @@ export default function PianoPage() {
               multiple
               accept={MEDIA_ACCEPT}
               className="hidden"
-              disabled={uploadingImages || planAssets.length >= MAX_PLAN_IMAGES}
+              disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
               onChange={e => { uploadPlanImages(e.target.files, 'auto'); e.target.value = '' }}
             />
           </label>
 
-          <p className="mt-2 text-right text-[10px] text-gray-500">Totale {planAssets.length}/{MAX_PLAN_IMAGES} media</p>
+          <p className="mt-2 text-right text-[10px] text-gray-500">Totale {contaVisivi(planAssets)}/{MAX_PLAN_IMAGES} media{planAssets.length > contaVisivi(planAssets) ? ` + ${planAssets.length - contaVisivi(planAssets)} audio` : ''}</p>
 
           {uploadError && <p className="text-xs text-red-600 mt-2">{uploadError}</p>}
 
