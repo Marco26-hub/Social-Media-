@@ -63,11 +63,27 @@ function mediaUrls(c: Contenuto): string[] {
   ].filter((url, index, all): url is string => Boolean(url) && all.indexOf(url) === index)
 }
 
+// Un contenuto ha "asset finali" SOLO se i media arrivano da una cartella campagna
+// gia prodotta: in quel caso il testo e gia impresso nell'immagine e l'anteprima non
+// deve sovrapporlo.
+//
+// Prima bastava che production_notes contenesse "MONTHLY_DNA:" — che pero
+// app/api/generate/plan/route.ts scrive su OGNI contenuto generato. Risultato: ogni
+// contenuto AI veniva trattato come asset finale, e l'anteprima nascondeva caption,
+// hashtag e hook che invece venivano pubblicati. Il cliente approvava una cosa e ne
+// usciva un'altra. L'unico segnale affidabile e campaign_source_paths, popolato solo
+// dall'import da cartella (migrazione 044).
 function hasCampaignFinalAssets(c: Contenuto): boolean {
   const paths = c.campaign_source_paths
-  if (Array.isArray(paths) && paths.length > 0) return true
-  if (typeof paths === 'string' && paths.trim().startsWith('[')) return true
-  return /MONTHLY_DNA:|asset\s+final|cartella/i.test(String(c.production_notes || ''))
+  if (Array.isArray(paths)) return paths.length > 0
+  if (typeof paths !== 'string') return false
+  // Una stringa JSON vuota ("[]") non e un asset finale.
+  try {
+    const parsed = JSON.parse(paths)
+    return Array.isArray(parsed) && parsed.length > 0
+  } catch {
+    return false
+  }
 }
 
 function VisualBriefCard({ icon, title, description, accent = 'from-gray-700 to-gray-950' }: {

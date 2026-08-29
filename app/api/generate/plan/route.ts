@@ -236,7 +236,12 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 const VALID_CANALI = new Set(['instagram', 'facebook', 'tiktok', 'pinterest', 'linkedin', 'threads', 'x', 'youtube_shorts', 'blog'])
 const VALID_FORMATI = new Set(['post', 'carousel', 'reel', 'story', 'pin', 'short', 'video', 'articolo'])
 
-type Chunk = { start: string; end: string; label: string; targetMin: number; targetMax: number; images: string[]; week?: number }
+// `mixBlocchi`/`mixIndice` dicono su quante parti va diviso il mix di formati del
+// pacchetto e quale parte spetta a questo blocco. NON coincidono con il numero di
+// chunk emessi: generando una fase si emettono 2 blocchi ma il mix mensile va
+// comunque diviso su 4 settimane, altrimenti una sola fase riceve tutti i reel e
+// tutte le story del mese. Assenti = si usa la posizione fra i chunk emessi.
+type Chunk = { start: string; end: string; label: string; targetMin: number; targetMax: number; images: string[]; week?: number; mixBlocchi?: number; mixIndice?: number }
 
 function isVideoUrl(url: string) {
   return url.split('?')[0].toLowerCase().endsWith('.mp4')
@@ -591,6 +596,9 @@ ${buildExtendedOutputSchema(contentQuality)}
           targetMax: targetPacchetto ?? maxPerWeek,
           images: [],
           week: i + 1,
+          // Il mix segue la settimana REALE del mese, non la posizione nella fase.
+          mixBlocchi: SETTIMANE_DEL_MESE.length,
+          mixIndice: i,
         })
       })
     } else if (packagePlan && packagePlan.totale > 4 && (contentQuality === 'high' || contentQuality === 'medium')) {
@@ -754,7 +762,7 @@ ${buildExtendedOutputSchema(contentQuality)}
           fonte: 'cartella',
         })
       } else {
-        mixPerChunk.set(chunk, mixFormatiBlocco(packagePlan, chunk.targetMax, chunks.length, ci))
+        mixPerChunk.set(chunk, mixFormatiBlocco(packagePlan, chunk.targetMax, chunk.mixBlocchi ?? chunks.length, chunk.mixIndice ?? ci))
       }
     })
 
@@ -864,7 +872,7 @@ Output SOLO JSON array valido:
           + (assetPlacements.size ? '' : buildPackageContext(pkg, packagePlan, periodoEff, targetMax))
           // Vincolo sui FORMATI: senza, il fabbisogno media annunciato all'utente
           // resta una stima che il modello può far saltare con 12 caroselli.
-          + buildMixFormatiContext(mixPerChunk.get(chunk) ?? mixFormatiBlocco(packagePlan, targetMax, chunks.length, chunkIndex))
+          + buildMixFormatiContext(mixPerChunk.get(chunk) ?? mixFormatiBlocco(packagePlan, targetMax, chunk.mixBlocchi ?? chunks.length, chunk.mixIndice ?? chunkIndex))
           + buildEditorialSkillContext({
             skill: activeEditorialSkill,
             pkg,

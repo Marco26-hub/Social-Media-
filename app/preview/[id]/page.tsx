@@ -160,10 +160,11 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setReelAudioTitle(textValue(d.reel_audio_title))
         setCampaignSourcePaths(d.campaign_source_paths ?? null)
         setProductionNotes(textValue(d.production_notes))
-        setHasCampaignFinalAssets(Boolean(
-          (Array.isArray(d.campaign_source_paths) && d.campaign_source_paths.length)
-          || /MONTHLY_DNA:|asset\s+final|cartella/i.test(textValue(d.production_notes))
-        ))
+        // Vedi components/PostPreview.tsx: "MONTHLY_DNA:" e presente su ogni
+        // contenuto generato, quindi non puo distinguere un asset finale.
+        setHasCampaignFinalAssets(
+          Array.isArray(d.campaign_source_paths) && d.campaign_source_paths.length > 0,
+        )
         if (Array.isArray(d.tags)) setTags(d.tags.filter((tag): tag is string => typeof tag === 'string'))
       }
       const exRaw = localStorage.getItem(`preview_${id}_excluded`)

@@ -398,6 +398,7 @@ export default function PianoPage() {
       chunks_total?: number
       chunks_failed?: number
       items_scartati?: number
+      media_fuori_periodo?: number
     }>({
       key: fase ? `piano-fase-${fase}` : 'piano',
       label: `Piano editoriale ${periodo}${faseLabel}`,
@@ -426,10 +427,17 @@ export default function PianoPage() {
         ? ` ⚠️ ${data.items_scartati} contenuti sono stati scartati perché il modello li ha restituiti incompleti (senza testo): rigenera, o passa a un modello più capace dal selettore in alto.`
         : ''
       const faseNote = fase ? ` (fase ${fase}: settimane ${fase === 1 ? '1-2' : '3-4'})` : ''
+      // Generando una fase, la cartella del mese intero contiene anche settimane non
+      // coperte da questo run: restano da parte per la fase successiva. Senza dirlo,
+      // il conteggio dei media qui sopra sembrava confermare che fossero stati usati tutti.
+      const fuoriPeriodo = Number(data?.media_fuori_periodo || 0)
+      const fuoriPeriodoNote = fuoriPeriodo
+        ? ` ${fuoriPeriodo} gruppi della cartella appartengono a settimane non generate ora: li userà l'altra fase.`
+        : ''
       const outcome = fallbackCount > 0
         ? `${data?.completed_count ?? 0} completati, ${fallbackCount} da sistemare`
         : `${data?.count ?? '?'} contenuti completati`
-      setMsg({ type: 'ok', text: `Piano generato${faseNote}: ${outcome}. Tutti gli slot del ciclo sono nel calendario.${imgNote}${chunkNote}${scartatiNote}` })
+      setMsg({ type: 'ok', text: `Piano generato${faseNote}: ${outcome}. Tutti gli slot del ciclo sono nel calendario.${imgNote}${fuoriPeriodoNote}${chunkNote}${scartatiNote}` })
     } else {
       setMsg({ type: 'err', text: result.error || 'Generazione piano fallita' })
     }
@@ -437,7 +445,7 @@ export default function PianoPage() {
 
   // Modalità "piano del pacchetto": numero/mix/social/qualità imposti dal pacchetto
   // acquistato dal cliente. Il periodo selezionato governa anche il pacchetto.
-  async function generaPacchetto() {
+  async function generaPacchetto(faseArg?: 1 | 2) {
     setMsg(null)
     if (!clientePkg) return
     if (!demo && !clienteId) { setMsg({ type: 'err', text: 'Cliente non selezionato' }); return }
@@ -450,7 +458,7 @@ export default function PianoPage() {
       key: 'piano-pacchetto',
       label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: true, include_weekend: includeWeekend, use_web_trends: true, pacchetto: clientePkg.id, ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...(faseArg ? { fase: faseArg } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 55000 : 30000,
       timeoutMs: periodo === 'mensile' ? 140000 : 100000,
@@ -1164,7 +1172,7 @@ export default function PianoPage() {
               />
             )}
             <button
-              onClick={generaPacchetto}
+              onClick={() => generaPacchetto()}
               disabled={runningPkg || running || uploadingImages || piattaforme.length === 0 || piattaforme.length > clientePkg.social}
               className="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
             >
@@ -1200,17 +1208,21 @@ export default function PianoPage() {
         {periodo === 'mensile' && (
           <div className="mt-3">
             <p className="text-xs text-gray-500 mb-2 text-center">Oppure genera in 2 fasi (più affidabile se va in timeout):</p>
+            {/* Con un pacchetto attivo la fase deve passare DAL pacchetto, altrimenti
+                il backend non riceve `pacchetto`, non risolve la quota contrattuale e
+                ripiega sul piano libero (6-9 contenuti a settimana): le due fasi non
+                ricomporrebbero il totale venduto. */}
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => genera(1)}
-                disabled={running || uploadingImages || piattaforme.length === 0}
+                onClick={() => (clientePkg ? generaPacchetto(1) : genera(1))}
+                disabled={running || runningPkg || uploadingImages || piattaforme.length === 0}
                 className="btn-secondary py-2.5 justify-center text-sm disabled:opacity-50"
               >
                 Fase 1 · settimane 1-2
               </button>
               <button
-                onClick={() => genera(2)}
-                disabled={running || uploadingImages || piattaforme.length === 0}
+                onClick={() => (clientePkg ? generaPacchetto(2) : genera(2))}
+                disabled={running || runningPkg || uploadingImages || piattaforme.length === 0}
                 className="btn-secondary py-2.5 justify-center text-sm disabled:opacity-50"
               >
                 Fase 2 · settimane 3-4

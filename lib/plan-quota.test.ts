@@ -43,3 +43,32 @@ test('an odd monthly quota is split without rounding drift', () => {
   assert.equal(contenutiDellaFase(30, 1) + contenutiDellaFase(30, 2), 30)
   assert.equal(contenutiDellaFase(7, 1) + contenutiDellaFase(7, 2), 7)
 })
+
+test('the format mix must be split over the four weeks, not over the emitted blocks', () => {
+  // Regressione reale: emettendo solo i blocchi di una fase, il mix dei formati
+  // veniva diviso per il NUMERO DI BLOCCHI EMESSI (2) invece che per le quattro
+  // settimane del mese. Risultato: la fase 1 riceveva tutti i reel e tutte le
+  // story del mese, e la fase 2 li riceveva di nuovo.
+  const reelMensili = 4
+  const storyMensili = 2
+
+  // Sbagliato: denominatore = blocchi emessi dalla fase.
+  const reelConDenominatoreSbagliato = [0, 1]
+    .reduce((somma, i) => somma + quotaBlocco(reelMensili, 2, i), 0)
+  assert.equal(reelConDenominatoreSbagliato, reelMensili, 'una sola fase prenderebbe tutti i reel del mese')
+
+  // Corretto: denominatore = quattro settimane, indice = settimana reale.
+  const reelFase1 = settimaneDellaFase(1)
+    .reduce((somma, settimana) => somma + quotaBlocco(reelMensili, SETTIMANE_DEL_MESE.length, settimana), 0)
+  const reelFase2 = settimaneDellaFase(2)
+    .reduce((somma, settimana) => somma + quotaBlocco(reelMensili, SETTIMANE_DEL_MESE.length, settimana), 0)
+  assert.equal(reelFase1, 2)
+  assert.equal(reelFase2, 2)
+  assert.equal(reelFase1 + reelFase2, reelMensili)
+
+  const storyFase1 = settimaneDellaFase(1)
+    .reduce((somma, settimana) => somma + quotaBlocco(storyMensili, SETTIMANE_DEL_MESE.length, settimana), 0)
+  const storyFase2 = settimaneDellaFase(2)
+    .reduce((somma, settimana) => somma + quotaBlocco(storyMensili, SETTIMANE_DEL_MESE.length, settimana), 0)
+  assert.equal(storyFase1 + storyFase2, storyMensili)
+})

@@ -67,12 +67,12 @@ export async function GET(request: Request) {
       'blotato_visual_media_url',
       'blotato_audio_visual_media_url',
     ].map(optionalText).join(',\n              ')
+    // Solo campaign_source_paths: production_notes contiene "MONTHLY_DNA:" su OGNI
+    // contenuto generato, quindi usarlo qui marcava tutto come asset finale e
+    // l'anteprima nascondeva testi che venivano comunque pubblicati.
     const finalAssetChecks = [
       calendarioColumns.has('campaign_source_paths')
         ? `NULLIF(c.campaign_source_paths::text, '') IS NOT NULL AND c.campaign_source_paths::text <> '[]'`
-        : '',
-      calendarioColumns.has('production_notes')
-        ? `c.production_notes ~* 'MONTHLY_DNA:|asset\\s+final|cartella'`
         : '',
     ].filter(Boolean)
     const finalAssetSelect = finalAssetChecks.length
