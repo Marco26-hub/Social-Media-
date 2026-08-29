@@ -785,13 +785,18 @@ ${buildExtendedOutputSchema(contentQuality)}
     // al massimo nello stesso giorno (cadenza del pacchetto) e le fasce reali di
     // ogni canale selezionato. L'enforcement resta comunque deterministico sotto.
     // Passiamo un target PER SETTIMANA (i blocchi del mensile sono settimanali).
-    const targetPerSettimana = pkg
-      ? periodoEff === 'mensile'
-        ? packageContentCount(pkg, 'settimanale', quotaMensile)
-        : packagePlan?.totale ?? chunks.reduce((sum, c) => sum + c.targetMax, 0)
-      : periodoEff === 'mensile'
-        ? chunks[0].targetMax
-        : chunks.reduce((sum, c) => sum + c.targetMax, 0)
+    // La cadenza deve nascere dal target REALE dei blocchi, non dal solo pacchetto.
+    // Importando una cartella campagna il target di ogni settimana viene riscritto
+    // dal numero di gruppi (social x contenuto): con 12 gruppi a settimana il
+    // pacchetto ne dichiarava comunque 6, quindi il prompt diceva "6 a settimana,
+    // max 2 al giorno" mentre i contenuti da piazzare erano il doppio. Risultato:
+    // tutti compressi nei primi giorni, con la seconda meta della settimana vuota.
+    const targetSettimanaleBlocchi = periodoEff === 'mensile'
+      ? Math.max(...chunks.map(c => c.targetMax))
+      : chunks.reduce((sum, c) => sum + c.targetMax, 0)
+    const targetPerSettimana = pkg && periodoEff === 'mensile'
+      ? Math.max(packageContentCount(pkg, 'settimanale', quotaMensile), targetSettimanaleBlocchi)
+      : targetSettimanaleBlocchi
     const cadenza = cadenzaDaPacchetto(pkg, 'settimanale', includeWeekend, targetPerSettimana)
     const cadenzaContext = `
 
