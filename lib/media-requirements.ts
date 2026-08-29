@@ -195,10 +195,21 @@ export function requisitiMedia(input: {
 // manuale del cliente, che l'admin può sovrascrivere su clienti.contenuti_mese).
 // Il piano settimanale prende il mensile diviso 4.33, arrotondato per ECCESSO:
 // meglio chiedere un media in più che far partire un piano a corto di materiale.
+/**
+ * Fabbisogno media del pacchetto.
+ *
+ * `social` = su quanti canali viene adattato ogni concept. Il pacchetto conta i
+ * CONCEPT (Crescita: 24 al mese), ma ogni concept diventa una pubblicazione per
+ * social, ciascuna con i propri media: due social significano il doppio delle
+ * foto. Senza questo fattore il pannello chiedeva 44 immagini quando ne
+ * servivano 88, e chi seguiva l'indicazione caricava meta materiale.
+ * Default 1 per non cambiare i chiamanti che non lo passano.
+ */
 export function requisitiDaPacchetto(
   pkg: PackageSpec | null,
   quotaMensile: number | null,
   periodo: 'settimanale' | 'mensile',
+  social = 1,
 ): Requisiti {
   const mensile = quotaMensile && quotaMensile > 0 ? Math.round(quotaMensile) : (pkg?.contenutiMese ?? 0)
   if (!mensile) {
@@ -225,10 +236,24 @@ export function requisitiDaPacchetto(
     reelVideo: mix?.reelVideo,
     conVideo: true,
   })
+  const canali = Math.max(1, Math.round(social))
   const intestazione = pkg
-    ? `Piano ${periodo} del pacchetto ${pkg.nome}: ${contenuti} contenuti`
-    : `Piano ${periodo}: ${contenuti} contenuti calcolati dalla quota cliente`
-  return { ...req, dettaglio: [intestazione, ...req.dettaglio] }
+    ? `Piano ${periodo} del pacchetto ${pkg.nome}: ${contenuti} contenuti${canali > 1 ? ` × ${canali} social = ${contenuti * canali} pubblicazioni` : ''}`
+    : `Piano ${periodo}: ${contenuti} contenuti calcolati dalla quota cliente${canali > 1 ? ` × ${canali} social` : ''}`
+
+  if (canali === 1) return { ...req, dettaglio: [intestazione, ...req.dettaglio] }
+
+  // Ogni social ha i suoi media: il fabbisogno si moltiplica.
+  return {
+    ...req,
+    immagini: req.immagini * canali,
+    video: req.video * canali,
+    dettaglio: [
+      intestazione,
+      `Ogni concept viene adattato su ${canali} social e ognuno richiede i propri media: fabbisogno moltiplicato per ${canali}.`,
+      ...req.dettaglio,
+    ],
+  }
 }
 
 // Confronto tra il materiale caricato e il fabbisogno: dice in italiano cosa

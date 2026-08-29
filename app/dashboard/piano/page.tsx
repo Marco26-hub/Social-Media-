@@ -484,9 +484,12 @@ export default function PianoPage() {
   // (1 media per post, 5 per carosello, 1 MP4 per reel), e si aggiorna da solo
   // mentre l'utente carica.
   // Fabbisogno del PULSANTE VIOLA (piano libero): segue il periodo selezionato.
+  // Il fabbisogno dipende anche da QUANTI social sono selezionati: ogni concept
+  // diventa una pubblicazione per canale, con i propri media. Con Instagram e
+  // Facebook servono il doppio delle foto rispetto al numero di concept.
   const requisiti = useMemo(
-    () => requisitiDaPacchetto(clientePkg, clienteQuota, periodo),
-    [clientePkg, clienteQuota, periodo],
+    () => requisitiDaPacchetto(clientePkg, clienteQuota, periodo, Math.max(1, piattaforme.length)),
+    [clientePkg, clienteQuota, periodo, piattaforme.length],
   )
   // Senza pacchetto né quota il fabbisogno non è calcolabile: niente allarmi,
   // si mostrano solo le regole per formato.
@@ -840,9 +843,12 @@ export default function PianoPage() {
               {clientePkg && mixPacchettoPeriodo && (
                 <div className="mt-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-2 py-1.5 text-emerald-900">
                   <p>
-                    Ricetta automatica <span className="font-bold">{clientePkg.nome} · {periodo}</span>: il pulsante verde genera esattamente <span className="font-bold">{mixPacchettoPeriodo.totale} contenuti</span>,
+                    Ricetta automatica <span className="font-bold">{clientePkg.nome} · {periodo}</span>: <span className="font-bold">{mixPacchettoPeriodo.totale} contenuti</span>,
                     {' '}{mixPacchettoPeriodo.postSingoli} post/pin + {mixPacchettoPeriodo.caroselli} caroselli + {mixPacchettoPeriodo.stories} Story + {mixPacchettoPeriodo.reelVideo} Reel/short.
-                    Fabbisogno collegato: <span className="font-bold">{requisiti.immagini} immagini{requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}</span>.
+                    {piattaforme.length > 1 && (
+                      <> Ogni contenuto viene adattato sui <span className="font-bold">{piattaforme.length} social</span> selezionati: <span className="font-bold">{mixPacchettoPeriodo.totale * piattaforme.length} pubblicazioni</span> in calendario.</>
+                    )}
+                    {' '}Fabbisogno collegato: <span className="font-bold">{requisiti.immagini} immagini{requisiti.video > 0 ? ` + ${requisiti.video} MP4` : ''}</span>.
                   </p>
                   <p className="mt-1 text-[10px] text-emerald-800">
                     I conteggi seguono il pacchetto del cliente, non il numero di file gia caricati. Se il materiale e stato prodotto con una ricetta diversa, correggi prima il pacchetto nella scheda cliente.
