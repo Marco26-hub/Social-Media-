@@ -452,8 +452,8 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
           </div>
           {/* Sticker hook */}
           {c.hook && !finalAssetMode && (
-            <div className="absolute top-1/3 left-3 right-3">
-              <div className="bg-white text-black text-sm font-bold p-3 rounded-lg shadow-lg leading-tight transform -rotate-2">
+            <div className="absolute bottom-28 left-3 right-9 flex justify-start">
+              <div className="max-w-[88%] rounded-md border border-white/20 bg-black/45 px-2.5 py-2 text-[11px] font-semibold leading-snug text-white shadow-lg backdrop-blur-md">
                 {c.hook}
               </div>
             </div>

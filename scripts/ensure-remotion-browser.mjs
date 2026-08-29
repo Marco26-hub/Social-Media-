@@ -14,12 +14,15 @@ import path from 'node:path'
 import { ensureBrowser } from '@remotion/renderer'
 import { bundle } from '@remotion/bundler'
 
-const status = await ensureBrowser({
-  chromeMode: 'headless-shell',
-  logLevel: 'info',
-})
-
-console.log(`[remotion] browser: ${status.type}${'path' in status ? ` (${status.path})` : ''}`)
+if (process.env.VERCEL) {
+  console.log('[remotion] browser: @sparticuz/chromium (serverless)')
+} else {
+  const status = await ensureBrowser({
+    chromeMode: 'headless-shell',
+    logLevel: 'info',
+  })
+  console.log(`[remotion] browser: ${status.type}${'path' in status ? ` (${status.path})` : ''}`)
+}
 
 const outDir = path.join(process.cwd(), '.remotion-bundle')
 const serveUrl = await bundle({

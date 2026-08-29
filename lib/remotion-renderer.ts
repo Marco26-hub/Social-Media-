@@ -4,11 +4,13 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { bundle } from '@remotion/bundler'
 import { getVideoMetadata, renderMedia, selectComposition } from '@remotion/renderer'
+import chromium from '@sparticuz/chromium'
 import { isStorageConfigured, uploadToStorage } from '@/lib/storage'
 
 const FPS = 30
 const MAX_IMAGES = 10
 let bundlePromise: Promise<string> | null = null
+let browserExecutablePromise: Promise<string | null> | null = null
 
 export type SwaRenderInput = {
   clienteId: string
@@ -110,6 +112,15 @@ async function remotionBundle(): Promise<string> {
   return bundlePromise
 }
 
+function remotionBrowserExecutable(): Promise<string | null> {
+  if (!browserExecutablePromise) {
+    browserExecutablePromise = process.env.VERCEL
+      ? chromium.executablePath()
+      : Promise.resolve(null)
+  }
+  return browserExecutablePromise
+}
+
 export async function renderSwaSocialVideo(input: SwaRenderInput): Promise<SwaRenderResult> {
   const mediaUrls = input.mediaUrls.filter(Boolean).slice(0, MAX_IMAGES)
   if (!mediaUrls.length) throw new Error('Remotion richiede almeno una foto o un video sorgente')
@@ -138,6 +149,7 @@ export async function renderSwaSocialVideo(input: SwaRenderInput): Promise<SwaRe
 
   try {
     const serveUrl = await remotionBundle()
+    const browserExecutable = await remotionBrowserExecutable()
     const props = {
       mediaUrls: imageUrls,
       sourceVideoUrl,
@@ -156,6 +168,8 @@ export async function renderSwaSocialVideo(input: SwaRenderInput): Promise<SwaRe
       id: 'SwaSocialVideo',
       inputProps: props,
       logLevel: 'warn',
+      browserExecutable,
+      chromeMode: 'headless-shell',
     })
     await renderMedia({
       serveUrl,
@@ -172,6 +186,8 @@ export async function renderSwaSocialVideo(input: SwaRenderInput): Promise<SwaRe
       disallowParallelEncoding: true,
       timeoutInMilliseconds: 120000,
       chromiumOptions: { disableWebSecurity: true },
+      browserExecutable,
+      chromeMode: 'headless-shell',
       overwrite: true,
       logLevel: 'warn',
     })

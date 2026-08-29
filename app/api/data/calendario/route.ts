@@ -116,6 +116,29 @@ const CALENDARIO_UPDATE_COLUMNS = new Set([
   'blotato_audio_visual_updated_at',
 ])
 
+async function repairCoordinatedNoveltyErrors(clienteId: string) {
+  await q(`
+    UPDATE calendario AS affected
+       SET status = 'DA_APPROVARE',
+           note = NULL,
+           errore_tecnico = NULL,
+           updated_at = now()
+     WHERE affected.cliente_id = $1
+       AND affected.status = 'ERRORE_MANUALE'
+       AND affected.note LIKE '[NOVELTY_GATE] Somiglianza creativa 100% con %'
+       AND affected.errore_tecnico LIKE 'Contenuto da differenziare: Somiglianza creativa 100% con %'
+       AND NULLIF(affected.campaign_content_key, '') IS NOT NULL
+       AND EXISTS (
+         SELECT 1
+           FROM calendario AS coordinated
+          WHERE coordinated.cliente_id = affected.cliente_id
+            AND coordinated.campaign_content_key = affected.campaign_content_key
+            AND LOWER(coordinated.canale) <> LOWER(affected.canale)
+            AND COALESCE(coordinated.hook, '') = COALESCE(affected.hook, '')
+       )
+  `, [clienteId])
+}
+
 export async function GET(request: Request) {
   try {
     await requireAuth()
@@ -146,6 +169,9 @@ export async function GET(request: Request) {
     }
 
     const cid = await requireClienteId()
+    // Bonifica i falsi positivi creati dal vecchio novelty gate: gli adattamenti
+    // coordinati Facebook/Instagram condividono intenzionalmente hook e chiave.
+    await repairCoordinatedNoveltyErrors(cid)
     const params: unknown[] = [cid]
     const where = ['cliente_id = $1']
     const addFilter = (column: string, value: string | null) => {

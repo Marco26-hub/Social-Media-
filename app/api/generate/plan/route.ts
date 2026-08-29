@@ -35,6 +35,7 @@ import {
   createMonthlyCreativeDirection,
   EDITORIAL_HISTORY_COLUMNS,
   findCreativeNearDuplicate,
+  isCoordinatedCrossPlatformVariant,
   type CreativeRecord,
 } from '@/lib/editorial-variation'
 import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage } from '@/lib/production-cycle'
@@ -1441,7 +1442,12 @@ Output SOLO JSON array valido:
       const item = sanitizeItem(rawItem, chunk)
       const isGenerationFallback = rawItem._generation_fallback === true
       const historyDuplicate = findCreativeNearDuplicate(item, historyRecords)
-      const batchDuplicate = historyDuplicate ? null : findCreativeNearDuplicate(item, acceptedCreativeItems)
+      // Instagram e Facebook dello stesso gruppo cartella sono adattamenti della
+      // medesima creativita, non due idee concorrenti. Il gate anti-clone deve
+      // confrontare contenuti diversi, non penalizzare la seconda piattaforma.
+      const comparableBatchItems = acceptedCreativeItems.filter(previous =>
+        !isCoordinatedCrossPlatformVariant(item, previous))
+      const batchDuplicate = historyDuplicate ? null : findCreativeNearDuplicate(item, comparableBatchItems)
       const duplicate = historyDuplicate || batchDuplicate
       const noveltyReason = duplicate
         ? `Somiglianza creativa ${Math.round(duplicate.score * 100)}% con "${duplicate.hook || 'un contenuto precedente'}"`

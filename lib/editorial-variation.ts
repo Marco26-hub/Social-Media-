@@ -230,4 +230,12 @@ export function findCreativeNearDuplicate(
   return best
 }
 
+export function isCoordinatedCrossPlatformVariant(a: CreativeRecord, b: CreativeRecord): boolean {
+  const keyA = text(a.content_key || a.campaign_content_key).toLowerCase()
+  const keyB = text(b.content_key || b.campaign_content_key).toLowerCase()
+  const channelA = text(a.canale).toLowerCase()
+  const channelB = text(b.canale).toLowerCase()
+  return Boolean(keyA && keyA === keyB && channelA && channelB && channelA !== channelB)
+}
+
 export const EDITORIAL_HISTORY_COLUMNS = HISTORY_FIELDS

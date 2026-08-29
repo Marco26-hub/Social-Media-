@@ -23,6 +23,7 @@
   "dependencies": {
     "@remotion/bundler": "^4.0.516",
     "@remotion/renderer": "^4.0.516",
+    "@sparticuz/chromium": "143.0.4",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

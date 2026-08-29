@@ -63,6 +63,16 @@ function formatoValue(value: unknown): Contenuto['formato'] | null {
   return raw as Contenuto['formato']
 }
 
+function audioPlaybackUrl(raw: string): string {
+  if (!raw || raw.startsWith('/')) return raw
+  if (typeof window !== 'undefined') {
+    try {
+      if (new URL(raw).origin === window.location.origin) return raw
+    } catch {}
+  }
+  return `/api/assets/audio-proxy?url=${encodeURIComponent(raw)}`
+}
+
 export default function PreviewPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [id, setId] = useState('')
@@ -93,6 +103,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
   const [musicMood, setMusicMood] = useState<string | null>(null)
   const [reelAudioUrl, setReelAudioUrl] = useState('')
   const [reelAudioTitle, setReelAudioTitle] = useState('')
+  const [campaignSourcePaths, setCampaignSourcePaths] = useState<unknown>(null)
+  const [productionNotes, setProductionNotes] = useState('')
   // Link condivisibile basato sul preview_token opaco (non sull'id enumerabile).
   const [shareUrl, setShareUrl] = useState('')
 
@@ -145,6 +157,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setMusicMood(textValue(d.music_mood) || null)
         setReelAudioUrl(textValue(d.reel_audio_url))
         setReelAudioTitle(textValue(d.reel_audio_title))
+        setCampaignSourcePaths(d.campaign_source_paths ?? null)
+        setProductionNotes(textValue(d.production_notes))
         if (Array.isArray(d.tags)) setTags(d.tags.filter((tag): tag is string => typeof tag === 'string'))
       }
       const exRaw = localStorage.getItem(`preview_${id}_excluded`)
@@ -203,6 +217,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         setMusicMood(s(d.music_mood) || null)
         setReelAudioUrl(s(d.reel_audio_url))
         setReelAudioTitle(s(d.reel_audio_title))
+        setCampaignSourcePaths(d.campaign_source_paths ?? null)
+        setProductionNotes(s(d.production_notes))
         if (Array.isArray(d.tags)) setTags(d.tags.filter((tag): tag is string => typeof tag === 'string'))
       })
       .catch(() => {})
@@ -255,6 +271,8 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     alt_text: altText, tags, thumbnail_url: thumbnailUrl,
     idea_visual: ideaVisual, voiceover_script: voiceoverScript, music_mood: musicMood,
     reel_audio_url: reelAudioUrl || null, reel_audio_title: reelAudioTitle || null,
+    campaign_source_paths: campaignSourcePaths as Contenuto['campaign_source_paths'],
+    production_notes: productionNotes || null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,
     created_at: '', updated_at: '',
   }
@@ -320,7 +338,12 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
                 {reelAudioUrl ? (
                   <>
                     <p className="mb-2 truncate text-[11px] text-emerald-800">{reelAudioTitle || 'Traccia audio caricata'}</p>
-                    <audio src={reelAudioUrl} controls preload="metadata" className="h-9 w-full" />
+                    <audio
+                      src={audioPlaybackUrl(reelAudioUrl)}
+                      controls
+                      preload="metadata"
+                      className="h-9 w-full"
+                    />
                   </>
                 ) : (
                   <p className="text-[11px] text-emerald-700">Nessuna traccia audio associata.</p>

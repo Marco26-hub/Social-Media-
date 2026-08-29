@@ -5,6 +5,7 @@ import {
   buildEditorialHistoryContext,
   createMonthlyCreativeDirection,
   findCreativeNearDuplicate,
+  isCoordinatedCrossPlatformVariant,
 } from './editorial-variation'
 
 test('monthly creative DNA is stable inside a month and changes the following month', () => {
@@ -50,4 +51,26 @@ test('novelty gate detects an exact or substantially repeated creative', () => {
     angle: 'tutorial pratico',
     primary_message: 'posizione del polso e rilascio della palla',
   }, previous), null)
+})
+
+test('coordinated platform variants do not count as duplicate creatives', () => {
+  const instagram = {
+    content_key: 'reel_01',
+    canale: 'instagram',
+    hook: 'Il suono che accende la notte',
+  }
+  const facebook = {
+    content_key: 'reel_01',
+    canale: 'facebook',
+    hook: 'Il suono che accende la notte',
+  }
+  const anotherInstagramContent = {
+    content_key: 'reel_10',
+    canale: 'instagram',
+    hook: 'Il suono che accende la notte',
+  }
+
+  assert.equal(isCoordinatedCrossPlatformVariant(instagram, facebook), true)
+  assert.equal(isCoordinatedCrossPlatformVariant(instagram, anotherInstagramContent), false)
+  assert.ok(findCreativeNearDuplicate(anotherInstagramContent, [instagram]))
 })
