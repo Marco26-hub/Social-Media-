@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 
-import { imageVideoDurationInSeconds, remotionSourceHash } from './remotion-renderer'
+import { imageVideoDurationInSeconds, remotionConcurrency, remotionSourceHash } from './remotion-renderer'
 
 test('image video duration always ends on a full visible frame', () => {
   assert.equal(imageVideoDurationInSeconds(1), 8)
   assert.equal(imageVideoDurationInSeconds(5), 15)
   assert.equal(imageVideoDurationInSeconds(10), 20)
+})
+
+test('serverless rendering never rounds concurrency down to zero', () => {
+  assert.equal(remotionConcurrency(true), 1)
+  assert.equal(remotionConcurrency(false), '25%')
 })
 
 test('custom audio participates in the deterministic Remotion render identity', () => {

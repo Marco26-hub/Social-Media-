@@ -68,6 +68,13 @@ export function imageVideoDurationInSeconds(imageCount: number): number {
 // abbondantemente Reel e Short, che è tutto ciò che pubblichiamo.
 export const MAX_SOURCE_VIDEO_SECONDS = 90
 
+// Remotion arrotonda le percentuali sul numero di CPU disponibili. Nelle
+// funzioni Vercel con una sola CPU, "25%" diventava 0 e il render falliva con
+// "Minimum for concurrency is 1" prima ancora di inviare il post a Blotato.
+export function remotionConcurrency(isServerless = Boolean(process.env.VERCEL)): number | `${number}%` {
+  return isServerless ? 1 : '25%'
+}
+
 async function resolveDuration(sourceVideoUrl: string | undefined, imageCount: number): Promise<number> {
   if (!sourceVideoUrl) return imageVideoDurationInSeconds(imageCount)
   const metadata = await getVideoMetadata(sourceVideoUrl, { logLevel: 'warn' })
@@ -182,7 +189,7 @@ export async function renderSwaSocialVideo(input: SwaRenderInput): Promise<SwaRe
       crf: 18,
       jpegQuality: 92,
       x264Preset: 'veryfast',
-      concurrency: '25%',
+      concurrency: remotionConcurrency(),
       disallowParallelEncoding: true,
       timeoutInMilliseconds: 120000,
       chromiumOptions: { disableWebSecurity: true },
