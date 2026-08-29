@@ -277,7 +277,11 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     scenes_json: scenesJson, slides_json: slidesJson, overlay_text: overlayText,
     alt_text: altText, tags, thumbnail_url: thumbnailUrl,
     idea_visual: ideaVisual, voiceover_script: voiceoverScript, music_mood: musicMood,
-    reel_audio_url: reelAudioUrl || null, reel_audio_title: reelAudioTitle || null,
+    // Stessa URL usata dal player qui sopra: passa dal proxy same-origin. Con
+    // l'URL grezzo dello storage l'anteprima del reel restava muta, mentre il
+    // player separato — che il proxy lo usava — si sentiva.
+    reel_audio_url: reelAudioUrl ? audioPlaybackUrl(reelAudioUrl) : null,
+    reel_audio_title: reelAudioTitle || null,
     campaign_source_paths: hasCampaignFinalAssets ? ['asset-finale'] : campaignSourcePaths as Contenuto['campaign_source_paths'],
     production_notes: productionNotes || null,
     checked_alt_text: null, checked_aspect_ratio: null, checked_media_valid: null,

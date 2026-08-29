@@ -1091,12 +1091,34 @@ Output SOLO JSON array valido:
     // di contenuti/giorno della cadenza, si sposta al giorno VALIDO più vicino del
     // blocco che ha ancora spazio. Se il blocco è pieno si resta dov'è (meglio un
     // giorno affollato che una data fuori range).
-    function giornoConCapacita(canale: string, giorno: string, giorni: string[]): string {
-      if ((contenutiPerGiorno.get(giorno) ?? 0) < cadenza.maxPerGiorno) return giorno
+    // Tetto per giorno calcolato sul CARICO REALE del blocco, non sulla cadenza
+    // settimanale generica. Con 12 contenuti su 7 giorni la cadenza concedeva 3 al
+    // giorno: il modello proponeva date ammassate all'inizio, il tetto non veniva
+    // mai raggiunto e il blocco si riempiva in 4-5 giorni lasciando vuota la
+    // seconda meta della settimana. Ripartendo il carico sui giorni disponibili il
+    // tetto scende a 2 e la distribuzione copre tutto il periodo.
+    function tettoGiornalieroBlocco(chunk: Chunk, giorni: string[]): number {
+      const capienzaCadenza = cadenza.maxPerGiorno
+      if (!giorni.length) return capienzaCadenza
+      const equilibrato = Math.ceil(chunk.targetMax / giorni.length)
+      // Mai sotto 1, mai sopra il tetto della cadenza: resta un vincolo, non un
+      // modo per superarlo.
+      return Math.max(1, Math.min(capienzaCadenza, equilibrato))
+    }
+
+    function giornoConCapacita(canale: string, giorno: string, giorni: string[], tetto: number): string {
+      if ((contenutiPerGiorno.get(giorno) ?? 0) < tetto) return giorno
       const target = new Date(`${giorno}T00:00:00Z`).getTime()
       const candidati = giorni
         .filter(d => giornoValidoPerCanale(canale, d))
         .sort((a, b) => Math.abs(new Date(`${a}T00:00:00Z`).getTime() - target) - Math.abs(new Date(`${b}T00:00:00Z`).getTime() - target))
+      // Primo passaggio col tetto equilibrato: spinge verso i giorni ancora vuoti.
+      for (const d of candidati) {
+        if ((contenutiPerGiorno.get(d) ?? 0) < tetto) return d
+      }
+      // Se il blocco è saturo a quel tetto, si concede fino al massimo della
+      // cadenza prima di rinunciare: meglio un giorno più carico che una data
+      // fuori dal periodo.
       for (const d of candidati) {
         if ((contenutiPerGiorno.get(d) ?? 0) < cadenza.maxPerGiorno) return d
       }
@@ -1200,8 +1222,9 @@ Output SOLO JSON array valido:
       // (a) il canale nel weekend non ha pubblico (linkedin, blog) oppure
       // (b) il giorno ha già raggiunto il maxPerGiorno della cadenza.
       const giorniChunk = giorniDelChunk(chunk)
+      const tettoBlocco = tettoGiornalieroBlocco(chunk, giorniChunk)
       const giornoProposto = typeof out.data_pubblicazione === 'string' ? out.data_pubblicazione : spreadDate(chunk)
-      const giorno = giornoConCapacita(canale, prossimoGiornoValido(canale, giornoProposto, giorniChunk), giorniChunk)
+      const giorno = giornoConCapacita(canale, prossimoGiornoValido(canale, giornoProposto, giorniChunk), giorniChunk, tettoBlocco)
       if (giorno !== giornoProposto) itemsCorrettiData++
       out.data_pubblicazione = giorno
       contenutiPerGiorno.set(giorno, (contenutiPerGiorno.get(giorno) ?? 0) + 1)

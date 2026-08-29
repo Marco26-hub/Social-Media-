@@ -233,9 +233,10 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
             onClick={() => setAudioAttivo(a => !a)}
             aria-label={audioAttivo ? 'Disattiva audio anteprima' : 'Ascolta la traccia del contenuto'}
             title={audioTitle || 'Traccia del contenuto'}
-            className={`absolute top-3 right-3 z-20 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors ${audioAttivo ? 'bg-white text-gray-900' : 'bg-black/55 text-white'}`}
+            className={`absolute top-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full px-2.5 h-8 text-[10px] font-semibold backdrop-blur-sm transition-colors ${audioAttivo ? 'bg-white text-gray-900' : 'bg-brand-600 text-white animate-pulse'}`}
           >
             <Volume2 className="w-4 h-4" />
+            {audioAttivo ? 'Audio' : 'Ascolta'}
           </button>
         )}
 
@@ -243,7 +244,13 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
         {!videoUrl && total > 1 && (
           <button
             type="button"
-            onClick={() => setPlaying(p => !p)}
+            onClick={() => {
+              // Il click sul player e gia un gesto dell'utente: ne approfittiamo
+              // per sbloccare l'audio, che i browser tengono muto finche non ce
+              // n'e uno. Senza, bisognava sapere di dover premere l'altoparlante.
+              if (haAudio && !audioAttivo) setAudioAttivo(true)
+              setPlaying(p => !p)
+            }}
             aria-label={playing ? 'Pausa' : 'Riproduci'}
             className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity z-10"
           >
