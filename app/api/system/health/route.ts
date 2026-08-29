@@ -8,7 +8,7 @@ import { ensureStandaloneServiceOrdersSchema } from '@/lib/standalone-service-sc
 
 export const dynamic = 'force-dynamic'
 
-const LATEST_REQUIRED_MIGRATION = '043_standalone_service_orders.sql'
+const LATEST_REQUIRED_MIGRATION = '046_remove_in_pubblicazione_status.sql'
 
 function hasEnv(name: string) {
   return Boolean(process.env[name]?.trim())
