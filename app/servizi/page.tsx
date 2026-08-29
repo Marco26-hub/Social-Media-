@@ -224,7 +224,7 @@ const METHOD = [
 const FAQ = [
   {
     q: 'Quanto costa affidare la gestione dei social a Social Web Automation?',
-    a: 'Il piano Presenza costa 390 € al mese per 2 social e 16 contenuti. Il piano Crescita costa 790 € al mese per 3 social e 24 contenuti, con articolo SEO + GEO e gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
+    a: 'Il piano Presenza costa 390 € al mese: 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 790 € al mese: 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, con articolo SEO + GEO e gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
   },
   {
     q: 'Il cliente deve gestire il software?',

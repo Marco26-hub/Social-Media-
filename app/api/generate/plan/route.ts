@@ -749,9 +749,18 @@ ${buildExtendedOutputSchema(contentQuality)}
     // ogni gruppo social/contenuto deve generare una card. Nel caso reale sono
     // 16 concept adattati su 2 social, quindi 32 pubblicazioni senza perdere meta
     // del materiale per rispettare un conteggio concettuale di 16.
+    // Quanti contenuti in PIU rispetto alla quota del pacchetto sono imposti dalla
+    // cartella. Va detto a chiare lettere: il piano non rispetta piu il numero
+    // venduto, e chi genera deve sapere quanti ne sta aggiungendo e perche.
+    let contenutiForzatiDaCartella = 0
+    const quotaPacchettoPeriodo = packagePlan?.totale ?? 0
     chunks.forEach(chunk => {
       const imported = importedGroupsForChunk(chunk)
       if (!imported.size) return
+      const quotaPrimaDellaCartella = chunk.targetMax
+      if (imported.size > quotaPrimaDellaCartella) {
+        contenutiForzatiDaCartella += imported.size - quotaPrimaDellaCartella
+      }
       chunk.targetMin = imported.size
       chunk.targetMax = imported.size
     })
@@ -1683,6 +1692,12 @@ Output SOLO JSON array valido:
       // Contenuti a cui è stato assegnato un gruppo cartella diverso da quello
       // richiesto: i media appartengono a un altro concept, vanno ricontrollati.
       ...(folderGroupMismatch && { items_gruppo_cartella_diverso: folderGroupMismatch }),
+      // Contenuti aggiunti dalla cartella OLTRE la quota del pacchetto: la
+      // campagna gia prodotta vince sul conteggio venduto, ma va dichiarato.
+      ...(contenutiForzatiDaCartella > 0 && {
+        contenuti_forzati_da_cartella: contenutiForzatiDaCartella,
+        quota_pacchetto_periodo: quotaPacchettoPeriodo,
+      }),
       // Settimane generate in questo run: con `fase` sono solo 2 su 4.
       settimane_generate: chunks.map(c => c.week).filter((w, i, a) => a.indexOf(w) === i),
       // Gruppi della cartella lasciati fuori perche appartengono a settimane non

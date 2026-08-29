@@ -34,8 +34,8 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
       {
         h2: 'Quanto costa la gestione social media con SWA',
         paragrafi: [
-          'Social Web Automation propone due livelli mensili trasparenti. Il piano Presenza costa 390 euro al mese, IVA esclusa, e comprende 16 contenuti per due social. È pensato per imprese che devono comunicare con continuità e desiderano un flusso gestito di produzione, approvazione e pubblicazione.',
-          'Il piano Crescita costa 790 euro al mese, IVA esclusa. Comprende 24 contenuti per tre social, un articolo SEO e GEO e la gestione di una campagna ADS. Il budget pubblicitario pagato alle piattaforme non è incluso nel canone e resta separato.',
+          'Social Web Automation propone due livelli mensili trasparenti. Il piano Presenza costa 390 euro al mese, IVA esclusa, e comprende 16 contenuti al mese per ciascuno dei due social coordinati, cioè 32 pubblicazioni. È pensato per imprese che devono comunicare con continuità e desiderano un flusso gestito di produzione, approvazione e pubblicazione.',
+          'Il piano Crescita costa 790 euro al mese, IVA esclusa. Comprende 24 contenuti al mese per ciascuno dei due social, cioè 48 pubblicazioni, un articolo SEO e GEO e la gestione di una campagna ADS. Il budget pubblicitario pagato alle piattaforme non è incluso nel canone e resta separato.',
           'Per e-commerce, più brand, volumi elevati, integrazioni o produzioni complesse viene definita una configurazione personalizzata. Il preventivo deve indicare con chiarezza attività, revisioni, responsabilità, tempi e costi esclusi.',
         ],
       },
@@ -57,7 +57,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     faq: [
       { domanda: 'Il budget pubblicitario è incluso nel canone?', risposta: 'No. La gestione della campagna può essere inclusa nel servizio, ma il budget versato a Meta, Google o altre piattaforme resta separato.' },
       { domanda: 'I contenuti vengono pubblicati senza approvazione?', risposta: 'No. Il processo SWA prevede controllo e approvazione del cliente prima della pubblicazione, nel rispetto delle revisioni incluse.' },
-      { domanda: 'È possibile iniziare con due social?', risposta: 'Sì. Il piano Presenza include due social coordinati e 16 contenuti mensili.' },
+      { domanda: 'È possibile iniziare con due social?', risposta: 'Sì. Il piano Presenza include due social coordinati con 16 contenuti mensili per ciascun canale, cioè 32 pubblicazioni.' },
       { domanda: 'La gestione social garantisce vendite?', risposta: 'No. Nessun fornitore serio può garantire vendite o viralità. È possibile progettare e misurare un processo orientato a obiettivi concreti.' },
     ],
     cta_finale: 'Vuoi capire quale perimetro è sostenibile per la tua impresa? Confronta i pacchetti SWA oppure richiedi un’analisi iniziale.',

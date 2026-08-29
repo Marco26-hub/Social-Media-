@@ -399,6 +399,8 @@ export default function PianoPage() {
       chunks_failed?: number
       items_scartati?: number
       media_fuori_periodo?: number
+      contenuti_forzati_da_cartella?: number
+      quota_pacchetto_periodo?: number
     }>({
       key: fase ? `piano-fase-${fase}` : 'piano',
       label: `Piano editoriale ${periodo}${faseLabel}`,
@@ -437,7 +439,15 @@ export default function PianoPage() {
       const outcome = fallbackCount > 0
         ? `${data?.completed_count ?? 0} completati, ${fallbackCount} da sistemare`
         : `${data?.count ?? '?'} contenuti completati`
-      setMsg({ type: 'ok', text: `Piano generato${faseNote}: ${outcome}. Tutti gli slot del ciclo sono nel calendario.${imgNote}${fuoriPeriodoNote}${chunkNote}${scartatiNote}` })
+      // In EVIDENZA e per PRIMO: quando la cartella impone piu contenuti della
+      // quota del pacchetto, il piano non rispetta piu il numero venduto. Prima
+      // succedeva in silenzio e ce ne si accorgeva solo contando il calendario.
+      const forzati = Number(data?.contenuti_forzati_da_cartella || 0)
+      const quotaPeriodo = Number(data?.quota_pacchetto_periodo || 0)
+      const forzatiNote = forzati
+        ? `📁 ${forzati} contenuti IN PIÙ rispetto al pacchetto${quotaPeriodo ? ` (quota del periodo: ${quotaPeriodo})` : ''}, imposti dalla cartella campagna: ogni gruppo social+contenuto diventa una pubblicazione. `
+        : ''
+      setMsg({ type: 'ok', text: `${forzatiNote}Piano generato${faseNote}: ${outcome}. Tutti gli slot del ciclo sono nel calendario.${imgNote}${fuoriPeriodoNote}${chunkNote}${scartatiNote}` })
     } else {
       setMsg({ type: 'err', text: result.error || 'Generazione piano fallita' })
     }
@@ -454,7 +464,7 @@ export default function PianoPage() {
       return
     }
     const aiSettings = readAISettings()
-    const result = await gen.run<{ count?: number; completed_count?: number; fallback_slots?: number; articolo_blog?: boolean; pacchetto_troncati?: number; images_provided?: number }>({
+    const result = await gen.run<{ count?: number; completed_count?: number; fallback_slots?: number; articolo_blog?: boolean; pacchetto_troncati?: number; images_provided?: number; contenuti_forzati_da_cartella?: number; quota_pacchetto_periodo?: number; media_fuori_periodo?: number }>({
       key: 'piano-pacchetto',
       label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
@@ -472,7 +482,18 @@ export default function PianoPage() {
       const outcome = fallbackCount > 0
         ? `${d?.completed_count ?? 0} completati, ${fallbackCount} da sistemare`
         : `${d?.count ?? '?'} contenuti completati`
-      setMsg({ type: 'ok', text: `Piano ${periodo} ${clientePkg.nome} generato: ${outcome}${d?.articolo_blog ? ' + articolo blog collegato' : ''}. Il ciclo resta completo nel calendario.` })
+      // Stessa avvertenza del piano libero: se la cartella impone piu contenuti
+      // della quota venduta, deve saltare all'occhio prima di ogni altra cosa.
+      const forzati = Number(d?.contenuti_forzati_da_cartella || 0)
+      const quotaPeriodo = Number(d?.quota_pacchetto_periodo || 0)
+      const forzatiNote = forzati
+        ? `📁 ${forzati} contenuti IN PIÙ rispetto al pacchetto${quotaPeriodo ? ` (quota del periodo: ${quotaPeriodo})` : ''}, imposti dalla cartella campagna: ogni gruppo social+contenuto diventa una pubblicazione. `
+        : ''
+      const fuoriPeriodo = Number(d?.media_fuori_periodo || 0)
+      const fuoriPeriodoNote = fuoriPeriodo
+        ? ` ${fuoriPeriodo} gruppi della cartella appartengono a settimane non generate ora: li userà l'altra fase.`
+        : ''
+      setMsg({ type: 'ok', text: `${forzatiNote}Piano ${periodo} ${clientePkg.nome} generato: ${outcome}${d?.articolo_blog ? ' + articolo blog collegato' : ''}. Il ciclo resta completo nel calendario.${fuoriPeriodoNote}` })
     } else {
       setMsg({ type: 'err', text: result.error || 'Generazione piano pacchetto fallita' })
     }

@@ -159,7 +159,7 @@ const PROCESS = [
 const FAQ = [
   {
     q: 'Quanto costa la gestione social media per una PMI?',
-    a: 'Il piano Presenza costa 390 € al mese e comprende 16 contenuti su 2 social. Il piano Crescita costa 790 € al mese e comprende 24 contenuti su 3 social, un articolo SEO + GEO e la gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
+    a: 'Il piano Presenza costa 390 € al mese e comprende 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 790 € al mese e comprende 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, più un articolo SEO + GEO e la gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
   },
   {
     q: 'Devo imparare a utilizzare un nuovo software?',

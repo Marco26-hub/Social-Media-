@@ -16,7 +16,14 @@ export type PackageSpec = {
   id: PackageId
   nome: string
   prezzoMese: number
-  contenutiMese: number     // totale contenuti social/mese
+  // ATTENZIONE — due letture diverse, volutamente non allineate:
+  //  · commercialmente il sito vende questa quota PER OGNI SOCIAL
+  //    (Crescita: 24 a canale su 2 canali = 48 pubblicazioni);
+  //  · il generatore la usa invece come TOTALE del periodo, quindi senza una
+  //    cartella campagna importata produce 24 contenuti complessivi, non 48.
+  // Il raddoppio arriva oggi solo dall'import da cartella, che crea una
+  // pubblicazione per ogni gruppo social+contenuto e scavalca questa quota.
+  contenutiMese: number
   postCaroselli: number     // quota post + caroselli
   reelBrevi: number         // quota reel / stories / short
   social: number            // n° social coordinati
@@ -50,7 +57,7 @@ export const PACKAGES: Record<PackageId, PackageSpec> = {
     social: 2,
     quality: 'medium',
     articoloBlog: false,
-    descrizione: '16 contenuti/mese (12 post/caroselli + 4 reel o stories) su 2 social.',
+    descrizione: '16 contenuti/mese per ogni social (12 post/caroselli + 4 reel o stories), fino a 2 social = 32 pubblicazioni.',
   },
   crescita: {
     id: 'crescita',
@@ -59,10 +66,10 @@ export const PACKAGES: Record<PackageId, PackageSpec> = {
     contenutiMese: 24,
     postCaroselli: 18,
     reelBrevi: 6,
-    social: 3,
+    social: 2,
     quality: 'high',
     articoloBlog: true,
-    descrizione: '24 contenuti/mese (18 post/caroselli + 6 reel o short) su 3 social + 1 articolo SEO/GEO.',
+    descrizione: '24 contenuti/mese per ogni social (18 post/caroselli + 6 reel o short), fino a 2 social = 48 pubblicazioni, + 1 articolo SEO/GEO.',
   },
 }
 

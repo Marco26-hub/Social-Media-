@@ -17,7 +17,7 @@ const groups=[
     {q:'Quali aziende seguite?',a:'Lavoriamo soprattutto con PMI, attività locali e professionisti che vogliono coordinare social, contenuti, sito e visibilità organica.'},
   ]},
   {title:'Pacchetti e costi',items:[
-    {q:'Quanto costa la gestione social?',a:'Presenza costa 390 € al mese per 2 social e 16 contenuti. Crescita costa 790 € al mese per 3 social e 24 contenuti, con un articolo SEO + GEO e gestione di una campagna ADS. IVA esclusa.'},
+    {q:'Quanto costa la gestione social?',a:'Presenza costa 390 € al mese: 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Crescita costa 790 € al mese: 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, con un articolo SEO + GEO e gestione di una campagna ADS. IVA esclusa.'},
     {q:'Il budget pubblicitario è incluso?',a:'No. Il budget versato alle piattaforme resta separato dal canone ed è concordato in base agli obiettivi.'},
     {q:'Esiste una soluzione personalizzata?',a:'Sì. Più brand, volumi elevati, automazioni, e-commerce, produzione video e integrazioni vengono configurati dopo un’analisi iniziale.'},
   ]},
