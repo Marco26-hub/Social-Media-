@@ -154,6 +154,45 @@ export async function downloadRangeFromStorage(
  * pubblicati: i media sono la parte che occupa davvero spazio.
  * Ritorna true se lo storage ha confermato la rimozione.
  */
+/**
+ * Elenca gli oggetti sotto un prefisso, con paginazione. Serve a ritrovare i
+ * media gia caricati per un cliente: la pagina Piano li teneva solo nello stato
+ * React, quindi cambiando schermata sparivano e bisognava ricaricare la cartella
+ * — duplicando ogni volta centinaia di MB nello storage.
+ */
+export async function listFromStorage(prefix: string): Promise<{ key: string; size: number; updatedAt: string }[]> {
+  if (!isStorageConfigured()) return []
+  const out: { key: string; size: number; updatedAt: string }[] = []
+  let token = ''
+  // Tetto difensivo: 20 pagine da 1000 = 20k oggetti, ben oltre il caso reale.
+  for (let pagina = 0; pagina < 20; pagina++) {
+    const url = new URL(`${STORAGE_ENDPOINT}/${STORAGE_BUCKET}`)
+    url.searchParams.set('list-type', '2')
+    url.searchParams.set('prefix', prefix)
+    url.searchParams.set('max-keys', '1000')
+    if (token) url.searchParams.set('continuation-token', token)
+
+    const res = await storageClient().fetch(url.toString(), { method: 'GET' })
+    if (!res.ok) break
+    const xml = await res.text()
+
+    for (const blocco of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+      const key = (blocco[1].match(/<Key>([\s\S]*?)<\/Key>/) || [])[1]
+      if (!key) continue
+      out.push({
+        key,
+        size: Number((blocco[1].match(/<Size>(\d+)<\/Size>/) || [])[1] || 0),
+        updatedAt: (blocco[1].match(/<LastModified>([\s\S]*?)<\/LastModified>/) || [])[1] || '',
+      })
+    }
+
+    const troncato = /<IsTruncated>true<\/IsTruncated>/.test(xml)
+    token = (xml.match(/<NextContinuationToken>([\s\S]*?)<\/NextContinuationToken>/) || [])[1] || ''
+    if (!troncato || !token) break
+  }
+  return out
+}
+
 export async function deleteFromStorage(key: string): Promise<boolean> {
   if (!isStorageConfigured()) return false
   try {

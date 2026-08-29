@@ -38,6 +38,9 @@ type PlanAsset = {
   platform?: 'instagram' | 'facebook' | null
   contentKey?: string | null
   sequence?: number | null
+  // Presente solo sui media recuperati dallo storage (/api/assets/list): serve a
+  // distinguere i caricamenti fra loro e proporre il piu recente.
+  updatedAt?: string
 }
 type FolderCandidate = { file: File; assignment: CampaignFolderAsset }
 type FolderPreview = { root: string; candidates: FolderCandidate[]; ignored: number }
@@ -147,6 +150,11 @@ export default function PianoPage() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [folderPreview, setFolderPreview] = useState<FolderPreview | null>(null)
   const folderInputRef = useRef<HTMLInputElement | null>(null)
+  // Media gia presenti nello storage per questo cliente: proposti al rientro
+  // nella pagina, cosi non si ricarica la stessa cartella (ogni ricaricamento
+  // duplicava centinaia di MB, perche i nomi ricevono un token casuale).
+  const [assetRecuperabili, setAssetRecuperabili] = useState<PlanAsset[]>([])
+  const [recuperoFatto, setRecuperoFatto] = useState(false)
   const [fallbackPopup, setFallbackPopup] = useState<{ count: number; completed: number } | null>(null)
   const [clientePkg, setClientePkg] = useState<PackageSpec | null>(null)
   // Quota reale del cliente (clienti.contenuti_mese): l'admin può sovrascrivere
@@ -188,6 +196,27 @@ export default function PianoPage() {
     loadPkg()
     return () => { alive = false }
   }, [clienteId])
+
+  // Recupera i media gia caricati nello storage per questo cliente. Non li
+  // aggiunge da solo al piano: li propone, perche la scelta di riusare materiale
+  // di un mese precedente deve restare esplicita.
+  useEffect(() => {
+    let alive = true
+    async function recupera() {
+      setAssetRecuperabili([])
+      setRecuperoFatto(false)
+      if (!clienteId || demo) return
+      try {
+        const res = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
+        if (!res.ok) return
+        const data = await res.json() as { assets?: PlanAsset[] }
+        if (alive) setAssetRecuperabili(Array.isArray(data.assets) ? data.assets : [])
+      } catch { /* il recupero e un extra: se fallisce si carica a mano */ }
+      finally { if (alive) setRecuperoFatto(true) }
+    }
+    recupera()
+    return () => { alive = false }
+  }, [clienteId, demo])
 
   function togglePlatform(key: PlatformKey) {
     setPiattaforme(p => p.includes(key) ? p.filter(x => x !== key) : [...p, key])
@@ -907,6 +936,45 @@ export default function PianoPage() {
                 }}
               />
             </div>
+
+            {/* Media gia nello storage: evita di ricaricare la stessa cartella,
+                che duplicherebbe centinaia di MB con nomi nuovi. */}
+            {recuperoFatto && assetRecuperabili.length > 0 && planAssets.length === 0 && (() => {
+              const ultimoGiorno = assetRecuperabili[0]?.updatedAt?.slice(0, 10) || ''
+              const ultimoCaricamento = assetRecuperabili.filter(a => (a.updatedAt || '').slice(0, 10) === ultimoGiorno)
+              const settimane = [...new Set(ultimoCaricamento.map(a => a.week).filter(Boolean))].sort()
+              return (
+                <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50/70 p-3">
+                  <p className="text-xs font-semibold text-sky-900">
+                    Hai già {assetRecuperabili.length} media caricati per questo cliente
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-sky-800">
+                    L’ultimo caricamento ({ultimoCaricamento.length} file
+                    {settimane.length ? `, settimane ${settimane.join(', ')}` : ''}) è ancora nello storage:
+                    riusalo invece di ricaricare la cartella, così non occupi spazio due volte.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPlanAssets(ultimoCaricamento.slice(0, MAX_PLAN_IMAGES))
+                        setUploadError(null)
+                      }}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-md bg-sky-600 px-3 text-xs font-semibold text-white hover:bg-sky-700"
+                    >
+                      Riusa l’ultimo caricamento ({ultimoCaricamento.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAssetRecuperabili([])}
+                      className="inline-flex h-8 items-center rounded-md border border-sky-300 bg-white px-3 text-xs font-medium text-sky-800 hover:bg-sky-50"
+                    >
+                      Carico una cartella nuova
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
 
             {folderPreview && (() => {
               const valid = folderPreview.candidates.filter(candidate => candidate.assignment.errors.length === 0)
