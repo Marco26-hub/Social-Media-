@@ -43,6 +43,15 @@ const noIndexHeaders = [
   { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
 ]
 
+const remotionServerFiles = [
+  './remotion/**/*',
+  './.remotion-bundle/**/*',
+  './node_modules/@sparticuz/chromium/bin/**/*',
+  // @remotion/renderer risolve questi binari con require dinamico. Senza un
+  // include esplicito Next non copia ffprobe/ffmpeg nella funzione Vercel.
+  './node_modules/@remotion/compositor-linux-x64-gnu/**/*',
+]
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Il renderer Remotion usa binari e Chromium lato server: Next deve lasciarlo
@@ -56,9 +65,9 @@ const nextConfig = {
   // `.remotion-bundle` e il bundle gia compilato in fase di build: senza di esso la
   // funzione ricadrebbe sulla compilazione webpack a runtime.
   outputFileTracingIncludes: {
-    '/api/data/calendario': ['./remotion/**/*', './.remotion-bundle/**/*', './node_modules/@sparticuz/chromium/bin/**/*'],
-    '/api/data/calendario/[id]/sync-uno': ['./remotion/**/*', './.remotion-bundle/**/*', './node_modules/@sparticuz/chromium/bin/**/*'],
-    '/api/data/blotato-sync': ['./remotion/**/*', './.remotion-bundle/**/*', './node_modules/@sparticuz/chromium/bin/**/*'],
+    '/api/data/calendario': remotionServerFiles,
+    '/api/data/calendario/[id]/sync-uno': remotionServerFiles,
+    '/api/data/blotato-sync': remotionServerFiles,
   },
   images: {
     remotePatterns: [
