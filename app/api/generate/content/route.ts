@@ -247,7 +247,7 @@ const PROMPTS: Record<string, PromptSpec> = {
     limiti: '30-90 secondi. Scene 4-6. Voiceover o parlato.',
     hashtag: '1-2 hashtag nella descrizione.',
     cta: 'CTA esplicito nel video (testo overlay) e nella descrizione: link.',
-    effetti: 'Qualità video professionale. Luci morbide. Brand logo watermark opzionale.',
+    effetti: 'Qualità video professionale. Luci morbide. Nessun watermark, logo Canva o filigrana aggiuntiva.',
     outputSchema: '{"titolo_video":"","durata":"60s","scene":[{"numero":1,"secondi":"0-5","descrizione":"","testo_overlay":""}],"voiceover":"testo parlato","descrizione_video":"testo sotto il video","cta_finale":""}',
   },
 
