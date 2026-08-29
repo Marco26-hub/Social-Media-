@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, Pause, Volume2, ChevronLeft, ChevronRight, Music2 } from 'lucide-react'
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, Pause, Volume2, VolumeX, ChevronLeft, ChevronRight, Music2 } from 'lucide-react'
 import type { Contenuto } from '@/lib/types'
 import { resolveHandle } from '@/lib/social-handle'
 
@@ -124,6 +124,10 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
   const [playing, setPlaying] = useState(true)
   const [progress, setProgress] = useState(0)
   const PER_SLIDE_MS = 2600
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const [videoPlaying, setVideoPlaying] = useState(false)
+  const [videoMuted, setVideoMuted] = useState(true)
+  const [videoErrore, setVideoErrore] = useState<string | null>(null)
 
   // La traccia caricata viene incorporata da Remotion nell'MP4 pubblicato: qui la
   // facciamo sentire mentre scorrono le foto, altrimenti si approva un montaggio
@@ -159,6 +163,35 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
         setAudioAttivo(false)
         setAudioErrore(e instanceof Error ? e.message.slice(0, 80) : 'riproduzione non consentita')
       })
+  }
+
+  function alternaVideo() {
+    const el = videoRef.current
+    if (!el) return
+    setVideoErrore(null)
+    if (el.paused) {
+      el.play().catch((e: unknown) => {
+        setVideoPlaying(false)
+        setVideoErrore(e instanceof Error ? e.message.slice(0, 80) : 'riproduzione non consentita')
+      })
+    } else {
+      el.pause()
+    }
+  }
+
+  function alternaAudioVideo() {
+    const el = videoRef.current
+    if (!el) return
+    const nextMuted = !el.muted
+    el.muted = nextMuted
+    el.volume = 1
+    setVideoMuted(nextMuted)
+    if (el.paused) {
+      el.play().catch((e: unknown) => {
+        setVideoPlaying(false)
+        setVideoErrore(e instanceof Error ? e.message.slice(0, 80) : 'riproduzione non consentita')
+      })
+    }
   }
 
   // La pausa dello slideshow mette in pausa anche la traccia, ma non la riattiva
@@ -198,13 +231,27 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
         {/* Media principale */}
         {videoUrl ? (
           <video
+            ref={videoRef}
             src={videoUrl}
             className="w-full h-full object-cover"
             autoPlay
             muted
             loop
             playsInline
+            preload="auto"
             poster={stills[0]}
+            onClick={alternaVideo}
+            onPlay={() => setVideoPlaying(true)}
+            onPause={() => setVideoPlaying(false)}
+            onLoadedData={event => {
+              event.currentTarget.muted = true
+              setVideoMuted(true)
+              event.currentTarget.play().catch(() => setVideoPlaying(false))
+            }}
+            onError={() => {
+              setVideoPlaying(false)
+              setVideoErrore('Video non caricabile')
+            }}
           />
         ) : currentStill ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -239,7 +286,17 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
         <div className={`absolute ${total > 1 && !videoUrl ? 'top-5' : 'top-3'} left-3 right-3 flex items-center justify-between text-white text-xs z-10`}>
           <span className="font-semibold drop-shadow">{handle}</span>
           <div className="flex items-center gap-2">
-            <Volume2 className="w-4 h-4 drop-shadow" />
+            {videoUrl && (
+              <button
+                type="button"
+                onClick={alternaAudioVideo}
+                aria-label={videoMuted ? 'Attiva audio video' : 'Disattiva audio video'}
+                title={videoMuted ? 'Attiva audio' : 'Disattiva audio'}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm hover:bg-black/65"
+              >
+                {videoMuted ? <VolumeX className="w-4 h-4 drop-shadow" /> : <Volume2 className="w-4 h-4 drop-shadow" />}
+              </button>
+            )}
             <span className="text-[10px] uppercase tracking-wide font-bold bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded">
               {videoUrl ? 'Video' : playerLabel}
             </span>
@@ -258,6 +315,20 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
             preload="metadata"
             onError={() => setAudioErrore('traccia non caricabile')}
           />
+        )}
+
+        {videoUrl && (
+          <div className={`pointer-events-none absolute inset-0 z-20 flex items-center justify-center transition-opacity ${videoPlaying ? 'opacity-0 hover:opacity-100 focus-within:opacity-100' : 'opacity-100'}`}>
+            <button
+              type="button"
+              onClick={alternaVideo}
+              aria-label={videoPlaying ? 'Metti in pausa il video' : 'Riproduci il video'}
+              title={videoErrore || (videoPlaying ? 'Pausa' : 'Riproduci')}
+              className={`pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full text-white shadow-2xl backdrop-blur-sm ${videoErrore ? 'bg-red-600/90' : 'bg-black/55'}`}
+            >
+              {videoPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-7 h-7 translate-x-0.5" />}
+            </button>
+          </div>
         )}
 
         {/* Attiva/disattiva l'audio. Serve un gesto dell'utente: senza, il browser
