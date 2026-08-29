@@ -19,9 +19,22 @@ export async function GET(request: Request) {
 
     const calendarioColumns = await getTableColumns('calendario')
     const mediaSelect = selectExistingColumns('c', mediaSlotColumns(), calendarioColumns).join(',\n              ')
+    // La pagina di approvazione e quella che il CLIENTE guarda davvero: se non
+    // riceve la traccia audio e il montaggio gia renderizzato, approva un
+    // contenuto muto e ne esce uno con la musica dentro. Colonne opzionali perche
+    // possono mancare su database non ancora migrati.
+    const extraSelect = selectExistingColumns('c', [
+      'reel_audio_url',
+      'reel_audio_title',
+      'blotato_visual_media_url',
+      'blotato_audio_visual_media_url',
+      'campaign_source_paths',
+    ], calendarioColumns)
+    const extraFields = extraSelect.length ? extraSelect.join(',\n              ') + ',' : ''
     const rows = await q(
       `SELECT ct.*, c.canale, c.formato, c.hook, c.caption, c.hashtag, c.cta,
               ${mediaSelect},
+              ${extraFields}
               c.link_prodotto, c.link_prodotto_finale,
               c.data_pubblicazione, c.ora_pubblicazione, c.nome_prodotto, c.tema,
               cl.nome as cliente_nome, cl.slug as cliente_slug,

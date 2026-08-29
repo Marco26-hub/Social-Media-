@@ -101,7 +101,7 @@ function VisualBriefCard({ icon, title, description, accent = 'from-gray-700 to-
   )
 }
 
-function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, canale, formato, canaleIcon, finalAssetMode }: {
+function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, canale, formato, canaleIcon, finalAssetMode, audioUrl, audioTitle }: {
   imgs: string[]
   storyboard?: VisualItem[]
   handle: string
@@ -113,6 +113,8 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
   formato: string
   canaleIcon: string
   finalAssetMode?: boolean
+  audioUrl?: string | null
+  audioTitle?: string | null
 }) {
   const videoUrl = useMemo(() => imgs.find(isVideoUrl), [imgs])
   const stills = useMemo(() => imgs.filter(u => !isVideoUrl(u)), [imgs])
@@ -122,6 +124,25 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
   const [playing, setPlaying] = useState(true)
   const [progress, setProgress] = useState(0)
   const PER_SLIDE_MS = 2600
+
+  // La traccia caricata viene incorporata da Remotion nell'MP4 pubblicato: qui la
+  // facciamo sentire mentre scorrono le foto, altrimenti si approva un montaggio
+  // muto e ne esce uno con la musica. Parte MUTA perche i browser bloccano
+  // l'autoplay sonoro finche l'utente non interagisce: il pulsante altoparlante
+  // la attiva.
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioAttivo, setAudioAttivo] = useState(false)
+  const haAudio = Boolean(audioUrl) && !videoUrl
+
+  useEffect(() => {
+    const el = audioRef.current
+    if (!el || !haAudio) return
+    if (playing && audioAttivo) {
+      el.play().catch(() => { /* il browser puo rifiutare: resta in pausa */ })
+    } else {
+      el.pause()
+    }
+  }, [playing, audioAttivo, haAudio])
 
   // Slideshow autoplay per multipli still (mock reel). Il video vero non serve
   // slideshow — lo gestisce l'elemento <video> con loop.
@@ -199,6 +220,25 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
           </div>
         </div>
 
+        {/* Traccia audio reale del contenuto: quella che finira nell'MP4. */}
+        {haAudio && (
+          <audio ref={audioRef} src={audioUrl ?? undefined} loop preload="none" muted={!audioAttivo} />
+        )}
+
+        {/* Attiva/disattiva l'audio. Serve un gesto dell'utente: senza, il browser
+            blocca la riproduzione sonora e l'anteprima resterebbe muta. */}
+        {haAudio && (
+          <button
+            type="button"
+            onClick={() => setAudioAttivo(a => !a)}
+            aria-label={audioAttivo ? 'Disattiva audio anteprima' : 'Ascolta la traccia del contenuto'}
+            title={audioTitle || 'Traccia del contenuto'}
+            className={`absolute top-3 right-3 z-20 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors ${audioAttivo ? 'bg-white text-gray-900' : 'bg-black/55 text-white'}`}
+          >
+            <Volume2 className="w-4 h-4" />
+          </button>
+        )}
+
         {/* Play/pause centrale (solo per slideshow still) */}
         {!videoUrl && total > 1 && (
           <button
@@ -227,14 +267,14 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
             <p className="line-clamp-2 leading-snug drop-shadow">{caption ?? hook ?? currentFrameTitle}</p>
             {hashtag && <p className="text-[9px] opacity-90 mt-1 truncate drop-shadow">{hashtag}</p>}
             <p className="text-[9px] mt-1.5 flex items-center gap-1 opacity-90">
-              <Music2 className="w-3 h-3" /> audio originale
+              <Music2 className="w-3 h-3" /> {audioTitle || (haAudio ? 'traccia caricata' : 'audio originale')}
             </p>
           </div>
         )}
         {finalAssetMode && (
           <div className="absolute bottom-3 left-3 right-12 text-white text-[9px] z-10">
             <p className="flex items-center gap-1 opacity-90 drop-shadow">
-              <Music2 className="w-3 h-3" /> audio originale
+              <Music2 className="w-3 h-3" /> {audioTitle || (haAudio ? 'traccia caricata' : 'audio originale')}
             </p>
           </div>
         )}
@@ -382,12 +422,31 @@ function StructuredCarouselGallery({ items, canale }: { items: VisualItem[]; can
 
 type BrandHandleInfo = { brand_name?: string | null; social_handle?: string | null; sito_url?: string | null } | null
 
-function StoryMediaSequence({ imgs }: { imgs: string[] }) {
+function StoryMediaSequence({ imgs, audioUrl, audioTitle }: { imgs: string[]; audioUrl?: string | null; audioTitle?: string | null }) {
   const videoUrl = imgs.find(isVideoUrl)
   const slides = videoUrl ? [videoUrl] : imgs.filter(url => !isVideoUrl(url))
   const [index, setIndex] = useState(0)
   const [progress, setProgress] = useState(0)
   const slideDurationMs = 5000
+
+  // Con una traccia caricata la story viene pubblicata come video montato da
+  // Remotion, con la musica dentro: l'anteprima muta non mostrerebbe cio che esce.
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioAttivo, setAudioAttivo] = useState(false)
+  const haAudio = Boolean(audioUrl) && !videoUrl
+
+  useEffect(() => {
+    const el = audioRef.current
+    if (!el || !haAudio) return
+    if (audioAttivo) el.play().catch(() => { /* autoplay negato: resta in pausa */ })
+    else el.pause()
+  }, [audioAttivo, haAudio])
+
+  // Se la lista si accorcia mentre siamo su un indice alto, `current` sarebbe
+  // undefined e il riquadro resterebbe nero per sempre.
+  useEffect(() => {
+    if (index >= slides.length) setIndex(0)
+  }, [index, slides.length])
 
   useEffect(() => {
     if (videoUrl || slides.length < 2) return
@@ -415,6 +474,21 @@ function StoryMediaSequence({ imgs }: { imgs: string[] }) {
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img key={current} src={current} alt="" className="h-full w-full object-cover transition-opacity duration-300" />
+      )}
+
+      {haAudio && (
+        <>
+          <audio ref={audioRef} src={audioUrl ?? undefined} loop preload="none" muted={!audioAttivo} />
+          <button
+            type="button"
+            onClick={() => setAudioAttivo(a => !a)}
+            aria-label={audioAttivo ? 'Disattiva audio anteprima' : 'Ascolta la traccia della story'}
+            title={audioTitle || 'Traccia della story'}
+            className={`absolute top-9 right-2 z-30 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors ${audioAttivo ? 'bg-white text-gray-900' : 'bg-black/55 text-white'}`}
+          >
+            <Volume2 className="w-4 h-4" />
+          </button>
+        </>
       )}
 
       <div className="absolute left-2 right-2 top-2 z-20 flex gap-1">
@@ -530,7 +604,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
       <div className="max-w-[260px] mx-auto">
         <div className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-black shadow-xl">
           {media.length ? (
-            <StoryMediaSequence imgs={media} />
+            <StoryMediaSequence imgs={media} audioUrl={c.reel_audio_url} audioTitle={c.reel_audio_title} />
           ) : sceneItems[0] || slideItems[0] ? (
             <VisualBriefCard
               icon={CANALE_ICON[c.canale] || '📸'}
@@ -662,6 +736,8 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
         formato={c.formato}
         canaleIcon={CANALE_ICON[c.canale] || '📸'}
         finalAssetMode={finalAssetMode}
+        audioUrl={c.reel_audio_url}
+        audioTitle={c.reel_audio_title}
       />
     )
   }

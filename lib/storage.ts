@@ -149,6 +149,47 @@ export async function downloadRangeFromStorage(
   }
 }
 
+/**
+ * Elimina un oggetto dallo storage. Usata dalla retention dei contenuti
+ * pubblicati: i media sono la parte che occupa davvero spazio.
+ * Ritorna true se lo storage ha confermato la rimozione.
+ */
+export async function deleteFromStorage(key: string): Promise<boolean> {
+  if (!isStorageConfigured()) return false
+  try {
+    const endpoint = `${STORAGE_ENDPOINT}/${STORAGE_BUCKET}/${key}`
+    const res = await storageClient().fetch(endpoint, { method: 'DELETE' })
+    // S3 risponde 204 anche se la chiave non esisteva: va bene, l'esito voluto e
+    // "non c'e piu".
+    return res.ok || res.status === 404
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Dalla URL di un media risale alla chiave nello storage.
+ * Copre le due forme che il progetto produce: URL pubblica diretta
+ * (STORAGE_PUBLIC_URL/uploads/...) e proxy same-origin
+ * /api/assets/file/<clienteId>/<filename>. Null se non e un nostro media.
+ */
+export function storageKeyFromUrl(url: string): string | null {
+  const clean = String(url || '').trim()
+  if (!clean) return null
+
+  const viaProxy = clean.match(/\/api\/assets\/file\/([^/?#]+)\/([^/?#]+)/)
+  if (viaProxy) {
+    return `uploads/${decodeURIComponent(viaProxy[1])}/${decodeURIComponent(viaProxy[2])}`
+  }
+
+  const indice = clean.indexOf('/uploads/')
+  if (indice >= 0) {
+    return clean.slice(indice + 1).split('?')[0]
+  }
+
+  return null
+}
+
 export async function downloadFromStorage(
   key: string,
 ): Promise<{ bytes: Buffer; contentType: string } | null> {

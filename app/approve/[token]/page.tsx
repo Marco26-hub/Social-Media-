@@ -130,6 +130,14 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
     link_prodotto_finale: c.link_prodotto_finale || null,
     nome_prodotto: c.nome_prodotto || '',
     tema: c.tema || '',
+    // Senza questi campi il cliente approvava un'anteprima diversa dal pubblicato:
+    // niente traccia audio (che Remotion incorpora nell'MP4) e nessun montaggio
+    // gia renderizzato, quindi vedeva una foto al posto del video.
+    reel_audio_url: c.reel_audio_url || null,
+    reel_audio_title: c.reel_audio_title || null,
+    blotato_visual_media_url: c.blotato_visual_media_url || null,
+    blotato_audio_visual_media_url: c.blotato_audio_visual_media_url || null,
+    campaign_source_paths: c.campaign_source_paths ?? null,
     status: 'DA_APPROVARE',
     media_type: 'image',
     retry_count: 0,

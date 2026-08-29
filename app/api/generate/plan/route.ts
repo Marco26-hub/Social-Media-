@@ -493,13 +493,20 @@ export async function POST(request: Request) {
     const calendarioColumns = await getTableColumns('calendario')
     const historyColumns = EDITORIAL_HISTORY_COLUMNS.filter(column => calendarioColumns.has(column))
     const historySelect = historyColumns.length ? historyColumns.join(', ') : 'hook, tema'
-    const [brandRows, products, clientRows, recentRows] = await Promise.all([
+    const [brandRows, products, clientRows, recentRows, archivedRows] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [effectiveClienteId]),
       q('SELECT * FROM prodotti WHERE cliente_id = $1', [effectiveClienteId]),
       q('SELECT * FROM clienti WHERE id = $1 LIMIT 1', [effectiveClienteId]),
       // Fino a tre mesi circa di memoria creativa. La selezione e dinamica per
       // restare compatibile anche con database non ancora aggiornati.
       q(`SELECT ${historySelect} FROM calendario WHERE cliente_id = $1 AND (hook IS NOT NULL OR tema IS NOT NULL) ORDER BY created_at DESC LIMIT 96`, [effectiveClienteId]),
+      // Impronte dei contenuti gia pubblicati ed eliminati dalla retention: senza
+      // queste, cancellare i pubblicati farebbe dimenticare cosa e gia uscito e
+      // l'AI riproporrebbe hook e temi visti dal cliente poche settimane prima.
+      // La tabella puo non esistere su database non ancora migrati: fallisce
+      // silenziosamente e la memoria resta quella del solo calendario.
+      q(`SELECT ${historySelect} FROM contenuti_storico WHERE cliente_id = $1 ORDER BY archiviato_il DESC LIMIT 96`, [effectiveClienteId])
+        .catch(() => [] as Record<string, unknown>[]),
     ])
     const brand = brandRows[0] ?? null
     const client = (clientRows[0] ?? null) as Record<string, unknown> | null
@@ -533,7 +540,9 @@ export async function POST(request: Request) {
     // non più un dump JSON grezzo. Vuoto se il brand non è configurato → nota esplicita.
     const brandContext = buildBrandContext(brand)
     const productsJson = JSON.stringify(products || [], null, 2)
-    const historyRecords = recentRows as CreativeRecord[]
+    // Il calendario contiene i contenuti vivi, `contenuti_storico` quelli gia
+    // pubblicati e rimossi: la memoria creativa e l'unione dei due.
+    const historyRecords = [...(recentRows as CreativeRecord[]), ...(archivedRows as CreativeRecord[])]
     const historyContext = buildEditorialHistoryContext(historyRecords)
     const creativeDirection = createMonthlyCreativeDirection({
       clienteId: effectiveClienteId,
