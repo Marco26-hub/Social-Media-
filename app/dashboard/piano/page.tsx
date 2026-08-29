@@ -162,6 +162,31 @@ export default function PianoPage() {
   const [assetRecuperabili, setAssetRecuperabili] = useState<PlanAsset[]>([])
   const [recuperoFatto, setRecuperoFatto] = useState(false)
   const [pulizia, setPulizia] = useState<{ inCorso: boolean; messaggio: string; errore?: boolean } | null>(null)
+
+  // Un "caricamento" e un gruppo di file vicini nel tempo, NON un giorno: nello
+  // stesso giorno possono essercene due (e successo: 296 file il 29/08, alle
+  // 09:03 e alle 11:10), e raggruppando per data si mescolavano due copie
+  // diverse della stessa campagna.
+  const ultimoCaricamento = useMemo(() => {
+    const SEPARAZIONE_MS = 30 * 60 * 1000
+    const ordinati = [...assetRecuperabili]
+      .filter(a => a.updatedAt)
+      .sort((x, y) => String(y.updatedAt).localeCompare(String(x.updatedAt)))
+    const gruppo: PlanAsset[] = []
+    let precedente = 0
+    for (const asset of ordinati) {
+      const t = new Date(String(asset.updatedAt)).getTime()
+      if (!Number.isFinite(t)) continue
+      if (gruppo.length && precedente - t > SEPARAZIONE_MS) break
+      gruppo.push(asset)
+      precedente = t
+    }
+    return gruppo
+  }, [assetRecuperabili])
+
+  // Media di caricamenti precedenti: candidati alla pulizia. Il conteggio esatto
+  // lo fa il server, che sa anche quali sono referenziati da un contenuto.
+  const caricamentiVecchi = Math.max(0, assetRecuperabili.length - ultimoCaricamento.length)
   const [fallbackPopup, setFallbackPopup] = useState<{ count: number; completed: number } | null>(null)
   const [clientePkg, setClientePkg] = useState<PackageSpec | null>(null)
   // Quota reale del cliente (clienti.contenuti_mese): l'admin può sovrascrivere
@@ -997,23 +1022,6 @@ export default function PianoPage() {
             {/* Media gia nello storage: evita di ricaricare la stessa cartella,
                 che duplicherebbe centinaia di MB con nomi nuovi. */}
             {recuperoFatto && assetRecuperabili.length > 0 && planAssets.length === 0 && (() => {
-              // Un "caricamento" e un gruppo di file vicini nel tempo, NON un
-              // giorno: nello stesso giorno possono essercene due (e successo:
-              // 296 file il 29/08, alle 09:03 e alle 11:10). Raggruppando per
-              // data si mescolavano due copie diverse della stessa campagna.
-              const SEPARAZIONE_MS = 30 * 60 * 1000
-              const ordinati = [...assetRecuperabili]
-                .filter(a => a.updatedAt)
-                .sort((x, y) => String(y.updatedAt).localeCompare(String(x.updatedAt)))
-              const ultimoCaricamento: PlanAsset[] = []
-              let precedente = 0
-              for (const asset of ordinati) {
-                const t = new Date(String(asset.updatedAt)).getTime()
-                if (!Number.isFinite(t)) continue
-                if (ultimoCaricamento.length && precedente - t > SEPARAZIONE_MS) break
-                ultimoCaricamento.push(asset)
-                precedente = t
-              }
               const audio = ultimoCaricamento.filter(a => a.kind === 'audio').length
               const settimane = [...new Set(ultimoCaricamento.map(a => a.week).filter(Boolean))].sort()
               return (
@@ -1052,27 +1060,44 @@ export default function PianoPage() {
                     >
                       Carico una cartella nuova
                     </button>
-                    {assetRecuperabili.length > ultimoCaricamento.length && (
-                      <button
-                        type="button"
-                        onClick={pulisciOrfani}
-                        disabled={pulizia !== null && pulizia.inCorso}
-                        title="Elimina dallo storage i media caricati e mai usati. L’ultimo caricamento non viene toccato."
-                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-amber-300 bg-white px-3 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50"
-                      >
-                        {pulizia?.inCorso ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                        Elimina i caricamenti vecchi ({assetRecuperabili.length - ultimoCaricamento.length})
-                      </button>
-                    )}
                   </div>
-                  {pulizia?.messaggio && (
-                    <p className={`mt-2 text-[11px] font-medium ${pulizia.errore ? 'text-red-700' : 'text-amber-900'}`}>
-                      {pulizia.messaggio}
-                    </p>
-                  )}
                 </div>
               )
             })()}
+
+            {/* Pulizia dello storage: FUORI dal riquadro di riuso, che sparisce
+                appena si riusano i media. Il caso reale in cui serve — "ho
+                riusato, ora libero lo spazio" — e proprio quello in cui il
+                riquadro non c'e piu. */}
+            {recuperoFatto && caricamentiVecchi > 0 && (
+              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-amber-900">
+                      {caricamentiVecchi} media da caricamenti precedenti occupano spazio
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-amber-800">
+                      Ricaricando la stessa cartella i file non si sovrascrivono: restano copie duplicate.
+                      L’ultimo caricamento e i media usati dai contenuti non vengono toccati.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={pulisciOrfani}
+                    disabled={Boolean(pulizia?.inCorso)}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-md border border-amber-400 bg-white px-3 text-xs font-semibold text-amber-900 shadow-sm hover:bg-amber-100 disabled:opacity-50"
+                  >
+                    {pulizia?.inCorso ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    Elimina i caricamenti vecchi
+                  </button>
+                </div>
+                {pulizia?.messaggio && (
+                  <p className={`mt-2 text-[11px] font-medium ${pulizia.errore ? 'text-red-700' : 'text-amber-900'}`}>
+                    {pulizia.messaggio}
+                  </p>
+                )}
+              </div>
+            )}
 
             {folderPreview && (() => {
               const valid = folderPreview.candidates.filter(candidate => candidate.assignment.errors.length === 0)
