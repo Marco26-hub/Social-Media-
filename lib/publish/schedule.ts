@@ -238,6 +238,12 @@ export async function scheduleOnBlotato(
       : row.use_trending_effects === true || String(row.use_trending_effects).toLowerCase() === 'true'
         ? 'trending' as const
         : 'premium' as const
+    // I media provenienti da una cartella campagna sono creativita finali: hook
+    // e CTA sono gia impaginati. Non ridisegnarli sopra l'immagine e abilita il
+    // percorso ffmpeg rapido quando il Reel e una sola foto con musica.
+    const hasFinalCampaignAsset = Boolean(String(row.campaign_content_key || '').trim())
+    const renderHook = hasFinalCampaignAsset ? undefined : String(row.hook || '').trim() || undefined
+    const renderCta = hasFinalCampaignAsset ? undefined : String(row.cta || '').trim() || undefined
 
     if (uploadedVideo && !hasAudio) {
       mediaUrls = [uploadedVideo]
@@ -249,8 +255,8 @@ export async function scheduleOnBlotato(
         audioUrl: attachedAudioUrl || undefined,
         keepOriginalAudio,
         motionPreset,
-        hook: String(row.hook || '').trim() || undefined,
-        cta: String(row.cta || '').trim() || undefined,
+        hook: renderHook,
+        cta: renderCta,
       })
       const storedSourceHash = String(row.blotato_visual_source_hash || '').trim()
       const storedVisualId = String((hasAudio ? row.blotato_audio_visual_id : row.blotato_visual_id) || '').trim()
@@ -313,8 +319,8 @@ export async function scheduleOnBlotato(
             audioUrl: attachedAudioUrl || undefined,
             keepOriginalAudio,
             motionPreset,
-            hook: String(row.hook || '').trim() || undefined,
-            cta: String(row.cta || '').trim() || undefined,
+            hook: renderHook,
+            cta: renderCta,
           })
 
         if (rowId) {

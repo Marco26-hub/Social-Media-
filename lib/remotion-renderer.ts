@@ -3,7 +3,7 @@ import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promise
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { bundle } from '@remotion/bundler'
-import { getVideoMetadata, renderMedia, selectComposition } from '@remotion/renderer'
+import { getVideoMetadata, RenderInternals, renderMedia, selectComposition } from '@remotion/renderer'
 import chromium from '@sparticuz/chromium'
 import { isStorageConfigured, uploadToStorage } from '@/lib/storage'
 
@@ -73,6 +73,55 @@ export const MAX_SOURCE_VIDEO_SECONDS = 90
 // "Minimum for concurrency is 1" prima ancora di inviare il post a Blotato.
 export function remotionConcurrency(isServerless = Boolean(process.env.VERCEL)): number | `${number}%` {
   return isServerless ? 1 : '25%'
+}
+
+export function canUseStaticImageAudioFastPath(input: Pick<SwaRenderInput, 'mediaUrls' | 'audioUrl' | 'hook' | 'cta' | 'logoUrl' | 'brandName'>): boolean {
+  return input.mediaUrls.length === 1
+    && Boolean(input.audioUrl)
+    && !/\.(mp4|mov|webm|m4v)(\?|$)/i.test(input.mediaUrls[0])
+    && !input.hook
+    && !input.cta
+    && !input.logoUrl
+    && !input.brandName
+}
+
+async function renderStaticImageAudio(args: {
+  imageUrl: string
+  audioUrl: string
+  durationInSeconds: number
+  outputLocation: string
+}): Promise<void> {
+  const ffmpegArgs = [
+    '-y',
+    '-loop', '1',
+    '-framerate', '24',
+    '-i', args.imageUrl,
+    '-i', args.audioUrl,
+    '-t', String(args.durationInSeconds),
+    '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p',
+    '-r', '24',
+    '-c:v', 'libx264',
+    '-preset', 'veryfast',
+    '-tune', 'stillimage',
+    '-crf', '20',
+    '-c:a', 'aac',
+    '-b:a', '160k',
+    '-shortest',
+    '-movflags', '+faststart',
+    args.outputLocation,
+  ]
+
+  await RenderInternals.callFf({
+    args: ffmpegArgs,
+    bin: 'ffmpeg',
+    indent: false,
+    logLevel: 'warn',
+    binariesDirectory: null,
+    cancelSignal: undefined,
+    options: {
+      stdio: ['ignore', 'ignore', 'pipe'],
+    },
+  })
 }
 
 async function resolveDuration(sourceVideoUrl: string | undefined, imageCount: number): Promise<number> {
@@ -155,8 +204,6 @@ export async function renderSwaSocialVideo(input: SwaRenderInput): Promise<SwaRe
   const outputLocation = path.join(renderDir, filename)
 
   try {
-    const serveUrl = await remotionBundle()
-    const browserExecutable = await remotionBrowserExecutable()
     const props = {
       mediaUrls: imageUrls,
       sourceVideoUrl,
@@ -170,34 +217,45 @@ export async function renderSwaSocialVideo(input: SwaRenderInput): Promise<SwaRe
       logoUrl: input.logoUrl,
       brandName: input.brandName,
     }
-    const composition = await selectComposition({
-      serveUrl,
-      id: 'SwaSocialVideo',
-      inputProps: props,
-      logLevel: 'warn',
-      browserExecutable,
-      chromeMode: 'headless-shell',
-    })
-    await renderMedia({
-      serveUrl,
-      composition,
-      inputProps: props,
-      codec: 'h264',
-      audioCodec: 'aac',
-      outputLocation,
-      pixelFormat: 'yuv420p',
-      crf: 18,
-      jpegQuality: 92,
-      x264Preset: 'veryfast',
-      concurrency: remotionConcurrency(),
-      disallowParallelEncoding: true,
-      timeoutInMilliseconds: 120000,
-      chromiumOptions: { disableWebSecurity: true },
-      browserExecutable,
-      chromeMode: 'headless-shell',
-      overwrite: true,
-      logLevel: 'warn',
-    })
+    if (canUseStaticImageAudioFastPath(input)) {
+      await renderStaticImageAudio({
+        imageUrl: mediaUrls[0],
+        audioUrl: input.audioUrl!,
+        durationInSeconds,
+        outputLocation,
+      })
+    } else {
+      const serveUrl = await remotionBundle()
+      const browserExecutable = await remotionBrowserExecutable()
+      const composition = await selectComposition({
+        serveUrl,
+        id: 'SwaSocialVideo',
+        inputProps: props,
+        logLevel: 'warn',
+        browserExecutable,
+        chromeMode: 'headless-shell',
+      })
+      await renderMedia({
+        serveUrl,
+        composition,
+        inputProps: props,
+        codec: 'h264',
+        audioCodec: 'aac',
+        outputLocation,
+        pixelFormat: 'yuv420p',
+        crf: 18,
+        jpegQuality: 92,
+        x264Preset: 'veryfast',
+        concurrency: remotionConcurrency(),
+        disallowParallelEncoding: true,
+        timeoutInMilliseconds: 120000,
+        chromiumOptions: { disableWebSecurity: true },
+        browserExecutable,
+        chromeMode: 'headless-shell',
+        overwrite: true,
+        logLevel: 'warn',
+      })
+    }
 
     const bytes = await readFile(outputLocation)
     const safeClienteId = safePathPart(input.clienteId)

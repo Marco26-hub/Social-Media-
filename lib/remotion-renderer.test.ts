@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 
-import { imageVideoDurationInSeconds, remotionConcurrency, remotionSourceHash } from './remotion-renderer'
+import { canUseStaticImageAudioFastPath, imageVideoDurationInSeconds, remotionConcurrency, remotionSourceHash } from './remotion-renderer'
 
 test('image video duration always ends on a full visible frame', () => {
   assert.equal(imageVideoDurationInSeconds(1), 8)
@@ -12,6 +12,22 @@ test('image video duration always ends on a full visible frame', () => {
 test('serverless rendering never rounds concurrency down to zero', () => {
   assert.equal(remotionConcurrency(true), 1)
   assert.equal(remotionConcurrency(false), '25%')
+})
+
+test('single final image with audio uses the fast ffmpeg path', () => {
+  assert.equal(canUseStaticImageAudioFastPath({
+    mediaUrls: ['https://example.com/final.png'],
+    audioUrl: 'https://example.com/music.mp3',
+  }), true)
+  assert.equal(canUseStaticImageAudioFastPath({
+    mediaUrls: ['https://example.com/final.png'],
+    audioUrl: 'https://example.com/music.mp3',
+    hook: 'Overlay da disegnare',
+  }), false)
+  assert.equal(canUseStaticImageAudioFastPath({
+    mediaUrls: ['https://example.com/final.mp4'],
+    audioUrl: 'https://example.com/music.mp3',
+  }), false)
 })
 
 test('custom audio participates in the deterministic Remotion render identity', () => {
