@@ -452,6 +452,15 @@ function domainLabel(url: string): string {
   }
 }
 
+function safeExternalUrl(value: string): string {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : ''
+  } catch {
+    return ''
+  }
+}
+
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', youtube_shorts: '▶️',
   linkedin: '💼', threads: '🧵', x: '✖️', blog: '✍️',
@@ -484,7 +493,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
   const key = `${c.canale}-${c.formato}`
   const aspect = ASPECT[key] ?? 'aspect-square'
   const handle = resolveHandle(c.canale, brand)
-  const linkUrl = c.link_prodotto_finale || c.link_prodotto || brand?.sito_url || ''
+  const linkUrl = safeExternalUrl(c.link_prodotto_finale || c.link_prodotto || brand?.sito_url || '')
   const media = mediaUrls(c)
   const slideItems = parseVisualItems(c.slides_json)
   const sceneItems = parseVisualItems(c.scenes_json)
@@ -525,6 +534,18 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
                 {c.hook}
               </div>
             </div>
+          )}
+          {finalAssetMode && linkUrl && (
+            <a
+              href={linkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={c.cta || `Apri ${domainLabel(linkUrl)}`}
+              title={`Apri ${domainLabel(linkUrl)}`}
+              className="absolute bottom-[7.65rem] left-9 right-9 z-30 h-8 rounded-full outline-none ring-white/0 transition hover:ring-2 hover:ring-white/70 focus:ring-2 focus:ring-white"
+            >
+              <span className="sr-only">{c.cta || `Apri ${domainLabel(linkUrl)}`}</span>
+            </a>
           )}
           {/* Sticker link cliccabile (nativo IG, nessuna soglia follower dal 2023) */}
           {!finalAssetMode && linkUrl ? (
