@@ -8,7 +8,7 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from '../content-page.module.css'
 
 const title='Domande Frequenti su Gestione Social, SEO, GEO e Siti | SWA'
-const description='Risposte chiare su pacchetti, gestione social, contenuti, approvazioni, SEO, GEO, siti, budget ADS, consulenza AI e condizioni del servizio SWA.'
+const description='Risposte chiare su pacchetti, gestione social organica, contenuti, approvazioni, SEO, GEO, siti, consulenza AI e condizioni del servizio SWA.'
 const wa=`https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Ho una domanda sui servizi Social Web Automation.')}`
 const groups=[
   {title:'Servizio e processo',items:[
@@ -17,8 +17,8 @@ const groups=[
     {q:'Quali aziende seguite?',a:'Lavoriamo soprattutto con PMI, attività locali e professionisti che vogliono coordinare social, contenuti, sito e visibilità organica.'},
   ]},
   {title:'Pacchetti e costi',items:[
-    {q:'Quanto costa la gestione social?',a:'Presenza costa 390 € al mese: 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Crescita costa 790 € al mese: 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, con un articolo SEO + GEO e gestione di una campagna ADS. IVA esclusa.'},
-    {q:'Il budget pubblicitario è incluso?',a:'No. Il budget versato alle piattaforme resta separato dal canone ed è concordato in base agli obiettivi.'},
+    {q:'Quanto costa la gestione social?',a:'Presenza costa 490 € al mese: 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Crescita costa 990 € al mese: 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, con un articolo SEO + GEO e analisi competitor. IVA esclusa.'},
+    {q:'I piani includono le campagne a pagamento?',a:'No. Presenza e Crescita sono piani di sola crescita organica. Le campagne ADS rientrano nella configurazione personalizzata: la gestione viene concordata e il budget versato alle piattaforme resta separato dal canone.'},
     {q:'Esiste una soluzione personalizzata?',a:'Sì. Più brand, volumi elevati, automazioni, e-commerce, produzione video e integrazioni vengono configurati dopo un’analisi iniziale.'},
   ]},
   {title:'SEO, GEO e tecnologia',items:[

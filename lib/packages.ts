@@ -50,7 +50,7 @@ export const PACKAGES: Record<PackageId, PackageSpec> = {
   presenza: {
     id: 'presenza',
     nome: 'Presenza',
-    prezzoMese: 390,
+    prezzoMese: 490,
     contenutiMese: 16,
     postCaroselli: 12,
     reelBrevi: 4,
@@ -62,7 +62,7 @@ export const PACKAGES: Record<PackageId, PackageSpec> = {
   crescita: {
     id: 'crescita',
     nome: 'Crescita',
-    prezzoMese: 790,
+    prezzoMese: 990,
     contenutiMese: 24,
     postCaroselli: 18,
     reelBrevi: 6,

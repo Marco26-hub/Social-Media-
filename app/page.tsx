@@ -159,7 +159,7 @@ const PROCESS = [
 const FAQ = [
   {
     q: 'Quanto costa la gestione social media per una PMI?',
-    a: 'Il piano Presenza costa 390 € al mese e comprende 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 790 € al mese e comprende 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, più un articolo SEO + GEO e la gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
+    a: 'Il piano Presenza costa 490 € al mese e comprende 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 990 € al mese e comprende 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, più un articolo SEO + GEO e l’analisi competitor. Entrambi i piani sono di sola crescita organica: le campagne a pagamento rientrano nella configurazione personalizzata. IVA esclusa.',
   },
   {
     q: 'Devo imparare a utilizzare un nuovo software?',
@@ -174,8 +174,8 @@ const FAQ = [
     a: 'No. Applichiamo buone pratiche tecniche ed editoriali per migliorare comprensione, indicizzazione e citabilità, ma nessun operatore può garantire posizioni o citazioni da parte di motori e assistenti AI.',
   },
   {
-    q: 'Il budget pubblicitario è incluso?',
-    a: 'No. Il budget destinato alle piattaforme pubblicitarie resta separato dal canone e viene definito in base agli obiettivi e alla sostenibilità della campagna.',
+    q: 'I piani Presenza e Crescita includono le campagne a pagamento?',
+    a: 'No. Presenza e Crescita sono piani di sola crescita organica: produzione, approvazione e pubblicazione dei contenuti. Le campagne ADS rientrano nella configurazione personalizzata, dove la gestione viene concordata e il budget versato alle piattaforme resta separato dal canone.',
   },
   {
     q: 'Cosa comprende la soluzione personalizzata?',

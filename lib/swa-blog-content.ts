@@ -34,8 +34,8 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
       {
         h2: 'Quanto costa la gestione social media con SWA',
         paragrafi: [
-          'Social Web Automation propone due livelli mensili trasparenti. Il piano Presenza costa 390 euro al mese, IVA esclusa, e comprende 16 contenuti al mese per ciascuno dei due social coordinati, cioè 32 pubblicazioni. È pensato per imprese che devono comunicare con continuità e desiderano un flusso gestito di produzione, approvazione e pubblicazione.',
-          'Il piano Crescita costa 790 euro al mese, IVA esclusa. Comprende 24 contenuti al mese per ciascuno dei due social, cioè 48 pubblicazioni, un articolo SEO e GEO e la gestione di una campagna ADS. Il budget pubblicitario pagato alle piattaforme non è incluso nel canone e resta separato.',
+          'Social Web Automation propone due livelli mensili trasparenti. Il piano Presenza costa 490 euro al mese, IVA esclusa, e comprende 16 contenuti al mese per ciascuno dei due social coordinati, cioè 32 pubblicazioni. È pensato per imprese che devono comunicare con continuità e desiderano un flusso gestito di produzione, approvazione e pubblicazione.',
+          'Il piano Crescita costa 990 euro al mese, IVA esclusa. Comprende 24 contenuti al mese per ciascuno dei due social, cioè 48 pubblicazioni, un articolo SEO e GEO e l’analisi competitor. Entrambi i piani coprono la sola crescita organica: le campagne a pagamento rientrano in una configurazione personalizzata, con il budget versato alle piattaforme separato dal canone.',
           'Per e-commerce, più brand, volumi elevati, integrazioni o produzioni complesse viene definita una configurazione personalizzata. Il preventivo deve indicare con chiarezza attività, revisioni, responsabilità, tempi e costi esclusi.',
         ],
       },

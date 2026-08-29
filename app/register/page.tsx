@@ -197,7 +197,7 @@ function RegisterForm() {
 
         <p className={styles.hint}>
           <ShieldCheck size={15} />
-          Il pagamento avviene nella pagina Stripe successiva. Il budget ADS resta sempre separato.
+          Il pagamento avviene nella pagina Stripe successiva. I piani coprono la sola crescita organica.
         </p>
       </form>
 

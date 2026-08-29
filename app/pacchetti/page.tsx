@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 const faq = [
   { q: 'I prezzi includono l’IVA?', a: 'No. I prezzi indicati sono mensili e IVA esclusa.' },
   { q: 'Il setup iniziale ha un costo?', a: 'Nei pacchetti social Presenza e Crescita il setup è incluso. Per Blog e Web eventuali integrazioni esterne vengono definite prima dell’avvio.' },
-  { q: 'Il budget ADS e compreso nel piano Crescita?', a: 'La gestione di una campagna e inclusa; il budget versato alla piattaforma pubblicitaria e separato e resta sotto il controllo del cliente.' },
+  { q: 'Il piano Crescita comprende le campagne a pagamento?', a: 'No. Presenza e Crescita sono piani di sola crescita organica. Le campagne ADS rientrano nella configurazione personalizzata: la gestione viene concordata e il budget versato alla piattaforma resta separato e sotto il controllo del cliente.' },
   { q: 'Blog SEO + GEO è incluso nei pacchetti social?', a: 'Crescita include un articolo al mese. Il servizio Blog autonomo comprende invece 12 articoli mensili e può essere combinato con qualsiasi piano.' },
   { q: 'Sito web ed e-commerce sono inclusi nei pacchetti social?', a: 'No. Web & Commerce è un servizio separato, combinabile con gli altri. Il canone parte da 19,90 euro al mese e dopo 12 mesi il sito diventa tuo.' },
   { q: 'Cosa comprende il Pilot Ricerca Clienti B2B?', a: 'È un servizio una tantum da 149 euro: definiamo il profilo ideale, analizziamo fino a 30 aziende e consegniamo una lista verificata e prioritaria. Non comprende invii automatici e non garantisce appuntamenti o vendite.' },

@@ -224,7 +224,7 @@ const METHOD = [
 const FAQ = [
   {
     q: 'Quanto costa affidare la gestione dei social a Social Web Automation?',
-    a: 'Il piano Presenza costa 390 € al mese: 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 790 € al mese: 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, con articolo SEO + GEO e gestione di una campagna ADS. IVA e budget pubblicitario sono esclusi.',
+    a: 'Il piano Presenza costa 490 € al mese: 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 990 € al mese: 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, con articolo SEO + GEO e analisi competitor. Entrambi sono piani di sola crescita organica. IVA esclusa.',
   },
   {
     q: 'Il cliente deve gestire il software?',
@@ -235,8 +235,8 @@ const FAQ = [
     a: 'No. Il flusso prevede approvazione e revisioni tracciate prima della pubblicazione, secondo il perimetro del pacchetto.',
   },
   {
-    q: 'Il budget pubblicitario è compreso?',
-    a: 'No. La gestione prevista dal piano è inclusa, mentre il budget versato alle piattaforme pubblicitarie resta separato.',
+    q: 'I piani includono le campagne a pagamento?',
+    a: 'No. Presenza e Crescita coprono la sola crescita organica. Le campagne ADS rientrano nella configurazione personalizzata: la gestione viene concordata e il budget versato alle piattaforme resta separato dal canone.',
   },
   {
     q: 'SEO e GEO garantiscono risultati o citazioni?',
@@ -419,7 +419,7 @@ export default function ServiziPage() {
         <div className={styles.sectionHeading}>
           <p className={site.eyebrow}>Soluzioni mensili</p>
           <h2 id="pricing-title">Scegli il risultato. Il sistema è già completo.</h2>
-          <p>Setup incluso in entrambi i piani. Il budget pubblicitario versato alle piattaforme resta separato e sotto il tuo controllo.</p>
+          <p>Setup incluso in entrambi i piani. Sono piani di sola crescita organica: le campagne a pagamento rientrano nella configurazione personalizzata.</p>
         </div>
         <div className={styles.pricingGrid}>
           {PACCHETTI.map(plan => (
