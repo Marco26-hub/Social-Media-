@@ -7,7 +7,7 @@ import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, Ima
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
-import { readAISettings } from '@/lib/ai-client'
+import { readAISettings, readApiError } from '@/lib/ai-client'
 import { uploadAssets } from '@/lib/asset-upload'
 import { useGeneration } from '@/components/GenerationProvider'
 import { useRuntimeDemo } from '@/lib/demo-client'
@@ -161,6 +161,7 @@ export default function PianoPage() {
   // duplicava centinaia di MB, perche i nomi ricevono un token casuale).
   const [assetRecuperabili, setAssetRecuperabili] = useState<PlanAsset[]>([])
   const [recuperoFatto, setRecuperoFatto] = useState(false)
+  const [pulizia, setPulizia] = useState<{ inCorso: boolean; messaggio: string; errore?: boolean } | null>(null)
   const [fallbackPopup, setFallbackPopup] = useState<{ count: number; completed: number } | null>(null)
   const [clientePkg, setClientePkg] = useState<PackageSpec | null>(null)
   // Quota reale del cliente (clienti.contenuti_mese): l'admin può sovrascrivere
@@ -223,6 +224,56 @@ export default function PianoPage() {
     recupera()
     return () => { alive = false }
   }, [clienteId, demo])
+
+  // Pulizia dei media orfani: prima SIMULA e mostra quanto libererebbe, poi
+  // chiede conferma. La cancellazione dallo storage e irreversibile e Supabase
+  // non permette di rifarla via SQL, quindi non deve mai partire con un click solo.
+  async function pulisciOrfani() {
+    if (!clienteId) return
+    setPulizia({ inCorso: true, messaggio: 'Calcolo quanto si può liberare...' })
+    try {
+      const simula = await fetch('/api/assets/cleanup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente_id: clienteId, dry_run: true }),
+      })
+      if (!simula.ok) throw new Error(await readApiError(simula, 'Simulazione fallita'))
+      const s = await simula.json() as { orfani: number; mb_liberati: number; ultimoCaricamento: number; usati: number }
+
+      if (!s.orfani) {
+        setPulizia({ inCorso: false, messaggio: 'Nessun media da eliminare: tutto è usato o appartiene all’ultimo caricamento.' })
+        return
+      }
+
+      const conferma = window.confirm(
+        `Eliminare ${s.orfani} media mai usati e liberare ${s.mb_liberati} MB?\n\n`
+        + `Restano intatti: ${s.usati} media usati dai contenuti e ${s.ultimoCaricamento} dell'ultimo caricamento.\n\n`
+        + 'L’operazione è irreversibile.',
+      )
+      if (!conferma) {
+        setPulizia({ inCorso: false, messaggio: `Annullato. ${s.orfani} media (${s.mb_liberati} MB) sono ancora nello storage.` })
+        return
+      }
+
+      setPulizia({ inCorso: true, messaggio: `Elimino ${s.orfani} media...` })
+      const res = await fetch('/api/assets/cleanup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente_id: clienteId, dry_run: false }),
+      })
+      if (!res.ok) throw new Error(await readApiError(res, 'Pulizia fallita'))
+      const d = await res.json() as { eliminati: number; mb_liberati: number }
+      setPulizia({ inCorso: false, messaggio: `Eliminati ${d.eliminati} media, ${d.mb_liberati} MB liberati.` })
+      // L'elenco recuperabile non e piu valido: si ricarica.
+      const aggiornato = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
+      if (aggiornato.ok) {
+        const dati = await aggiornato.json() as { assets?: PlanAsset[] }
+        setAssetRecuperabili(Array.isArray(dati.assets) ? dati.assets : [])
+      }
+    } catch (e) {
+      setPulizia({ inCorso: false, errore: true, messaggio: (e as Error).message })
+    }
+  }
 
   function togglePlatform(key: PlatformKey) {
     setPiattaforme(p => p.includes(key) ? p.filter(x => x !== key) : [...p, key])
@@ -1001,7 +1052,24 @@ export default function PianoPage() {
                     >
                       Carico una cartella nuova
                     </button>
+                    {assetRecuperabili.length > ultimoCaricamento.length && (
+                      <button
+                        type="button"
+                        onClick={pulisciOrfani}
+                        disabled={pulizia !== null && pulizia.inCorso}
+                        title="Elimina dallo storage i media caricati e mai usati. L’ultimo caricamento non viene toccato."
+                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-amber-300 bg-white px-3 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50"
+                      >
+                        {pulizia?.inCorso ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        Elimina i caricamenti vecchi ({assetRecuperabili.length - ultimoCaricamento.length})
+                      </button>
+                    )}
                   </div>
+                  {pulizia?.messaggio && (
+                    <p className={`mt-2 text-[11px] font-medium ${pulizia.errore ? 'text-red-700' : 'text-amber-900'}`}>
+                      {pulizia.messaggio}
+                    </p>
+                  )}
                 </div>
               )
             })()}
