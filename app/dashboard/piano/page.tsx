@@ -587,25 +587,30 @@ export default function PianoPage() {
             </button>
           ))}
         </div>
+        {/* Con un pacchetto attivo queste due caselle erano bloccate su "attive" e
+            non cliccabili. Era un vincolo solo di interfaccia: il backend NON le
+            forza affatto — la ricerca trend parte solo con use_web_trends === true
+            (app/api/generate/plan/route.ts) e l'effetto viene salvato come
+            Boolean(use_trending_effects). Restano consigliate dalla skill, ma
+            disattivarle e una scelta legittima: senza trend reali la skill ripiega
+            su una regia sobria invece di inventarne. */}
         <label className="flex items-center gap-2 mt-3 cursor-pointer">
           <input
             type="checkbox"
-            checked={clientePkg ? true : useTrendingEffects}
+            checked={useTrendingEffects}
             onChange={e => setUseTrendingEffects(e.target.checked)}
-            disabled={Boolean(clientePkg)}
             className="rounded border-gray-300"
           />
-          <span className="text-sm text-gray-700">Effetti e animazioni recenti, calibrati per formato e brand{clientePkg ? ' · attivi nella skill' : ''}</span>
+          <span className="text-sm text-gray-700">Effetti e animazioni recenti, calibrati per formato e brand{clientePkg ? ' · consigliati dalla skill' : ''}</span>
         </label>
         <label className="flex items-center gap-2 mt-2 cursor-pointer">
           <input
             type="checkbox"
-            checked={clientePkg ? true : useWebTrends}
+            checked={useWebTrends}
             onChange={e => setUseWebTrends(e.target.checked)}
-            disabled={Boolean(clientePkg)}
             className="rounded border-gray-300"
           />
-          <span className="text-sm text-gray-700">Trend reali dal web: format, motion, transizioni e meccaniche del momento{clientePkg ? ' · obbligatori nella skill' : ''}</span>
+          <span className="text-sm text-gray-700">Trend reali dal web: format, motion, transizioni e meccaniche del momento{clientePkg ? ' · consigliati dalla skill' : ''}</span>
         </label>
         <p className="text-xs text-gray-500 mt-2">
           La skill usa i trend solo quando pertinenti e li alterna per non rendere il profilo confuso o ripetitivo.
