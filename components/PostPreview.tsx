@@ -267,23 +267,24 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
           <VisualBriefCard icon={canaleIcon} title={hook || playerLabel} description={caption} />
         )}
 
-        {/* Progress bar segmentata (IG stories/reels style) */}
+        {/* Avanzamento del Reel: UNA barra continua in basso, come nel player
+            vero. Le barrette segmentate in cima sono l'interfaccia delle STORY,
+            dove ogni frame e un pezzo separato che si salta col tap; un Reel e
+            un video unico e non le ha. Qui ce le aveva, e questa anteprima si
+            manda al cliente: deve somigliare a cio che vedra pubblicato, non a
+            un altro formato. */}
         {total > 1 && !videoUrl && (
-          <div className="absolute top-2 left-2 right-2 flex gap-1 z-10">
-            {Array.from({ length: total }, (_, i) => (
-              <div key={i} className="flex-1 h-0.5 rounded-full bg-white/30 overflow-hidden">
-                <div
-                  className="h-full bg-white rounded-full transition-[width] duration-100 ease-linear"
-                  style={{ width: i < index ? '100%' : i === index ? `${Math.round(progress * 100)}%` : '0%' }}
-                />
-              </div>
-            ))}
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/25 z-10">
+            <div
+              className="h-full bg-white transition-[width] duration-100 ease-linear"
+              style={{ width: `${Math.round(((index + progress) / total) * 100)}%` }}
+            />
           </div>
         )}
 
         {/* Overlay gradient + top bar */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70 pointer-events-none" />
-        <div className={`absolute ${total > 1 && !videoUrl ? 'top-5' : 'top-3'} left-3 right-3 flex items-center justify-between text-white text-xs z-10`}>
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between text-white text-xs z-10">
           <span className="font-semibold drop-shadow">{handle}</span>
           <div className="flex items-center gap-2">
             {videoUrl && (
@@ -412,7 +413,9 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
       </div>
       <p className="text-center text-xs text-gray-400 mt-2">
         Preview {canale} · {formato}
-        {!videoUrl && total > 1 && ` · ${total} scene`}
+        {/* Dire che diventeranno un video unico: senza, l'anteprima che scorre
+            fa pensare a una sequenza di immagini separate come una Story. */}
+        {!videoUrl && total > 1 && ` · ${total} scene → un MP4 unico al montaggio`}
         {!videoUrl && total === 1 && ' · anteprima statica'}
       </p>
     </div>
