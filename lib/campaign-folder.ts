@@ -183,3 +183,16 @@ export function compareCampaignFolderGroups(left: CampaignFolderGroupOrder, righ
     || left.tag.localeCompare(right.tag, 'it')
     || String(left.contentKey || '').localeCompare(String(right.contentKey || ''), 'it', { numeric: true })
 }
+
+type CampaignAssetSequence = Pick<CampaignFolderAsset, 'sequence' | 'relativePath'>
+
+/** Ordina slide e scene per numero, lasciando i file non numerati in fondo. */
+export function compareCampaignAssetSequence(
+  left: CampaignAssetSequence | null | undefined,
+  right: CampaignAssetSequence | null | undefined,
+): number {
+  const leftSequence = left?.sequence ?? Number.MAX_SAFE_INTEGER
+  const rightSequence = right?.sequence ?? Number.MAX_SAFE_INTEGER
+  return leftSequence - rightSequence
+    || String(left?.relativePath || '').localeCompare(String(right?.relativePath || ''), 'it', { numeric: true })
+}

@@ -49,11 +49,11 @@ const carousels = [
   {
     id: 4, folder: 'CAROSELLO_04_CINQUE_SEGNALI', slides: [
       ['5 SEGNALI CHE', 'IL TUO BOWLING', 'NON HA UN PIANO.'],
-      ['01', 'PUBBLICHI', 'QUANDO CAPITA.'],
-      ['02', 'OGNI CONTENUTO', 'PARLA A CASO.'],
-      ['03', 'HAI FOTO BELLE,', 'MA NESSUN MESSAGGIO.'],
-      ['04', 'NON ESISTE', 'UN CALENDARIO.'],
-      ['05', 'NON LEGGI', 'COSA FUNZIONA.'],
+      ['PUBBLICHI', 'QUANDO CAPITA.', ''],
+      ['OGNI CONTENUTO', 'PARLA A CASO.', ''],
+      ['HAI FOTO BELLE,', 'MA NESSUN MESSAGGIO.', ''],
+      ['NON ESISTE', 'UN CALENDARIO.', ''],
+      ['NON LEGGI', 'COSA FUNZIONA.', ''],
       ['RICONOSCI ALMENO 2 SEGNALI?', 'SCRIVI BOWLING', 'PER UNA MINI ANALISI.'],
     ],
   },
@@ -74,7 +74,7 @@ const carousels = [
   },
   {
     id: 20, folder: 'CAROSELLO_20_CHECKLIST_PUBBLICAZIONE', slides: [
-      ['CHECKLIST PRIMA', 'DI PUBBLICARE', ''], ['01', 'Obiettivo chiaro.', ''], ['02', 'Pubblico definito.', ''], ['03', 'Formato coerente.', ''], ['04', 'CTA concreta.', 'SALVA LA CHECKLIST'],
+      ['CHECKLIST PRIMA', 'DI PUBBLICARE', ''], ['OBIETTIVO', 'Deve essere chiaro.', ''], ['PUBBLICO', 'Deve essere definito.', ''], ['FORMATO', 'Deve essere coerente.', ''], ['CTA', 'Deve essere concreta.', 'SALVA LA CHECKLIST'],
     ],
   },
   {
@@ -174,17 +174,17 @@ for (const [index, item] of contentRecords.entries()) {
     if (item.format === 'Reel') {
       await render(sourceAt(sourceIndex), path.join(folder, `REEL_${String(item.id).padStart(2, '0')}_COVER.png`), 1080, 1920, svgOverlay({ width: 1080, height: 1920, label: 'CASO STUDIO BOWLING', lines: item.hook, cta: item.cta }));
       for (let scene = 0; scene < 4; scene += 1) {
-        await render(sourceAt(sourceIndex + scene + 1), path.join(folder, `REEL_${String(item.id).padStart(2, '0')}_SCENA_0${scene + 1}.png`), 1080, 1920, svgOverlay({ width: 1080, height: 1920, label: `REEL ${String(item.id).padStart(2, '0')} / SCENA 0${scene + 1}`, lines: [item.scenes[scene] || item.cta], cta: scene === 3 ? item.cta : '', scene: true }));
+        await render(sourceAt(sourceIndex + scene + 1), path.join(folder, `REEL_${String(item.id).padStart(2, '0')}_SCENA_0${scene + 1}.png`), 1080, 1920, svgOverlay({ width: 1080, height: 1920, label: 'CASO STUDIO BOWLING', lines: [item.scenes[scene] || item.cta], cta: scene === 3 ? item.cta : '', scene: true }));
       }
       await copy(path.join(audioSourceDir, audio), path.join(folder, `AUDIO_REEL_${String(item.id).padStart(2, '0')}_${path.basename(audio, '.mp3').toUpperCase().replaceAll(/[^A-Z0-9]+/g, '_')}.mp3`));
       await writeText(path.join(outputRoot, '05_Script_Reel', item.folder, 'SCRIPT.md'), `# ${item.folder}\n\nHook: ${item.hook.join(' ')}\n\nScene: ${item.scenes.join(' | ')}\n\nCTA: ${item.cta}\n\nFormato: Reel 1080x1920.\n`);
     } else if (item.format === 'Story') {
-      for (const [frameIndex, frame] of item.frames.entries()) await render(sourceAt(sourceIndex + frameIndex), path.join(folder, `STORY_${String(item.id).padStart(2, '0')}_FRAME_0${frameIndex + 1}.png`), 1080, 1920, svgOverlay({ width: 1080, height: 1920, label: `STORY ${String(item.id).padStart(2, '0')}`, lines: frame.slice(0, 2), cta: frame[2] }));
+      for (const [frameIndex, frame] of item.frames.entries()) await render(sourceAt(sourceIndex + frameIndex), path.join(folder, `STORY_${String(item.id).padStart(2, '0')}_FRAME_0${frameIndex + 1}.png`), 1080, 1920, svgOverlay({ width: 1080, height: 1920, label: 'CASO STUDIO BOWLING', lines: frame.slice(0, 2), cta: frame[2] }));
       await copy(path.join(audioSourceDir, audio), path.join(folder, `AUDIO_STORY_${String(item.id).padStart(2, '0')}_${path.basename(audio, '.mp3').toUpperCase().replaceAll(/[^A-Z0-9]+/g, '_')}.mp3`));
     } else if (item.format === 'Post') {
       await render(sourceAt(sourceIndex), path.join(folder, `POST_${String(item.id).padStart(2, '0')}.png`), 1080, 1350, svgOverlay({ width: 1080, height: 1350, label: 'CASO STUDIO BOWLING', lines: item.lines, cta: item.cta }));
     } else {
-      for (const [slideIndex, slide] of item.slides.entries()) await render(sourceAt(sourceIndex + slideIndex), path.join(folder, `CAROSELLO_${String(item.id).padStart(2, '0')}_SLIDE_${String(slideIndex + 1).padStart(2, '0')}.png`), 1080, 1350, svgOverlay({ width: 1080, height: 1350, label: slideIndex === 0 ? 'CAROSELLO SWA' : `CAROSELLO ${String(item.id).padStart(2, '0')} / ${String(slideIndex + 1).padStart(2, '0')}`, lines: slide.slice(0, 3), cta: slideIndex === item.slides.length - 1 ? slide[2] : '' }));
+      for (const [slideIndex, slide] of item.slides.entries()) await render(sourceAt(sourceIndex + slideIndex), path.join(folder, `CAROSELLO_${String(item.id).padStart(2, '0')}_SLIDE_${String(slideIndex + 1).padStart(2, '0')}.png`), 1080, 1350, svgOverlay({ width: 1080, height: 1350, label: 'CAROSELLO SWA', lines: slide.slice(0, 3), cta: slideIndex === item.slides.length - 1 ? slide[2] : '' }));
     }
   }
   manifestContents.push({ order: item.id, id: item.folder, format: item.format, format_dir: item.formatDir, folder: item.folder, phase: phase.replace(/^\d+_/, ''), week: Math.ceil(item.id / 6), day: publicationDayFor(item.id), assets: item.assets, dimensions: item.dimensions });

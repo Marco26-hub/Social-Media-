@@ -42,7 +42,7 @@ import {
 import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage } from '@/lib/production-cycle'
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
 import { SETTIMANE_DEL_MESE, quotaBlocco, settimaneDellaFase } from '@/lib/plan-quota'
-import { compareCampaignFolderGroups } from '@/lib/campaign-folder'
+import { compareCampaignAssetSequence, compareCampaignFolderGroups } from '@/lib/campaign-folder'
 // Governo di ORARI (e del solo vincolo di giorno che dipende dal canale): il
 // piano non deve più affidarsi a un default fisso '10:00' né agli orari a caso
 // del modello. Fasce per canale + cadenza dal pacchetto vivono in lib/scheduling.
@@ -1376,9 +1376,10 @@ Output SOLO JSON array valido:
           const ordered = (folderGroups.get(selectedKey) || [])
             .filter(idx => !used.has(idx))
             .sort((left, right) => {
-              const sequenceLeft = assetPlacements.get(chunk.images[left])?.sequence ?? 999
-              const sequenceRight = assetPlacements.get(chunk.images[right])?.sequence ?? 999
-              return sequenceLeft - sequenceRight || left - right
+              return compareCampaignAssetSequence(
+                assetPlacements.get(chunk.images[left]),
+                assetPlacements.get(chunk.images[right]),
+              ) || left - right
             })
           const video = ordered.find(idx => isVideoUrl(chunk.images[idx]))
           const target = isCarousel || gruppo === 'story'

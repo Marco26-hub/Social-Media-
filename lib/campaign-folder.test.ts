@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 
-import { compareCampaignFolderGroups, folderGroupKey, parseCampaignFolderFile } from './campaign-folder'
+import {
+  compareCampaignAssetSequence,
+  compareCampaignFolderGroups,
+  folderGroupKey,
+  parseCampaignFolderFile,
+} from './campaign-folder'
 
 test('reads week, social, format, content and frame from an SWA campaign path', () => {
   const parsed = parseCampaignFolderFile({
@@ -88,6 +93,18 @@ test('orders campaign groups by editorial number instead of format name', () => 
     'reel_06',
     'carosello_07',
   ])
+})
+
+test('orders carousel slides numerically even when files arrive out of order', () => {
+  const slides = ['SLIDE_10.png', 'SLIDE_02.png', 'SLIDE_01.png'].map(name => parseCampaignFolderFile({
+    name,
+    relativePath: `Settimana_01/Instagram/CAROSELLO_04/${name}`,
+    type: 'image/png',
+  }))
+
+  slides.sort(compareCampaignAssetSequence)
+
+  assert.deepEqual(slides.map(slide => slide.sequence), [1, 2, 10])
 })
 
 test('assigns an audio inside a campaign content folder to its exact creative', () => {
