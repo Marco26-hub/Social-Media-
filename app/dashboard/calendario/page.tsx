@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { Fragment, useEffect, useState, useCallback, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
-import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid, CalendarClock, Music2, GripVertical, Move } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid, CalendarClock, Music2, GripVertical, Move, ClipboardCheck } from 'lucide-react'
 import CalendarGrid from '@/components/CalendarGrid'
 import { preflightRow } from '@/lib/publish/preflight'
 import { toYmd } from '@/lib/publish/blotato-map'
@@ -42,6 +42,25 @@ function audioFormatLabel(formato: string) {
   if (formato === 'story') return 'Story'
   if (formato === 'post' || formato === 'pin') return 'Post'
   return 'Reel'
+}
+
+// Referto del controllo finale del ciclo (app/api/data/plan-audit + lib/plan-audit).
+type PlanAudit = {
+  dal: string
+  al: string
+  attesi: number
+  pianificati: number
+  settimanePiene: number
+  bloccanti: number
+  attenzioni: number
+  pronto: boolean
+  checks: Array<{
+    id: string
+    titolo: string
+    stato: 'ok' | 'attenzione' | 'blocco'
+    dettaglio: string
+    contenuti?: string[]
+  }>
 }
 
 type PackageReconcile = {
@@ -185,6 +204,8 @@ function CalendarioInner() {
   const [syncing, setSyncing] = useState(false)
   const [reconciling, setReconciling] = useState(false)
   const [packageReconcile, setPackageReconcile] = useState<PackageReconcile | null>(null)
+  const [auditing, setAuditing] = useState(false)
+  const [planAudit, setPlanAudit] = useState<PlanAudit | null>(null)
   const [requeuing, setRequeuing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'warn' | 'err'; text: string } | null>(null)
   const [vista, setVista] = useState<'lista' | 'griglia'>('lista')
@@ -524,6 +545,31 @@ function CalendarioInner() {
       return null
     } finally {
       setReconciling(false)
+    }
+  }
+
+  // Controllo finale del ciclo: guarda il piano COME INSIEME (copertura, quattro
+  // settimane, mix, media, slot rotti, arco narrativo, duplicati). Non tocca
+  // nulla e non blocca l'invio a Blotato: e un referto, la decisione resta a chi
+  // pubblica.
+  async function verificaPiano() {
+    setAuditing(true)
+    setSyncMsg(null)
+    try {
+      const res = await fetch('/api/data/plan-audit', { method: 'POST' })
+      if (!res.ok) throw new Error(await readApiError(res, 'Controllo del piano fallito'))
+      const data = await res.json() as PlanAudit
+      setPlanAudit(data)
+      setSyncMsg({
+        type: data.pronto ? (data.attenzioni ? 'warn' : 'ok') : 'err',
+        text: data.pronto
+          ? `Piano completo: ${data.pianificati} contenuti sul ciclo${data.attenzioni ? `, ${data.attenzioni} cose da guardare` : ', nessun problema'}.`
+          : `Piano NON completo: ${data.bloccanti} problemi bloccanti su ${data.pianificati} contenuti. Leggi il referto qui sotto.`,
+      })
+    } catch (e) {
+      setSyncMsg({ type: 'err', text: (e as Error).message })
+    } finally {
+      setAuditing(false)
     }
   }
 
@@ -1141,6 +1187,14 @@ function CalendarioInner() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              {/* PRIMO della fila di proposito: e il passo che viene subito dopo la
+                  generazione del piano (verifica il ciclo → approva → sincronizza →
+                  verifica Blotato). Colore diverso dalla coppia Blotato perche
+                  guarda il PIANO, non le pubblicazioni. */}
+              <button onClick={verificaPiano} disabled={auditing} className="rounded-xl bg-violet-300 px-3 py-2 text-xs font-semibold text-violet-950 shadow-sm hover:bg-violet-200 disabled:opacity-60 inline-flex items-center gap-1.5" title="Controlla il ciclo intero: contenuti previsti, quattro settimane, mix formati, media, slot rotti, arco narrativo e duplicati">
+                {auditing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ClipboardCheck className="w-4 h-4" />}
+                <span>{auditing ? 'Controllo...' : 'Verifica piano'}</span>
+              </button>
               <button onClick={requeuePassati} disabled={requeuing} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 disabled:opacity-60 inline-flex items-center gap-1.5" title="Sposta i contenuti approvati in ritardo e recupera gli invii Blotato rimasti programmati">
                 {requeuing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
                 <span>{requeuing ? 'Rimetto in coda...' : 'Rimetti in coda i passati'}</span>
@@ -1202,6 +1256,47 @@ function CalendarioInner() {
         <div className={`mb-4 rounded-xl border p-3 text-sm flex items-start gap-2 ${syncMsg.type === 'ok' ? 'border-green-200 bg-green-50 text-green-800' : syncMsg.type === 'warn' ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
           {syncMsg.type === 'ok' ? <CheckCircle className="w-4 h-4 mt-0.5" /> : <AlertTriangle className="w-4 h-4 mt-0.5" />}
           {syncMsg.text}
+        </div>
+      )}
+
+      {/* REFERTO DEL CICLO — sopra il consuntivo pacchetto: quello dice cosa e
+          stato pubblicato, questo dice se il piano e completo e coerente PRIMA
+          di pubblicarlo. Informativo: non blocca la sincronizzazione. */}
+      {planAudit && (
+        <div className={`mb-4 overflow-hidden rounded-xl border bg-white shadow-sm ${planAudit.pronto ? 'border-violet-200' : 'border-red-300'}`}>
+          <div className={`flex flex-col gap-1 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${planAudit.pronto ? 'border-violet-100 bg-violet-50' : 'border-red-100 bg-red-50'}`}>
+            <div>
+              <p className={`font-semibold ${planAudit.pronto ? 'text-violet-950' : 'text-red-900'}`}>
+                {planAudit.pronto ? 'Piano del ciclo completo' : 'Piano del ciclo NON completo'}
+              </p>
+              <p className={`text-xs ${planAudit.pronto ? 'text-violet-800' : 'text-red-800'}`}>
+                Ciclo di 4 settimane dal {formatShortDate(planAudit.dal)} al {formatShortDate(planAudit.al)} · {planAudit.pianificati} contenuti attivi
+                {planAudit.attesi > 0 && ` su ${planAudit.attesi} previsti`} · {planAudit.settimanePiene}/4 settimane coperte
+              </p>
+            </div>
+            <button type="button" onClick={() => setPlanAudit(null)} className="self-start text-xs font-medium text-gray-500 hover:text-gray-800">Chiudi</button>
+          </div>
+          <ul className="divide-y">
+            {planAudit.checks.map(c => (
+              <li key={c.id} className="flex items-start gap-2.5 px-4 py-2.5">
+                {c.stato === 'ok'
+                  ? <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-600" />
+                  : c.stato === 'attenzione'
+                    ? <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
+                    : <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600" />}
+                <div className="min-w-0">
+                  <p className={`text-sm font-semibold ${c.stato === 'ok' ? 'text-gray-700' : c.stato === 'attenzione' ? 'text-amber-800' : 'text-red-800'}`}>{c.titolo}</p>
+                  <p className="text-xs text-gray-600">{c.dettaglio}</p>
+                  {Boolean(c.contenuti?.length) && (
+                    <p className="mt-0.5 font-mono text-[11px] text-gray-500">{c.contenuti?.join(' · ')}</p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="border-t bg-gray-50 px-4 py-2 text-[11px] text-gray-600">
+            Il referto non blocca la sincronizzazione: decidi tu se pubblicare. Gli slot mancanti si rigenerano dalla pagina Piano (fase 1 · settimane 1-2, fase 2 · settimane 3-4).
+          </div>
         </div>
       )}
 
