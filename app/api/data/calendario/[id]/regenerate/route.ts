@@ -8,6 +8,7 @@ import { jsonbParam, pickJson, pickText } from '@/lib/content-quality'
 import { apiError } from '@/lib/api-error'
 import { CAPTION_VIDEO_MAX } from '@/lib/caption-limits'
 import { deriveSequenceFromMedia } from '@/lib/derive-sequence'
+import { findCreativeNearDuplicate, isCoordinatedCrossPlatformVariant, type CreativeRecord } from '@/lib/editorial-variation'
 import { evaluateNarrativeContract } from '@/lib/format-narrative'
 import { toYmd } from '@/lib/publish/blotato-map'
 import { readGateReason, readGenerationGate } from '@/lib/generation-gates'
@@ -80,12 +81,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
     const gateReason = readGateReason(row.note)
 
-    const [brandRows, productRows] = await Promise.all([
+    // Gli altri contenuti del cliente: servono al modello per NON riscrivere un
+    // hook che esiste gia. La rigenerazione non aveva alcun controllo anti-clone
+    // e ha prodotto due volte lo stesso hook su concept diversi — il piano quel
+    // controllo ce l'ha, questo percorso no, e riscrive proprio il campo su cui
+    // il controllo si basa.
+    const [brandRows, productRows, altriRows] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cid]),
       row.product_id
         ? q('SELECT * FROM prodotti WHERE cliente_id = $1 AND product_id = $2 LIMIT 1', [cid, row.product_id])
         : Promise.resolve([]),
+      q(`SELECT hook, tema, canale, campaign_content_key FROM calendario
+          WHERE cliente_id = $1 AND id <> $2 AND coalesce(hook,'') <> ''
+          ORDER BY data_pubblicazione DESC LIMIT 96`, [cid, id]),
     ])
+    const altri = (altriRows || []) as CreativeRecord[]
     const brand = (brandRows[0] || null) as Record<string, unknown> | null
     const product = (productRows[0] || null) as Record<string, unknown> | null
     const urls = mediaUrls(row)
@@ -117,6 +127,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       userPrompt: `${buildBrandContext(brand)}
 
 Rigenera UN SOLO contenuto rimasto incompleto nel piano editoriale.
+${altri.length ? `HOOK GIA USATI in questo calendario — il tuo deve essere DIVERSO da tutti questi, per apertura, immagine e parole:\n${altri.slice(0, 40).map(r => `- ${String(r.hook || '').slice(0, 90)}`).join('\n')}` : ''}
 ${gateReason ? `MOTIVO DEL BLOCCO da risolvere in questa rigenerazione: ${gateReason}` : ''}
 ${strutturaRichiesta}
 ${gate === 'novelty' ? 'Il contenuto era troppo simile a un altro gia in calendario: cambia angolo, apertura e esempio, mantenendo prodotto e obiettivo.' : ''}
@@ -168,10 +179,18 @@ Output JSON:
     const primaryMessage = pickText(parsed, ['primary_message', 'messaggio_chiave', 'messaggio_principale'])
     const rigenerato = { ...parsed, formato: format, hook, caption, cta: pickText(parsed, ['cta']), primary_message: primaryMessage }
     const issues = String(row.quality_level || '') === 'high' ? evaluateNarrativeContract(rigenerato) : []
-    const motivo = issues.map(issue => issue.message).join('; ')
+    // Stesso cancello del piano: un hook identico a uno gia in calendario non
+    // passa. Le varianti coordinate dello stesso concept sui due social restano
+    // esenti, come nella generazione.
+    const confrontabili = altri.filter(a => !isCoordinatedCrossPlatformVariant(rigenerato as CreativeRecord, a))
+    const clone = findCreativeNearDuplicate(rigenerato as CreativeRecord, confrontabili)
+    const motivo = [
+      ...issues.map(issue => issue.message),
+      clone ? `Somiglianza creativa ${Math.round(clone.score * 100)}% con "${clone.hook || 'un altro contenuto'}"` : '',
+    ].filter(Boolean).join('; ')
     const nuovoStato = motivo ? 'ERRORE_MANUALE' : 'DA_APPROVARE'
-    const nuovaNota = motivo ? `[NARRATIVE_GATE] ${motivo}` : null
-    const nuovoErrore = motivo ? `Struttura narrativa da completare: ${motivo}` : null
+    const nuovaNota = motivo ? `[${issues.length ? 'NARRATIVE_GATE' : 'NOVELTY_GATE'}] ${motivo}` : null
+    const nuovoErrore = motivo ? `${issues.length ? 'Struttura narrativa da completare' : 'Contenuto da differenziare'}: ${motivo}` : null
     const updated = await q(
       `UPDATE calendario SET
         hook = $3, caption = $4, hashtag = $5, cta = $6,
