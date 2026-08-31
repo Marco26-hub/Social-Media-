@@ -16,12 +16,17 @@ export const maxDuration = 300
 // SICUREZZA DEL DATO:
 //  - solo admin: e una cancellazione irreversibile su storage;
 //  - `dry_run` e il DEFAULT: per cancellare serve passarlo esplicitamente false;
-//  - l'ultimo caricamento non viene mai toccato, perche i suoi file possono non
-//    essere ancora in calendario e servire alla fase successiva.
+//  - di default l'ultimo caricamento non viene toccato; una sostituzione completa
+//    puo invece proteggere i nuovi URL e rimuovere gli upload precedenti.
 export async function POST(request: Request) {
   try {
     await requireAdmin()
-    const body = await request.json().catch(() => ({})) as { cliente_id?: string; dry_run?: boolean }
+    const body = await request.json().catch(() => ({})) as {
+      cliente_id?: string
+      dry_run?: boolean
+      preserva_ultimo_caricamento?: boolean
+      proteggi_url?: string[]
+    }
     const clienteId = String(body.cliente_id || '')
     if (!clienteId) return NextResponse.json({ error: 'cliente_id richiesto' }, { status: 400 })
     await requireClienteAccess(clienteId)
@@ -34,7 +39,12 @@ export async function POST(request: Request) {
     }
 
     const dryRun = body.dry_run !== false
-    const esito = await pulisciMediaOrfani({ clienteId, dryRun })
+    const esito = await pulisciMediaOrfani({
+      clienteId,
+      dryRun,
+      preservaUltimoCaricamento: body.preserva_ultimo_caricamento !== false,
+      proteggiUrl: Array.isArray(body.proteggi_url) ? body.proteggi_url.slice(0, 300) : [],
+    })
 
     return NextResponse.json({
       ok: true,

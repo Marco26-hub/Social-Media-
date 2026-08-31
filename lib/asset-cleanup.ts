@@ -29,15 +29,19 @@ export type EsitoPulizia = {
 }
 
 /**
- * Elimina i media del cliente che nessun contenuto referenzia, ESCLUSO l'ultimo
- * caricamento: i suoi file possono non essere ancora in calendario e servire a
- * una fase successiva. `dryRun` (default) calcola senza cancellare.
+ * Elimina i media del cliente che nessun contenuto referenzia. Normalmente
+ * protegge anche l'ultimo caricamento; durante la sostituzione di una campagna
+ * può invece proteggere esplicitamente i nuovi URL e ripulire tutti i vecchi.
+ * `dryRun` (default) calcola senza cancellare.
  */
 export async function pulisciMediaOrfani(opts: {
   clienteId: string
   dryRun?: boolean
+  preservaUltimoCaricamento?: boolean
+  proteggiUrl?: string[]
 }): Promise<EsitoPulizia> {
   const dryRun = opts.dryRun !== false
+  const preservaUltimoCaricamento = opts.preservaUltimoCaricamento !== false
   const oggetti = await listFromStorage(`uploads/${opts.clienteId}/`)
   if (!oggetti.length) {
     return { totali: 0, usati: 0, ultimoCaricamento: 0, orfani: 0, eliminati: 0, bytesLiberati: 0, dryRun }
@@ -52,7 +56,7 @@ export async function pulisciMediaOrfani(opts: {
     'blotato_audio_visual_media_url',
   ].filter(c => colonne.has(c))
 
-  const usati = new Set<string>()
+  const usati = new Set<string>((opts.proteggiUrl || []).map(url => String(url).trim()).filter(Boolean))
   if (colonneMedia.length) {
     const righe = await q(
       `SELECT ${colonneMedia.join(', ')} FROM calendario WHERE cliente_id = $1`,
@@ -80,12 +84,14 @@ export async function pulisciMediaOrfani(opts: {
   const ordinati = [...oggetti].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   const chiaviUltimo = new Set<string>()
   let precedente = 0
-  for (const o of ordinati) {
-    const t = new Date(o.updatedAt).getTime()
-    if (!Number.isFinite(t)) continue
-    if (chiaviUltimo.size && precedente - t > SEPARAZIONE_CARICAMENTI_MS) break
-    chiaviUltimo.add(o.key)
-    precedente = t
+  if (preservaUltimoCaricamento) {
+    for (const o of ordinati) {
+      const t = new Date(o.updatedAt).getTime()
+      if (!Number.isFinite(t)) continue
+      if (chiaviUltimo.size && precedente - t > SEPARAZIONE_CARICAMENTI_MS) break
+      chiaviUltimo.add(o.key)
+      precedente = t
+    }
   }
 
   const orfani = oggetti.filter(o => !chiaviUltimo.has(o.key) && !referenziato(o.key))

@@ -499,21 +499,35 @@ export default function PianoPage() {
     return `${base}-${i}${ext}`
   }
 
+  function campaignFolderReplacesSelection(candidates: FolderCandidate[]): boolean {
+    if (!planAssets.length) return false
+    const incomingWeeks = new Set(candidates.map(candidate => candidate.assignment.week).filter((week): week is number => Boolean(week)))
+    const existingWeeks = new Set(planAssets.map(asset => asset.week).filter((week): week is number => Boolean(week)))
+    return existingWeeks.size === 0
+      || incomingWeeks.has(1)
+      || [...incomingWeeks].some(week => existingWeeks.has(week))
+  }
+
   // Upload in blocchi da 14 (limite server per richiesta) finché tutti i media scelti sono caricati.
-  async function uploadPlanEntries(entries: { file: File; destination: MediaTag; assignment?: CampaignFolderAsset }[]) {
+  async function uploadPlanEntries(
+    entries: { file: File; destination: MediaTag; assignment?: CampaignFolderAsset }[],
+    options: { replaceExisting?: boolean } = {},
+  ) {
     if (!entries.length || !clienteId) return
     setUploadError(null)
     setUploadingImages(true)
     try {
       // Con il limite già saturo `slice(0, 0)` restituiva un array vuoto e
       // l'upload terminava senza caricare nulla e senza dirlo.
-      const capienza = MAX_PLAN_IMAGES - contaVisivi(planAssets)
+      const capienza = MAX_PLAN_IMAGES - (options.replaceExisting ? 0 : contaVisivi(planAssets))
       if (capienza <= 0) {
         setUploadError(`Limite di ${MAX_PLAN_IMAGES} media per piano già raggiunto: rimuovi qualche file prima di caricarne altri.`)
         return
       }
       const selected = entries.slice(0, capienza)
       const skippedMessages: string[] = []
+      const uploadedThisRun: PlanAsset[] = []
+      if (options.replaceExisting) setPlanAssets([])
       if (selected.length < entries.length) {
         skippedMessages.push(`${entries.length - selected.length} file oltre il limite di ${MAX_PLAN_IMAGES} media per piano`)
       }
@@ -552,10 +566,32 @@ export default function PianoPage() {
           contentKey: uploadedNames.get(a.name)?.assignment?.contentKey,
           sequence: uploadedNames.get(a.name)?.assignment?.sequence,
         }))
+        uploadedThisRun.push(...uploaded)
         setPlanAssets(prev => [...prev, ...uploaded])
         skippedMessages.push(...(data.skipped || []).map(item => `${item.name}: ${item.motivo}`))
       }
       setFolderPreview(null)
+      // Una nuova campagna sostituisce la selezione precedente. Dopo che i
+      // nuovi file sono al sicuro, elimina i vecchi upload non referenziati;
+      // quelli usati dal calendario e quelli appena caricati restano protetti.
+      const replacementComplete = uploadedThisRun.length === selected.length && skippedMessages.length === 0
+      if (options.replaceExisting && replacementComplete) {
+        const cleanup = await fetch('/api/assets/cleanup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cliente_id: clienteId,
+            dry_run: false,
+            preserva_ultimo_caricamento: false,
+            proteggi_url: uploadedThisRun.map(asset => asset.url),
+          }),
+        })
+        if (!cleanup.ok) {
+          skippedMessages.push(await readApiError(cleanup, 'Pulizia automatica dei media precedenti non riuscita'))
+        }
+      } else if (options.replaceExisting && uploadedThisRun.length) {
+        skippedMessages.push('I media precedenti sono stati conservati perché il nuovo caricamento non è completo')
+      }
       // Il riepilogo MB deve riflettere anche il caricamento appena concluso,
       // altrimenti il limite mostrato resta quello della sessione precedente.
       const aggiornato = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
@@ -584,7 +620,10 @@ export default function PianoPage() {
   async function confirmCampaignFolder() {
     if (!folderPreview) return
     const valid = folderPreview.candidates.filter(candidate => candidate.assignment.errors.length === 0)
-    await uploadPlanEntries(valid.map(candidate => ({ file: candidate.file, destination: candidate.assignment.tag, assignment: candidate.assignment })))
+    await uploadPlanEntries(
+      valid.map(candidate => ({ file: candidate.file, destination: candidate.assignment.tag, assignment: candidate.assignment })),
+      { replaceExisting: campaignFolderReplacesSelection(valid) },
+    )
   }
 
   function removePlanImage(index: number) {
@@ -1333,7 +1372,9 @@ export default function PianoPage() {
                 .sort(compareCampaignFolderGroups)
               const incompleteGroups = groupRows.filter(group => group.count < Math.min(expectedMediaForFolderTag(group.tag), group.tag === 'carosello' ? MEDIA_PER_FORMATO.carousel.min ?? 3 : expectedMediaForFolderTag(group.tag)))
               const underTargetGroups = groupRows.filter(group => group.count < expectedMediaForFolderTag(group.tag))
-              const exceedsLimit = valid.filter(c => c.assignment.kind !== 'audio').length > MAX_PLAN_IMAGES - contaVisivi(planAssets)
+              const replacesSelection = campaignFolderReplacesSelection(valid)
+              const availableMedia = MAX_PLAN_IMAGES - (replacesSelection ? 0 : contaVisivi(planAssets))
+              const exceedsLimit = valid.filter(c => c.assignment.kind !== 'audio').length > availableMedia
               return (
                 <div className={`mt-3 rounded-lg border p-3 ${blocked.length || exceedsLimit ? 'border-amber-300 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1351,6 +1392,11 @@ export default function PianoPage() {
                         </p>
                       )}
                       {folderPreview.ignored > 0 && <p className="mt-1 text-[10px] text-gray-500">{folderPreview.ignored} file non editoriali o copie ignorati</p>}
+                      {replacesSelection && (
+                        <p className="mt-1 text-[10px] font-medium text-sky-800">
+                          Questa campagna sostituirà i {contaVisivi(planAssets)} media selezionati in precedenza; non verranno sommati.
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -1371,7 +1417,7 @@ export default function PianoPage() {
                       </button>
                     </div>
                   </div>
-                  {exceedsLimit && <p className="mt-2 text-[11px] font-medium text-amber-900">La cartella supera i {MAX_PLAN_IMAGES} media disponibili nel piano. Rimuovi i caricamenti precedenti o riduci la cartella.</p>}
+                  {exceedsLimit && <p className="mt-2 text-[11px] font-medium text-amber-900">La cartella contiene più dei {availableMedia} media disponibili nel piano.</p>}
                   {groupRows.length > 0 && (
                     <div className="mt-2 border-t border-white/70 pt-2">
                       <p className="text-[11px] font-semibold text-gray-950">Controllo per contenuto</p>
