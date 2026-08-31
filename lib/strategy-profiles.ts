@@ -148,12 +148,15 @@ function normalized(value: unknown): string {
 
 export function resolveStrategyProfile(
   requested: unknown,
-  context: { sector?: unknown; brandName?: unknown; clientName?: unknown } = {},
+  context: { sector?: unknown; brandName?: unknown; clientName?: unknown; campaignContext?: unknown } = {},
 ): StrategyProfile {
   if (typeof requested === 'string' && requested !== 'auto' && requested in STRATEGY_PROFILES) {
     return STRATEGY_PROFILES[requested as Exclude<StrategyProfileId, 'auto'>]
   }
-  const text = normalized([context.sector, context.brandName, context.clientName].join(' '))
+  // Il profilo non coincide sempre con il mestiere del cliente. SWA e una
+  // agenzia, ma una campagna puo essere un caso studio Bowling: il soggetto
+  // della cartella deve quindi precedere il settore anagrafico nella scelta.
+  const text = normalized([context.campaignContext, context.sector, context.brandName, context.clientName].join(' '))
   if (/bowling|pista|strike|spare/.test(text)) return STRATEGY_PROFILES['bowling-case-study']
   if (/silkincom|abbigliamento|accessori|moda|fashion|ecommerce|e-commerce/.test(text)) return STRATEGY_PROFILES['silkincom-ecommerce']
   if (/ristorante|ristorazione|pizzeria|cucina|piatti|food/.test(text)) return STRATEGY_PROFILES.restaurant

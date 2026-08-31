@@ -1,6 +1,13 @@
 import { MEDIA_PER_FORMATO } from '@/lib/media-requirements'
 import { packageMixForPeriod, type PackageSpec } from '@/lib/packages'
-import { findCreativeNearDuplicate, isCoordinatedCrossPlatformVariant, type CreativeRecord } from '@/lib/editorial-variation'
+import {
+  findCreativeNearDuplicate,
+  findCrossPlatformCopyDuplicate,
+  hashtagBlockSignature,
+  isCoordinatedCrossPlatformVariant,
+  type CreativeRecord,
+} from '@/lib/editorial-variation'
+import { isPlaceholderEditorialText } from '@/lib/editorial-content-direction'
 
 // ─────────────────────────────────────────────────────────────────────────
 // CONTROLLO FINALE DEL PIANO (referto del ciclo)
@@ -249,6 +256,34 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
     : check('media', 'Media assegnati a ogni contenuto', 'ok',
         'Ogni contenuto ha i media richiesti dal suo formato.'))
 
+  // 4b. RIUSO MEDIA — la stessa URL in due concept diversi significa che due
+  // contenuti mostrano davvero lo stesso file. La coppia coordinata IG/FB e
+  // esclusa: in quel caso il riuso e il cross-post dichiarato del concept.
+  const mediaUsati = new Map<string, Record<string, unknown>[]>()
+  const mediaDuplicati = new Set<string>()
+  attivi.forEach(row => {
+    const urls = mediaDi(row)
+    if (new Set(urls).size !== urls.length) mediaDuplicati.add(etichetta(row))
+    urls.forEach(url => {
+      const peers = mediaUsati.get(url) || []
+      if (peers.some(peer => !isCoordinatedCrossPlatformVariant(row as CreativeRecord, peer as CreativeRecord))) {
+        mediaDuplicati.add(etichetta(row))
+        peers.forEach(peer => {
+          if (!isCoordinatedCrossPlatformVariant(row as CreativeRecord, peer as CreativeRecord)) {
+            mediaDuplicati.add(etichetta(peer))
+          }
+        })
+      }
+      peers.push(row)
+      mediaUsati.set(url, peers)
+    })
+  })
+  checks.push(mediaDuplicati.size
+    ? check('media-duplicati', 'Immagini e video riutilizzati', 'attenzione',
+        `${mediaDuplicati.size} contenuti riutilizzano lo stesso file in concept diversi. Le sole coppie coordinate Instagram/Facebook sono escluse.`, [...mediaDuplicati])
+    : check('media-duplicati', 'Immagini e video riutilizzati', 'ok',
+        'Nessun file media e riutilizzato fra concept diversi.'))
+
   // 5. SLOT ROTTI — quello che la generazione non è riuscita a produrre.
   const rotti = attivi.filter(row =>
     testo(row.status).toUpperCase() === 'ERRORE_MANUALE'
@@ -257,6 +292,15 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
     ? check('slot', 'Slot da sistemare', 'blocco',
         `${rotti.length} slot sono rimasti da completare: apri il contenuto e rigeneralo dal calendario.`, rotti)
     : check('slot', 'Slot da sistemare', 'ok', 'Nessuno slot incompleto rimasto nel ciclo.'))
+
+  const segnaposto = attivi.filter(row =>
+    ['tema', 'hook', 'caption', 'primary_message'].some(field => isPlaceholderEditorialText(row[field]))
+  ).map(etichetta)
+  checks.push(segnaposto.length
+    ? check('segnaposto', 'Residui di generazioni precedenti', 'blocco',
+        `${segnaposto.length} contenuti contengono ancora un tema o un testo segnaposto. Vanno rigenerati: non sono metadati editoriali validi.`, segnaposto)
+    : check('segnaposto', 'Residui di generazioni precedenti', 'ok',
+        'Nessun segnaposto o residuo di generazione nel piano.'))
 
   // 6. COPY — senza hook o caption non è pubblicabile.
   const senzaCopy = attivi.filter(row => !testo(row.hook) || !testo(row.caption)).map(etichetta)
@@ -303,6 +347,60 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
     ? check('duplicati', 'Contenuti che si somigliano', 'attenzione',
         `${duplicati.length} contenuti quasi identici ad altri dello stesso ciclo (stesso hook o stesso tema).`, duplicati)
     : check('duplicati', 'Contenuti che si somigliano', 'ok', 'Nessun contenuto ripetuto nel ciclo.'))
+
+  // 8b. ADATTAMENTI — due social dello stesso concept possono condividere la
+  // tesi e gli asset, ma non devono essere un copia/incolla di hook, caption e
+  // hashtag. Questo controllo e separato dal precedente proprio per non
+  // confondere coordinamento con duplicazione.
+  const variantiCopiate: string[] = []
+  const precedentiVarianti: CreativeRecord[] = []
+  attivi.forEach(row => {
+    if (findCrossPlatformCopyDuplicate(row as CreativeRecord, precedentiVarianti)) {
+      variantiCopiate.push(etichetta(row))
+    }
+    precedentiVarianti.push(row as CreativeRecord)
+  })
+  checks.push(variantiCopiate.length
+    ? check('adattamenti-canale', 'Adattamenti Instagram/Facebook', 'attenzione',
+        `${variantiCopiate.length} varianti coordinate copiano hook, caption o blocco hashtag da un altro canale invece di adattarlo.`, variantiCopiate)
+    : check('adattamenti-canale', 'Adattamenti Instagram/Facebook', 'ok',
+        'Le varianti coordinate non sono copie testuali fra canali.'))
+
+  const hashtagGroups = new Map<string, string[]>()
+  attivi.forEach(row => {
+    const signature = hashtagBlockSignature(row.hashtag)
+    if (signature.split(' ').filter(Boolean).length < 3) return
+    const ids = hashtagGroups.get(signature) || []
+    ids.push(etichetta(row))
+    hashtagGroups.set(signature, ids)
+  })
+  const hashtagRipetuti = [...new Set(
+    [...hashtagGroups.values()].filter(ids => ids.length > 1).flat(),
+  )]
+  checks.push(hashtagRipetuti.length
+    ? check('hashtag-ripetuti', 'Blocchi hashtag differenziati', 'attenzione',
+        `${hashtagRipetuti.length} contenuti riutilizzano un intero blocco di almeno 3 hashtag. Il tag di marca puo ricorrere, il blocco completo no.`, hashtagRipetuti)
+    : check('hashtag-ripetuti', 'Blocchi hashtag differenziati', 'ok',
+        'Nessun blocco hashtag completo e riciclato.'))
+
+  const firmeVisuali = new Map<string, Record<string, unknown>[]>()
+  const firmeDuplicate = new Set<string>()
+  attivi.forEach(row => {
+    const signature = /VISUAL_SIGNATURE:\s*([^\n]+)/i.exec(testo(row.production_notes))?.[1]?.trim()
+    if (!signature) return
+    const peers = firmeVisuali.get(signature) || []
+    if (peers.some(peer => !isCoordinatedCrossPlatformVariant(row as CreativeRecord, peer as CreativeRecord))) {
+      firmeDuplicate.add(etichetta(row))
+      peers.forEach(peer => firmeDuplicate.add(etichetta(peer)))
+    }
+    peers.push(row)
+    firmeVisuali.set(signature, peers)
+  })
+  checks.push(firmeDuplicate.size
+    ? check('firme-visuali', 'Regie visuali distinte', 'attenzione',
+        `${firmeDuplicate.size} contenuti diversi dichiarano la stessa firma visuale.`, [...firmeDuplicate])
+    : check('firme-visuali', 'Regie visuali distinte', 'ok',
+        'Ogni concept governato ha una firma visuale distinta.'))
 
   // 9. GATE AUTO-DICHIARATI — il modello scrive "REVISE" nelle note quando lui
   // stesso giudica il contenuto non pronto. Finora nessuno le rileggeva.

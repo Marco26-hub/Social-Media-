@@ -72,6 +72,8 @@ const HISTORY_FIELDS = [
   // bocciato come "somiglianza creativa 100%" con se stesso.
   'campaign_content_key',
   'hook',
+  'caption',
+  'hashtag',
   'tema',
   'angle',
   'primary_message',
@@ -214,6 +216,25 @@ function normalizedHook(record: CreativeRecord): string {
     .trim()
 }
 
+function normalizedCopy(value: unknown): string {
+  return text(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9#]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+export function hashtagBlockSignature(value: unknown): string {
+  const tags = text(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .match(/#[a-z0-9_]+/g) || []
+  return [...new Set(tags)].sort().join(' ')
+}
+
 export function creativeSimilarity(a: CreativeRecord, b: CreativeRecord): number {
   const hookA = normalizedHook(a)
   const hookB = normalizedHook(b)
@@ -247,6 +268,39 @@ export function isCoordinatedCrossPlatformVariant(a: CreativeRecord, b: Creative
   const channelA = text(a.canale).toLowerCase()
   const channelB = text(b.canale).toLowerCase()
   return Boolean(keyA && keyA === keyB && channelA && channelB && channelA !== channelB)
+}
+
+export function findCrossPlatformCopyDuplicate(
+  candidate: CreativeRecord,
+  previous: CreativeRecord[],
+): { fields: string[]; channel: string } | null {
+  for (const row of previous) {
+    if (!isCoordinatedCrossPlatformVariant(candidate, row)) continue
+    const fields: string[] = []
+    const hookA = normalizedCopy(candidate.hook)
+    const hookB = normalizedCopy(row.hook)
+    if (hookA.length >= 12 && hookA === hookB) fields.push('hook')
+    const captionA = normalizedCopy(candidate.caption)
+    const captionB = normalizedCopy(row.caption)
+    if (captionA.length >= 40 && captionA === captionB) fields.push('caption')
+    const hashtagsA = hashtagBlockSignature(candidate.hashtag)
+    const hashtagsB = hashtagBlockSignature(row.hashtag)
+    if (hashtagsA.split(' ').filter(Boolean).length >= 2 && hashtagsA === hashtagsB) fields.push('hashtag')
+    if (fields.length) return { fields, channel: text(row.canale) }
+  }
+  return null
+}
+
+export function findRepeatedHashtagBlock(
+  candidate: CreativeRecord,
+  previous: CreativeRecord[],
+): { signature: string; hook: string } | null {
+  const signature = hashtagBlockSignature(candidate.hashtag)
+  // Uno o due hashtag di marca possono legittimamente ricorrere. Il problema
+  // editoriale e il blocco intero riciclato, quindi il gate parte da tre tag.
+  if (signature.split(' ').filter(Boolean).length < 3) return null
+  const match = previous.find(row => hashtagBlockSignature(row.hashtag) === signature)
+  return match ? { signature, hook: text(match.hook).slice(0, 100) } : null
 }
 
 export const EDITORIAL_HISTORY_COLUMNS = HISTORY_FIELDS

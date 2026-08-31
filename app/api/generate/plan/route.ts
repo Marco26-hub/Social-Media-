@@ -35,10 +35,21 @@ import {
   buildEditorialHistoryContext,
   createMonthlyCreativeDirection,
   EDITORIAL_HISTORY_COLUMNS,
+  findCrossPlatformCopyDuplicate,
   findCreativeNearDuplicate,
+  findRepeatedHashtagBlock,
   isCoordinatedCrossPlatformVariant,
   type CreativeRecord,
 } from '@/lib/editorial-variation'
+import { buildStrategyProfileContext, resolveStrategyProfile } from '@/lib/strategy-profiles'
+import {
+  applyEditorialContentDirection,
+  buildEditorialDirectionsContext,
+  createEditorialContentDirections,
+  editorialDirectionNotes,
+  type EditorialContentDirection,
+  type EditorialSlotSeed,
+} from '@/lib/editorial-content-direction'
 import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage } from '@/lib/production-cycle'
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
 import { SETTIMANE_DEL_MESE, quotaBlocco, settimaneDellaFase } from '@/lib/plan-quota'
@@ -427,7 +438,7 @@ export async function POST(request: Request) {
   const requestStartedAt = Date.now()
   try {
     await requireAuth()
-    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita, media_urls, uploaded_assets, fase, visual_effects, visual_preset, use_trending_effects, include_weekend, use_web_trends, pacchetto, business_category } = await request.json()
+    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita, media_urls, uploaded_assets, fase, visual_effects, visual_preset, use_trending_effects, include_weekend, use_web_trends, pacchetto, business_category, strategy_profile } = await request.json()
     // Modalità "piano del pacchetto": la generazione è guidata dalla ricetta del
     // pacchetto (numero, mix, social, qualità) invece che dai parametri manuali.
     // Il body dice SOLO che la si vuole: quale pacchetto sia davvero è un dato
@@ -528,6 +539,9 @@ export async function POST(request: Request) {
       const demoPackagePlan = pkgRequested ? packageMixForPeriod(pkgRequested, periodoEff) : null
       const demoEditorialSkill = resolveEditorialSkill(pkgRequested)
       const demoBusinessCategory = resolveBusinessCategory(business_category)
+      const demoStrategyProfile = resolveStrategyProfile(strategy_profile, {
+        sector: demoBusinessCategory.label,
+      })
       const count = demoPackagePlan?.totale
         ?? (demoContenuti.filter((item) => selectedPlatforms.has(item.canale)).length || (periodoEff === 'mensile' ? 30 : 7))
       return NextResponse.json({
@@ -537,6 +551,7 @@ export async function POST(request: Request) {
         quality_level: demoQuality,
         editorial_skill: demoEditorialSkill,
         business_category: demoBusinessCategory.id,
+        strategy_profile: demoStrategyProfile.id,
         creative_direction: demoCreativeDirection,
         quality_downgraded: isQualityDowngraded(requestedQuality, demoQuality),
         warning: 'Fallback demo: DATABASE_URL non configurato, piano non persistito su Neon.',
@@ -574,6 +589,16 @@ export async function POST(request: Request) {
       brandName: brand?.brand_name,
       clientName: client?.nome,
     })
+    const campaignContext = [...assetPlacements.values()]
+      .map(placement => placement.relativePath)
+      .filter(Boolean)
+      .join(' ')
+    const activeStrategyProfile = resolveStrategyProfile(strategy_profile, {
+      sector: brand?.settore || client?.settore,
+      brandName: brand?.brand_name,
+      clientName: client?.nome,
+      campaignContext,
+    })
 
     // Il pacchetto che conta è quello acquistato, non quello chiesto dal client.
     const pkg: PackageSpec | null = pkgRequested ? getPackage(client?.pacchetto) : null
@@ -604,6 +629,7 @@ export async function POST(request: Request) {
     // non più un dump JSON grezzo. Vuoto se il brand non è configurato → nota esplicita.
     const brandContext = buildBrandContext(brand)
     const businessCategoryContext = buildBusinessCategoryContext(activeBusinessCategory)
+    const strategyProfileContext = buildStrategyProfileContext(activeStrategyProfile)
     const productsJson = JSON.stringify(products || [], null, 2)
     // Il calendario contiene i contenuti vivi, `contenuti_storico` quelli gia
     // pubblicati e rimossi: la memoria creativa e l'unione dei due.
@@ -988,6 +1014,50 @@ CADENZA DEL PIANO — vincolante:
         .sort(compareCampaignFolderGroups)
     }
 
+    function plannedFormatsForChunk(chunk: Chunk): string[] {
+      const mix = mixPerChunk.get(chunk) ?? { caroselli: 0, reel: 0, story: 0, postSingoli: chunk.targetMax, fonte: 'libero' as const }
+      return [
+        ...Array(mix.postSingoli).fill('post'),
+        ...Array(mix.caroselli).fill('carousel'),
+        ...Array(mix.story).fill('story'),
+        ...Array(mix.reel).fill('reel'),
+      ].slice(0, chunk.targetMax)
+    }
+
+    // Prima il modello riceveva un DNA mensile e un mix per blocco, ma decideva
+    // da solo il lavoro dei singoli contenuti. I blocchi paralleli potevano cosi
+    // scegliere la stessa premessa o la stessa scena. Qui costruiamo PRIMA una
+    // distinta completa e deterministica: un contratto editoriale per ogni card.
+    const editorialDirectionsByChunk = new Map<Chunk, EditorialContentDirection[]>()
+    let conceptOffset = 0
+    chunks.forEach((chunk, chunkIndex) => {
+      const folderRules = folderCampaignRules(chunk)
+      const formats = plannedFormatsForChunk(chunk)
+      const plannedCount = folderRules.length || (pkg ? chunk.targetMax : chunk.targetMin)
+      const seeds: EditorialSlotSeed[] = folderRules.length
+        ? folderRules.map(rule => ({
+            contentKey: rule.contentKey,
+            channel: rule.platform,
+            format: rule.tag === 'carosello' ? 'carousel' : rule.tag === 'auto' ? 'post' : rule.tag,
+            week: rule.week || chunk.week || null,
+          }))
+        : Array.from({ length: plannedCount }, (_, index) => ({
+            contentKey: `${creativeDirection.code.toLowerCase()}-w${chunk.week || 1}-slot-${String(conceptOffset + index + 1).padStart(2, '0')}`,
+            channel: piattaforme[(conceptOffset + index) % piattaforme.length] || 'instagram',
+            format: formats[index] || 'post',
+            week: chunk.week || Math.min(4, (chunk.mixIndice ?? chunkIndex) + 1),
+          }))
+      const directions = createEditorialContentDirections({
+        creativeCode: creativeDirection.code,
+        category: activeBusinessCategory,
+        profile: activeStrategyProfile,
+        slots: seeds,
+        conceptOffset,
+      })
+      editorialDirectionsByChunk.set(chunk, directions)
+      conceptOffset += new Set(seeds.map(seed => seed.contentKey)).size
+    })
+
     function buildFolderCampaignContext(chunk: Chunk): string {
       const rules = folderCampaignRules(chunk)
       if (!rules.length) return ''
@@ -1035,6 +1105,8 @@ ${brandContext || 'BRAND non ancora configurato: resta coerente con i prodotti e
 
 ${businessCategoryContext}
 
+${strategyProfileContext}
+
 PRODOTTI:
 ${productsJson}
 
@@ -1065,6 +1137,7 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
 - post/pin: "primary_message" compilato oltre a hook e caption.` : ''}`
             : qualityPrompt)
           + historyContext + faseContinuitaContext + creativeDirection.context + temporalContext + trendContext
+          + buildEditorialDirectionsContext(editorialDirectionsByChunk.get(chunk) || [])
           + (assetPlacements.size ? '' : buildPackageContext(pkg, packagePlan, periodoEff, targetMax))
           // Vincolo sui FORMATI: senza, il fabbisogno media annunciato all'utente
           // resta una stima che il modello può far saltare con 12 caroselli.
@@ -1148,54 +1221,63 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
     const itemChunkPairs: { item: Record<string, unknown>; chunk: Chunk }[] = []
     let pkgTruncated = 0
     function fallbackFormats(chunk: Chunk): string[] {
-      const mix = mixPerChunk.get(chunk) ?? { caroselli: 0, reel: 0, story: 0, postSingoli: chunk.targetMax, fonte: 'libero' as const }
-      return [
-        ...Array(mix.postSingoli).fill('post'),
-        ...Array(mix.caroselli).fill('carousel'),
-        ...Array(mix.story).fill('story'),
-        ...Array(mix.reel).fill('reel'),
-      ]
+      return plannedFormatsForChunk(chunk)
     }
-    function fallbackItem(chunk: Chunk, index: number, reason: string, original?: Record<string, unknown>): Record<string, unknown> {
+    function fallbackItem(
+      chunk: Chunk,
+      index: number,
+      reason: string,
+      original?: Record<string, unknown>,
+      direction?: EditorialContentDirection,
+    ): Record<string, unknown> {
       const formats = fallbackFormats(chunk)
       const folderRule = folderCampaignRules(chunk)[index]
-      return {
+      const fallback = {
         ...(original || {}),
-        content_key: folderRule?.contentKey || original?.content_key,
+        content_key: direction?.contentKey || folderRule?.contentKey || original?.content_key,
         data_pubblicazione: original?.data_pubblicazione || '',
-        canale: folderRule?.platform || original?.canale || piattaforme[index % piattaforme.length] || 'instagram',
-        formato: folderRule ? (folderRule.tag === 'carosello' ? 'carousel' : folderRule.tag) : original?.formato || formats[index] || 'post',
+        canale: direction?.channel || folderRule?.platform || original?.canale || piattaforme[index % piattaforme.length] || 'instagram',
+        formato: direction?.format || (folderRule ? (folderRule.tag === 'carosello' ? 'carousel' : folderRule.tag) : original?.formato || formats[index] || 'post'),
         media_refs: folderRule?.refs || original?.media_refs || [],
         obiettivo: original?.obiettivo || obiettivo || 'mix',
-        tema: original?.tema || 'Slot del piano da completare',
+        tema: direction?.themeSeed || original?.tema || `${formats[index] || 'post'} editoriale da rigenerare`,
         hook: '',
         caption: '',
         _generation_fallback: true,
         _fallback_reason: reason.slice(0, 280),
       }
+      return direction
+        ? { ...applyEditorialContentDirection(fallback, direction), _editorial_direction: direction }
+        : fallback
     }
     chunkResults.forEach((r, i) => {
       const chunk = chunks[i]
       const target = pkg ? chunk.targetMax : chunk.targetMin
+      const directions = editorialDirectionsByChunk.get(chunk) || []
       if (!r.ok) {
         for (let index = 0; index < target; index++) {
-          itemChunkPairs.push({ item: fallbackItem(chunk, index, r.error), chunk })
+          itemChunkPairs.push({ item: fallbackItem(chunk, index, r.error, undefined, directions[index]), chunk })
         }
         return
       }
       const folderRules = folderCampaignRules(chunk)
       const rawItems = pkg ? r.items.slice(0, chunk.targetMax) : r.items
-      const items = folderRules.length
-        ? folderRules.map((rule, index) => {
-            const expectedKey = String(rule.contentKey || '').trim().toLowerCase()
+      const items = directions.length
+        ? directions.map((direction, index) => {
+            const expectedKey = direction.contentKey.trim().toLowerCase()
             const matched = rawItems.find(item => String(item.content_key || '').trim().toLowerCase() === expectedKey)
-            const item = matched || rawItems[index] || fallbackItem(chunk, index, `L'AI ha generato ${rawItems.length}/${folderRules.length} contenuti per questo blocco.`)
+            const item = matched || rawItems[index] || fallbackItem(
+              chunk,
+              index,
+              `L'AI ha generato ${rawItems.length}/${directions.length} contenuti per questo blocco.`,
+              undefined,
+              direction,
+            )
+            const directed = applyEditorialContentDirection(item, direction)
             return {
-              ...item,
-              content_key: rule.contentKey,
-              canale: rule.platform,
-              formato: rule.tag === 'carosello' ? 'carousel' : rule.tag,
-              media_refs: rule.refs,
+              ...directed,
+              media_refs: folderRules[index]?.refs || directed.media_refs || [],
+              _editorial_direction: direction,
             }
           })
         : rawItems
@@ -1203,13 +1285,13 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
       items.forEach((item, index) => {
         const hasCopy = String(item.hook || '').trim() || String(item.caption || '').trim()
         itemChunkPairs.push({
-          item: hasCopy ? item : fallbackItem(chunk, index, 'La risposta AI non conteneva hook o caption.', item),
+          item: hasCopy ? item : fallbackItem(chunk, index, 'La risposta AI non conteneva hook o caption.', item, directions[index]),
           chunk,
         })
       })
       for (let index = items.length; index < target; index++) {
         itemChunkPairs.push({
-          item: fallbackItem(chunk, index, `L'AI ha generato ${items.length}/${target} contenuti per questo blocco.`),
+          item: fallbackItem(chunk, index, `L'AI ha generato ${items.length}/${target} contenuti per questo blocco.`, undefined, directions[index]),
           chunk,
         })
       }
@@ -1687,17 +1769,30 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
     const acceptedCreativeItems: CreativeRecord[] = []
 
     for (const { item: rawItem, chunk } of itemChunkPairs) {
-      const item = sanitizeItem(rawItem, chunk)
+      const editorialDirection = rawItem._editorial_direction as EditorialContentDirection | undefined
+      const directedRawItem = editorialDirection
+        ? applyEditorialContentDirection(rawItem, editorialDirection)
+        : rawItem
+      const item = sanitizeItem(directedRawItem, chunk)
       const isGenerationFallback = rawItem._generation_fallback === true
-      const historyDuplicate = findCreativeNearDuplicate(item, historyRecords)
+      const comparableHistory = historyRecords.filter(previous =>
+        !isCoordinatedCrossPlatformVariant(item, previous))
+      const historyDuplicate = findCreativeNearDuplicate(item, comparableHistory)
       // Instagram e Facebook dello stesso gruppo cartella sono adattamenti della
-      // medesima creativita, non due idee concorrenti. Il gate anti-clone deve
-      // confrontare contenuti diversi, non penalizzare la seconda piattaforma.
+      // medesima creativita, non due idee concorrenti. Restano esclusi dal gate
+      // semantico ampio, ma il gate sotto pretende un adattamento copy reale.
       const comparableBatchItems = acceptedCreativeItems.filter(previous =>
         !isCoordinatedCrossPlatformVariant(item, previous))
       const batchDuplicate = historyDuplicate ? null : findCreativeNearDuplicate(item, comparableBatchItems)
       const duplicate = historyDuplicate || batchDuplicate
-      const noveltyReason = duplicate
+      const allPrevious = [...historyRecords, ...acceptedCreativeItems]
+      const platformCopyDuplicate = findCrossPlatformCopyDuplicate(item, allPrevious)
+      const hashtagDuplicate = findRepeatedHashtagBlock(item, allPrevious)
+      const noveltyReason = platformCopyDuplicate
+        ? `Adattamento ${String(item.canale || '')} copiato da ${platformCopyDuplicate.channel}: campi identici ${platformCopyDuplicate.fields.join(', ')}`
+        : hashtagDuplicate
+          ? `Blocco hashtag gia usato con "${hashtagDuplicate.hook || 'un altro contenuto'}"`
+          : duplicate
         ? `Somiglianza creativa ${Math.round(duplicate.score * 100)}% con "${duplicate.hook || 'un contenuto precedente'}"`
         : ''
       // I media si assegnano PRIMA del cancello narrativo, perche quando le
@@ -1725,10 +1820,11 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
       else acceptedCreativeItems.push(item)
       const existingProductionNotes = pickText(item, ['production_notes', 'note_produzione'])
         .split('\n')
-        .filter(line => !/^\s*(MONTHLY_DNA|NOVELTY_GATE):/i.test(line))
+        .filter(line => !/^\s*(MONTHLY_DNA|NOVELTY_GATE|EDITORIAL_SLOT|EDITORIAL_CONCEPT|STRATEGY_PROFILE|VISUAL_SIGNATURE|CHANNEL_ADAPTATION):/i.test(line))
         .join('\n')
       item.production_notes = [
         existingProductionNotes,
+        ...(editorialDirection ? editorialDirectionNotes(editorialDirection) : []),
         `MONTHLY_DNA: ${creativeDirection.code}`,
         noveltyReason ? `NOVELTY_GATE: REVISE ${noveltyReason}` : 'NOVELTY_GATE: PASS',
         narrativeReason ? `NARRATIVE_GATE: REVISE ${narrativeReason}` : 'NARRATIVE_GATE: PASS',
@@ -1791,6 +1887,7 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
         'optimization_cycle_json', 'performance_hypothesis', 'next_iteration_actions',
         'missing_inputs', 'content_checklist',
         'campaign_content_key', 'campaign_week', 'campaign_source_paths',
+        'strategy_profile', 'business_category',
       ]
       const assignedFolderPlacement = media1 ? assetPlacements.get(media1) : undefined
       const isCampaignFolderImport = assetPlacements.size > 0
@@ -1874,6 +1971,8 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
           : null,
         isCampaignFolderImport ? assignedFolderPlacement?.week || chunk.week || null : null,
         jsonbParam(campaignSourcePaths.length ? campaignSourcePaths : null),
+        activeStrategyProfile.id,
+        activeBusinessCategory.id,
       ]
       try {
         const usedFallback = await insertCalendario(insertColumns, insertValues)
@@ -1941,6 +2040,8 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
       cadenza: { contenuti_settimana: cadenza.contenutiSettimana, giorni_attivi: cadenza.giorniAttivi, max_per_giorno: cadenza.maxPerGiorno },
       quality_level: contentQuality,
       editorial_skill: activeEditorialSkill,
+      strategy_profile: activeStrategyProfile.id,
+      business_category: activeBusinessCategory.id,
       creative_direction: creativeDirection,
       quality_downgraded: isQualityDowngraded(requestedQuality, contentQuality),
       images_provided: mediaPool.length,

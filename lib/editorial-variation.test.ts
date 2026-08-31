@@ -5,7 +5,10 @@ import {
   buildEditorialHistoryContext,
   createMonthlyCreativeDirection,
   EDITORIAL_HISTORY_COLUMNS,
+  findCrossPlatformCopyDuplicate,
   findCreativeNearDuplicate,
+  findRepeatedHashtagBlock,
+  hashtagBlockSignature,
   isCoordinatedCrossPlatformVariant,
 } from './editorial-variation'
 
@@ -121,4 +124,34 @@ test('the same hook on the same channel stays a duplicate', () => {
   const a = { campaign_content_key: 'k1', canale: 'instagram', hook: 'Stesso hook' }
   const b = { campaign_content_key: 'k1', canale: 'instagram', hook: 'Stesso hook' }
   assert.equal(isCoordinatedCrossPlatformVariant(a, b), false)
+})
+
+test('coordinated variants must adapt copy instead of copying it verbatim', () => {
+  const instagram = {
+    campaign_content_key: 'reel_01',
+    canale: 'instagram',
+    hook: 'Gestore di bowling, queste foto non sono ancora una strategia',
+    caption: 'Una serata produce momenti. La regia li trasforma in un percorso leggibile.',
+    hashtag: '#bowling #gestionesocial #swa',
+  }
+  const facebookCopy = { ...instagram, canale: 'facebook' }
+  const facebookAdapted = {
+    ...instagram,
+    canale: 'facebook',
+    hook: 'Una serata piena non basta: al tuo bowling serve una regia editoriale',
+    caption: 'Il punto non e avere altre foto, ma collegare i momenti della sala a un piano che il pubblico capisca.',
+    hashtag: '#bowlingitalia #pianoeditoriale #socialwebautomation',
+  }
+
+  assert.deepEqual(findCrossPlatformCopyDuplicate(facebookCopy, [instagram])?.fields, ['hook', 'caption', 'hashtag'])
+  assert.equal(findCrossPlatformCopyDuplicate(facebookAdapted, [instagram]), null)
+})
+
+test('a complete hashtag block is detected regardless of tag order', () => {
+  const previous = [{ hook: 'Primo contenuto', hashtag: '#swa #bowling #regiasocial' }]
+  const candidate = { hook: 'Secondo contenuto', hashtag: '#regiasocial #SWA #bowling' }
+
+  assert.equal(hashtagBlockSignature(candidate.hashtag), '#bowling #regiasocial #swa')
+  assert.ok(findRepeatedHashtagBlock(candidate, previous))
+  assert.equal(findRepeatedHashtagBlock({ hashtag: '#swa #bowling' }, previous), null)
 })

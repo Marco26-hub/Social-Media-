@@ -111,6 +111,7 @@ test('coordinated variants of one concept on two socials are not duplicates', ()
   ]
   const report = auditPianoCiclo({ rows, quota: 0, pkg: null, oggi: OGGI })
   assert.equal(checkById(report, 'duplicati').stato, 'ok')
+  assert.equal(checkById(report, 'adattamenti-canale').stato, 'attenzione')
 })
 
 test('the same hook reused on the same channel is reported', () => {
@@ -147,4 +148,24 @@ test('the blog article stays outside the social quota', () => {
   const report = auditPianoCiclo({ rows, quota: 24, pkg: PACKAGES.crescita, oggi: OGGI })
   assert.equal(report.pianificati, 24)
   assert.equal(checkById(report, 'copertura').stato, 'ok')
+})
+
+test('placeholder themes left by a failed generation are blocking', () => {
+  const rows = [contenuto({ id_contenuto: 'PLACEHOLDER', tema: 'Slot del piano da completare' })]
+  const report = auditPianoCiclo({ rows, quota: 0, pkg: null, oggi: OGGI })
+
+  assert.equal(checkById(report, 'segnaposto').stato, 'blocco')
+  assert.deepEqual(checkById(report, 'segnaposto').contenuti, ['PLACEHOLDER'])
+})
+
+test('the same media file on different concepts is reported but a coordinated cross-post is allowed', () => {
+  const rows = [
+    contenuto({ id_contenuto: 'IG1', campaign_content_key: 'post_01', canale: 'instagram', link_media_1: 'https://cdn.test/shared.jpg' }),
+    contenuto({ id_contenuto: 'FB1', campaign_content_key: 'post_01', canale: 'facebook', data_pubblicazione: '2026-09-02', link_media_1: 'https://cdn.test/shared.jpg' }),
+    contenuto({ id_contenuto: 'OTHER', campaign_content_key: 'post_02', canale: 'instagram', data_pubblicazione: '2026-09-03', link_media_1: 'https://cdn.test/shared.jpg' }),
+  ]
+  const report = auditPianoCiclo({ rows, quota: 0, pkg: null, oggi: OGGI })
+
+  assert.equal(checkById(report, 'media-duplicati').stato, 'attenzione')
+  assert.deepEqual(checkById(report, 'media-duplicati').contenuti, ['OTHER', 'IG1', 'FB1'])
 })

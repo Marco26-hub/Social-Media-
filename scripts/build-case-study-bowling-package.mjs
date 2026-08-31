@@ -25,13 +25,13 @@ const reels = [
   { id: 1, folder: 'REEL_01_REGIA_NON_FOTO', hook: ['IL TUO BOWLING NON HA', 'UN PROBLEMA DI FOTO.'], cta: 'SEGUI IL CASO STUDIO', scenes: ['Hai già momenti che meritano attenzione.', 'Pubblicati a caso restano file isolati.', 'SWA assegna un ruolo a ogni contenuto.', 'Il risultato è una storia riconoscibile.'] },
   { id: 2, folder: 'REEL_02_SERATA_UN_MESE', hook: ['IL TUO BOWLING HA GIÀ LE STORIE.', 'SWA LE TRASFORMA IN UN PIANO.'], cta: 'SCRIVI BOWLING', scenes: ['Partiamo dai momenti reali.', 'Scegliamo gli angoli che interessano.', 'Diamo a ogni formato un obiettivo.', 'Costruiamo una sequenza che porta avanti.'] },
   { id: 3, folder: 'REEL_03_PUBBLICHI_QUANDO_CAPITA', hook: ['PUBBLICARE A CASO', 'COSTA PIÙ DI QUANTO PENSI.'], cta: 'CONTROLLA IL CALENDARIO', scenes: ['Ogni post parte da zero.', 'Il pubblico non riconosce una promessa.', 'I dati non spiegano cosa migliorare.', 'Una regia rende ogni uscita misurabile.'] },
-  { id: 5, folder: 'REEL_05_TRE_SEGNALI', hook: ['3 SEGNALI CHE IL TUO BOWLING', 'STA COMUNICANDO SENZA PIANO.'], cta: 'SALVA IL CONTROLLO', scenes: ['Ogni post ha un tono diverso.', 'Le offerte arrivano senza preparazione.', 'Nessuno sa cosa ha funzionato.', 'Il primo passo e riconoscere il problema.'] },
+  { id: 5, folder: 'REEL_05_COSTO_SENZA_DIREZIONE', hook: ['IL COSTO INVISIBILE', 'DI PUBBLICARE SENZA DIREZIONE.'], cta: 'MISURA PRIMA DI RIPETERE', scenes: ['Ogni uscita riparte da zero.', 'Il team consuma tempo senza una priorita.', 'Le offerte non ereditano fiducia.', 'La regia trasforma lo sforzo in apprendimento.'] },
   { id: 7, folder: 'REEL_07_PISTA_5_CONTENUTI', hook: ['UNA SOLA SERATA.', 'CINQUE ANGOLI EDITORIALI.'], cta: 'SCOPRI LA MAPPA SWA', scenes: ["Atmosfera: fa desiderare l'esperienza.", "Gesto: trattiene l'attenzione.", 'Persone: costruiscono fiducia.', 'Offerta: arriva dopo aver creato valore.'] },
   { id: 8, folder: 'REEL_08_CALENDARIO_INVISIBILE', hook: ['QUELLO CHE IL CLIENTE VEDE', 'PARTE DA CIÒ CHE NON VEDE.'], cta: 'SALVA IL PROCESSO', scenes: ["Brief: decidiamo l'obiettivo.", 'Produzione: creiamo asset coerenti.', "Approvazione: controlli prima dell'uscita.", 'Pubblicazione: ogni contenuto ha il suo posto.'] },
   { id: 13, folder: 'REEL_13_PRIMA_E_DOPO_ASSET', hook: ['PRIMA: FOTO ISOLATE.', 'DOPO: UNA CAMPAGNA RICONOSCIBILE.'], cta: 'VEDI LA TRASFORMAZIONE', scenes: ['Selezioniamo solo gli asset utili.', 'Costruiamo una promessa mensile.', 'Ordiniamo formati e messaggi.', 'Misuriamo cosa porta avanti il pubblico.'] },
   { id: 17, folder: 'REEL_17_HAI_GIA_FOTO', hook: ['HAI GIÀ LE FOTO?', 'ALLORA NON RIPARTIRE DA ZERO.'], cta: 'RICEVI LA MAPPA SWA', scenes: ['Facciamo audit del materiale.', 'Scartiamo ciò che non sostiene il messaggio.', 'Completiamo solo gli scatti mancanti.', 'Scrivi BOWLING per ricevere la regia.'] },
   { id: 19, folder: 'REEL_19_CHECKLIST_PUBBLICARE', hook: ['PRIMA DI PUBBLICARE', 'CONTROLLA QUESTE 4 COSE.'], cta: 'SALVA LA CHECKLIST', scenes: ['Un obiettivo verificabile.', 'Un pubblico preciso.', 'Un formato coerente.', 'Una CTA con destinazione reale.'] },
-  { id: 22, folder: 'REEL_22_STORIE_SISTEMA', hook: ['IL TUO BOWLING HA GIÀ LE STORIE.', 'SWA COSTRUISCE IL SISTEMA.'], cta: 'RICEVI LA MAPPA SWA', scenes: ['Audit di ciò che hai già.', 'Piano di ciò che serve davvero.', 'Produzione e approvazione ordinate.', 'Scrivi BOWLING per ricevere la regia.'] },
+  { id: 22, folder: 'REEL_22_DAL_BRIEF_ALLA_PUBBLICAZIONE', hook: ['DAL BRIEF ALLA PUBBLICAZIONE.', 'ECCO DOVE LAVORA LA REGIA SWA.'], cta: 'VEDI IL FLUSSO COMPLETO', scenes: ['Il brief fissa una priorita commerciale.', 'La shot list traduce la priorita in scene.', 'Il controllo collega copy, asset e canale.', 'Il calendario consegna ogni uscita al suo momento.'] },
 ];
 
 const stories = [
@@ -45,7 +45,7 @@ const posts = [
   { id: 6, folder: 'POST_06_DOMANDA_PRIMA_DEL_CONTENUTO', lines: ['PRIMA DEL CONTENUTO', 'VIENE LA DOMANDA:', 'COSA DEVE OTTENERE?'], cta: 'SCOPRI LA REGIA SWA' },
   { id: 12, folder: 'POST_12_FOTO_CON_DECISIONE', lines: ['UNA FOTO FUNZIONA', 'QUANDO HA UN RUOLO', 'NEL PERCORSO.'], cta: 'SALVA IL PRINCIPIO' },
   { id: 18, folder: 'POST_18_CONTENUTO_E_SCELTA', lines: ['IL CONTENUTO NON È IL FILE.', 'È LA DECISIONE', 'CHE VIENE PRIMA.'], cta: 'SCOPRI IL METODO SWA' },
-  { id: 24, folder: 'POST_24_STORIE_E_SISTEMA', lines: ['IL TUO BOWLING HA GIÀ LE STORIE.', 'SWA COSTRUISCE', 'IL SISTEMA.'], cta: 'RICEVI LA MAPPA SWA' },
+  { id: 24, folder: 'POST_24_PROSSIMO_MESE_CON_REGIA', lines: ['IL PROSSIMO MESE', 'NON DEVE RIPARTIRE DA ZERO.', 'DEVE PARTIRE DA UNA DIREZIONE.'], cta: 'SCRIVI BOWLING' },
 ];
 
 const carousels = [
@@ -116,7 +116,7 @@ const editorialMeta = {
   2: { intent: 'Rendere desiderabile una trasformazione editoriale', visualRole: 'open-loop', visualBrief: 'Momenti reali della serata collegati a una mappa editoriale; telefono, pista e persone in azione.' },
   3: { intent: 'Mostrare il costo dell’improvvisazione', visualRole: 'contrasto', visualBrief: 'Calendario frammentato contrapposto a una sequenza ordinata, senza interfacce inventate o dati falsi.' },
   4: { intent: 'Autodiagnosi salvabile', visualRole: 'checklist', visualBrief: 'Cinque scene diverse di comunicazione incoerente, una per segnale; cover pulita e CTA conclusiva.' },
-  5: { intent: 'Rendere misurabile il problema', visualRole: 'segnali', visualBrief: 'Tre prove visive distinte: tono incoerente, offerta improvvisa, assenza di lettura dati.' },
+  5: { intent: 'Quantificare il costo operativo dell’improvvisazione', visualRole: 'costo-invisibile', visualBrief: 'Quattro scene distinte mostrano ripartenza da zero, tempo disperso, offerta senza fiducia e apprendimento strutturato.' },
   6: { intent: 'Insegnare il principio obiettivo-prima-del-formato', visualRole: 'tesi', visualBrief: 'Direttore creativo SWA che definisce un obiettivo prima di scegliere il contenuto.' },
   7: { intent: 'Dimostrare la moltiplicazione degli angoli', visualRole: 'metodo', visualBrief: 'Quattro momenti unici della stessa serata: atmosfera, gesto, persone e proposta commerciale.' },
   8: { intent: 'Far percepire il processo agenzia', visualRole: 'backstage', visualBrief: 'Brief, produzione, approvazione e pubblicazione rappresentati da scene di lavoro reali e diverse.' },
@@ -133,9 +133,9 @@ const editorialMeta = {
   19: { intent: 'Fornire un controllo operativo salvabile', visualRole: 'checklist', visualBrief: 'Obiettivo, pubblico, formato e CTA mostrati con quattro scene reali e raccordate.' },
   20: { intent: 'Trasformare la checklist in strumento', visualRole: 'strumento', visualBrief: 'Cinque slide essenziali, una verifica per slide, visual differenti e recap finale.' },
   21: { intent: 'Far desiderare il piano personalizzato', visualRole: 'anteprima', visualBrief: 'Tre frame: audit, calendario e beneficio per il team; chiusura con DM reale.' },
-  22: { intent: 'Riassumere il sistema end-to-end', visualRole: 'sintesi', visualBrief: 'Audit, piano, produzione e risultato come sequenza cinematografica continua.' },
+  22: { intent: 'Rendere visibile il flusso operativo SWA', visualRole: 'workflow', visualBrief: 'Brief, shot list, controllo e calendario come sequenza cinematografica continua con passaggi verificabili.' },
   23: { intent: 'Mostrare il percorso di ingresso', visualRole: 'processo', visualBrief: 'Dal primo audit al calendario con prove di lavoro, niente dashboard finte o risultati inventati.' },
-  24: { intent: 'Convertire il caso studio in richiesta qualificata', visualRole: 'chiusura', visualBrief: 'Gestore sereno con piano approvato e bowling vivo sullo sfondo; CTA BOWLING pulita.' },
+  24: { intent: 'Convertire il caso studio in richiesta qualificata', visualRole: 'prossimo-passo', visualBrief: 'Gestore sereno davanti alla direzione del mese successivo, bowling vivo sullo sfondo e CTA BOWLING pulita.' },
 };
 const sourceAt = (index) => {
   if (!sourceFiles[index]) throw new Error(`Master visuale ${index + 1} mancante.`);
