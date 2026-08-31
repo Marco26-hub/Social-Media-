@@ -4,6 +4,7 @@ export type CampaignPlatform = 'instagram' | 'facebook'
 
 export type CampaignFolderAsset = {
   relativePath: string
+  campaignKey: string
   week: number | null
   platform: CampaignPlatform | null
   tag: MediaTag
@@ -34,6 +35,21 @@ function normalized(value: string): string {
 
 function extension(name: string): string {
   return name.toLowerCase().split('.').pop() || ''
+}
+
+function stableCampaignToken(value: string): string {
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return `c${(hash >>> 0).toString(16).padStart(8, '0')}`
+}
+
+/** Identità stabile della cartella principale, separata dai numeri dei contenuti. */
+export function campaignKeyForPath(relativePath: string): string {
+  const root = relativePath.replace(/^\/+/, '').split('/').filter(Boolean)[0] || 'campagna'
+  return stableCampaignToken(normalized(root))
 }
 
 function inferKind(file: CampaignFolderFile): CampaignFolderAsset['kind'] {
@@ -133,6 +149,7 @@ export function parseCampaignFolderFile(file: CampaignFolderFile): CampaignFolde
   if (isLooseAudio(relativePath, kind)) {
     return {
       relativePath,
+      campaignKey: campaignKeyForPath(relativePath),
       week: null,
       platform: null,
       tag: 'auto',
@@ -143,27 +160,29 @@ export function parseCampaignFolderFile(file: CampaignFolderFile): CampaignFolde
     }
   }
   const week = inferWeek(relativePath)
+  const campaignKey = campaignKeyForPath(relativePath)
   const platform = inferPlatform(relativePath)
   const tag = inferTag(relativePath)
   const contentKey = inferContentKey(relativePath, tag)
   const sequence = inferSequence(file.name)
   const errors: string[] = []
 
-  if (kind === 'unsupported') return { relativePath, week, platform, tag, contentKey, sequence, kind, errors }
+  if (kind === 'unsupported') return { relativePath, campaignKey, week, platform, tag, contentKey, sequence, kind, errors }
   if (!week) errors.push('settimana non riconosciuta')
   if (!platform) errors.push('social non riconosciuto (Instagram/Facebook)')
   if (tag === 'auto') errors.push('formato non riconosciuto')
   if (!contentKey) errors.push('cartella contenuto non riconosciuta (es. Reel 01)')
   if (kind === 'video' && tag !== 'reel') errors.push('MP4 consentito solo nella cartella Reel/Video')
 
-  return { relativePath, week, platform, tag, contentKey, sequence, kind, errors }
+  return { relativePath, campaignKey, week, platform, tag, contentKey, sequence, kind, errors }
 }
 
-export function folderGroupKey(asset: Pick<CampaignFolderAsset, 'week' | 'platform' | 'tag' | 'contentKey'>): string {
-  return [asset.week || 0, asset.platform || 'senza-social', asset.tag, asset.contentKey || 'senza-contenuto'].join(':')
+export function folderGroupKey(asset: Pick<CampaignFolderAsset, 'campaignKey' | 'week' | 'platform' | 'tag' | 'contentKey'>): string {
+  return [asset.campaignKey, asset.week || 0, asset.platform || 'senza-social', asset.tag, asset.contentKey || 'senza-contenuto'].join(':')
 }
 
 type CampaignFolderGroupOrder = {
+  campaignKey: string
   week: number | null
   platform: string | null
   tag: MediaTag
@@ -177,7 +196,8 @@ function contentNumber(contentKey: string | null): number {
 
 /** Ordina i contenuti secondo la sequenza editoriale, indipendentemente dal formato. */
 export function compareCampaignFolderGroups(left: CampaignFolderGroupOrder, right: CampaignFolderGroupOrder): number {
-  return (left.week || 0) - (right.week || 0)
+  return left.campaignKey.localeCompare(right.campaignKey, 'it')
+    || (left.week || 0) - (right.week || 0)
     || String(left.platform || '').localeCompare(String(right.platform || ''), 'it')
     || contentNumber(left.contentKey) - contentNumber(right.contentKey)
     || left.tag.localeCompare(right.tag, 'it')

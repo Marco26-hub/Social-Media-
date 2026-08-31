@@ -117,9 +117,10 @@ export function createMonthlyCreativeDirection(args: {
   clienteId: string
   startISO: string
   brandName?: string
+  campaignKey?: string
 }): MonthlyCreativeDirection {
   const { key, ordinal } = parseMonth(args.startISO)
-  const brandSeed = stableHash(`${args.clienteId}:${args.brandName || 'brand'}`)
+  const brandSeed = stableHash(`${args.clienteId}:${args.brandName || 'brand'}:${args.campaignKey || 'campaign-default'}`)
   const narrativeIndex = rotatingIndex(NARRATIVE_SYSTEMS.length, brandSeed, ordinal, 1, 'narrative')
   const visualIndex = rotatingIndex(VISUAL_LANGUAGES.length, brandSeed, ordinal, 2, 'visual')
   const motionIndex = rotatingIndex(MOTION_LANGUAGES.length, brandSeed, ordinal, 2, 'motion')

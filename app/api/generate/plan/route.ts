@@ -43,6 +43,7 @@ import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage }
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
 import { SETTIMANE_DEL_MESE, quotaBlocco, settimaneDellaFase } from '@/lib/plan-quota'
 import { compareCampaignAssetSequence, compareCampaignFolderGroups } from '@/lib/campaign-folder'
+import { evaluateNarrativeContract, FORMAT_NARRATIVE_CONTEXT } from '@/lib/format-narrative'
 // Governo di ORARI (e del solo vincolo di giorno che dipende dal canale): il
 // piano non deve più affidarsi a un default fisso '10:00' né agli orari a caso
 // del modello. Fasce per canale + cadenza dal pacchetto vivono in lib/scheduling.
@@ -73,6 +74,8 @@ ${SEO_GEO_STANDARDS}
 
 ${PRO_COPY_STANDARDS}
 
+${FORMAT_NARRATIVE_CONTEXT}
+
 Non inventare prezzi, stock, sconti o claim non presenti nei dati brand/prodotti.`
 
 // Se il media resta su Auto, il nome/descrizione può comunque dichiararne la
@@ -95,11 +98,20 @@ function inferMediaTagFromLabel(value: string): MediaTag {
 // Prima l'assegnazione era posizionale cieca: il modello riordinava gli item e le foto
 // slittavano sul post sbagliato.
 type FolderPlacement = {
+  campaignKey: string
   week: number | null
   platform: string
   contentKey: string
   sequence: number | null
   relativePath: string
+}
+
+function folderPlacementGroupKey(placement: FolderPlacement): string {
+  return `${placement.campaignKey}:${placement.week}:${placement.platform}:${placement.contentKey}`
+}
+
+function scopedCampaignContentKey(placement: FolderPlacement): string {
+  return `${placement.campaignKey}__${placement.contentKey}`
 }
 
 function buildPlanAssetContext(
@@ -421,6 +433,9 @@ export async function POST(request: Request) {
           && (rec.platform === 'instagram' || rec.platform === 'facebook')
           && typeof rec.content_key === 'string' && rec.content_key.trim()
           ? {
+              campaignKey: typeof rec.campaign_key === 'string' && rec.campaign_key.trim()
+                ? rec.campaign_key.trim().toLowerCase()
+                : 'legacy',
               week: weekRaw,
               platform: rec.platform,
               contentKey: rec.content_key.trim().toLowerCase(),
@@ -557,6 +572,7 @@ export async function POST(request: Request) {
       clienteId: effectiveClienteId,
       startISO: fmtDate(new Date()),
       brandName: typeof brand?.brand_name === 'string' ? brand.brand_name : '',
+      campaignKey: assetPlacements.values().next().value?.campaignKey || undefined,
     })
 
     const qualityPrompt = `
@@ -709,7 +725,7 @@ ${buildExtendedOutputSchema(contentQuality)}
         const week = placement.week
         if (!groupsByWeek.has(week)) groupsByWeek.set(week, new Map())
         const groups = groupsByWeek.get(week)!
-        const key = `${week}:${placement.platform}:${placement.contentKey}`
+        const key = folderPlacementGroupKey(placement)
         if (!groups.has(key)) groups.set(key, [])
         groups.get(key)!.push(url)
         folderAssigned.add(url)
@@ -748,7 +764,7 @@ ${buildExtendedOutputSchema(contentQuality)}
       chunk.images.forEach(url => {
         const placement = assetPlacements.get(url)
         if (!placement) return
-        const key = `${placement.week}:${placement.platform}:${placement.contentKey}`
+        const key = folderPlacementGroupKey(placement)
         groups.set(key, assetTags.get(url) ?? inferMediaTagFromLabel(placement.contentKey))
       })
       return groups
@@ -840,17 +856,18 @@ CADENZA DEL PIANO — vincolante:
 
     const systemPrompt = `Sei un social media manager, creative strategist, visual director e SEO/GEO specialist senior (10+ anni, brand premium). Obiettivo: ${obiettivo || 'mix'}. Livello qualità: ${contentQuality}. Crei piani editoriali dove OGNI contenuto è unico, professionale, moderno e trend-aware: hook diversi, angoli ruotati, funnel bilanciato, keyword SEO/GEO sfruttate, meccaniche native da feed 2026, zero cliché, grammatica italiana impeccabile. Rispondi con JSON array valido, nessun altro testo. Non inventare prezzi, stock, canzoni virali, eventi o claim non presenti nei dati.`
 
-    type FolderCampaignRule = { week: number | null; platform: string; contentKey: string; tag: MediaTag; refs: number[] }
+    type FolderCampaignRule = { campaignKey: string; week: number | null; platform: string; contentKey: string; tag: MediaTag; refs: number[] }
     function folderCampaignRules(chunk: Chunk): FolderCampaignRule[] {
       const groups = new Map<string, FolderCampaignRule>()
       chunk.images.forEach((url, index) => {
         const placement = assetPlacements.get(url)
         if (!placement) return
-        const key = `${placement.week}:${placement.platform}:${placement.contentKey}`
+        const key = folderPlacementGroupKey(placement)
         const group = groups.get(key) || {
+          campaignKey: placement.campaignKey,
           week: placement.week,
           platform: placement.platform,
-          contentKey: placement.contentKey,
+          contentKey: scopedCampaignContentKey(placement),
           tag: assetTags.get(url) ?? inferMediaTagFromLabel(placement.contentKey),
           refs: [],
         }
@@ -1335,7 +1352,7 @@ Output SOLO JSON array valido:
       chunk.images.forEach((url, idx) => {
         const placement = assetPlacements.get(url)
         if (!placement || placement.platform !== canale || !compatibile(idx)) return
-        const key = `${placement.week}:${placement.platform}:${placement.contentKey}`
+        const key = folderPlacementGroupKey(placement)
         const indices = folderGroups.get(key) || []
         indices.push(idx)
         folderGroups.set(key, indices)
@@ -1349,7 +1366,7 @@ Output SOLO JSON array valido:
           : []
         const requestedPlacement = requestedPlacements.find(placement => placement?.platform === canale)
         const requestedKey = requestedPlacement
-          ? `${requestedPlacement.week}:${requestedPlacement.platform}:${requestedPlacement.contentKey}`
+          ? folderPlacementGroupKey(requestedPlacement)
           : ''
         const normalizedContentKey = typeof contentKey === 'string' ? contentKey.trim().toLowerCase() : ''
         // La chiave va confrontata sulla SETTIMANA DEL PLACEMENT, non su
@@ -1359,8 +1376,9 @@ Output SOLO JSON array valido:
         // tutto nel fallback.
         const contentKeyMatch = normalizedContentKey
           ? [...folderGroups.keys()].find(key => {
-            const parts = key.split(':')
-            return parts[1] === canale && parts.slice(2).join(':') === normalizedContentKey
+            const firstIndex = folderGroups.get(key)?.[0]
+            const placement = firstIndex === undefined ? undefined : assetPlacements.get(chunk.images[firstIndex])
+            return placement?.platform === canale && scopedCampaignContentKey(placement) === normalizedContentKey
           })
           : ''
         const availableKeys = [...folderGroups.keys()]
@@ -1518,6 +1536,8 @@ Output SOLO JSON array valido:
       const noveltyReason = duplicate
         ? `Somiglianza creativa ${Math.round(duplicate.score * 100)}% con "${duplicate.hook || 'un contenuto precedente'}"`
         : ''
+      const narrativeIssues = contentQuality === 'high' ? evaluateNarrativeContract(item) : []
+      const narrativeReason = narrativeIssues.map(issue => issue.message).join('; ')
       if (noveltyReason) noveltyReviewCount++
       else acceptedCreativeItems.push(item)
       const existingProductionNotes = pickText(item, ['production_notes', 'note_produzione'])
@@ -1528,8 +1548,9 @@ Output SOLO JSON array valido:
         existingProductionNotes,
         `MONTHLY_DNA: ${creativeDirection.code}`,
         noveltyReason ? `NOVELTY_GATE: REVISE ${noveltyReason}` : 'NOVELTY_GATE: PASS',
+        narrativeReason ? `NARRATIVE_GATE: REVISE ${narrativeReason}` : 'NARRATIVE_GATE: PASS',
       ].filter(Boolean).join('\n')
-      const needsManualReview = isGenerationFallback || Boolean(noveltyReason)
+      const needsManualReview = isGenerationFallback || Boolean(noveltyReason) || Boolean(narrativeReason)
 
       // Un contenuto senza testo non è un contenuto: i modelli piccoli (tipici del
       // tier gratuito) chiudono a volte il JSON con oggetti che hanno data, canale e
@@ -1559,6 +1580,7 @@ Output SOLO JSON array valido:
           if (asset.tag !== audioGroup) return false
           if (!asset.placement) return true
           return Boolean(assignedPlacement
+            && asset.placement.campaignKey === assignedPlacement.campaignKey
             && asset.placement.week === assignedPlacement.week
             && asset.placement.platform === assignedPlacement.platform
             && asset.placement.contentKey === assignedPlacement.contentKey)
@@ -1613,10 +1635,12 @@ Output SOLO JSON array valido:
         needsManualReview ? 'ERRORE_MANUALE' : 'DA_APPROVARE',
         isGenerationFallback
           ? `[GENERATION_FALLBACK] ${String(rawItem._fallback_reason || 'Generazione incompleta')}`
-          : noveltyReason ? `[NOVELTY_GATE] ${noveltyReason}` : null,
+          : noveltyReason ? `[NOVELTY_GATE] ${noveltyReason}`
+            : narrativeReason ? `[NARRATIVE_GATE] ${narrativeReason}` : null,
         isGenerationFallback
           ? `Generazione AI da completare: ${String(rawItem._fallback_reason || 'contenuto mancante')}`
-          : noveltyReason ? `Contenuto da differenziare: ${noveltyReason}` : null,
+          : noveltyReason ? `Contenuto da differenziare: ${noveltyReason}`
+            : narrativeReason ? `Struttura narrativa da completare: ${narrativeReason}` : null,
         itemLinkProdotto,
         itemLinkProdotto,
         typeof visual_preset === 'string' ? visual_preset : null,
@@ -1664,7 +1688,7 @@ Output SOLO JSON array valido:
         jsonbParam(pickJson(item, ['missing_inputs', 'input_mancanti'])),
         jsonbParam(pickJson(item, ['content_checklist', 'checklist'])),
         isCampaignFolderImport
-          ? pickText(item, ['content_key']) || assignedFolderPlacement?.contentKey || null
+          ? pickText(item, ['content_key']) || (assignedFolderPlacement ? scopedCampaignContentKey(assignedFolderPlacement) : null)
           : null,
         isCampaignFolderImport ? assignedFolderPlacement?.week || chunk.week || null : null,
         jsonbParam(campaignSourcePaths.length ? campaignSourcePaths : null),

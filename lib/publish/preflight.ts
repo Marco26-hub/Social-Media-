@@ -40,10 +40,7 @@ export function preflightRow(row: Record<string, unknown>, tz: string = DEFAULT_
   const req = PLATFORM_REQUIREMENTS[platform] || { needsMedia: false, targetRequired: [] as string[] }
 
   if (platform === 'facebook' && formato === 'story') {
-    errors.push({
-      code: 'facebook_story',
-      message: 'Facebook Story non supportata dal contratto Blotato: usa Reel, Video, Post o Carosello',
-    })
+    warnings.push('Facebook Story non è esposta dal contratto Blotato: verrà montata e pubblicata come Reel video')
   }
 
   // Testo
@@ -72,6 +69,9 @@ export function preflightRow(row: Record<string, unknown>, tz: string = DEFAULT_
       ? 'in un video finale durante la sincronizzazione'
       : 'in un video da approvare prima della pubblicazione'
     warnings.push(`MP4 assente: ${media.length} ${media.length === 1 ? 'immagine verrà montata' : 'immagini verranno montate'} ${action}`)
+  }
+  if (formato === 'story' && media.length > 0 && !media.some(u => VIDEO_RE.test(u))) {
+    warnings.push(`Story da immagini: ${media.length} ${media.length === 1 ? 'frame verrà montato' : 'frame verranno montati'} in un MP4 verticale`)
   }
 
   // Data/ora deve essere nel FUTURO nel fuso del cliente (Blotato: passato → 422).

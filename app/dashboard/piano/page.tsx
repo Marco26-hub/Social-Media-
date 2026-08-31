@@ -34,6 +34,7 @@ type PlanAsset = {
   mime?: string
   kind?: 'image' | 'video' | 'audio'
   tag: MediaTag
+  campaignKey?: string
   relativePath?: string
   week?: number | null
   platform?: 'instagram' | 'facebook' | null
@@ -208,6 +209,12 @@ export default function PianoPage() {
   const gen = useGeneration()
   const running = gen.isRunning('piano')
   const runningPkg = gen.isRunning('piano-pacchetto')
+  const maxPlanImages = MAX_PLAN_IMAGES * Math.max(
+    1,
+    clientePkg && clienteQuota
+      ? Math.ceil(clienteQuota / clientePkg.contenutiMese)
+      : 1,
+  )
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -484,7 +491,7 @@ export default function PianoPage() {
     const sequence = a.sequence === null || a.sequence === undefined
       ? 'xx'
       : String(a.sequence).padStart(2, '0')
-    return `w${a.week}-${a.platform}-${a.contentKey}-${sequence}${ext}`
+    return `${a.campaignKey}-w${a.week}-${a.platform}-${a.contentKey}-${sequence}${ext}`
   }
 
   // Due file possono comunque produrre lo stesso nome (entrambi senza sequenza
@@ -501,6 +508,9 @@ export default function PianoPage() {
 
   function campaignFolderReplacesSelection(candidates: FolderCandidate[]): boolean {
     if (!planAssets.length) return false
+    const incomingCampaigns = new Set(candidates.map(candidate => candidate.assignment.campaignKey))
+    const existingCampaigns = new Set(planAssets.map(asset => asset.campaignKey).filter(Boolean))
+    if (existingCampaigns.size && ![...incomingCampaigns].some(key => existingCampaigns.has(key))) return false
     const incomingWeeks = new Set(candidates.map(candidate => candidate.assignment.week).filter((week): week is number => Boolean(week)))
     const existingWeeks = new Set(planAssets.map(asset => asset.week).filter((week): week is number => Boolean(week)))
     return existingWeeks.size === 0
@@ -519,9 +529,9 @@ export default function PianoPage() {
     try {
       // Con il limite già saturo `slice(0, 0)` restituiva un array vuoto e
       // l'upload terminava senza caricare nulla e senza dirlo.
-      const capienza = MAX_PLAN_IMAGES - (options.replaceExisting ? 0 : contaVisivi(planAssets))
+      const capienza = maxPlanImages - (options.replaceExisting ? 0 : contaVisivi(planAssets))
       if (capienza <= 0) {
-        setUploadError(`Limite di ${MAX_PLAN_IMAGES} media per piano già raggiunto: rimuovi qualche file prima di caricarne altri.`)
+        setUploadError(`Limite di ${maxPlanImages} media per piano già raggiunto: rimuovi qualche file prima di caricarne altri.`)
         return
       }
       const selected = entries.slice(0, capienza)
@@ -529,7 +539,7 @@ export default function PianoPage() {
       const uploadedThisRun: PlanAsset[] = []
       if (options.replaceExisting) setPlanAssets([])
       if (selected.length < entries.length) {
-        skippedMessages.push(`${entries.length - selected.length} file oltre il limite di ${MAX_PLAN_IMAGES} media per piano`)
+        skippedMessages.push(`${entries.length - selected.length} file oltre il limite di ${maxPlanImages} media per piano`)
       }
       for (let i = 0; i < selected.length; i += 14) {
         const chunk = selected.slice(i, i + 14)
@@ -560,6 +570,7 @@ export default function PianoPage() {
           kind: a.kind,
           size: a.size,
           tag: uploadedNames.get(a.name)?.assignment?.tag || uploadedNames.get(a.name)?.destination || 'auto',
+          campaignKey: uploadedNames.get(a.name)?.assignment?.campaignKey,
           relativePath: uploadedNames.get(a.name)?.assignment?.relativePath,
           week: uploadedNames.get(a.name)?.assignment?.week,
           platform: uploadedNames.get(a.name)?.assignment?.platform,
@@ -672,7 +683,7 @@ export default function PianoPage() {
       key: fase ? `piano-fase-${fase}` : 'piano',
       label: `Piano editoriale ${periodo}${faseLabel}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, business_category: businessCategory, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, business_category: businessCategory, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, campaign_key: a.campaignKey, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 50000 : 25000,
       timeoutMs: periodo === 'mensile' ? 130000 : 95000,
@@ -735,7 +746,7 @@ export default function PianoPage() {
       key: 'piano-pacchetto',
       label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', business_category: businessCategory, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...(faseArg ? { fase: faseArg } : {}), ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', business_category: businessCategory, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, campaign_key: a.campaignKey, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...(faseArg ? { fase: faseArg } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 55000 : 30000,
       timeoutMs: periodo === 'mensile' ? 140000 : 100000,
@@ -1188,7 +1199,7 @@ export default function PianoPage() {
               <button
                 type="button"
                 onClick={() => folderInputRef.current?.click()}
-                disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
+                disabled={uploadingImages || contaVisivi(planAssets) >= maxPlanImages}
                 className="inline-flex h-9 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-800 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {uploadingImages ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderUp className="h-4 w-4" />}
@@ -1200,7 +1211,7 @@ export default function PianoPage() {
                 multiple
                 accept={`${MEDIA_ACCEPT},${AUDIO_ACCEPT}`}
                 className="hidden"
-                disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
+                disabled={uploadingImages || contaVisivi(planAssets) >= maxPlanImages}
                 onChange={event => {
                   inspectCampaignFolder(event.target.files)
                   event.target.value = ''
@@ -1234,7 +1245,7 @@ export default function PianoPage() {
                         setPlanAssets(ultimoCaricamento.filter(a => {
                           if (a.kind === 'audio') return true
                           visivi++
-                          return visivi <= MAX_PLAN_IMAGES
+                          return visivi <= maxPlanImages
                         }))
                         setUploadError(null)
                       }}
@@ -1357,6 +1368,7 @@ export default function PianoPage() {
                 const key = folderGroupKey(candidate.assignment)
                 const current = map.get(key) || {
                   key,
+                  campaignKey: candidate.assignment.campaignKey,
                   week: candidate.assignment.week || 0,
                   platform: candidate.assignment.platform || 'senza-social',
                   tag: candidate.assignment.tag,
@@ -1368,12 +1380,12 @@ export default function PianoPage() {
                 if (candidate.assignment.sequence !== null) current.sequences.push(candidate.assignment.sequence)
                 map.set(key, current)
                 return map
-              }, new Map<string, { key: string; week: number; platform: string; tag: MediaTag; contentKey: string; count: number; sequences: number[] }>()).values())
+              }, new Map<string, { key: string; campaignKey: string; week: number; platform: string; tag: MediaTag; contentKey: string; count: number; sequences: number[] }>()).values())
                 .sort(compareCampaignFolderGroups)
               const incompleteGroups = groupRows.filter(group => group.count < Math.min(expectedMediaForFolderTag(group.tag), group.tag === 'carosello' ? MEDIA_PER_FORMATO.carousel.min ?? 3 : expectedMediaForFolderTag(group.tag)))
               const underTargetGroups = groupRows.filter(group => group.count < expectedMediaForFolderTag(group.tag))
               const replacesSelection = campaignFolderReplacesSelection(valid)
-              const availableMedia = MAX_PLAN_IMAGES - (replacesSelection ? 0 : contaVisivi(planAssets))
+              const availableMedia = maxPlanImages - (replacesSelection ? 0 : contaVisivi(planAssets))
               const exceedsLimit = valid.filter(c => c.assignment.kind !== 'audio').length > availableMedia
               return (
                 <div className={`mt-3 rounded-lg border p-3 ${blocked.length || exceedsLimit ? 'border-amber-300 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
@@ -1495,7 +1507,7 @@ export default function PianoPage() {
                     multiple
                     accept={destination.accept}
                     className="hidden"
-                    disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
+                    disabled={uploadingImages || contaVisivi(planAssets) >= maxPlanImages}
                     onChange={e => { uploadPlanImages(e.target.files, destination.tag); e.target.value = '' }}
                   />
                 </label>
@@ -1524,7 +1536,7 @@ export default function PianoPage() {
                   multiple
                   accept={AUDIO_ACCEPT}
                   className="hidden"
-                  disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
+                  disabled={uploadingImages || contaVisivi(planAssets) >= maxPlanImages}
                   onChange={e => { uploadPlanImages(e.target.files, destination.tag); e.target.value = '' }}
                 />
               </label>
@@ -1542,12 +1554,12 @@ export default function PianoPage() {
               multiple
               accept={MEDIA_ACCEPT}
               className="hidden"
-              disabled={uploadingImages || contaVisivi(planAssets) >= MAX_PLAN_IMAGES}
+              disabled={uploadingImages || contaVisivi(planAssets) >= maxPlanImages}
               onChange={e => { uploadPlanImages(e.target.files, 'auto'); e.target.value = '' }}
             />
           </label>
 
-          <p className="mt-2 text-right text-[10px] text-gray-500">Totale {contaVisivi(planAssets)}/{MAX_PLAN_IMAGES} media{planAssets.length > contaVisivi(planAssets) ? ` + ${planAssets.length - contaVisivi(planAssets)} audio` : ''}</p>
+          <p className="mt-2 text-right text-[10px] text-gray-500">Totale {contaVisivi(planAssets)}/{maxPlanImages} media{planAssets.length > contaVisivi(planAssets) ? ` + ${planAssets.length - contaVisivi(planAssets)} audio` : ''}</p>
 
           {uploadError && <p className="text-xs text-red-600 mt-2">{uploadError}</p>}
 

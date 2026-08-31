@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic'
 // Nota: safeFilename normalizza gli underscore in trattini, quindi
 // `reel_01` diventa `reel-01`.
 
-const NOME_CARTELLA = /^w(\d+)-(instagram|facebook)-([a-z]+)-(\d+)-([0-9]+|xx)-[0-9a-f]{20}$/
+const NOME_CARTELLA = /^(?:(c[0-9a-f]{8})-)?w(\d+)-(instagram|facebook)-([a-z]+)-(\d+)-([0-9]+|xx)-[0-9a-f]{20}$/
 
 const ESTENSIONI: Record<string, 'image' | 'video' | 'audio'> = {
   '.jpg': 'image', '.jpeg': 'image', '.png': 'image', '.webp': 'image', '.gif': 'image', '.avif': 'image',
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
 
       const base = path.basename(filename, ext)
       const m = base.match(NOME_CARTELLA)
-      const tagGrezzo = m?.[3]
+      const tagGrezzo = m?.[4]
       const tag: MediaTag = tagGrezzo && TAG_VALIDI.has(tagGrezzo) ? tagGrezzo as MediaTag : 'auto'
 
       return {
@@ -63,13 +63,14 @@ export async function GET(request: Request) {
         name: filename,
         kind,
         tag,
+        campaignKey: m?.[1] || undefined,
         size: o.size,
         updatedAt: o.updatedAt,
         // Presenti solo per i file arrivati da una cartella campagna.
-        week: m ? Number(m[1]) : null,
-        platform: m ? m[2] : null,
-        contentKey: m ? `${m[3]}_${m[4]}` : null,
-        sequence: m ? (m[5] === 'xx' ? null : Number(m[5])) : null,
+        week: m ? Number(m[2]) : null,
+        platform: m ? m[3] : null,
+        contentKey: m ? `${m[4]}_${m[5]}` : null,
+        sequence: m ? (m[6] === 'xx' ? null : Number(m[6])) : null,
       }
     }).filter(Boolean)
 

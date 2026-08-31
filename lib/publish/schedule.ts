@@ -138,8 +138,8 @@ export async function scheduleOnBlotato(
   // video. I formati statici con audio sono quindi adattamenti video espliciti:
   // IG Story resta Story video; Post/Carosello e Facebook Story diventano Reel.
   const staticAudioVideo = Boolean(attachedAudioUrl) && ['post', 'pin', 'carousel'].includes(formato.toLowerCase())
-  const facebookAudioStory = Boolean(attachedAudioUrl) && platform === 'facebook' && isStory
-  const effectiveFormato = staticAudioVideo || facebookAudioStory ? 'reel' : formato
+  const facebookStory = platform === 'facebook' && isStory
+  const effectiveFormato = staticAudioVideo || facebookStory ? 'reel' : formato
   const mediaType = formatoToMediaType(effectiveFormato, platform)
   if (mediaType && (platform === 'instagram' || platform === 'facebook')) target.mediaType = mediaType
   const linkProdottoFinale = String(row.link_prodotto_finale || row.link_prodotto || '').trim()
@@ -223,8 +223,8 @@ export async function scheduleOnBlotato(
 
   try {
   const isVideoFormat = ['reel', 'short', 'video'].includes(formato.toLowerCase())
-  const isInstagramAudioStory = platform === 'instagram' && isStory && Boolean(attachedAudioUrl)
-  const needsVideoRender = isVideoFormat || isInstagramAudioStory || staticAudioVideo || facebookAudioStory
+  const instagramStory = platform === 'instagram' && isStory
+  const needsVideoRender = isVideoFormat || instagramStory || staticAudioVideo || facebookStory
   if (needsVideoRender) {
     const uploadedVideo = mediaUrls.find(isVideoUrl)
     const sourceImages = mediaUrls.filter(url => !isVideoUrl(url)).slice(0, 10)

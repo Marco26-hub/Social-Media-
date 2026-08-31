@@ -107,9 +107,9 @@ const PLATFORM_RULES: Record<string, string[]> = {
 
 const FORMAT_RULES: Record<string, string[]> = {
   post: ['Hook forte, caption leggibile, CTA chiara, visual direction e alt text.'],
-  carousel: ['Slide-by-slide: cover, promessa, valore progressivo, prova, recap, CTA finale.'],
-  reel: ['Storyboard con timing, hook 0-2s, overlay, voiceover, transizioni, CTA e caption video.'],
-  story: ['Sequenza di 1-3 frame, copy corto e safe-zone; solo elementi statici supportati dalla pubblicazione Blotato.'],
+  carousel: ['Slide-by-slide: cover, problema, valore/prova progressivi, payoff, recap e CTA finale; minimo 5 slide separate.'],
+  reel: ['Storyboard di 5 scene con timing: hook 0-2s, tensione, prova, payoff, CTA/loop; overlay, voiceover e transizioni raccordate.'],
+  story: ['Sequenza di 3 frame: apertura, sviluppo, risoluzione/CTA; copy corto e safe-zone, solo elementi realmente supportati dalla pubblicazione Blotato.'],
   video: ['Script con scene, voiceover, sottotitoli/overlay, proof e CTA visiva.'],
   short: ['Hook 0-3s, payoff veloce, title SEO, descrizione e tag.'],
   pin: ['Titolo visual, keyword, layout 2:3, CTA salvataggio/traffico e descrizione SEO.'],
@@ -248,8 +248,8 @@ export function buildExtendedOutputSchema(quality: ContentQuality = 'medium'): s
   "template_style": "minimal|editorial|ugc|premium|bold|educational",
   "layout_spec": {"aspect_ratio":"","safe_zone":"","grid":"","visual_hierarchy":[""]},
   "asset_requirements": [{"asset":"foto prodotto","required":true,"note":"formato/uso"}],
-  "scenes": [{"numero":1,"secondi":"0-3","descrizione":"","overlay_testo":"","voiceover":""}],
-  "slides": [{"numero":1,"titolo":"","testo":"","visual":"","obiettivo_slide":""}],
+  "scenes": [{"numero":1,"ruolo":"hook|tensione|prova|payoff|cta_loop","secondi":"0-2","descrizione":"","overlay_testo":"","visual":"","movimento":"","transizione":"","voiceover":""}],
+  "slides": [{"numero":1,"ruolo":"cover|problema|sviluppo|prova|payoff|cta","titolo":"","testo":"","visual":"","obiettivo_slide":"","raccordo_successivo":""}],
   "overlay_text": "testo overlay principale",
   "thumbnail_url": "",
   "voiceover_script": "script parlato se formato video",

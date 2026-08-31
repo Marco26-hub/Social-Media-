@@ -21,7 +21,8 @@ test('reads week, social, format, content and frame from an SWA campaign path', 
   assert.equal(parsed.tag, 'reel')
   assert.equal(parsed.contentKey, 'reel_01')
   assert.equal(parsed.sequence, 3)
-  assert.equal(folderGroupKey(parsed), '1:instagram:reel:reel_01')
+  assert.match(parsed.campaignKey, /^c[0-9a-f]{8}$/)
+  assert.equal(folderGroupKey(parsed), `${parsed.campaignKey}:1:instagram:reel:reel_01`)
 })
 
 test('accepts Italian aliases and Facebook abbreviation', () => {
@@ -76,12 +77,13 @@ test('ignores strategy documents as unsupported media', () => {
 })
 
 test('orders campaign groups by editorial number instead of format name', () => {
+  const campaignKey = 'c00000001'
   const groups = [
-    { week: 2, platform: 'facebook' as const, tag: 'carosello' as const, contentKey: 'carosello_07' },
-    { week: 1, platform: 'facebook' as const, tag: 'reel' as const, contentKey: 'reel_04' },
-    { week: 2, platform: 'facebook' as const, tag: 'post' as const, contentKey: 'post_05' },
-    { week: 1, platform: 'facebook' as const, tag: 'story' as const, contentKey: 'story_03' },
-    { week: 2, platform: 'facebook' as const, tag: 'reel' as const, contentKey: 'reel_06' },
+    { campaignKey, week: 2, platform: 'facebook' as const, tag: 'carosello' as const, contentKey: 'carosello_07' },
+    { campaignKey, week: 1, platform: 'facebook' as const, tag: 'reel' as const, contentKey: 'reel_04' },
+    { campaignKey, week: 2, platform: 'facebook' as const, tag: 'post' as const, contentKey: 'post_05' },
+    { campaignKey, week: 1, platform: 'facebook' as const, tag: 'story' as const, contentKey: 'story_03' },
+    { campaignKey, week: 2, platform: 'facebook' as const, tag: 'reel' as const, contentKey: 'reel_06' },
   ]
 
   groups.sort(compareCampaignFolderGroups)
@@ -93,6 +95,22 @@ test('orders campaign groups by editorial number instead of format name', () => 
     'reel_06',
     'carosello_07',
   ])
+})
+
+test('keeps identical content numbers separate across two campaigns', () => {
+  const first = parseCampaignFolderFile({
+    name: 'REEL_01_SCENA_01.png',
+    relativePath: 'CAMPAGNA_01/Settimana_01/Instagram/REEL_01/REEL_01_SCENA_01.png',
+    type: 'image/png',
+  })
+  const second = parseCampaignFolderFile({
+    name: 'REEL_01_SCENA_01.png',
+    relativePath: 'CAMPAGNA_02/Settimana_01/Instagram/REEL_01/REEL_01_SCENA_01.png',
+    type: 'image/png',
+  })
+
+  assert.notEqual(first.campaignKey, second.campaignKey)
+  assert.notEqual(folderGroupKey(first), folderGroupKey(second))
 })
 
 test('orders carousel slides numerically even when files arrive out of order', () => {

@@ -20,6 +20,14 @@ test('monthly creative DNA is stable inside a month and changes the following mo
   assert.match(augustA.context, /identita del brand restano stabili/i)
 })
 
+test('two campaigns in the same month receive different creative DNA', () => {
+  const base = { clienteId: 'client-1', startISO: '2026-08-01', brandName: 'SWA' }
+  const first = createMonthlyCreativeDirection({ ...base, campaignKey: 'c00000001' })
+  const second = createMonthlyCreativeDirection({ ...base, campaignKey: 'c00000002' })
+
+  assert.notEqual(first.code, second.code)
+})
+
 test('history context remembers creative angles and visual direction, not only hooks', () => {
   const context = buildEditorialHistoryContext([{
     hook: 'La serata cambia quando parte la sfida',
