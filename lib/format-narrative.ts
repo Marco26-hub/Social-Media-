@@ -1,3 +1,5 @@
+import { CAPTION_VIDEO_MAX } from '@/lib/caption-limits'
+
 export type NarrativeIssue = {
   code: string
   message: string
@@ -91,6 +93,15 @@ CONTRATTO NARRATIVO E PRODUTTIVO PER FORMATO — VINCOLANTE:
 - Non basta raggiungere il numero di file: ogni scena o slide deve avere una funzione narrativa distinta e un visual diverso, mantenendo personaggi, luce, palette e direzione artistica coerenti.
 - Proteggi logo, volto, hook e CTA dalle interfacce social. Nei verticali 9:16 lascia libera la fascia superiore dell'app e il lato destro; mantieni i messaggi chiave nella safe area centrale. Vietate sovrapposizioni tra logo, handle, testi e controlli.
 - Non simulare sondaggi, box domande, link, swipe o pulsanti che la pubblicazione automatica non rende realmente interattivi.
+
+LUNGHEZZA DELLA CAPTION — vincolante, la pubblicazione la fa rispettare:
+- Reel, Short, Story e Video: caption di MASSIMO ${CAPTION_VIDEO_MAX} caratteri, chiusa da una frase completa. Oltre quel limite viene accorciata in automatico prima di pubblicare: se scrivi lungo, il pubblico legge un testo che si interrompe. Meglio due frasi che valgono di tre che vengono tagliate.
+- Post, Carosello e Pin: caption distesa, ma i primi 125 caratteri devono reggersi da soli (e' cio che si vede prima di "altro").
+
+HASHTAG — vincolante:
+- Vanno SOLO nel campo hashtag, mai appiccicati in coda alla caption: la pubblicazione li aggiunge da se' e duplicarli produce muri di testo.
+- Massimo 5, separati da spazio, ognuno una parola o una crasi BREVE e leggibile (#bowling, #socialmediamarketing, #PMI).
+- Vietati gli hashtag-frase che inghiottono un concetto (#contenutiprogettatipereessseretrovati): sono illeggibili, nessuno li cerca e un refuso dentro non si vede piu. Niente accenti e niente parole sciolte appese a un hashtag.
 
 REEL / SHORT / VIDEO — 5 scene, 9:16:
 1. HOOK (0-2s): pattern interrupt visivo + promessa specifica comprensibile anche senza audio.

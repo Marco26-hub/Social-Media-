@@ -6,6 +6,7 @@ import { isDemo } from '@/lib/demo'
 import { callAI, extractJSON } from '@/lib/ai'
 import { jsonbParam, pickJson, pickText } from '@/lib/content-quality'
 import { apiError } from '@/lib/api-error'
+import { CAPTION_VIDEO_MAX } from '@/lib/caption-limits'
 import { evaluateNarrativeContract } from '@/lib/format-narrative'
 import { toYmd } from '@/lib/publish/blotato-map'
 import { readGateReason, readGenerationGate } from '@/lib/generation-gates'
@@ -128,7 +129,9 @@ Vincoli immutabili:
 - prodotto: ${JSON.stringify(product || { product_id: row.product_id, nome_prodotto: row.nome_prodotto })}
 - i ${urls.length} media gia assegnati devono guidare copy e struttura
 ${storyRule}
-Per Instagram usa al massimo 5 hashtag totali. Scrivi in italiano corretto, concreto e coerente con il formato.
+Per Instagram usa al massimo 5 hashtag totali. Gli hashtag stanno SOLO nel campo hashtag, mai in coda alla caption, e ognuno e' una parola breve e leggibile: vietati gli hashtag-frase che inghiottono un concetto.
+${['reel','short','video','story'].includes(format) ? `La caption di questo formato non deve superare ${CAPTION_VIDEO_MAX} caratteri e deve chiudersi con una frase completa: oltre quel limite viene accorciata prima di pubblicare.` : ''}
+Scrivi in italiano corretto, concreto e coerente con il formato.
 
 Output JSON:
 {"hook":"","caption":"","hashtag":"","cta":"","tema":"","primary_message":"","scenes":[],"slides":[],"overlay_text":"","alt_text":"","tags":[],"idea_visual":"","voiceover_script":"","music_mood":""}`,
