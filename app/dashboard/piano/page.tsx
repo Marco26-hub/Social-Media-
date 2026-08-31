@@ -803,7 +803,7 @@ export default function PianoPage() {
     // pacchetto Crescita" era identico per il mese intero e per le sole settimane
     // 1-2, e da un errore non si capiva quale dei due run fosse fallito.
     const faseLabelPkg = faseArg ? ` · fase ${faseArg} (sett. ${faseArg === 1 ? '1-2' : '3-4'})` : ''
-    const result = await gen.run<{ count?: number; completed_count?: number; fallback_slots?: number; articolo_blog?: boolean; pacchetto_troncati?: number; images_provided?: number; contenuti_forzati_da_cartella?: number; quota_pacchetto_periodo?: number; media_fuori_periodo?: number }>({
+    const result = await gen.run<{ count?: number; completed_count?: number; fallback_slots?: number; pacchetto_troncati?: number; images_provided?: number; contenuti_forzati_da_cartella?: number; quota_pacchetto_periodo?: number; media_fuori_periodo?: number }>({
       // Key UNICA per tutte le varianti (mese intero, fase 1, fase 2): è ciò che
       // tiene disabilitati i tre pulsanti finché una generazione è in volo. Una
       // key per fase li riaccenderebbe e due run in parallelo raddoppierebbero
@@ -837,7 +837,7 @@ export default function PianoPage() {
       const fuoriPeriodoNote = fuoriPeriodo
         ? ` ${fuoriPeriodo} gruppi della cartella appartengono a settimane non generate ora: li userà l'altra fase.`
         : ''
-      setMsg({ type: 'ok', text: `${forzatiNote}Piano ${periodo} ${clientePkg.nome} generato: ${outcome}${d?.articolo_blog ? ' + articolo blog collegato' : ''}. Il ciclo resta completo nel calendario.${fuoriPeriodoNote}` })
+      setMsg({ type: 'ok', text: `${forzatiNote}Piano ${periodo} ${clientePkg.nome} generato: ${outcome}. Il ciclo resta completo nel calendario.${fuoriPeriodoNote}` })
     } else {
       setMsg({ type: 'err', text: result.error || 'Generazione piano pacchetto fallita' })
     }
@@ -1751,7 +1751,7 @@ export default function PianoPage() {
                 Periodo <span className="font-bold capitalize">{periodo}</span>: {mixPacchettoPeriodo.totale} contenuti
                 {' '}({mixPacchettoPeriodo.postSingoli} post/pin + {mixPacchettoPeriodo.caroselli} caroselli + {mixPacchettoPeriodo.stories} Story + {mixPacchettoPeriodo.reelVideo} Reel/short)
                 {clienteQuota && clienteQuota !== clientePkg.contenutiMese ? ' · quota personalizzata del cliente' : ''}.
-                {clientePkg.articoloBlog && periodo === 'mensile' ? ' Include l’articolo blog collegato.' : ''}
+                {clientePkg.articoloBlog && periodo === 'mensile' ? ' L’articolo SEO+GEO del pacchetto si scrive nella sezione Blog.' : ''}
               </p>
             )}
             {verifica && (

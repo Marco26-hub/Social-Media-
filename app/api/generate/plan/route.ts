@@ -1855,27 +1855,17 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
       }
     }
 
-    // Pacchetto Crescita: l'articolo SEO+GEO non si genera qui (resta nella sezione
-    // Blog), ma inseriamo nel calendario una VOCE DI COLLEGAMENTO così è chiaro che
-    // fa parte del piano del mese e con il link per generarlo/gestirlo nel Blog.
+    // NIENTE voce segnaposto per l'articolo blog nel calendario.
+    //
+    // Il pacchetto Crescita include un articolo SEO+GEO, ma quell'articolo si
+    // scrive e si gestisce nella sezione Blog: la riga inserita qui non era un
+    // contenuto, era un cartello che diceva "vai nella sezione Blog". Occupava
+    // uno slot, chiedeva un'approvazione che non approva nulla, si ripresentava
+    // a ogni generazione del piano (e quindi si duplicava a ogni fase) e
+    // sporcava il calendario social con una riga che non si pubblica.
+    // L'articolo resta incluso nel pacchetto: lo dice la scheda del piano, e la
+    // sezione Blog e il posto dove esiste davvero.
     const contenutiSocialInseriti = inseriti.length
-    let articoloBlogInserito = false
-    if (pkg?.articoloBlog && periodoEff === 'mensile') {
-      try {
-        // Anche la voce blog esce dal governo orari: mattina di un feriale del
-        // primo blocco (il blog nel weekend perde la giornata di indicizzazione).
-        const giornoArticolo = prossimoGiornoValido('blog', chunks[0].start, giorniDelChunk(chunks[0]))
-        const oraArticolo = pickSlot({ canale: 'blog', formato: 'articolo', obiettivo: 'educazione' }, giornoArticolo, slotUsati)
-        await insertCalendario(
-          ['cliente_id', 'id_contenuto', 'data_pubblicazione', 'ora_pubblicazione', 'canale', 'formato', 'obiettivo', 'nome_prodotto', 'tema', 'hook', 'caption', 'cta', 'status', 'link_prodotto', 'link_prodotto_finale', 'quality_level'],
-          [effectiveClienteId, `C${Date.now().toString(36).toUpperCase()}_ART`, giornoArticolo, oraArticolo, 'blog', 'articolo', 'educazione', `Articolo SEO+GEO — pacchetto ${pkg.nome}`, 'Articolo SEO+GEO del mese', 'Approfondimento SEO/GEO incluso nel pacchetto', 'Articolo SEO+GEO incluso nel pacchetto: generalo e gestiscilo nella sezione Blog.', 'Vai alla sezione Blog', 'DA_APPROVARE', '/dashboard/blog', '/dashboard/blog', pkg.quality],
-        )
-        inseriti.push({ id_contenuto: 'ARTICOLO_BLOG', canale: 'blog', data_pubblicazione: giornoArticolo })
-        articoloBlogInserito = true
-      } catch (error) {
-        console.warn('[plan] voce articolo blog non inserita:', error instanceof Error ? error.message : error)
-      }
-    }
 
     return NextResponse.json({
       ok: true,
@@ -1886,7 +1876,7 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
       novelty_review_count: noveltyReviewCount,
       review_slots: fallbackInseriti + noveltyReviewCount,
       partial: fallbackInseriti > 0 || noveltyReviewCount > 0,
-      ...(pkg && { pacchetto: pkg.id, pacchetto_nome: pkg.nome, pacchetto_contenuti: packagePlan?.totale, periodo: periodoEff, articolo_blog: articoloBlogInserito }),
+      ...(pkg && { pacchetto: pkg.id, pacchetto_nome: pkg.nome, pacchetto_contenuti: packagePlan?.totale, periodo: periodoEff }),
       ...(pkgTruncated && { pacchetto_troncati: pkgTruncated }),
       requested_range: packagePlan ? String(packagePlan.totale) : periodoEff === 'mensile' ? '25-35' : '7-10',
       chunks_total: chunks.length,
