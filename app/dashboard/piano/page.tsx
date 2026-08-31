@@ -47,7 +47,35 @@ type PlanAsset = {
 }
 type FolderCandidate = { file: File; assignment: CampaignFolderAsset }
 type FolderPreview = { root: string; candidates: FolderCandidate[]; ignored: number }
-type StorageSummary = { totalBytes: number; totalMb: number; limitMb: number | null }
+type StorageSummary = {
+  totalBytes: number
+  totalMb: number
+  limitMb: number | null
+  // Byte occupati da oggetti senza estensione media riconosciuta: pesano sulla
+  // capienza ma non compaiono in nessun elenco della pagina.
+  altriFile: number
+  mbAltri: number
+  esempiAltri: string[]
+}
+type StorageListResponse = {
+  assets?: PlanAsset[]
+  totale_bytes?: number
+  mb_totali?: number
+  limite_mb?: number | null
+  altri_file?: number
+  mb_altri?: number
+  esempi_altri?: string[]
+}
+function storageSummaryFrom(dati: StorageListResponse): StorageSummary {
+  return {
+    totalBytes: Number(dati.totale_bytes || 0),
+    totalMb: Number(dati.mb_totali || 0),
+    limitMb: Number.isFinite(Number(dati.limite_mb)) ? Number(dati.limite_mb) : null,
+    altriFile: Number(dati.altri_file || 0),
+    mbAltri: Number(dati.mb_altri || 0),
+    esempiAltri: Array.isArray(dati.esempi_altri) ? dati.esempi_altri : [],
+  }
+}
 // Tetto sui media VISIVI (foto e MP4). Le tracce audio non lo consumano: sono
 // una per contenuto, accompagnano un media invece di sostituirlo, e facendole
 // pesare sul limite una cartella mensile completa arrivava a sfiorarlo.
@@ -55,6 +83,12 @@ type StorageSummary = { totalBytes: number; totalMb: number; limitMb: number | n
 // (10 Reel, 6 caroselli, 4 Story e 4 post per piattaforma). Il margine
 // consente anche piccole varianti senza includere le tracce audio nel cap.
 const MAX_PLAN_IMAGES = 240
+// Una quota cliente fuori scala non deve trasformare il tetto in "nessun tetto":
+// oltre questa soglia il prompt di generazione diventa ingestibile e lo storage
+// del cliente (1 GB) finisce comunque prima.
+const MAX_PLAN_IMAGES_HARD = 960
+// Deve restare allineato al tetto di `proteggi_url` in app/api/assets/cleanup.
+const MAX_PROTECTED_URLS = 1000
 function contaVisivi(assets: { kind?: 'image' | 'video' | 'audio' }[]): number {
   return assets.filter(a => a.kind !== 'audio').length
 }
@@ -209,11 +243,14 @@ export default function PianoPage() {
   const gen = useGeneration()
   const running = gen.isRunning('piano')
   const runningPkg = gen.isRunning('piano-pacchetto')
-  const maxPlanImages = MAX_PLAN_IMAGES * Math.max(
-    1,
-    clientePkg && clienteQuota
-      ? Math.ceil(clienteQuota / clientePkg.contenutiMese)
-      : 1,
+  const maxPlanImages = Math.min(
+    MAX_PLAN_IMAGES_HARD,
+    MAX_PLAN_IMAGES * Math.max(
+      1,
+      clientePkg && clienteQuota
+        ? Math.ceil(clienteQuota / clientePkg.contenutiMese)
+        : 1,
+    ),
   )
 
   useEffect(() => {
@@ -266,14 +303,10 @@ export default function PianoPage() {
       try {
         const res = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
         if (!res.ok) return
-        const data = await res.json() as { assets?: PlanAsset[]; totale_bytes?: number; mb_totali?: number; limite_mb?: number | null }
+        const data = await res.json() as StorageListResponse
         if (alive) {
           setAssetRecuperabili(Array.isArray(data.assets) ? data.assets : [])
-          setStorageSummary({
-            totalBytes: Number(data.totale_bytes || 0),
-            totalMb: Number(data.mb_totali || 0),
-            limitMb: Number.isFinite(Number(data.limite_mb)) ? Number(data.limite_mb) : null,
-          })
+          setStorageSummary(storageSummaryFrom(data))
         }
       } catch { /* il recupero e un extra: se fallisce si carica a mano */ }
       finally { if (alive) setRecuperoFatto(true) }
@@ -306,27 +339,58 @@ export default function PianoPage() {
   // Pulizia dei media orfani: prima SIMULA e mostra quanto libererebbe, poi
   // chiede conferma. La cancellazione dallo storage e irreversibile e Supabase
   // non permette di rifarla via SQL, quindi non deve mai partire con un click solo.
-  async function pulisciOrfani() {
+  //
+  // Due livelli, perche cancellare i contenuti dal calendario NON libera lo
+  // storage: i file restano sotto uploads/<cliente>/ e, se appartengono
+  // all'ultimo caricamento, nemmeno la pulizia normale li tocca. Il secondo
+  // livello e l'unico modo dall'interfaccia per recuperare quello spazio.
+  async function pulisciOrfani(opts: { includiUltimoCaricamento?: boolean } = {}) {
     if (!clienteId) return
+    const includiUltimo = opts.includiUltimoCaricamento === true
+    // Gli URL protetti hanno un tetto lato server: superarlo significherebbe
+    // cancellare media che l'utente ha ancora selezionati nel piano.
+    const daProteggere = includiUltimo ? planAssets.map(asset => asset.url).filter(Boolean) : []
+    if (daProteggere.length > MAX_PROTECTED_URLS) {
+      setPulizia({
+        inCorso: false,
+        errore: true,
+        messaggio: `Troppi media selezionati (${daProteggere.length}) per proteggerli tutti: svuota la selezione del piano prima di liberare lo spazio.`,
+      })
+      return
+    }
     setPulizia({ inCorso: true, messaggio: 'Calcolo quanto si può liberare...' })
     try {
+      const richiesta = {
+        cliente_id: clienteId,
+        ...(includiUltimo ? { preserva_ultimo_caricamento: false, proteggi_url: daProteggere } : {}),
+      }
       const simula = await fetch('/api/assets/cleanup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, dry_run: true }),
+        body: JSON.stringify({ ...richiesta, dry_run: true }),
       })
       if (!simula.ok) throw new Error(await readApiError(simula, 'Simulazione fallita'))
       const s = await simula.json() as { orfani: number; mb_liberati: number; ultimoCaricamento: number; usati: number }
 
       if (!s.orfani) {
-        setPulizia({ inCorso: false, messaggio: 'Nessun media da eliminare: tutto è usato o appartiene all’ultimo caricamento.' })
+        setPulizia({
+          inCorso: false,
+          messaggio: includiUltimo
+            ? 'Nessun media da eliminare: tutto è usato dai contenuti o protetto dalla selezione corrente del piano.'
+            : 'Nessun media da eliminare: tutto è usato o appartiene all’ultimo caricamento.',
+        })
         return
       }
 
       const conferma = window.confirm(
-        `Eliminare ${s.orfani} media mai usati e liberare ${s.mb_liberati} MB?\n\n`
-        + `Restano intatti: ${s.usati} media usati dai contenuti e ${s.ultimoCaricamento} dell'ultimo caricamento.\n\n`
-        + 'L’operazione è irreversibile.',
+        includiUltimo
+          ? `Eliminare ${s.orfani} media e liberare ${s.mb_liberati} MB?\n\n`
+            + `Include ANCHE l'ultimo caricamento. Restano intatti solo: ${s.usati} media usati dai contenuti`
+            + `${daProteggere.length ? ` e ${daProteggere.length} selezionati ora nel piano` : ''}.\n\n`
+            + 'Per rigenerare un piano dovrai ricaricare la cartella campagna. L’operazione è irreversibile.'
+          : `Eliminare ${s.orfani} media mai usati e liberare ${s.mb_liberati} MB?\n\n`
+            + `Restano intatti: ${s.usati} media usati dai contenuti e ${s.ultimoCaricamento} dell'ultimo caricamento.\n\n`
+            + 'L’operazione è irreversibile.',
       )
       if (!conferma) {
         setPulizia({ inCorso: false, messaggio: `Annullato. ${s.orfani} media (${s.mb_liberati} MB) sono ancora nello storage.` })
@@ -337,7 +401,7 @@ export default function PianoPage() {
       const res = await fetch('/api/assets/cleanup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cliente_id: clienteId, dry_run: false }),
+        body: JSON.stringify({ ...richiesta, dry_run: false }),
       })
       if (!res.ok) throw new Error(await readApiError(res, 'Pulizia fallita'))
       const d = await res.json() as { eliminati: number; mb_liberati: number }
@@ -345,13 +409,9 @@ export default function PianoPage() {
       // L'elenco recuperabile non e piu valido: si ricarica.
       const aggiornato = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
       if (aggiornato.ok) {
-        const dati = await aggiornato.json() as { assets?: PlanAsset[]; totale_bytes?: number; mb_totali?: number; limite_mb?: number | null }
+        const dati = await aggiornato.json() as StorageListResponse
         setAssetRecuperabili(Array.isArray(dati.assets) ? dati.assets : [])
-        setStorageSummary({
-          totalBytes: Number(dati.totale_bytes || 0),
-          totalMb: Number(dati.mb_totali || 0),
-          limitMb: Number.isFinite(Number(dati.limite_mb)) ? Number(dati.limite_mb) : null,
-        })
+        setStorageSummary(storageSummaryFrom(dati))
       }
     } catch (e) {
       setPulizia({ inCorso: false, errore: true, messaggio: (e as Error).message })
@@ -398,13 +458,9 @@ export default function PianoPage() {
       })
       const aggiornato = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
       if (aggiornato.ok) {
-        const dati = await aggiornato.json() as { assets?: PlanAsset[]; totale_bytes?: number; mb_totali?: number; limite_mb?: number | null }
+        const dati = await aggiornato.json() as StorageListResponse
         setAssetRecuperabili(Array.isArray(dati.assets) ? dati.assets : [])
-        setStorageSummary({
-          totalBytes: Number(dati.totale_bytes || 0),
-          totalMb: Number(dati.mb_totali || 0),
-          limitMb: Number.isFinite(Number(dati.limite_mb)) ? Number(dati.limite_mb) : null,
-        })
+        setStorageSummary(storageSummaryFrom(dati))
       }
     } catch (error) {
       setCalendarioPulizia({ inCorso: false, messaggio: (error as Error).message, candidati: calendarioPulizia?.candidati || 0 })
@@ -607,13 +663,9 @@ export default function PianoPage() {
       // altrimenti il limite mostrato resta quello della sessione precedente.
       const aggiornato = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
       if (aggiornato.ok) {
-        const dati = await aggiornato.json() as { assets?: PlanAsset[]; totale_bytes?: number; mb_totali?: number; limite_mb?: number | null }
+        const dati = await aggiornato.json() as StorageListResponse
         setAssetRecuperabili(Array.isArray(dati.assets) ? dati.assets : [])
-        setStorageSummary({
-          totalBytes: Number(dati.totale_bytes || 0),
-          totalMb: Number(dati.mb_totali || 0),
-          limitMb: Number.isFinite(Number(dati.limite_mb)) ? Number(dati.limite_mb) : null,
-        })
+        setStorageSummary(storageSummaryFrom(dati))
       }
       if (skippedMessages.length) setUploadError(`Alcuni file non sono stati caricati: ${skippedMessages.join(' · ')}`)
     } catch (e) {
@@ -1283,7 +1335,7 @@ export default function PianoPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={pulisciOrfani}
+                    onClick={() => pulisciOrfani()}
                     disabled={Boolean(pulizia?.inCorso)}
                     className="inline-flex h-9 items-center gap-1.5 rounded-md border border-amber-400 bg-white px-3 text-xs font-semibold text-amber-900 shadow-sm hover:bg-amber-100 disabled:opacity-50"
                   >
@@ -1316,8 +1368,35 @@ export default function PianoPage() {
                   </div>
                 )}
                 <p className="mt-1 text-[10px] text-gray-600">
-                  Il conteggio include immagini, MP4 e audio realmente presenti nello storage. I contenuti pubblicati o già schedulati non vengono rimossi dalla pulizia.
+                  Il conteggio include ogni file presente nello storage del cliente, non solo i media dell’elenco.
+                  Eliminare i contenuti dal calendario non libera spazio: i file restano caricati.
                 </p>
+                {storageSummary.altriFile > 0 && (
+                  <p className="mt-1 text-[10px] font-medium text-amber-800">
+                    {storageSummary.altriFile} file di tipo non riconosciuto occupano {storageSummary.mbAltri} MB e non compaiono in nessun elenco
+                    {storageSummary.esempiAltri.length ? ` (es. ${storageSummary.esempiAltri.join(', ')})` : ''}.
+                  </p>
+                )}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => pulisciOrfani({ includiUltimoCaricamento: true })}
+                    disabled={Boolean(pulizia?.inCorso)}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-300 bg-white px-3 text-[11px] font-semibold text-red-800 shadow-sm hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {pulizia?.inCorso ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                    Libera tutto lo spazio non usato
+                  </button>
+                  <span className="text-[10px] text-gray-600">
+                    Elimina anche l’ultimo caricamento. Restano solo i media usati dai contenuti
+                    {planAssets.length ? ` e i ${planAssets.length} selezionati ora nel piano` : ''}.
+                  </span>
+                </div>
+                {pulizia?.messaggio && caricamentiVecchi === 0 && (
+                  <p className={`mt-2 text-[11px] font-medium ${pulizia.errore ? 'text-red-700' : 'text-gray-800'}`}>
+                    {pulizia.messaggio}
+                  </p>
+                )}
               </div>
             )}
 

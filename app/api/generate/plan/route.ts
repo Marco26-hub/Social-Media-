@@ -568,11 +568,20 @@ export async function POST(request: Request) {
     // pubblicati e rimossi: la memoria creativa e l'unione dei due.
     const historyRecords = [...(recentRows as CreativeRecord[]), ...(archivedRows as CreativeRecord[])]
     const historyContext = buildEditorialHistoryContext(historyRecords)
+    // Il DNA mensile e uno solo per generazione: con piu campagne caricate
+    // insieme va scelto in modo deterministico, altrimenti dipenderebbe
+    // dall'ordine di inserimento nella mappa e cambierebbe fra due run identici.
+    const campaignKeysInPlan = [...new Set(
+      [...assetPlacements.values()].map(placement => placement.campaignKey).filter(Boolean),
+    )].sort()
+    if (campaignKeysInPlan.length > 1) {
+      console.warn(`[plan] ${campaignKeysInPlan.length} campagne nello stesso caricamento: DNA creativo ancorato a ${campaignKeysInPlan[0]}`)
+    }
     const creativeDirection = createMonthlyCreativeDirection({
       clienteId: effectiveClienteId,
       startISO: fmtDate(new Date()),
       brandName: typeof brand?.brand_name === 'string' ? brand.brand_name : '',
-      campaignKey: assetPlacements.values().next().value?.campaignKey || undefined,
+      campaignKey: campaignKeysInPlan[0] || undefined,
     })
 
     const qualityPrompt = `

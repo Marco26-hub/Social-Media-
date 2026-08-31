@@ -11,6 +11,8 @@ export const dynamic = 'force-dynamic'
 // Puo dover cancellare centinaia di oggetti, uno alla volta.
 export const maxDuration = 300
 
+const MAX_PROTECTED_URLS = 1000
+
 // Elimina i media caricati e mai usati da nessun contenuto.
 //
 // SICUREZZA DEL DATO:
@@ -38,12 +40,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Storage non configurato' }, { status: 503 })
     }
 
+    // Il tetto evita payload enormi, ma la lista non va MAI troncata in
+    // silenzio: gli URL scartati verrebbero cancellati proprio mentre il
+    // chiamante chiedeva di proteggerli.
+    const proteggiUrl = Array.isArray(body.proteggi_url) ? body.proteggi_url : []
+    if (proteggiUrl.length > MAX_PROTECTED_URLS) {
+      return NextResponse.json(
+        { error: `Troppi media da proteggere (${proteggiUrl.length}, massimo ${MAX_PROTECTED_URLS}): riduci la selezione prima della pulizia` },
+        { status: 400 },
+      )
+    }
+
     const dryRun = body.dry_run !== false
     const esito = await pulisciMediaOrfani({
       clienteId,
       dryRun,
       preservaUltimoCaricamento: body.preserva_ultimo_caricamento !== false,
-      proteggiUrl: Array.isArray(body.proteggi_url) ? body.proteggi_url.slice(0, 300) : [],
+      proteggiUrl,
     })
 
     return NextResponse.json({

@@ -110,8 +110,11 @@ const FORMAT_RULES: Record<string, string[]> = {
   carousel: ['Slide-by-slide: cover, problema, valore/prova progressivi, payoff, recap e CTA finale; minimo 5 slide separate.'],
   reel: ['Storyboard di 5 scene con timing: hook 0-2s, tensione, prova, payoff, CTA/loop; overlay, voiceover e transizioni raccordate.'],
   story: ['Sequenza di 3 frame: apertura, sviluppo, risoluzione/CTA; copy corto e safe-zone, solo elementi realmente supportati dalla pubblicazione Blotato.'],
-  video: ['Script con scene, voiceover, sottotitoli/overlay, proof e CTA visiva.'],
-  short: ['Hook 0-3s, payoff veloce, title SEO, descrizione e tag.'],
+  // Short e video seguono lo stesso contratto narrativo del Reel (lib/format-narrative.ts
+  // li tratta come sequenze video): se qui chiedessimo una struttura diversa, il
+  // modello produrrebbe meno scene di quante il gate ne pretende.
+  video: ['Storyboard di 5 scene: hook, tensione, prova, payoff, CTA/loop; voiceover, sottotitoli/overlay, proof e CTA visiva.'],
+  short: ['Storyboard di 5 scene: hook 0-2s, tensione, prova, payoff, CTA/loop; title SEO, descrizione e tag.'],
   pin: ['Titolo visual, keyword, layout 2:3, CTA salvataggio/traffico e descrizione SEO.'],
   articolo: ['Brief SEO/GEO, outline, FAQ, link interni, E-E-A-T e asset editoriali.'],
 }

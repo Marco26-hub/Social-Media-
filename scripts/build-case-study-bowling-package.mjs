@@ -214,8 +214,11 @@ async function writeEditorialPlanArtifacts() {
   await writeText(path.join(outputRoot, '00_Strategia', 'PIANO-EDITORIALE.md'), `# Piano editoriale - Caso Studio Bowling\n\nObiettivo commerciale: mostrare ai gestori di bowling come SWA trasforma materiale reale in una comunicazione pianificata, riconoscibile e misurabile.\n\n| # | Giorno | Fase | Formato | Funzione | Ruolo visuale |\n|---:|---:|---|---|---|---|\n${editorialPlanTable}\n\n## Regia del mese\n\n1. ATTENZIONE: il gestore riconosce il costo della comunicazione improvvisata.\n2. FIDUCIA: SWA dimostra come estrae angoli, ordina asset e governa il calendario.\n3. SCELTA: il servizio diventa concreto, confrontabile e risolve le obiezioni.\n4. AZIONE: checklist, percorso di ingresso e richiesta qualificata con keyword BOWLING.\n`);
   await writeText(path.join(outputRoot, '00_Strategia', 'PIANO-EDITORIALE.json'), `${JSON.stringify(editorialPlan, null, 2)}\n`);
 }
-await writeEditorialPlanArtifacts();
+// Nel build completo il piano si scrive DOPO il `rm -rf outputRoot`: scriverlo
+// qui significherebbe cancellarlo subito dopo, e un errore fra le due fasi
+// lascerebbe la cartella strategia vuota.
 if (process.argv.includes('--plan-only')) {
+  await writeEditorialPlanArtifacts();
   console.log(`Updated editorial plan at ${path.join(outputRoot, '00_Strategia')}`);
   process.exit(0);
 }

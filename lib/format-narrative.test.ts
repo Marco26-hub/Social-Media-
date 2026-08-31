@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import { test } from 'playwright/test'
+
 import { evaluateNarrativeContract, FORMAT_NARRATIVE_CONTEXT } from './format-narrative'
 
 test('narrative context defines an opening, payoff and close for every sequenced format', () => {
@@ -30,4 +31,51 @@ test('rejects an incomplete or duplicated Story sequence', () => {
   })
   assert.ok(issues.some(issue => issue.code === 'story_frame_count'))
   assert.ok(issues.some(issue => issue.code === 'story_frame_duplicate'))
+})
+
+test('a Post written with Italian field names is not sent back for manual review', () => {
+  const issues = evaluateNarrativeContract({
+    formato: 'post',
+    hook: 'Il tuo bowling ha gia le storie',
+    didascalia: 'Contesto, prova e takeaway del contenuto.',
+    call_to_action: 'Scrivi BOWLING',
+    messaggio_chiave: 'La regia editoriale viene prima del file',
+  })
+  assert.deepEqual(issues, [])
+})
+
+test('Short and Video follow the same five-scene contract as a Reel', () => {
+  for (const formato of ['short', 'video']) {
+    const completo = evaluateNarrativeContract({
+      formato,
+      hook: 'Una serata, cinque angoli',
+      cta: 'Salva il metodo',
+      scenes: ['Hook', 'Tensione', 'Prova', 'Payoff', 'CTA'],
+    })
+    assert.deepEqual(completo, [], `${formato} completo`)
+
+    const corto = evaluateNarrativeContract({
+      formato,
+      hook: 'Una serata, cinque angoli',
+      cta: 'Salva il metodo',
+      scenes: ['Hook', 'Payoff'],
+    })
+    assert.ok(corto.some(issue => issue.code === 'reel_scene_count'), `${formato} incompleto`)
+  }
+})
+
+test('a carousel serialised as a JSON string is read, not rejected', () => {
+  const issues = evaluateNarrativeContract({
+    formato: 'carosello',
+    hook: 'Prima di pubblicare',
+    cta: 'Salva la checklist',
+    slides: JSON.stringify([
+      { ruolo: 'cover', titolo: 'Cover' },
+      { ruolo: 'problema', titolo: 'Problema' },
+      { ruolo: 'sviluppo', titolo: 'Sviluppo' },
+      { ruolo: 'payoff', titolo: 'Payoff' },
+      { ruolo: 'cta', titolo: 'CTA' },
+    ]),
+  })
+  assert.deepEqual(issues, [])
 })

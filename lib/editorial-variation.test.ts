@@ -28,6 +28,17 @@ test('two campaigns in the same month receive different creative DNA', () => {
   assert.notEqual(first.code, second.code)
 })
 
+test('a plan without a campaign folder keeps its historical creative DNA', () => {
+  const base = { clienteId: 'client-1', startISO: '2026-08-01', brandName: 'SWA' }
+  const senzaCampagna = createMonthlyCreativeDirection(base)
+
+  // Nessuna campagna non deve equivalere a una campagna chiamata "campaign-default":
+  // sarebbe un seme diverso da quello storico e sposterebbe il DNA di ogni
+  // cliente che non importa cartelle.
+  assert.equal(senzaCampagna.code, createMonthlyCreativeDirection({ ...base, campaignKey: '' }).code)
+  assert.notEqual(senzaCampagna.code, createMonthlyCreativeDirection({ ...base, campaignKey: 'campaign-default' }).code)
+})
+
 test('history context remembers creative angles and visual direction, not only hooks', () => {
   const context = buildEditorialHistoryContext([{
     hook: 'La serata cambia quando parte la sfida',

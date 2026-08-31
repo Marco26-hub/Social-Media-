@@ -45,6 +45,26 @@ function countDistinctSequenceItems(items: unknown[]): number {
   return new Set(items.map(sequenceText).map(text => text.toLowerCase()).filter(Boolean)).size
 }
 
+// Il modello risponde in italiano e alterna gli alias: la route li accetta gia
+// con pickText/pickJson. Se il gate leggesse solo la chiave inglese, un piano
+// scritto con "messaggio_chiave" finirebbe tutto in ERRORE_MANUALE per un
+// campo che in realta c'e.
+function firstText(item: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = item[key]
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return ''
+}
+
+function firstSequence(item: Record<string, unknown>, keys: string[]): unknown[] {
+  for (const key of keys) {
+    const items = sequence(item[key])
+    if (items.length) return items
+  }
+  return []
+}
+
 export const FORMAT_NARRATIVE_CONTEXT = `
 CONTRATTO NARRATIVO E PRODUTTIVO PER FORMATO — VINCOLANTE:
 - Ogni contenuto ha una sola promessa, un solo pubblico e una sola micro-azione. Hook, sviluppo, prova, payoff e CTA devono parlare dello stesso problema.
@@ -80,36 +100,38 @@ POST STATICO — 4:5:
 - Il post deve avere hook, primary_message, proof_points o esempio verificabile, caption e CTA coerenti.`
 
 export function evaluateNarrativeContract(item: Record<string, unknown>): NarrativeIssue[] {
-  const format = normalizedFormat(item.formato)
-  const hook = String(item.hook || '').trim()
-  const caption = String(item.caption || '').trim()
-  const cta = String(item.cta || '').trim()
+  const format = normalizedFormat(item.formato ?? item.format)
+  const hook = firstText(item, ['hook', 'gancio'])
+  const caption = firstText(item, ['caption', 'didascalia'])
+  const cta = firstText(item, ['cta', 'call_to_action'])
   const issues: NarrativeIssue[] = []
 
   if (!hook) issues.push({ code: 'hook_missing', message: 'Hook narrativo mancante' })
   if (!cta) issues.push({ code: 'cta_missing', message: 'CTA finale mancante' })
 
   if (format === 'reel') {
-    const scenes = sequence(item.scenes ?? item.scene ?? item.frames)
+    const scenes = firstSequence(item, ['scenes', 'scene', 'frames'])
     if (scenes.length !== 5) issues.push({ code: 'reel_scene_count', message: `Reel: servono esattamente 5 scene narrative (attuali: ${scenes.length})` })
     if (scenes.length && countDistinctSequenceItems(scenes) !== scenes.length) {
       issues.push({ code: 'reel_scene_duplicate', message: 'Reel: scene duplicate o prive di una funzione distinta' })
     }
   } else if (format === 'carousel') {
-    const slides = sequence(item.slides ?? item.immagini)
+    const slides = firstSequence(item, ['slides', 'immagini'])
     if (slides.length < 5 || slides.length > 10) issues.push({ code: 'carousel_slide_count', message: `Carosello: servono 5-10 slide narrative (attuali: ${slides.length})` })
     if (slides.length && countDistinctSequenceItems(slides) !== slides.length) {
       issues.push({ code: 'carousel_slide_duplicate', message: 'Carosello: slide duplicate o senza progressione distinta' })
     }
   } else if (format === 'story') {
-    const frames = sequence(item.scenes ?? item.frames)
+    const frames = firstSequence(item, ['scenes', 'frames', 'scene'])
     if (frames.length !== 3) issues.push({ code: 'story_frame_count', message: `Story: servono esattamente 3 frame narrativi (attuali: ${frames.length})` })
     if (frames.length && countDistinctSequenceItems(frames) !== frames.length) {
       issues.push({ code: 'story_frame_duplicate', message: 'Story: frame duplicati o senza avanzamento narrativo' })
     }
   } else if (format === 'post') {
     if (!caption) issues.push({ code: 'post_caption_missing', message: 'Post: caption narrativa mancante' })
-    if (!String(item.primary_message || '').trim()) issues.push({ code: 'post_message_missing', message: 'Post: messaggio principale non definito' })
+    if (!firstText(item, ['primary_message', 'messaggio_chiave'])) {
+      issues.push({ code: 'post_message_missing', message: 'Post: messaggio principale non definito' })
+    }
   }
 
   return issues

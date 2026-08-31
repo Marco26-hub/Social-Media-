@@ -120,7 +120,12 @@ export function createMonthlyCreativeDirection(args: {
   campaignKey?: string
 }): MonthlyCreativeDirection {
   const { key, ordinal } = parseMonth(args.startISO)
-  const brandSeed = stableHash(`${args.clienteId}:${args.brandName || 'brand'}:${args.campaignKey || 'campaign-default'}`)
+  // Il segmento campagna entra nel seme SOLO quando esiste davvero. Un valore
+  // di default ("campaign-default") cambierebbe l'hash di ogni cliente senza
+  // cartella campagna, spostandone il DNA creativo da un mese all'altro proprio
+  // mentre promettiamo che l'identita del brand resta stabile.
+  const campaignSeed = String(args.campaignKey || '').trim()
+  const brandSeed = stableHash(`${args.clienteId}:${args.brandName || 'brand'}${campaignSeed ? `:${campaignSeed}` : ''}`)
   const narrativeIndex = rotatingIndex(NARRATIVE_SYSTEMS.length, brandSeed, ordinal, 1, 'narrative')
   const visualIndex = rotatingIndex(VISUAL_LANGUAGES.length, brandSeed, ordinal, 2, 'visual')
   const motionIndex = rotatingIndex(MOTION_LANGUAGES.length, brandSeed, ordinal, 2, 'motion')

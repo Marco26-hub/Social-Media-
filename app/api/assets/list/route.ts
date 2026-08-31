@@ -47,6 +47,13 @@ export async function GET(request: Request) {
     const oggetti = await listFromStorage(`uploads/${clienteId}/`)
     const totaleBytes = oggetti.reduce((total, object) => total + (object.size || 0), 0)
 
+    // La barra della capienza somma TUTTI gli oggetti sotto il prefisso, l'elenco
+    // qui sotto solo quelli con un'estensione riconosciuta. Senza dichiararlo,
+    // un .mov o un .heic occupa spazio senza comparire da nessuna parte e la
+    // pagina sembra sbagliare i conti.
+    const nonRiconosciuti = oggetti.filter(o => !ESTENSIONI[path.extname(o.key).toLowerCase()])
+    const bytesNonRiconosciuti = nonRiconosciuti.reduce((total, object) => total + (object.size || 0), 0)
+
     const assets = oggetti.map(o => {
       const filename = o.key.split('/').pop() || ''
       const ext = path.extname(filename).toLowerCase()
@@ -84,6 +91,10 @@ export async function GET(request: Request) {
       totale_bytes: totaleBytes,
       mb_totali: bytesToMb(totaleBytes),
       limite_mb: storageQuotaMb(),
+      // Occupazione non attribuibile a un media dell'elenco.
+      altri_file: nonRiconosciuti.length,
+      mb_altri: bytesToMb(bytesNonRiconosciuti),
+      esempi_altri: nonRiconosciuti.slice(0, 5).map(o => o.key.split('/').pop() || o.key),
       assets,
     })
   } catch (e) {
