@@ -52,13 +52,13 @@ export async function POST() {
     // Finestra di lettura larga: il ciclo vero (28 giorni) lo sceglie la libreria
     // dai contenuti reali. Serve guardare anche indietro perché un ciclo può
     // essere partito la settimana scorsa.
+    // SELECT * e non l'elenco delle colonne: Vercel non applica le migrazioni al
+    // deploy, quindi su un DB indietro (funnel_stage, production_notes,
+    // campaign_content_key sono aggiunte recenti) l'elenco esplicito farebbe
+    // fallire il controllo con "column does not exist". La libreria legge i campi
+    // che trova e tratta gli assenti come vuoti.
     const rows = await q(
-      `SELECT id, id_contenuto, data_pubblicazione, canale, formato, status, note,
-              hook, tema, caption, cta, funnel_stage, obiettivo, production_notes,
-              content_key, campaign_content_key,
-              link_media_1, link_media_2, link_media_3, link_media_4, link_media_5,
-              link_media_6, link_media_7, link_media_8, link_media_9, link_media_10
-         FROM calendario
+      `SELECT * FROM calendario
         WHERE cliente_id = $1
           AND data_pubblicazione >= $2::date
           AND data_pubblicazione <= $3::date
