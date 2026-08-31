@@ -7,6 +7,7 @@ import { callAI, extractJSON } from '@/lib/ai'
 import { jsonbParam, pickJson, pickText } from '@/lib/content-quality'
 import { apiError } from '@/lib/api-error'
 import { evaluateNarrativeContract } from '@/lib/format-narrative'
+import { toYmd } from '@/lib/publish/blotato-map'
 import { readGateReason, readGenerationGate } from '@/lib/generation-gates'
 
 export const dynamic = 'force-dynamic'
@@ -180,7 +181,14 @@ Output JSON:
 
     return NextResponse.json({
       ok: true,
-      content: updated[0],
+      // `RETURNING *` restituisce data_pubblicazione come Date (il driver pg
+      // converte le colonne `date`), che in JSON diventa "2026-09-08T00:00:00.000Z".
+      // Il client fonde questa riga nel proprio stato, quindi quel valore
+      // sostituiva la stringa 'YYYY-MM-DD' e l'intestazione del giorno mostrava
+      // l'ISO grezzo finche non si ricaricava la pagina. La GET del calendario
+      // normalizza gia con toYmd: qui mancava. E l'unica colonna `date` della
+      // tabella, quindi basta lei.
+      content: { ...updated[0], data_pubblicazione: toYmd(updated[0]?.data_pubblicazione) },
       // Il client mostrava sempre "rigenerato": ora sa se e davvero risolto.
       risolto: !motivo,
       motivo_residuo: motivo || null,

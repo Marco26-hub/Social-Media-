@@ -1,4 +1,21 @@
-import { Pool } from 'pg'
+import { Pool, types } from 'pg'
+
+// Colonne `date` (OID 1082) restituite come STRINGA 'YYYY-MM-DD', non come Date.
+//
+// Il parser di serie di pg dichiara: "Force YYYY-MM-DD dates to be parsed as
+// local time" — costruisce cioe un Date a mezzanotte LOCALE. Su un processo in
+// Europe/Rome '2026-09-08' diventa 2026-09-07T22:00:00Z, e toYmd (che legge i
+// componenti UTC) restituisce 2026-09-07: un giorno prima, su ogni data del
+// calendario. In produzione non mordeva perche Vercel gira in UTC, ma bastava
+// un ambiente con fuso diverso — lo sviluppo in locale — per spostare indietro
+// l'intero piano editoriale. In un prodotto che programma pubblicazioni non e
+// un dettaglio estetico.
+//
+// Tenendo la stringa grezza non esiste piu nessuna conversione di fuso: e la
+// stessa forma che il resto del codice si aspetta (toYmd, zonedToUtcIso,
+// confronti fra date ISO). I timestamp (1114/1184) restano Date: li l'istante
+// e reale e il fuso conta.
+types.setTypeParser(1082, value => value)
 
 // Driver Postgres su TCP (node-postgres). Prima usava @neondatabase/serverless
 // (protocollo HTTP proprietario Neon); Supabase non lo parla, quindi si passa a `pg`
