@@ -635,6 +635,28 @@ ${buildExtendedOutputSchema(contentQuality)}
     // delle foto caricate, quindi la vision copre molte più immagini nel mese
     // invece delle sole prime 7 di sempre.
     const today = new Date()
+    // ANCORA DELLA FASE 2 — la seconda fase deve RIPRENDERE dove finisce la
+    // prima, non ripartire da "oggi + 14 giorni". Le due fasi sono un mese solo
+    // spezzato in due richieste: se la fase 1 e stata riprogrammata (slittamento
+    // della partenza, compattazione del calendario), un'ancora fissa su oggi
+    // lascia un buco o accavalla le settimane. Qui la fase 2 parte dal giorno
+    // dopo l'ultimo contenuto gia pianificato.
+    let ancoraFase: Date | null = null
+    if (faseNum === 2 && effectiveClienteId && dbReady() && !isDemo()) {
+      const ultime = await q(
+        `SELECT max(data_pubblicazione) AS ultima FROM calendario
+          WHERE cliente_id = $1 AND data_pubblicazione >= $2::date AND canale <> 'blog'`,
+        [effectiveClienteId, fmtDate(today)],
+      ) as Record<string, unknown>[]
+      const ultima = ultime[0]?.ultima
+      const ultimaISO = ultima instanceof Date ? fmtDate(ultima) : String(ultima || '').slice(0, 10)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(ultimaISO)) {
+        // Mezzogiorno UTC, non mezzanotte: `addDays` conta in ora LOCALE mentre
+        // `fmtDate` legge i componenti UTC, e a mezzanotte i due sistemi possono
+        // cadere su giorni diversi. A mezzogiorno concordano su ogni fuso.
+        ancoraFase = addDays(new Date(`${ultimaISO}T12:00:00Z`), 1)
+      }
+    }
     // `images` nasce vuoto: la ripartizione vera avviene una sola volta sotto
     // (distribuisciMediaSuBlocchi), quando il numero di blocchi è definitivo.
     // Prima ogni ramo faceva la sua slice e poi veniva comunque sovrascritta.
@@ -666,14 +688,20 @@ ${buildExtendedOutputSchema(contentQuality)}
       // dimezza la risposta, e le due meta girano comunque in parallelo: stesso
       // tempo d'attesa, meta del rischio.
       const META_PER_SETTIMANA = 2
+      // Con l'ancora della fase 2 i giorni si contano dal giorno dopo l'ultimo
+      // contenuto pianificato, e la prima settimana della fase parte da li:
+      // senza questo scarto la fase 2 ricomincerebbe due settimane piu in la.
+      const primaSettimanaFase = Math.min(...settimane)
+      const inizioPiano = ancoraFase ?? today
+      const offsetSettimana = (i: number) => (ancoraFase ? i - primaSettimanaFase : i) * 7
       SETTIMANE_DEL_MESE.forEach(i => {
         if (!settimane.includes(i)) return
         const targetSettimana = packagePlan ? quotaBlocco(packagePlan.totale, SETTIMANE_DEL_MESE.length, i) : null
         for (let h = 0; h < META_PER_SETTIMANA; h++) {
           const targetMeta = targetSettimana === null ? null : quotaBlocco(targetSettimana, META_PER_SETTIMANA, h)
           chunks.push({
-            start: fmtDate(addDays(today, i * 7 + (h === 0 ? 0 : 4))),
-            end: fmtDate(addDays(today, i * 7 + (h === 0 ? 3 : 6))),
+            start: fmtDate(addDays(inizioPiano, offsetSettimana(i) + (h === 0 ? 0 : 4))),
+            end: fmtDate(addDays(inizioPiano, offsetSettimana(i) + (h === 0 ? 3 : 6))),
             label: `Settimana ${i + 1} del piano mensile · ${h === 0 ? 'giorni 1-4' : 'giorni 5-7'}`,
             targetMin: targetMeta ?? Math.ceil(minPerWeek / META_PER_SETTIMANA),
             targetMax: targetMeta ?? Math.ceil(maxPerWeek / META_PER_SETTIMANA),
