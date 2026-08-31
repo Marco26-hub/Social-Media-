@@ -6,12 +6,13 @@ import { isDemo } from '@/lib/demo'
 import { callAI, extractJSON } from '@/lib/ai'
 import { jsonbParam, pickJson, pickText } from '@/lib/content-quality'
 import { apiError } from '@/lib/api-error'
+import { evaluateNarrativeContract } from '@/lib/format-narrative'
+import { readGateReason, readGenerationGate } from '@/lib/generation-gates'
 
 export const dynamic = 'force-dynamic'
 // Un solo contenuto: se non ce la fa in due minuti non ce la fa proprio.
 export const maxDuration = 120
 
-const FALLBACK_PREFIX = '[GENERATION_FALLBACK]'
 // Scadenza dell'intera cascata AI. Senza, i 70s valgono per OGNI modello
 // (scelto + 2 fallback) e rigenerare UNO slot poteva tenere l'interfaccia
 // appesa oltre tre minuti: il client qui non ha nemmeno un abort, aspetta
@@ -62,12 +63,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!rows.length) return NextResponse.json({ error: 'Contenuto non trovato' }, { status: 404 })
 
     const row = rows[0]
-    const isFallback = row.status === 'ERRORE_MANUALE' && String(row.note || '').startsWith(FALLBACK_PREFIX)
-    if (!isFallback) {
+    // Rigenerabile ogni contenuto fermato dalla GENERAZIONE, non solo lo slot
+    // vuoto: anche quelli bloccati dal cancello narrativo (Reel senza le 5 scene)
+    // o dal cancello novità. Prima solo [GENERATION_FALLBACK] passava di qui, e
+    // gli altri due restavano senza alcuna azione possibile nell'interfaccia:
+    // solo "Riprova pubblicazione" (che tenterebbe di pubblicare un Reel senza
+    // copione) o "Elimina". Un vicolo cieco su 20 contenuti su 24.
+    const gate = readGenerationGate(row.status, row.note)
+    if (!gate) {
       return NextResponse.json({
-        error: 'Questo contenuto non e uno slot di generazione incompleto. Per gli errori di pubblicazione usa Riprova pubblicazione.',
+        error: 'Questo contenuto non e stato fermato dalla generazione. Per gli errori di pubblicazione usa Riprova pubblicazione.',
       }, { status: 409 })
     }
+    const gateReason = readGateReason(row.note)
 
     const [brandRows, productRows] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [cid]),
@@ -83,6 +91,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const storyRule = format === 'story'
       ? 'Per una Story non generare commenti o first_comment; hashtag vuoto.'
       : ''
+    // La struttura che il formato PRETENDE, scritta nero su bianco: e la stessa
+    // che evaluateNarrativeContract verifica subito dopo. Chiedere "rigenera" e
+    // poi bocciare per una regola mai comunicata al modello e come rigenerare a
+    // vuoto: il contenuto tornerebbe fermo esattamente com'era.
+    const strutturaRichiesta = format === 'reel' || format === 'short' || format === 'video'
+      ? 'STRUTTURA OBBLIGATORIA: "scenes" con ESATTAMENTE 5 elementi distinti, ruoli in ordine hook, tensione, prova, payoff, cta_loop. Ogni scena: numero, ruolo, secondi, descrizione, overlay_testo, visual, movimento, transizione. Le scene devono raccontare i media gia assegnati, in ordine.'
+      : format === 'carousel'
+        ? 'STRUTTURA OBBLIGATORIA: "slides" con 5-10 elementi distinti e progressivi (cover, problema, sviluppo/prova, payoff, CTA), uno per ogni immagine gia assegnata.'
+        : format === 'story'
+          ? 'STRUTTURA OBBLIGATORIA: "scenes" con ESATTAMENTE 3 frame distinti: apertura, sviluppo, risoluzione/CTA. Il terzo chiude la tensione aperta dal primo.'
+          : 'Compila anche primary_message oltre a hook, caption e CTA.'
 
     const response = await callAI({
       model: body.model || 'google/gemma-4-31b-it:free',
@@ -95,6 +114,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       userPrompt: `${buildBrandContext(brand)}
 
 Rigenera UN SOLO contenuto rimasto incompleto nel piano editoriale.
+${gateReason ? `MOTIVO DEL BLOCCO da risolvere in questa rigenerazione: ${gateReason}` : ''}
+${strutturaRichiesta}
+${gate === 'novelty' ? 'Il contenuto era troppo simile a un altro gia in calendario: cambia angolo, apertura e esempio, mantenendo prodotto e obiettivo.' : ''}
 Vincoli immutabili:
 - data: ${String(row.data_pubblicazione || '')}
 - ora: ${String(row.ora_pubblicazione || '')}
@@ -120,14 +142,24 @@ Output JSON:
 
     const hashtagsRaw = format === 'story' ? '' : pickText(parsed, ['hashtag', 'hashtags'])
     const hashtags = channel === 'instagram' ? normalizeInstagramHashtags(hashtagsRaw) : hashtagsRaw
+
+    // Ricontrollo lo stesso cancello che aveva fermato il contenuto. Senza,
+    // rigenerare sarebbe un lavaggio: un Reel ancora senza le 5 scene tornerebbe
+    // "Da approvare" e finirebbe in pubblicazione come montaggio vuoto.
+    const rigenerato = { ...parsed, formato: format, hook, caption, cta: pickText(parsed, ['cta']) }
+    const issues = String(row.quality_level || '') === 'high' ? evaluateNarrativeContract(rigenerato) : []
+    const motivo = issues.map(issue => issue.message).join('; ')
+    const nuovoStato = motivo ? 'ERRORE_MANUALE' : 'DA_APPROVARE'
+    const nuovaNota = motivo ? `[NARRATIVE_GATE] ${motivo}` : null
+    const nuovoErrore = motivo ? `Struttura narrativa da completare: ${motivo}` : null
     const updated = await q(
       `UPDATE calendario SET
         hook = $3, caption = $4, hashtag = $5, cta = $6,
         tema = COALESCE(NULLIF($7, ''), tema), scenes_json = $8,
         slides_json = $9, overlay_text = $10, alt_text = $11,
         tags = $12, idea_visual = $13, voiceover_script = $14,
-        music_mood = $15, status = 'DA_APPROVARE', note = NULL,
-        errore_tecnico = NULL, retry_count = 0, publish_lock_id = NULL,
+        music_mood = $15, status = $16, note = $17,
+        errore_tecnico = $18, retry_count = 0, publish_lock_id = NULL,
         updated_at = now()
        WHERE id = $1 AND cliente_id = $2
        RETURNING *`,
@@ -142,10 +174,17 @@ Output JSON:
         pickText(parsed, ['idea_visual', 'visual']) || null,
         pickText(parsed, ['voiceover_script', 'voiceover']) || null,
         pickText(parsed, ['music_mood', 'musica_mood']) || null,
+        nuovoStato, nuovaNota, nuovoErrore,
       ],
     ) as Record<string, unknown>[]
 
-    return NextResponse.json({ ok: true, content: updated[0] })
+    return NextResponse.json({
+      ok: true,
+      content: updated[0],
+      // Il client mostrava sempre "rigenerato": ora sa se e davvero risolto.
+      risolto: !motivo,
+      motivo_residuo: motivo || null,
+    })
   } catch (error) {
     return apiError(error)
   }

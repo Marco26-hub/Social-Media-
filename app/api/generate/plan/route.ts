@@ -969,7 +969,19 @@ Tono moderno coerente con settore e brand. Ogni contenuto deve sembrare attuale 
 Output SOLO JSON array valido:
 [{"content_key":"compila solo se fornito dalla distinta cartella","data_pubblicazione":"YYYY-MM-DD (dentro ${chunk.start}..${chunk.end})","ora_pubblicazione":"HH:MM","canale":"USA SOLO un canale tra quelli in / ${piattaformeStr} / (valori ammessi: instagram|facebook|tiktok|pinterest|linkedin|threads|x|youtube_shorts|blog)","formato":"post|carousel|reel|story|pin|short|video|articolo","obiettivo":"vendita|awareness|community|educazione|ispirazione|trending","media_refs":[numeri delle foto di QUESTO blocco usate in questo contenuto, in ordine; [] se nessuna adatta],"product_id":"","nome_prodotto":"","tema":"","hook":"","caption":"","hashtag":"","cta":""}]`
           + '\n' + PLAN_STANDARDS + '\n' + (compact
-            ? 'FALLBACK COMPATTO: mantieni ESATTAMENTE il numero richiesto. Compila sempre hook, caption, hashtag, CTA, data, ora, canale e formato; limita i campi strategici opzionali a frasi brevi.'
+            // Il retry compatto accorcia i campi STRATEGICI, mai la struttura del
+            // formato. Prima toglieva l'intero schema esteso, quindi anche scenes
+            // e slides — che il cancello narrativo (attivo in qualità high) poi
+            // pretende: il piano si auto-condannava, JSON troncato -> retry
+            // compatto -> zero scene -> tutto in ERRORE_MANUALE. Successo reale:
+            // 20 contenuti su 24 parcheggiati, gli unici 2 sopravvissuti erano i
+            // caroselli usciti al primo tentativo.
+            ? `FALLBACK COMPATTO: mantieni ESATTAMENTE il numero richiesto. Compila sempre hook, caption, hashtag, CTA, data, ora, canale e formato; limita i campi strategici opzionali a frasi brevi.${contentQuality === 'high' ? `
+STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rifiutato):
+- reel/short/video: "scenes" con ESATTAMENTE 5 elementi, ruoli hook, tensione, prova, payoff, cta_loop. Una riga di descrizione ciascuno basta.
+- carousel: "slides" con 5-10 elementi distinti (cover, problema, sviluppo/prova, payoff, CTA).
+- story: "scenes" con ESATTAMENTE 3 frame (apertura, sviluppo, risoluzione/CTA).
+- post/pin: "primary_message" compilato oltre a hook e caption.` : ''}`
             : qualityPrompt)
           + historyContext + faseContinuitaContext + creativeDirection.context + temporalContext + trendContext
           + (assetPlacements.size ? '' : buildPackageContext(pkg, packagePlan, periodoEff, targetMax))
@@ -1008,7 +1020,13 @@ Output SOLO JSON array valido:
             openrouterKey: openrouter_key,
             images: visionImages,
             maxTokens: maxTok,
-            timeoutMs: 90000,
+            // Un blocco con schema esteso, distinta cartella e 10 immagini vision
+            // puo chiedere a Gemini piu di 90s: col cap fisso il tentativo veniva
+            // abortito DA NOI a meta risposta, e il budget se ne andava in due
+            // tentativi mozzati invece che in uno portato a termine ("This
+            // operation was aborted" su entrambi i modelli). Meglio un tentativo
+            // lungo che due tronchi: lasciamo comunque il margine per un retry.
+            timeoutMs: Math.max(45000, Math.min(150000, aiDeadlineAt - Date.now() - 20000)),
             // Il tempo residuo comanda sul timeout del singolo tentativo: la
             // cascata di fallback si ferma qui invece di sforare la richiesta.
             deadlineAt: aiDeadlineAt,

@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
+import { readGenerationGate } from '@/lib/generation-gates'
 import { readClienteId } from '@/lib/use-data'
 import { readAISettings, readApiError } from '@/lib/ai-client'
 import { uploadAssets } from '@/lib/asset-upload'
@@ -97,8 +98,12 @@ function hasText(value: unknown) {
   return asText(value).trim().length > 0
 }
 
+// Contenuto fermato dalla GENERAZIONE (slot vuoto, struttura narrativa mancante
+// o troppo simile a un altro): tutti e tre si sistemano rigenerando. Un
+// ERRORE_MANUALE senza uno di quei marcatori e invece un errore di
+// PUBBLICAZIONE e resta affare di "Riprova pubblicazione".
 function isGenerationFallback(c: Contenuto): boolean {
-  return c.status === 'ERRORE_MANUALE' && String(c.note || '').startsWith('[GENERATION_FALLBACK]')
+  return readGenerationGate(c.status, c.note) !== null
 }
 
 function formatDateLabel(date: string) {
@@ -479,12 +484,18 @@ function CalendarioInner() {
         body: JSON.stringify(ai),
       })
       if (!res.ok) throw new Error(await readApiError(res, 'Rigenerazione contenuto fallita'))
-      const data = await res.json() as { content?: Partial<Contenuto> }
-      const updated = { ...c, ...(data.content || {}), status: 'DA_APPROVARE' as Status, note: null, errore_tecnico: null }
+      const data = await res.json() as { content?: Partial<Contenuto>; risolto?: boolean; motivo_residuo?: string | null }
+      // Lo stato lo decide il server: se la rigenerazione non ha prodotto la
+      // struttura richiesta (un Reel ancora senza le 5 scene) il contenuto RESTA
+      // fermo. Forzare "Da approvare" qui sarebbe un lavaggio: l'utente lo
+      // approverebbe convinto che sia a posto.
+      const updated = { ...c, ...(data.content || {}) } as Contenuto
       if (demo) setDemoData(prev => prev.map(item => item.id === c.id ? updated : item))
       setContenuti(prev => prev.map(item => item.id === c.id ? updated : item))
       setSelected(updated)
-      setSyncMsg({ type: 'ok', text: `${c.id_contenuto} rigenerato. Controlla l'anteprima e approvalo solo quando e pronto.` })
+      setSyncMsg(data.risolto === false
+        ? { type: 'warn', text: `${c.id_contenuto} rigenerato ma ancora incompleto: ${data.motivo_residuo}. Riprova, o scegli un modello piu capace.` }
+        : { type: 'ok', text: `${c.id_contenuto} rigenerato. Controlla l'anteprima e approvalo solo quando e pronto.` })
     } catch (e) {
       setAdminError((e as Error).message)
     } finally {
