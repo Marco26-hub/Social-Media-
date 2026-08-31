@@ -25,24 +25,44 @@ function sequence(value: unknown): unknown[] {
   }
 }
 
+// Il modello alterna italiano e inglese SULLA STESSA chiave: `overlay_testo` e
+// `overlay_text`, `descrizione` e `description`. Leggerne solo meta significa
+// non vedere il testo di una slide che ce l'ha eccome — ed e successo: un
+// carosello con 5 slide tutte diverse (overlay_text + alt_text) veniva bocciato
+// per "slide duplicate" perche NESSUNA delle sue chiavi era in questo elenco.
 function sequenceText(value: unknown): string {
   if (typeof value === 'string') return value.trim()
   if (!value || typeof value !== 'object') return ''
   const row = value as Record<string, unknown>
   return [
-    row.ruolo,
-    row.role,
-    row.titolo,
-    row.testo,
-    row.descrizione,
-    row.overlay_testo,
-    row.voiceover,
-    row.obiettivo_slide,
+    row.ruolo, row.role,
+    row.titolo, row.title, row.headline,
+    row.testo, row.text, row.copy, row.contenuto,
+    row.descrizione, row.description,
+    row.overlay_testo, row.overlay_text,
+    row.alt_text, row.alt,
+    row.caption,
+    row.visual, row.idea_visual,
+    row.voiceover, row.voiceover_script,
+    row.obiettivo_slide, row.obiettivo,
   ].filter(Boolean).map(String).join(' ').trim()
 }
 
-function countDistinctSequenceItems(items: unknown[]): number {
-  return new Set(items.map(sequenceText).map(text => text.toLowerCase()).filter(Boolean)).size
+// Duplicati VERI: due elementi con lo stesso testo. Un elemento senza alcun
+// testo riconoscibile non e un duplicato — e un altro problema, e lo dice gia
+// il conteggio delle slide/scene. Prima il `.filter(Boolean)` lo faceva sparire
+// dall'insieme e il confronto con `items.length` lo trasformava in un duplicato
+// inesistente: bastava una chiave fuori elenco per bocciare tutto il contenuto.
+function duplicateSequenceItems(items: unknown[]): number {
+  const visti = new Set<string>()
+  let duplicati = 0
+  for (const item of items) {
+    const text = sequenceText(item).toLowerCase()
+    if (!text) continue
+    if (visti.has(text)) duplicati++
+    else visti.add(text)
+  }
+  return duplicati
 }
 
 // Il modello risponde in italiano e alterna gli alias: la route li accetta gia
@@ -112,19 +132,19 @@ export function evaluateNarrativeContract(item: Record<string, unknown>): Narrat
   if (format === 'reel') {
     const scenes = firstSequence(item, ['scenes', 'scene', 'frames'])
     if (scenes.length !== 5) issues.push({ code: 'reel_scene_count', message: `Reel: servono esattamente 5 scene narrative (attuali: ${scenes.length})` })
-    if (scenes.length && countDistinctSequenceItems(scenes) !== scenes.length) {
+    if (duplicateSequenceItems(scenes) > 0) {
       issues.push({ code: 'reel_scene_duplicate', message: 'Reel: scene duplicate o prive di una funzione distinta' })
     }
   } else if (format === 'carousel') {
     const slides = firstSequence(item, ['slides', 'immagini'])
     if (slides.length < 5 || slides.length > 10) issues.push({ code: 'carousel_slide_count', message: `Carosello: servono 5-10 slide narrative (attuali: ${slides.length})` })
-    if (slides.length && countDistinctSequenceItems(slides) !== slides.length) {
+    if (duplicateSequenceItems(slides) > 0) {
       issues.push({ code: 'carousel_slide_duplicate', message: 'Carosello: slide duplicate o senza progressione distinta' })
     }
   } else if (format === 'story') {
     const frames = firstSequence(item, ['scenes', 'frames', 'scene'])
     if (frames.length !== 3) issues.push({ code: 'story_frame_count', message: `Story: servono esattamente 3 frame narrativi (attuali: ${frames.length})` })
-    if (frames.length && countDistinctSequenceItems(frames) !== frames.length) {
+    if (duplicateSequenceItems(frames) > 0) {
       issues.push({ code: 'story_frame_duplicate', message: 'Story: frame duplicati o senza avanzamento narrativo' })
     }
   } else if (format === 'post') {

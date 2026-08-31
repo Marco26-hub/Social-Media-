@@ -79,3 +79,51 @@ test('a carousel serialised as a JSON string is read, not rejected', () => {
   })
   assert.deepEqual(issues, [])
 })
+
+test('slides written with English keys are read, not called duplicates', () => {
+  // Caso reale: 5 slide tutte diverse, ognuna con media, overlay_text e
+  // alt_text. Nessuna di quelle chiavi era nell'elenco letto dal gate, quindi
+  // il testo estratto era vuoto per tutte e il contenuto veniva bocciato per
+  // "slide duplicate o senza progressione distinta". Erano distintissime.
+  const issues = evaluateNarrativeContract({
+    formato: 'carousel',
+    hook: 'La tua attivita locale',
+    cta: 'Scrivi BOWLING in DM',
+    slides: [
+      { media: 'a.jpg', overlay_text: 'UNA SERATA. PIU CONTENUTI.', alt_text: 'Persone che giocano a bowling' },
+      { media: 'b.jpg', overlay_text: 'AMBIENTE. La pista apre la storia.', alt_text: 'Interno della pista' },
+      { media: 'c.jpg', overlay_text: 'GESTO. Il movimento crea attenzione.', alt_text: 'Palla in movimento' },
+      { media: 'd.jpg', overlay_text: 'REAZIONE. Il gruppo rende tutto umano.', alt_text: 'Persone sorridenti' },
+      { media: 'e.jpg', overlay_text: 'METODO. SWA organizza il mese.', alt_text: 'Due persone al tavolo' },
+    ],
+  })
+  assert.deepEqual(issues, [])
+})
+
+test('slides with no readable text are not reported as duplicates', () => {
+  // Un elemento senza testo riconoscibile e un problema diverso (e lo dice il
+  // conteggio): trasformarlo in "duplicato" mandava fuori strada chi legge.
+  const issues = evaluateNarrativeContract({
+    formato: 'carousel',
+    hook: 'Hook',
+    cta: 'CTA',
+    slides: [{ x: 1 }, { x: 2 }, { x: 3 }, { x: 4 }, { x: 5 }],
+  })
+  assert.equal(issues.filter(i => i.code === 'carousel_slide_duplicate').length, 0)
+})
+
+test('genuinely repeated slides are still caught', () => {
+  const issues = evaluateNarrativeContract({
+    formato: 'carousel',
+    hook: 'Hook',
+    cta: 'CTA',
+    slides: [
+      { overlay_text: 'Stessa slide' },
+      { overlay_text: 'Stessa slide' },
+      { overlay_text: 'Terza' },
+      { overlay_text: 'Quarta' },
+      { overlay_text: 'Quinta' },
+    ],
+  })
+  assert.ok(issues.some(i => i.code === 'carousel_slide_duplicate'))
+})
