@@ -4,6 +4,7 @@ import { test } from 'playwright/test'
 import {
   buildEditorialHistoryContext,
   createMonthlyCreativeDirection,
+  EDITORIAL_HISTORY_COLUMNS,
   findCreativeNearDuplicate,
   isCoordinatedCrossPlatformVariant,
 } from './editorial-variation'
@@ -92,4 +93,32 @@ test('coordinated platform variants do not count as duplicate creatives', () => 
   assert.equal(isCoordinatedCrossPlatformVariant(instagram, facebook), true)
   assert.equal(isCoordinatedCrossPlatformVariant(instagram, anotherInstagramContent), false)
   assert.ok(findCreativeNearDuplicate(anotherInstagramContent, [instagram]))
+})
+
+test('the coordinated twin of a content already in the calendar is not a duplicate', () => {
+  // Caso reale: il carosello Instagram veniva bocciato con "somiglianza creativa
+  // 100%" citando il proprio stesso hook — era il gemello Facebook gia salvato.
+  // Le righe che arrivano dal DB devono portare la chiave del concept, o
+  // l'esenzione non puo scattare e ogni secondo social viene fermato.
+  const storico = {
+    campaign_content_key: 'cebeb8cfa__carosello_09',
+    canale: 'facebook',
+    hook: 'Hai già foto di qualità ma non sai come usarle?',
+    tema: 'Ottimizzazione del materiale esistente',
+  }
+  const nuovo = {
+    campaign_content_key: 'cebeb8cfa__carosello_09',
+    canale: 'instagram',
+    hook: 'Hai già foto di qualità ma non sai come usarle?',
+    tema: 'Ottimizzazione del materiale esistente',
+  }
+  assert.ok(EDITORIAL_HISTORY_COLUMNS.includes('campaign_content_key'),
+    'la chiave del concept deve essere fra le colonne lette dallo storico')
+  assert.ok(isCoordinatedCrossPlatformVariant(nuovo, storico))
+})
+
+test('the same hook on the same channel stays a duplicate', () => {
+  const a = { campaign_content_key: 'k1', canale: 'instagram', hook: 'Stesso hook' }
+  const b = { campaign_content_key: 'k1', canale: 'instagram', hook: 'Stesso hook' }
+  assert.equal(isCoordinatedCrossPlatformVariant(a, b), false)
 })

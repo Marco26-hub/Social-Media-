@@ -66,6 +66,11 @@ const ENGAGEMENT_MECHANICS = [
 ] as const
 
 const HISTORY_FIELDS = [
+  // Serve a isCoordinatedCrossPlatformVariant: senza la chiave del concept
+  // l'esenzione per le varianti coordinate non puo scattare contro lo storico,
+  // e il gemello Instagram di un contenuto Facebook gia in calendario viene
+  // bocciato come "somiglianza creativa 100%" con se stesso.
+  'campaign_content_key',
   'hook',
   'tema',
   'angle',

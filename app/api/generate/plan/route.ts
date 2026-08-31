@@ -539,6 +539,12 @@ export async function POST(request: Request) {
     const calendarioColumns = await getTableColumns('calendario')
     const historyColumns = EDITORIAL_HISTORY_COLUMNS.filter(column => calendarioColumns.has(column))
     const historySelect = historyColumns.length ? historyColumns.join(', ') : 'hook, tema'
+    // Lo storico e una tabella diversa e puo avere meno colonne: filtrarlo con
+    // l'elenco del calendario farebbe fallire la query, e il .catch qui sotto
+    // cancellerebbe in silenzio tutta la memoria dei contenuti gia pubblicati.
+    const storicoColumns = await getTableColumns('contenuti_storico').catch(() => new Set<string>())
+    const storicoUsabili = EDITORIAL_HISTORY_COLUMNS.filter(column => storicoColumns.has(column))
+    const storicoSelect = storicoUsabili.length ? storicoUsabili.join(', ') : 'hook, tema'
     const [brandRows, products, clientRows, recentRows, archivedRows] = await Promise.all([
       q('SELECT * FROM brand WHERE cliente_id = $1 LIMIT 1', [effectiveClienteId]),
       q('SELECT * FROM prodotti WHERE cliente_id = $1', [effectiveClienteId]),
@@ -551,7 +557,7 @@ export async function POST(request: Request) {
       // l'AI riproporrebbe hook e temi visti dal cliente poche settimane prima.
       // La tabella puo non esistere su database non ancora migrati: fallisce
       // silenziosamente e la memoria resta quella del solo calendario.
-      q(`SELECT ${historySelect} FROM contenuti_storico WHERE cliente_id = $1 ORDER BY archiviato_il DESC LIMIT 96`, [effectiveClienteId])
+      q(`SELECT ${storicoSelect} FROM contenuti_storico WHERE cliente_id = $1 ORDER BY archiviato_il DESC LIMIT 96`, [effectiveClienteId])
         .catch(() => [] as Record<string, unknown>[]),
     ])
     const brand = brandRows[0] ?? null
