@@ -131,7 +131,7 @@ ${storyRule}
 Per Instagram usa al massimo 5 hashtag totali. Scrivi in italiano corretto, concreto e coerente con il formato.
 
 Output JSON:
-{"hook":"","caption":"","hashtag":"","cta":"","tema":"","scenes":[],"slides":[],"overlay_text":"","alt_text":"","tags":[],"idea_visual":"","voiceover_script":"","music_mood":""}`,
+{"hook":"","caption":"","hashtag":"","cta":"","tema":"","primary_message":"","scenes":[],"slides":[],"overlay_text":"","alt_text":"","tags":[],"idea_visual":"","voiceover_script":"","music_mood":""}`,
     })
 
     const parsed = extractJSON(response) as Record<string, unknown>
@@ -147,7 +147,12 @@ Output JSON:
     // Ricontrollo lo stesso cancello che aveva fermato il contenuto. Senza,
     // rigenerare sarebbe un lavaggio: un Reel ancora senza le 5 scene tornerebbe
     // "Da approvare" e finirebbe in pubblicazione come montaggio vuoto.
-    const rigenerato = { ...parsed, formato: format, hook, caption, cta: pickText(parsed, ['cta']) }
+    // `primary_message` NON era ne' nello schema di risposta ne' salvato: un post
+    // fermato per "messaggio principale non definito" tornava fermo dopo ogni
+    // rigenerazione, all'infinito, perche il campo che gli mancava non veniva mai
+    // chiesto al modello ne' scritto a DB.
+    const primaryMessage = pickText(parsed, ['primary_message', 'messaggio_chiave', 'messaggio_principale'])
+    const rigenerato = { ...parsed, formato: format, hook, caption, cta: pickText(parsed, ['cta']), primary_message: primaryMessage }
     const issues = String(row.quality_level || '') === 'high' ? evaluateNarrativeContract(rigenerato) : []
     const motivo = issues.map(issue => issue.message).join('; ')
     const nuovoStato = motivo ? 'ERRORE_MANUALE' : 'DA_APPROVARE'
@@ -160,7 +165,9 @@ Output JSON:
         slides_json = $9, overlay_text = $10, alt_text = $11,
         tags = $12, idea_visual = $13, voiceover_script = $14,
         music_mood = $15, status = $16, note = $17,
-        errore_tecnico = $18, retry_count = 0, publish_lock_id = NULL,
+        errore_tecnico = $18,
+        primary_message = COALESCE(NULLIF($19, ''), primary_message),
+        retry_count = 0, publish_lock_id = NULL,
         updated_at = now()
        WHERE id = $1 AND cliente_id = $2
        RETURNING *`,
@@ -175,7 +182,7 @@ Output JSON:
         pickText(parsed, ['idea_visual', 'visual']) || null,
         pickText(parsed, ['voiceover_script', 'voiceover']) || null,
         pickText(parsed, ['music_mood', 'musica_mood']) || null,
-        nuovoStato, nuovaNota, nuovoErrore,
+        nuovoStato, nuovaNota, nuovoErrore, primaryMessage,
       ],
     ) as Record<string, unknown>[]
 
