@@ -43,6 +43,7 @@ import { buildGenerationOptimizationCyclePrompt, normalizeProductionCycleStage }
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
 import { SETTIMANE_DEL_MESE, quotaBlocco, settimaneDellaFase } from '@/lib/plan-quota'
 import { compareCampaignAssetSequence, compareCampaignFolderGroups } from '@/lib/campaign-folder'
+import { deriveSequenceFromMedia } from '@/lib/derive-sequence'
 import { evaluateNarrativeContract, FORMAT_NARRATIVE_CONTEXT } from '@/lib/format-narrative'
 // Governo di ORARI (e del solo vincolo di giorno che dipende dal canale): il
 // piano non deve più affidarsi a un default fisso '10:00' né agli orari a caso
@@ -1693,6 +1694,25 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
       const noveltyReason = duplicate
         ? `Somiglianza creativa ${Math.round(duplicate.score * 100)}% con "${duplicate.hook || 'un contenuto precedente'}"`
         : ''
+      // I media si assegnano PRIMA del cancello narrativo, perche quando le
+      // creativita arrivano gia prodotte da una cartella campagna la sequenza si
+      // DERIVA dai file assegnati invece di pretenderla dal modello: quel
+      // carosello E quelle cinque immagini, in quell'ordine, ognuna con il testo
+      // gia impresso. Chiederne la descrizione e poi bloccarlo se non arriva
+      // significa fermare un contenuto completo per una didascalia interna che
+      // non verra mai pubblicata. Se i media non bastano non si deriva nulla e
+      // il cancello continua a fare il suo lavoro.
+      const [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10] = nextChunkMediaSlots(chunk, String(item.canale || ''), String(item.formato || 'post'), item.media_refs, item.content_key)
+      const mediaAssegnati = [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10]
+        .filter((url): url is string => Boolean(url))
+      if (contentQuality === 'high') {
+        const chiaveSequenza = /carousel|carosello/i.test(String(item.formato || '')) ? 'slides' : 'scenes'
+        const sequenzaModello = item[chiaveSequenza]
+        if (!Array.isArray(sequenzaModello) || !sequenzaModello.length) {
+          const derivata = deriveSequenceFromMedia(item.formato, mediaAssegnati)
+          if (derivata.length) item[chiaveSequenza] = derivata
+        }
+      }
       const narrativeIssues = contentQuality === 'high' ? evaluateNarrativeContract(item) : []
       const narrativeReason = narrativeIssues.map(issue => issue.message).join('; ')
       if (noveltyReason) noveltyReviewCount++
@@ -1722,7 +1742,6 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
 
       const id_contenuto = `C${Date.now().toString(36).toUpperCase()}_${inseriti.length}_${scartati.length}`
       const itemQuality = normalizeContentQuality(item.quality_level) ?? contentQuality
-      const [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10] = nextChunkMediaSlots(chunk, String(item.canale || ''), String(item.formato || 'post'), item.media_refs, item.content_key)
       // Lookup link prodotto per l'item: se il piano riferisce un product_id valido,
       // persistiamo il link così il publisher può appenderlo al testo Blotato.
       const itemProduct = (products as Array<Record<string, unknown>>).find(p => p.product_id === item.product_id)

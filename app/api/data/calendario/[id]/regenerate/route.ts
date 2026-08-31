@@ -7,6 +7,7 @@ import { callAI, extractJSON } from '@/lib/ai'
 import { jsonbParam, pickJson, pickText } from '@/lib/content-quality'
 import { apiError } from '@/lib/api-error'
 import { CAPTION_VIDEO_MAX } from '@/lib/caption-limits'
+import { deriveSequenceFromMedia } from '@/lib/derive-sequence'
 import { evaluateNarrativeContract } from '@/lib/format-narrative'
 import { toYmd } from '@/lib/publish/blotato-map'
 import { readGateReason, readGenerationGate } from '@/lib/generation-gates'
@@ -154,6 +155,16 @@ Output JSON:
     // fermato per "messaggio principale non definito" tornava fermo dopo ogni
     // rigenerazione, all'infinito, perche il campo che gli mancava non veniva mai
     // chiesto al modello ne' scritto a DB.
+    // Stessa regola del piano: se il contenuto ha gia i suoi media finali e il
+    // modello non ha dichiarato la sequenza, la sequenza si deriva dai file
+    // invece di lasciare il contenuto bloccato per una descrizione mancante.
+    const chiaveSequenza = /carousel|carosello/i.test(format) ? 'slides' : 'scenes'
+    const sequenzaModello = parsed[chiaveSequenza]
+    if (!Array.isArray(sequenzaModello) || !sequenzaModello.length) {
+      const derivata = deriveSequenceFromMedia(format, urls)
+      if (derivata.length) parsed[chiaveSequenza] = derivata
+    }
+
     const primaryMessage = pickText(parsed, ['primary_message', 'messaggio_chiave', 'messaggio_principale'])
     const rigenerato = { ...parsed, formato: format, hook, caption, cta: pickText(parsed, ['cta']), primary_message: primaryMessage }
     const issues = String(row.quality_level || '') === 'high' ? evaluateNarrativeContract(rigenerato) : []
