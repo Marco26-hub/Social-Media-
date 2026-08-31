@@ -145,6 +145,12 @@ function buildPlanAssetContext(
   const videoUrls = shown.filter(isVideoUrl)
   return `
 
+LEGGI IL TESTO IMPRESSO SULLE IMMAGINI — vincolante quando i media arrivano da una cartella campagna:
+- Le creativita sono gia prodotte e molte hanno il testo stampato sopra (cover, scene, slide). Quel testo E la promessa del contenuto: guardalo prima di scrivere.
+- Hook e caption devono PROSEGUIRE quel testo, non affiancargli un'altra idea. Se la cover dice "PRIMA: foto isolate. DOPO: una campagna riconoscibile", il contenuto parla di quella trasformazione, con quelle parole; non di un concetto vicino.
+- Non contraddire e non ripetere alla lettera: l'hook apre cio che l'immagine mostra, la caption lo spiega e lo porta alla CTA.
+- Se le immagini raccontano un prima/dopo, un elenco o un processo, la caption segue lo stesso ordine.
+
 MEDIA CARICATI DALL'UTENTE PER QUESTO BLOCCO (numerati — il numero è il valore da usare in media_refs):
 ${shown.map((url, index) => {
   const tag = tags.get(url) ?? 'auto'

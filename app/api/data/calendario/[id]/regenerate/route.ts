@@ -154,6 +154,7 @@ Vincoli immutabili:
 - tema: ${String(row.tema || 'contenuto brand')}
 - prodotto: ${JSON.stringify(product || { product_id: row.product_id, nome_prodotto: row.nome_prodotto })}
 - i ${urls.length} media gia assegnati devono guidare copy e struttura
+- GUARDA il testo impresso sulle immagini: e la promessa gia stampata sul contenuto. Hook e caption devono proseguirla con le sue stesse parole chiave, non proporre un'idea vicina ma diversa.
 ${storyRule}
 Per Instagram usa al massimo 5 hashtag totali. Gli hashtag stanno SOLO nel campo hashtag, mai in coda alla caption, e ognuno e' una parola breve e leggibile: vietati gli hashtag-frase che inghiottono un concetto.
 ${['reel','short','video','story'].includes(format) ? `La caption di questo formato non deve superare ${CAPTION_VIDEO_MAX} caratteri e deve chiudersi con una frase completa: oltre quel limite viene accorciata prima di pubblicare.` : ''}
