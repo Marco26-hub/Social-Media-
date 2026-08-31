@@ -9,6 +9,7 @@ import { getBlotatoKey } from '@/lib/blotato-key'
 import { getPinnedAccountId, getPinnedSubaccountId, resolveBlotatoTarget } from '@/lib/blotato-accounts'
 import { CANALE_TO_BLOTATO, PLATFORM_REQUIREMENTS, formatoToMediaType, zonedToUtcIso, DEFAULT_TIMEZONE } from '@/lib/publish/blotato-map'
 import { preflightRow } from '@/lib/publish/preflight'
+import { accorciaCaption } from '@/lib/caption-limits'
 import { hashtagCount, normalizeHashtagsForPublish, normalizeInstagramPublishPayload, stripHashtags } from '@/lib/hashtags'
 import { remotionSourceHash, renderSwaSocialVideo } from '@/lib/remotion-renderer'
 import { hasFinalCampaignAsset, requiresRenderedVisualReview } from '@/lib/publish/visual-review'
@@ -526,7 +527,7 @@ function buildPlatformContent(canale: string, formato: string, row: ContentRow):
   if (caption && caption !== hook) {
     // Per reel/short/story: caption breve
     if (['reel', 'short', 'story'].includes(formatoNorm)) {
-      parts.push(caption.slice(0, 300))
+      parts.push(accorciaCaption(caption))
     } else {
       parts.push(caption)
     }
