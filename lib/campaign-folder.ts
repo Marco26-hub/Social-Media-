@@ -63,6 +63,19 @@ function inferPlatform(path: string): CampaignPlatform | null {
 
 function inferTag(path: string): MediaTag {
   const text = normalized(path)
+  const segments = path.split('/').map(normalized).filter(Boolean)
+  const explicitFormat = segments.find(segment =>
+    /^(?:reel|reels|video|short|shorts)\s*0?\d+\b/.test(segment)
+    || /^(?:story|stories|storia|storie)\s*0?\d+\b/.test(segment)
+    || /^(?:carousel|carosello|caroselli)\s*0?\d+\b/.test(segment)
+    || /^(?:post|feed|pin)\s*0?\d+\b/.test(segment),
+  )
+  if (explicitFormat) {
+    if (/^(?:reel|reels|video|short|shorts)\s*0?\d+\b/.test(explicitFormat)) return 'reel'
+    if (/^(?:story|stories|storia|storie)\s*0?\d+\b/.test(explicitFormat)) return 'story'
+    if (/^(?:carousel|carosello|caroselli)\s*0?\d+\b/.test(explicitFormat)) return 'carosello'
+    if (/^(?:post|feed|pin)\s*0?\d+\b/.test(explicitFormat)) return 'post'
+  }
   if (/\b(reel|reels|video|short|shorts)\b/.test(text)) return 'reel'
   if (/\b(story|stories|storia|storie)\b/.test(text)) return 'story'
   if (/\b(carousel|carosello|caroselli)\b/.test(text)) return 'carosello'

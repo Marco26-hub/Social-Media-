@@ -115,3 +115,16 @@ test('ignores loose audio libraries at the strategy root', () => {
   assert.equal(parsed.kind, 'unsupported')
   assert.deepEqual(parsed.errors, [])
 })
+
+test('keeps an explicit post folder when its descriptive name contains stories', () => {
+  const parsed = parseCampaignFolderFile({
+    name: 'POST_24.png',
+    type: 'image/png',
+    relativePath: '04_CRESCITA_Per_Strategia/Facebook/04_AZIONE/POST_24_STORIE_E_SISTEMA/POST_24.png',
+  })
+
+  assert.equal(parsed.kind, 'image')
+  assert.equal(parsed.tag, 'post')
+  assert.equal(parsed.contentKey, 'post_24')
+  assert.deepEqual(parsed.errors, [])
+})
