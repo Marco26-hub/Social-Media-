@@ -8,8 +8,15 @@ import { jsonbParam, pickJson, pickText } from '@/lib/content-quality'
 import { apiError } from '@/lib/api-error'
 
 export const dynamic = 'force-dynamic'
+// Un solo contenuto: se non ce la fa in due minuti non ce la fa proprio.
+export const maxDuration = 120
 
 const FALLBACK_PREFIX = '[GENERATION_FALLBACK]'
+// Scadenza dell'intera cascata AI. Senza, i 70s valgono per OGNI modello
+// (scelto + 2 fallback) e rigenerare UNO slot poteva tenere l'interfaccia
+// appesa oltre tre minuti: il client qui non ha nemmeno un abort, aspetta
+// finche il server non risponde.
+const REGEN_BUDGET_MS = 95000
 
 function mediaUrls(row: Record<string, unknown>): string[] {
   return Array.from({ length: 10 }, (_, i) => String(row[`link_media_${i + 1}`] || '').trim())
@@ -83,6 +90,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       images: urls.filter(url => !isVideoUrl(url)),
       maxTokens: 7000,
       timeoutMs: 70000,
+      deadlineAt: Date.now() + REGEN_BUDGET_MS,
       systemPrompt: 'Sei un senior social media strategist italiano. Rispondi solo con un singolo oggetto JSON valido. Non inventare prezzi, dati o claim non forniti.',
       userPrompt: `${buildBrandContext(brand)}
 
