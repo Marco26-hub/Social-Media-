@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 
-import { pianificaSpostamento, spostaData } from './plan-shift'
+import { giorniPerRipartireDa, pianificaSpostamento, primoGiornoSpostabile, spostaData } from './plan-shift'
 
 const OGGI = '2026-09-01'
 
@@ -82,4 +82,42 @@ test('zero, non-integer and oversized shifts are rejected with a reason', () => 
 test('the shift crosses month and year boundaries correctly', () => {
   assert.equal(spostaData('2026-12-30', 5), '2027-01-04')
   assert.equal(spostaData('2026-03-01', -1), '2026-02-28')
+})
+
+test('restarting from a chosen day lands the first movable content exactly there', () => {
+  const rows = [
+    riga({ id: 'a', data_pubblicazione: '2026-09-02' }),
+    riga({ id: 'b', data_pubblicazione: '2026-09-06' }),
+  ]
+  const { giorni, errore } = giorniPerRipartireDa(rows, '2026-09-15', OGGI)
+  assert.equal(errore, undefined)
+  assert.equal(giorni, 13)
+  const plan = pianificaSpostamento(rows, giorni, OGGI)
+  assert.equal(plan.nuovaPrimaData, '2026-09-15')
+  assert.deepEqual(plan.spostabili.map(s => s.a), ['2026-09-15', '2026-09-19'])
+})
+
+test('the anchor is the first MOVABLE content, not one locked on Blotato', () => {
+  // Ancorare su un contenuto bloccato farebbe atterrare il piano da un'altra
+  // parte: quello non si muove, quindi non puo dettare l'offset.
+  const rows = [
+    riga({ id: 'bloccato', data_pubblicazione: '2026-09-02', blotato_post_id: 'sub_1' }),
+    riga({ id: 'libero', data_pubblicazione: '2026-09-05' }),
+  ]
+  assert.equal(primoGiornoSpostabile(rows, OGGI), '2026-09-05')
+  assert.equal(giorniPerRipartireDa(rows, '2026-09-10', OGGI).giorni, 5)
+})
+
+test('restarting in the past, or on the day it already starts, is refused', () => {
+  const rows = [riga({ data_pubblicazione: '2026-09-05' })]
+  assert.match(String(giorniPerRipartireDa(rows, '2026-08-20', OGGI).errore), /gia passato/)
+  assert.match(String(giorniPerRipartireDa(rows, '2026-09-05', OGGI).errore), /parte gia/)
+  assert.match(String(giorniPerRipartireDa(rows, 'non-una-data', OGGI).errore), /Scegli il giorno/)
+})
+
+test('restarting earlier is allowed when it stays from today on', () => {
+  const rows = [riga({ data_pubblicazione: '2026-09-20' })]
+  const { giorni } = giorniPerRipartireDa(rows, '2026-09-10', OGGI)
+  assert.equal(giorni, -10)
+  assert.equal(pianificaSpostamento(rows, giorni, OGGI).nuovaPrimaData, '2026-09-10')
 })

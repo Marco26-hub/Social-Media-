@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireClienteId } from '@/lib/auth-utils'
 import { dbReady, q } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
-import { pianificaSpostamento } from '@/lib/plan-shift'
+import { giorniPerRipartireDa, pianificaSpostamento } from '@/lib/plan-shift'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,8 +20,15 @@ function oggiNelFuso(timezone: string): string {
 export async function POST(request: Request) {
   try {
     const cid = await requireClienteId()
-    const body = await request.json().catch(() => ({})) as { giorni?: number; da?: string; dry_run?: boolean }
-    const giorni = Number(body.giorni)
+    // Due modi per dire la stessa cosa: "sposta di N giorni" oppure "riparti dal
+    // giorno X". Il secondo e solo un modo piu naturale di esprimere il primo —
+    // sotto gira lo stesso motore, con gli stessi controlli.
+    const body = await request.json().catch(() => ({})) as {
+      giorni?: number
+      riparti_da?: string
+      da?: string
+      dry_run?: boolean
+    }
     const dryRun = body.dry_run !== false
 
     if (isDemo() || !dbReady()) {
@@ -39,6 +46,13 @@ export async function POST(request: Request) {
         ORDER BY data_pubblicazione, ora_pubblicazione`,
       [cid, body.da && /^\d{4}-\d{2}-\d{2}$/.test(body.da) ? body.da : oggi],
     ) as Record<string, unknown>[]
+
+    let giorni = Number(body.giorni)
+    if (body.riparti_da) {
+      const calcolo = giorniPerRipartireDa(rows, String(body.riparti_da), oggi, body.da)
+      if (calcolo.errore) return NextResponse.json({ error: calcolo.errore }, { status: 400 })
+      giorni = calcolo.giorni
+    }
 
     const piano = pianificaSpostamento(rows, giorni, oggi, body.da)
     if (piano.errore) {

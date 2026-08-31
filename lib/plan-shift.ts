@@ -47,10 +47,63 @@ function dataDi(row: ShiftRow): string {
   return /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : ''
 }
 
+// Differenza in giorni fra due date ISO. Conti su UTC puro: qui non esistono
+// istanti ne fusi, solo caselle di calendario.
+function giorniTraDate(daISO: string, aISO: string): number {
+  const da = Date.parse(`${daISO}T00:00:00Z`)
+  const a = Date.parse(`${aISO}T00:00:00Z`)
+  if (Number.isNaN(da) || Number.isNaN(a)) return 0
+  return Math.round((a - da) / 86400000)
+}
+
 export function spostaData(iso: string, giorni: number): string {
   const base = Date.parse(`${iso}T00:00:00Z`)
   if (Number.isNaN(base)) return iso
   return new Date(base + giorni * 86400000).toISOString().slice(0, 10)
+}
+
+// Prima data fra i contenuti che si possono DAVVERO muovere: e l'ancora del
+// "riparti dal giorno X". Deve applicare gli stessi filtri dello spostamento,
+// altrimenti si calcolerebbe l'offset su un contenuto bloccato su Blotato e il
+// piano atterrerebbe da un'altra parte.
+export function primoGiornoSpostabile(rows: ShiftRow[], oggi: string, da?: string): string {
+  const soglia = da && /^\d{4}-\d{2}-\d{2}$/.test(da) ? da : oggi
+  const date = rows
+    .filter(row => {
+      const data = dataDi(row)
+      if (!data || data < soglia) return false
+      if (STATI_FERMI.has(testo(row.status).toUpperCase())) return false
+      return !testo(row.blotato_post_id)
+    })
+    .map(dataDi)
+    .sort()
+  return date[0] || ''
+}
+
+// Converte "voglio ripartire dal giorno X" nell'offset in giorni che serve allo
+// spostamento. Cosi il pulsante "riprogramma dal giorno" e quello "sposta di N
+// giorni" usano lo stesso identico motore, con gli stessi controlli.
+export function giorniPerRipartireDa(
+  rows: ShiftRow[],
+  nuovoInizio: string,
+  oggi: string,
+  da?: string,
+): { giorni: number; errore?: string } {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(nuovoInizio || ''))) {
+    return { giorni: 0, errore: 'Scegli il giorno da cui far ripartire il piano.' }
+  }
+  if (nuovoInizio < oggi) {
+    return { giorni: 0, errore: `Il ${nuovoInizio} e gia passato: scegli una data da oggi (${oggi}) in poi.` }
+  }
+  const primo = primoGiornoSpostabile(rows, oggi, da)
+  if (!primo) {
+    return { giorni: 0, errore: 'Nessun contenuto da riprogrammare: sono tutti pubblicati o gia inviati a Blotato.' }
+  }
+  const giorni = giorniTraDate(primo, nuovoInizio)
+  if (giorni === 0) {
+    return { giorni: 0, errore: `Il piano parte gia dal ${primo}: non c'e niente da riprogrammare.` }
+  }
+  return { giorni }
 }
 
 // `da`: sposta solo i contenuti a partire da questa data (inclusa). Default:

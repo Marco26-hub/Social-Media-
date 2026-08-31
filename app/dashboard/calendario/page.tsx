@@ -227,6 +227,9 @@ function CalendarioInner() {
   // l'anteprima sia stata mostrata: sono decine di pubblicazioni.
   const [shiftOpen, setShiftOpen] = useState(false)
   const [shiftGiorni, setShiftGiorni] = useState('7')
+  // 'giorni' = sposta di N giorni · 'data' = riparti dal giorno scelto.
+  const [shiftModo, setShiftModo] = useState<'giorni' | 'data'>('giorni')
+  const [shiftData, setShiftData] = useState('')
   const [shifting, setShifting] = useState(false)
   const [shiftPreview, setShiftPreview] = useState<ShiftResult | null>(null)
   const [shiftError, setShiftError] = useState<string | null>(null)
@@ -605,14 +608,15 @@ function CalendarioInner() {
 
   // `applica = false` chiede solo l'anteprima: il server calcola e non scrive.
   async function spostaPiano(applica: boolean) {
-    const giorni = Number(shiftGiorni)
     setShifting(true)
     setShiftError(null)
     try {
       const res = await fetch('/api/data/calendario/shift', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ giorni, dry_run: !applica }),
+        body: JSON.stringify(shiftModo === 'data'
+          ? { riparti_da: shiftData, dry_run: !applica }
+          : { giorni: Number(shiftGiorni), dry_run: !applica }),
       })
       if (!res.ok) throw new Error(await readApiError(res, 'Spostamento del piano fallito'))
       const data = await res.json() as ShiftResult
@@ -1337,17 +1341,45 @@ function CalendarioInner() {
             <button type="button" onClick={() => { setShiftOpen(false); setShiftPreview(null); setShiftError(null) }} className="text-xs font-medium text-gray-500 hover:text-gray-800">Chiudi</button>
           </div>
           <div className="flex flex-wrap items-end gap-3 px-4 py-3">
-            <label className="text-xs font-medium text-gray-700">
-              Giorni
-              <input
-                type="number"
-                value={shiftGiorni}
-                onChange={e => { setShiftGiorni(e.target.value); setShiftPreview(null) }}
-                className="mt-1 block w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                placeholder="7"
-              />
-              <span className="mt-1 block text-[11px] font-normal text-gray-500">Negativo per anticipare</span>
-            </label>
+            {/* Due modi per dire la stessa cosa. "Riparti dal giorno" e quello
+                naturale quando la partenza slitta a una data precisa: non devi
+                contare i giorni a mano. */}
+            <div className="inline-flex overflow-hidden rounded-lg border border-gray-300 text-xs font-medium">
+              {([['giorni', 'Di N giorni'], ['data', 'Riparti dal giorno']] as const).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => { setShiftModo(id); setShiftPreview(null); setShiftError(null) }}
+                  className={`px-3 py-2 ${shiftModo === id ? 'bg-slate-900 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {shiftModo === 'giorni' ? (
+              <label className="text-xs font-medium text-gray-700">
+                Giorni
+                <input
+                  type="number"
+                  value={shiftGiorni}
+                  onChange={e => { setShiftGiorni(e.target.value); setShiftPreview(null) }}
+                  className="mt-1 block w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  placeholder="7"
+                />
+                <span className="mt-1 block text-[11px] font-normal text-gray-500">Negativo per anticipare</span>
+              </label>
+            ) : (
+              <label className="text-xs font-medium text-gray-700">
+                Il piano riparte dal
+                <input
+                  type="date"
+                  value={shiftData}
+                  onChange={e => { setShiftData(e.target.value); setShiftPreview(null) }}
+                  className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+                <span className="mt-1 block text-[11px] font-normal text-gray-500">Il primo contenuto cade qui, gli altri lo seguono</span>
+              </label>
+            )}
             <button type="button" onClick={() => spostaPiano(false)} disabled={shifting} className="btn-secondary py-2 px-4 text-sm disabled:opacity-60">
               {shifting && !shiftPreview ? 'Calcolo...' : 'Anteprima'}
             </button>
