@@ -95,7 +95,25 @@ export async function POST() {
   let skipped = 0
   const errors: { id_contenuto: string; canale: string; error: string }[] = []
 
+  // BUDGET DI TEMPO. Un reel senza MP4 viene MONTATO qui (Remotion) e il
+  // montaggio dura decine di secondi: con 22 contenuti approvati il ciclo non
+  // sta nei 5 minuti della funzione, veniva ucciso a meta e la risposta non
+  // arrivava mai. Da fuori sembrava che i contenuti "sparissero": in realta
+  // erano stati lavorati, ma nessuno lo diceva. Ora ci si ferma PRIMA del tetto
+  // e si dichiara quanti ne restano, cosi si sa che va rilanciato.
+  const startedAt = Date.now()
+  const BUDGET_MS = 260000
+  // Un montaggio video puo durare parecchio: sotto questa soglia non se ne
+  // apre un altro, si chiude la risposta.
+  const MARGINE_PER_ITEM_MS = 70000
+  let nonLavorati = 0
+
   for (const row of rows) {
+    const trascorso = Date.now() - startedAt
+    if (trascorso > BUDGET_MS - MARGINE_PER_ITEM_MS) {
+      nonLavorati = rows.length - (synced + visualPending + visualReview + dryRun + skipped + errors.length)
+      break
+    }
     try {
       const outcome = await scheduleOnBlotato(clienteId, row, timezone)
       if (outcome.status === 'scheduled') synced++
@@ -147,6 +165,9 @@ export async function POST() {
     dry_run: dryRun,
     skipped,
     failed: errors.length,
+    // Quanti approvati non sono stati toccati in questo giro: vanno lavorati
+    // rilanciando la sincronizzazione.
+    rimasti: nonLavorati,
     ...(dryRun > 0 ? { note: 'Pubblicazione disattivata (PUBLISH_ENABLED=false): contenuti pronti ma NON pubblicati.' } : {}),
     errors: errors.slice(0, 20),
   })

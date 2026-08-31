@@ -650,15 +650,24 @@ function CalendarioInner() {
       const failNote = data.failed ? ` (${data.failed} falliti)${firstErr}` : ''
       // dry-run = pubblicazione non attiva: contenuti pronti ma non pubblicati davvero.
       const dryNote = data.dry_run ? ` ${data.dry_run} in dry-run (PUBLISH_ENABLED non attivo).` : ''
-      const visualNote = [
-        data.visual_pending ? `${data.visual_pending} montaggi in corso` : '',
-        data.visual_review ? `${data.visual_review} video pronti da vedere e approvare` : '',
-      ].filter(Boolean).join(', ')
+      // I video montati adesso NON partono: tornano in "Da approvare" perche il
+      // montaggio e un artefatto nuovo e va guardato. Detto cosi invece che con
+      // "N video pronti": chi guardava l'elenco vedeva i contenuti lasciare gli
+      // approvati e pensava fossero spariti.
+      const visualNote = data.visual_review
+        ? ` ${data.visual_review} video sono stati montati e sono tornati in "Da approvare": guardali in Preview e approvali una seconda volta, poi risincronizza. Nessun video appena montato viene pubblicato senza che tu lo veda.`
+        : ''
+      const pendingNote = data.visual_pending ? ` ${data.visual_pending} montaggi ancora in corso.` : ''
+      // Il montaggio video e lento e la funzione ha un tetto di 5 minuti: con
+      // molti approvati un giro solo non basta, e va detto.
+      const restoNote = data.rimasti
+        ? ` ⏳ Restano ${data.rimasti} contenuti da lavorare: premi di nuovo "Sincronizza Blotato" per continuare.`
+        : ''
       setSyncMsg({
-        type: data.failed ? 'err' : (data.dry_run || data.visual_pending || data.visual_review) ? 'warn' : 'ok',
+        type: data.failed ? 'err' : (data.dry_run || data.visual_pending || data.visual_review || data.rimasti) ? 'warn' : 'ok',
         text: data.candidates === 0
           ? 'Nessun contenuto approvato da sincronizzare.'
-          : `${data.synced} contenuti inviati a Blotato${failNote}.${dryNote}${visualNote ? ` ${visualNote}. Nessun video appena generato è stato pubblicato.` : ''}`,
+          : `${data.synced} contenuti inviati a Blotato${failNote}.${dryNote}${visualNote}${pendingNote}${restoNote}`,
       })
       // Dopo l'invio rileggi Blotato: scheduled non equivale a pubblicato. Questo
       // aggiorna anche gli invii dei giorni scorsi rimasti senza webhook.
