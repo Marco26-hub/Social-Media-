@@ -45,6 +45,17 @@ function audioFormatLabel(formato: string) {
   return 'Reel'
 }
 
+// Esito (anteprima o applicazione) dello spostamento del piano.
+type ShiftResult = {
+  applicato: boolean
+  giorni: number
+  spostati: number
+  bloccati_blotato: number
+  ignorati: number
+  prima_data: string
+  nuova_prima_data: string
+}
+
 // Referto del controllo finale del ciclo (app/api/data/plan-audit + lib/plan-audit).
 type PlanAudit = {
   dal: string
@@ -211,6 +222,14 @@ function CalendarioInner() {
   const [packageReconcile, setPackageReconcile] = useState<PackageReconcile | null>(null)
   const [auditing, setAuditing] = useState(false)
   const [planAudit, setPlanAudit] = useState<PlanAudit | null>(null)
+  // Spostamento del piano: `shiftOpen` apre il pannello, `shiftPreview` tiene
+  // l'anteprima calcolata dal server. Nessuno spostamento parte senza che
+  // l'anteprima sia stata mostrata: sono decine di pubblicazioni.
+  const [shiftOpen, setShiftOpen] = useState(false)
+  const [shiftGiorni, setShiftGiorni] = useState('7')
+  const [shifting, setShifting] = useState(false)
+  const [shiftPreview, setShiftPreview] = useState<ShiftResult | null>(null)
+  const [shiftError, setShiftError] = useState<string | null>(null)
   const [requeuing, setRequeuing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'warn' | 'err'; text: string } | null>(null)
   const [vista, setVista] = useState<'lista' | 'griglia'>('lista')
@@ -581,6 +600,38 @@ function CalendarioInner() {
       setSyncMsg({ type: 'err', text: (e as Error).message })
     } finally {
       setAuditing(false)
+    }
+  }
+
+  // `applica = false` chiede solo l'anteprima: il server calcola e non scrive.
+  async function spostaPiano(applica: boolean) {
+    const giorni = Number(shiftGiorni)
+    setShifting(true)
+    setShiftError(null)
+    try {
+      const res = await fetch('/api/data/calendario/shift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ giorni, dry_run: !applica }),
+      })
+      if (!res.ok) throw new Error(await readApiError(res, 'Spostamento del piano fallito'))
+      const data = await res.json() as ShiftResult
+      setShiftPreview(data)
+      if (applica) {
+        setShiftOpen(false)
+        setShiftPreview(null)
+        setSyncMsg({
+          type: data.bloccati_blotato ? 'warn' : 'ok',
+          text: `Piano spostato di ${data.giorni > 0 ? '+' : ''}${data.giorni} giorni: ${data.spostati} contenuti, si parte dal ${formatShortDate(data.nuova_prima_data)}.`
+            + (data.bloccati_blotato ? ` ${data.bloccati_blotato} gia inviati a Blotato NON sono stati spostati: la loro data vive sul server di Blotato.` : ''),
+        })
+        await fetchData()
+      }
+    } catch (e) {
+      setShiftError((e as Error).message)
+      setShiftPreview(null)
+    } finally {
+      setShifting(false)
     }
   }
 
@@ -1206,6 +1257,12 @@ function CalendarioInner() {
                 {auditing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ClipboardCheck className="w-4 h-4" />}
                 <span>{auditing ? 'Controllo...' : 'Verifica piano'}</span>
               </button>
+              {/* Accanto a "Verifica piano" perche e l'altra azione che agisce sul
+                  PIANO intero, non sul singolo contenuto. */}
+              <button onClick={() => { setShiftOpen(true); setShiftPreview(null); setShiftError(null) }} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 inline-flex items-center gap-1.5" title="Sposta tutto il piano futuro avanti o indietro di N giorni, mantenendo distanze, orari e sequenza">
+                <CalendarClock className="w-4 h-4" />
+                <span>Sposta piano</span>
+              </button>
               <button onClick={requeuePassati} disabled={requeuing} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 disabled:opacity-60 inline-flex items-center gap-1.5" title="Sposta i contenuti approvati in ritardo e recupera gli invii Blotato rimasti programmati">
                 {requeuing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
                 <span>{requeuing ? 'Rimetto in coda...' : 'Rimetti in coda i passati'}</span>
@@ -1267,6 +1324,54 @@ function CalendarioInner() {
         <div className={`mb-4 rounded-xl border p-3 text-sm flex items-start gap-2 ${syncMsg.type === 'ok' ? 'border-green-200 bg-green-50 text-green-800' : syncMsg.type === 'warn' ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
           {syncMsg.type === 'ok' ? <CheckCircle className="w-4 h-4 mt-0.5" /> : <AlertTriangle className="w-4 h-4 mt-0.5" />}
           {syncMsg.text}
+        </div>
+      )}
+
+      {shiftOpen && (
+        <div className="mb-4 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+            <div>
+              <p className="font-semibold text-slate-900">Sposta il piano</p>
+              <p className="text-xs text-slate-600">Tutti i contenuti futuri si spostano insieme: distanze, orari e sequenza restano identici.</p>
+            </div>
+            <button type="button" onClick={() => { setShiftOpen(false); setShiftPreview(null); setShiftError(null) }} className="text-xs font-medium text-gray-500 hover:text-gray-800">Chiudi</button>
+          </div>
+          <div className="flex flex-wrap items-end gap-3 px-4 py-3">
+            <label className="text-xs font-medium text-gray-700">
+              Giorni
+              <input
+                type="number"
+                value={shiftGiorni}
+                onChange={e => { setShiftGiorni(e.target.value); setShiftPreview(null) }}
+                className="mt-1 block w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                placeholder="7"
+              />
+              <span className="mt-1 block text-[11px] font-normal text-gray-500">Negativo per anticipare</span>
+            </label>
+            <button type="button" onClick={() => spostaPiano(false)} disabled={shifting} className="btn-secondary py-2 px-4 text-sm disabled:opacity-60">
+              {shifting && !shiftPreview ? 'Calcolo...' : 'Anteprima'}
+            </button>
+            {shiftPreview && !shiftPreview.applicato && (
+              <button type="button" onClick={() => spostaPiano(true)} disabled={shifting} className="btn-primary py-2 px-4 text-sm disabled:opacity-60">
+                {shifting ? 'Sposto...' : `Conferma: sposta ${shiftPreview.spostati} contenuti`}
+              </button>
+            )}
+          </div>
+          {shiftError && <p className="border-t bg-red-50 px-4 py-2 text-xs text-red-700">{shiftError}</p>}
+          {shiftPreview && !shiftPreview.applicato && (
+            <div className="border-t bg-slate-50 px-4 py-3 text-xs text-slate-700">
+              <p>
+                <span className="font-semibold">{shiftPreview.spostati} contenuti</span> si spostano di {shiftPreview.giorni > 0 ? '+' : ''}{shiftPreview.giorni} giorni:
+                si parte dal <span className="font-semibold">{formatShortDate(shiftPreview.nuova_prima_data)}</span> invece che dal {formatShortDate(shiftPreview.prima_data)}.
+              </p>
+              {shiftPreview.bloccati_blotato > 0 && (
+                <p className="mt-1 text-amber-800">
+                  {shiftPreview.bloccati_blotato} contenuti sono gia stati inviati a Blotato e NON verranno spostati: la loro data di uscita vive sul server di Blotato, cambiarla qui creerebbe un calendario che mente. Per spostarli davvero vanno annullati la e rimessi in coda.
+                </p>
+              )}
+              {shiftPreview.ignorati > 0 && <p className="mt-1 text-gray-500">{shiftPreview.ignorati} gia pubblicati o archiviati restano dove sono.</p>}
+            </div>
+          )}
         </div>
       )}
 
