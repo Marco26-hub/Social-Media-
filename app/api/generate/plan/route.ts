@@ -273,7 +273,11 @@ const VALID_FORMATI = new Set(['post', 'carousel', 'reel', 'story', 'pin', 'shor
 // chunk emessi: generando una fase si emettono 2 blocchi ma il mix mensile va
 // comunque diviso su 4 settimane, altrimenti una sola fase riceve tutti i reel e
 // tutte le story del mese. Assenti = si usa la posizione fra i chunk emessi.
-type Chunk = { start: string; end: string; label: string; targetMin: number; targetMax: number; images: string[]; week?: number; mixBlocchi?: number; mixIndice?: number }
+// `mixIndice/mixBlocchi` governano la ripartizione dei FORMATI (fine: una voce
+// per mezza settimana). `faseIndice/faseBlocchi` governano la fase del FUNNEL
+// (grossa: una per settimana reale). Tenerli separati serve da quando una
+// settimana viaggia in due blocchi: il mix va diviso, la fase narrativa no.
+type Chunk = { start: string; end: string; label: string; targetMin: number; targetMax: number; images: string[]; week?: number; mixBlocchi?: number; mixIndice?: number; faseBlocchi?: number; faseIndice?: number }
 
 function isVideoUrl(url: string) {
   return url.split('?')[0].toLowerCase().endsWith('.mp4')
@@ -652,21 +656,39 @@ ${buildExtendedOutputSchema(contentQuality)}
       // emettono solo i blocchi della fase richiesta: cosi fase 1 e fase 2 danno
       // meta quota ciascuna e insieme ricompongono esattamente il totale mensile.
       const settimane = settimaneDellaFase(faseNum)
+      // OGNI settimana viaggia in DUE mezze settimane, non in un blocco solo.
+      // Con una cartella campagna una settimana arriva a 12 contenuti e, in
+      // qualita high, ogni contenuto porta con se 5 scene da 9 campi: il JSON di
+      // risposta supera il tetto di token e torna troncato ("Malformed JSON
+      // array"), oppure ci mette troppo e viene abortito. Successo reale: fase 2
+      // con 24 contenuti su 24 finiti come slot da sistemare, i due blocchi
+      // falliti uno per troncamento e uno per timeout. Dimezzando il blocco si
+      // dimezza la risposta, e le due meta girano comunque in parallelo: stesso
+      // tempo d'attesa, meta del rischio.
+      const META_PER_SETTIMANA = 2
       SETTIMANE_DEL_MESE.forEach(i => {
         if (!settimane.includes(i)) return
-        const targetPacchetto = packagePlan ? quotaBlocco(packagePlan.totale, SETTIMANE_DEL_MESE.length, i) : null
-        chunks.push({
-          start: fmtDate(addDays(today, i * 7)),
-          end: fmtDate(addDays(today, i * 7 + 6)),
-          label: `Settimana ${i + 1} del piano mensile`,
-          targetMin: targetPacchetto ?? minPerWeek,
-          targetMax: targetPacchetto ?? maxPerWeek,
-          images: [],
-          week: i + 1,
-          // Il mix segue la settimana REALE del mese, non la posizione nella fase.
-          mixBlocchi: SETTIMANE_DEL_MESE.length,
-          mixIndice: i,
-        })
+        const targetSettimana = packagePlan ? quotaBlocco(packagePlan.totale, SETTIMANE_DEL_MESE.length, i) : null
+        for (let h = 0; h < META_PER_SETTIMANA; h++) {
+          const targetMeta = targetSettimana === null ? null : quotaBlocco(targetSettimana, META_PER_SETTIMANA, h)
+          chunks.push({
+            start: fmtDate(addDays(today, i * 7 + (h === 0 ? 0 : 4))),
+            end: fmtDate(addDays(today, i * 7 + (h === 0 ? 3 : 6))),
+            label: `Settimana ${i + 1} del piano mensile · ${h === 0 ? 'giorni 1-4' : 'giorni 5-7'}`,
+            targetMin: targetMeta ?? Math.ceil(minPerWeek / META_PER_SETTIMANA),
+            targetMax: targetMeta ?? Math.ceil(maxPerWeek / META_PER_SETTIMANA),
+            images: [],
+            week: i + 1,
+            // Il MIX si ripartisce su tutte le mezze settimane del mese (8), o il
+            // mese ne produrrebbe il doppio.
+            mixBlocchi: SETTIMANE_DEL_MESE.length * META_PER_SETTIMANA,
+            mixIndice: i * META_PER_SETTIMANA + h,
+            // La FASE del funnel resta legata alla settimana reale: le due meta
+            // della settimana 3 raccontano entrambe SCELTA, non due fasi diverse.
+            faseBlocchi: SETTIMANE_DEL_MESE.length,
+            faseIndice: i,
+          })
+        }
       })
     } else if (packagePlan && packagePlan.totale > 4 && (contentQuality === 'high' || contentQuality === 'medium')) {
       // Crescita settimanale = 6 contenuti: due blocchi da 3 evitano JSON
@@ -782,8 +804,22 @@ ${buildExtendedOutputSchema(contentQuality)}
           })
           return
         }
-        ;[...groups.values()].forEach((urls, i) => {
-          blocchiSettimana[i % blocchiSettimana.length].images.push(...urls)
+        // La rotazione va fatta per CONCETTO, non per gruppo: Instagram e
+        // Facebook dello stesso contenuto sono due gruppi distinti (la chiave
+        // include la piattaforma) e a rotazione finirebbero in blocchi diversi,
+        // quindi in giorni diversi. Sarebbe lo stesso concept raccontato sui due
+        // canali a giorni di distanza — il difetto che si vede subito nel
+        // calendario. Assegnando per concetto, le due varianti restano insieme.
+        const bloccoDelConcetto = new Map<string, number>()
+        ;[...groups.entries()].forEach(([chiave, urls]) => {
+          const placement = assetPlacements.get(urls[0])
+          const concetto = placement ? scopedCampaignContentKey(placement) : chiave
+          let indice = bloccoDelConcetto.get(concetto)
+          if (indice === undefined) {
+            indice = bloccoDelConcetto.size % blocchiSettimana.length
+            bloccoDelConcetto.set(concetto, indice)
+          }
+          blocchiSettimana[indice].images.push(...urls)
         })
       })
 
@@ -945,6 +981,10 @@ CONTINUITÀ TRA LE FASI — vincolante: questi sono i contenuti delle SETTIMANE 
       // due fasi generano due volte lo stesso pezzo di storia.
       const posizioneNelMese = chunk.mixIndice ?? chunkIndex
       const mixBlocchiChunk = chunk.mixBlocchi ?? chunks.length
+      // La fase del funnel segue la SETTIMANA, non la mezza settimana: le due
+      // meta della settimana 3 devono raccontare entrambe SCELTA.
+      const faseIndiceChunk = chunk.faseIndice ?? posizioneNelMese
+      const faseBlocchiChunk = chunk.faseBlocchi ?? mixBlocchiChunk
       async function attempt(targetMin: number, targetMax: number, maxTok: number, compact = false): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
         const userPrompt = `Agisci come Social Media Manager e Visual Director senior per il brand o l'attivita descritta nel contesto.
 Crea contenuti per ${chunk.label}, dal ${chunk.start} al ${chunk.end}, per / ${piattaformeStr} /.
@@ -997,8 +1037,8 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
             // 3-4 e deve ricevere SCELTA/AZIONE. Con l'indice del run partiva da 0
             // e ripeteva ATTENZIONE/FIDUCIA della fase 1: due mezzi mesi identici
             // invece di un unico arco narrativo che prosegue.
-            chunkIndex: posizioneNelMese,
-            totalChunks: mixBlocchiChunk,
+            chunkIndex: faseIndiceChunk,
+            totalChunks: faseBlocchiChunk,
             target: targetMax,
           })
           // Stessa ragione: pilastri e angoli creativi ruotano sull'indice, quindi
