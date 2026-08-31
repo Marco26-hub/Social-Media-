@@ -39,12 +39,14 @@ type PlanAsset = {
   platform?: 'instagram' | 'facebook' | null
   contentKey?: string | null
   sequence?: number | null
+  size?: number
   // Presente solo sui media recuperati dallo storage (/api/assets/list): serve a
   // distinguere i caricamenti fra loro e proporre il piu recente.
   updatedAt?: string
 }
 type FolderCandidate = { file: File; assignment: CampaignFolderAsset }
 type FolderPreview = { root: string; candidates: FolderCandidate[]; ignored: number }
+type StorageSummary = { totalBytes: number; totalMb: number; limitMb: number | null }
 // Tetto sui media VISIVI (foto e MP4). Le tracce audio non lo consumano: sono
 // una per contenuto, accompagnano un media invece di sostituirlo, e facendole
 // pesare sul limite una cartella mensile completa arrivava a sfiorarlo.
@@ -167,6 +169,8 @@ export default function PianoPage() {
   const [assetRecuperabili, setAssetRecuperabili] = useState<PlanAsset[]>([])
   const [recuperoFatto, setRecuperoFatto] = useState(false)
   const [pulizia, setPulizia] = useState<{ inCorso: boolean; messaggio: string; errore?: boolean } | null>(null)
+  const [storageSummary, setStorageSummary] = useState<StorageSummary | null>(null)
+  const [calendarioPulizia, setCalendarioPulizia] = useState<{ inCorso: boolean; messaggio: string; candidati: number } | null>(null)
 
   // Un "caricamento" e un gruppo di file vicini nel tempo, NON un giorno: nello
   // stesso giorno possono essercene due (e successo: 296 file il 29/08, alle
@@ -255,12 +259,40 @@ export default function PianoPage() {
       try {
         const res = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
         if (!res.ok) return
-        const data = await res.json() as { assets?: PlanAsset[] }
-        if (alive) setAssetRecuperabili(Array.isArray(data.assets) ? data.assets : [])
+        const data = await res.json() as { assets?: PlanAsset[]; totale_bytes?: number; mb_totali?: number; limite_mb?: number | null }
+        if (alive) {
+          setAssetRecuperabili(Array.isArray(data.assets) ? data.assets : [])
+          setStorageSummary({
+            totalBytes: Number(data.totale_bytes || 0),
+            totalMb: Number(data.mb_totali || 0),
+            limitMb: Number.isFinite(Number(data.limite_mb)) ? Number(data.limite_mb) : null,
+          })
+        }
       } catch { /* il recupero e un extra: se fallisce si carica a mano */ }
       finally { if (alive) setRecuperoFatto(true) }
     }
     recupera()
+    return () => { alive = false }
+  }, [clienteId, demo])
+
+  // Stato del calendario prima di una nuova campagna. La simulazione non tocca
+  // dati e serve a rendere esplicito cosa verrebbe rimosso.
+  useEffect(() => {
+    let alive = true
+    async function controllaCalendario() {
+      if (!clienteId || demo) return
+      try {
+        const res = await fetch('/api/data/calendario/cleanup-non-live', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cliente_id: clienteId, dry_run: true }),
+        })
+        if (!res.ok) return
+        const data = await res.json() as { contenuti?: number }
+        if (alive) setCalendarioPulizia({ inCorso: false, messaggio: '', candidati: Number(data.contenuti || 0) })
+      } catch { /* il pannello resta opzionale se il DB non e raggiungibile */ }
+    }
+    controllaCalendario()
     return () => { alive = false }
   }, [clienteId, demo])
 
@@ -306,11 +338,69 @@ export default function PianoPage() {
       // L'elenco recuperabile non e piu valido: si ricarica.
       const aggiornato = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
       if (aggiornato.ok) {
-        const dati = await aggiornato.json() as { assets?: PlanAsset[] }
+        const dati = await aggiornato.json() as { assets?: PlanAsset[]; totale_bytes?: number; mb_totali?: number; limite_mb?: number | null }
         setAssetRecuperabili(Array.isArray(dati.assets) ? dati.assets : [])
+        setStorageSummary({
+          totalBytes: Number(dati.totale_bytes || 0),
+          totalMb: Number(dati.mb_totali || 0),
+          limitMb: Number.isFinite(Number(dati.limite_mb)) ? Number(dati.limite_mb) : null,
+        })
       }
     } catch (e) {
       setPulizia({ inCorso: false, errore: true, messaggio: (e as Error).message })
+    }
+  }
+
+  async function pulisciCalendarioNonInviato() {
+    if (!clienteId || calendarioPulizia?.inCorso) return
+    setCalendarioPulizia(prev => ({ inCorso: true, messaggio: 'Controllo i contenuti non inviati...', candidati: prev?.candidati || 0 }))
+    try {
+      const preview = await fetch('/api/data/calendario/cleanup-non-live', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente_id: clienteId, dry_run: true }),
+      })
+      if (!preview.ok) throw new Error(await readApiError(preview, 'Controllo calendario fallito'))
+      const s = await preview.json() as { contenuti?: number; mediaCollegati?: number; mbMedia?: number }
+      const candidati = Number(s.contenuti || 0)
+      if (!candidati) {
+        setCalendarioPulizia({ inCorso: false, messaggio: 'Nessun contenuto non inviato da rimuovere.', candidati: 0 })
+        return
+      }
+      const conferma = window.confirm(
+        `Rimuovere ${candidati} contenuti non inviati dal calendario?\n\n`
+        + `Media collegati: ${Number(s.mediaCollegati || 0)} (${Number(s.mbMedia || 0)} MB stimati).\n`
+        + 'Restano intatti i contenuti pubblicati o già schedulati su Blotato.\n\n'
+        + 'L’operazione è irreversibile.',
+      )
+      if (!conferma) {
+        setCalendarioPulizia({ inCorso: false, messaggio: 'Pulizia annullata.', candidati })
+        return
+      }
+      const response = await fetch('/api/data/calendario/cleanup-non-live', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente_id: clienteId, dry_run: false, elimina_media: true }),
+      })
+      if (!response.ok) throw new Error(await readApiError(response, 'Pulizia calendario fallita'))
+      const result = await response.json() as { eliminati?: number; media_eliminati?: number; mb_liberati?: number }
+      setCalendarioPulizia({
+        inCorso: false,
+        messaggio: `Rimossi ${Number(result.eliminati || 0)} contenuti non inviati e ${Number(result.media_eliminati || 0)} media (${Number(result.mb_liberati || 0)} MB liberati).`,
+        candidati: 0,
+      })
+      const aggiornato = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
+      if (aggiornato.ok) {
+        const dati = await aggiornato.json() as { assets?: PlanAsset[]; totale_bytes?: number; mb_totali?: number; limite_mb?: number | null }
+        setAssetRecuperabili(Array.isArray(dati.assets) ? dati.assets : [])
+        setStorageSummary({
+          totalBytes: Number(dati.totale_bytes || 0),
+          totalMb: Number(dati.mb_totali || 0),
+          limitMb: Number.isFinite(Number(dati.limite_mb)) ? Number(dati.limite_mb) : null,
+        })
+      }
+    } catch (error) {
+      setCalendarioPulizia({ inCorso: false, messaggio: (error as Error).message, candidati: calendarioPulizia?.candidati || 0 })
     }
   }
 
@@ -454,6 +544,7 @@ export default function PianoPage() {
           })(),
           mime: a.mime,
           kind: a.kind,
+          size: a.size,
           tag: uploadedNames.get(a.name)?.assignment?.tag || uploadedNames.get(a.name)?.destination || 'auto',
           relativePath: uploadedNames.get(a.name)?.assignment?.relativePath,
           week: uploadedNames.get(a.name)?.assignment?.week,
@@ -465,6 +556,18 @@ export default function PianoPage() {
         skippedMessages.push(...(data.skipped || []).map(item => `${item.name}: ${item.motivo}`))
       }
       setFolderPreview(null)
+      // Il riepilogo MB deve riflettere anche il caricamento appena concluso,
+      // altrimenti il limite mostrato resta quello della sessione precedente.
+      const aggiornato = await fetch(`/api/assets/list?cliente_id=${encodeURIComponent(clienteId)}`)
+      if (aggiornato.ok) {
+        const dati = await aggiornato.json() as { assets?: PlanAsset[]; totale_bytes?: number; mb_totali?: number; limite_mb?: number | null }
+        setAssetRecuperabili(Array.isArray(dati.assets) ? dati.assets : [])
+        setStorageSummary({
+          totalBytes: Number(dati.totale_bytes || 0),
+          totalMb: Number(dati.mb_totali || 0),
+          limitMb: Number.isFinite(Number(dati.limite_mb)) ? Number(dati.limite_mb) : null,
+        })
+      }
       if (skippedMessages.length) setUploadError(`Alcuni file non sono stati caricati: ${skippedMessages.join(' · ')}`)
     } catch (e) {
       setUploadError((e as Error).message)
@@ -1142,6 +1245,63 @@ export default function PianoPage() {
                   <p className={`mt-2 text-[11px] font-medium ${pulizia.errore ? 'text-red-700' : 'text-amber-900'}`}>
                     {pulizia.messaggio}
                   </p>
+                )}
+              </div>
+            )}
+
+            {recuperoFatto && storageSummary && !demo && (
+              <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50/80 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-gray-900">Capienza storage cliente</p>
+                  <p className="text-xs font-bold text-gray-700">
+                    {storageSummary.totalMb} MB{storageSummary.limitMb ? ` / ${storageSummary.limitMb} MB` : ''}
+                  </p>
+                </div>
+                {storageSummary.limitMb && (
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-200" aria-label="Utilizzo storage">
+                    <div
+                      className={`h-full rounded-full transition-all ${storageSummary.totalMb / storageSummary.limitMb >= 0.9 ? 'bg-red-500' : storageSummary.totalMb / storageSummary.limitMb >= 0.75 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                      style={{ width: `${Math.min(100, Math.max(0, (storageSummary.totalMb / storageSummary.limitMb) * 100))}%` }}
+                    />
+                  </div>
+                )}
+                <p className="mt-1 text-[10px] text-gray-600">
+                  Il conteggio include immagini, MP4 e audio realmente presenti nello storage. I contenuti pubblicati o già schedulati non vengono rimossi dalla pulizia.
+                </p>
+              </div>
+            )}
+
+            {recuperoFatto && calendarioPulizia && (calendarioPulizia.candidati > 0 || Boolean(calendarioPulizia.messaggio)) && (
+              <div className={`mt-3 rounded-lg border p-3 ${calendarioPulizia.candidati > 0 ? 'border-red-200 bg-red-50/70' : 'border-emerald-200 bg-emerald-50/70'}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    {calendarioPulizia.candidati > 0 ? (
+                      <>
+                        <p className="text-xs font-semibold text-red-900">
+                          {calendarioPulizia.candidati} contenuti non inviati sono ancora nel calendario
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-red-800">
+                          Prima di generare una nuova campagna puoi rimuovere bozze, rifiutati, errori e approvati mai trasferiti a Blotato. Pubblicati e schedulati restano protetti.
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs font-semibold text-emerald-900">Calendario pronto per una nuova campagna</p>
+                    )}
+                  </div>
+                  {calendarioPulizia.candidati > 0 && (
+                    <button
+                      type="button"
+                      onClick={pulisciCalendarioNonInviato}
+                      disabled={Boolean(calendarioPulizia.inCorso)}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-md border border-red-300 bg-white px-3 text-xs font-semibold text-red-800 shadow-sm hover:bg-red-100 disabled:opacity-50"
+                    >
+                      {calendarioPulizia.inCorso ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      Pulisci calendario non inviato
+                    </button>
+                  )}
+                </div>
+                {calendarioPulizia.messaggio && (
+                  <p className={`mt-2 text-[11px] font-medium ${calendarioPulizia.candidati > 0 ? 'text-red-900' : 'text-emerald-900'}`}>{calendarioPulizia.messaggio}</p>
                 )}
               </div>
             )}

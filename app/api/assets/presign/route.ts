@@ -2,8 +2,9 @@ import path from 'path'
 import { NextResponse } from 'next/server'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { apiError } from '@/lib/api-error'
-import { isStorageConfigured, presignPutUrl, publicUrlForKey } from '@/lib/storage'
+import { isStorageConfigured, listFromStorage, presignPutUrl, publicUrlForKey } from '@/lib/storage'
 import { safeFilename } from '@/lib/asset-name'
+import { bytesToMb, storageQuotaBytes, storageQuotaMb } from '@/lib/storage-quota'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -63,6 +64,9 @@ export async function POST(request: Request) {
     if (!files.length) return NextResponse.json({ error: 'Nessun file' }, { status: 400 })
     if (files.length > MAX_FILES) return NextResponse.json({ error: `Massimo ${MAX_FILES} media per contenuto` }, { status: 400 })
 
+    const storageObjects = await listFromStorage(`uploads/${clienteId}/`)
+    let projectedBytes = storageObjects.reduce((total, object) => total + (object.size || 0), 0)
+    const quotaBytes = storageQuotaBytes()
     const items: OutItem[] = []
     for (const f of files) {
       const name = String(f?.name || 'asset')
@@ -87,6 +91,14 @@ export async function POST(request: Request) {
         items.push({ name, ok: false, motivo: `supera ${Math.round(maxSize / 1024 / 1024)}MB` })
         continue
       }
+      if (projectedBytes + size > quotaBytes) {
+        items.push({
+          name,
+          ok: false,
+          motivo: `supera la capienza storage del cliente (${bytesToMb(projectedBytes)} MB di ${storageQuotaMb()} MB già occupati)`,
+        })
+        continue
+      }
 
       const filename = safeFilename(name)
       const key = `uploads/${clienteId}/${filename}`
@@ -96,9 +108,17 @@ export async function POST(request: Request) {
       // Bucket pubblico → URL diretto; privato → proxy same-origin /api/assets/file.
       const url = publicUrlForKey(key) || `/api/assets/file/${encodeURIComponent(clienteId)}/${encodeURIComponent(filename)}`
       items.push({ name, ok: true, uploadUrl, url, path: url, key, mime, kind })
+      projectedBytes += size
     }
 
-    return NextResponse.json({ ok: true, storage: 'storage', items })
+    return NextResponse.json({
+      ok: true,
+      storage: 'storage',
+      items,
+      storage_bytes: projectedBytes,
+      storage_mb: bytesToMb(projectedBytes),
+      storage_limit_mb: storageQuotaMb(),
+    })
   } catch (e) {
     return apiError(e)
   }

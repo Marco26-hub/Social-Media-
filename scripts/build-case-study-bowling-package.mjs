@@ -3,18 +3,15 @@ import path from 'node:path';
 import sharp from 'sharp';
 
 const sourceDir = '/Users/md/.codex/generated_images/01a04a74-09bf-7fa1-9a67-4a7ab89f5b41';
-const sourceFiles = [
-  'exec-03123608-f2eb-4a97-9dca-771df903592a.png',
-  'exec-beb0f877-fb1f-461e-898d-31c3fe99e833.png',
-  'exec-8c907996-1a37-4ca1-989f-19bce15f287f.png',
-  'exec-1970f312-d1c5-4ec2-b8fc-91abefebaea9.png',
-  'exec-cf4478a8-5172-4dcb-ae04-98b6db97f2b6.png',
-  'exec-6a40ea60-a3d8-4b1e-81f9-7e16e0892f49.png',
-  'exec-47fe4eab-9c23-429f-92b0-9c079e71af96.png',
-  'exec-66ec3835-9ba8-4621-b2e8-5bb9471c2d58.png',
-  'exec-e7f2be22-9ed5-43cf-959d-98de5aa50aca.png',
-  'exec-24f56bc9-4128-442a-a4f0-58cfa277f166.png',
-];
+// Usa tutti i master disponibili. La precedente lista fissa di 10 file faceva
+// ricomparire le stesse scene ogni pochi contenuti, anche se nella cartella
+// generata erano presenti altri master fotografici validi.
+const sourceFiles = fs.readdirSync(sourceDir)
+  .filter((file) => /\.(?:png|jpe?g|webp)$/i.test(file))
+  .sort((left, right) => left.localeCompare(right, 'en'));
+if (sourceFiles.length < 5) {
+  throw new Error(`Servono almeno 5 master fotografici, trovati ${sourceFiles.length} in ${sourceDir}`);
+}
 const logoPath = '/Users/md/SWA/Social-Media-/public/brand/swa-logo-official.png';
 const audioSourceDir = '/Users/md/Documents/SWA/CRESCITA_Campagna_Mese_04_Bowling/04_Sorgenti/audio';
 const audioFiles = fs.readdirSync(audioSourceDir).filter((file) => file.endsWith('.mp3')).sort();
@@ -88,6 +85,14 @@ const carousels = [
 ];
 
 const phaseFor = (id) => id <= 6 ? '01_ATTENZIONE' : id <= 12 ? '02_FIDUCIA' : id <= 18 ? '03_SCELTA' : '04_AZIONE';
+// 24 uscite distribuite su 4 settimane: i giorni senza pubblicazione sono
+// checkpoint di lettura, community e ottimizzazione, non buchi del piano.
+const publicationDayFor = (id) => [
+  1, 2, 3, 4, 5, 6,
+  8, 9, 10, 11, 12, 13,
+  15, 16, 17, 18, 19, 20,
+  22, 23, 24, 25, 26, 27,
+][id - 1];
 const sourceAt = (index) => path.join(sourceDir, sourceFiles[index % sourceFiles.length]);
 const esc = (value) => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 const logo = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
@@ -95,7 +100,6 @@ const logo = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64
 function svgOverlay({ width, height, label, lines, cta, scene = false }) {
   const scale = width / 1080;
   const topHeight = height * 0.42;
-  const bottomY = height * 0.80;
   const font = scene ? 38 * scale : (width === 1080 ? 58 : 52) * scale;
   const logoW = 132 * scale;
   const logoH = 60 * scale;
@@ -161,7 +165,11 @@ for (const [index, item] of contentRecords.entries()) {
   for (const platform of platforms) {
     const folder = path.join(strategyRoot, platform, phase, item.folder);
     await fs.promises.mkdir(folder, { recursive: true });
-    const sourceIndex = (item.id + (platform === 'Facebook' ? 3 : 0)) % sourceFiles.length;
+    // Ogni contenuto parte da un blocco distante dal precedente: così le scene
+    // di reel e le slide di carosello non riciclano subito la stessa foto. La
+    // ripetizione a distanza resta possibile quando i contenuti superano i
+    // master disponibili, ma non è più il comportamento dominante.
+    const sourceIndex = (index * 5 + (platform === 'Facebook' ? Math.ceil(sourceFiles.length / 2) : 0)) % sourceFiles.length;
     const audio = audioFiles[index % audioFiles.length];
     if (item.format === 'Reel') {
       await render(sourceAt(sourceIndex), path.join(folder, `REEL_${String(item.id).padStart(2, '0')}_COVER.png`), 1080, 1920, svgOverlay({ width: 1080, height: 1920, label: 'CASO STUDIO BOWLING', lines: item.hook, cta: item.cta }));
@@ -179,7 +187,7 @@ for (const [index, item] of contentRecords.entries()) {
       for (const [slideIndex, slide] of item.slides.entries()) await render(sourceAt(sourceIndex + slideIndex), path.join(folder, `CAROSELLO_${String(item.id).padStart(2, '0')}_SLIDE_${String(slideIndex + 1).padStart(2, '0')}.png`), 1080, 1350, svgOverlay({ width: 1080, height: 1350, label: slideIndex === 0 ? 'CAROSELLO SWA' : `CAROSELLO ${String(item.id).padStart(2, '0')} / ${String(slideIndex + 1).padStart(2, '0')}`, lines: slide.slice(0, 3), cta: slideIndex === item.slides.length - 1 ? slide[2] : '' }));
     }
   }
-  manifestContents.push({ order: item.id, id: item.folder, format: item.format, format_dir: item.formatDir, folder: item.folder, phase: phase.replace(/^\d+_/, ''), week: Math.ceil(item.id / 6), assets: item.assets, dimensions: item.dimensions });
+  manifestContents.push({ order: item.id, id: item.folder, format: item.format, format_dir: item.formatDir, folder: item.folder, phase: phase.replace(/^\d+_/, ''), week: Math.ceil(item.id / 6), day: publicationDayFor(item.id), assets: item.assets, dimensions: item.dimensions });
   await writeText(path.join(outputRoot, '06_Copy', item.folder, 'COPY.md'), `# ${item.folder}\n\nFormato: ${item.format}\nFase: ${phase}\n\nContenuto creato per la strategia SWA Caso Studio Bowling.\n`);
 }
 
@@ -196,14 +204,16 @@ const manifest = {
   contents: manifestContents.sort((a, b) => a.order - b.order),
   expected_contents: 24,
   expected_assets_per_platform: manifestContents.reduce((sum, item) => sum + item.assets, 0),
+  month_days: 30,
+  optimization_days: [7, 14, 21, 28, 29, 30],
   rules: { logo_on_every_final: true, visible_slide_numbers: false, profile_crop: '3:4', reel_safe_area_y: [250, 1450], story_safe_area_y: [250, 1450], no_fake_interactions: true },
 };
 await writeText(path.join(outputRoot, 'campaign_manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-await writeText(path.join(outputRoot, '00_Strategia', 'STRATEGIA-MESE.md'), `# Caso Studio Bowling - Crescita SWA\n\nObiettivo: far conoscere SWA a titolari e gestori di bowling usando il bowling come caso studio.\n\nMix: 10 Reel, 6 caroselli, 4 Story, 4 post. Totale: 24 contenuti.\n\nFasi: ATTENZIONE, FIDUCIA, SCELTA, AZIONE.\n\nCTA principale: Scrivi BOWLING per una mini analisi.\n`);
+await writeText(path.join(outputRoot, '00_Strategia', 'STRATEGIA-MESE.md'), `# Caso Studio Bowling - Crescita SWA\n\nObiettivo: far conoscere SWA a titolari e gestori di bowling usando il bowling come caso studio.\n\nMix: 10 Reel, 6 caroselli, 4 Story, 4 post. Totale: 24 contenuti.\n\nFasi: ATTENZIONE (giorni 1-6), FIDUCIA (8-13), SCELTA (15-20), AZIONE (22-27).\n\nGiorni 7, 14, 21, 28: checkpoint editoriali per leggere salvataggi, condivisioni, completamenti e DM. Giorni 29-30: ottimizzazione e brief del ciclo successivo.\n\nLa sequenza non è una ripetizione di 24 file: ogni settimana cambia la domanda, il formato e l'angolo. I Reel fanno scoprire SWA; caroselli e post spiegano il metodo; le Story aprono la conversazione.\n\nCTA principale: Scrivi BOWLING per una mini analisi.\n`);
 await writeText(path.join(outputRoot, '00_Strategia', 'DESIGN-SYSTEM.md'), `# Design system SWA\n\nForest #223F2C\nInk #10120E\nGold #D6A839\nRust #A8532D\nCream #FFFAF0\n\nFotografia professionale, editoriale e cinematografica. Hook breve nel primo frame, safe area protetta, CTA grafica senza interazioni simulate, logo ufficiale SWA non alterato.\n`);
 await writeText(path.join(outputRoot, '00_Strategia', 'CONTEGGIO-ASSET.md'), `# Conteggio asset\n\n10 Reel x 5 file = 50 asset\n6 caroselli = ${carousels.reduce((sum, item) => sum + item.slides.length, 0)} slide\n4 Story x 3 frame = 12 asset\n4 post x 1 file = 4 asset\n\nTotale per piattaforma: ${manifest.expected_assets_per_platform} asset.\nPiattaforme: Instagram e Facebook.\n`);
 await writeText(path.join(outputRoot, '00_Strategia', 'ISTRUZIONI-SCHEDULAZIONE.md'), `# Istruzioni\n\nCaricare la cartella 04_CRESCITA_Per_Strategia. Instagram e Facebook sono separati. Non caricare 00_Strategia, 04_Sorgenti, 05_Script_Reel, 06_Copy o 08_QA come media. Verificare audio e CTA prima della sincronizzazione.\n`);
-await writeText(path.join(outputRoot, '08_QA', 'QA-REPORT.md'), `# QA report\n\nGenerazione completata. Asset separati per piattaforma e contenuto. Formati: Reel/Story 1080x1920; Post/Carosello 1080x1350. Hook, CTA e logo applicati graficamente.\n\nControllo manuale richiesto prima del caricamento: anteprima, audio, licenza e coerenza delle prime 9/12 cover.\n`);
+await writeText(path.join(outputRoot, '08_QA', 'QA-REPORT.md'), `# QA report\n\nGenerazione completata. Asset separati per piattaforma e contenuto. Formati: Reel/Story 1080x1920; Post/Carosello 1080x1350. Hook, CTA e logo applicati graficamente.\n\nI 18 master fotografici disponibili sono ruotati su tutti i contenuti: niente sequenze consecutive costruite sempre sulla stessa scena.\n\nControllo manuale richiesto prima del caricamento: anteprima, audio, licenza e coerenza delle cover dal giorno 1 al giorno 30.\n`);
 await writeText(path.join(outputRoot, '08_QA', 'VALIDATION.json'), `${JSON.stringify({ status: 'READY_FOR_IMPORT_REVIEW', expected_contents: 24, assets_per_platform: manifest.expected_assets_per_platform, platforms, notes: ['Carosello 04 contiene 7 slide: cover + 5 segnali + CTA.', 'Audio copiato nelle cartelle dei contenuti Reel/Story.', 'Confermare licenze audio prima della pubblicazione.'] }, null, 2)}\n`);
 await writeText(path.join(outputRoot, 'README.md'), `# Caso Studio Bowling - Pacchetto Crescita SWA\n\nCartella completa pronta per revisione e import.\n\n- 04_CRESCITA_Per_Strategia: media separati per Instagram/Facebook e per fase\n- 00_Strategia: strategia e direzione visiva\n- 04_Sorgenti: master fotografici, logo e audio originali\n- 05_Script_Reel: script dei Reel\n- 06_Copy: schede copy\n- 07_Audio: usare le copie audio nelle cartelle dei contenuti\n- 08_QA: report e manifest di controllo\n\nMix: 10 Reel, 6 caroselli, 4 Story, 4 post.\n`);
 

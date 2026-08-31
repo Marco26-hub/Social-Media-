@@ -6,18 +6,14 @@ const sourceDir = '/Users/md/.codex/generated_images/01a04a74-09bf-7fa1-9a67-4a7
 const outputDir = '/Users/md/Documents/SWA/CASO_STUDIO_BOWLING_VISUALS/REEL';
 const logoPath = '/Users/md/SWA/Social-Media-/public/brand/swa-logo-official.png';
 
-const sources = [
-  'exec-03123608-f2eb-4a97-9dca-771df903592a.png',
-  'exec-beb0f877-fb1f-461e-898d-31c3fe99e833.png',
-  'exec-8c907996-1a37-4ca1-989f-19bce15f287f.png',
-  'exec-1970f312-d1c5-4ec2-b8fc-91abefebaea9.png',
-  'exec-cf4478a8-5172-4dcb-ae04-98b6db97f2b6.png',
-  'exec-6a40ea60-a3d8-4b1e-81f9-7e16e0892f49.png',
-  'exec-47fe4eab-9c23-429f-92b0-9c079e71af96.png',
-  'exec-66ec3835-9ba8-4621-b2e8-5bb9471c2d58.png',
-  'exec-e7f2be22-9ed5-43cf-959d-98de5aa50aca.png',
-  'exec-24f56bc9-4128-442a-a4f0-58cfa277f166.png',
-];
+// Carica tutti i master fotografici disponibili: limitarsi a 10 faceva
+// ricomparire le stesse scene mentre il kit Bowling ne contiene di più.
+const sources = fs.readdirSync(sourceDir)
+  .filter((file) => /\.(?:png|jpe?g|webp)$/i.test(file))
+  .sort((left, right) => left.localeCompare(right, 'en'));
+if (sources.length < 5) {
+  throw new Error(`Servono almeno 5 master fotografici, trovati ${sources.length} in ${sourceDir}`);
+}
 
 const copy = [
   ['GESTORE DI BOWLING?', 'IL PROBLEMA NON SONO LE FOTO.', 'SCOPRI LA REGIA SWA'],
@@ -117,7 +113,8 @@ function squareOverlaySvg([lineOne, lineTwo, cta], label) {
 
 await fs.promises.mkdir(outputDir, { recursive: true });
 
-await Promise.all(sources.map(async (source, index) => {
+const reelSources = Array.from({ length: 10 }, (_, index) => sources[(index * 5) % sources.length]);
+await Promise.all(reelSources.map(async (source, index) => {
   const inputPath = path.join(sourceDir, source);
   const outputPath = path.join(outputDir, `CASO_STUDIO_BOWLING_REEL_${String(index + 1).padStart(2, '0')}.png`);
   await sharp(inputPath)
@@ -133,7 +130,7 @@ const carouselDir = path.join(path.dirname(outputDir), 'CAROSELLI');
 await Promise.all([storyDir, postDir, carouselDir].map((dir) => fs.promises.mkdir(dir, { recursive: true })));
 
 await Promise.all(storyCopy.map(async (content, index) => {
-  const inputPath = path.join(sourceDir, sources[(index + 5) % sources.length]);
+  const inputPath = path.join(sourceDir, sources[(index * 3 + 7) % sources.length]);
   const outputPath = path.join(storyDir, `CASO_STUDIO_BOWLING_STORY_${String(index + 1).padStart(2, '0')}.png`);
   await sharp(inputPath)
     .resize(1080, 1920, { fit: 'cover', position: 'centre' })
@@ -143,7 +140,7 @@ await Promise.all(storyCopy.map(async (content, index) => {
 }));
 
 await Promise.all(postCopy.map(async (content, index) => {
-  const inputPath = path.join(sourceDir, sources[(index + 1) % sources.length]);
+  const inputPath = path.join(sourceDir, sources[(index * 5 + 11) % sources.length]);
   const outputPath = path.join(postDir, `CASO_STUDIO_BOWLING_POST_${String(index + 1).padStart(2, '0')}.png`);
   await sharp(inputPath)
     .resize(1080, 1080, { fit: 'cover', position: 'centre' })
@@ -153,7 +150,7 @@ await Promise.all(postCopy.map(async (content, index) => {
 }));
 
 await Promise.all(carouselCopy.map(async (content, index) => {
-  const inputPath = path.join(sourceDir, sources[(index + 3) % sources.length]);
+  const inputPath = path.join(sourceDir, sources[(index * 5 + 13) % sources.length]);
   const outputPath = path.join(carouselDir, `CASO_STUDIO_BOWLING_CAROUSEL_${String(index + 1).padStart(2, '0')}_COVER.png`);
   await sharp(inputPath)
     .resize(1080, 1080, { fit: 'cover', position: 'centre' })
@@ -162,4 +159,4 @@ await Promise.all(carouselCopy.map(async (content, index) => {
     .toFile(outputPath);
 }));
 
-console.log(`Generated ${sources.length} Reel, ${storyCopy.length} Story, ${postCopy.length} post and ${carouselCopy.length} carousel cover visuals in ${path.dirname(outputDir)}`);
+console.log(`Generated ${reelSources.length} Reel, ${storyCopy.length} Story, ${postCopy.length} post and ${carouselCopy.length} carousel cover visuals in ${path.dirname(outputDir)}`);

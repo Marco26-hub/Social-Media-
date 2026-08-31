@@ -4,6 +4,7 @@ import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { apiError } from '@/lib/api-error'
 import { isStorageConfigured, listFromStorage, publicUrlForKey } from '@/lib/storage'
 import type { MediaTag } from '@/lib/media-requirements'
+import { bytesToMb, storageQuotaMb } from '@/lib/storage-quota'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -40,10 +41,11 @@ export async function GET(request: Request) {
     await requireClienteAccess(clienteId)
 
     if (!isStorageConfigured()) {
-      return NextResponse.json({ ok: true, assets: [], storage: false })
+      return NextResponse.json({ ok: true, assets: [], storage: false, totale: 0, totale_bytes: 0, mb_totali: 0, limite_mb: null })
     }
 
     const oggetti = await listFromStorage(`uploads/${clienteId}/`)
+    const totaleBytes = oggetti.reduce((total, object) => total + (object.size || 0), 0)
 
     const assets = oggetti.map(o => {
       const filename = o.key.split('/').pop() || ''
@@ -74,7 +76,15 @@ export async function GET(request: Request) {
     // Piu recenti per primi: e quasi sempre l'ultimo caricamento a interessare.
     assets.sort((a, b) => String(b!.updatedAt).localeCompare(String(a!.updatedAt)))
 
-    return NextResponse.json({ ok: true, storage: true, totale: assets.length, assets })
+    return NextResponse.json({
+      ok: true,
+      storage: true,
+      totale: assets.length,
+      totale_bytes: totaleBytes,
+      mb_totali: bytesToMb(totaleBytes),
+      limite_mb: storageQuotaMb(),
+      assets,
+    })
   } catch (e) {
     return apiError(e)
   }

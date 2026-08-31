@@ -4,8 +4,9 @@ import { NextResponse } from 'next/server'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
 import { getPublicBaseUrl } from '@/lib/base-url'
 import { apiError } from '@/lib/api-error'
-import { isStorageConfigured, uploadToStorage } from '@/lib/storage'
+import { isStorageConfigured, listFromStorage, uploadToStorage } from '@/lib/storage'
 import { safeFilename } from '@/lib/asset-name'
+import { bytesToMb, storageQuotaBytes, storageQuotaMb } from '@/lib/storage-quota'
 
 export const runtime = 'nodejs'
 
@@ -39,6 +40,12 @@ export async function POST(request: Request) {
     // Storage persistente (S3-compatible) se configurato, altrimenti disco locale
     // (effimero, solo dev). Il proxy /api/assets/file serve i file dei bucket privati.
     const useStorage = isStorageConfigured()
+    let projectedBytes = 0
+    if (useStorage) {
+      const storageObjects = await listFromStorage(`uploads/${clienteId}/`)
+      projectedBytes = storageObjects.reduce((total, object) => total + (object.size || 0), 0)
+    }
+    const quotaBytes = storageQuotaBytes()
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', clienteId)
     if (!useStorage) await mkdir(uploadDir, { recursive: true })
 
@@ -64,6 +71,13 @@ export async function POST(request: Request) {
       if (file.size > maxSize) {
         const maxMb = Math.round(maxSize / 1024 / 1024)
         skipped.push({ name: file.name, motivo: `supera ${maxMb}MB` })
+        continue
+      }
+      if (useStorage && projectedBytes + file.size > quotaBytes) {
+        skipped.push({
+          name: file.name,
+          motivo: `supera la capienza storage del cliente (${bytesToMb(projectedBytes)} MB di ${storageQuotaMb()} MB già occupati)`,
+        })
         continue
       }
 
@@ -102,6 +116,7 @@ export async function POST(request: Request) {
         source: 'upload',
         storage: useStorage ? 'storage' : 'local',
       })
+      if (useStorage) projectedBytes += file.size
     }
 
     // Successo parziale: i file validi vengono caricati, quelli scartati sono
@@ -113,7 +128,13 @@ export async function POST(request: Request) {
         { status: 400 },
       )
     }
-    return NextResponse.json({ ok: true, assets: uploaded, skipped, storage: useStorage ? 'storage' : 'local' })
+    return NextResponse.json({
+      ok: true,
+      assets: uploaded,
+      skipped,
+      storage: useStorage ? 'storage' : 'local',
+      ...(useStorage ? { storage_bytes: projectedBytes, storage_mb: bytesToMb(projectedBytes), storage_limit_mb: storageQuotaMb() } : {}),
+    })
   } catch (e) {
     return apiError(e)
   }
