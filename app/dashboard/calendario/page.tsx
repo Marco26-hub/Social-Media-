@@ -1882,7 +1882,10 @@ function CalendarioInner() {
                     )}
                   </div>
                   {c.hook && <p className="text-sm font-medium text-gray-800 mb-0.5 truncate">{c.hook}</p>}
-                  {c.caption && <p className="text-sm text-gray-500 truncate">{c.caption}</p>}
+                  {/* Due righe, non una: `truncate` tagliava una caption da 700
+                      caratteri a meta della prima frase, spesso a meta parola, e
+                      sembrava che il testo fosse tagliato nel contenuto. */}
+                  {c.caption && <p className="text-sm text-gray-500 line-clamp-2">{c.caption}</p>}
                   {c.errore_tecnico && (
                     <p className="text-xs text-red-600 bg-red-50 rounded px-2 py-1 mt-1 truncate">
                       ⚠ {c.errore_tecnico}
