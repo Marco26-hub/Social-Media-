@@ -351,10 +351,14 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
           <button
             type="button"
             onClick={() => {
-              // Il click sul player e un gesto valido: si sblocca anche l'audio,
-              // chiamando play() da qui dentro e non da un effetto.
-              if (haAudio && !audioAttivo) alternaAudio()
-              setPlaying(p => !p)
+              // Lo slideshow parte gia in riproduzione, quindi il primo click e
+              // una PAUSA. Sbloccare l'audio qui dentro senza guardare lo stato
+              // futuro lo faceva partire e fermare nello stesso istante:
+              // alternaAudio() avviava la traccia e l'effetto sotto, vedendo
+              // playing=false, la rimetteva subito in pausa.
+              const prossimoPlaying = !playing
+              setPlaying(prossimoPlaying)
+              if (prossimoPlaying && haAudio && !audioAttivo) alternaAudio()
             }}
             aria-label={playing ? 'Pausa' : 'Riproduci'}
             className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity z-10"
@@ -697,14 +701,22 @@ const CANALE_ICON: Record<string, string> = {
   linkedin: '💼', threads: '🧵', x: '✖️', blog: '✍️',
 }
 
-// Aspect ratios standard per canale/formato
+// Aspect ratios delle anteprime.
+//
+// Post e caroselli usano 4:5 perche e il formato che il kit SWA produce davvero
+// (1080x1350, verificato sui file caricati) ed e supportato sia da Instagram sia
+// da Facebook. Prima il post Facebook usava 1.91:1 — che e la proporzione del
+// LINK preview, non di un post con immagine — e quello Instagram 1:1: con
+// object-cover un'immagine verticale veniva tagliata sopra e sotto, nascondendo
+// il testo impresso. Il cliente approvava un contenuto mutilato che poi usciva
+// intero.
 const ASPECT: Record<string, string> = {
-  'instagram-post':      'aspect-square',       // 1:1
-  'instagram-carousel':  'aspect-square',       // 1:1
+  'instagram-post':      'aspect-[4/5]',        // 4:5 verticale
+  'instagram-carousel':  'aspect-[4/5]',        // 4:5 verticale
   'instagram-reel':      'aspect-[9/16]',       // 9:16
   'instagram-story':     'aspect-[9/16]',       // 9:16
-  'facebook-post':       'aspect-[1.91/1]',     // landscape
-  'facebook-carousel':   'aspect-square',
+  'facebook-post':       'aspect-[4/5]',        // 4:5 verticale
+  'facebook-carousel':   'aspect-[4/5]',
   'facebook-video':      'aspect-video',        // 16:9
   'facebook-reel':       'aspect-[9/16]',       // 9:16
   'tiktok-video':        'aspect-[9/16]',

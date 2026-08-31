@@ -16,3 +16,13 @@ test('generated visuals retain the explicit second approval gate', () => {
   assert.equal(hasFinalCampaignAsset({ campaign_source_paths: '[]' }), false)
   assert.equal(requiresRenderedVisualReview({}), true)
 })
+
+test('an unreadable campaign_source_paths closes the gate instead of opening it', () => {
+  // Questo valore decide se un montaggio puo essere pubblicato senza che nessuno
+  // lo guardi. Un dato corrotto veniva scambiato per "asset finale gia
+  // approvato" e il video usciva senza revisione: deve valere il contrario.
+  for (const rotto of ['{non-json', 'undefined', '{"a":', '<xml/>']) {
+    assert.equal(hasFinalCampaignAsset({ campaign_source_paths: rotto }), false, rotto)
+    assert.equal(requiresRenderedVisualReview({ campaign_source_paths: rotto }), true, rotto)
+  }
+})

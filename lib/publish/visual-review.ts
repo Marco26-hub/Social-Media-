@@ -13,7 +13,12 @@ export function hasFinalCampaignAsset(row: ContentRow): boolean {
     const parsed = JSON.parse(paths)
     return Array.isArray(parsed) ? parsed.length > 0 : Boolean(parsed)
   } catch {
-    return true
+    // FAIL-CLOSED. Questo valore decide se il montaggio puo essere pubblicato
+    // SENZA che nessuno lo guardi (vedi requiresRenderedVisualReview): un dato
+    // illeggibile deve chiudere il cancello, non aprirlo. Prima un
+    // campaign_source_paths corrotto veniva scambiato per "asset finale gia
+    // approvato" e il video usciva senza revisione.
+    return false
   }
 }
 
