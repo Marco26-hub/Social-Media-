@@ -102,9 +102,33 @@ function inferSequence(filename: string): number | null {
   return trailing ? Number(trailing[1]) : null
 }
 
+function isLooseAudio(relativePath: string, kind: CampaignFolderAsset['kind']): boolean {
+  if (kind !== 'audio') return false
+  const segments = relativePath.split('/').map(normalized).filter(Boolean)
+  if (segments.length < 2 || segments.at(-2) !== 'audio') return false
+
+  // An audio folder directly under the strategy root is a source library,
+  // not an editorial assignment. Audio inside a Reel/Story folder is valid.
+  return !segments.slice(0, -2).some(segment =>
+    /\b(?:reel|reels|video|short|shorts|story|stories|storia|storie)\b/.test(segment),
+  )
+}
+
 export function parseCampaignFolderFile(file: CampaignFolderFile): CampaignFolderAsset {
   const relativePath = String(file.relativePath || file.name).replace(/^\/+/, '')
   const kind = inferKind(file)
+  if (isLooseAudio(relativePath, kind)) {
+    return {
+      relativePath,
+      week: null,
+      platform: null,
+      tag: 'auto',
+      contentKey: null,
+      sequence: null,
+      kind: 'unsupported',
+      errors: [],
+    }
+  }
   const week = inferWeek(relativePath)
   const platform = inferPlatform(relativePath)
   const tag = inferTag(relativePath)

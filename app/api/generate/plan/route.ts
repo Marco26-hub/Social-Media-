@@ -29,6 +29,7 @@ import {
 // possono ricevere un MP4 e come si legge la marcatura manuale dell'utente.
 import { MEDIA_PER_FORMATO, normalizeMediaTag, type MediaTag } from '@/lib/media-requirements'
 import { buildBrandContext } from '@/lib/brand-context'
+import { buildBusinessCategoryContext, resolveBusinessCategory } from '@/lib/business-categories'
 import { buildEditorialSkillContext, resolveEditorialSkill } from '@/lib/editorial-skills'
 import {
   buildEditorialHistoryContext,
@@ -383,7 +384,7 @@ async function insertCalendario(columns: string[], values: unknown[]): Promise<b
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita, media_urls, uploaded_assets, fase, visual_effects, visual_preset, use_trending_effects, include_weekend, use_web_trends, pacchetto } = await request.json()
+    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita, media_urls, uploaded_assets, fase, visual_effects, visual_preset, use_trending_effects, include_weekend, use_web_trends, pacchetto, business_category } = await request.json()
     // Modalità "piano del pacchetto": la generazione è guidata dalla ricetta del
     // pacchetto (numero, mix, social, qualità) invece che dai parametri manuali.
     // Il body dice SOLO che la si vuole: quale pacchetto sia davvero è un dato
@@ -476,6 +477,7 @@ export async function POST(request: Request) {
       }
       const demoPackagePlan = pkgRequested ? packageMixForPeriod(pkgRequested, periodoEff) : null
       const demoEditorialSkill = resolveEditorialSkill(pkgRequested)
+      const demoBusinessCategory = resolveBusinessCategory(business_category)
       const count = demoPackagePlan?.totale
         ?? (demoContenuti.filter((item) => selectedPlatforms.has(item.canale)).length || (periodoEff === 'mensile' ? 30 : 7))
       return NextResponse.json({
@@ -484,6 +486,7 @@ export async function POST(request: Request) {
         count,
         quality_level: demoQuality,
         editorial_skill: demoEditorialSkill,
+        business_category: demoBusinessCategory.id,
         creative_direction: demoCreativeDirection,
         quality_downgraded: isQualityDowngraded(requestedQuality, demoQuality),
         warning: 'Fallback demo: DATABASE_URL non configurato, piano non persistito su Neon.',
@@ -510,6 +513,11 @@ export async function POST(request: Request) {
     ])
     const brand = brandRows[0] ?? null
     const client = (clientRows[0] ?? null) as Record<string, unknown> | null
+    const activeBusinessCategory = resolveBusinessCategory(business_category, {
+      sector: brand?.settore || client?.settore,
+      brandName: brand?.brand_name,
+      clientName: client?.nome,
+    })
 
     // Il pacchetto che conta è quello acquistato, non quello chiesto dal client.
     const pkg: PackageSpec | null = pkgRequested ? getPackage(client?.pacchetto) : null
@@ -539,6 +547,7 @@ export async function POST(request: Request) {
     // Stesso contesto brand del generatore di post singoli (campi espliciti + default),
     // non più un dump JSON grezzo. Vuoto se il brand non è configurato → nota esplicita.
     const brandContext = buildBrandContext(brand)
+    const businessCategoryContext = buildBusinessCategoryContext(activeBusinessCategory)
     const productsJson = JSON.stringify(products || [], null, 2)
     // Il calendario contiene i contenuti vivi, `contenuti_storico` quelli gia
     // pubblicati e rimossi: la memoria creativa e l'unione dei due.
@@ -873,6 +882,8 @@ Crea contenuti per ${chunk.label}, dal ${chunk.start} al ${chunk.end}, per / ${p
 Genera TRA ${targetMin} E ${targetMax} contenuti (mai meno di ${targetMin}). Ogni data_pubblicazione DEVE cadere dentro il range ${chunk.start}..${chunk.end} incluso — mai fuori, mai un placeholder generico.
 
 ${brandContext || 'BRAND non ancora configurato: resta coerente con i prodotti e la stagione, NON inventare tono di voce, valori o claim.'}
+
+${businessCategoryContext}
 
 PRODOTTI:
 ${productsJson}

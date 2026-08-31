@@ -104,6 +104,8 @@ const CALENDARIO_UPDATE_COLUMNS = new Set([
   'next_iteration_actions',
   'missing_inputs',
   'content_checklist',
+  'strategy_profile',
+  'business_category',
   'checked_alt_text',
   'checked_aspect_ratio',
   'checked_media_valid',

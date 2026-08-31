@@ -1,6 +1,66 @@
 # HANDOFF — Social Web Automation
 
-Stato al 2026-08-28. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+Stato al 2026-08-31. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+
+## Memoria operativa campagne SWA
+
+### Struttura cartelle canonica
+
+Per ogni strategia mensile destinata a Instagram e Facebook usare sempre questa struttura, senza mischiare media, copy e documenti strategici:
+
+```text
+<CAMPAGNA>/
+  04_CRESCITA_Per_Strategia/
+    Instagram/
+      01_ATTENZIONE/
+      02_FIDUCIA/
+      03_SCELTA/
+      04_AZIONE/
+    Facebook/
+      01_ATTENZIONE/
+      02_FIDUCIA/
+      03_SCELTA/
+      04_AZIONE/
+    audio/
+```
+
+Dentro ogni fase, ogni contenuto ha una cartella autonoma con nome numerato e descrittivo:
+
+```text
+REEL_01_NOME_CONTENUTO/
+  REEL_01_COVER.png
+  REEL_01_SCENA_01.png ... REEL_01_SCENA_05.png
+  AUDIO_REEL_01_NOME.mp3
+
+CAROSELLO_02_NOME_CONTENUTO/
+  CAROSELLO_02_SLIDE_01.png ... CAROSELLO_02_SLIDE_05.png
+
+STORY_03_NOME_CONTENUTO/
+  STORY_03_FRAME_01.png ... STORY_03_FRAME_03.png
+  AUDIO_STORY_03_NOME.mp3
+
+POST_04_NOME_CONTENUTO/
+  POST_04.png
+```
+
+Regole permanenti:
+
+- duplicare la stessa gerarchia per `Instagram` e `Facebook`, mantenendo file distinti per piattaforma;
+- ordinare ogni contenuto con il numero editoriale globale 01-24, non con il formato;
+- mantenere la corrispondenza tra numero, fase, settimana, copy e media;
+- usare `04_Sorgenti` per storyboard e materiali originali, `05_Script_Reel` per gli script, `06_Copy` per copy e CTA, `07_Audio` per audio e licenze, `08_QA` per validazione;
+- non caricare `00_Strategia`, sorgenti, script, copy o QA come media nel piano SWA;
+- tenere audio e media dentro la cartella del contenuto quando devono essere associati automaticamente;
+- non rinominare o spostare una cartella dopo l'import senza aggiornare manifest e numeri;
+- la cartella `04_CRESCITA_Per_Strategia` della campagna Bowling esistente conserva il vecchio mix consumer; per il nuovo Caso Studio Bowling usare la stessa struttura ma il mix strategico aggiornato: 10 Reel, 6 caroselli, 4 Story e 4 post.
+
+Percorso di riferimento verificato: `/Users/md/Documents/SWA/CRESCITA_Campagna_Mese_04_Bowling/04_CRESCITA_Per_Strategia/`.
+
+### Caso Studio Bowling - direzione corrente
+
+La campagna parla a titolari e gestori di bowling e usa il bowling come caso studio per vendere i servizi SWA. Non deve invitare i giocatori a prenotare o giocare. Mix: 10 Reel, 6 caroselli, 4 Story e 4 post, per 24 contenuti. Direzione visuale: fotografia professionale/editoriale, forest `#223F2C`, ink `#10120E`, gold `#D6A839`, rust `#A8532D`, cream `#FFFAF0`. Hook e CTA vengono composti graficamente in safe area; nessun watermark Canvas, riquadro bianco invasivo o interazione simulata.
+
+Pacchetto visuale generato: `/Users/md/Documents/SWA/CASO_STUDIO_BOWLING_VISUALS/`. Contiene 10 Reel, 4 Story, 4 post e 6 copertine carosello con hook e CTA applicati. Le copertine carosello richiedono ancora le slide successive prima dell'import come caroselli completi.
 
 ## Stack
 - **Frontend/Backend:** Next.js 15.5 (App Router), React 19, Tailwind. Deploy su **Vercel**.

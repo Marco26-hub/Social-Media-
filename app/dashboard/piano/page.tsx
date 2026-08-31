@@ -23,6 +23,7 @@ import {
   type MediaTag,
 } from '@/lib/media-requirements'
 import { compareCampaignFolderGroups, folderGroupKey, parseCampaignFolderFile, type CampaignFolderAsset } from '@/lib/campaign-folder'
+import { BUSINESS_CATEGORY_OPTIONS, resolveBusinessCategory, type BusinessCategoryId } from '@/lib/business-categories'
 
 type QualitySelection = 'auto' | ContentQuality
 // `tag` = marcatura manuale ("questa foto è del carosello, questo MP4 del reel").
@@ -47,7 +48,10 @@ type FolderPreview = { root: string; candidates: FolderCandidate[]; ignored: num
 // Tetto sui media VISIVI (foto e MP4). Le tracce audio non lo consumano: sono
 // una per contenuto, accompagnano un media invece di sostituirlo, e facendole
 // pesare sul limite una cartella mensile completa arrivava a sfiorarlo.
-const MAX_PLAN_IMAGES = 160
+// Il pacchetto Crescita completo IG+Facebook richiede 196 asset visivi
+// (10 Reel, 6 caroselli, 4 Story e 4 post per piattaforma). Il margine
+// consente anche piccole varianti senza includere le tracce audio nel cap.
+const MAX_PLAN_IMAGES = 240
 function contaVisivi(assets: { kind?: 'image' | 'video' | 'audio' }[]): number {
   return assets.filter(a => a.kind !== 'audio').length
 }
@@ -143,6 +147,7 @@ export default function PianoPage() {
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
   const [piattaforme, setPiattaforme] = useState<PlatformKey[]>(['instagram', 'facebook'])
   const [obiettivo, setObiettivo] = useState('mix')
+  const [businessCategory, setBusinessCategory] = useState<BusinessCategoryId>('auto')
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [aiModel, setAiModel] = useState('google/gemma-4-31b-it:free')
@@ -192,6 +197,8 @@ export default function PianoPage() {
   // Quota reale del cliente (clienti.contenuti_mese): l'admin può sovrascrivere
   // il numero di contenuti del pacchetto, e il fabbisogno media deve seguirla.
   const [clienteQuota, setClienteQuota] = useState<number | null>(null)
+  const [clienteSettore, setClienteSettore] = useState('')
+  const [clienteNome, setClienteNome] = useState('')
   const { clienteId } = useActiveClienteId()
   const demo = useRuntimeDemo()
   const gen = useGeneration()
@@ -214,7 +221,7 @@ export default function PianoPage() {
   useEffect(() => {
     let alive = true
     async function loadPkg() {
-      if (!clienteId) { setClientePkg(null); setClienteQuota(null); return }
+      if (!clienteId) { setClientePkg(null); setClienteQuota(null); setClienteSettore(''); setClienteNome(''); return }
       try {
         const rows = await fetch('/api/data/clienti').then(r => r.ok ? r.json() : [])
         const c = Array.isArray(rows) ? rows.find((x: { id?: string; slug?: string }) => x.id === clienteId || x.slug === clienteId) : null
@@ -222,12 +229,19 @@ export default function PianoPage() {
         if (alive) {
           setClientePkg(getPackage(c?.pacchetto))
           setClienteQuota(Number.isFinite(quota) && quota > 0 ? quota : null)
+          setClienteSettore(typeof c?.settore === 'string' ? c.settore : '')
+          setClienteNome(typeof c?.nome === 'string' ? c.nome : '')
         }
       } catch { if (alive) { setClientePkg(null); setClienteQuota(null) } }
     }
     loadPkg()
     return () => { alive = false }
   }, [clienteId])
+
+  const activeBusinessCategory = useMemo(
+    () => resolveBusinessCategory(businessCategory, { sector: clienteSettore, clientName: clienteNome }),
+    [businessCategory, clienteSettore, clienteNome],
+  )
 
   // Recupera i media gia caricati nello storage per questo cliente. Non li
   // aggiunge da solo al piano: li propone, perche la scelta di riusare materiale
@@ -516,7 +530,7 @@ export default function PianoPage() {
       key: fase ? `piano-fase-${fase}` : 'piano',
       label: `Piano editoriale ${periodo}${faseLabel}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, business_category: businessCategory, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 50000 : 25000,
       timeoutMs: periodo === 'mensile' ? 130000 : 95000,
@@ -579,7 +593,7 @@ export default function PianoPage() {
       key: 'piano-pacchetto',
       label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
       url: '/api/generate/plan',
-      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...(faseArg ? { fase: faseArg } : {}), ...aiSettings },
+      body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', business_category: businessCategory, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...(faseArg ? { fase: faseArg } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 55000 : 30000,
       timeoutMs: periodo === 'mensile' ? 140000 : 100000,
@@ -790,6 +804,39 @@ export default function PianoPage() {
               </p>
             )}
           </div>
+        </div>
+      </div>
+
+      <div className="card p-5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-full bg-sky-100 text-sky-700 font-bold text-xs flex items-center justify-center">C</div>
+          <div>
+            <h2 className="font-semibold text-gray-900">Categoria lavorativa</h2>
+            <p className="text-xs text-gray-500">Il motore OpenRouter adatta strategia e produzione al mestiere del cliente.</p>
+          </div>
+        </div>
+        <select
+          value={businessCategory}
+          onChange={event => setBusinessCategory(event.target.value as BusinessCategoryId)}
+          className="input"
+        >
+          {BUSINESS_CATEGORY_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>{option.label} — {option.description}</option>
+          ))}
+        </select>
+        <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50/70 p-3">
+          <p className="text-sm font-semibold text-sky-950">{activeBusinessCategory.label}</p>
+          <p className="mt-1 text-xs leading-relaxed text-sky-900">{activeBusinessCategory.commercialJob}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {activeBusinessCategory.skills.map(skill => (
+              <span key={skill} className="rounded-full bg-white px-2 py-1 text-[10px] font-medium text-sky-800 ring-1 ring-sky-200">
+                {skill}
+              </span>
+            ))}
+          </div>
+          {businessCategory === 'auto' && (
+            <p className="mt-2 text-[11px] text-sky-800">Profilo rilevato dal settore del cliente: {clienteSettore || 'settore non ancora compilato'}.</p>
+          )}
         </div>
       </div>
 

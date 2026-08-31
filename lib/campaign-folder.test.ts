@@ -104,3 +104,14 @@ test('assigns an audio inside a campaign content folder to its exact creative', 
   assert.equal(parsed.contentKey, 'reel_19')
   assert.deepEqual(parsed.errors, [])
 })
+
+test('ignores loose audio libraries at the strategy root', () => {
+  const parsed = parseCampaignFolderFile({
+    name: 'darkshadow.mp3',
+    type: 'audio/mpeg',
+    relativePath: '04_CRESCITA_Per_Strategia/audio/darkshadow.mp3',
+  })
+
+  assert.equal(parsed.kind, 'unsupported')
+  assert.deepEqual(parsed.errors, [])
+})

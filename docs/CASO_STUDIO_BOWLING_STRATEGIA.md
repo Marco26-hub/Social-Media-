@@ -62,13 +62,15 @@ Il testo deve parlare al gestore, non al giocatore. Evitare `prenota la pista`, 
 
 ## Piano Crescita - 24 contenuti
 
-Il pacchetto Crescita usa 6 contenuti a settimana. Il mix Admin corrente e 12 post, 6 caroselli, 4 Reel e 2 sequenze Story.
+Il pacchetto Crescita usa 6 contenuti a settimana. Per il Caso Studio Bowling il mix editoriale dedicato e **10 Reel, 6 caroselli, 4 Story e 4 post**, per un totale di 24 contenuti.
+
+Questo mix e una scelta strategica per far conoscere SWA ai titolari e gestori di bowling: i Reel sono il principale motore di scoperta, i caroselli rendono il metodo salvabile, le Story portano alla conversazione e i post consolidano il posizionamento. Non va confuso con il mix commerciale generale di Admin finche non viene approvata una modifica della ricetta del pacchetto.
 
 ### Settimana 1 - ATTENZIONE
 
 1. Reel: `Il tuo bowling non ha un problema di foto: ha un problema di regia.`
-2. Post: `Una serata al bowling puo diventare un mese di comunicazione.`
-3. Post: `Pubblicare quando capita non e una strategia.`
+2. Reel: `Una serata al bowling puo diventare un mese di comunicazione.`
+3. Reel: `Pubblicare quando capita non e una strategia.`
 4. Carosello: `5 segnali che il tuo bowling comunica senza un piano.`
 5. Reel: `Cosa vede un gestore dopo un mese senza regia.`
 6. Post: `Prima del contenuto viene la domanda: cosa deve ottenere?`
@@ -76,27 +78,27 @@ Il pacchetto Crescita usa 6 contenuti a settimana. Il mix Admin corrente e 12 po
 ### Settimana 2 - FIDUCIA
 
 7. Reel: `Da una pista a una sequenza di contenuti: il metodo SWA in 5 passaggi.`
-8. Post: `Il lavoro invisibile dietro un calendario social per bowling.`
+8. Reel: `Il lavoro invisibile dietro un calendario social per bowling.`
 9. Carosello: `Brief, idea, storyboard, produzione, approvazione: cosa succede davvero.`
-10. Post: `Non mostriamo solo il risultato: mostriamo come ci arriviamo.`
-11. Story: `Qual e il punto piu difficile del tuo piano social?`
+10. Story: `Qual e il punto piu difficile del tuo piano social?`
+11. Story: `Quale parte della produzione vorresti delegare?`
 12. Post: `Una foto di bowling funziona quando racconta una decisione, non solo un'atmosfera.`
 
 ### Settimana 3 - SCELTA
 
 13. Reel: `Come SWA adatta lo stesso caso Bowling a Reel, carosello e Story.`
 14. Carosello: `Foto singola, Reel o carosello: quale formato serve a quale obiettivo?`
-15. Post: `Famiglie, gruppi, aziende e serate: ogni pubblico richiede un messaggio diverso.`
+15. Story: `Quale contenuto manca oggi al tuo bowling?`
 16. Carosello: `Cosa comprende una gestione social organizzata per un bowling.`
-17. Post: `Ho gia delle foto: perche mi serve una strategia?`
+17. Reel: `Ho gia delle foto: perche mi serve una strategia?`
 18. Post: `Il contenuto non e solo il file: e la scelta di cosa dire, a chi e quando.`
 
 ### Settimana 4 - AZIONE
 
-19. Carosello: `La checklist prima di pubblicare il prossimo contenuto del tuo bowling.`
-20. Post: `Strategia, contenuti, approvazione e pubblicazione: SWA tiene insieme il processo.`
+19. Reel: `La checklist prima di pubblicare il prossimo contenuto del tuo bowling.`
+20. Carosello: `Strategia, contenuti, approvazione e pubblicazione: SWA tiene insieme il processo.`
 21. Story: `Vuoi vedere come partirebbe il piano del tuo bowling? Scrivi BOWLING.`
-22. Post: `Quanto deve essere complessa una strategia social per un bowling?`
+22. Reel: `Quanto deve essere complessa una strategia social per un bowling?`
 23. Carosello: `Dal primo audit al calendario: come iniziare con SWA.`
 24. Post: `Il tuo bowling ha gia le storie. SWA costruisce il sistema per raccontarle.`
 
@@ -111,11 +113,23 @@ Il pacchetto Crescita usa 6 contenuti a settimana. Il mix Admin corrente e 12 po
 
 Sistema premium, cinematografico e operativo. La pista comunica energia; la composizione e il testo comunicano metodo.
 
-Palette: SWA green `#087F5B`, midnight `#07111F`, electric cyan `#22D3EE`, magenta controllato `#E879F9`, bianco `#FFFFFF`.
+Palette coerente con il kit SWA esistente: forest `#223F2C`, ink `#10120E`, gold `#D6A839`, rust `#A8532D`, cream `#FFFAF0`. Il forest resta dominante; gold e rust sono accenti, non campiture principali.
 
 Alternare ambiente, dettaglio, volto, gruppo, azione e schemi chiari. Evitare tre cover consecutive uguali per soggetto, colore o peso tipografico. Usare solo il logo ufficiale SWA; niente watermark Canvas. Hook e CTA sempre in safe area, senza riquadri bianchi invasivi.
 
-Reel e Story: 9:16, primo secondo leggibile, frame finale completo. Audio solo da fonte con licenza commerciale documentata. Verificare trend e disponibilita dell'audio entro 48 ore dalla pubblicazione.
+Reel e Story: 9:16, primo secondo leggibile, frame finale completo. Hook e CTA vengono applicati in post-produzione con testo vettoriale preciso, senza riquadro bianco invasivo. CTA utilizzabili: `SCRIVI BOWLING`, `SCOPRI LA REGIA SWA`, `SALVA IL METODO`; non usare sticker o interazioni simulate nell'immagine. Audio solo da fonte con licenza commerciale documentata. Verificare trend e disponibilita dell'audio entro 48 ore dalla pubblicazione.
+
+## Standard creativi aggiornati
+
+- usare i visual 9:16 come cover e keyframe di Reel con una sola idea per scena;
+- portare l'hook nel primo frame e mantenerlo breve, ad alto contrasto e nella safe area;
+- lasciare libere le zone occupate dai controlli nativi di Instagram e Facebook;
+- preferire scene originali, persone, gesto e contesto reale del bowling rispetto a grafiche generiche;
+- usare audio coerente e con licenza commerciale, aggiunto nel flusso di pubblicazione quando supportato;
+- testare due hook per lo stesso tema e ottimizzare su reach non follower, completamento, salvataggi, condivisioni e DM;
+- non promettere viralita: la viralita e un risultato da verificare sui dati, non una caratteristica garantibile del file.
+
+Riferimento operativo Meta: [Reels creative best practices](https://www.facebook.com/business/ads/facebook-instagram-reels-ads). Per audio commerciale usare la [Meta Sound Collection](https://www.facebook.com/help/instagram/402084904469945).
 
 ## Regole di caricamento
 
