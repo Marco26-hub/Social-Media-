@@ -44,7 +44,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     const cid = await requireClienteId()
-    const body = await request.json().catch(() => ({})) as { model?: string; openrouter_key?: string }
+    const body = await request.json().catch(() => ({})) as { model?: string; openrouter_key?: string; differenzia?: boolean }
 
     if (isDemo() || !dbReady()) {
       return NextResponse.json({
@@ -73,10 +73,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     // gli altri due restavano senza alcuna azione possibile nell'interfaccia:
     // solo "Riprova pubblicazione" (che tenterebbe di pubblicare un Reel senza
     // copione) o "Elimina". Un vicolo cieco su 20 contenuti su 24.
+    // `differenzia` = richiesta esplicita dall'interfaccia ("Rigenera diverso")
+    // su un contenuto sano: si riscrive per cambiarlo, non per ripararlo.
+    const differenzia = body.differenzia === true
     const gate = readGenerationGate(row.status, row.note)
-    if (!gate) {
+    if (!gate && !differenzia) {
       return NextResponse.json({
         error: 'Questo contenuto non e stato fermato dalla generazione. Per gli errori di pubblicazione usa Riprova pubblicazione.',
+      }, { status: 409 })
+    }
+    // Un contenuto gia in mano a Blotato non si riscrive da qui: la copia che
+    // uscira e la loro, e cambiarla solo da noi produrrebbe un calendario che
+    // mente su cosa e stato pubblicato.
+    if (row.blotato_post_id || String(row.status || '').toUpperCase() === 'PUBBLICATO') {
+      return NextResponse.json({
+        error: 'Contenuto gia inviato a Blotato o pubblicato: rimettilo in coda prima di riscriverlo.',
       }, { status: 409 })
     }
     const gateReason = readGateReason(row.note)
@@ -126,7 +137,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       systemPrompt: 'Sei un senior social media strategist italiano. Rispondi solo con un singolo oggetto JSON valido. Non inventare prezzi, dati o claim non forniti.',
       userPrompt: `${buildBrandContext(brand)}
 
-Rigenera UN SOLO contenuto rimasto incompleto nel piano editoriale.
+${differenzia
+  ? 'Riscrivi COMPLETAMENTE questo contenuto: deve dire la stessa cosa in modo diverso. Cambia apertura, angolo, esempio e ritmo; mantieni prodotto, obiettivo e formato. Se il testo attuale usa una domanda, non aprire con una domanda.'
+  : 'Rigenera UN SOLO contenuto rimasto incompleto nel piano editoriale.'}
+${differenzia ? `TESTO ATTUALE da NON ripetere: "${String(row.hook || '').slice(0, 120)}"` : ''}
 ${altri.length ? `HOOK GIA USATI in questo calendario — il tuo deve essere DIVERSO da tutti questi, per apertura, immagine e parole:\n${altri.slice(0, 40).map(r => `- ${String(r.hook || '').slice(0, 90)}`).join('\n')}` : ''}
 ${gateReason ? `MOTIVO DEL BLOCCO da risolvere in questa rigenerazione: ${gateReason}` : ''}
 ${strutturaRichiesta}

@@ -520,7 +520,10 @@ function CalendarioInner() {
     }
   }
 
-  async function rigeneraFallback(c: Contenuto) {
+  // `differenzia` = riscrittura voluta di un contenuto sano ("Rigenera diverso"),
+  // non riparazione di uno slot rotto. Il server lo distingue: senza il flag
+  // rifiuta i contenuti che non sono stati fermati dalla generazione.
+  async function rigeneraFallback(c: Contenuto, differenzia = false) {
     setSaving(c.id)
     setAdminError(null)
     setSyncMsg(null)
@@ -529,7 +532,7 @@ function CalendarioInner() {
       const res = await fetch(`/api/data/calendario/${encodeURIComponent(c.id)}/regenerate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ai),
+        body: JSON.stringify({ ...ai, differenzia }),
       })
       if (!res.ok) throw new Error(await readApiError(res, 'Rigenerazione contenuto fallita'))
       const data = await res.json() as { content?: Partial<Contenuto>; risolto?: boolean; motivo_residuo?: string | null }
@@ -2524,6 +2527,28 @@ function CalendarioInner() {
                     <XCircle className="w-4 h-4" />
                     Non approvare
                   </button>
+                </div>
+              )}
+
+              {/* Riscrittura voluta di un contenuto che NON e rotto: serve quando
+                  il testo somiglia troppo a un altro, o semplicemente non
+                  convince. Nascosto per i contenuti gia in mano a Blotato: la
+                  copia che uscira e la loro, riscriverla solo qui creerebbe un
+                  calendario che mente. Il contenuto torna in Da approvare. */}
+              {!isGenerationFallback(selected) && selected.status !== 'PUBBLICATO' && !selected.blotato_post_id && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => rigeneraFallback(selected, true)}
+                    disabled={saving === selected.id}
+                    className="btn-secondary w-full justify-center"
+                    title="Riscrive hook, caption e struttura con un angolo diverso, evitando gli hook gia usati in calendario"
+                  >
+                    <Sparkles className={`w-4 h-4 ${saving === selected.id ? 'animate-pulse' : ''}`} />
+                    {saving === selected.id ? 'Riscrittura...' : 'Rigenera diverso'}
+                  </button>
+                  <p className="mt-1 text-center text-[11px] text-gray-500">
+                    Stesso prodotto, obiettivo, data e media: cambiano angolo e testo. Torna in Da approvare.
+                  </p>
                 </div>
               )}
 
