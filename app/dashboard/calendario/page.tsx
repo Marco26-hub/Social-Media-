@@ -494,6 +494,32 @@ function CalendarioInner() {
     }
   }
 
+  // Toglie la traccia da un contenuto. Azzera anche i riferimenti al montaggio
+  // gia prodotto con quell'audio: senza, il video con la musica vecchia
+  // resterebbe agganciato e verrebbe pubblicato al posto di quello muto.
+  async function rimuoviContentAudio(c: Contenuto) {
+    setSaving(c.id)
+    setAdminError(null)
+    try {
+      await saveField(c, 'reel_audio_url', null, {
+        reel_audio_title: null,
+        reel_audio_source_url: null,
+        reel_audio_license: null,
+        blotato_visual_id: null,
+        blotato_visual_status: null,
+        blotato_visual_media_url: null,
+        blotato_audio_visual_id: null,
+        blotato_audio_visual_status: null,
+        blotato_audio_visual_media_url: null,
+      })
+      setSyncMsg({ type: 'ok', text: `Audio rimosso da ${c.id_contenuto}: il contenuto uscira senza musica.` })
+    } catch (e) {
+      setAdminError((e as Error).message)
+    } finally {
+      setSaving(null)
+    }
+  }
+
   async function rigeneraFallback(c: Contenuto) {
     setSaving(c.id)
     setAdminError(null)
@@ -2388,7 +2414,24 @@ function CalendarioInner() {
                   </div>
                   {selected.reel_audio_url && (
                     <div className="mb-3">
-                      <p className="mb-1 truncate text-[11px] font-medium text-emerald-800">{selected.reel_audio_title || 'Traccia audio caricata'}</p>
+                      <div className="mb-1 flex items-start justify-between gap-2">
+                        <p className="truncate text-[11px] font-medium text-emerald-800">{selected.reel_audio_title || 'Traccia audio caricata'}</p>
+                        <button
+                          type="button"
+                          onClick={() => rimuoviContentAudio(selected)}
+                          disabled={saving === selected.id}
+                          title="Togli la traccia: il contenuto verra pubblicato senza musica"
+                          className="inline-flex flex-shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Rimuovi
+                        </button>
+                      </div>
+                      {selected.reel_audio_source_url && (
+                        <a href={selected.reel_audio_source_url} target="_blank" rel="noreferrer" className="mb-1 block truncate text-[10px] text-emerald-700 underline">
+                          Fonte e licenza della traccia
+                        </a>
+                      )}
                       <audio src={selected.reel_audio_url} controls preload="metadata" className="h-9 w-full" />
                     </div>
                   )}
