@@ -57,6 +57,25 @@ import {
   slotsPerPrompt,
 } from '@/lib/scheduling'
 
+// Il piano mensile fa più chiamate AI in parallelo, ognuna con la sua cascata di
+// fallback: senza questo la funzione girava col limite di default della piattaforma.
+export const maxDuration = 300
+
+// BUDGET DI GENERAZIONE (lato server). Prima non esisteva: ogni chunk poteva
+// spendere 90s per modello × 3 modelli + ondata rate-limit, mentre il browser
+// abortiva a 130-140s. Risultato visibile all'utente: "Richiesta troppo lunga.
+// Riprova o cambia modello AI." — e, peggio, la funzione continuava a girare e
+// poteva inserire il piano in calendario DOPO l'abort, quindi un rilancio creava
+// contenuti doppi. Ora la fase AI ha una scadenza assoluta e chiude in tempo,
+// restituendo gli slot mancanti come fallback invece di far scadere la richiesta.
+// Tetto complessivo della richiesta: il client (app/dashboard/piano/page.tsx)
+// aspetta un po' di più di questi valori, mai di meno.
+const PLAN_TOTAL_BUDGET_MS: Record<PackagePeriod, number> = { mensile: 215000, settimanale: 135000 }
+// Tempo riservato al dopo-AI (normalizzazione, controllo media, insert calendario).
+const PLAN_WRAPUP_RESERVE_MS = 25000
+// Sotto questa soglia non si tenta il retry compatto di un blocco: non finirebbe.
+const PLAN_RETRY_MIN_MS = 35000
+
 // Standard del piano: composti dalla "bibbia" condivisa (lib/prompt-standards).
 // Forza DIVERSITÀ + funnel strategico + SEO/GEO + copy professionale.
 const PLAN_STANDARDS = `
@@ -394,6 +413,7 @@ async function insertCalendario(columns: string[], values: unknown[]): Promise<b
 }
 
 export async function POST(request: Request) {
+  const requestStartedAt = Date.now()
   try {
     await requireAuth()
     const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita, media_urls, uploaded_assets, fase, visual_effects, visual_preset, use_trending_effects, include_weekend, use_web_trends, pacchetto, business_category } = await request.json()
@@ -405,6 +425,10 @@ export async function POST(request: Request) {
     // qualità del proprio piano.
     const pkgRequested: PackageSpec | null = getPackage(pacchetto)
     const periodoEff: PackagePeriod = periodo === 'mensile' ? 'mensile' : 'settimanale'
+    // Scadenza assoluta della FASE AI: oltre questo istante non si aprono nuovi
+    // tentativi e i blocchi non completati diventano slot da sistemare, così la
+    // risposta arriva sempre prima che il browser abortisca.
+    const aiDeadlineAt = requestStartedAt + PLAN_TOTAL_BUDGET_MS[periodoEff] - PLAN_WRAPUP_RESERVE_MS
     const mediaPool: string[] = Array.isArray(media_urls) ? media_urls.filter((u): u is string => typeof u === 'string' && u.length > 0) : []
     // Descrizione per foto (nome prodotto) dal client: mappa url→label. Serve al prompt
     // per far scegliere al modello la foto giusta per numero (media_refs). Opzionale:
@@ -901,7 +925,26 @@ CAMPAGNA SWA IMPORTATA DA CARTELLA — DISTINTA VINCOLANTE:
 ${lines.join('\n')}`
     }
 
+    // Le due fasi sono UN mese solo, spezzato in due richieste. Senza dirlo, la
+    // fase 2 si comporta come un piano nuovo: ripresenta il brand, riapre il
+    // funnel e riusa promesse già spese nelle settimane 1-2.
+    const faseContinuitaContext = faseNum === 2
+      ? `
+
+CONTINUITÀ TRA LE FASI — vincolante: questi sono i contenuti delle SETTIMANE 3-4 dello stesso mese. Le settimane 1-2 sono GIÀ in calendario e le trovi nello storico qui sopra. Prosegui quell'arco chiudendo il funnel (scelta e azione): richiama prove, promesse e obiezioni già introdotte, porta alla conversione, e non ripetere hook, temi, prodotti in evidenza o CTA già usati nelle settimane 1-2.`
+      : faseNum === 1
+        ? `
+
+CONTINUITÀ TRA LE FASI — vincolante: questi sono i contenuti delle SETTIMANE 1-2 di un mese che verrà completato dopo con le settimane 3-4. Apri l'arco (attenzione e fiducia) e lascia materiale alla chiusura: non esaurire adesso offerta, prove decisive e CTA finali.`
+        : ''
+
     async function generateChunk(chunk: Chunk, chunkIndex: number): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
+      // `chunkIndex` è la posizione nel RUN (fase 1 → 0,1; fase 2 → di nuovo 0,1).
+      // Tutto ciò che descrive l'arco del MESE (fase del funnel, ruoli visuali,
+      // pilastri, mix formati) deve invece usare la settimana reale, altrimenti le
+      // due fasi generano due volte lo stesso pezzo di storia.
+      const posizioneNelMese = chunk.mixIndice ?? chunkIndex
+      const mixBlocchiChunk = chunk.mixBlocchi ?? chunks.length
       async function attempt(targetMin: number, targetMax: number, maxTok: number, compact = false): Promise<{ ok: true; items: Record<string, unknown>[] } | { ok: false; error: string }> {
         const userPrompt = `Agisci come Social Media Manager e Visual Director senior per il brand o l'attivita descritta nel contesto.
 Crea contenuti per ${chunk.label}, dal ${chunk.start} al ${chunk.end}, per / ${piattaformeStr} /.
@@ -928,21 +971,28 @@ Output SOLO JSON array valido:
           + '\n' + PLAN_STANDARDS + '\n' + (compact
             ? 'FALLBACK COMPATTO: mantieni ESATTAMENTE il numero richiesto. Compila sempre hook, caption, hashtag, CTA, data, ora, canale e formato; limita i campi strategici opzionali a frasi brevi.'
             : qualityPrompt)
-          + historyContext + creativeDirection.context + temporalContext + trendContext
+          + historyContext + faseContinuitaContext + creativeDirection.context + temporalContext + trendContext
           + (assetPlacements.size ? '' : buildPackageContext(pkg, packagePlan, periodoEff, targetMax))
           // Vincolo sui FORMATI: senza, il fabbisogno media annunciato all'utente
           // resta una stima che il modello può far saltare con 12 caroselli.
-          + buildMixFormatiContext(mixPerChunk.get(chunk) ?? mixFormatiBlocco(packagePlan, targetMax, chunk.mixBlocchi ?? chunks.length, chunk.mixIndice ?? chunkIndex))
+          + buildMixFormatiContext(mixPerChunk.get(chunk) ?? mixFormatiBlocco(packagePlan, targetMax, mixBlocchiChunk, posizioneNelMese))
           + buildEditorialSkillContext({
             skill: activeEditorialSkill,
             pkg,
             piano: packagePlan,
             periodo: periodoEff,
-            chunkIndex,
-            totalChunks: chunks.length,
+            // Posizione REALE nel mese, non nel run: la fase 2 sono le settimane
+            // 3-4 e deve ricevere SCELTA/AZIONE. Con l'indice del run partiva da 0
+            // e ripeteva ATTENZIONE/FIDUCIA della fase 1: due mezzi mesi identici
+            // invece di un unico arco narrativo che prosegue.
+            chunkIndex: posizioneNelMese,
+            totalChunks: mixBlocchiChunk,
             target: targetMax,
           })
-          + buildChunkDiversitySeed(chunkIndex, chunks.length, creativeDirection.code)
+          // Stessa ragione: pilastri e angoli creativi ruotano sull'indice, quindi
+          // con l'indice del run la fase 2 riceveva gli stessi identici del blocco
+          // corrispondente della fase 1.
+          + buildChunkDiversitySeed(posizioneNelMese, mixBlocchiChunk, creativeDirection.code)
           + buildPlanAssetContext(chunk.images, assetLabels, assetTags, assetPlacements)
           + buildFolderCampaignContext(chunk)
         const visionImages = chunk.images.filter(url => !isVideoUrl(url))
@@ -959,6 +1009,9 @@ Output SOLO JSON array valido:
             images: visionImages,
             maxTokens: maxTok,
             timeoutMs: 90000,
+            // Il tempo residuo comanda sul timeout del singolo tentativo: la
+            // cascata di fallback si ferma qui invece di sforare la richiesta.
+            deadlineAt: aiDeadlineAt,
           })
           const items = extractJSONArray(aiRes) as Record<string, unknown>[]
           return { ok: true, items }
@@ -973,7 +1026,10 @@ Output SOLO JSON array valido:
       if (first.ok) return first
       // Retry compatto: riduce la verbosità, MAI il numero di contenuti. Per un
       // pacchetto 6/24 sono un contratto, non un target da dimezzare al fallback.
-      if (/malformed|truncat|no json array/i.test(first.error)) {
+      // Il retry compatto costa un'altra cascata: si tenta solo se resta tempo
+      // vero prima della scadenza, altrimenti la richiesta scadrebbe comunque e
+      // si perderebbe anche quello che gli altri blocchi hanno già prodotto.
+      if (/malformed|truncat|no json array/i.test(first.error) && aiDeadlineAt - Date.now() >= PLAN_RETRY_MIN_MS) {
         console.warn('[plan retry]', `chunk "${chunk.label}" incompleto, retry compatto con ${chunk.targetMin}-${chunk.targetMax} item`)
         const retry = await attempt(chunk.targetMin, chunk.targetMax, baseMaxTok, true)
         if (retry.ok) return retry

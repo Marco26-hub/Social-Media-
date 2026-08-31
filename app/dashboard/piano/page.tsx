@@ -24,6 +24,7 @@ import {
 } from '@/lib/media-requirements'
 import { compareCampaignFolderGroups, folderGroupKey, parseCampaignFolderFile, type CampaignFolderAsset } from '@/lib/campaign-folder'
 import { BUSINESS_CATEGORY_OPTIONS, resolveBusinessCategory, type BusinessCategoryId } from '@/lib/business-categories'
+import { calculateCampaignAssetRequirements } from '@/lib/campaign-asset-requirements'
 
 type QualitySelection = 'auto' | ContentQuality
 // `tag` = marcatura manuale ("questa foto è del carosello, questo MP4 del reel").
@@ -738,7 +739,11 @@ export default function PianoPage() {
       body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality, business_category: businessCategory, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, campaign_key: a.campaignKey, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, ...(fase ? { fase } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 50000 : 25000,
-      timeoutMs: periodo === 'mensile' ? 130000 : 95000,
+      // Sempre SOPRA il budget del server (PLAN_TOTAL_BUDGET_MS in
+      // app/api/generate/plan/route.ts: 215s mensile / 135s settimanale). Se il
+      // client mollasse per primo, la funzione continuerebbe e scriverebbe il
+      // piano in calendario dopo l'errore: rilanciando si ottengono doppioni.
+      timeoutMs: periodo === 'mensile' ? 240000 : 160000,
     })
 
     if (result.ok) {
@@ -794,14 +799,23 @@ export default function PianoPage() {
       return
     }
     const aiSettings = readAISettings()
+    // La fase DEVE comparire nella barra e nell'errore: senza, "Piano mensile ·
+    // pacchetto Crescita" era identico per il mese intero e per le sole settimane
+    // 1-2, e da un errore non si capiva quale dei due run fosse fallito.
+    const faseLabelPkg = faseArg ? ` · fase ${faseArg} (sett. ${faseArg === 1 ? '1-2' : '3-4'})` : ''
     const result = await gen.run<{ count?: number; completed_count?: number; fallback_slots?: number; articolo_blog?: boolean; pacchetto_troncati?: number; images_provided?: number; contenuti_forzati_da_cartella?: number; quota_pacchetto_periodo?: number; media_fuori_periodo?: number }>({
+      // Key UNICA per tutte le varianti (mese intero, fase 1, fase 2): è ciò che
+      // tiene disabilitati i tre pulsanti finché una generazione è in volo. Una
+      // key per fase li riaccenderebbe e due run in parallelo raddoppierebbero
+      // gli insert in calendario (la generazione è un INSERT puro, non sostituisce).
       key: 'piano-pacchetto',
-      label: `Piano ${periodo} · pacchetto ${clientePkg.nome}`,
+      label: `Piano ${periodo} · pacchetto ${clientePkg.nome}${faseLabelPkg}`,
       url: '/api/generate/plan',
       body: { cliente_id: clienteId, piattaforme, obiettivo, periodo, quality: 'auto', business_category: businessCategory, media_urls: planAssets.filter(a => a.kind !== 'audio').map(a => a.url), uploaded_assets: planAssets.map(a => ({ url: a.url, name: a.name, mime: a.mime, kind: a.kind, tag: a.tag, campaign_key: a.campaignKey, relative_path: a.relativePath, week: a.week, platform: a.platform, content_key: a.contentKey, sequence: a.sequence })), ...(visualPreset ? { visual_preset: visualPreset } : {}), use_trending_effects: useTrendingEffects, include_weekend: includeWeekend, use_web_trends: useWebTrends, pacchetto: clientePkg.id, ...(faseArg ? { fase: faseArg } : {}), ...aiSettings },
       href: '/dashboard/calendario',
       estMs: periodo === 'mensile' ? 55000 : 30000,
-      timeoutMs: periodo === 'mensile' ? 140000 : 100000,
+      // Stesso patto del piano libero: il client aspetta oltre il budget server.
+      timeoutMs: periodo === 'mensile' ? 240000 : 160000,
     })
     if (result.ok) {
       const d = result.data
@@ -859,6 +873,15 @@ export default function PianoPage() {
   )
   const contenutiPacchettoPeriodo = clientePkg ? packageContentCount(clientePkg, periodo, clienteQuota) : 0
   const mixPacchettoPeriodo = clientePkg ? packageMixForPeriod(clientePkg, periodo, clienteQuota) : null
+  const produzioneDaZero = useMemo(() => mixPacchettoPeriodo
+    ? calculateCampaignAssetRequirements({
+        posts: mixPacchettoPeriodo.postSingoli,
+        stories: mixPacchettoPeriodo.stories,
+        carousels: mixPacchettoPeriodo.caroselli,
+        reels: mixPacchettoPeriodo.reelVideo,
+      }, { platformCount: Math.max(1, piattaforme.length) })
+    : null,
+  [mixPacchettoPeriodo, piattaforme.length])
   const uploadTargets = mixPacchettoPeriodo ? {
     post: { main: `${mixPacchettoPeriodo.postSingoli} foto richieste`, note: `${mixPacchettoPeriodo.postSingoli} post/pin` },
     story: { main: `${mixPacchettoPeriodo.stories} foto richieste`, note: `${mixPacchettoPeriodo.stories} Story` },
@@ -1237,6 +1260,13 @@ export default function PianoPage() {
                   <p className="mt-1 text-[10px] text-emerald-800">
                     I conteggi seguono il pacchetto del cliente, non il numero di file gia caricati. Se il materiale e stato prodotto con una ricetta diversa, correggi prima il pacchetto nella scheda cliente.
                   </p>
+                  {produzioneDaZero && (
+                    <p className="mt-1 text-[10px] text-emerald-800">
+                      Produzione completa da zero: <span className="font-bold">{produzioneDaZero.uniqueImageMasters} immagini master uniche</span>
+                      {' '}({produzioneDaZero.breakdown.postImages} post + {produzioneDaZero.breakdown.storyImages} frame Story + {produzioneDaZero.breakdown.carouselImages} slide + {produzioneDaZero.breakdown.reelImages} scene Reel).
+                      {' '}Nelle {piattaforme.length || 1} cartelle social diventano <span className="font-bold">{produzioneDaZero.folderImageFiles} file immagine</span>; Story e Reel da foto producono {produzioneDaZero.renderedVerticalVideos} MP4 al momento della sincronizzazione.
+                    </p>
+                  )}
                 </div>
               )}
             </div>

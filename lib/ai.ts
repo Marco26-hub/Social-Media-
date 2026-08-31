@@ -148,9 +148,18 @@ async function callAIImpl(params: {
   silentFallback?: boolean
   images?: string[]
   timeoutMs?: number
+  // Scadenza ASSOLUTA (epoch ms) dell'intera cascata: senza, `timeoutMs` vale per
+  // OGNI modello e la cascata (modello + 2 fallback + ondata rate-limit) può durare
+  // 3-4 volte il timeout singolo — molto oltre l'attesa del client, che intanto ha
+  // abortito ("Richiesta troppo lunga") mentre il server continuava a lavorare.
+  deadlineAt?: number
   meta?: TokenMeta
 }): Promise<string> {
-  const { model, systemPrompt, userPrompt, maxTokens = 4000, silentFallback = true, images = [], timeoutMs = 30000 } = params
+  const { model, systemPrompt, userPrompt, maxTokens = 4000, silentFallback = true, images = [], timeoutMs = 30000, deadlineAt } = params
+  const remainingMs = () => (deadlineAt ? deadlineAt - Date.now() : Number.POSITIVE_INFINITY)
+  // Sotto questa soglia un tentativo non ha speranza di completare: meglio uscire
+  // subito con un errore chiaro che bruciare il tempo residuo.
+  const MIN_ATTEMPT_MS = 8000
   // SICUREZZA: la key BYO arriva dal client (localStorage). Accettala solo col
   // formato atteso, altrimenti ignorala e usa quella server.
   const byoKey = (params.openrouterKey || '').trim()
@@ -190,21 +199,30 @@ async function callAIImpl(params: {
     )
   }
 
-  // Ondata 1: modello scelto + fallback.
+  // Ondata 1: modello scelto + fallback. Ogni tentativo riceve il MINORE tra il
+  // timeout richiesto e il tempo che resta prima della scadenza globale.
+  let deadlineHit = false
   for (const m of orModels) {
-    const res = await tryOpenRouterModel(m, systemPrompt, userPrompt, orKey, maxTokens, attempts, images, timeoutMs)
+    const budget = remainingMs()
+    if (budget < MIN_ATTEMPT_MS) {
+      deadlineHit = true
+      recordAttempt(attempts, { provider: 'openrouter', model: m, ok: false, error: 'tempo esaurito prima del tentativo' })
+      break
+    }
+    const res = await tryOpenRouterModel(m, systemPrompt, userPrompt, orKey, maxTokens, attempts, images, Math.min(timeoutMs, budget - 1000))
     if (res) return res
   }
 
   // Ondata 2: se TUTTO è rate-limited, attende il Retry-After e ritenta una volta
-  // (le code free upstream si liberano in ~20-30s).
+  // (le code free upstream si liberano in ~20-30s). Salta l'attesa se non ci sta
+  // dentro la scadenza: aspettare 28s per poi abortire è tempo regalato.
   const orFailures = attempts.filter(a => !a.ok)
-  if (orModels.length && orFailures.length && orFailures.every(a => isRateLimit(a.error))) {
+  if (!deadlineHit && orModels.length && orFailures.length && orFailures.every(a => isRateLimit(a.error))) {
     const waitMs = rateLimitWaitMs(orFailures)
-    if (waitMs > 0) {
+    if (waitMs > 0 && waitMs + MIN_ATTEMPT_MS <= remainingMs()) {
       console.warn('[AI bridge]', `modelli rate-limited, attendo ${Math.round(waitMs / 1000)}s e ritento`)
       await sleep(waitMs)
-      const res = await tryOpenRouterModel(orModels[0], systemPrompt, userPrompt, orKey, maxTokens, attempts, images, timeoutMs)
+      const res = await tryOpenRouterModel(orModels[0], systemPrompt, userPrompt, orKey, maxTokens, attempts, images, Math.min(timeoutMs, Math.max(MIN_ATTEMPT_MS, remainingMs() - 1000)))
       if (res) return res
     }
   }
@@ -215,6 +233,9 @@ async function callAIImpl(params: {
       'Hai caricato un\'immagine ma il modello non la "vede" (serve un modello vision). Scegli un modello vision ' +
       '(es. google/gemini-2.5-flash) con credito OpenRouter, oppure genera senza immagine.',
     )
+  }
+  if (deadlineHit) {
+    throw new Error('Tempo di generazione esaurito sul server prima di completare il blocco. Riprova, genera una fase per volta, o scegli un modello più veloce.')
   }
   throw new Error(buildFailureMessage(attempts))
 }

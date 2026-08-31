@@ -32,3 +32,6 @@ playwright-report
 
 # scratch locali
 sc-tmp.mjs
+output/
+tmp/
+__pycache__/
