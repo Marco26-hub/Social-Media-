@@ -1,6 +1,105 @@
 # HANDOFF — Social Web Automation
 
-Stato al 2026-08-31. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+Stato al 2026-08-31 (sera). Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+
+## Sessione 2026-08-31: partenza campagna Caso Studio Bowling
+
+Contesto: la strategia del cliente `swa` parte il 1 settembre. La generazione del
+piano mensile falliva, e da li e emersa una catena di difetti. Tutto risolto e in
+produzione (26 commit, da `69c9512` a `6449461`). Quello che segue serve a non
+riaprire strade gia percorse.
+
+### Generazione del piano — cosa era rotto e come e stato chiuso
+
+- **Il timeout valeva per OGNI modello della cascata**, non per la richiesta: un
+  blocco poteva spendere 300s mentre il browser mollava a 140s, e la funzione
+  continuava a scrivere DOPO l'errore (rischio piano doppio al rilancio).
+  `callAI` ora accetta `deadlineAt`, la route ha un budget (215s mensile / 135s
+  settimanale) e il client aspetta sempre di piu del server.
+- **Ogni settimana viaggia in DUE blocchi da 6**, non in uno da 12: con una
+  cartella campagna e qualita high il JSON superava il tetto di token e tornava
+  troncato, o veniva abortito. Le due meta girano in parallelo: stessa attesa,
+  meta del rischio. `mixIndice/mixBlocchi` (8 blocchi) governano i formati,
+  `faseIndice/faseBlocchi` (4 settimane) la fase del funnel: sono separati apposta.
+- **Il retry compatto toglieva lo schema esteso**, quindi anche `scenes` e
+  `slides` che il cancello narrativo poi pretendeva: JSON troncato -> retry ->
+  zero scene -> 20 contenuti su 24 parcheggiati. Ora il fallback accorcia i campi
+  strategici ma tiene la struttura obbligatoria.
+- **La fase 2 si ancorava a "oggi + 14 giorni"**: ora riprende dal giorno dopo
+  l'ultimo contenuto pianificato. L'ancora e a mezzogiorno UTC perche `addDays`
+  conta in ora locale e `fmtDate` legge UTC.
+- I gruppi della cartella si distribuiscono per **concetto**, non per gruppo:
+  Instagram e Facebook dello stesso contenuto sono chiavi diverse e a rotazione
+  finivano in blocchi diversi, quindi in giorni diversi.
+
+### Cancelli (gate) — erano fail-closed su contenuti validi
+
+- `sequenceText` leggeva solo meta degli alias: un carosello con 5 slide scritte
+  con `overlay_text` (inglese) veniva bocciato per "slide duplicate". E il
+  conteggio dei duplicati trasformava in duplicato QUALUNQUE elemento senza testo
+  riconosciuto. Ora conta i duplicati veri.
+- **`campaign_content_key` mancava fra le colonne dello storico**, quindi
+  l'esenzione per le varianti coordinate non poteva scattare: il gemello
+  Instagram di un contenuto Facebook risultava "somiglianza 100%" con se stesso.
+- **Quando le creativita esistono gia, la sequenza si DERIVA dai media**
+  (`lib/derive-sequence.ts`): chiedere all'AI di descrivere cinque immagini che
+  sono sul disco, e bloccare il contenuto se non lo fa, fermava caroselli
+  completi. Se i media non bastano non deriva nulla e il cancello resta severo.
+- La **rigenerazione singola** accetta ora anche `[NARRATIVE_GATE]` e
+  `[NOVELTY_GATE]` (prima solo `[GENERATION_FALLBACK]`: gli altri due erano un
+  vicolo cieco), riceve il motivo del blocco, e **ricontrolla** il risultato —
+  senza il ricontrollo sarebbe un lavaggio.
+- La rigenerazione **non aveva alcun controllo anti-clone** e riscriveva proprio
+  l'hook: ha prodotto 4 contenuti con hook gia usati. Ora riceve gli hook in uso
+  e passa dallo stesso metro del piano.
+
+### Pubblicazione
+
+- **Le colonne `date` tornano come stringa** (`types.setTypeParser(1082)`): il
+  parser di pg le costruiva a mezzanotte LOCALE mentre `toYmd` legge UTC, quindi
+  fuori da UTC ogni data del calendario slittava indietro di un giorno.
+- La caption dei formati video veniva tagliata con `slice(0, 300)`, a meta
+  parola. Ora `lib/caption-limits.ts` chiude sull'ultima frase o sull'ultima
+  parola intera con i puntini. Il limite vive in un posto solo e alimenta anche
+  le regole di scrittura.
+- La sincronizzazione **si ferma prima del tetto di 5 minuti** e dichiara quanti
+  contenuti restano: il ciclo veniva ucciso a meta, la risposta non arrivava, e i
+  contenuti gia lavorati sparivano dagli approvati (tornano in Da approvare per
+  la revisione del montaggio, che e voluta).
+
+### Interfaccia — cosa e nuovo in /dashboard/calendario
+
+- **Verifica piano**: referto del ciclo di 28 giorni (non del mese solare, i
+  blocchi partono da oggi) con nove controlli. `lib/plan-audit.ts`.
+- **Sposta piano**: spostamento di N giorni oppure "riparti dal giorno X".
+  Anteprima obbligatoria; non tocca mai i contenuti gia inviati a Blotato e
+  rifiuta INTERO uno spostamento che finirebbe nel passato. `lib/plan-shift.ts`.
+- **Rigenera diverso** sui contenuti sani, **Rimuovi** sulla traccia audio.
+- Anteprima Reel senza le barrette segmentate delle Story.
+
+### Regole di scrittura aggiunte
+
+Lunghezza caption per formato, igiene degli hashtag (solo nel campo hashtag, max
+5, niente hashtag-frase), e l'obbligo di **proseguire il testo gia impresso sulle
+immagini** quando i media vengono da una cartella campagna.
+
+### Aperto — da fare
+
+1. **Il `PIANO-EDITORIALE.json` della cartella non entra nel sistema.** Contiene
+   `intent` e `visual_brief` per contenuto: senza, il modello scrive attorno alle
+   immagini invece che dal brief. E la causa dello scollamento fra hook e visual.
+2. **Generatore immagini in blocco**: oggi `Genera immagine AI` funziona su un
+   contenuto solo e non vede ne il DNA mensile ne le immagini vicine, quindi
+   produce buone immagini singole, non una griglia coerente. Serve tetto di spesa.
+3. **12 contenuti hanno ancora `tema = "Slot del piano da completare"`**: residuo
+   dei fallback, visibile come etichetta in calendario.
+4. **Audio**: i 28 MP3 sono i brani INTERI (4-5 minuti), non estratti. Le clip
+   tagliate a 15s (reel) e 9s (story) con fade sono pronte in
+   `04_Sorgenti/audio/clip_pronte/` ma vanno caricate a mano. Licenza Pixabay
+   verificata e scritta sui contenuti; due tracce senza pagina confermata
+   (**Upbeat Lead 231424** e **Spider The Band 282981**).
+5. Due clienti quasi omonimi, `swa` (24 contenuti) e `SWA` (vuoto): rinominare o
+   cancellare quello inutilizzato.
 
 ## Memoria operativa campagne SWA
 
