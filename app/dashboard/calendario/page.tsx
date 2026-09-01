@@ -1534,8 +1534,18 @@ function CalendarioInner() {
               {stalli.length === 1 ? '1 contenuto risulta ancora "programmato" ma l\'orario è passato.' : `${stalli.length} contenuti risultano ancora "programmati" ma l'orario è passato.`}
             </p>
             <p className="mt-0.5 text-red-700">
-              Blotato non ha confermato la pubblicazione. Verifica sul social se il post è uscito davvero: se non c&apos;è, controlla lo storico Blotato e la API key del cliente.
+              Lo stato remoto è fermo all&apos;invio: finché nessuno rilegge Blotato resta &quot;programmato&quot; anche se il post è già uscito.
+              Premi <strong>Verifica Blotato</strong> come prima cosa. Se dopo la verifica risulta ancora programmato, controlla sul social:
+              se il post c&apos;è non rimetterlo in coda — verrebbe pubblicato una seconda volta.
             </p>
+            <button
+              type="button"
+              onClick={() => reconcileBlotato(true)}
+              disabled={reconciling}
+              className="mt-1.5 inline-flex h-7 items-center rounded-md border border-red-300 bg-white px-2.5 text-[11px] font-semibold text-red-800 hover:bg-red-100 disabled:opacity-50"
+            >
+              {reconciling ? 'Verifico...' : 'Verifica Blotato adesso'}
+            </button>
             <ul className="mt-1.5 space-y-0.5 text-xs text-red-700">
               {stalli.slice(0, 5).map(c => (
                 <li key={c.id}>
@@ -1616,6 +1626,27 @@ function CalendarioInner() {
             </button>
           ))}
         </div>
+        {/* Il giorno selezionato sopravvive al cambio di stato: senza dirlo, un
+            contenuto approvato per domani sembra sparito da ogni filtro perche
+            la lista mostra ancora solo oggi. */}
+        {selectedDay && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2">
+            <CalendarDays className="h-3.5 w-3.5 text-brand-700" />
+            <span className="text-xs font-semibold text-brand-900">
+              Stai vedendo solo il {formatDateLabel(selectedDay)}
+            </span>
+            <span className="text-[11px] text-brand-800">
+              I contenuti degli altri giorni non compaiono, qualunque stato sia selezionato.
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedDay(null)}
+              className="ml-auto inline-flex h-7 items-center rounded-md border border-brand-300 bg-white px-2.5 text-[11px] font-semibold text-brand-800 hover:bg-brand-100"
+            >
+              Mostra tutta la settimana
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Week date bar — drop targets */}
@@ -1871,7 +1902,7 @@ function CalendarioInner() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <span className="font-mono text-xs text-gray-400">{c.id_contenuto}</span>
-                    <StatusBadge status={c.status} />
+                    <StatusBadge status={c.status} blotatoStatus={c.blotato_status} />
                     {(() => {
                       // Badge pre-flight Blotato: solo per contenuti che verranno sincronizzati
                       // (non pubblicati/archiviati/non_approvati). Avvisa senza bloccare l'approvazione.
