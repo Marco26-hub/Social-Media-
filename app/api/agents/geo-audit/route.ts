@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
-import { cronDenied } from '@/lib/cron-auth'
+import { scheduledAgentsDenied } from '@/lib/cron-auth'
 import { requireAdmin } from '@/lib/auth-utils'
 import { eseguiGeoAuditPerCliente, type GeoAuditResult } from '@/lib/agents/geo-audit'
 import { notifyAgency } from '@/lib/notifications'
@@ -16,7 +16,7 @@ export const maxDuration = 300
 // Stesso pattern di app/api/agents/seo-audit: auth cron/admin, gate agent_config,
 // niente falliti mascherati da 200.
 export async function POST(request: Request) {
-  const denied = cronDenied(request)
+  const denied = scheduledAgentsDenied(request)
   if (denied) {
     try {
       await requireAdmin()

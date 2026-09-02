@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
-import { cronDenied } from '@/lib/cron-auth'
+import { scheduledAgentsDenied } from '@/lib/cron-auth'
 import { requireAdmin } from '@/lib/auth-utils'
 import { eseguiCompetitorPerCliente, type CompetitorResult } from '@/lib/agents/competitor'
 import { notifyAgency } from '@/lib/notifications'
@@ -16,7 +16,7 @@ export const maxDuration = 300
 // esterno) OPPURE sessione admin (trigger manuale). Analizza i competitor SALVATI dei
 // clienti su generation_mode=AUTO e salva in competitor_analysis.
 export async function POST(request: Request) {
-  const denied = cronDenied(request)
+  const denied = scheduledAgentsDenied(request)
   if (denied) {
     try {
       await requireAdmin()

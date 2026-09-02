@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
-import { cronDenied } from '@/lib/cron-auth'
+import { scheduledAgentsDenied } from '@/lib/cron-auth'
 import { requireAdmin } from '@/lib/auth-utils'
 import { eseguiSeoAuditPerCliente, type SeoAuditResult } from '@/lib/agents/seo-audit'
 import { notifyAgency } from '@/lib/notifications'
@@ -18,7 +18,7 @@ export const maxDuration = 300
 // in dashboard). Anti-punteggi-finti: se l'AI fallisce, il cliente finisce tra gli
 // errori, non viene salvato un audit inventato.
 export async function POST(request: Request) {
-  const denied = cronDenied(request)
+  const denied = scheduledAgentsDenied(request)
   if (denied) {
     try {
       await requireAdmin()

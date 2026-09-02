@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
-import { cronDenied } from '@/lib/cron-auth'
+import { scheduledAgentsDenied } from '@/lib/cron-auth'
 import { requireAdmin } from '@/lib/auth-utils'
 import { eseguiAdsPerCliente, type AdsResult } from '@/lib/agents/ads'
 import { notifyAgency } from '@/lib/notifications'
@@ -17,7 +17,7 @@ export const maxDuration = 300
 // l'admin ha messo su generation_mode=AUTO, sulle piattaforme ad su cui sono
 // realmente presenti. Salva in ads_campaign (l'admin le legge in dashboard).
 export async function POST(request: Request) {
-  const denied = cronDenied(request)
+  const denied = scheduledAgentsDenied(request)
   if (denied) {
     try {
       await requireAdmin()

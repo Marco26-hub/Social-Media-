@@ -24,3 +24,21 @@ export function cronDenied(request: Request): NextResponse | null {
   }
   return null
 }
+
+// Gli agenti devono partire a calendario solo quando l'automazione e stata
+// riattivata esplicitamente. Questo blocca anche scheduler esterni dimenticati
+// che possiedono ancora un CRON_SECRET valido; i trigger manuali con sessione
+// admin continuano a passare dal fallback delle route /api/agents/*.
+export function scheduledAgentsDenied(request: Request): NextResponse | null {
+  const denied = cronDenied(request)
+  if (denied) return denied
+
+  if (process.env.SCHEDULED_AGENTS_ENABLED?.trim().toLowerCase() !== 'true') {
+    return NextResponse.json({
+      error: 'Esecuzione automatica degli agenti disattivata',
+      scheduled_agents_disabled: true,
+    }, { status: 409 })
+  }
+
+  return null
+}

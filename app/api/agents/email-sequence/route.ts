@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q } from '@/lib/db'
-import { cronDenied } from '@/lib/cron-auth'
+import { scheduledAgentsDenied } from '@/lib/cron-auth'
 import { requireAdmin } from '@/lib/auth-utils'
 import { eseguiEmailSequencePerCliente, type EmailSequenceResult } from '@/lib/agents/email-sequence'
 import { notifyAgency } from '@/lib/notifications'
@@ -14,7 +14,7 @@ export const maxDuration = 300
 // mancanti per i clienti AUTO. Idempotente — un cliente che le ha già non viene
 // ritoccato (email_sequence è un asset stabile, non contenuto del giorno).
 export async function POST(request: Request) {
-  const denied = cronDenied(request)
+  const denied = scheduledAgentsDenied(request)
   if (denied) {
     try {
       await requireAdmin()
