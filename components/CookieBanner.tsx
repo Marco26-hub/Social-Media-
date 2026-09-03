@@ -3,10 +3,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import styles from './cookie-banner.module.css'
 
-// Banner cookie leggero. Il sito usa SOLO cookie tecnici (nessuna profilazione),
-// quindi la legge non impone il consenso preventivo: il banner INFORMA e permette
-// di prendere atto. Se in futuro si aggiungono cookie di terze parti (analytics,
-// pixel), il banner va esteso con accetta/rifiuta granulare PRIMA di installarli.
 const CONSENT_KEY = 'cookie_consent'
 
 function readConsent(): string | null {
@@ -18,6 +14,7 @@ function readConsent(): string | null {
 function writeConsent(value: string) {
   const sixMonths = 60 * 60 * 24 * 182
   document.cookie = `${CONSENT_KEY}=${encodeURIComponent(value)}; Max-Age=${sixMonths}; Path=/; SameSite=Lax`
+  window.dispatchEvent(new Event('swa-cookie-consent'))
 }
 
 export default function CookieBanner() {
@@ -29,16 +26,20 @@ export default function CookieBanner() {
 
   if (!visible) return null
 
-  const accept = () => { writeConsent('technical'); setVisible(false) }
+  const acceptEssential = () => { writeConsent('essential'); setVisible(false) }
+  const acceptMarketing = () => { writeConsent('marketing'); setVisible(false) }
 
   return (
     <div role="dialog" aria-label="Informativa cookie" className={styles.banner}>
       <p>
-        Usiamo <strong>solo cookie tecnici</strong> necessari al funzionamento del sito (nessuna
-        profilazione). Continuando, ne prendi atto. Dettagli nella{' '}
+        Usiamo cookie tecnici necessari e, solo con il tuo consenso, cookie marketing
+        per misurare le campagne Meta. Dettagli nella{' '}
         <Link href="/cookie-policy">Cookie Policy</Link>.
       </p>
-      <button onClick={accept}>Ho capito</button>
+      <div className={styles.actions}>
+        <button className={styles.secondary} onClick={acceptEssential}>Solo essenziali</button>
+        <button onClick={acceptMarketing}>Accetta marketing</button>
+      </div>
     </div>
   )
 }

@@ -37,18 +37,20 @@ export default function CookiePolicyPage() {
             <tr><td>next-auth.csrf-token</td><td>Tecnico</td><td>Protezione anti-CSRF</td><td>Sessione</td><td>Non richiesto</td></tr>
             <tr><td>active_cliente_id</td><td>Tecnico</td><td>Cliente/workspace attivo (multi-tenant)</td><td>Sessione</td><td>Non richiesto</td></tr>
             <tr><td>cookie_consent</td><td>Tecnico</td><td>Memorizza la tua scelta sui cookie</td><td>6 mesi</td><td>Non richiesto</td></tr>
+            <tr><td>_fbp</td><td>Marketing</td><td>Misurazione delle campagne Meta e attribuzione degli eventi del sito</td><td>Fino a 3 mesi</td><td>Richiesto</td></tr>
+            <tr><td>_fbc</td><td>Marketing</td><td>Attribuzione delle visite provenienti da inserzioni Meta</td><td>Fino a 3 mesi</td><td>Richiesto</td></tr>
           </tbody>
         </table>
       </div>
       <p>
-        Attualmente il sito utilizza <strong>solo cookie tecnici</strong> necessari al funzionamento: per questi la legge
-        non richiede il consenso preventivo. Non sono presenti cookie di profilazione, pubblicità o analytics di terze parti.
+        I cookie tecnici sono sempre attivi perché necessari. I cookie marketing vengono caricati solo dopo consenso esplicito
+        tramite banner e sono usati per Meta Pixel e Conversions API.
       </p>
 
-      <h2>3. Cookie di terze parti (potenziali)</h2>
-      <p>Qualora in futuro venissero attivati strumenti di analisi (es. Google Analytics), pixel pubblicitari (Meta, LinkedIn) o
-        video incorporati (YouTube), questi installerebbero cookie di terze parti soggetti a consenso. In tal caso questa tabella
-        verrà aggiornata e il banner richiederà il consenso prima dell&apos;installazione.</p>
+      <h2>3. Cookie di terze parti</h2>
+      <p>Il sito può utilizzare Meta Pixel per misurare visite, lead e avvii di checkout collegati alle campagne pubblicitarie.
+        Le informazioni sono trattate secondo le impostazioni e le informative di Meta. Eventuali ulteriori strumenti di analisi,
+        pixel pubblicitari o contenuti incorporati verranno indicati in questa tabella prima dell&apos;attivazione.</p>
 
       <h2>4. Gestione del consenso</h2>
       <p>Puoi modificare o revocare le tue preferenze in qualsiasi momento tramite il banner cookie (che ricompare alla revoca)

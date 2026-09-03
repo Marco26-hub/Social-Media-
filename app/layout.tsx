@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import JsonLd from '@/components/JsonLd'
 import CookieBanner from '@/components/CookieBanner'
+import MetaPixel from '@/components/MetaPixel'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
 
 export const metadata: Metadata = {
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <JsonLd />
+        <MetaPixel />
         {children}
         <CookieBanner />
       </body>

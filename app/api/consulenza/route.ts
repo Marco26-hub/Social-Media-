@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q1 } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
+import { sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 import { stripeConfigured, createOneOffCheckoutSession } from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
@@ -38,9 +39,21 @@ export async function POST(request: Request) {
       [nome, email, telefono || null, messaggio || null, IMPORTO_CENTS],
     )
     const consulenzaId = String((row as { id: string }).id)
+    const eventSourceUrl = `${baseUrl()}/consulenza`
 
     // Se Stripe non è configurato: registra comunque la richiesta e rimanda a WhatsApp.
     if (!stripeConfigured()) {
+      await sendMetaConversionEvent({
+        eventName: 'Lead',
+        request,
+        eventId: `consulenza-${consulenzaId}`,
+        eventSourceUrl,
+        email,
+        phone: telefono,
+        value: IMPORTO_CENTS / 100,
+        currency: 'EUR',
+        customData: { content_name: 'Consulenza legale AI & GDPR', content_category: 'consulting' },
+      })
       return NextResponse.json({
         ok: true,
         status: 'pending',
@@ -62,6 +75,18 @@ export async function POST(request: Request) {
 
     // Salva il session id per riconciliazione.
     await q1('UPDATE consulenze SET stripe_session_id = $2, updated_at = now() WHERE id = $1 RETURNING id', [consulenzaId, session.id])
+
+    await sendMetaConversionEvent({
+      eventName: 'InitiateCheckout',
+      request,
+      eventId: `consulenza-checkout-${consulenzaId}`,
+      eventSourceUrl,
+      email,
+      phone: telefono,
+      value: IMPORTO_CENTS / 100,
+      currency: 'EUR',
+      customData: { content_name: 'Consulenza legale AI & GDPR', content_category: 'consulting' },
+    })
 
     if (session.url) return NextResponse.json({ ok: true, status: 'checkout', checkout_url: session.url })
     return NextResponse.json({ ok: true, status: 'pending', message: 'Richiesta registrata.' })

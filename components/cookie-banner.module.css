@@ -20,11 +20,16 @@
 .banner p { flex: 1 1 320px; margin: 0; color: rgba(255, 250, 240, .85); font: 13px/1.5 Arial, Helvetica, sans-serif; }
 .banner strong { color: #fffaf0; }
 .banner a { color: #e7bf57; font-weight: 700; }
-.banner button { min-height: 40px; flex: none; padding: 0 18px; border: 0; border-radius: 4px; background: #e0b23c; color: #10120e; cursor: pointer; font: 800 13px Arial, Helvetica, sans-serif; }
+.actions { display: flex; flex: none; gap: 8px; }
+.banner button { min-height: 40px; flex: none; padding: 0 18px; border: 0; border-radius: 4px; background: #e0b23c; color: #10120e; cursor: pointer; font: 800 13px Arial, Helvetica, sans-serif; white-space: nowrap; }
+.banner .secondary { border: 1px solid rgba(255, 250, 240, .28); background: transparent; color: #fffaf0; }
 .banner button:hover { background: #edc55e; }
+.banner .secondary:hover { background: rgba(255, 250, 240, .12); }
 .banner a:focus-visible, .banner button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
 @media (max-width: 700px) {
-  .banner { right: 10px; bottom: 10px; left: 10px; gap: 11px; padding: 12px; }
+  .banner { right: 10px; bottom: 10px; left: 10px; gap: 11px; padding: 12px; flex-direction: column; align-items: stretch; }
   .banner p { flex-basis: 220px; font-size: 11px; line-height: 1.45; }
+  .actions { width: 100%; }
+  .actions button { flex: 1 1 0; padding: 0 10px; }
   .banner button { min-height: 38px; padding: 0 14px; font-size: 12px; }
 }

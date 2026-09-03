@@ -4,6 +4,7 @@ import { dbReady, q, q1 } from '@/lib/db'
 import { standaloneServiceBySlug } from '@/lib/standalone-services'
 import { ensureStandaloneServiceOrdersSchema } from '@/lib/standalone-service-schema'
 import { createStandaloneServiceCheckoutSession, stripeConfigured } from '@/lib/stripe'
+import { sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 import { verifyTurnstile } from '@/lib/turnstile'
 
 export const dynamic = 'force-dynamic'
@@ -117,6 +118,21 @@ export async function POST(request: Request) {
           WHERE id = $1`,
         [orderId, session.id],
       )
+      await sendMetaConversionEvent({
+        eventName: 'InitiateCheckout',
+        request,
+        eventId: `service-checkout-${orderId}`,
+        eventSourceUrl: `${baseUrl}/acquista?servizio=${encodeURIComponent(service.slug)}`,
+        email,
+        phone: telefono,
+        value: service.amountCents / 100,
+        currency: 'EUR',
+        customData: {
+          content_name: service.name,
+          content_category: 'standalone_service',
+          content_ids: [service.slug],
+        },
+      })
       return NextResponse.json({ ok: true, checkout_url: session.url })
     } catch (error) {
       await q(
