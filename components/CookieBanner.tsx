@@ -2,32 +2,27 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import styles from './cookie-banner.module.css'
+import { COOKIE_CONSENSO, EVENTO_CONSENSO, leggiConsenso, type Consenso } from '@/lib/cookie-consent'
 
-const CONSENT_KEY = 'cookie_consent'
-
-function readConsent(): string | null {
-  if (typeof document === 'undefined') return null
-  const m = document.cookie.match(/(?:^|;\s*)cookie_consent=([^;]+)/)
-  return m ? decodeURIComponent(m[1]) : null
-}
-
-function writeConsent(value: string) {
-  const sixMonths = 60 * 60 * 24 * 182
-  document.cookie = `${CONSENT_KEY}=${encodeURIComponent(value)}; Max-Age=${sixMonths}; Path=/; SameSite=Lax`
-  window.dispatchEvent(new Event('swa-cookie-consent'))
+function scriviConsenso(valore: Consenso) {
+  const seiMesi = 60 * 60 * 24 * 182
+  document.cookie = `${COOKIE_CONSENSO}=${valore}; Max-Age=${seiMesi}; Path=/; SameSite=Lax`
+  window.dispatchEvent(new Event(EVENTO_CONSENSO))
 }
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (!readConsent()) setVisible(true)
+    // Chiede a chi non ha ancora risposto — inclusi i visitatori che avevano
+    // accettato il banner precedente, a cui il marketing non era mai stato posto.
+    if (!leggiConsenso(document.cookie)) setVisible(true)
   }, [])
 
   if (!visible) return null
 
-  const acceptEssential = () => { writeConsent('essential'); setVisible(false) }
-  const acceptMarketing = () => { writeConsent('marketing'); setVisible(false) }
+  const acceptEssential = () => { scriviConsenso('essential'); setVisible(false) }
+  const acceptMarketing = () => { scriviConsenso('marketing'); setVisible(false) }
 
   return (
     <div role="dialog" aria-label="Informativa cookie" className={styles.banner}>

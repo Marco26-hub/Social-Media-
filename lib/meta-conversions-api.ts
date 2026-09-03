@@ -1,5 +1,7 @@
 import { createHash, randomUUID } from 'crypto'
 
+import { marketingConcesso } from './cookie-consent'
+
 const GRAPH_VERSION = 'v21.0'
 const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID
 const ACCESS_TOKEN = process.env.META_CAPI_ACCESS_TOKEN
@@ -32,7 +34,7 @@ function cookieValue(request: Request, name: string): string | undefined {
 }
 
 function marketingConsentGranted(request: Request): boolean {
-  return cookieValue(request, 'cookie_consent') === 'marketing'
+  return marketingConcesso(request.headers.get('cookie'))
 }
 
 function clientIp(request: Request): string | undefined {

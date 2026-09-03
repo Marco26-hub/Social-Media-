@@ -2,20 +2,14 @@
 
 import { usePathname, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
+import { EVENTO_CONSENSO, marketingConcesso } from '@/lib/cookie-consent'
 
 const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID
-const CONSENT_COOKIE = 'cookie_consent'
 
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void
   }
-}
-
-function readConsent(): string | null {
-  if (typeof document === 'undefined') return null
-  const match = document.cookie.match(/(?:^|;\s*)cookie_consent=([^;]+)/)
-  return match ? decodeURIComponent(match[1]) : null
 }
 
 function MetaPixelTracker() {
@@ -24,10 +18,10 @@ function MetaPixelTracker() {
   const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
-    const sync = () => setEnabled(readConsent() === 'marketing')
+    const sync = () => setEnabled(marketingConcesso(document.cookie))
     sync()
-    window.addEventListener('swa-cookie-consent', sync)
-    return () => window.removeEventListener('swa-cookie-consent', sync)
+    window.addEventListener(EVENTO_CONSENSO, sync)
+    return () => window.removeEventListener(EVENTO_CONSENSO, sync)
   }, [])
 
   useEffect(() => {
@@ -86,5 +80,3 @@ export default function MetaPixel() {
     </Suspense>
   )
 }
-
-export { CONSENT_COOKIE }
