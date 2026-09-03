@@ -1227,7 +1227,13 @@ function CalendarioInner() {
     daApprovare: contenuti.filter(c => c.status === 'DA_APPROVARE').length,
     approvati: contenuti.filter(c => c.status === 'APPROVATO').length,
     nonApprovati: contenuti.filter(c => c.status === 'NON_APPROVATO').length,
-    pubblicati: contenuti.filter(c => c.status === 'PUBBLICATO' || c.blotato_status === 'published').length,
+    // Un contenuto inviato a Blotato conta come pubblicato solo quando Blotato
+    // lo conferma. Lo status locale passa a PUBBLICATO gia al momento della
+    // programmazione, quindi da solo contava anche i post ancora in coda: il
+    // pannello diceva "8 pubblicati" con 4 usciti davvero e 4 ancora da uscire.
+    pubblicati: contenuti.filter(c => c.blotato_status === 'published'
+      || (c.status === 'PUBBLICATO' && !c.blotato_post_id)).length,
+    inCoda: contenuti.filter(c => c.blotato_status === 'scheduled' || c.blotato_status === 'in-progress').length,
     errori: contenuti.filter(c => c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE' || c.blotato_status === 'failed' || Boolean(c.errore_tecnico)).length,
     oggi: contenuti.filter(c => c.data_pubblicazione === todayIso).length,
     video: contenuti.filter(c => c.media_type === 'video' || ['reel', 'video', 'short', 'story'].includes(c.formato)).length,
@@ -1334,6 +1340,7 @@ function CalendarioInner() {
               { label: 'Approvati', value: stats.approvati, tone: 'text-blue-200' },
               { label: 'Non approvati', value: stats.nonApprovati, tone: 'text-rose-200' },
               { label: 'Pubblicati', value: stats.pubblicati, tone: 'text-emerald-200' },
+              { label: 'In coda', value: stats.inCoda, tone: 'text-sky-200' },
               { label: 'Errori', value: stats.errori, tone: 'text-red-200' },
               { label: 'Reel/Video', value: stats.video, tone: 'text-fuchsia-200' },
               { label: 'Trend/Premium', value: stats.trend, tone: 'text-violet-200' },

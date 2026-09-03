@@ -492,9 +492,13 @@ export async function scheduleOnBlotato(
     if (rowId && lockId) {
       const message = error instanceof Error ? error.message : 'Errore Blotato sconosciuto'
       try {
+        // status = 'ERRORE' oltre a blotato_status: senza, la riga restava
+        // APPROVATO e il filtro per stato del calendario — che guarda status —
+        // non la mostrava tra gli errori. Un montaggio fallito deve comparire
+        // dove si va a cercarlo, non solo nel contatore.
         await q(
           `UPDATE calendario
-           SET publish_lock_id = NULL, blotato_status = 'failed',
+           SET status = 'ERRORE', publish_lock_id = NULL, blotato_status = 'failed',
                errore_tecnico = $1, blotato_sync_at = now(), updated_at = now()
            WHERE id = $2 AND cliente_id = $3 AND publish_lock_id = $4`,
           [`Pipeline pubblicazione: ${message.slice(0, 500)}`, rowId, clienteId, lockId],

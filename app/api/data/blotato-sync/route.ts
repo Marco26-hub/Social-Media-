@@ -135,7 +135,8 @@ export async function POST() {
         try {
           await q(
             `UPDATE calendario
-               SET errore_tecnico = $1, blotato_status = 'failed', blotato_sync_at = now(), publish_lock_id = NULL
+               SET status = 'ERRORE', errore_tecnico = $1, blotato_status = 'failed',
+                   blotato_sync_at = now(), publish_lock_id = NULL
              WHERE id = $2 AND cliente_id = $3`,
             [msg, row.id, clienteId],
           )

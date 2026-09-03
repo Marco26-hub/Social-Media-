@@ -22,13 +22,13 @@ test('an unreadable campaign_source_paths is not taken for a final creative', ()
   }
 })
 
-test('every rendered montage requires a human review before publishing', () => {
-  // Regola non negoziabile: il montaggio e un artefatto NUOVO — movimento,
-  // transizioni, durata, audio — e nessuno lo pubblica senza averlo visto.
-  // Vale anche per i media di una cartella campagna gia approvata: le
-  // creativita di partenza sono approvate, il video che ne esce no.
-  assert.equal(requiresRenderedVisualReview({}), true)
-  assert.equal(requiresRenderedVisualReview({ campaign_content_key: 'reel_01' }), true)
-  assert.equal(requiresRenderedVisualReview({ campaign_source_paths: ['REEL_01/SCENA_01.png'] }), true)
-  assert.equal(requiresRenderedVisualReview({ campaign_source_paths: '{corrotto' }), true)
+test('un montaggio non si ferma per una seconda approvazione', () => {
+  // Si approva una volta sola, guardando l'anteprima: da li il contenuto va a
+  // Blotato da solo. Il gate precedente rimandava il video in DA_APPROVARE e i
+  // contenuti restavano fermi a meta strada senza segnalarlo. Se il render
+  // fallisce il contenuto finisce in ERRORE, non in attesa di approvazione.
+  assert.equal(requiresRenderedVisualReview({}), false)
+  assert.equal(requiresRenderedVisualReview({ campaign_content_key: 'reel_01' }), false)
+  assert.equal(requiresRenderedVisualReview({ campaign_source_paths: ['REEL_01/SCENA_01.png'] }), false)
+  assert.equal(requiresRenderedVisualReview({ campaign_source_paths: '{corrotto' }), false)
 })

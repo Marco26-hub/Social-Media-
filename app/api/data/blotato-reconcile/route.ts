@@ -34,7 +34,11 @@ function monthRange(month: string): { start: string; end: string } {
 
 function packageSummary(rows: CalendarRow[], included: number) {
   const active = rows.filter(row => !['NON_APPROVATO', 'ARCHIVIATO'].includes(String(row.status || '')))
-  const published = active.filter(row => row.status === 'PUBBLICATO' || row.blotato_status === 'published')
+  // Confermato da Blotato, oppure marcato pubblicato senza essere mai passato da
+  // Blotato (pubblicazione manuale). Lo status locale diventa PUBBLICATO gia alla
+  // programmazione, quindi da solo gonfierebbe il totale con i post ancora in coda.
+  const published = active.filter(row => row.blotato_status === 'published'
+    || (row.status === 'PUBBLICATO' && !row.blotato_post_id))
   const queued = active.filter(row => ['scheduled', 'in-progress'].includes(String(row.blotato_status || '')))
   const failed = active.filter(row => row.status === 'ERRORE' || row.blotato_status === 'failed')
   const notSent = active.filter(row => !row.blotato_post_id && !['PUBBLICATO', 'ERRORE'].includes(String(row.status || '')))

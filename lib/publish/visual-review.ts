@@ -4,9 +4,9 @@ type ContentRow = Record<string, unknown>
  * Vero se i media vengono da una cartella campagna gia prodotta: hook e CTA sono
  * gia impaginati nell'immagine, quindi il render NON deve ridisegnarli sopra.
  *
- * ATTENZIONE: questa funzione dice solo come MONTARE, non se pubblicare senza
- * controllo. La revisione del video montato e sempre richiesta — vedi
- * requiresRenderedVisualReview.
+ * ATTENZIONE: dice solo COME montare. Non dice se il contenuto sia gia pronto:
+ * un reel di una cartella campagna e comunque un montaggio da produrre, perche
+ * il materiale caricato sono foto verticali, non un MP4 finito.
  */
 export function hasFinalCampaignAsset(row: ContentRow): boolean {
   if (String(row.campaign_content_key || '').trim()) return true
@@ -28,23 +28,26 @@ export function hasFinalCampaignAsset(row: ContentRow): boolean {
 }
 
 /**
- * Un video montato non viene MAI pubblicato senza che una persona lo abbia
- * guardato. Vale anche per i media di una cartella campagna gia prodotta.
+ * Il montaggio NON si ferma per una seconda approvazione: si approva una volta
+ * sola, guardando l'anteprima, e da li il contenuto arriva a Blotato da solo.
  *
- * Le creativita di partenza sono si gia approvate, ma il montaggio e un
- * artefatto NUOVO: Remotion aggiunge movimento, transizioni, durata e una
- * traccia audio, e puo sbagliare senza che nessuno se ne accorga — tanto piu
- * che in produzione non ha ancora un montaggio riuscito alle spalle. Il
- * contenuto torna quindi in DA_APPROVARE con stato visual_review, si guarda in
- * Preview e si approva una seconda volta.
+ * Il gate precedente rimandava ogni video in DA_APPROVARE con stato
+ * visual_review, chiedendo di riapprovare un contenuto gia approvato. Nel flusso
+ * reale il materiale e sempre lo stesso — foto verticali caricate a mano, viste
+ * in anteprima prima di approvare — quindi la seconda conferma non aggiungeva
+ * una decisione: aggiungeva un giro, e i contenuti restavano fermi a meta strada
+ * senza che nulla lo segnalasse (due reel del 5 settembre non sono mai partiti
+ * proprio cosi).
  *
- * Il bypass per gli asset di campagna (commit 6c6c465) e stato rimosso su
- * richiesta esplicita: il controllo umano sul montaggio e la garanzia che regge
- * l'intero flusso, e vale piu del giro in meno.
+ * Il controllo sul montaggio resta, ma cambia forma: se il render fallisce il
+ * contenuto finisce in ERRORE — visibile nel contatore e nel filtro — invece di
+ * mettersi in attesa di un'approvazione. Il prezzo accettato consapevolmente e
+ * che un montaggio tecnicamente riuscito ma brutto esce senza un secondo sguardo:
+ * per quello resta l'anteprima prima di approvare.
  */
 // La firma tiene il parametro perche i chiamanti passano la riga e perche una
 // futura eccezione (se mai motivata) si scriverebbe qui e in nessun altro punto.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function requiresRenderedVisualReview(row: ContentRow): boolean {
-  return true
+  return false
 }
