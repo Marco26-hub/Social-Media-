@@ -1921,6 +1921,14 @@ function CalendarioInner() {
                     {c.quality_level && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700 uppercase">{c.quality_level}</span>
                     )}
+                    {c.content_series_id && c.content_series_position && c.content_series_total && (
+                      <span
+                        title={c.content_series_theme || `Serie ${c.content_series_id}`}
+                        className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-50 text-cyan-800 border border-cyan-100 inline-flex items-center gap-1"
+                      >
+                        <Layers className="w-3 h-3" /> Serie {c.content_series_position}/{c.content_series_total}
+                      </span>
+                    )}
                     <span className="text-xs text-gray-400 inline-flex items-center gap-1">
                       <span>{CANALE_ICON[c.canale] ?? '📄'}</span>
                       <span>{c.canale}</span>
@@ -2119,6 +2127,14 @@ function CalendarioInner() {
                     Qualità {selected.quality_level}
                   </span>
                 )}
+                {selected.content_series_id && selected.content_series_position && selected.content_series_total && (
+                  <span
+                    title={selected.content_series_id}
+                    className="ml-2 inline-flex mt-2 items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-cyan-100 text-cyan-800"
+                  >
+                    <Layers className="w-3 h-3" /> Serie {selected.content_series_position}/{selected.content_series_total}
+                  </span>
+                )}
               </div>
               <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600">
                 <XCircle className="w-5 h-5" />
@@ -2129,6 +2145,12 @@ function CalendarioInner() {
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                   <p className="font-semibold">Contenuto da completare</p>
                   <p className="mt-1 text-xs">Il ciclo ha conservato data, canale, formato e media. Modifica qui sotto hook, caption, hashtag e CTA, poi mandalo in approvazione.</p>
+                </div>
+              )}
+              {selected.content_series_theme && (
+                <div className="rounded-xl border border-cyan-100 bg-cyan-50/70 p-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-cyan-800">Tema condiviso della serie</p>
+                  <p className="mt-1 text-sm text-cyan-950">{selected.content_series_theme}</p>
                 </div>
               )}
               {/* Anteprima visuale post */}

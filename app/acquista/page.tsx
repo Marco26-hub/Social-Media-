@@ -44,7 +44,11 @@ function CheckoutForm() {
     ? '/servizi/blog-seo'
     : service.slug === 'web-commerce'
       ? '/servizi/siti-e-commerce'
-      : '/servizi/ricerca-clienti-b2b'
+      : service.slug === 'lead-pilot'
+        ? '/servizi/ricerca-clienti-b2b'
+        : service.slug === 'agenda-clienti' || service.slug === 'tutto-in-uno'
+          ? '/servizi/agenda-clienti-whatsapp'
+          : '/servizi/segretaria-telefonica-ai'
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -101,6 +105,7 @@ function CheckoutForm() {
           <h1>{service.shortName}</h1>
           <p>{service.description}</p>
           <div className={styles.price}><strong>{service.displayPrice}</strong><span>{service.cadenceLabel}</span></div>
+          {service.setupCents ? <p className={styles.renewal}>Avvio una tantum: {(service.setupCents / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} sulla prima fattura.</p> : null}
           <ul>{service.features.map(feature => <li key={feature}><Check size={17} />{feature}</li>)}</ul>
           <div className={styles.onboarding}><strong>Dopo il pagamento</strong><p>{service.onboarding}</p></div>
           <p className={styles.renewal}>{service.billingMode === 'subscription'

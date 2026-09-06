@@ -17,6 +17,7 @@ import { useGeneration } from '@/components/GenerationProvider'
 import { useRuntimeDemo } from '@/lib/demo-client'
 import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
 import { GENERATION_OPTIMIZATION_CYCLE } from '@/lib/production-cycle'
+import { BUSINESS_CATEGORY_OPTIONS, resolveBusinessCategory, type BusinessCategoryId } from '@/lib/business-categories'
 
 // Cap asset per singolo post/carosello = max carosello Instagram (10).
 // Altre piattaforme limitano di più in publish (X 4) — vedi warning nel form.
@@ -38,6 +39,21 @@ type UploadedAsset = {
   size?: number
   kind?: 'image' | 'video' | 'audio'
   source: 'upload' | 'url'
+}
+
+type BrandProfileSummary = {
+  brand_name?: string | null
+  settore?: string | null
+  tono_voce?: string | null
+  target?: string | null
+}
+
+type ContentSeries = {
+  id: string
+  position: number
+  total: number
+  formats: string[]
+  theme: string
 }
 
 // Pagina UNICA "Crea contenuti social": la piattaforma si sceglie qui in cima
@@ -93,12 +109,16 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [recenti, setRecenti] = useState<Contenuto[]>([])
   const [states, setStates]   = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({})
   const [errors, setErrors]   = useState<Record<string, string>>({})
+  const [warnings, setWarnings] = useState<Record<string, string>>({})
   const [pending, setPending] = useState<FormatoConfig | null>(null)
   const [selectedFormats, setSelectedFormats] = useState<Set<string>>(new Set())
   const [pendingBatch, setPendingBatch] = useState(false)
   const [crossCanali, setCrossCanali] = useState<Set<string>>(new Set())
   const [aiModel, setAiModel] = useState(DEFAULT_AI_MODEL)
   const [quality, setQuality] = useState<QualitySelection>('auto')
+  const [businessCategory, setBusinessCategory] = useState<BusinessCategoryId>('auto')
+  const [brandProfile, setBrandProfile] = useState<BrandProfileSummary | null>(null)
+  const [brandProfileLoading, setBrandProfileLoading] = useState(true)
   const [assets, setAssets] = useState<UploadedAsset[]>([])
   const [assetUrl, setAssetUrl] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -107,6 +127,10 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
   const gen = useGeneration()
+  const activeBusinessCategory = resolveBusinessCategory(businessCategory, {
+    sector: brandProfile?.settore,
+    brandName: brandProfile?.brand_name,
+  })
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -128,6 +152,33 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     }
     load()
   }, [demo, config.canaleDb, clienteId, loadingCliente])
+
+  useEffect(() => {
+    if (loadingCliente) return
+    if (demo) {
+      setBrandProfile({ brand_name: 'SILKinCOM', settore: 'Fashion/Abbigliamento' })
+      setBrandProfileLoading(false)
+      return
+    }
+    setBrandProfileLoading(true)
+    fetch('/api/data/brand')
+      .then(async response => {
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({})) as { error?: string }
+          throw new Error(data.error || 'Profilo Brand non disponibile')
+        }
+        return response.json() as Promise<BrandProfileSummary | null>
+      })
+      .then(profile => {
+        setBrandProfile(profile)
+        setErrors(prev => { const next = { ...prev }; delete next.brand_profile; return next })
+      })
+      .catch(error => {
+        setBrandProfile(null)
+        setErrors(prev => ({ ...prev, brand_profile: (error as Error).message }))
+      })
+      .finally(() => setBrandProfileLoading(false))
+  }, [demo, clienteId, loadingCliente])
 
   // Catalogo prodotti (per usarne le foto già caricate senza ri-uploadarle).
   useEffect(() => {
@@ -229,9 +280,14 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     setAssets(prev => prev.map((a, i) => (i === index ? { ...a, name: nome } : a)))
   }
 
-  async function genera(f: FormatoConfig) {
+  async function genera(f: FormatoConfig, series?: ContentSeries) {
     setPending(null)
     setErrors(prev => {
+      const next = { ...prev }
+      delete next[f.id]
+      return next
+    })
+    setWarnings(prev => {
       const next = { ...prev }
       delete next[f.id]
       return next
@@ -248,7 +304,26 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     const endpoint = isBlog ? '/api/generate/blog' : '/api/generate/content'
     const body = isBlog
       ? { cliente_id: clienteId, tema: prodottoNome.trim() || (config.nome + ' - ' + f.nome), nome_prodotto: prodottoNome.trim() || undefined, quality, uploaded_assets: assets, media_urls: assets.map(asset => asset.url), ...aiSettings }
-      : { cliente_id: clienteId, canale: config.canaleDb, formato: f.formato, tema: prodottoNome.trim() || undefined, nome_prodotto: prodottoNome.trim() || undefined, quality, uploaded_assets: assets, media_urls: assets.map(asset => asset.url), also_canali: [...crossCanali], ...aiSettings }
+      : {
+          cliente_id: clienteId,
+          canale: config.canaleDb,
+          formato: f.formato,
+          tema: prodottoNome.trim() || undefined,
+          nome_prodotto: prodottoNome.trim() || undefined,
+          quality,
+          business_category: businessCategory,
+          uploaded_assets: assets,
+          media_urls: assets.map(asset => asset.url),
+          also_canali: [...crossCanali],
+          ...(series ? {
+            series_id: series.id,
+            series_position: series.position,
+            series_total: series.total,
+            series_formats: series.formats,
+            series_theme: series.theme,
+          } : {}),
+          ...aiSettings,
+        }
 
     // Generazione nel provider globale: continua anche se cambi pagina, con barra di progresso.
     const result = await gen.run({
@@ -262,6 +337,11 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
 
     if (result.ok) {
       setStates(s => ({ ...s, [f.id]: 'success' }))
+      const response = result.data as { warning?: string; warnings?: string[] } | undefined
+      const responseWarnings = [response?.warning, ...(response?.warnings || [])].filter((value): value is string => Boolean(value))
+      if (responseWarnings.length) {
+        setWarnings(prev => ({ ...prev, [f.id]: responseWarnings.join(' ') }))
+      }
     } else {
       setErrors(prev => ({ ...prev, [f.id]: result.error || `Generazione ${f.nome} fallita` }))
       setStates(s => ({ ...s, [f.id]: 'error' }))
@@ -278,13 +358,24 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     })
   }
 
-  // Genera in blocco tutti i formati flaggati (uno alla volta, ognuno = un contenuto).
+  // Un solo formato resta autonomo; due o piu formati condividono serie, tema e funnel.
   async function generaBatch() {
     setPendingBatch(false)
     setAiModel(readAISettings().model)
     const scelti = config.formati.filter(f => selectedFormats.has(f.id))
-    for (const f of scelti) {
-      await genera(f)
+    if (scelti.length === 1) {
+      await genera(scelti[0])
+      setSelectedFormats(new Set())
+      return
+    }
+    if (scelti.length < 2) return
+
+    const seriesId = `${activeBusinessCategory.id}-${Date.now().toString(36)}`
+    const formats = scelti.map(format => format.formato)
+    const seriesTheme = prodottoNome.trim()
+      || `${brandProfile?.brand_name || 'Brand'}: ${activeBusinessCategory.description}`
+    for (const [index, f] of scelti.entries()) {
+      await genera(f, { id: seriesId, position: index + 1, total: scelti.length, formats, theme: seriesTheme })
     }
     setSelectedFormats(new Set())
   }
@@ -312,6 +403,42 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       </div>
 
       <AIModelSelector task="contenuti-social" />
+
+      <div className="card p-4 mb-5 border-brand-200 bg-brand-50/40">
+        <div className="flex flex-col md:flex-row md:items-end gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-gray-900">Categoria e Profilo Brand</p>
+            <p className="text-xs text-gray-500 mt-1">
+              La categoria guida il metodo; nome, tono, target e vincoli arrivano dal Profilo Brand del cliente attivo.
+            </p>
+            <select
+              value={businessCategory}
+              onChange={event => setBusinessCategory(event.target.value as BusinessCategoryId)}
+              className="input mt-3"
+            >
+              {BUSINESS_CATEGORY_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>{option.label} — {option.description}</option>
+              ))}
+            </select>
+          </div>
+          <div className="md:w-80 rounded-xl border border-brand-100 bg-white p-3">
+            <p className="text-[10px] uppercase tracking-wide font-bold text-gray-400">Brand Profile collegato</p>
+            {brandProfileLoading ? (
+              <p className="text-xs text-gray-500 mt-1 inline-flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Caricamento...</p>
+            ) : brandProfile?.brand_name ? (
+              <>
+                <p className="text-sm font-semibold text-gray-900 mt-1">{brandProfile.brand_name}</p>
+                <p className="text-xs text-gray-500">{brandProfile.settore || 'Settore da completare'} · motore {activeBusinessCategory.label}</p>
+              </>
+            ) : (
+              <p className="text-xs text-amber-700 mt-1">Profilo non compilato: la generazione userà un fallback dichiarato.</p>
+            )}
+            <Link href="/dashboard/settings?tab=brand" className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline mt-2">
+              {brandProfile?.brand_name ? 'Modifica Profilo Brand' : 'Completa Profilo Brand'} <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+      </div>
 
       <div className="card p-4 mb-5">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -476,6 +603,12 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
         </div>
       )}
 
+      {Object.values(warnings).length > 0 && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Attenzione: {Object.values(warnings)[0]}
+        </div>
+      )}
+
       {/* Cross-post: pubblica lo stesso contenuto anche su altri social (opt-in) */}
       <div className="card p-4 mb-6">
         <p className="text-sm font-semibold text-gray-900 mb-1">Pubblica anche su (opzionale)</p>
@@ -506,7 +639,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       {/* Format scegliere cosa creare */}
       <div className="mb-8">
         <h2 className="font-bold text-gray-900 mb-1">Cosa vuoi creare?</h2>
-        <p className="text-xs md:text-sm text-gray-500 mb-4">Spunta uno o più formati e genera in blocco, oppure usa il bottone del singolo formato. L&apos;AI scriverà hook, caption, hashtag e CTA.</p>
+        <p className="text-xs md:text-sm text-gray-500 mb-4">Il bottone singolo crea un contenuto autonomo. Se selezioni più formati, l&apos;AI li collega in una serie {activeBusinessCategory.label} coordinata con sviluppo narrativo comune.</p>
 
         {/* Barra generazione multipla */}
         {selectedFormats.size > 0 && (
@@ -609,13 +742,16 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
         const isFree = aiModel.endsWith(':free')
         const n = selectedFormats.size
         const nomi = config.formati.filter(f => selectedFormats.has(f.id)).map(f => f.nome).join(', ')
+        const isSeries = n > 1
         return (
           <ConfirmModal
             open={true}
             onClose={() => setPendingBatch(false)}
             onConfirm={generaBatch}
             title={`Generare ${n} formati ${config.nome}?`}
-            desc={`L'AI genererà ${n} contenuti (${nomi}), uno per formato, aggiunti al calendario in stato DA_APPROVARE. L'AI verrà chiamata ${n} volte.`}
+            desc={isSeries
+              ? `L'AI genererà una serie ${activeBusinessCategory.label} coordinata di ${n} contenuti (${nomi}), con tema e funnel condivisi. Ogni elemento resta approvabile separatamente nel calendario. L'AI verrà chiamata ${n} volte.`
+              : `L'AI genererà ${nomi} come contenuto autonomo e lo aggiungerà al calendario in stato DA_APPROVARE.`}
             modello={aiModel}
             isFree={isFree}
             tokenEstimate={{

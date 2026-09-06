@@ -1,10 +1,11 @@
 'use client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import ClienteSelector from '@/components/ClienteSelector'
+import { isDemo } from '@/lib/demo'
 import {
   LayoutDashboard, Calendar, Settings,
   LogOut, Zap, Menu, X, Target,
@@ -18,6 +19,7 @@ const SECTIONS: NavSection[] = [
   {
     title: '',
     items: [
+      { href: '/dashboard/settings?tab=brand', label: 'Profilo Brand', icon: Sparkles, adminOnly: true },
       { href: '/dashboard',            label: 'Dashboard',  icon: LayoutDashboard },
       { href: '/dashboard/il-mio-piano', label: 'Il mio piano', icon: CreditCard },
       { href: '/dashboard/calendario', label: 'Calendario', icon: Calendar },
@@ -55,9 +57,10 @@ const SECTIONS: NavSection[] = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const router   = useRouter()
   const { data: session } = useSession()
-  const isAdmin = ['admin', 'super_admin'].includes(session?.user?.ruolo ?? '')
+  const isAdmin = isDemo() || ['admin', 'super_admin'].includes(session?.user?.ruolo ?? '')
   const [open, setOpen] = useState(false)
 
   useEffect(() => { setOpen(false) }, [pathname])
@@ -136,9 +139,16 @@ export default function Sidebar() {
                 )}
                 <div className="space-y-0.5">
                   {visibleItems.map(item => {
+                    const itemUrl = new URL(item.href, 'https://swa.local')
+                    const itemPath = itemUrl.pathname
+                    const itemTab = itemUrl.searchParams.get('tab')
+                    const currentTab = searchParams.get('tab')
                     const active = !item.external && (
-                      pathname === item.href ||
-                      (item.href !== '/dashboard' && item.href !== '/' && pathname.startsWith(item.href))
+                      itemTab
+                        ? pathname === itemPath && currentTab === itemTab
+                        : pathname === itemPath || (
+                            itemPath !== '/dashboard' && itemPath !== '/' && pathname.startsWith(itemPath) && !(itemPath === '/dashboard/settings' && currentTab === 'brand')
+                          )
                     )
                     const Icon = item.icon
                     return (

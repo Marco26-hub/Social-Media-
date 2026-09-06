@@ -21,6 +21,8 @@ import { normalizeProductionCycleStage } from '@/lib/production-cycle'
 import { PRO_COPY_STANDARDS, SEO_GEO_STANDARDS, COPY_FRAMEWORKS, HOOK_FORMULAS, pickAngle } from '@/lib/prompt-standards'
 import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
 import { adaptRowForPlatform } from '@/lib/social-adapt'
+import { buildBusinessCategoryContext, resolveBusinessCategory, type BusinessCategory } from '@/lib/business-categories'
+import { buildContentSeriesContext } from '@/lib/content-series'
 
 type PromptSpec = {
   persona: string
@@ -41,6 +43,13 @@ type UserAsset = {
   mime?: string
   source?: string
 }
+
+const CONTENT_SERIES_COLUMNS = [
+  'content_series_id',
+  'content_series_position',
+  'content_series_total',
+  'content_series_theme',
+] as const
 
 function isVideoUrl(url: string) {
   return url.split('?')[0].toLowerCase().endsWith('.mp4')
@@ -415,6 +424,36 @@ const PROMPTS: Record<string, PromptSpec> = {
   },
 }
 
+function applyBusinessCategoryToPrompt(
+  spec: PromptSpec,
+  category: BusinessCategory,
+  canale: string,
+  formato: string,
+): PromptSpec {
+  if (category.id === 'fashion') return spec
+
+  const structures: Record<string, string> = {
+    post: 'Hook breve, contesto concreto, un solo messaggio principale, prova o dettaglio verificabile e CTA coerente. Ogni affermazione deve derivare dal Profilo Brand, dal catalogo o dagli asset.',
+    pin: 'Titolo cercabile, beneficio o idea concreta, descrizione utile e CTA verso una destinazione reale. Il visual deve rendere immediatamente riconoscibile il soggetto.',
+    carousel: 'Prima slide con promessa chiara; sviluppo progressivo senza ripetizioni; ogni slide aggiunge un fatto, passaggio o prova; ultima slide con CTA. Rispetta il numero di slide e i limiti del formato.',
+    story: 'Sequenza breve: hook, dettaglio o prova, chiusura con invito testuale statico. Ogni frame deve essere comprensibile anche senza audio e non deve simulare controlli interattivi.',
+    reel: '0-2 secondi: hook visivo; sviluppo: problema, esperienza o dimostrazione reale; chiusura: risultato osservabile e CTA. Specifica scene, overlay e voiceover senza inventare asset.',
+    short: 'Hook immediato, sviluppo visuale rapido e una sola CTA finale. Specifica scene e overlay leggibili, usando esclusivamente dati e asset disponibili.',
+    video: 'Hook immediato, sviluppo visuale coerente con il canale e una sola CTA finale. Specifica scene e overlay leggibili, usando esclusivamente dati e asset disponibili.',
+  }
+
+  return {
+    ...spec,
+    persona: `Sei un creative strategist senior per ${canale}, specializzato nella categoria ${category.label}.`,
+    goal: category.commercialJob,
+    struttura: structures[formato] || structures.post,
+    tono: 'Usa il tono del Profilo Brand. Scrivi in modo specifico, umano e coerente con il pubblico reale; evita gergo di settore non spiegato e formule da AI.',
+    hashtag: 'Usa solo hashtag pertinenti al brand, al tema e al pubblico reale, rispettando i limiti nativi del canale. Non inserire hashtag Fashion se la categoria non li giustifica.',
+    cta: 'Scegli una sola azione successiva realmente disponibile e coerente con il lavoro commerciale della categoria; non inventare link, offerte o disponibilita.',
+    effetti: 'Progetta un visual social-native basato sugli asset reali e sulle regole della categoria. Non introdurre prodotti, luoghi, persone, risultati o prove non forniti.',
+  }
+}
+
 function extractCaption(parsed: Record<string, unknown>): string {
   if (parsed.caption_tiktok) return parsed.caption_tiktok as string
   if (parsed.caption_adattata) return parsed.caption_adattata as string
@@ -453,8 +492,8 @@ function extractOverlay(parsed: Record<string, unknown>): string | null {
   return null
 }
 
-function buildSystemPrompt(brand: Record<string, unknown> | null, quality: string): string {
-  const settore = (brand as Record<string, string>)?.settore || 'moda ed e-commerce'
+function buildSystemPrompt(brand: Record<string, unknown> | null, quality: string, categoryLabel: string): string {
+  const settore = (brand as Record<string, string>)?.settore || categoryLabel
   const nome = (brand as Record<string, string>)?.brand_name || 'brand'
   return `Sei un creative strategist e copywriter social media senior (10+ anni, brand premium) specializzato in ${settore} per il brand ${nome}. Livello qualità: ${quality}. Il tuo copy deve sembrare scritto da un professionista, non da un'AI: hook che fermano lo scroll, specificità concreta, zero cliché e zero frasi-riempitivo. Ogni contenuto deve essere moderno, trend-aware e social-native: ritmo da feed 2026, POV/micro-storia/swipe tension quando utile, mai tono brochure. Evita le formule generiche da didascalia automatica. GRAMMATICA E ORTOGRAFIA ITALIANE IMPECCABILI: mai parole attaccate (es. "Eleganzasenza"), accenti e apostrofi corretti, nessun refuso — rileggi prima di restituire. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo. Usa tono di voce, parole-chiave e stile del contesto brand. Non inventare claim, prezzi, stock, canzoni virali o dati non forniti.`
 }
@@ -462,7 +501,7 @@ function buildSystemPrompt(brand: Record<string, unknown> | null, quality: strin
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, canale, formato, model, openrouter_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls, also_canali, visual_effects, visual_preset, use_trending_effects, consenso_utilizzo } = await request.json()
+    const { cliente_id, canale, formato, model, openrouter_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls, also_canali, visual_effects, visual_preset, use_trending_effects, consenso_utilizzo, business_category, series_id, series_position, series_total, series_formats, series_theme } = await request.json()
     if (!canale || !formato) {
       return NextResponse.json({ error: 'canale, formato richiesti' }, { status: 400 })
     }
@@ -478,6 +517,7 @@ export async function POST(request: Request) {
     const requestedQuality = quality ?? quality_level ?? post_quality ?? qualita
     if (isDemo() || !dbReady()) {
       const demoQuality = resolveContentQuality({ requestedQuality })
+      const demoCategory = resolveBusinessCategory(business_category)
       const id_contenuto = `DEMO_${Date.now().toString(36).toUpperCase()}`
       return NextResponse.json({
         ok: true,
@@ -485,6 +525,7 @@ export async function POST(request: Request) {
         id_contenuto,
         tipo: 'calendario',
         quality_level: demoQuality,
+        business_category: demoCategory.id,
         quality_downgraded: isQualityDowngraded(requestedQuality, demoQuality),
         warning: 'Fallback demo: DATABASE_URL non configurato, contenuto non persistito su Neon.',
       })
@@ -494,7 +535,7 @@ export async function POST(request: Request) {
     const warnings: string[] = []
 
     const key = `${canale}:${formato}`
-    const spec = PROMPTS[key] || PROMPTS[`instagram:post`]
+    const rawSpec = PROMPTS[key] || PROMPTS[`instagram:post`]
     // Formato non-nativo (es. pinterest:reel): usiamo il template IG generico → l'utente
     // deve saperlo, il contenuto non segue le regole native di quel canale/formato.
     if (!PROMPTS[key]) warnings.push(`Formato ${canale}/${formato} non nativo: generato con template generico Instagram post.`)
@@ -506,6 +547,38 @@ export async function POST(request: Request) {
     ])
     const brand = (brandRows[0] ?? null) as Record<string, unknown> | null
     const client = (clientRows[0] ?? null) as Record<string, unknown> | null
+    const activeBusinessCategory = resolveBusinessCategory(business_category, {
+      sector: brand?.settore || client?.settore,
+      brandName: brand?.brand_name,
+      clientName: client?.nome,
+    })
+    const spec = applyBusinessCategoryToPrompt(rawSpec, activeBusinessCategory, canale, formato)
+    const businessCategoryContext = buildBusinessCategoryContext(activeBusinessCategory)
+    const seriesRequested = [series_id, series_position, series_total, series_theme].some(value => value !== undefined && value !== null && value !== '')
+    const series = buildContentSeriesContext({
+      id: series_id,
+      position: series_position,
+      total: series_total,
+      formats: series_formats,
+      format: formato,
+      theme: series_theme || tema || nome_prodotto || brand?.brand_name,
+    })
+    if (seriesRequested && !series) {
+      return NextResponse.json({ error: 'Metadati serie non validi: servono ID, posizione e almeno 2 contenuti.' }, { status: 400 })
+    }
+    if (series) {
+      const calendarColumns = await getTableColumns('calendario')
+      const missingSeriesColumns = CONTENT_SERIES_COLUMNS.filter(column => !calendarColumns.has(column))
+      if (missingSeriesColumns.length) {
+        return NextResponse.json({
+          error: `Schema serie non aggiornato: mancano ${missingSeriesColumns.join(', ')}. Eseguire npm run migrate prima di generare.`,
+          migration_required: '049_content_series.sql',
+        }, { status: 503 })
+      }
+    }
+    if (!brand?.brand_name) {
+      warnings.push(`Profilo Brand assente o incompleto: usata la categoria ${activeBusinessCategory.label} con dati generici; completa il Profilo Brand prima dell'approvazione.`)
+    }
     const contentQuality = resolveContentQuality({ requestedQuality, piano: client?.piano })
     const matchedProduct = (products as Array<Record<string, unknown>>).find(p => p.product_id === product_id)
     // product_id fornito ma inesistente → ripieghiamo sul primo prodotto, MA lo diciamo.
@@ -533,11 +606,11 @@ export async function POST(request: Request) {
     )
 
     // Prepend brand context for richer generation
-    const userPrompt = brandContext ? `${brandContext}\n---\n${basePrompt}` : basePrompt
+    const userPrompt = `${businessCategoryContext}\n---\n${series ? `${series.prompt}\n---\n` : ''}${brandContext ? `${brandContext}\n---\n` : ''}${basePrompt}`
 
     const aiRes = await callAI({
       model: model || 'google/gemma-4-31b-it:free',
-      systemPrompt: buildSystemPrompt(brand, contentQuality),
+      systemPrompt: buildSystemPrompt(brand, contentQuality, activeBusinessCategory.label),
       userPrompt,
       openrouterKey: openrouter_key,
       maxTokens: getQualityTokenBudget(contentQuality),
@@ -564,7 +637,7 @@ export async function POST(request: Request) {
         try {
           const retryRes = await callAI({
             model: model || 'google/gemma-4-31b-it:free',
-            systemPrompt: buildSystemPrompt(brand, contentQuality),
+            systemPrompt: buildSystemPrompt(brand, contentQuality, activeBusinessCategory.label),
             userPrompt: `${userPrompt}\n\nVINCOLO ASSOLUTO: il carosello deve avere ESATTAMENTE da 3 a 5 slide nel campo "slides" (mai meno di 3, mai più di 5). La generazione precedente ne aveva ${n}. Rigenera rispettando il vincolo.`,
             openrouterKey: openrouter_key,
             maxTokens: getQualityTokenBudget(contentQuality),
@@ -615,7 +688,8 @@ export async function POST(request: Request) {
       'production_notes', 'compliance_notes', 'risk_flags', 'platform_best_practices',
       'ab_variants_json', 'kpi_target', 'expected_outcome', 'production_cycle_stage',
       'optimization_cycle_json', 'performance_hypothesis', 'next_iteration_actions',
-      'missing_inputs', 'content_checklist',
+      'missing_inputs', 'content_checklist', 'business_category',
+      'content_series_id', 'content_series_position', 'content_series_total', 'content_series_theme',
     ]
     const insertValues = [
       effectiveClienteId, id_contenuto,
@@ -688,6 +762,11 @@ export async function POST(request: Request) {
       jsonbParam(pickJson(parsed, ['next_iteration_actions', 'azioni_prossima_iterazione', 'next_actions'])),
       jsonbParam(pickJson(parsed, ['missing_inputs', 'input_mancanti'])),
       jsonbParam(pickJson(parsed, ['content_checklist', 'checklist'])),
+      activeBusinessCategory.id,
+      series?.id || null,
+      series?.position || null,
+      series?.total || null,
+      series?.theme || null,
     ]
 
     const schemaFallback = await insertCalendario(insertColumns, insertValues)
@@ -739,6 +818,8 @@ export async function POST(request: Request) {
       id_contenuto,
       tipo: 'calendario',
       quality_level: generatedQuality,
+      business_category: activeBusinessCategory.id,
+      ...(series ? { series_id: series.id, series_position: series.position, series_total: series.total, series_theme: series.theme } : {}),
       quality_downgraded: isQualityDowngraded(requestedQuality, generatedQuality),
       ...(crossPosted.length ? { cross_posted: crossPosted } : {}),
       ...(crossFailed.length ? { cross_post_failed: crossFailed } : {}),

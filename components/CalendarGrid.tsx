@@ -145,6 +145,11 @@ export default function CalendarGrid({ items, tz, onSelect, onMove }: {
                           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot(it.status)}`} />
                           <span className="shrink-0">{CANALE_ICON[it.canale] || '📄'}</span>
                           <span className="text-gray-600 shrink-0">{(it.ora_pubblicazione || '').slice(0, 5)}</span>
+                          {it.content_series_id && it.content_series_position && it.content_series_total && (
+                            <span title={it.content_series_theme || `Serie ${it.content_series_id}`} className="shrink-0 font-semibold text-cyan-700">
+                              S{it.content_series_position}/{it.content_series_total}
+                            </span>
+                          )}
                           {!pf.ok && <AlertTriangle className="w-3 h-3 text-red-500 shrink-0" />}
                           <span className="truncate text-gray-700">{it.hook || it.caption || it.formato}</span>
                         </button>

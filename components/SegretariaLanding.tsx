@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
-import { SEGRETARIA_NOTA, type FamigliaSegretaria } from '@/lib/segretaria-listino'
+import { SEGRETARIA_AVVIO, SEGRETARIA_NOTA, type FamigliaSegretaria } from '@/lib/segretaria-listino'
 import { SITE_URL } from '@/lib/site-config'
 import styles from './segretaria-landing.module.css'
 
@@ -104,7 +104,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
         <div className="home-hero">
           <div className="cinematic-media" aria-hidden="true">
             <Image src={c.foto} alt="" fill priority fetchPriority="high" quality={90} sizes="100vw"
-              style={{ objectFit: 'cover', objectPosition: 'center 22%' }} />
+              style={{ objectFit: 'cover' }} />
             <div className="cinematic-vignette" />
             <div className="cinematic-light" />
             <div className="film-grain" />
@@ -252,11 +252,22 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
                   <p className={styles.pianoAvvio}>Avvio {p.avvio} · {p.soglia}</p>
                   <ul>{p.voci.map(v => <li key={v}>{v}</li>)}</ul>
                   <p className={styles.pianoExtra}>{p.extra}</p>
-                  <a className={styles.pianoCta} href={wa}>Richiedi una call</a>
+                  <a className={styles.pianoCta} href={`/acquista?servizio=${encodeURIComponent(p.id)}`}>Attiva il piano</a>
                 </article>
               ))}
             </div>
           </div>
+          {/* Il costo di avvio spiegato subito sotto i piani: e la voce che il
+              cliente vede per prima e su cui si ferma se non sa cosa compra. */}
+          <div className={styles.avvio}>
+            <div>
+              <h3>{SEGRETARIA_AVVIO.titolo}</h3>
+              <p>{SEGRETARIA_AVVIO.testo}</p>
+            </div>
+            <ul>{SEGRETARIA_AVVIO.voci.map(v => <li key={v}>{v}</li>)}</ul>
+            <p className={styles.avvioDopo}>{SEGRETARIA_AVVIO.dopoPagamento}</p>
+          </div>
+
           <p className={styles.listinoNota}>{SEGRETARIA_NOTA}</p>
         </section>
 

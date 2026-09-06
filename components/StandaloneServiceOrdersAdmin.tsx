@@ -1,11 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { AlertTriangle, ExternalLink, FileText, Globe2, Loader2, Newspaper, RefreshCw, Target } from 'lucide-react'
+import { AlertTriangle, CalendarDays, ExternalLink, FileText, Globe2, Loader2, Newspaper, PhoneCall, RefreshCw, Target } from 'lucide-react'
 
 type Order = {
   id: string
-  service_slug: 'blog-seo' | 'web-commerce' | 'lead-pilot'
+  service_slug: 'blog-seo' | 'web-commerce' | 'lead-pilot' | 'agenda-clienti' | 'tutto-in-uno' | 'voce-base' | 'voce-attivita' | 'voce-azienda'
   service_name: string
   amount_cents: number
   currency: string
@@ -72,15 +72,15 @@ export default function StandaloneServiceOrdersAdmin() {
   return (
     <section className="card mb-6 overflow-hidden">
       <header className="flex items-center justify-between border-b border-gray-100 p-4">
-        <div><h2 className="font-semibold text-gray-900">Servizi Blog e Web</h2><p className="text-xs text-gray-500">Ordini ricorrenti separati dai pacchetti social</p></div>
+        <div><h2 className="font-semibold text-gray-900">Servizi acquistati</h2><p className="text-xs text-gray-500">Ordini Stripe separati dai pacchetti social</p></div>
         <button onClick={load} className="btn-secondary text-xs"><RefreshCw className="h-3.5 w-3.5" /> Aggiorna</button>
       </header>
       {loading ? <div className="p-9 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" /></div>
         : error ? <div className="flex gap-2 p-5 text-sm text-red-700"><AlertTriangle className="h-5 w-5" />{error}</div>
           : data?.needs_migration ? <div className="flex gap-2 p-5 text-sm text-amber-700"><AlertTriangle className="h-5 w-5" />Migrazione ordini servizi non applicata.</div>
-            : !data?.orders.length ? <div className="p-8 text-center text-sm text-gray-400">Nessun ordine Blog o Web.</div>
+            : !data?.orders.length ? <div className="p-8 text-center text-sm text-gray-400">Nessun ordine servizio.</div>
               : <div className="divide-y divide-gray-100">{data.orders.map(order => {
-                const Icon = order.service_slug === 'blog-seo' ? Newspaper : order.service_slug === 'web-commerce' ? Globe2 : Target
+                const Icon = order.service_slug === 'blog-seo' ? Newspaper : order.service_slug === 'web-commerce' ? Globe2 : order.service_slug === 'lead-pilot' ? Target : order.service_slug === 'agenda-clienti' || order.service_slug === 'tutto-in-uno' ? CalendarDays : PhoneCall
                 return <article key={order.id} className="grid gap-3 p-4 md:grid-cols-[1.25fr_.7fr_.8fr_auto] md:items-center">
                   <div className="min-w-0"><div className="flex items-center gap-2"><Icon className="h-4 w-4 text-brand-600" /><strong className="truncate text-sm text-gray-900">{order.service_name}</strong><span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone(order.status)}`}>{order.status}</span></div><p className="mt-1 text-xs text-gray-500">{order.azienda || order.nome} · <a href={`mailto:${order.email}`} className="hover:underline">{order.email}</a></p></div>
                   <div><p className="text-sm font-bold text-gray-900">{money(order.amount_cents, order.currency)}{order.service_slug === 'lead-pilot' ? '' : '/mese'}</p><p className="text-xs text-gray-500">Ordinato {date(order.created_at)}</p></div>

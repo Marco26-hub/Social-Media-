@@ -27,8 +27,7 @@ export default function CookieBanner() {
   return (
     <div role="dialog" aria-label="Informativa cookie" className={styles.banner}>
       <p>
-        Usiamo cookie tecnici necessari e, solo con il tuo consenso, cookie marketing
-        per misurare le campagne Meta. Dettagli nella{' '}
+        Cookie tecnici sempre attivi. Con il tuo consenso usiamo cookie marketing per Meta.{' '}
         <Link href="/cookie-policy">Cookie Policy</Link>.
       </p>
       <div className={styles.actions}>

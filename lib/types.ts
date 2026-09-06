@@ -146,6 +146,10 @@ export interface Contenuto {
   campaign_source_paths?: unknown | null
   strategy_profile?: string | null
   business_category?: string | null
+  content_series_id?: string | null
+  content_series_position?: number | null
+  content_series_total?: number | null
+  content_series_theme?: string | null
   // Pre-publish checklist
   checked_alt_text: 'SI' | 'NO' | null
   checked_aspect_ratio: 'SI' | 'NO' | null

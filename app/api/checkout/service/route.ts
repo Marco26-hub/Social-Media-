@@ -3,6 +3,7 @@ import { getPublicBaseUrl } from '@/lib/base-url'
 import { dbReady, q, q1 } from '@/lib/db'
 import { standaloneServiceBySlug } from '@/lib/standalone-services'
 import { ensureStandaloneServiceOrdersSchema } from '@/lib/standalone-service-schema'
+import { ensureRuntimeMigrations } from '@/lib/runtime-migrations'
 import { createStandaloneServiceCheckoutSession, stripeConfigured } from '@/lib/stripe'
 import { sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 import { verifyTurnstile } from '@/lib/turnstile'
@@ -23,6 +24,7 @@ function publicStatus(status: string): 'pending' | 'confirmed' | 'attention' {
 
 export async function GET(request: Request) {
   if (!dbReady()) return NextResponse.json({ error: 'Servizio ordini non disponibile' }, { status: 503 })
+  await ensureRuntimeMigrations()
   await ensureStandaloneServiceOrdersSchema()
   const sessionId = new URL(request.url).searchParams.get('session_id')?.trim()
   if (!sessionId) return NextResponse.json({ error: 'Sessione richiesta' }, { status: 400 })
@@ -106,6 +108,7 @@ export async function POST(request: Request) {
         serviceSlug: service.slug,
         serviceName: service.name,
         amountCents: service.amountCents,
+        setupCents: service.setupCents,
         billingMode: service.billingMode,
         customerEmail: email,
         successUrl: `${baseUrl}/acquista/successo?session_id={CHECKOUT_SESSION_ID}`,

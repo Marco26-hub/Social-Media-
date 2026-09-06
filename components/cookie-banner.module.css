@@ -27,9 +27,9 @@
 .banner .secondary:hover { background: rgba(255, 250, 240, .12); }
 .banner a:focus-visible, .banner button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
 @media (max-width: 700px) {
-  .banner { right: 10px; bottom: 10px; left: 10px; gap: 11px; padding: 12px; flex-direction: column; align-items: stretch; }
-  .banner p { flex-basis: 220px; font-size: 11px; line-height: 1.45; }
+  .banner { right: 8px; bottom: 8px; left: 8px; gap: 6px; padding: 8px; flex-direction: column; align-items: stretch; }
+  .banner p { flex: none; font-size: 10px; line-height: 1.3; }
   .actions { width: 100%; }
-  .actions button { flex: 1 1 0; padding: 0 10px; }
-  .banner button { min-height: 38px; padding: 0 14px; font-size: 12px; }
+  .actions button { flex: 1 1 0; padding: 0 8px; }
+  .banner button { min-height: 34px; padding: 0 10px; font-size: 11px; }
 }

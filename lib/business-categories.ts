@@ -1,5 +1,6 @@
 export type BusinessCategoryId =
   | 'auto'
+  | 'fashion'
   | 'social-media-agency'
   | 'ecommerce'
   | 'restaurant-hospitality'
@@ -33,6 +34,7 @@ const COMMON_SKILLS = ['swa-editorial-campaign', 'market-brand', 'market-social'
 
 export const BUSINESS_CATEGORY_OPTIONS: Array<{ value: BusinessCategoryId; label: string; description: string }> = [
   { value: 'auto', label: 'Automatico', description: 'Riconosce la categoria dal settore del cliente' },
+  { value: 'fashion', label: 'Fashion', description: 'Moda, abbigliamento e accessori con contenuti UGC e prodotto' },
   { value: 'social-media-agency', label: 'Agenzia social e marketing', description: 'Servizi di strategia, gestione, contenuti e automazione' },
   { value: 'ecommerce', label: 'E-commerce e vendita online', description: 'Prodotti, catalogo, fiducia e acquisto' },
   { value: 'restaurant-hospitality', label: 'Ristorazione e hospitality', description: 'Piatti, servizio, luogo ed esperienza' },
@@ -66,6 +68,7 @@ function category(
 }
 
 export const BUSINESS_CATEGORIES: Record<Exclude<BusinessCategoryId, 'auto'>, BusinessCategory> = {
+  fashion: category('fashion', 'Fashion', 'Racconta moda, abbigliamento e accessori attraverso prodotto reale, styling, desiderio e fiducia.', 'Persone che cercano ispirazione, vestibilita, qualita, abbinamenti e sicurezza prima dell acquisto.', 'Far desiderare il prodotto, ridurre i dubbi e portare alla scheda, al negozio o al contatto reale.', ['Metti al centro capi e accessori realmente presenti negli asset o nel catalogo del cliente.', 'Alterna UGC credibile, styling, dettaglio, fit, occasione d uso, prova e conversione soft.', 'Per Reel e Story specifica hook iniziale, shot list, cover luminosa e ultimo frame completo.', 'Adatta hook, caption e CTA alla piattaforma senza duplicare meccanicamente lo stesso testo.'], ['Non inventare prezzo, disponibilita, materiali, taglie, recensioni, sconti, heritage o claim.', 'Se manca un dato necessario, inseriscilo in missing_inputs e mantieni il contenuto in revisione.'], [...COMMON_SKILLS, 'market-seo']),
   'social-media-agency': category('social-media-agency', 'Agenzia social e marketing', 'Vende competenza, metodo e gestione del ciclo editoriale.', 'Titolari e responsabili marketing che hanno bisogno di continuita, metodo e produzione.', 'Far riconoscere il problema, dimostrare il metodo e generare una richiesta qualificata.', ['Spiega strategia, produzione, approvazione, pubblicazione e ottimizzazione con esempi concreti.', 'Trasforma processi invisibili in prove osservabili: calendario, brief, revisioni e QA.', 'Traduci il gergo tecnico in tempo risparmiato, controllo e opportunita.'], [], [...COMMON_SKILLS, 'content-research-writer', 'market-seo', 'market-competitors']),
   ecommerce: category('ecommerce', 'E-commerce e vendita online', 'Vende prodotti attraverso desiderio, fiducia e percorso di acquisto.', 'Persone interessate al prodotto che cercano ispirazione, qualita e un acquisto semplice.', 'Far desiderare il prodotto, ridurre l incertezza e portare alla scheda o all acquisto.', ['Mostra prodotto reale, dettaglio, uso, confronto, prova e occasione d acquisto.', 'Alterna ispirazione, dimostrazione, obiezioni, novita e prova sociale.', 'Collega ogni CTA a una scheda o destinazione realmente disponibile.'], ['Non inventare prezzo, disponibilita, materiali, recensioni o caratteristiche.'], [...COMMON_SKILLS, 'market-seo']),
   'restaurant-hospitality': category('restaurant-hospitality', 'Ristorazione e hospitality', 'Vende piatto, luogo, servizio ed esperienza.', 'Persone locali o viaggiatori che cercano un esperienza da provare e condividere.', 'Far desiderare l esperienza e portare a prenotazione, visita o richiesta.', ['Racconta piatto, preparazione, sala, servizio, persone e momento.', 'Usa fotografia appetitosa ma credibile e non coprire il piatto con testo.', 'Indica menu, telefono, sito o messaggio solo se realmente disponibili.'], ['Non inventare ingredienti, allergeni, prezzi, disponibilita o recensioni.'], [...COMMON_SKILLS, 'content-research-writer']),
@@ -95,7 +98,8 @@ export function resolveBusinessCategory(requested: unknown, context: { sector?: 
   }
   const text = normalize([context.sector, context.brandName, context.clientName].join(' '))
   if (/swa|social|marketing|agenzia|automation/.test(text)) return BUSINESS_CATEGORIES['social-media-agency']
-  if (/silkincom|abbigliamento|accessori|moda|fashion|ecommerce|e-commerce|negozio online/.test(text)) return BUSINESS_CATEGORIES.ecommerce
+  if (/silkincom|abbigliamento|accessori|moda|fashion/.test(text)) return BUSINESS_CATEGORIES.fashion
+  if (/ecommerce|e-commerce|negozio online/.test(text)) return BUSINESS_CATEGORIES.ecommerce
   if (/ristorante|ristorazione|pizzeria|cucina|piatti|food|hotel|albergo|turismo|viaggi/.test(text)) return BUSINESS_CATEGORIES['restaurant-hospitality']
   if (/bowling|pista|strike|spare|intrattenimento|venue|sala giochi/.test(text)) return BUSINESS_CATEGORIES['leisure-venue']
   if (/immobiliare|immobili|agenzia immobiliare/.test(text)) return BUSINESS_CATEGORIES['real-estate']

@@ -35,3 +35,4 @@ sc-tmp.mjs
 output/
 tmp/
 __pycache__/
+.env*.local

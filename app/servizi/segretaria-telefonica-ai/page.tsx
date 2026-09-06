@@ -57,16 +57,18 @@ const contenuto: ContenutoLanding = {
     h2: 'Gestisce le chiamate ripetitive, senza toglierti il controllo.',
     intro: 'Le domande che ricevi cento volte al mese — quanto costa, a che ora aprite, avete posto giovedì — non richiedono te. Tutto il resto sì, e infatti resta a te.',
     voci: [
-      ['Accoglie chi chiama', 'Si presenta con il nome della tua attività e capisce che cosa serve prima di rispondere.'],
+      ['Accoglie chi chiama', 'Si presenta con il nome della tua attività, con la voce e la frase di apertura che hai scelto tu.'],
       ['Informa', 'Servizi, prezzi, orari e regole: soltanto quelli che hai approvato nel pannello.'],
-      ['Prenota', 'Controlla gli orari davvero liberi, raccoglie i dati e salva solo dopo la conferma del cliente.'],
-      ['Passa la mano', 'Se la richiesta esce dal previsto, trasferisce la chiamata al numero che hai indicato.'],
+      ['Prenota', 'Legge il calendario collegato, propone gli orari davvero liberi e salva solo dopo la conferma.'],
+      ['Smista e inoltra', 'Capisce di che cosa si tratta e passa la chiamata alla persona giusta, secondo le regole che hai scritto.'],
+      ['Trascrive tutto', 'Di ogni chiamata restano trascrizione e riepilogo: non devi più riascoltare la segreteria per capire chi ha chiamato.'],
+      ['Chiude il giro', 'A telefonata finita registra l’esito e aggiorna dove serve, senza che qualcuno debba ricopiare a mano.'],
     ],
   },
   flusso: {
     occhiello: 'Il flusso completo',
     h2: 'Dalla telefonata all’appuntamento confermato.',
-    passi: ['Riceve la chiamata', 'Capisce la richiesta', 'Controlla l’agenda', 'Propone e conferma', 'Registra l’esito'],
+    passi: ['Riceve la chiamata', 'Capisce la richiesta', 'Controlla il calendario', 'Prenota o smista', 'Trascrive e registra'],
     chiusura: 'Ogni chiamata lascia traccia: che cosa è stato chiesto, che cosa è stato risposto e se l’appuntamento è stato fissato. Puoi rileggerlo quando vuoi.',
   },
   pannello: {

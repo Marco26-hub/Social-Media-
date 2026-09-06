@@ -8,7 +8,7 @@ import { ensureStandaloneServiceOrdersSchema } from '@/lib/standalone-service-sc
 
 export const dynamic = 'force-dynamic'
 
-const LATEST_REQUIRED_MIGRATION = '046_remove_in_pubblicazione_status.sql'
+const LATEST_REQUIRED_MIGRATION = '049_content_series.sql'
 
 function hasEnv(name: string) {
   return Boolean(process.env[name]?.trim())
@@ -19,6 +19,7 @@ async function getDatabaseChecks(enabled: boolean) {
     return {
       dbConnection: false,
       profilesTable: false,
+      contentSeriesSchema: false,
       adminUser: false,
       migrationsTable: false,
       migrationCount: 0,
@@ -32,12 +33,20 @@ async function getDatabaseChecks(enabled: boolean) {
       q('SELECT 1 AS ok'),
       q(`SELECT
         to_regclass('public.profiles') IS NOT NULL AS profiles_table,
-        to_regclass('public.schema_migrations') IS NOT NULL AS migrations_table`),
+        to_regclass('public.schema_migrations') IS NOT NULL AS migrations_table,
+        (
+          SELECT count(*) = 4
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'calendario'
+            AND column_name IN ('content_series_id', 'content_series_position', 'content_series_total', 'content_series_theme')
+        ) AS content_series_schema`),
     ])
 
     const schema = schemaRows[0] as Record<string, unknown> | undefined
     const profilesTable = Boolean(schema?.profiles_table)
     const migrationsTable = Boolean(schema?.migrations_table)
+    const contentSeriesSchema = Boolean(schema?.content_series_schema)
     const adminRows = profilesTable
       ? await q(`SELECT EXISTS(SELECT 1 FROM profiles WHERE email = 'admin') AS admin_user`)
       : []
@@ -56,6 +65,7 @@ async function getDatabaseChecks(enabled: boolean) {
     return {
       dbConnection: Boolean((connectionRows[0] as Record<string, unknown> | undefined)?.ok),
       profilesTable,
+      contentSeriesSchema,
       adminUser: Boolean(admin?.admin_user),
       migrationsTable,
       migrationCount: Number(migrations?.migration_count || 0),
@@ -69,6 +79,7 @@ async function getDatabaseChecks(enabled: boolean) {
     return {
       dbConnection: false,
       profilesTable: false,
+      contentSeriesSchema: false,
       adminUser: false,
       migrationsTable: false,
       migrationCount: 0,
@@ -104,6 +115,7 @@ export async function GET(request: NextRequest) {
     databaseUrl: hasDatabaseUrl,
     dbConnection: demo || databaseChecks.dbConnection,
     profilesTable: demo || databaseChecks.profilesTable,
+    contentSeriesSchema: demo || databaseChecks.contentSeriesSchema,
     adminUser: demo || databaseChecks.adminUser,
     migrationsTable: demo || databaseChecks.migrationsTable,
     authSecret: hasEnv('AUTH_SECRET') || hasEnv('NEXTAUTH_SECRET'),
@@ -120,7 +132,14 @@ export async function GET(request: NextRequest) {
     r2Storage: isR2Configured(),
   }
 
-  const hasDatabase = demo || (checks.databaseUrl && checks.dbConnection && checks.profilesTable)
+  const hasDatabase = demo || (
+    checks.databaseUrl
+    && checks.dbConnection
+    && checks.profilesTable
+    && checks.migrationsTable
+    && checks.contentSeriesSchema
+    && databaseChecks.latestMigrationApplied
+  )
   const hasAi = checks.openrouter
   const ready = hasDatabase && checks.adminUser && checks.authSecret && checks.nextauthUrl && hasAi
 
@@ -129,11 +148,17 @@ export async function GET(request: NextRequest) {
   const version = (process.env.VERCEL_GIT_COMMIT_SHA || process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || '').slice(0, 7) || 'unknown'
 
   // Liveness vs readiness: torniamo 503 SOLO su fallimento CRITICO (in produzione
-  // con DATABASE_URL ma DB irraggiungibile o schema mancante) così Render rileva
+  // con DATABASE_URL ma DB irraggiungibile, migrazione assente o schema mancante) così l'hosting rileva
   // un deploy davvero rotto. Le env opzionali mancanti (Stripe/Blotato/storage)
   // restano 'needs_setup' con HTTP 200: l'app funziona, mancano solo feature — NON
   // vogliamo che l'healthcheck Render bocci il deploy per una key opzionale.
-  const criticalFailure = !demo && checks.databaseUrl && (!checks.dbConnection || !checks.profilesTable)
+  const criticalFailure = !demo && checks.databaseUrl && (
+    !checks.dbConnection
+    || !checks.profilesTable
+    || !checks.migrationsTable
+    || !checks.contentSeriesSchema
+    || !databaseChecks.latestMigrationApplied
+  )
   const httpStatus = criticalFailure ? 503 : 200
   const status = criticalFailure ? 'unhealthy' : (ready ? 'ready' : 'needs_setup')
 
@@ -170,6 +195,7 @@ export async function GET(request: NextRequest) {
       ...(!checks.databaseUrl ? ['Configura DATABASE_URL per Neon/Postgres'] : []),
       ...(checks.databaseUrl && !checks.dbConnection ? ['DATABASE_URL presente ma connessione Neon fallita: verifica stringa/SSL/password'] : []),
       ...(checks.dbConnection && !checks.profilesTable ? ['Esegui migrations Neon: tabella profiles mancante'] : []),
+      ...(checks.dbConnection && !checks.contentSeriesSchema ? ['Esegui migrations: schema serie contenuti mancante'] : []),
       ...(checks.profilesTable && !checks.adminUser ? ['Esegui db/migrations/011_admin_user.sql: admin mancante'] : []),
       ...(!checks.authSecret ? ['Configura AUTH_SECRET o NEXTAUTH_SECRET'] : []),
       ...(!checks.nextauthUrl ? ['Configura NEXTAUTH_URL con URL Render o dominio custom'] : []),

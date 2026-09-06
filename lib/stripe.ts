@@ -174,6 +174,7 @@ export async function createStandaloneServiceCheckoutSession(args: {
   serviceSlug: string
   serviceName: string
   amountCents: number
+  setupCents?: number
   billingMode: 'subscription' | 'payment'
   customerEmail: string
   successUrl: string
@@ -202,6 +203,16 @@ export async function createStandaloneServiceCheckoutSession(args: {
     appendForm(params, 'subscription_data[metadata][tipo]', 'standalone_service_order')
     appendForm(params, 'subscription_data[metadata][service_order_id]', args.orderId)
     appendForm(params, 'subscription_data[metadata][service_slug]', args.serviceSlug)
+    const setupCents = args.setupCents ?? 0
+    if (setupCents > 0) {
+      appendForm(params, 'line_items[1][quantity]', 1)
+      appendForm(params, 'line_items[1][price_data][currency]', 'eur')
+      appendForm(params, 'line_items[1][price_data][unit_amount]', setupCents)
+      appendForm(params, 'line_items[1][price_data][product_data][name]', `Avvio una tantum — ${args.serviceName}`)
+      appendForm(params, 'line_items[1][price_data][product_data][metadata][service_order_id]', args.orderId)
+      appendForm(params, 'line_items[1][price_data][product_data][metadata][service_slug]', args.serviceSlug)
+      appendForm(params, 'line_items[1][price_data][product_data][metadata][tipo]', 'setup')
+    }
   } else {
     appendForm(params, 'payment_intent_data[metadata][tipo]', 'standalone_service_order')
     appendForm(params, 'payment_intent_data[metadata][service_order_id]', args.orderId)

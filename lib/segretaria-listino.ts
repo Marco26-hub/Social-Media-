@@ -6,6 +6,26 @@
 // per i messaggi restano fuori dal canone e vanno indicati a parte: scriverli
 // dentro il prezzo li farebbe sembrare compresi.
 
+/** Che cosa comprende il costo di avvio: uguale per tutti i piani, cambia solo
+ *  la cifra. Scritto una volta perche e la stessa lavorazione. */
+export const SEGRETARIA_AVVIO = {
+  titolo: 'Che cosa comprende l’avvio',
+  testo:
+    'Raccogliamo servizi, prezzi, orari e regole, configuriamo l’assistente, colleghiamo agenda e numero, prepariamo le prove che puoi ascoltare, correggiamo finche non ti convince e mettiamo online in modo controllato.',
+  voci: [
+    'Raccolta delle informazioni della tua attività',
+    'Configurazione di servizi, prezzi, orari e regole',
+    'Collegamento di agenda e numero telefonico',
+    'Prove ascoltabili prima di attivare',
+    'Correzioni fino all’approvazione',
+    'Messa online controllata e affiancamento',
+  ],
+  // Detto in pagina, non solo nella mail di conferma: chi paga deve sapere che
+  // il passo successivo e una persona che lo chiama, non un pannello vuoto.
+  dopoPagamento:
+    'Dopo il pagamento ti contattiamo entro un giorno lavorativo per fissare la call conoscitiva e partire con l’onboarding. Eventuali lavorazioni fuori dalla configurazione standard vengono concordate prima di ogni costo aggiuntivo.',
+} as const
+
 export type PianoSegretaria = {
   id: string
   nome: string

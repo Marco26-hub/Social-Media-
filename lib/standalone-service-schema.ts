@@ -2,6 +2,9 @@ import { q, q1 } from '@/lib/db'
 
 const MIGRATION = '043_standalone_service_orders.sql'
 const CHECKSUM = 'd58a805a43d4ad1e38bf04d2260e67cbfaf7d05dc866d4e824c579c740f1e8fd'
+const SERVICE_EXTENSION_MIGRATION = '051_standalone_service_orders_agenda_voice.sql'
+const SERVICE_EXTENSION_CHECKSUM = 'c9cb5385b9f7e6f922166a5621c78e7d833ac1c67f48850dbdb7e7005d5e4f26'
+const SERVICE_SLUG_CHECK = `service_slug IN ('blog-seo', 'web-commerce', 'lead-pilot', 'agenda-clienti', 'tutto-in-uno', 'voce-base', 'voce-attivita', 'voce-azienda')`
 
 let schemaPromise: Promise<void> | null = null
 
@@ -9,17 +12,42 @@ async function initializeSchema() {
   const existing = await q1(`SELECT
     to_regclass('public.standalone_service_orders') AS relation,
     to_regclass('public.schema_migrations') AS migrations`)
+  if (existing?.relation) {
+    const constraint = await q1(`SELECT pg_get_constraintdef(oid) AS definition
+      FROM pg_constraint
+      WHERE conrelid = 'public.standalone_service_orders'::regclass
+        AND conname = 'standalone_service_orders_service_slug_check'
+      LIMIT 1`)
+    const definition = String(constraint?.definition || '')
+    if (!definition.includes('agenda-clienti') || !definition.includes('voce-azienda')) {
+      await q('ALTER TABLE standalone_service_orders DROP CONSTRAINT IF EXISTS standalone_service_orders_service_slug_check')
+      await q(`ALTER TABLE standalone_service_orders ADD CONSTRAINT standalone_service_orders_service_slug_check CHECK (${SERVICE_SLUG_CHECK})`)
+    }
+  }
   if (existing?.relation && existing?.migrations) {
     const applied = await q1('SELECT checksum FROM schema_migrations WHERE filename = $1 LIMIT 1', [MIGRATION])
     if (applied?.checksum) {
       if (String(applied.checksum) !== CHECKSUM) throw new Error(`Checksum diversa per ${MIGRATION}`)
+      const extension = await q1(
+        'SELECT checksum FROM schema_migrations WHERE filename = $1 LIMIT 1',
+        [SERVICE_EXTENSION_MIGRATION],
+      )
+      if (extension?.checksum && String(extension.checksum) !== SERVICE_EXTENSION_CHECKSUM) {
+        throw new Error(`Checksum diversa per ${SERVICE_EXTENSION_MIGRATION}`)
+      }
+      if (!extension?.checksum) {
+        await q(
+          'INSERT INTO schema_migrations (filename, checksum) VALUES ($1, $2)',
+          [SERVICE_EXTENSION_MIGRATION, SERVICE_EXTENSION_CHECKSUM],
+        )
+      }
       return
     }
   }
   if (!existing?.relation) {
     await q(`CREATE TABLE IF NOT EXISTS standalone_service_orders (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      service_slug text NOT NULL CHECK (service_slug IN ('blog-seo', 'web-commerce', 'lead-pilot')),
+      service_slug text NOT NULL CHECK (${SERVICE_SLUG_CHECK}),
       service_name text NOT NULL,
       billing_mode text NOT NULL DEFAULT 'subscription' CHECK (billing_mode IN ('subscription', 'payment')),
       amount_cents integer NOT NULL CHECK (amount_cents > 0),
@@ -68,6 +96,11 @@ async function initializeSchema() {
     `INSERT INTO schema_migrations (filename, checksum) VALUES ($1, $2)
      ON CONFLICT (filename) DO NOTHING`,
     [MIGRATION, CHECKSUM],
+  )
+  await q(
+    `INSERT INTO schema_migrations (filename, checksum) VALUES ($1, $2)
+     ON CONFLICT (filename) DO NOTHING`,
+    [SERVICE_EXTENSION_MIGRATION, SERVICE_EXTENSION_CHECKSUM],
   )
 }
 
