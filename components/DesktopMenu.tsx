@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   Building2,
   CalendarClock,
+  Clapperboard,
   ChevronDown,
   ChevronRight,
   Globe2,
@@ -72,6 +73,12 @@ const SOLUTIONS: SolutionLink[] = [
     label: 'Agenda, clienti e WhatsApp',
     description: 'Recupera chi non torna, riempie l’agenda.',
     icon: CalendarClock,
+  },
+  {
+    href: '/servizi/video-produzione',
+    label: 'Riprese video in azienda',
+    description: 'Fotografo, luci e un volto se serve.',
+    icon: Clapperboard,
   },
   {
     href: '/servizi/automazione-gestionali',

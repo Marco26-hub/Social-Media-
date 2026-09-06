@@ -18,6 +18,7 @@ const MOBILE_LINKS = [
   { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B' },
   { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
   { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
+  { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
   { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
   { href: '/metodo', label: 'Metodo' },
   { href: '/pacchetti', label: 'Pacchetti' },

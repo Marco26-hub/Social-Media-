@@ -37,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/servizi/ricerca-clienti-b2b',
       '/servizi/segretaria-telefonica-ai',
       '/servizi/agenda-clienti-whatsapp',
+      '/servizi/video-produzione',
       '/servizi/automazione-gestionali',
       '/metodo',
       '/pacchetti',

@@ -1,6 +1,89 @@
 # HANDOFF — Social Web Automation
 
-Stato al 2026-09-06 (sera). Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+Stato al 2026-09-07. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+
+## Sessione 2026-09-07: Stripe attivo, offerta Segretaria, riprese video
+
+### Stripe — configurato e i piani sono acquistabili
+
+Le chiavi sono ora su Vercel (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+publishable, MCP). **Nota della sessione precedente superata.**
+
+Attenzione a un punto verificato sul campo: su Vercel le variabili entrano in
+vigore solo con un nuovo deploy. Le chiavi erano state aggiunte 17 minuti dopo
+l'ultimo deploy, quindi il sito girava ancora senza Stripe: la prova e la chiave
+pubblica assente dal bundle. Se i pagamenti sembrano non funzionare dopo aver
+messo una env, la prima cosa da guardare e la data del deploy.
+
+I cinque piani Segretaria sono acquistabili da `/acquista`: canone mensile piu
+avvio addebitato una volta sola sulla prima fattura (test in
+`lib/standalone-services.test.ts`). Due piani hanno l'avvio indicato con "da"
+perche dipende dal lavoro: restano acquistabili al prezzo pieno, ma pagina e
+messaggio di conferma dicono che le lavorazioni fuori dalla configurazione
+standard si concordano prima. Ogni piano annuncia che il cliente viene
+contattato entro un giorno lavorativo per la call e l'onboarding.
+
+### Analisi del fornitore a monte
+
+Il servizio vocale e rivenduto. Il fornitore **non va mai nominato**: non nel
+sito, non nei commenti del codice, non qui. Il repo e pubblico.
+
+Dall'analisi del loro listino pubblico (fatta per capire il posizionamento):
+i nostri prezzi reggono con margine fra il 49% e il 75% anche al livello partner
+piu basso. Il punto debole e il piano alto, dove vendiamo meno minuti a piu
+soldi di quanto costi il loro scaglione equivalente — visibile solo a chi
+confronta, ma va saputo.
+
+Il programma partner ha cinque livelli di sconto legati al fatturato annuo: si
+sale di scaglione intorno ai 10.000 euro l'anno, che sono circa quattro clienti
+sul piano medio. Vale la pena tenerlo d'occhio.
+
+Capacita della piattaforma che non stavamo raccontando e che ora sono in pagina:
+smistamento intelligente delle chiamate, trascrizione e riepilogo di ogni
+telefonata, chiusura automatica a fine chiamata, calendario collegato, scelta
+della voce e della frase di apertura.
+
+### Nuove pagine e correzioni
+
+- `/servizi/video-produzione` — riprese in azienda con fotografo e, a scelta, un
+  volto maschile o femminile davanti alla camera. Chiude il cerchio: prima
+  montavamo il materiale del cliente, ora produciamo anche la materia prima.
+  Prezzo su preventivo, definito prima delle riprese.
+- Le pagine Segretaria seguono ora il tema chiaro/scuro del sito. Due difetti
+  emersi solo provando il tema notte: la card del piano in evidenza usava
+  `--white` per il testo, e quel token in notturna diventa il fondo pagina
+  (scuro su scuro); il pulsante dei piani spariva dentro la card. Entrambi
+  chiusi con colori espliciti.
+- Sezione "Che cosa comprende l'avvio" sotto il listino: senza, una cifra una
+  tantum si legge come un sovrapprezzo invece che come il lavoro che distingue
+  il servizio dal software venduto da solo.
+
+### Deciso di NON fare
+
+- **Screenshot del pannello sul sito pubblico**: mostrano il metodo, non il
+  risultato, e regalano il progetto a un concorrente. Le catture fatte in
+  sessione sono state cancellate; erano finite in `public/`, che e servita
+  pubblicamente anche senza link.
+- **Pagine per settore** (dentisti, centri estetici, ecc.): restano gli accenni
+  nella griglia delle due pagine Segretaria, da sviluppare piu avanti.
+- **Admin del prodotto vocale**: integrazione ancora da decidere.
+
+### Aperto — da fare
+
+1. **Sezione portfolio "come lavoriamo"**: i media ci sono gia in DB —
+   `calendario.link_media_1` per il cliente `swa`, 48 contenuti con media di cui
+   4 pubblicati con URL pubblico in `blotato_post_url`. Lo storage e pubblico su
+   Supabase. Instagram non e utilizzabile come fonte: profilo ed embed
+   rispondono con il muro di login senza autenticazione.
+2. **Terza card del Journal**: copertina pronta in
+   `public/blog/chiamate-perse-segretaria-ai.webp`, articolo mai scritto.
+3. **Minuti dei piani voce**: seguono i pacchetti acquistati a monte, non sono
+   una leva libera. Verificare in contratto se gli scaglioni acquistati
+   corrispondono a quelli venduti: se compriamo pacchetti piu grandi di quelli
+   che rivendiamo, ci sono minuti pagati e non consegnati.
+4. `RESEND_API_KEY` manca: le email di conferma non partono.
+5. **Remotion**: ancora zero render riusciti in produzione.
+6. `admin` / `1234567` restano validi e leggibili nel repo pubblico.
 
 ## Sessione 2026-09-06: incidente Blotato, offerta Segretaria AI, sito
 
@@ -89,11 +172,8 @@ umana. Contenuto in `lib/guida-catena.ts`, separato dal layout.
 
 ### Aperto — da fare
 
-1. **Stripe non e configurato in produzione.** `STRIPE_SECRET_KEY` e
-   `STRIPE_WEBHOOK_SECRET` non sono su Vercel: il codice c'e ed e corretto, ma
-   ogni acquisto (Presenza, Crescita, Blog, Web, Pilot) degrada al percorso
-   manuale con "ti attiviamo a breve". Manca anche `RESEND_API_KEY`, quindi quel
-   messaggio non arriva nemmeno per email. Scelta del titolare: lasciare cosi.
+1. ~~Stripe non configurato~~ — **risolto il 7 settembre**: chiavi e webhook
+   sono su Vercel e i pagamenti funzionano. Resta fuori solo `RESEND_API_KEY`.
 2. **AgendaPiena va tolta da Render.** Il dominio `agendapiena.ai` non e
    registrato (whois: Domain not found); oggi risponde solo
    `agendapiena-ai.onrender.com`, che dorme e impiega ~7s a svegliarsi. Il cron
