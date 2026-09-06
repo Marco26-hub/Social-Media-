@@ -1,6 +1,110 @@
 # HANDOFF — Social Web Automation
 
-Stato al 2026-08-31 (sera). Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+Stato al 2026-09-06 (sera). Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+
+## Sessione 2026-09-06: incidente Blotato, offerta Segretaria AI, sito
+
+Stato: tutto in produzione (`204be89` -> `c20b73b`, piu i commit precedenti della
+giornata). Due filoni: la catena di pubblicazione, e l'offerta commerciale nuova.
+
+### Blotato — "8 pubblicati" ne erano 4
+
+Il calendario mostrava 8 contenuti pubblicati con 4 usciti davvero. Due difetti
+distinti, entrambi chiusi:
+
+1. `lib/publish/schedule.ts` scrive `status = 'PUBBLICATO'` gia al momento della
+   PROGRAMMAZIONE, non alla conferma. Il contatore sommava quindi anche i post in
+   coda. Ora il pannello conta solo `blotato_status = 'published'` (piu i
+   pubblicati manuali senza `blotato_post_id`), e "In coda" ha la sua card. Stesso
+   conteggio corretto in `/api/data/blotato-reconcile`.
+2. Il DB era fermo a `scheduled` su 4 post che Blotato dava per `published`. La
+   chiamata REST funziona (verificata a mano: 200, status e publicUrl corretti),
+   quindi il reconcile non era mai stato eseguito con successo dopo l'uscita. I 4
+   sono stati allineati a mano con gli URL reali. Se ricapita, guardare i log
+   runtime: il codice e sano.
+
+### Revisione del montaggio — tolta, su richiesta esplicita
+
+`requiresRenderedVisualReview` ora torna **false**. Prima ogni video rimandava il
+contenuto in `DA_APPROVARE` con `blotato_status = 'visual_review'`: due reel del 5
+settembre erano fermi li senza che nulla lo segnalasse, e non sono mai partiti.
+Si approva una volta sola, guardando l'anteprima.
+
+Il controllo non sparisce, cambia forma: se il render fallisce la riga passa a
+`status = 'ERRORE'` (prima restava `APPROVATO` con solo `blotato_status = failed`,
+quindi il filtro per stato del calendario non la mostrava: il problema era contato
+ma non trovabile).
+
+### Meta Pixel e Conversions API
+
+Pixel client + CAPI server, entrambi dietro consenso esplicito. Il banner cookie
+ha ora due scelte reali ("Solo essenziali" / "Accetta marketing"). La lettura del
+consenso sta in `lib/cookie-consent.ts`, sorgente unica per browser e server: le
+uniche risposte valide sono `essential` e `marketing`, ogni altro valore
+(compreso lo storico `technical`) rifa comparire il banner.
+
+**`META_CAPI_ACCESS_TOKEN` non e su Vercel**: il pixel funziona, la CAPI e muta.
+
+### Offerta Segretaria AI (prodotto AgendaPiena)
+
+Portata dentro questo dominio invece di vivere su uno separato non registrato.
+La landing e clonata da AgendaPiena cambiando **solo la palette**: struttura,
+foto ed effetti cinematici restano quelli.
+
+- `/servizi/segretaria-telefonica-ai` — i 3 piani voce (199 / 349 / 649)
+- `/servizi/agenda-clienti-whatsapp` — i 2 piani agenda (390 / 569)
+- `/servizi/segretaria-ai` — redirect permanente sulla prima
+
+Divise perche rispondono a due ricerche diverse (telefono che squilla a vuoto vs
+agenda con i buchi): una pagina sola non ne vinceva nessuna. Testi, FAQ e settori
+sono scritti daccapo per ciascuna; l'impaginazione sta in
+`components/SegretariaLanding.tsx` e i prezzi in `lib/segretaria-listino.ts`
+(sorgente unica). Ogni pagina porta BreadcrumbList, Service con OfferCatalog,
+FAQPage (domande anche visibili in pagina) e anteprima social propria.
+
+Tolti dalle pagine i numeri dimostrativi (2.290 euro, 33 clienti, 92%): erano dati
+di una demo e su una pagina che vende si leggono come promesse.
+
+### Video corsi AI Act
+
+Sezione su `/consulenza` con form di prenotazione. Tabella `corso_iscrizioni`
+(migrazione `050`), endpoint pubblico `/api/corso-ai-act`. Consenso obbligatorio;
+un secondo invio dallo stesso indirizzo aggiorna la riga invece di duplicarla.
+Verificato end-to-end in produzione.
+
+### Sito — difetti chiusi
+
+- Fascia "Un partner operativo": testo disallineato di 24px rispetto alla colonna
+  sopra, e in tema scuro `#0d1814` su pagina `#080b09` era invisibile.
+- Griglia del percorso commerciale: 5 colonne per 6 tappe lasciavano 4 celle vuote
+  che mostravano lo sfondo come un rettangolo colorato. Ora 3 colonne.
+- Nuove pagine servizio: automazione/gestionali, piu le due Segretaria.
+- Popup Segretaria AI in home, una volta ogni 30 giorni, solo dopo il banner cookie.
+
+### Admin
+
+Nuova pagina `/dashboard/guida` ("Come funziona"): la catena completa da
+onboarding a pubblicazione, con filtro sui soli passi che richiedono una decisione
+umana. Contenuto in `lib/guida-catena.ts`, separato dal layout.
+
+### Aperto — da fare
+
+1. **Stripe non e configurato in produzione.** `STRIPE_SECRET_KEY` e
+   `STRIPE_WEBHOOK_SECRET` non sono su Vercel: il codice c'e ed e corretto, ma
+   ogni acquisto (Presenza, Crescita, Blog, Web, Pilot) degrada al percorso
+   manuale con "ti attiviamo a breve". Manca anche `RESEND_API_KEY`, quindi quel
+   messaggio non arriva nemmeno per email. Scelta del titolare: lasciare cosi.
+2. **AgendaPiena va tolta da Render.** Il dominio `agendapiena.ai` non e
+   registrato (whois: Domain not found); oggi risponde solo
+   `agendapiena-ai.onrender.com`, che dorme e impiega ~7s a svegliarsi. Il cron
+   gira gia su GitHub Actions, quindi quella parte e portabile.
+3. **Admin della Segretaria AI**: l'app AgendaPiena ha un suo pannello con DB e
+   login separati. Integrazione da decidere (link, port completo o superficie su
+   API). Il titolare ha chiesto di aspettare.
+4. **Journal**: manca la terza card. Copertina pronta
+   (`public/blog/chiamate-perse-segretaria-ai.webp`), articolo da scrivere.
+5. **Remotion**: ancora zero render riusciti in produzione.
+6. `admin` / `1234567` restano validi e leggibili nel repo pubblico.
 
 ## Sessione 2026-08-31: partenza campagna Caso Studio Bowling
 
