@@ -38,3 +38,12 @@
 @media (max-width: 880px) {
   .corso { grid-template-columns: 1fr; gap: 30px; margin-bottom: 64px; }
 }
+
+/* Prezzo del corso, sopra il form: chi prenota deve sapere quanto costera,
+   anche se oggi non paga niente. */
+.corsoPrezzo {
+  display: flex; align-items: baseline; gap: 9px; margin: 0 0 14px;
+  padding-bottom: 14px; border-bottom: 1px solid rgba(255, 253, 247, .16);
+}
+.corsoPrezzo strong { font: 700 34px/1 Archivo, Arial, sans-serif; letter-spacing: -.02em; color: #e2b023; }
+.corsoPrezzo span { font-size: 13px; color: rgba(255, 253, 247, .66); }

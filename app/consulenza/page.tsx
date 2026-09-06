@@ -126,14 +126,16 @@ export default function ConsulenzaPage() {
             <li>Che cosa scrivere nei contratti con chi ti fornisce AI</li>
             <li>Informare le persone: quando serve e come si fa</li>
             <li>Che cosa tenere agli atti se qualcuno te lo chiede</li>
+            <li>Come impostare la formazione del personale prevista dal regolamento</li>
           </ul>
           <p className={styles.disclaimer}>
             I contenuti hanno finalità formativa e non sostituiscono il parere sul caso concreto.
           </p>
         </div>
         <div className={styles.corsoForm}>
+          <p className={styles.corsoPrezzo}><strong>2.000 €</strong><span>a persona, IVA esclusa</span></p>
           <p className={styles.corsoFormTitolo}>Prenota il tuo posto</p>
-          <p className={styles.corsoFormSub}>Ti avvisiamo appena esce il primo modulo. Niente altro.</p>
+          <p className={styles.corsoFormSub}>Nessun pagamento adesso: la prenotazione ti dà la precedenza e ti avvisiamo appena esce il primo modulo.</p>
           <CorsoAiActForm />
         </div>
       </section>
