@@ -35,6 +35,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/servizi/blog-seo',
       '/servizi/siti-e-commerce',
       '/servizi/ricerca-clienti-b2b',
+      '/servizi/segretaria-ai',
+      '/servizi/automazione-gestionali',
       '/metodo',
       '/pacchetti',
       '/faq',

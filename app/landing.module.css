@@ -293,7 +293,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 30px;
-  padding: 22px max(24px, calc((100vw - 1180px) / 2));
+  /* Stesso bordo interno delle sezioni (max-width 1180 + padding 24), altrimenti
+     il testo della fascia partiva 24px piu a sinistra della colonna sopra. */
+  padding: 26px max(24px, calc((100vw - 1132px) / 2));
   background: var(--sa-ink);
   color: white;
 }
@@ -428,7 +430,10 @@
 }
 .journeyGrid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* Tre colonne, non cinque: le tappe sono sei, e su cinque colonne la seconda
+     riga restava con quattro celle vuote che mostravano lo sfondo della griglia
+     come un rettangolo colorato. Con tre colonne le due righe si riempiono. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   margin: 48px 0 0;
   padding: 0;
@@ -827,8 +832,17 @@
   color: #edf4f1;
 }
 
+/* La fascia esce dal gruppo: a #0d1814 su fondo #080b09 era quasi invisibile e
+   si leggeva come una macchia, non come una fascia voluta. Verde del brand piu
+   due filetti, cosi stacca dal fondo e resta distinta dal footer. */
+:global(html[data-theme='dark']) .signalBand {
+  background: #143528;
+  border-top: 1px solid rgba(73, 214, 160, .16);
+  border-bottom: 1px solid rgba(73, 214, 160, .16);
+}
+:global(html[data-theme='dark']) .signalBand span { color: #d7e5df; }
+
 :global(html[data-theme='dark']) .skipLink,
-:global(html[data-theme='dark']) .signalBand,
 :global(html[data-theme='dark']) .compliance,
 :global(html[data-theme='dark']) .legalPartner,
 :global(html[data-theme='dark']) .footer {

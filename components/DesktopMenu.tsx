@@ -17,6 +17,7 @@ import {
   ScanSearch,
   Target,
   Workflow,
+  PhoneCall,
   type LucideIcon,
 } from 'lucide-react'
 import styles from './desktop-menu.module.css'
@@ -58,6 +59,18 @@ const SOLUTIONS: SolutionLink[] = [
     label: 'Ricerca Clienti B2B',
     description: 'Aziende in target, verificate e prioritarie.',
     icon: Target,
+  },
+  {
+    href: '/servizi/segretaria-ai',
+    label: 'Segretaria telefonica AI',
+    description: 'Risponde, prenota e riempie l’agenda.',
+    icon: PhoneCall,
+  },
+  {
+    href: '/servizi/automazione-gestionali',
+    label: 'Automazione e gestionali',
+    description: 'Sistemi collegati, meno lavoro manuale.',
+    icon: Workflow,
   },
   {
     href: '/consulenza',

@@ -1,0 +1,112 @@
+/* Invito alla Segretaria telefonica AI. Layout ripreso dalla landing AgendaPiena;
+   i colori sono quelli del brand SWA (verde, crema, arancio, oro). */
+.popup {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 60;
+  width: min(370px, calc(100vw - 32px));
+  padding: 22px 22px 20px;
+  border: 1px solid rgba(226, 176, 35, .28);
+  border-radius: 16px;
+  background: #153b32;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .34);
+  color: #fffdf7;
+  animation: popupEntra .34s cubic-bezier(.22, 1, .36, 1) both;
+}
+.esce { animation: popupEsce .26s ease forwards; }
+
+@keyframes popupEntra {
+  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes popupEsce {
+  to { opacity: 0; transform: translateY(10px); }
+}
+
+.chiudi {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 253, 247, .09);
+  color: rgba(255, 253, 247, .72);
+  cursor: pointer;
+}
+.chiudi:hover { background: rgba(255, 253, 247, .16); color: #fffdf7; }
+.chiudi:focus-visible { outline: 2px solid #e2b023; outline-offset: 2px; }
+
+.occhiello {
+  display: flex;
+  align-items: center;
+  margin: 0 0 10px;
+  color: #e2b023;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .19em;
+  text-transform: uppercase;
+}
+/* Il parallelogramma del logo, usato come segno grafico. */
+.para {
+  display: inline-block;
+  width: 14px;
+  height: 6px;
+  margin-right: 9px;
+  background: #e86244;
+  transform: skewX(-20deg);
+}
+
+.titolo {
+  margin: 0 0 9px;
+  padding-right: 18px;
+  font: 500 20px/1.25 Georgia, 'Times New Roman', serif;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+}
+.testo {
+  margin: 0 0 17px;
+  color: rgba(255, 253, 247, .78);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.azioni { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border-radius: 9px;
+  background: #e86244;
+  color: #fffdf7;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.cta:hover { background: #f0704f; }
+.cta:focus-visible { outline: 2px solid #e2b023; outline-offset: 2px; }
+.dopo {
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  color: rgba(255, 253, 247, .6);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.dopo:hover { color: #fffdf7; }
+.dopo:focus-visible { outline: 2px solid #e2b023; outline-offset: 2px; }
+
+@media (max-width: 560px) {
+  .popup { right: 12px; left: 12px; bottom: 12px; width: auto; padding: 19px 18px 17px; }
+  .titolo { font-size: 18.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popup, .esce { animation: none; }
+}

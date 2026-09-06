@@ -16,6 +16,8 @@ const MOBILE_LINKS = [
   { href: '/servizi/blog-seo', label: 'Blog SEO + GEO' },
   { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
   { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B' },
+  { href: '/servizi/segretaria-ai', label: 'Segretaria telefonica AI' },
+  { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
   { href: '/metodo', label: 'Metodo' },
   { href: '/pacchetti', label: 'Pacchetti' },
   { href: '/consulenza', label: 'Consulenza legale AI' },

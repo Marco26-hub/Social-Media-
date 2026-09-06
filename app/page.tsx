@@ -27,6 +27,7 @@ import { TITOLARE } from '@/lib/legal-config'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicHeader from '@/components/PublicHeader'
+import SegretariaPopup from '@/components/SegretariaPopup'
 import styles from './landing.module.css'
 
 export const metadata: Metadata = {
@@ -585,6 +586,7 @@ export default function LandingPage() {
         Richiedi una prova <ArrowRight size={17} aria-hidden="true" />
       </a>
       <FloatingNavigation />
+      <SegretariaPopup />
     </main>
   )
 }

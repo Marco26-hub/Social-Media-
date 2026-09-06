@@ -13,12 +13,14 @@ import {
   Megaphone,
   MessageCircle,
   Newspaper,
+  PhoneCall,
   Scale,
   ScanSearch,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Target,
+  Workflow,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { BLOG_SERVICE } from '@/lib/blog-service'
@@ -188,6 +190,44 @@ const SERVICES = [
       'Consegna strutturata per valutazione o CRM',
     ],
     outcome: 'Una base commerciale ordinata per decidere chi approfondire, senza confondere una lista con una vendita garantita.',
+  },
+  {
+    id: 'segretaria-ai',
+    href: '/servizi/segretaria-ai',
+    number: '06',
+    icon: PhoneCall,
+    label: 'Segretaria telefonica AI',
+    title: 'Risponde al telefono, fissa appuntamenti e riempie l’agenda.',
+    description:
+      'Per le attività che lavorano su appuntamento. Risponde alle chiamate quando non puoi, prenota negli orari liberi e prepara i messaggi per recuperare chi non torna. I messaggi partono solo dopo la tua approvazione.',
+    included: [
+      'Risposta telefonica in italiano e inglese',
+      'Informazioni, prezzi e regole definiti da te',
+      'Prenotazioni, spostamenti e disdette',
+      'Recupero clienti e orari rimasti liberi',
+      'Messaggi WhatsApp in bozza, approvati prima dell’invio',
+      'Consenso, opt-out e tracciamento delle risposte',
+    ],
+    outcome: 'Meno chiamate perse e meno orari vuoti, senza che nulla raggiunga un cliente senza il tuo controllo.',
+  },
+  {
+    id: 'automazione',
+    href: '/servizi/automazione-gestionali',
+    number: '07',
+    icon: Workflow,
+    label: 'Automazione e gestionali',
+    title: 'I sistemi che già usi, collegati e senza passaggi manuali.',
+    description:
+      'Gestionale, CRM, e-commerce, moduli e analytics spesso non si parlano. Colleghiamo quei sistemi e togliamo le operazioni che si ripetono. Quando lo strumento standard non basta, lo sviluppiamo su misura.',
+    included: [
+      'Analisi dei flussi e dei dati duplicati',
+      'Integrazioni tra gestionale, CRM ed e-commerce',
+      'Automazione delle operazioni ricorrenti',
+      'Sviluppo su misura quando serve davvero',
+      'Registro delle esecuzioni e degli errori',
+      'Perimetro e costi definiti prima di partire',
+    ],
+    outcome: 'Gli stessi dati smettono di essere reinseriti a mano, e ogni passaggio automatico resta tracciabile.',
   },
 ]
 
