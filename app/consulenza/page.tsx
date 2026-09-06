@@ -5,8 +5,9 @@ export const dynamic = 'force-dynamic'
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { ArrowRight, CheckCircle2, Clock, FileCheck2, LockKeyhole, Scale, ShieldCheck } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Clock, FileCheck2, LockKeyhole, Scale, ShieldCheck, Sparkles } from 'lucide-react'
 import FloatingNavigation from '@/components/FloatingNavigation'
+import CorsoAiActForm from '@/components/CorsoAiActForm'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
 import styles from './consulenza.module.css'
@@ -110,6 +111,33 @@ export default function ConsulenzaPage() {
         </div>
         <Suspense fallback={<div className={styles.formCard}>Caricamento…</div>}><ConsulenzaForm /></Suspense>
       </section>
+      <section className={styles.corso} id="corso-ai-act" aria-labelledby="corso-ai-act-titolo">
+        <div className={styles.corsoCopy}>
+          <p className={styles.corsoEyebrow}><Sparkles size={14} aria-hidden="true" /> In arrivo</p>
+          <h2 id="corso-ai-act-titolo">Video corsi AI Act, spiegati da chi li applica.</h2>
+          <p>
+            L’AI Act è già in vigore e gli obblighi arrivano a scaglioni. Stiamo preparando una serie
+            di video corsi con l’Avv. Vincenzo Sapone: brevi, in italiano, pensati per chi l’azienda
+            la manda avanti e non ha tempo di leggere un regolamento europeo.
+          </p>
+          <ul className={styles.corsoPunti}>
+            <li>Che ruolo hai davvero: fornitore, utilizzatore o nessuno dei due</li>
+            <li>Quali obblighi scattano per te, e da quando</li>
+            <li>Che cosa scrivere nei contratti con chi ti fornisce AI</li>
+            <li>Informare le persone: quando serve e come si fa</li>
+            <li>Che cosa tenere agli atti se qualcuno te lo chiede</li>
+          </ul>
+          <p className={styles.disclaimer}>
+            I contenuti hanno finalità formativa e non sostituiscono il parere sul caso concreto.
+          </p>
+        </div>
+        <div className={styles.corsoForm}>
+          <p className={styles.corsoFormTitolo}>Prenota il tuo posto</p>
+          <p className={styles.corsoFormSub}>Ti avvisiamo appena esce il primo modulo. Niente altro.</p>
+          <CorsoAiActForm />
+        </div>
+      </section>
+
       <PublicFooter />
       <FloatingNavigation />
     </main>

@@ -178,3 +178,80 @@
 .pianoEvidenza li::before { background: var(--champagne); }
 .pianoEvidenza .pianoCta { background: var(--champagne); color: #15231f; }
 .pianoEvidenza .pianoCta:hover { background: #e9d3a2; }
+
+/* Console del hero, ridisegnata.
+   Togliendo i numeri finti la versione originale restava un riquadro nero con
+   dentro due rettangoli bianchi: squadrata e vuota. Qui diventa un pannello di
+   vetro sul verde del brand, con le righe come voci di una lista e non come
+   blocchi, e il parallelogramma del logo a marcare la categoria. */
+.pagina :global(.phone-frame) {
+  border-radius: 20px;
+  padding: 20px 18px 18px;
+  background: linear-gradient(165deg, rgba(21, 59, 50, .93), rgba(11, 30, 25, .96));
+  border: 1px solid rgba(255, 253, 247, .16);
+  box-shadow: 0 28px 70px rgba(8, 24, 19, .45), inset 0 1px 0 rgba(255, 253, 247, .1);
+  backdrop-filter: blur(10px);
+}
+.pagina :global(.phone-top) {
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 253, 247, .14);
+}
+.pagina :global(.phone-top span) {
+  color: rgba(255, 253, 247, .58); font-size: 10.5px;
+  font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+}
+.pagina :global(.phone-top strong) { color: var(--champagne); font-size: 14px; font-weight: 700; }
+
+.pagina :global(.pulse-card) {
+  margin: 14px 0 6px; padding: 10px 13px; border-radius: 11px;
+  background: rgba(255, 253, 247, .07); border: 1px solid rgba(255, 253, 247, .12);
+  font-size: 13px; color: rgba(255, 253, 247, .88);
+}
+
+.pagina :global(.opportunity-card) {
+  position: relative; display: block; margin-top: 9px;
+  padding: 13px 14px 13px 20px; border-radius: 12px;
+  background: rgba(255, 253, 247, .06);
+  border: 1px solid rgba(255, 253, 247, .1);
+  color: var(--white);
+}
+.pagina :global(.opportunity-card)::before {
+  content: ''; position: absolute; left: 10px; top: 17px;
+  width: 9px; height: 5px; background: var(--champagne); transform: skewX(-20deg);
+}
+.pagina :global(.opportunity-card span) {
+  color: var(--champagne); font-size: 9.5px; letter-spacing: .16em;
+}
+.pagina :global(.opportunity-card h3) { color: var(--white); font-size: 14.5px; font-weight: 600; margin-top: 4px; }
+.pagina :global(.opportunity-card p) { color: rgba(255, 253, 247, .68); font-size: 12px; margin-top: 3px; }
+
+.pagina :global(.approve-button) {
+  width: 100%; margin-top: 15px; min-height: 44px; border: 0; border-radius: 11px;
+  background: var(--champagne); color: #15231f; font-size: 13.5px; font-weight: 800; cursor: pointer;
+}
+
+/* Recuperati dall'originale: le regole .tech-orbit (la classe base era stata
+   saltata) e i @keyframes, che l'estrazione precedente scartava perche partono
+   con @. Senza di essi gli strati cinematici restavano fermi: c'era il markup
+   ma non il movimento. I keyframes stanno in :global perche i selettori che li
+   usano sono globali dentro questo modulo. */
+.pagina :global(.tech-orbit) { border:1px solid rgba(218,190,135,.26); border-radius:50%; position:absolute; z-index:3; }
+.pagina :global(.tech-orbit::before) { background:var(--champagne); border-radius:50%; box-shadow:0 0 18px rgba(199,166,106,.8); content:""; height:5px; left:50%; position:absolute; top:-3px; width:5px; }
+
+:global {
+@keyframes drift { to{transform:translate(22px,-18px) scale(1.08)} }
+@keyframes float { 0%,100%{transform:translateY(0) rotate(1deg)}50%{transform:translateY(-15px) rotate(-1deg)} }
+@keyframes pulse { 50%{box-shadow:0 0 0 9px rgba(85,215,165,0)}0%,100%{box-shadow:0 0 0 0 rgba(85,215,165,.5)} }
+@keyframes spin { to{transform:rotate(360deg)} }
+}
+
+/* I restanti keyframes: i nomi hanno il trattino e il filtro precedente li
+   troncava, quindi vignettatura, grana, luce e orbite restavano immobili. */
+:global {
+@keyframes cinema-sweep { 0%,15%{transform:translateX(-48%)}70%,100%{transform:translateX(48%)} }
+@keyframes cinematic-push { from{transform:scale(1.04) translate3d(0,0,0)}to{transform:scale(1.1) translate3d(-1.2%,.5%,0)} }
+@keyframes console-float { 0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)} }
+@keyframes grain-shift { 0%{transform:translate(0,0)}25%{transform:translate(2%,-1%)}50%{transform:translate(-1%,2%)}75%{transform:translate(1%,1%)}100%{transform:translate(-2%,-1%)} }
+@keyframes orbit-spin { to{transform:rotate(360deg)} }
+@keyframes scan-light { 0%,15%{left:-45%}70%,100%{left:125%} }
+}

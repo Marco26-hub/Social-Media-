@@ -1,0 +1,71 @@
+/* Form di preiscrizione ai video corsi AI Act, nei colori del brand SWA. */
+.form { display: grid; gap: 14px; }
+.riga { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+.pieno { grid-column: 1 / -1; }
+
+.form label { display: grid; gap: 6px; }
+.form label > span {
+  font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255, 253, 247, .62);
+}
+.form label > span i { font-style: normal; font-weight: 500; letter-spacing: .04em; text-transform: none; opacity: .7; }
+
+.form input[type='text'],
+.form input[type='email'],
+.form textarea {
+  width: 100%; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid rgba(255, 253, 247, .2);
+  background: rgba(255, 253, 247, .06);
+  color: #fffdf7; font: 400 15px/1.4 inherit; resize: vertical;
+}
+.form input::placeholder, .form textarea::placeholder { color: rgba(255, 253, 247, .38); }
+.form input:focus-visible, .form textarea:focus-visible {
+  outline: 2px solid #e2b023; outline-offset: 1px; border-color: transparent;
+}
+
+.consenso {
+  display: grid !important; grid-template-columns: 20px 1fr; gap: 10px !important;
+  align-items: start; margin-top: 2px;
+}
+.consenso input { width: 18px; height: 18px; margin-top: 2px; accent-color: #e2b023; }
+.consenso span {
+  font-size: 12.5px; line-height: 1.5; color: rgba(255, 253, 247, .72);
+  letter-spacing: 0; text-transform: none; font-weight: 400;
+}
+
+.invia {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  justify-self: start; min-height: 50px; padding: 0 24px; margin-top: 4px;
+  border: 0; border-radius: 11px; background: #e2b023; color: #15231f;
+  font-size: 15px; font-weight: 800; cursor: pointer;
+}
+.invia:hover:not(:disabled) { background: #eec24a; }
+.invia:disabled { opacity: .7; cursor: progress; }
+.invia:focus-visible { outline: 2px solid #fffdf7; outline-offset: 2px; }
+.gira { animation: giraTondo .9s linear infinite; }
+@keyframes giraTondo { to { transform: rotate(360deg); } }
+
+.nota { margin: 0; font-size: 12.5px; color: rgba(255, 253, 247, .55); }
+.errore {
+  margin: 0; padding: 11px 13px; border-radius: 9px;
+  background: rgba(232, 98, 68, .16); border: 1px solid rgba(232, 98, 68, .4);
+  color: #ffd9cd; font-size: 13.5px;
+}
+
+.fatto {
+  display: flex; gap: 13px; align-items: flex-start;
+  padding: 20px; border-radius: 14px;
+  background: rgba(226, 176, 35, .12); border: 1px solid rgba(226, 176, 35, .38);
+  color: #fffdf7;
+}
+.fatto strong { display: block; font-size: 17px; margin-bottom: 5px; }
+.fatto p { margin: 0; font-size: 13.5px; line-height: 1.55; color: rgba(255, 253, 247, .76); }
+
+@media (max-width: 640px) {
+  .riga { grid-template-columns: 1fr; }
+  .invia { justify-self: stretch; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gira { animation: none; }
+}

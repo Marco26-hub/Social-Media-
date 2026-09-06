@@ -46,6 +46,8 @@ const passi = [
   ['Misuri i risultati', 'Vedi risposte, appuntamenti recuperati e orari riempiti.'],
 ]
 
+const citta = ['Milano', 'Roma', 'Torino', 'Bologna', 'Firenze', 'Napoli', 'Verona', 'Rimini', 'Como', 'Bergamo']
+
 const settori = [
   ['Centri estetici', 'Richiami, pacchetti, laser, viso e corpo.'],
   ['Cliniche estetiche e longevità', 'Follow-up, controlli e continuità dei percorsi.'],
@@ -103,8 +105,9 @@ export default function SegretariaAiPage() {
               fill
               priority
               fetchPriority="high"
+              quality={90}
               sizes="100vw"
-              unoptimized
+              style={{ objectFit: 'cover', objectPosition: 'center 22%' }}
             />
             <div className="cinematic-vignette" />
             <div className="cinematic-light" />
@@ -228,6 +231,17 @@ export default function SegretariaAiPage() {
             {settori.map(([titolo, testo], i) => (
               <div key={titolo}><span>0{i + 1}</span><h3>{titolo}</h3><p>{testo}</p></div>
             ))}
+          </div>
+        </section>
+
+        <section className="geo-section">
+          <div className="section-title">
+            <span>In tutta Italia</span>
+            <h2>Vicino al modo in cui lavora la tua attività.</h2>
+            <p>Configurazione e affiancamento da remoto, con messaggi in italiano naturale e attenzione al rapporto con ogni cliente.</p>
+          </div>
+          <div className="area-list">
+            {citta.map(c => <span key={c}>Segretaria AI a {c}</span>)}
           </div>
         </section>
 
