@@ -196,6 +196,98 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     data_pubblicazione: '2026-08-11T08:20:00.000Z',
     url_pubblicato: `${SITE_URL}/blog/piano-editoriale-social-esempio-pmi`,
   },
+  {
+    slug: 'chiamate-perse-agenda-vuota-cosa-fare',
+    meta_title: 'Chiamate perse e agenda vuota: cosa fare davvero | SWA',
+    meta_description: 'Perché una chiamata persa è quasi sempre un appuntamento perso, come recuperare i clienti che non tornano e cosa valutare prima di automatizzare la risposta.',
+    h1: 'Chiamate perse e agenda vuota: due problemi diversi, due soluzioni diverse',
+    intro: 'In un’attività che lavora su appuntamento ci sono due buchi che si somigliano ma non sono la stessa cosa. Il primo è chi ti cerca e non ti trova: il telefono squilla mentre sei con un cliente e chi chiama passa al nome successivo. Il secondo è chi non ti cerca più: il cliente che veniva ogni sei settimane e da quattro mesi non si vede. Confonderli porta a comprare lo strumento sbagliato.',
+    sezioni: [
+      {
+        h2: 'Perché una chiamata persa pesa più di quanto sembri',
+        paragrafi: [
+          'Chi telefona a un centro estetico, a uno studio dentistico o a un’officina ha già deciso di prenotare: non sta cercando informazioni generiche, sta cercando un posto libero. Se non trova risposta, raramente richiama più tardi. Chiama il prossimo numero della lista, e quel numero è quasi sempre un concorrente.',
+          'Il problema è strutturale, non organizzativo. Le telefonate arrivano proprio quando non puoi rispondere: durante un trattamento, con le mani occupate, mentre stai parlando con qualcuno allo sportello. Le fasce in cui il telefono squilla di più sono le stesse in cui sei più occupato.',
+          'La segreteria telefonica classica non risolve, sposta soltanto: registra un messaggio che qualcuno dovrà ascoltare, capire e richiamare. Nel frattempo il cliente ha già prenotato altrove.',
+        ],
+        lista_punti: [
+          'Chi chiama per prenotare ha già deciso: la richiesta è calda',
+          'Le chiamate arrivano nelle ore in cui sei meno disponibile',
+          'La segreteria rimanda il problema invece di chiuderlo',
+          'Nessuno tiene il conto delle chiamate perse, quindi il costo resta invisibile',
+        ],
+      },
+      {
+        h2: 'L’altro buco: i clienti che smettono di tornare senza dirlo',
+        paragrafi: [
+          'Un cliente che non torna quasi mai se ne va sbattendo la porta. Semplicemente dirada: salta un appuntamento, poi rimanda, poi passano i mesi. Nessuno se ne accorge, perché non c’è un momento preciso in cui succede.',
+          'È il valore più grande che hai in archivio e anche il più trascurato. Quelle persone ti conoscono, sanno dove sei, hanno già speso da te: riportarle dentro costa molto meno che trovarne di nuove. Ma richiede di ricordarsi di loro al momento giusto, ed è esattamente la cosa che nessuno ha il tempo di fare a fine giornata.',
+          'Lo stesso vale per gli spazi liberi. Una disdetta lascia un buco che si potrebbe riempire, se solo qualcuno sapesse chi chiamare nelle due ore che restano.',
+        ],
+      },
+      {
+        h2: 'Cosa si può fare senza tecnologia',
+        paragrafi: [
+          'Prima di comprare qualsiasi strumento vale la pena sistemare tre cose, perché costano zero e a volte bastano.',
+          'La prima: sapere quante chiamate perdi davvero. Quasi nessuna attività lo misura, e senza quel numero ogni decisione è a occhio. Il tabulato del telefono lo dice.',
+          'La seconda: scrivere le risposte alle domande che ricevi cento volte. Prezzi, orari, tempi, come si arriva. Se sono scritte, chiunque in studio può rispondere senza chiamare te.',
+          'La terza: un elenco, anche su un foglio, di chi non si vede da più di tre mesi. Guardarlo una volta a settimana è già una forma di recupero clienti.',
+        ],
+        lista_punti: [
+          'Misura le chiamate perse: senza quel numero decidi al buio',
+          'Metti per iscritto le risposte alle domande ricorrenti',
+          'Tieni una lista di chi non torna da più di tre mesi',
+          'Definisci chi richiama, e quando: se è compito di tutti non è di nessuno',
+        ],
+      },
+      {
+        h2: 'Cosa può fare un assistente telefonico AI',
+        paragrafi: [
+          'Quando il volume di chiamate supera quello che una persona può gestire mentre lavora, un assistente telefonico può rispondere al posto tuo: dà informazioni su servizi, prezzi e orari, controlla il calendario, propone gli orari liberi e fissa l’appuntamento. Le richieste delicate o non previste le passa a una persona.',
+          'La differenza con un centralino automatico è che non c’è un menu da attraversare: chi chiama parla normalmente. E ogni telefonata lascia una trascrizione, quindi non devi più riascoltare messaggi per capire cosa è successo.',
+          'Il limite va detto: un assistente gestisce bene le richieste ripetitive, non le conversazioni delicate. Un reclamo, una situazione clinica, una trattativa vogliono una persona. Chi lo vende come sostituto completo del personale sta esagerando.',
+        ],
+      },
+      {
+        h2: 'Cosa può fare il recupero clienti automatizzato',
+        paragrafi: [
+          'Sul secondo buco lo strumento è diverso. Un sistema che legge agenda e storico può segnalare chi manca da troppo tempo, chi ha lasciato un percorso a metà e chi potrebbe coprire l’orario rimasto libero venerdì, e preparare il messaggio già scritto.',
+          'Qui la regola che conta è una sola: il messaggio non deve partire da solo. Deve arrivare a te, tu lo leggi e decidi se inviarlo. Un sistema che scrive ai tuoi clienti senza il tuo controllo prima o poi manda la cosa sbagliata alla persona sbagliata, e il danno lo paghi tu.',
+          'Vanno gestiti anche consenso e possibilità di esclusione: contattare via WhatsApp chi non ha dato il consenso non è solo scorretto, è un problema normativo.',
+        ],
+      },
+      {
+        h2: 'Cosa chiedere prima di comprare',
+        paragrafi: [
+          'Le domande che separano un fornitore serio da uno che improvvisa sono poche e concrete.',
+          'Come vengono contati i minuti o i messaggi, e cosa succede oltre la soglia. Che cosa comprende esattamente il costo di avvio. Se il numero di telefono e il traffico sono inclusi o separati. Se puoi ascoltare come risponde prima di attivarlo sul tuo numero. Chi possiede i dati e dove vengono conservati.',
+          'E soprattutto: che cosa viene garantito. Un fornitore corretto garantisce il funzionamento del servizio, non un numero di appuntamenti recuperati. Quello dipende anche dalla tua offerta, dalla stagione e dal rapporto che hai con i clienti — e chi promette una cifra non sa di cosa sta parlando.',
+        ],
+        lista_punti: [
+          'Come si contano minuti e messaggi, e il costo oltre soglia',
+          'Che cosa comprende il costo di avvio, voce per voce',
+          'Se numero e traffico telefonico sono compresi',
+          'Se puoi provare prima di andare online',
+          'Chi possiede i dati e dove sono conservati',
+          'Che cosa viene garantito davvero, messo per iscritto',
+        ],
+      },
+    ],
+    faq: [
+      { domanda: 'Un assistente telefonico AI sostituisce la segretaria?', risposta: 'No. Gestisce le chiamate ripetitive e quelle che altrimenti andrebbero perse. Le richieste delicate o non previste vengono passate a una persona, e le decisioni restano dello studio.' },
+      { domanda: 'Il cliente capisce che sta parlando con un sistema automatico?', risposta: 'Dovrebbe, e l’assistente dovrebbe presentarsi come tale. Nascondere che si tratta di un sistema automatico non è una scelta consigliabile, né dal punto di vista normativo né da quello del rapporto con il cliente.' },
+      { domanda: 'I messaggi di recupero partono automaticamente?', risposta: 'Non devono. Il sistema può preparare le bozze, ma l’invio va approvato da una persona. Un messaggio sbagliato inviato a un cliente è un danno che paga l’attività, non il fornitore.' },
+      { domanda: 'Serve cambiare gestionale?', risposta: 'Di norma no. I dati di clienti e agenda si possono importare da file o dal gestionale già in uso. Collegamenti particolari vanno valutati prima e non sono automaticamente compresi.' },
+      { domanda: 'Quanti clienti si recuperano?', risposta: 'Non è un numero che si può promettere. Il sistema individua le occasioni e prepara il lavoro; quante persone tornano dipende anche da offerta, stagionalità e rapporto esistente.' },
+    ],
+    cta_finale: 'Vuoi capire quale dei due buchi ti pesa di più? Guarda come funziona la segretaria telefonica AI oppure il recupero clienti via WhatsApp, e parliamone.',
+    keywords_target: ['chiamate perse', 'segretaria telefonica AI', 'recuperare clienti', 'riempire agenda', 'appuntamenti persi'],
+    immagine_cover: '/blog/chiamate-perse-segretaria-ai.webp',
+    autore: 'Social Web Automation',
+    tempo_lettura_min: 8,
+    data_pubblicazione: '2026-09-07T09:00:00.000Z',
+    url_pubblicato: `${SITE_URL}/blog/chiamate-perse-agenda-vuota-cosa-fare`,
+  },
 ]
 
 export function getSwaBlogArticle(slug: string) {
