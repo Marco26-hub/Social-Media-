@@ -373,6 +373,156 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     data_pubblicazione: '2026-09-07T14:00:00.000Z',
     url_pubblicato: `${SITE_URL}/blog/ai-act-obblighi-pmi-cosa-fare`,
   },
+  {
+    slug: 'video-social-aziendali-come-farli-bene',
+    meta_title: 'Video per i social aziendali: come farli bene | SWA',
+    meta_description: 'Perché i video girati col telefono si riconoscono, che cosa rende un video professionale davvero, e come organizzare una giornata di riprese che copra settimane di contenuti.',
+    h1: 'Video per i social: perché quelli fatti col telefono si riconoscono',
+    intro: 'Non è questione di megapixel. Le fotocamere dei telefoni riprendono benissimo, e non è lì che si perde. Un video amatoriale si riconosce da tre cose — la luce, l’audio e la stabilità — e sono le tre che il telefono da solo non risolve. Il problema è che il pubblico se ne accorge in mezzo secondo, molto prima di aver capito che cosa vendi.',
+    sezioni: [
+      {
+        h2: 'Le tre cose che tradiscono un video improvvisato',
+        paragrafi: [
+          'La luce è la prima. Un neon a soffitto crea ombre dure sotto gli occhi e appiattisce tutto il resto; la finestra alle spalle trasforma le persone in sagome scure. Nessuna app corregge una luce sbagliata in fase di ripresa: si può solo rigirare.',
+          'L’audio è la seconda, ed è quella sottovalutata di più. Il microfono del telefono raccoglie tutto: il riverbero della stanza, il condizionatore, la strada. La gente perdona un’immagine mediocre, ma smette di guardare un video che si sente male dopo pochi secondi.',
+          'La terza è la stabilità, insieme all’inquadratura. Camera a mano, orizzonte storto e soggetto scentrato comunicano fretta. Ed è un peccato, perché il lavoro che stai mostrando spesso è fatto con cura.',
+        ],
+        lista_punti: [
+          'Luce: morbida e davanti al soggetto, mai alle spalle',
+          'Audio: microfono dedicato, lontano da riverbero e rumori',
+          'Stabilità: treppiede o gimbal, orizzonte dritto',
+          'Verticale 9:16: si gira per il formato in cui verrà visto',
+        ],
+      },
+      {
+        h2: 'Girare a blocchi, non un video alla volta',
+        paragrafi: [
+          'L’errore organizzativo più comune è produrre un video quando serve. Significa rimettere in piedi luci, audio e attrezzatura ogni volta, per un contenuto solo, e finisce che non si gira più niente.',
+          'Chi lavora bene fa il contrario: concentra le riprese in una sessione e ne esce con il materiale di settimane. Le stesse luci montate una volta servono per dieci scene, e il costo per contenuto crolla.',
+          'Questo però richiede che il piano editoriale esista prima delle riprese. Bisogna sapere che cosa si pubblicherà nelle settimane successive, altrimenti si gira materiale generico che poi non serve a niente.',
+        ],
+      },
+      {
+        h2: 'Serve una persona davanti alla camera?',
+        paragrafi: [
+          'Dipende, e non c’è una risposta unica. I contenuti con un volto creano più familiarità: chi guarda associa un viso all’attività e la ricorda. Quelli senza volto — mani che lavorano, dettagli, prima e dopo — funzionano molto bene quando il mestiere è visivo, e non richiedono che qualcuno sia a suo agio in ripresa.',
+          'Il punto è la sostenibilità. Se il titolare non è a suo agio, si vede, e dopo due video smette. Meglio un formato senza volto fatto con continuità che un formato parlato abbandonato dopo tre settimane.',
+          'Le alternative sono tre: compare il titolare, compare qualcuno dello staff, oppure si porta un volto professionista. La scelta fra maschile e femminile si fa guardando a chi parla il tuo servizio, non alle preferenze personali.',
+        ],
+      },
+      {
+        h2: 'Che cosa preparare prima del giorno delle riprese',
+        paragrafi: [
+          'Una giornata di riprese improvvisata produce poco e stanca tutti. Quella preparata produce settimane di contenuti e finisce prima.',
+          'Serve sapere quali scene servono e per quali messaggi, quali spazi sono utilizzabili e in che ore la luce naturale aiuta, chi compare e in quali momenti si può girare senza fermare il lavoro. E serve avere gli ambienti in ordine: un dettaglio fuori posto in campo si nota in un video molto più che dal vivo.',
+        ],
+        lista_punti: [
+          'Elenco delle scene, legato al piano editoriale dei mesi successivi',
+          'Sopralluogo su spazi, luce naturale e rumore',
+          'Fasce orarie in cui girare senza bloccare l’attività',
+          'Chi compare, e con quale ruolo',
+          'Ambienti sistemati: in campo si vede tutto',
+        ],
+      },
+      {
+        h2: 'Le riprese non bastano: contano montaggio e continuità',
+        paragrafi: [
+          'Del girato la maggior parte non viene usata, ed è normale. Il valore lo produce la selezione: quali secondi tenere, dove tagliare, che cosa mettere nei primi tre secondi, che sono quelli che decidono se qualcuno resta.',
+          'I sottotitoli non sono un accessorio: gran parte dei video sui social viene guardata senza audio. Un video senza testo in sovrimpressione perde una fetta consistente di pubblico prima ancora di iniziare.',
+          'E poi c’è la continuità. Un bel video ogni tanto conta molto meno di contenuti regolari fatti decentemente. La costanza è quello che gli algoritmi premiano e che il pubblico riconosce.',
+        ],
+      },
+    ],
+    faq: [
+      { domanda: 'Basta un buon telefono per fare video professionali?', risposta: 'La fotocamera del telefono è più che sufficiente. Quello che manca sono luce controllata, audio pulito e stabilità: sono questi tre elementi, non la risoluzione, a distinguere un video professionale da uno improvvisato.' },
+      { domanda: 'Quanti contenuti escono da una giornata di riprese?', risposta: 'Dipende dal numero di scene e di location, ma girando a blocchi una sessione copre di norma diverse settimane di pubblicazioni. È il motivo per cui conviene concentrare le riprese invece di produrre un video alla volta.' },
+      { domanda: 'Devo comparire io nei video?', risposta: 'No. Può comparire una persona dello staff, si può usare un volto professionista, oppure si possono costruire contenuti senza volto basati su mani, dettagli e lavorazione. Conta la sostenibilità nel tempo più della scelta in sé.' },
+      { domanda: 'Bisogna chiudere l’attività per girare?', risposta: 'Di norma no, e spesso è controproducente: le riprese fatte mentre si lavora sono le più credibili. Le fasce orarie si concordano in sopralluogo per stare fuori dai momenti di punta.' },
+      { domanda: 'I video servono se pubblico già foto?', risposta: 'Le due cose non si escludono. Il video regge meglio la distribuzione sulla maggior parte delle piattaforme, ma un piano fatto solo di video è difficile da sostenere: la combinazione di formati è quasi sempre più solida.' },
+    ],
+    cta_finale: 'Se il materiale è il collo di bottiglia, veniamo noi a girarlo: fotografo, attrezzatura e un volto se serve, con montaggio e pubblicazione già dentro il piano social.',
+    keywords_target: ['video per social aziendali', 'come fare video per instagram azienda', 'riprese video aziendali', 'reel professionali PMI', 'video marketing piccole imprese'],
+    immagine_cover: null,
+    autore: 'Social Web Automation',
+    tempo_lettura_min: 8,
+    data_pubblicazione: '2026-09-07T16:00:00.000Z',
+    url_pubblicato: `${SITE_URL}/blog/video-social-aziendali-come-farli-bene`,
+  },
+  {
+    slug: 'ricerca-clienti-b2b-come-costruire-lista',
+    meta_title: 'Ricerca clienti B2B: come costruire una lista che serve | SWA',
+    meta_description: 'Perché i database comprati non funzionano, come si definisce il cliente ideale, quali segnali pubblici verificare e che cosa dice il GDPR sul contatto B2B.',
+    h1: 'Ricerca clienti B2B: come si costruisce una lista che serve davvero',
+    intro: 'Comprare un database di aziende è la scorciatoia più tentata e quella che delude di più. Non perché i dati siano falsi, ma perché rispondono alla domanda sbagliata: dicono quali aziende esistono, non quali hanno motivo di ascoltarti adesso. La differenza fra un elenco e una lista di lavoro sta tutta lì.',
+    sezioni: [
+      {
+        h2: 'Perché gli elenchi comprati rendono poco',
+        paragrafi: [
+          'Un database venduto a chiunque è già stato contattato da chiunque. Le aziende dentro hanno ricevuto la stessa email da decine di fornitori, e hanno imparato a ignorarla.',
+          'C’è poi un problema di coerenza. I filtri disponibili — settore, dimensione, area — sono grossolani rispetto a quello che serve davvero. Due aziende dello stesso codice ATECO e della stessa dimensione possono avere bisogni opposti.',
+          'Infine i dati invecchiano. Le persone cambiano ruolo, le aziende chiudono sedi, gli indirizzi smettono di funzionare. Un elenco fermo a un anno fa contiene una percentuale di rumore che nessuno ti dichiara.',
+        ],
+      },
+      {
+        h2: 'Si parte dal cliente ideale, non dal mercato',
+        paragrafi: [
+          'La domanda giusta non è "quante aziende posso contattare", ma "a quali aziende sono già utile". La risposta si trova guardando i clienti che hai: quali sono i più redditizi, quali tornano, quali portano meno problemi.',
+          'Da lì emergono i criteri veri, che quasi mai coincidono con i filtri di un database. Possono essere il modello organizzativo, il fatto di avere o non avere una figura interna dedicata, la fase in cui si trova l’azienda.',
+          'Altrettanto importanti sono i criteri di esclusione: chi non vuoi come cliente. Definirli in anticipo evita di riempire la lista di aziende che ti farebbero perdere tempo.',
+        ],
+        lista_punti: [
+          'Guarda i clienti attuali migliori, non il mercato in astratto',
+          'Cerca i criteri veri, non quelli che il database offre',
+          'Scrivi anche chi escludere, e perché',
+          'Definisci che cosa rende un’azienda contattabile adesso',
+        ],
+      },
+      {
+        h2: 'I segnali pubblici che dicono qualcosa',
+        paragrafi: [
+          'Quello che distingue una lista utile è la presenza di un motivo. Non basta che l’azienda esista e sia del settore giusto: serve un segnale che spieghi perché ha senso parlarle ora.',
+          'I segnali utili sono pubblici e verificabili: un sito rifatto da poco o fermo da anni, l’apertura di una sede, una ricerca di personale che rivela una direzione, la presenza o l’assenza su un canale rilevante per quel mercato.',
+          'La regola operativa è semplice: ogni voce della lista deve avere accanto la fonte da cui è stata tratta. Se una riga non ha una fonte consultabile, non è informazione ma supposizione, e in una telefonata si sente.',
+        ],
+      },
+      {
+        h2: 'Che aspetto ha una lista fatta bene',
+        paragrafi: [
+          'Una lista utile è corta e ordinata. Trenta aziende verificate valgono più di tremila righe che nessuno guarderà mai, perché trenta si possono davvero lavorare.',
+          'Ogni voce dovrebbe portare tre cose: chi è l’azienda, perché è coerente con il tuo cliente ideale, e da dove viene l’informazione. Con questi tre elementi chi telefona sa già che cosa dire.',
+          'Vanno tolti i duplicati, le aziende fuori perimetro e quelle su cui i dati non sono abbastanza solidi. Una lista pulita è più corta, e va bene così.',
+        ],
+        lista_punti: [
+          'Poche aziende verificate invece di molte righe grezze',
+          'Per ognuna: il motivo e la fonte consultabile',
+          'Duplicati e profili fuori target rimossi',
+          'Ordine di priorità, non un elenco piatto',
+        ],
+      },
+      {
+        h2: 'Il contatto: che cosa dice la normativa',
+        paragrafi: [
+          'Il fatto che un indirizzo sia pubblico non lo rende automaticamente utilizzabile per qualsiasi scopo. Nel contatto commerciale verso imprese esistono margini, ma vanno valutati caso per caso, insieme alla base giuridica su cui ci si appoggia.',
+          'In concreto: informare chi viene contattato, rendere semplice l’opposizione, non riutilizzare i dati per finalità diverse da quelle dichiarate. E tenere traccia di dove i dati sono stati raccolti, che è utile a te prima ancora che a un’autorità.',
+          'Per questo motivo ricerca e contatto vanno tenuti distinti. Costruire una lista qualificata è un lavoro di analisi; contattarla è un’attività con un perimetro suo, che va impostata con attenzione.',
+        ],
+      },
+    ],
+    faq: [
+      { domanda: 'Perché non comprare semplicemente un database?', risposta: 'Perché risponde alla domanda sbagliata: dice quali aziende esistono, non quali hanno motivo di ascoltarti adesso. Inoltre è stato venduto anche ai tuoi concorrenti e i dati invecchiano rapidamente.' },
+      { domanda: 'Quante aziende servono per iniziare?', risposta: 'Poche e lavorate bene rendono più di molte e ignorate. Un primo ciclo su una trentina di aziende verificate permette di capire se il profilo cliente è quello giusto prima di allargare.' },
+      { domanda: 'La ricerca include l’invio dei messaggi?', risposta: 'Sono due attività diverse. La ricerca produce una lista qualificata con fonti e motivazioni; il contatto ha un perimetro proprio, anche dal punto di vista normativo, e va impostato separatamente.' },
+      { domanda: 'Si possono garantire appuntamenti?', risposta: 'No. Si può garantire il lavoro di ricerca e verifica nel perimetro concordato. Gli appuntamenti dipendono anche da offerta, messaggio e processo commerciale, che non sono nella disponibilità di chi costruisce la lista.' },
+      { domanda: 'Come si verifica che i dati siano attendibili?', risposta: 'Riportando per ogni voce la fonte pubblica da cui proviene, così che possa essere controllata. Una riga senza fonte consultabile va trattata come una supposizione, non come un’informazione.' },
+    ],
+    cta_finale: 'Se vuoi partire da un perimetro definito invece che da un elenco comprato, il Pilot di ricerca clienti B2B analizza fino a trenta aziende coerenti e consegna una lista con fonti e priorità.',
+    keywords_target: ['ricerca clienti B2B', 'lista aziende target', 'lead generation B2B', 'profilo cliente ideale', 'database aziende'],
+    immagine_cover: null,
+    autore: 'Social Web Automation',
+    tempo_lettura_min: 8,
+    data_pubblicazione: '2026-09-07T17:30:00.000Z',
+    url_pubblicato: `${SITE_URL}/blog/ricerca-clienti-b2b-come-costruire-lista`,
+  },
 ]
 
 export function getSwaBlogArticle(slug: string) {
