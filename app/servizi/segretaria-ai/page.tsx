@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   twitter: { title, description },
 }
 
-const WA = 'https://wa.me/393477196603?text=' + encodeURIComponent('Ciao! Vorrei una demo della Segretaria telefonica AI.')
+const WA = 'https://wa.me/393477196603?text=' + encodeURIComponent('Ciao! Vorrei una call sulla Segretaria telefonica AI.')
 
 // Esempio di pannello, senza cifre: i numeri di una demo non sono risultati e in
 // una pagina che vende si leggono come promesse.
@@ -92,7 +92,7 @@ export default function SegretariaAiPage() {
   return (
     <div className={styles.pagina}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <PublicHeader ctaHref={WA} ctaLabel="Prenota una demo" />
+      <PublicHeader ctaHref={WA} ctaLabel="Richiedi una call" />
 
       <main>
         <div className="home-hero">
@@ -125,7 +125,7 @@ export default function SegretariaAiPage() {
                 torna da tempo. Le decisioni restano tue: niente parte senza il tuo sì.
               </p>
               <div className="hero-actions">
-                <a className="primary-action" href={WA}>Prenota una demo</a>
+                <a className="primary-action" href={WA}>Richiedi una call</a>
                 <a className="secondary-action" href="#listino">Vedi i piani</a>
               </div>
               <div className="proof-strip" aria-label="Caratteristiche principali">
@@ -199,7 +199,7 @@ export default function SegretariaAiPage() {
             <span>Una schermata, poche decisioni</span>
             <h2>Apri. Controlla. Approva.</h2>
             <p>Dal telefono vedi le occasioni più importanti della giornata, i messaggi pronti e il valore possibile. Il tuo staff continua a lavorare come sempre.</p>
-            <a className="light-action" href={WA}>Prenota una demo</a>
+            <a className="light-action" href={WA}>Richiedi una call</a>
           </div>
           <div className="admin-phone">
             <div className="admin-head"><span>Esempio di pannello</span><b>Che cosa vedi</b></div>
@@ -270,7 +270,7 @@ export default function SegretariaAiPage() {
                     <p className={styles.pianoAvvio}>Avvio {piano.avvio} · {piano.soglia}</p>
                     <ul>{piano.voci.map(v => <li key={v}>{v}</li>)}</ul>
                     <p className={styles.pianoExtra}>{piano.extra}</p>
-                    <a className={styles.pianoCta} href={WA}>Richiedi una demo</a>
+                    <a className={styles.pianoCta} href={WA}>Richiedi una call</a>
                   </article>
                 ))}
               </div>
