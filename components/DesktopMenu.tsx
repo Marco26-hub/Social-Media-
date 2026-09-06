@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import {
   Building2,
+  CalendarClock,
   ChevronDown,
   ChevronRight,
   Globe2,
@@ -61,10 +62,16 @@ const SOLUTIONS: SolutionLink[] = [
     icon: Target,
   },
   {
-    href: '/servizi/segretaria-ai',
+    href: '/servizi/segretaria-telefonica-ai',
     label: 'Segretaria telefonica AI',
-    description: 'Risponde, prenota e riempie l’agenda.',
+    description: 'Risponde al telefono e fissa appuntamenti.',
     icon: PhoneCall,
+  },
+  {
+    href: '/servizi/agenda-clienti-whatsapp',
+    label: 'Agenda, clienti e WhatsApp',
+    description: 'Recupera chi non torna, riempie l’agenda.',
+    icon: CalendarClock,
   },
   {
     href: '/servizi/automazione-gestionali',

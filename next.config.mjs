@@ -55,6 +55,15 @@ const remotionServerFiles = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // La pagina unica della Segretaria AI e stata divisa in due, una per tipo di
+  // ricerca. Chi arriva dal vecchio indirizzo — menu, sitemap, link gia in giro —
+  // finisce sulla parte telefonica, la piu cercata delle due.
+  async redirects() {
+    return [
+      { source: '/servizi/segretaria-ai', destination: '/servizi/segretaria-telefonica-ai', permanent: true },
+    ]
+  },
+
   // Il renderer Remotion usa binari e Chromium lato server: Next deve lasciarlo
   // come dipendenza Node esterna invece di inglobarlo nel bundle delle route.
   serverExternalPackages: ['@remotion/bundler', '@remotion/renderer', '@sparticuz/chromium'],

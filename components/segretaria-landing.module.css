@@ -255,3 +255,38 @@
 @keyframes orbit-spin { to{transform:rotate(360deg)} }
 @keyframes scan-light { 0%,15%{left:-45%}70%,100%{left:125%} }
 }
+
+/* Briciole di pane: aiutano il lettore e danno al motore la gerarchia del sito. */
+.briciole { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; font-size: 12.5px; color: rgba(255, 253, 247, .6); }
+.briciole a { color: rgba(255, 253, 247, .8); text-decoration: none; }
+.briciole a:hover { color: #fffdf7; text-decoration: underline; }
+
+/* Ponte verso il servizio gemello: i due percorsi restano collegati. */
+.gemella {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: center;
+  max-width: 1180px; margin: 0 auto 80px; padding: clamp(28px, 4vw, 46px);
+  border-radius: 20px; background: var(--night); color: var(--white);
+}
+.gemellaOcchiello { margin: 0 0 10px; color: var(--champagne); font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+.gemella h2 { margin: 0 0 10px; font: 400 clamp(24px, 3vw, 34px)/1.15 Georgia, 'Times New Roman', serif; text-wrap: balance; }
+.gemellaTesto { margin: 0; color: rgba(255, 253, 247, .78); font-size: 15px; line-height: 1.6; max-width: 62ch; }
+.gemellaCta {
+  display: inline-flex; align-items: center; min-height: 50px; padding: 0 24px; white-space: nowrap;
+  border-radius: 11px; background: var(--champagne); color: #15231f; font-size: 14.5px; font-weight: 800; text-decoration: none;
+}
+.gemellaCta:hover { background: #e9d3a2; }
+
+/* FAQ visibili: la risposta sta nel testo, non solo nei dati strutturati.
+   Un motore che cita una risposta deve poterla leggere nella pagina. */
+.faq { max-width: 860px; margin: 0 auto; }
+.faq details { border-bottom: 1px solid var(--line); padding: 4px 0; }
+.faq summary { cursor: pointer; padding: 17px 0; font-size: 17px; font-weight: 600; list-style: none; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '+'; float: right; color: var(--coral); font-weight: 400; font-size: 22px; line-height: 1; }
+.faq details[open] summary::after { content: '−'; }
+.faq p { margin: 0 0 18px; color: var(--muted); font-size: 15px; line-height: 1.65; }
+
+@media (max-width: 760px) {
+  .gemella { grid-template-columns: 1fr; }
+  .gemellaCta { justify-content: center; }
+}

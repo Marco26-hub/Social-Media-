@@ -9,7 +9,7 @@ import { join } from 'node:path'
 // parla prima di aprire. Qui l'anteprima porta la foto e il titolo della
 // pagina, quindi il link si riconosce senza cliccarlo.
 
-export const alt = 'Segretaria telefonica AI e agenda intelligente — Social Web Automation'
+export const alt = 'Agenda, clienti e WhatsApp — recupera chi non torna | Social Web Automation'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 export const runtime = 'nodejs'
@@ -17,7 +17,7 @@ export const runtime = 'nodejs'
 export default async function OpenGraphImage() {
   const [logo, foto] = await Promise.all([
     readFile(join(process.cwd(), 'public/brand/swa-logo-official.png')),
-    readFile(join(process.cwd(), 'public/og-segretaria.jpg')),
+    readFile(join(process.cwd(), 'public/og-agenda.jpg')),
   ])
 
   return new ImageResponse(
@@ -37,10 +37,10 @@ export default async function OpenGraphImage() {
           <img src={`data:image/png;base64,${logo.toString('base64')}`} width={168} alt="" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', fontSize: 19, letterSpacing: 3, color: '#e2b023', marginBottom: 18 }}>
-              SEGRETARIA TELEFONICA E AGENDA
+              AGENDA, CLIENTI E WHATSAPP
             </div>
-            <div style={{ display: 'flex', fontSize: 52, lineHeight: 1.08, fontWeight: 700, letterSpacing: -1 }}>
-              Risponde al telefono. Fissa appuntamenti. Riempie l’agenda.
+            <div style={{ display: 'flex', fontSize: 46, lineHeight: 1.12, fontWeight: 700, letterSpacing: -1 }}>
+              I clienti che non tornano sono solo da richiamare.
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
