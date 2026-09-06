@@ -151,7 +151,7 @@
 .famigliaTesta > span { color: #bf4a2b; font-size: 11px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
 .famigliaTesta > h3 { font: 400 clamp(26px, 3vw, 38px)/1.1 Georgia, 'Times New Roman', serif; margin: 10px 0 8px; }
 .famigliaTesta > p { color: var(--muted); font-size: 15.5px; line-height: 1.6; margin: 0; }
-.piani { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); align-items: start; }
+.piani { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); align-items: stretch; }
 .piano { border: 1px solid var(--line); border-radius: 16px; padding: 26px 24px; background: var(--white); display: flex; flex-direction: column; }
 .pianoPerChi { color: var(--muted); font-size: 12.5px; margin: 0 0 8px; }
 .piano h4 { font: 400 25px/1.15 Georgia, 'Times New Roman', serif; margin: 0 0 12px; }
@@ -166,3 +166,15 @@
 .pianoCta { margin-top: auto; align-self: flex-start; display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 10px; background: var(--night); color: var(--white); font-size: 14px; font-weight: 700; text-decoration: none; }
 .pianoCta:hover { background: #1d4a3e; }
 .listinoNota { max-width: 1180px; margin: 0 auto; padding: 0 24px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+/* Piano in evidenza: stesso trattamento del listino originale — card scura,
+   pulsante oro — cosi l'occhio cade sul piano piu scelto. */
+.pianoEvidenza { background: var(--night); border-color: var(--night); color: var(--white); }
+.pianoEvidenza .pianoPerChi { color: var(--champagne); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 11px; }
+.pianoEvidenza .pianoPrezzo span,
+.pianoEvidenza .pianoAvvio,
+.pianoEvidenza .pianoExtra { color: rgba(255, 253, 247, .72); }
+.pianoEvidenza .pianoExtra { border-top-color: rgba(255, 253, 247, .2); }
+.pianoEvidenza li::before { background: var(--champagne); }
+.pianoEvidenza .pianoCta { background: var(--champagne); color: #15231f; }
+.pianoEvidenza .pianoCta:hover { background: #e9d3a2; }

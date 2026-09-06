@@ -247,8 +247,8 @@ export default function SegretariaAiPage() {
               </div>
               <div className={styles.piani}>
                 {famiglia.piani.map(piano => (
-                  <article className={styles.piano} key={piano.id}>
-                    <p className={styles.pianoPerChi}>{piano.perChi}</p>
+                  <article className={`${styles.piano} ${piano.evidenza ? styles.pianoEvidenza : ''}`} key={piano.id}>
+                    <p className={styles.pianoPerChi}>{piano.evidenza ?? piano.perChi}</p>
                     <h4>{piano.nome}</h4>
                     <p className={styles.pianoPrezzo}>
                       <strong>€{piano.canone}</strong><span>al mese</span>

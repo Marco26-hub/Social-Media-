@@ -14,6 +14,8 @@ export type PianoSegretaria = {
   avvio: string
   soglia: string
   extra: string
+  /** Piano messo in evidenza nel listino, con l'etichetta indicata. */
+  evidenza?: string
   voci: readonly string[]
 }
 
@@ -100,6 +102,7 @@ export const SEGRETARIA_LISTINO: readonly FamigliaSegretaria[] = [
         canone: 349,
         avvio: '€790 una tantum',
         soglia: '700 minuti al mese',
+        evidenza: 'Più scelto',
         extra: 'Minuti oltre soglia €0,35. Audio disattivato di base, attivabile solo con regole privacy adeguate.',
         voci: [
           '700 minuti al mese, circa 230 conversazioni da 3 minuti',
@@ -137,4 +140,4 @@ export const SEGRETARIA_DA = Math.min(
 )
 
 export const SEGRETARIA_NOTA =
-  'Prezzi IVA esclusa. Prima del contratto ricevi una proposta con canone, avvio, minuti, eventuali costi telefonici e collegamenti richiesti. Nessuna funzione viene attivata senza approvazione.'
+  'Prezzi IVA esclusa. Numero telefonico, traffico dell’operatore, assistenti aggiuntivi e collegamenti speciali non sono inclusi: vengono indicati nella proposta prima dell’attivazione. Nessuna funzione viene attivata senza approvazione.'
