@@ -10,7 +10,7 @@ import { SITE_URL } from '@/lib/site-config'
 
 const path = '/servizi/video-produzione'
 const title = 'Riprese video in azienda con fotografo e volto | SWA'
-const description = 'Veniamo da te a girare: fotografo, luci e attrezzatura. Con la possibilità di un volto, uomo o donna, davanti alla camera. Montaggio e pubblicazione sono già nel piano social.'
+const description = 'Veniamo da te a girare: fotografo, luci, audio e attrezzatura. Con la possibilità di un volto, uomo o donna, davanti alla camera. Montaggio e pubblicazione sono già nel piano social.'
 
 export const metadata: Metadata = {
   title,
@@ -24,8 +24,8 @@ export const metadata: Metadata = {
 const config = {
   path,
   eyebrow: 'Riprese in azienda',
-  title: 'Il girato professionale che ai tuoi video mancava.',
-  lead: 'Un video fatto col telefono si riconosce in mezzo secondo, e il tuo lavoro merita di più. Veniamo da te con fotografo, luci e attrezzatura, e giriamo il materiale di settimane in mezza giornata. Se davanti alla camera non ci vuoi stare tu, ci mettiamo un volto: uomo o donna, lo scegli tu.',
+  title: 'Strumenti professionali, a casa tua.',
+  lead: 'Un telefono recente gira benissimo, e non è lì che si perde. La differenza la fanno gli strumenti intorno alla camera: illuminazione controllata, microfoni dedicati, stabilizzazione e ottiche, con qualcuno che sa usarli. Veniamo da te con fotografo, luci e attrezzatura, e giriamo il materiale di settimane in mezza giornata. Se davanti alla camera non ci vuoi stare tu, ci mettiamo un volto: uomo o donna, lo scegli tu.',
   serviceName: 'Riprese video in azienda',
   serviceType: 'Produzione video e fotografica in sede per contenuti social',
   promise: 'Materiale girato bene, pensato per il verticale e tagliato sui formati che pubblichiamo. Le riprese chiudono il cerchio: prima montavamo quello che avevi, ora produciamo anche la materia prima.',
@@ -34,9 +34,9 @@ const config = {
   primaryCtaLabel: 'Parliamo delle riprese',
   primaryCtaHref: '/contatti',
   icon: Clapperboard,
-  signals: ['Fotografo e attrezzatura inclusi', 'Volto maschile o femminile a scelta', 'Girato pensato per il formato verticale'],
+  signals: ['Illuminazione, audio e ottiche professionali', 'Volto maschile o femminile a scelta', 'Girato pensato per il formato verticale'],
   outcomes: [
-    { title: 'Qualità', text: 'Luce, audio e stabilità sono la differenza fra un video che sembra tuo e uno che sembra improvvisato.' },
+    { title: 'Strumenti', text: 'Illuminazione controllata, microfoni dedicati, stabilizzazione e ottiche: la dotazione che cambia il risultato a parità di soggetto.' },
     { title: 'Quantità', text: 'Una sessione produce il materiale per settimane: si gira a blocchi, non un video alla volta.' },
     { title: 'Continuità', text: 'Il girato entra nel piano editoriale e viene montato e pubblicato da noi, senza passaggi di mano.' },
   ],
@@ -44,7 +44,7 @@ const config = {
   deliverablesIntro: 'Non arriviamo a improvvisare. Il piano di quello che si gira esiste prima, perché sappiamo già che cosa andrà pubblicato nelle settimane successive.',
   deliverables: [
     { title: 'Piano di ripresa', text: 'Prima del giorno decidiamo scene, messaggi e formati: si arriva sapendo che cosa serve, e si evita di rigirare.' },
-    { title: 'Fotografo e attrezzatura', text: 'Camera, ottiche, luci e microfoni. Non è un telefono su un treppiede: è una troupe leggera che entra e non ti blocca il lavoro.' },
+    { title: 'Fotografo e attrezzatura', text: 'Ottiche, luci e microfoni, e soprattutto qualcuno che sa dove metterli. Una troupe leggera che entra e non ti blocca il lavoro.' },
     { title: 'Un volto, se lo vuoi', text: 'Puoi comparire tu, può farlo una persona del tuo staff, oppure portiamo noi un volto professionista, uomo o donna.' },
     { title: 'Ambiente e lavorazione', text: 'Il posto, i gesti, i dettagli del mestiere. È il materiale che rende un profilo credibile anche senza parlare.' },
     { title: 'Foto dallo stesso set', text: 'Dalla stessa sessione escono anche gli scatti per post, copertine e sito, senza organizzare un secondo giorno.' },
