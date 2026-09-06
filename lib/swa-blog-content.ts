@@ -288,6 +288,91 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     data_pubblicazione: '2026-09-07T09:00:00.000Z',
     url_pubblicato: `${SITE_URL}/blog/chiamate-perse-agenda-vuota-cosa-fare`,
   },
+  {
+    slug: 'ai-act-obblighi-pmi-cosa-fare',
+    meta_title: 'AI Act: quali obblighi ha davvero una PMI | SWA',
+    meta_description: 'Le date di applicazione dell’AI Act, la differenza fra fornitore e utilizzatore, gli obblighi di trasparenza e di formazione. Che cosa riguarda una piccola impresa che usa strumenti AI.',
+    h1: 'AI Act: che cosa riguarda davvero una piccola impresa',
+    intro: 'Il regolamento europeo sull’intelligenza artificiale è in vigore e le regole principali si applicano dal 2 agosto 2026. Molte imprese non sanno di rientrarci, perché pensano che riguardi chi sviluppa sistemi AI. In realtà riguarda anche chi li usa, e usare un assistente che risponde ai clienti o uno strumento che scrive testi basta a far scattare qualche obbligo. Non tutti, però, e la differenza conta.',
+    sezioni: [
+      {
+        h2: 'Le date, in ordine',
+        paragrafi: [
+          'L’AI Act è il regolamento (UE) 2024/1689. È entrato in vigore il 1° agosto 2024, ma non tutto si applica subito: le scadenze sono scaglionate, ed è il motivo per cui molti hanno smesso di seguirlo dopo i primi titoli di giornale.',
+          'Le pratiche vietate — quelle a rischio inaccettabile — si applicano dal 2 febbraio 2025, insieme all’obbligo di garantire una alfabetizzazione adeguata sull’AI a chi la usa in azienda. Dal 2 agosto 2025 valgono le regole sui modelli di uso generale, la governance e le sanzioni. Dal 2 agosto 2026 si applica la parte generale del regolamento, quindi gli obblighi che toccano la maggior parte delle imprese. Per alcuni sistemi ad alto rischio legati a prodotti regolamentati la scadenza è il 2 agosto 2027.',
+        ],
+        lista_punti: [
+          '1 agosto 2024: entrata in vigore',
+          '2 febbraio 2025: pratiche vietate e obbligo di alfabetizzazione',
+          '2 agosto 2025: modelli di uso generale, governance, sanzioni',
+          '2 agosto 2026: applicazione generale del regolamento',
+          '2 agosto 2027: alcuni sistemi ad alto rischio legati a prodotti',
+        ],
+      },
+      {
+        h2: 'Fornitore o utilizzatore: la domanda da cui parte tutto',
+        paragrafi: [
+          'Il regolamento assegna obblighi diversi in base al ruolo. Chi sviluppa un sistema AI e lo mette sul mercato con il proprio nome è un fornitore, e ha gli obblighi più pesanti. Chi invece usa un sistema sviluppato da altri, sotto la propria autorità e nell’ambito della propria attività, è un utilizzatore, e ha obblighi molto più contenuti.',
+          'La grande maggioranza delle piccole imprese sta nella seconda categoria: usa strumenti fatti da altri. Un centro estetico che attiva un assistente telefonico non diventa un fornitore di AI, così come non diventa un produttore di software perché usa un gestionale.',
+          'Attenzione però: il ruolo può cambiare. Se un sistema viene modificato in modo sostanziale, oppure se viene rivenduto con il proprio marchio, chi lo fa può assumere gli obblighi del fornitore. È la verifica che va fatta prima, non dopo.',
+        ],
+      },
+      {
+        h2: 'I livelli di rischio, e perché quasi tutto ciò che usi non è ad alto rischio',
+        paragrafi: [
+          'Il regolamento classifica i sistemi per rischio. Alcune pratiche sono vietate del tutto: manipolazione che provoca danno, sfruttamento di vulnerabilità, punteggio sociale, alcune forme di riconoscimento delle emozioni sul lavoro.',
+          'Poi ci sono i sistemi ad alto rischio, quelli usati in ambiti come selezione del personale, accesso al credito, istruzione, alcuni servizi essenziali. Qui gli obblighi sono seri.',
+          'Sotto, c’è la fascia che riguarda la stragrande maggioranza degli usi aziendali quotidiani: strumenti che scrivono testi, rispondono al telefono, organizzano appuntamenti. Non sono ad alto rischio, ma non sono nemmeno esenti da tutto: hanno obblighi di trasparenza.',
+        ],
+      },
+      {
+        h2: 'Trasparenza: la regola che tocca chi risponde ai clienti',
+        paragrafi: [
+          'Se una persona interagisce con un sistema di AI, deve poterlo sapere, a meno che non sia già evidente dal contesto. Tradotto: un assistente che risponde al telefono o in chat non dovrebbe far credere di essere una persona.',
+          'Ci sono poi obblighi sui contenuti generati o manipolati artificialmente, che vanno resi riconoscibili. È il punto che tocca chi produce immagini o video con l’AI, e vale la pena guardarlo con attenzione se se ne fa un uso commerciale.',
+          'Il rovescio positivo: dichiarare che è un assistente non allontana i clienti. Quello che li allontana è scoprirlo dopo.',
+        ],
+      },
+      {
+        h2: 'L’obbligo di cui quasi nessuno parla: la formazione',
+        paragrafi: [
+          'Dal febbraio 2025 fornitori e utilizzatori devono adoperarsi perché il personale che si occupa dell’uso dei sistemi AI abbia un livello sufficiente di competenza, tenendo conto delle conoscenze, del contesto e delle persone su cui i sistemi vengono usati.',
+          'Non significa mandare tutti a un master. Significa che chi in azienda usa uno strumento AI deve sapere che cosa fa, che cosa non fa e quando fermarsi. È un obbligo di mezzi, e per una piccola impresa si soddisfa con una formazione proporzionata e documentata.',
+          'È anche la ragione per cui questo obbligo passa inosservato: non c’è un modulo da compilare né un ente a cui mandarlo. Ma in caso di contestazione, dimostrare di averci pensato fa la differenza.',
+        ],
+      },
+      {
+        h2: 'Che cosa fare, in pratica',
+        paragrafi: [
+          'Il primo passo non è comprare niente: è fare l’inventario. Quali strumenti AI si usano davvero in azienda, chi li usa, su quali dati lavorano e con quali persone entrano in contatto. Spesso la lista è più lunga di quanto ci si aspetti.',
+          'Da lì si guarda il ruolo — fornitore o utilizzatore — per ciascuno, si verifica se qualcuno rientra fra le pratiche vietate o ad alto rischio, e si controllano le informazioni date ai clienti quando parlano con un sistema.',
+          'Infine i contratti: chi ti fornisce lo strumento che cosa garantisce, dove tiene i dati, che cosa succede se il servizio cambia. Sono clausole che si negoziano prima della firma, non dopo.',
+        ],
+        lista_punti: [
+          'Inventario degli strumenti AI realmente in uso',
+          'Ruolo per ciascuno: fornitore o utilizzatore',
+          'Verifica delle pratiche vietate e dei casi ad alto rischio',
+          'Informazione ai clienti quando parlano con un sistema',
+          'Formazione proporzionata di chi li usa, documentata',
+          'Contratti con i fornitori: garanzie, dati, continuità',
+        ],
+      },
+    ],
+    faq: [
+      { domanda: 'L’AI Act riguarda anche chi usa soltanto strumenti fatti da altri?', risposta: 'Sì, con obblighi diversi e più contenuti rispetto a chi sviluppa. Chi usa un sistema AI sotto la propria autorità nell’ambito della propria attività è un utilizzatore e ha comunque doveri, in particolare di trasparenza e di competenza del personale.' },
+      { domanda: 'Devo dire ai clienti che rispondo con un assistente AI?', risposta: 'Il regolamento prevede che chi interagisce con un sistema di AI debba poterlo sapere, salvo che sia evidente dal contesto. In pratica un assistente che risponde al telefono o in chat non dovrebbe far credere di essere una persona.' },
+      { domanda: 'Usare l’AI per scrivere i post rende la mia azienda ad alto rischio?', risposta: 'In genere no: gli usi di marketing e comunicazione non rientrano nelle categorie ad alto rischio, che riguardano ambiti come selezione del personale, credito o servizi essenziali. Restano però gli obblighi di trasparenza sui contenuti generati artificialmente. La valutazione va fatta sul caso concreto.' },
+      { domanda: 'Che cosa rischia chi non si adegua?', risposta: 'Il regolamento prevede sanzioni amministrative, con importi diversi a seconda della violazione: le più alte riguardano le pratiche vietate. L’entità applicabile dipende dalla violazione e dalle dimensioni dell’impresa.' },
+      { domanda: 'Basta un documento per essere in regola?', risposta: 'No. Gli obblighi riguardano comportamenti, non moduli: che cosa dici ai clienti, come formi chi usa gli strumenti, che cosa hai verificato prima di attivarli. La documentazione serve a dimostrarlo, non a sostituirlo.' },
+    ],
+    cta_finale: 'Questo articolo ha finalità informative e non sostituisce il parere sul caso concreto. Stiamo preparando dei video corsi sull’AI Act con l’Avv. Vincenzo Sapone, cassazionista: puoi prenotare il posto dalla pagina della consulenza legale AI.',
+    keywords_target: ['AI Act', 'AI Act obblighi PMI', 'regolamento intelligenza artificiale imprese', 'trasparenza AI clienti', 'alfabetizzazione AI'],
+    immagine_cover: null,
+    autore: 'Social Web Automation',
+    tempo_lettura_min: 9,
+    data_pubblicazione: '2026-09-07T14:00:00.000Z',
+    url_pubblicato: `${SITE_URL}/blog/ai-act-obblighi-pmi-cosa-fare`,
+  },
 ]
 
 export function getSwaBlogArticle(slug: string) {
