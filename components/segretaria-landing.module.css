@@ -196,7 +196,13 @@
 
 /* Piano in evidenza: stesso trattamento del listino originale — card scura,
    pulsante oro — cosi l'occhio cade sul piano piu scelto. */
-.pianoEvidenza { background: var(--night); border-color: var(--night); color: var(--white); }
+/* Colori espliciti, non token: questa card e verde scura con testo crema in
+   entrambi i temi. Usando --white il testo seguiva il token, che in tema notte
+   diventa il fondo pagina, e la card restava scritta in scuro su scuro. */
+.pianoEvidenza { background: #153b32; border-color: #153b32; color: #fffdf7; }
+.pianoEvidenza h3 { color: #fffdf7; }
+.pianoEvidenza .pianoPrezzo strong { color: #fffdf7; }
+.pianoEvidenza li { color: rgba(255, 253, 247, .9); }
 .pianoEvidenza { box-shadow: 0 26px 70px rgba(21, 59, 50, .28), inset 0 1px 0 rgba(255,255,255,.14); }
 .pianoEvidenza .pianoPerChi { color: var(--champagne); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 11px; }
 .pianoEvidenza .pianoPrezzo span,
@@ -293,12 +299,13 @@
 
 /* Ponte verso il servizio gemello: i due percorsi restano collegati. */
 .gemella {
+  color: #fffdf7;
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: center;
   max-width: 1180px; margin: 0 auto 80px; padding: clamp(28px, 4vw, 46px);
-  border-radius: 20px; background: var(--night); color: var(--white);
+  border-radius: 20px; background: #153b32;
 }
 .gemellaOcchiello { margin: 0 0 10px; color: var(--champagne); font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
-.gemella h2 { margin: 0 0 10px; font: 400 clamp(24px, 3vw, 34px)/1.15 Georgia, 'Times New Roman', serif; text-wrap: balance; }
+.gemella h2 { color: #fffdf7; margin: 0 0 10px; font: 400 clamp(24px, 3vw, 34px)/1.15 Georgia, 'Times New Roman', serif; text-wrap: balance; }
 .gemellaTesto { margin: 0; color: rgba(255, 253, 247, .78); font-size: 15px; line-height: 1.6; max-width: 62ch; }
 .gemellaCta {
   display: inline-flex; align-items: center; min-height: 50px; padding: 0 24px; white-space: nowrap;
@@ -422,3 +429,56 @@
   border-top: 1px solid var(--line); color: var(--muted);
   font-size: 13.4px; line-height: 1.6;
 }
+
+/* Tema scuro.
+   La pagina definiva una palette fissa chiara e restava bianca mentre il resto
+   del sito passava alla notte. Qui gli stessi token vengono ridefiniti quando il
+   documento e in tema scuro: cambiano i valori, non le regole che li usano. */
+:global(html[data-theme='dark']) .pagina {
+  --ink: #edf4f1;
+  --paper: #111713;
+  --white: #0b100d;
+  --muted: #a9b7b1;
+  --line: rgba(237, 244, 241, .14);
+  --mint: #49d6a0;
+  --sage: #17372d;
+  background: #080b09;
+}
+
+/* Superfici che in chiaro erano bianche: se restano su --white in scuro
+   spariscono dentro il fondo pagina. Vengono sollevate di un gradino. */
+:global(html[data-theme='dark']) .pagina :global(.section-title > p),
+:global(html[data-theme='dark']) .pagina :global(.benefit-item p),
+:global(html[data-theme='dark']) .pagina :global(.workflow-card p),
+:global(html[data-theme='dark']) .pagina :global(.audience-grid p) { color: var(--muted); }
+
+:global(html[data-theme='dark']) .pagina .piano { background: var(--paper); }
+:global(html[data-theme='dark']) .pagina .avvio { background: var(--paper); }
+:global(html[data-theme='dark']) .pagina :global(.service-clarity-grid article),
+:global(html[data-theme='dark']) .pagina :global(.workflow-card),
+:global(html[data-theme='dark']) .pagina :global(.audience-grid > *) { background: var(--paper); }
+
+/* Il hero resta scuro in entrambi i temi: sopra c'e la foto. */
+:global(html[data-theme='dark']) .pagina :global(.home-hero) {
+  background: linear-gradient(110deg, #0b100d 0%, #101a15 58%, #0d1712 100%);
+}
+
+/* La fascia dichiarativa e in oro spento con testo scuro: in tema notte il
+   contrasto regge, ma il bordo va ammorbidito per non tagliare la pagina. */
+:global(html[data-theme='dark']) .pagina :global(.statement-band) { color: #15231f; }
+
+/* La FAQ e le briciole seguono il testo, non un colore fissato in chiaro. */
+:global(html[data-theme='dark']) .pagina .faq summary { color: var(--ink); }
+:global(html[data-theme='dark']) .pagina .faq p { color: var(--muted); }
+
+/* Il pulsante dei piani era verde scuro su superficie scura: in tema notte
+   spariva dentro la card. Passa al verde acceso del tema, che e il colore che
+   il resto del sito usa per le azioni in notturna. */
+:global(html[data-theme='dark']) .pagina .pianoCta {
+  background: #0f6b4f; color: #fffdf7;
+}
+:global(html[data-theme='dark']) .pagina .pianoCta:hover { background: #148a66; }
+:global(html[data-theme='dark']) .pagina .pianoEvidenza .pianoCta {
+  background: var(--champagne); color: #15231f;
+}
+:global(html[data-theme='dark']) .pagina .gemellaCta { background: var(--champagne); color: #15231f; }
