@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import Link from 'next/link'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
+import { SEGRETARIA_LISTINO, SEGRETARIA_NOTA } from '@/lib/segretaria-listino'
 import { SITE_URL } from '@/lib/site-config'
 import styles from './landing.module.css'
 
@@ -25,9 +25,11 @@ export const metadata: Metadata = {
 
 const WA = 'https://wa.me/393477196603?text=' + encodeURIComponent('Ciao! Vorrei una demo della Segretaria telefonica AI.')
 
+// Esempio di pannello, senza cifre: i numeri di una demo non sono risultati e in
+// una pagina che vende si leggono come promesse.
 const opportunita = [
-  ['Agenda', 'Orario libero domani alle 15:30', '6 clienti adatte al trattamento', '€420'],
-  ['Recupero', 'Clienti assenti da 90 giorni', '18 persone da ricontattare', '€1.240'],
+  ['Agenda', 'Orario libero domani alle 15:30', 'Propone i clienti adatti a coprirlo'],
+  ['Recupero', 'Clienti che non tornano da tempo', 'Prepara il messaggio, tu approvi'],
 ]
 
 const funzioni = [
@@ -66,9 +68,9 @@ const jsonLd = {
       areaServed: 'IT',
       offers: {
         '@type': 'Offer',
-        price: '390',
+        price: '199',
         priceCurrency: 'EUR',
-        description: 'Canone mensile dopo una configurazione iniziale di 790 €, IVA esclusa.',
+        description: 'Canone mensile a partire dal piano Voce Base, IVA esclusa, oltre al costo di avvio indicato in proposta.',
       },
     },
     {
@@ -121,7 +123,7 @@ export default function SegretariaAiPage() {
               </p>
               <div className="hero-actions">
                 <a className="primary-action" href={WA}>Prenota una demo</a>
-                <Link className="secondary-action" href="/pacchetti">Vedi i piani</Link>
+                <a className="secondary-action" href="#listino">Vedi i piani</a>
               </div>
               <div className="proof-strip" aria-label="Caratteristiche principali">
                 <span>Italiano e inglese</span>
@@ -133,15 +135,14 @@ export default function SegretariaAiPage() {
             <div className="hero-stage luxury-stage" aria-label="Anteprima del pannello">
               <span className="live-caption"><i /> Conversazione assistita</span>
               <div className="phone-frame floating-console">
-                <div className="phone-top"><span>Oggi</span><strong>€2.290 individuati</strong></div>
+                <div className="phone-top"><span>Esempio di pannello</span><strong>Oggi</strong></div>
                 <div className="pulse-card"><span className="live-dot" />Assistente attiva</div>
-                {opportunita.map(([tag, titolo, dettaglio, valore]) => (
+                {opportunita.map(([tag, titolo, dettaglio]) => (
                   <article className="opportunity-card" key={titolo}>
                     <div><span>{tag}</span><h3>{titolo}</h3><p>{dettaglio}</p></div>
-                    <strong>{valore}</strong>
                   </article>
                 ))}
-                <button className="approve-button" type="button">Controlla 12 messaggi</button>
+                <button className="approve-button" type="button">Controlla i messaggi pronti</button>
               </div>
             </div>
           </section>
@@ -198,16 +199,16 @@ export default function SegretariaAiPage() {
             <a className="light-action" href={WA}>Prenota una demo</a>
           </div>
           <div className="admin-phone">
-            <div className="admin-head"><span>Pannello</span><b>In tempo reale</b></div>
+            <div className="admin-head"><span>Esempio di pannello</span><b>Che cosa vedi</b></div>
             <div className="admin-kpis">
-              <div><strong>33</strong><span>clienti da ricontattare</span></div>
-              <div><strong>4</strong><span>orari da riempire</span></div>
-              <div><strong>12</strong><span>messaggi da controllare</span></div>
-              <div><strong>€2.290</strong><span>valore possibile</span></div>
+              <div><span>Chi ricontattare, con il motivo</span></div>
+              <div><span>Gli orari rimasti liberi</span></div>
+              <div><span>I messaggi pronti da approvare</span></div>
+              <div><span>Le risposte e gli appuntamenti ottenuti</span></div>
             </div>
             <div className="task-list">
-              <article><span className="score">92%</span><div><h3>Riprendi il percorso interrotto</h3><p>18 messaggi pronti · €1.240 stimati</p></div><button>Controlla</button></article>
-              <article><span className="score">84%</span><div><h3>Riempi venerdì alle 15:30</h3><p>6 clienti adatte · €420 stimati</p></div><button>Controlla</button></article>
+              <article><div><h3>Riprendi il percorso interrotto</h3><p>Messaggi pronti, in attesa del tuo sì</p></div><button>Controlla</button></article>
+              <article><div><h3>Riempi l’orario libero di venerdì</h3><p>Clienti adatti già selezionati</p></div><button>Controlla</button></article>
             </div>
           </div>
         </section>
@@ -230,18 +231,41 @@ export default function SegretariaAiPage() {
           </div>
         </section>
 
-        <section className="pricing-teaser">
-          <div>
-            <span>Prova guidata</span>
-            <h2>Partiamo dai tuoi dati. Misuriamo risultati veri.</h2>
-            <p>Configurazione, importazione, prime azioni e affiancamento da remoto: tutto compreso per iniziare senza cambiare il modo in cui lavori. I numeri delle schermate qui sopra sono dimostrativi, non risultati promessi.</p>
+        <section className="section" id="listino">
+          <div className="section-title">
+            <span>Listino</span>
+            <h2>Due famiglie, cinque piani. Scegli cosa automatizzare.</h2>
+            <p>Agenda e clienti prepara i messaggi e aiuta a riempire gli spazi liberi. La segretaria telefonica risponde e gestisce le prenotazioni. Puoi usarle separate oppure insieme.</p>
           </div>
-          <div>
-            <strong>€790</strong><span>configurazione iniziale</span>
-            <strong>€390/mese</strong><span>dopo l’avvio</span>
-            <a href={WA}>Parlane con noi</a>
-          </div>
+
+          {SEGRETARIA_LISTINO.map(famiglia => (
+            <div className={styles.famiglia} key={famiglia.id}>
+              <div className={styles.famigliaTesta}>
+                <span>{famiglia.occhiello}</span>
+                <h3>{famiglia.nome}</h3>
+                <p>{famiglia.descrizione}</p>
+              </div>
+              <div className={styles.piani}>
+                {famiglia.piani.map(piano => (
+                  <article className={styles.piano} key={piano.id}>
+                    <p className={styles.pianoPerChi}>{piano.perChi}</p>
+                    <h4>{piano.nome}</h4>
+                    <p className={styles.pianoPrezzo}>
+                      <strong>€{piano.canone}</strong><span>al mese</span>
+                    </p>
+                    <p className={styles.pianoAvvio}>Avvio {piano.avvio} · {piano.soglia}</p>
+                    <ul>{piano.voci.map(v => <li key={v}>{v}</li>)}</ul>
+                    <p className={styles.pianoExtra}>{piano.extra}</p>
+                    <a className={styles.pianoCta} href={WA}>Richiedi una demo</a>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <p className={styles.listinoNota}>{SEGRETARIA_NOTA}</p>
         </section>
+
       </main>
 
       <PublicFooter />

@@ -142,3 +142,27 @@
 .pagina :global(.full-workflow>p) { color:rgba(255,255,255,.65); line-height:1.6; margin-top:28px; max-width:750px; }
 .pagina :global(.full-workflow .text-link) { color:white; }
 .pagina :global(.score-ring) { align-items:center; border:1px solid var(--champagne); border-radius:50%; color:#8a6a12; display:flex; font-size:12px; font-weight:900; height:44px; justify-content:center; width:44px; }
+
+/* Listino: cinque piani in due famiglie, dentro la stessa pagina. Tenuti in un
+   blocco proprio invece che ereditati dalla landing originale, che il listino
+   non ce l'aveva: li' i prezzi stavano su una pagina separata. */
+.famiglia { max-width: 1180px; margin: 0 auto 54px; padding: 0 24px; }
+.famigliaTesta { max-width: 640px; margin-bottom: 26px; }
+.famigliaTesta > span { color: #bf4a2b; font-size: 11px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
+.famigliaTesta > h3 { font: 400 clamp(26px, 3vw, 38px)/1.1 Georgia, 'Times New Roman', serif; margin: 10px 0 8px; }
+.famigliaTesta > p { color: var(--muted); font-size: 15.5px; line-height: 1.6; margin: 0; }
+.piani { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); align-items: start; }
+.piano { border: 1px solid var(--line); border-radius: 16px; padding: 26px 24px; background: var(--white); display: flex; flex-direction: column; }
+.pianoPerChi { color: var(--muted); font-size: 12.5px; margin: 0 0 8px; }
+.piano h4 { font: 400 25px/1.15 Georgia, 'Times New Roman', serif; margin: 0 0 12px; }
+.pianoPrezzo { margin: 0; display: flex; align-items: baseline; gap: 8px; }
+.pianoPrezzo strong { font-size: 40px; font-weight: 850; letter-spacing: -.02em; }
+.pianoPrezzo span { color: var(--muted); font-size: 13px; }
+.pianoAvvio { margin: 6px 0 16px; color: var(--muted); font-size: 13px; }
+.piano ul { list-style: none; margin: 0 0 16px; padding: 0; }
+.piano li { position: relative; padding-left: 18px; margin-bottom: 9px; font-size: 13.8px; line-height: 1.5; }
+.piano li::before { content: ''; position: absolute; left: 0; top: 8px; width: 8px; height: 4px; background: var(--champagne); transform: skewX(-20deg); }
+.pianoExtra { margin: 0 0 18px; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.3px; line-height: 1.45; }
+.pianoCta { margin-top: auto; align-self: flex-start; display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 10px; background: var(--night); color: var(--white); font-size: 14px; font-weight: 700; text-decoration: none; }
+.pianoCta:hover { background: #1d4a3e; }
+.listinoNota { max-width: 1180px; margin: 0 auto; padding: 0 24px; color: var(--muted); font-size: 13px; line-height: 1.6; }
