@@ -627,12 +627,13 @@ export const SETTORI: Settore[] = [
       { q: 'Il personale deve imparare un programma nuovo?', a: 'Il pannello serve a guardare e correggere, non a lavorare tutto il giorno: ordini in corso, prenotazioni, tavoli e menu. Durante la prova in sala si parte da pochi tavoli con qualcuno di noi presente.' },
       { q: 'Posso cambiare il menu da solo?', a: 'Sì. Piatti, prezzi, disponibilità e allergeni si modificano dal pannello e cambiano subito su tutti i tavoli, senza ristampare i codici: il QR punta al tavolo, non al menu.' },
       { q: 'Serve anche se ho già un gestionale?', a: 'Dipende da che cosa copre. Se il gestionale fa già ordini e conti valutiamo un collegamento invece di una sostituzione; se copre solo la contabilità, il sistema di sala gli sta accanto senza toccarlo.' },
+      { q: 'Posso vederlo prima di decidere?', a: 'Sì. Il sistema è online e si guarda subito: la pagina mostra il menu al tavolo come lo vede un cliente e il pannello come lo vede la sala. Durante la call lo apriamo sul vostro menu, così si capisce come funziona sui vostri piatti e non su un esempio generico.' },
     ],
     correlati: [
+      { href: 'https://ristoranti-dashboard.vercel.app/', label: 'Guarda il sistema di sala' },
       { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
       { href: '/servizi/gestione-social-media', label: 'Gestione social media' },
       { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
-      { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
     ],
   },
   {
