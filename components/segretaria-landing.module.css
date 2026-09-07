@@ -487,3 +487,8 @@
   background: var(--champagne); color: #15231f;
 }
 :global(html[data-theme='dark']) .pagina .gemellaCta { background: var(--champagne); color: #15231f; }
+
+/* Card pari a colpo d'occhio: in una griglia a due colonne un numero dispari
+   lascia l'ultima cella vuota, che con i filetti si legge come un riquadro
+   sbagliato. L'ultimo elemento in posizione dispari occupa tutta la riga. */
+.pagina :global(.audience-grid) > *:last-child:nth-child(odd) { grid-column: 1 / -1; }

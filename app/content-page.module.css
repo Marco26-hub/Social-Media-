@@ -58,3 +58,8 @@
 :global(html[data-theme='dark']) .finalCta { background:#0f6b4f; }
 @media(max-width:800px){.faqLayout{grid-template-columns:1fr;gap:28px}.roleGrid{grid-template-columns:1fr}}
 @media(max-width:700px){.page{padding-top:60px}.hero{padding:48px 18px 56px}.hero h1{font-size:42px}.lead{font-size:16px}.heroActions{display:grid}.primary,.secondary{width:100%}.anchorBand{display:grid;grid-template-columns:1fr 1fr}.anchorBand a{min-width:0}.section{padding:64px 18px}.sectionHeading h2{font-size:35px}.stepGrid{grid-template-columns:1fr}.stepGrid article{min-height:0;padding:23px}.stepGrid h3{margin-top:22px}.finalCta{align-items:flex-start;flex-direction:column;gap:28px;padding:58px 18px}.finalCta h2{font-size:35px}.finalCta a{width:100%}}
+
+/* Card pari a colpo d'occhio: in una griglia a due colonne un numero dispari
+   lascia l'ultima cella vuota, che con i filetti si legge come un riquadro
+   sbagliato. L'ultimo elemento in posizione dispari occupa tutta la riga. */
+.stepGrid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
