@@ -273,6 +273,8 @@ export const SETTORI: Settore[] = [
       { title: 'Cosa vede l’amministratore', text: 'Il pannello è la vista sulla giornata: rapporti, ore, pendenti e contestati, con 4 filtri per data, operatore, cliente e stato. Da lì si approva, si contesta e si gestiscono immobili e squadre.' },
       { title: 'Quali referenze si vedono', text: `Le referenze visibili sono contenuti su cantieri, mezzi e squadre, 16 al mese per canale con il piano Presenza a ${PREZZI.presenza}. Chi affida un appalto vuole vedere chi entra nei suoi locali.` },
       { title: 'Modelli per tipo di intervento', text: 'Ogni tipo di lavoro ha la sua checklist: l’operatore la trova già compilata e spunta, invece di scrivere ogni volta da capo che cosa ha fatto.' },
+      { title: 'Come si presenta il marchio', text: 'Nome, logo, colori e tono vengono applicati al sito e alla brochure in PDF, disponibile in 2 lingue: il documento da allegare a un’offerta senza rifarlo ogni volta.' },
+      { title: 'In quante lingue esce il sito', text: 'Il sito esce in 7 lingue, con i testi scritti per ognuna e non passati a un traduttore. Privacy, cookie, termini, trattamento dati e cancellazioni sono già scritti e collegati.' },
     ],
     ciclo: [
       { number: '01', title: 'Cosa definiamo', text: 'Il target è la definizione scritta del cliente ideale — settore, area geografica, dimensione, criteri di esclusione — da cui nasce la ricerca delle 30 aziende del Pilot. Basta una call di avvio, e l’elenco non arriva pieno di nomi fuori mercato da scartare a mano.' },
