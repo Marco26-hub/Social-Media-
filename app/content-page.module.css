@@ -50,7 +50,7 @@
 .finalCta .eyebrow { color:#b9ead8; }
 .finalCta h2 { margin:0; font:500 42px/1.08 Georgia,'Times New Roman',serif; }
 .finalCta p:last-child { margin:15px 0 0; color:#d5eee5; line-height:1.6; }
-.finalCta a { min-height:48px; display:inline-flex; align-items:center; justify-content:center; gap:8px; flex:none; padding:0 18px; border-radius:4px; background:white; color:var(--green-dark); font-size:13px; font-weight:800; text-decoration:none; }
+.finalCta a { min-height:48px; display:inline-flex; align-items:center; justify-content:center; gap:8px; flex:none; padding:0 18px; border-radius:4px; background:white; color:#094c39; font-size:13px; font-weight:800; text-decoration:none; }
 .page a:focus-visible,.page summary:focus-visible { outline:3px solid var(--gold); outline-offset:3px; }
 :global(html[data-theme='dark']) .page {
   --coral-testo: #ff9b82; --ink:#edf4f1; --muted:#aab8b2; --green:#49d6a0; --green-dark:#25b67f; --mint:#17372d; --line:#293b35; --paper:#0d110f; --surface:#080b09; background:#080b09; }
@@ -69,3 +69,7 @@
 /* Colori espliciti: il token del testo si inverte in tema notte e il salto al
    contenuto diventava bianco su chiaro proprio quando serve. */
 .skipLink { background: #0D2620; color: #FFFDF7; }
+
+/* Il fondo di questo bottone e' bianco in tutti i temi, quindi il testo non
+   puo' passare da un token che si inverte: in notte diventava 2,6:1. */
+:global(html[data-theme='dark']) .breadcrumbs { color: #97a8a1; }

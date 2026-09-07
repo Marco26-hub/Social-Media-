@@ -76,6 +76,8 @@
 .sectionHeading { max-width: 760px; margin-bottom: 40px; }
 .sectionHeading h2, .closing h2 { margin: 0; font: 700 clamp(36px, 4vw, 54px)/1.05 Georgia, serif; }
 .sectionHeading p:last-child { margin: 18px 0 0; color: #5c6a65; font-size: 18px; line-height: 1.6; }
+/* La band e' scura in entrambi i temi: qui il grigio del chiaro fa 2,5:1. */
+.band .sectionHeading p:last-child { color: #c9d8d2; }
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: #cfd9d4; border: 1px solid #cfd9d4; }
 .service, .proof, .priceCard { padding: 28px; background: #fff; }
 .service h3, .proof h3, .priceCard h2 { margin: 16px 0 10px; font: 700 25px/1.15 Georgia, serif; }
@@ -152,3 +154,36 @@
   .footerLinks { justify-content: flex-start; }
   .legal { grid-column: auto; }
 }
+
+/* Tema scuro per le pagine inglesi.
+   Mancava del tutto: il selettore in testata era visibile anche qui, ma non
+   cambiava nulla, perche' le superfici chiare erano scritte a mano. Hero e
+   band sono scuri in entrambi i temi e restano come sono; qui si ridefinisce
+   solo cio' che era chiaro. */
+:global(html[data-theme='dark']) .shell { background: #0d1512; color: #edf4f1; }
+:global(html[data-theme='dark']) .eyebrow { color: #49c995; }
+:global(html[data-theme='dark']) .sectionHeading p:last-child { color: #aab8b2; }
+:global(html[data-theme='dark']) .grid { background: #293b35; border-color: #293b35; }
+:global(html[data-theme='dark']) .service,
+:global(html[data-theme='dark']) .proof,
+:global(html[data-theme='dark']) .priceCard { background: #151d1a; }
+:global(html[data-theme='dark']) .service p,
+:global(html[data-theme='dark']) .proof p,
+:global(html[data-theme='dark']) .priceCard p { color: #aab8b2; }
+:global(html[data-theme='dark']) .checkList,
+:global(html[data-theme='dark']) .priceCard ul { color: #cbd8d2; }
+:global(html[data-theme='dark']) .closing { background: #12201b; }
+:global(html[data-theme='dark']) .closing p { color: #aab8b2; }
+:global(html[data-theme='dark']) .faqList details { background: #151d1a; border-color: #293b35; }
+:global(html[data-theme='dark']) .faqList details p { color: #aab8b2; }
+/* La domanda aveva #14231e scritto a mano: su scheda scura faceva 1,05:1. */
+:global(html[data-theme='dark']) .faqList summary { color: #edf4f1; }
+:global(html[data-theme='dark']) .nav a { color: #cbd8d2; }
+:global(html[data-theme='dark']) .band .proof { background: #16382c; }
+/* Il prezzo ha !important: senza pari peso resterebbe scuro su scheda scura. */
+:global(html[data-theme='dark']) .price { color: #edf4f1 !important; }
+:global(html[data-theme='dark']) .service a,
+:global(html[data-theme='dark']) .textLink,
+:global(html[data-theme='dark']) .service svg,
+:global(html[data-theme='dark']) .faqList summary span { color: #49c995; }
+:global(html[data-theme='dark']) .note { color: #93a29c; }

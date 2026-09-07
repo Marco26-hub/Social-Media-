@@ -43,7 +43,7 @@ const comparisonRows = [
   ['Articoli SEO + GEO', '—', '1/mese', '12/mese', 'SEO tecnica', '—'],
   ['Gestione campagna ADS', '—', '1', '—', 'Tracking', '—'],
   ['Pubblicazione blog', '—', '1 articolo', 'Inclusa o export CMS', 'Integrazione', '—'],
-  ['Sito web base', '—', '—', '—', 'A partire da €19,90/mese', '—'],
+  ['Sito web base', '—', '—', '—', 'A partire da 19,90 €/mese', '—'],
   ['Aziende B2B analizzate', '—', '—', '—', '—', 'Fino a 30'],
   ['Fonti e priorità', '—', '—', '—', '—', 'Incluse'],
   ['Proprietà dopo 12 mesi', '—', '—', '—', 'Sì', '—'],
