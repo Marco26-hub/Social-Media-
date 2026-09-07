@@ -336,3 +336,14 @@
 .articleFonti li { margin-bottom: 8px; }
 .articleFonti a { color: var(--green); text-decoration: underline; text-underline-offset: 3px; }
 .articleFonti span { color: var(--muted); }
+
+/* Tabelle dentro gli articoli. Scorrono da sole in orizzontale, cosi' la
+   pagina non scorre mai di lato sul telefono. */
+.tableWrap { overflow-x: auto; margin: 30px 0; border: 1px solid var(--line); border-radius: 7px; }
+.articleTable { width: 100%; min-width: 560px; border-collapse: collapse; font-family: Arial, Helvetica, sans-serif; font-size: 14px; text-align: left; }
+.articleTable caption { padding: 14px 18px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; text-align: left; }
+.articleTable th, .articleTable td { padding: 13px 18px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.5; }
+.articleTable thead th { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.articleTable tbody th { width: 28%; color: var(--ink); font-weight: 700; }
+.articleTable td { color: #4a5852; }
+.articleTable tbody tr:last-child th, .articleTable tbody tr:last-child td { border-bottom: 0; }

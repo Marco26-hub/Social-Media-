@@ -196,6 +196,25 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
                 {section.lista_punti && section.lista_punti.length > 0 && (
                   <ul>{section.lista_punti.map((item, itemIndex) => <li key={itemIndex}>{item}</li>)}</ul>
                 )}
+                {section.tabella && (
+                  <div className={styles.tableWrap}>
+                    <table className={styles.articleTable}>
+                      <caption>{section.tabella.caption}</caption>
+                      <thead>
+                        <tr>{section.tabella.colonne.map(c => <th scope="col" key={c}>{c}</th>)}</tr>
+                      </thead>
+                      <tbody>
+                        {section.tabella.righe.map((riga, r) => (
+                          <tr key={r}>
+                            {riga.map((cella, c) => c === 0
+                              ? <th scope="row" key={c}>{cella}</th>
+                              : <td key={c}>{cella}</td>)}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </section>
             ))}
 

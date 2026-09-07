@@ -275,6 +275,36 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
             <p className={styles.avvioDopo}>{SEGRETARIA_AVVIO.dopoPagamento}</p>
           </div>
 
+          {/* Le stesse soglie dei piani, in tabella.
+              Le schede raccontano, la tabella confronta: e' la struttura che i
+              motori di risposta estraggono piu' volentieri, e chi sta
+              scegliendo vuole vedere le righe una sotto l'altra. */}
+          <div className={styles.tabellaWrap}>
+            <table className={styles.tabellaPiani}>
+              <caption>{c.listino.famiglia.nome}: soglie comprese e costi di avvio, IVA esclusa</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Piano</th>
+                  <th scope="col">Per chi</th>
+                  <th scope="col">Canone</th>
+                  <th scope="col">Avvio</th>
+                  <th scope="col">Compreso nel mese</th>
+                </tr>
+              </thead>
+              <tbody>
+                {c.listino.famiglia.piani.map(p => (
+                  <tr key={p.id}>
+                    <th scope="row">{p.nome}</th>
+                    <td>{p.perChi}</td>
+                    <td className={styles.tabellaPrezzo}>{p.canone} € al mese</td>
+                    <td className={styles.tabellaPrezzo}>{p.avvio}</td>
+                    <td>{p.soglia}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           <p className={styles.listinoNota}>{SEGRETARIA_NOTA}</p>
         </section>
 

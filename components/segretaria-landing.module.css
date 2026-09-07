@@ -507,3 +507,15 @@
 :global(html[data-theme='dark']) .pagina .gemellaOcchiello,
 :global(html[data-theme='dark']) .pagina :global(.eyebrow),
 :global(html[data-theme='dark']) .pagina :global(.phone-top strong) { color: var(--champagne); }
+
+/* Tabella dei piani. Scorre da sola in orizzontale: la pagina non deve mai
+   scorrere di lato sul telefono. */
+.tabellaWrap { overflow-x: auto; margin: 34px 0 0; border: 1px solid var(--line); }
+.tabellaPiani { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 13.5px; text-align: left; }
+.tabellaPiani caption { padding: 15px 18px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; text-align: left; }
+.tabellaPiani th, .tabellaPiani td { padding: 13px 18px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.45; }
+.tabellaPiani thead th { color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }
+.tabellaPiani tbody th { color: var(--ink); font-weight: 800; white-space: nowrap; }
+.tabellaPiani td { color: var(--muted); }
+.tabellaPiani tbody tr:last-child th, .tabellaPiani tbody tr:last-child td { border-bottom: 0; }
+.tabellaPrezzo { color: var(--ink) !important; font-variant-numeric: tabular-nums; white-space: nowrap; }

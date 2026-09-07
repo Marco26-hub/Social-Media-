@@ -9,7 +9,14 @@ export type BlogArticleData = {
   meta_description: string | null
   h1: string
   intro: string | null
-  sezioni: { h2: string; paragrafi: string[]; lista_punti?: string[] }[]
+  sezioni: {
+    h2: string
+    paragrafi: string[]
+    lista_punti?: string[]
+    // Una tabella e' la struttura che i motori di risposta estraggono piu'
+    // volentieri, e un articolo comparativo senza confronto la spreca.
+    tabella?: { caption: string; colonne: string[]; righe: string[][] }
+  }[]
   faq: { domanda: string; risposta: string }[]
   cta_finale: string | null
   keywords_target: string[]
@@ -41,7 +48,7 @@ export function normalizeArticle(row: Record<string, unknown>): BlogArticleData 
     meta_description: (row.meta_description as string) ?? null,
     h1: String(row.h1 || ''),
     intro: (row.intro as string) ?? null,
-    sezioni: asArray<{ h2: string; paragrafi: string[]; lista_punti?: string[] }>(row.sezioni),
+    sezioni: asArray<BlogArticleData['sezioni'][number]>(row.sezioni),
     faq: asArray<{ domanda: string; risposta: string }>(row.faq),
     cta_finale: (row.cta_finale as string) ?? null,
     keywords_target: asArray<string>(row.keywords_target),

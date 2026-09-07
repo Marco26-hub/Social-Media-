@@ -96,6 +96,24 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
         ],
       },
       {
+        h2: 'SEO e GEO a confronto, voce per voce',
+        paragrafi: [
+          'Le due discipline lavorano sullo stesso contenuto ma rispondono a due domande diverse: la SEO chiede «questa pagina merita di comparire fra i risultati?», la GEO chiede «questo passaggio si può citare in una risposta?». La tabella mette le differenze una accanto all’altra.',
+        ],
+        tabella: {
+          caption: 'Differenze fra SEO e GEO su sei dimensioni operative',
+          colonne: ['Dimensione', 'SEO', 'GEO'],
+          righe: [
+            ['Obiettivo', 'Comparire fra i risultati di ricerca', 'Essere citati dentro una risposta generata'],
+            ['Dove appare il risultato', 'Nella pagina dei risultati, come link', 'Dentro il testo della risposta, con o senza link'],
+            ['Unità di misura', 'Posizione, clic, impressioni', 'Presenza e frequenza della citazione'],
+            ['Che cosa premia', 'Rilevanza, autorevolezza del dominio, esperienza d’uso', 'Risposte brevi e autonome, dati verificabili, fonti citate'],
+            ['Struttura utile', 'Titoli, link interni, dati strutturati', 'Blocchi domanda e risposta, tabelle, elenchi, definizioni'],
+            ['Come si verifica', 'Search Console e posizionamento sulle chiavi', 'Interrogando i motori di risposta sulle domande dei clienti'],
+          ],
+        },
+      },
+      {
         h2: 'Cosa SEO e GEO hanno in comune',
         paragrafi: [
           'Un sito deve essere accessibile ai crawler, avere URL stabili, canonical corretti e pagine collegate tra loro. Titoli e descrizioni devono distinguere gli argomenti, mentre il testo deve rispondere direttamente alla domanda dell’utente prima di approfondire.',
