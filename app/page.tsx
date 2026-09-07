@@ -119,6 +119,7 @@ const SERVICES = [
     icon: PhoneCall,
     href: '/servizi/segretaria-telefonica-ai',
     title: 'Il telefono che squilla mentre lavori',
+    ancora: 'l’assistente telefonico',
     text: 'Risponde al posto tuo con il tuo listino, informa, fissa l’appuntamento e ti lascia la trascrizione.',
     items: ['Da 199 € al mese, 300 minuti inclusi', 'Dice solo cose che hai approvato', 'Passa a una persona quando serve', 'Registro delle chiamate con esito'],
   },
@@ -126,6 +127,7 @@ const SERVICES = [
     icon: CalendarClock,
     href: '/servizi/agenda-clienti-whatsapp',
     title: 'I clienti spariti da mesi',
+    ancora: 'l’agenda e il recupero clienti',
     text: 'Ogni giorno trovi chi ricontattare, con il motivo e il messaggio già scritto. Parte solo se ci metti il sì.',
     items: ['Da 390 € al mese, 1000 invii inclusi', 'Legge agenda e storico ogni giorno', 'Messaggi pronti, mai inviati da soli', 'Spazi liberi proposti a chi è già cliente'],
   },
@@ -133,6 +135,7 @@ const SERVICES = [
     icon: ClipboardCheck,
     href: '/servizi/gestione-lavorazioni',
     title: 'Il lavoro che si chiude sul posto',
+    ancora: 'i rapportini di lavoro',
     text: 'Per chi lavora fuori sede: checklist, foto e firma del cliente dal telefono, PDF prima di ripartire.',
     items: ['Checklist già pronta per tipo di lavoro', 'Firma dell’operatore e del cliente', 'Ore calcolate da entrata e uscita', 'Pannello con storico e approvazioni'],
   },
@@ -140,6 +143,7 @@ const SERVICES = [
     icon: Workflow,
     href: '/servizi/automazione-gestionali',
     title: 'Sistemi che si parlano',
+    ancora: 'l’automazione dei gestionali',
     text: 'Gestionale, CRM, moduli e archivio smettono di richiedere lo stesso dato tre volte.',
     items: ['Analisi dei flussi prima del codice', 'Integrazioni sui sistemi esistenti', 'Registro delle esecuzioni e degli errori', 'Sviluppo su misura solo dove serve'],
   },
@@ -353,7 +357,7 @@ export default function LandingPage() {
           <p>Riduciamo frammentazione, passaggi tra fornitori e attività operative interne.</p>
         </div>
         <div className={styles.serviceGrid}>
-          {SERVICES.map(({ icon: Icon, href, title, text, items }) => (
+          {SERVICES.map(({ icon: Icon, href, title, text, items, ancora }) => (
             <article key={title} className={styles.service}>
               <span><Icon size={22} aria-hidden="true" /></span>
               <h3>{title}</h3>
@@ -361,7 +365,7 @@ export default function LandingPage() {
               <ul className={styles.serviceList}>
                 {items.map(item => <li key={item}><Check size={15} aria-hidden="true" /> {item}</li>)}
               </ul>
-              <Link href={href}>Approfondisci <ChevronRight size={16} aria-hidden="true" /></Link>
+              <Link href={href}>Come funziona: {ancora ?? title} <ChevronRight size={16} aria-hidden="true" /></Link>
             </article>
           ))}
         </div>

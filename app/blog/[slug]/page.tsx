@@ -246,7 +246,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
 
             {article.cta_finale && <div className={styles.articleCta}>{article.cta_finale}</div>}
             <Link href="/pacchetti" className={styles.primaryButton}>
-              Scopri come possiamo aiutarti <ArrowRight size={17} aria-hidden="true" />
+              Vedi i pacchetti e i prezzi d’ingresso <ArrowRight size={17} aria-hidden="true" />
             </Link>
             <br />
             <Link href="/blog" className={styles.backLink}><ArrowLeft size={16} aria-hidden="true" /> Torna a SWA Journal</Link>

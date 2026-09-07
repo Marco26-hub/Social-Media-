@@ -329,11 +329,30 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
 
       <section className={styles.finalCta}>
         <div><p className={styles.eyebrow}>{isEnglish ? 'Next step' : 'Prossimo passo'}</p><h2>{isEnglish ? (config.entityName ? `Is this the right fit for ${minuscolo(config.entityName)}?` : `Is ${minuscolo(config.serviceName)} right for you?`) : (config.entityName ? `Fa al caso tuo, se lavori con ${minuscolo(config.entityName)}?` : `${config.serviceName} fa al caso tuo?`)}</h2><p>{isEnglish ? 'A first assessment clarifies priorities, activities, responsibilities and costs.' : 'Una prima valutazione chiarisce priorità, attività, responsabilità e costi.'}</p></div>
-        {config.primaryCtaHref ? (
-          <Link href={config.primaryCtaHref}>{config.primaryCtaLabel ?? 'Attiva il servizio'} <ArrowRight size={17} aria-hidden="true" /></Link>
-        ) : (
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">{isEnglish ? 'Talk to us' : 'Parliamo del progetto'} <ArrowRight size={17} aria-hidden="true" /></a>
-        )}
+        {/* Due azioni, non una.
+            Su tutto il sito l'invito era «parliamone»: 64 richiami al contatto
+            contro 20 all'acquisto. Ma parlare con un fornitore e' il passo piu'
+            impegnativo, e fra il leggere e il telefonare non c'era nulla. La
+            prova gratuita esisteva, citata una volta sola dentro una fascia
+            della pagina servizi: qui diventa la seconda azione, perche' e'
+            l'unico modo di giudicare il lavoro senza impegnarsi. */}
+        <div className={styles.finalCtaAzioni}>
+          {config.primaryCtaHref ? (
+            <Link href={config.primaryCtaHref}>{config.primaryCtaLabel ?? 'Attiva il servizio'} <ArrowRight size={17} aria-hidden="true" /></Link>
+          ) : (
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">{isEnglish ? 'Talk to us' : 'Parliamo del progetto'} <ArrowRight size={17} aria-hidden="true" /></a>
+          )}
+          <a
+            className={styles.finalCtaProva}
+            href={`https://wa.me/393477196603?text=${encodeURIComponent(isEnglish
+              ? `Hello! Before deciding, I would like a free sample piece about ${config.serviceName.toLowerCase()}.`
+              : `Ciao! Prima di decidere vorrei un contenuto di prova gratuito su ${config.serviceName.toLowerCase()}.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {isEnglish ? 'Or ask for a free sample first' : 'Oppure chiedi prima un contenuto di prova'}
+          </a>
+        </div>
       </section>
 
       {!isEnglish && <PublicFooter />}

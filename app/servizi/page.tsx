@@ -461,7 +461,7 @@ export default function ServiziPage() {
                 </div>
                 <div className={styles.outcome}><Target size={17} aria-hidden="true" /><span><strong>Risultato atteso:</strong> {outcome}</span></div>
                 <div className={styles.serviceLinks}>
-                  <Link href={href} className={site.outlineButton}>Pagina del servizio <ArrowRight size={16} aria-hidden="true" /></Link>
+                  <Link href={href} className={site.outlineButton}>Come funziona: {label} <ArrowRight size={16} aria-hidden="true" /></Link>
                   <Link href="/pacchetti" className={styles.listinoLink}>Listino completo <ArrowRight size={14} aria-hidden="true" /></Link>
                 </div>
               </div>

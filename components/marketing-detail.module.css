@@ -209,3 +209,10 @@ h1 .eyebrow, .hero h1 .eyebrow {
 .textLink,
 .related a,
 .page a:not(p a):not(li a):not(small a) { padding-block: 4px; }
+
+/* Le due azioni della chiusura: attivare, oppure vedere prima un contenuto
+   di prova. La seconda e' volutamente secondaria a vista, ma esiste. */
+.finalCtaAzioni { display: grid; justify-items: center; gap: 12px; flex: none; }
+.finalCtaProva { min-height: 24px; display: inline-flex; align-items: center; color: #d5eee5; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.finalCtaProva:hover { color: #fff; }
+@media (max-width: 900px) { .finalCtaAzioni { justify-items: flex-start; } }

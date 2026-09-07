@@ -82,7 +82,7 @@ export default function SettoriPage() {
               <p>{settore.sommario}</p>
               <p style={{ marginTop: 18 }}>
                 <Link href={`/settori/${settore.slug}`} className={styles.primary}>
-                  Apri la pagina <ArrowRight size={16} aria-hidden="true" />
+                  Come lavoriamo per {settore.nome} <ArrowRight size={16} aria-hidden="true" />
                 </Link>
               </p>
             </article>
