@@ -88,6 +88,44 @@ export default function ConsulenzaPage() {
     '@graph': [
       { '@type': 'Service', name: 'Consulenza legale AI Act e GDPR', serviceType: 'Consulenza legale', provider: { '@type': 'LegalService', name: 'Studio Legale BCS' }, areaServed: 'Italia', offers: { '@type': 'Offer', price: '150', priceCurrency: 'EUR' } },
       { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.socialautomation.app' }, { '@type': 'ListItem', position: 2, name: 'Consulenza legale AI', item: 'https://www.socialautomation.app/consulenza' }] },
+      // Il corso e' pubblicato con un prezzo e un modulo di prenotazione e non
+      // era marcato. Non e' un Event: la pagina dice «in arrivo» e non esistono
+      // data ne' luogo, che per Event sono obbligatori — inventarli sarebbe un
+      // dato falso. Course con disponibilita' in preordine descrive lo stato
+      // reale: si prenota, non si paga adesso.
+      {
+        '@type': 'Course',
+        '@id': 'https://www.socialautomation.app/consulenza#corso-ai-act',
+        name: 'Video corsi AI Act per piccole e medie imprese',
+        description:
+          'Serie di moduli video sugli obblighi dell’AI Act per le PMI: quale ruolo ha l’azienda fra fornitore e utilizzatore, quali obblighi scattano e da quando, che cosa scrivere nei contratti con chi fornisce AI, quando informare le persone, che cosa tenere agli atti e come impostare la formazione del personale.',
+        url: 'https://www.socialautomation.app/consulenza#corso-ai-act',
+        inLanguage: 'it-IT',
+        provider: { '@id': 'https://www.socialautomation.app/#organization' },
+        teaches: [
+          'Ruolo di fornitore e di utilizzatore ai sensi del regolamento (UE) 2024/1689',
+          'Calendario degli obblighi e delle scadenze applicative',
+          'Clausole contrattuali con i fornitori di sistemi AI',
+          'Obblighi di trasparenza verso le persone',
+          'Documentazione da conservare',
+          'Alfabetizzazione AI del personale',
+        ],
+        hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'online' },
+        offers: {
+          '@type': 'Offer',
+          price: '2000',
+          priceCurrency: 'EUR',
+          availability: 'https://schema.org/PreOrder',
+          url: 'https://www.socialautomation.app/consulenza#corso-ai-act',
+          seller: { '@id': 'https://www.socialautomation.app/#organization' },
+          priceSpecification: {
+            '@type': 'PriceSpecification',
+            price: '2000',
+            priceCurrency: 'EUR',
+            valueAddedTaxIncluded: false,
+          },
+        },
+      },
     ],
   }
 

@@ -92,6 +92,13 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         description: config.lead,
         inLanguage: isEnglish ? 'en' : 'it-IT',
         isPartOf: { '@id': `${SITE_URL}/#website` },
+        // Indica quali blocchi sono adatti a essere letti ad alta voce da un
+        // assistente: il titolo, l'attacco e le risposte delle domande
+        // frequenti, che sono gia' scritte per stare in piedi da sole.
+        speakable: {
+          '@type': 'SpeakableSpecification',
+          cssSelector: ['h1', '[class*="lead"]', '[class*="faq"] summary', '[class*="faq"] p'],
+        },
         about: { '@id': `${pageUrl}#service` },
       },
       {

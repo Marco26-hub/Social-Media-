@@ -33,7 +33,14 @@ function languageAlternates(italianPath: string) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Date per gruppo, non una sola per tutto.
+  // Quarantadue URL con lo stesso identico istante e' il pattern che porta un
+  // motore a ignorare lastmod per l'intero sito: si perde il segnale anche
+  // quando una pagina cambia davvero. Aggiornare solo il gruppo toccato.
   const marketingUpdated = new Date('2026-09-07T00:00:00.000Z')
+  const serviziUpdated = new Date('2026-09-07T12:00:00.000Z')
+  const settoriUpdated = new Date('2026-09-07T09:00:00.000Z')
+  const englishUpdated = new Date('2026-09-07T15:00:00.000Z')
   const legalUpdated = new Date('2026-08-11T00:00:00.000Z')
 
   const pages: MetadataRoute.Sitemap = [
@@ -53,7 +60,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...['/en', '/en/services', '/en/method', '/en/pricing', '/en/about', '/en/faq', '/en/contact', '/en/settori'].map(path => ({
       url: `${SITE_URL}${path}`,
-      lastModified: marketingUpdated,
+      lastModified: englishUpdated,
       changeFrequency: 'monthly' as const,
       priority: path === '/en' ? 0.85 : 0.75,
       alternates: languageAlternates(Object.keys(ENGLISH_PAIRS).find(key => ENGLISH_PAIRS[key] === path) || ''),
@@ -75,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/contatti',
     ].map(path => ({
       url: `${SITE_URL}${path}`,
-      lastModified: marketingUpdated,
+      lastModified: serviziUpdated,
       changeFrequency: 'monthly' as const,
       priority: path.startsWith('/servizi/') ? 0.85 : 0.75,
       alternates: languageAlternates(path),
@@ -89,14 +96,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...SETTORI.map(settore => ({
       url: `${SITE_URL}/settori/${settore.slug}`,
-      lastModified: marketingUpdated,
+      lastModified: settoriUpdated,
       changeFrequency: 'monthly' as const,
       priority: 0.85,
       alternates: languageAlternates(`/settori/${settore.slug}`),
     })),
     ...SETTORI_EN.map(settore => ({
       url: `${SITE_URL}/en/settori/${settore.slug}`,
-      lastModified: marketingUpdated,
+      lastModified: englishUpdated,
       changeFrequency: 'monthly' as const,
       priority: 0.75,
       alternates: languageAlternates(`/settori/${settore.slug}`),
