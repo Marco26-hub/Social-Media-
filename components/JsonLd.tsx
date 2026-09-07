@@ -12,7 +12,10 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
     {
-      '@type': 'Organization',
+      // Un solo nodo con due tipi: e' una ditta individuale, non un gruppo.
+      // Prima erano due nodi legati da parentOrganization, che dichiarava due
+      // soggetti giuridici distinti, e nessuno dei due era completo.
+      '@type': ['Organization', 'ProfessionalService'],
       '@id': `${SITE_URL}/#organization`,
       name: TITOLARE.brand,
       legalName: TITOLARE.ragioneSociale,
@@ -27,17 +30,26 @@ const jsonLd = {
       image: { '@id': `${SITE_URL}/#logo` },
       description:
         'Servizi digitali integrati per PMI e professionisti: social media management, Blog SEO e GEO, siti, e-commerce, ricerca clienti B2B e compliance AI.',
-      alternateName: ['SWA', 'Social Web Automation'],
+      // Il dominio non contiene la parola «Web», che e' quella che distingue
+      // il marchio: esiste almeno un'altra impresa dello stesso settore in
+      // Italia sulla stringa «Social Automation». Qui si dichiara cio' che
+      // nessun omonimo puo' replicare: partita IVA, sede e dominio.
+      alternateName: ['SWA', 'SWA Social Web Automation', 'socialautomation.app'],
+      disambiguatingDescription:
+        `Ditta individuale di Marco Dibenedetto con sede a Cermenate, in provincia di Como, partita IVA IT${TITOLARE.partitaIva}. Da non confondere con altre imprese di denominazione simile attive in altre province italiane.`,
+      identifier: [
+        { '@type': 'PropertyValue', propertyID: 'VAT', name: 'Partita IVA', value: `IT${TITOLARE.partitaIva}` },
+      ],
+      priceRange: '€€',
+      currenciesAccepted: 'EUR',
+      knowsLanguage: ['it', 'en'],
       sameAs: [
         'https://www.instagram.com/socialwebautomation/',
         'https://www.facebook.com/profile.php?id=61592835840985',
       ],
-      founder: {
-        '@type': 'Person',
-        name: 'Marco Dibenedetto',
-      },
+      founder: { '@id': `${SITE_URL}/#marco-dibenedetto` },
+      employee: { '@id': `${SITE_URL}/#marco-dibenedetto` },
       vatID: `IT${TITOLARE.partitaIva}`,
-      taxID: TITOLARE.codiceFiscale,
       email: TITOLARE.email,
       telephone: TITOLARE.telefono,
       address: {
@@ -90,8 +102,10 @@ const jsonLd = {
               '@type': 'UnitPriceSpecification',
               price: PREZZO_SCHEMA[0],
               priceCurrency: 'EUR',
-              unitText: 'MONTH',
               valueAddedTaxIncluded: false,
+              unitCode: 'MON',
+              billingDuration: 1,
+              billingIncrement: 1,
             },
             itemOffered: {
               '@type': 'Service',
@@ -114,8 +128,10 @@ const jsonLd = {
               '@type': 'UnitPriceSpecification',
               price: PREZZO_SCHEMA[1],
               priceCurrency: 'EUR',
-              unitText: 'MONTH',
               valueAddedTaxIncluded: false,
+              unitCode: 'MON',
+              billingDuration: 1,
+              billingIncrement: 1,
             },
             itemOffered: {
               '@type': 'Service',
@@ -138,8 +154,10 @@ const jsonLd = {
               '@type': 'UnitPriceSpecification',
               price: '29.90',
               priceCurrency: 'EUR',
-              unitText: 'MONTH',
               valueAddedTaxIncluded: false,
+              unitCode: 'MON',
+              billingDuration: 1,
+              billingIncrement: 1,
             },
             itemOffered: {
               '@type': 'Service',
@@ -213,37 +231,23 @@ const jsonLd = {
       },
     },
     {
-      // Tipo locale: dice ai motori che questa impresa sta in un posto preciso.
-      // Serve a non farla confondere con omonime di altre province, e a farla
-      // comparire nelle ricerche con intento locale del suo territorio.
-      '@type': 'ProfessionalService',
-      '@id': `${SITE_URL}/#impresa`,
-      name: 'Social Web Automation',
-      legalName: TITOLARE.ragioneSociale,
-      url: SITE_URL,
-      image: { '@id': `${SITE_URL}/#logo` },
-      parentOrganization: { '@id': `${SITE_URL}/#organization` },
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: 'Via Giuseppe Verdi 2B',
-        postalCode: '22072',
-        addressLocality: 'Cermenate',
-        addressRegion: 'CO',
-        addressCountry: 'IT',
-      },
-      email: TITOLARE.email,
-      telephone: TITOLARE.telefono,
-      vatID: `IT${TITOLARE.partitaIva}`,
-      priceRange: '€€',
-      currenciesAccepted: 'EUR',
-      areaServed: [
-        { '@type': 'AdministrativeArea', name: 'Provincia di Como' },
-        { '@type': 'AdministrativeArea', name: 'Città metropolitana di Milano' },
-        { '@type': 'AdministrativeArea', name: 'Provincia di Monza e della Brianza' },
-        { '@type': 'AdministrativeArea', name: 'Provincia di Varese' },
-        { '@type': 'Country', name: 'Italia' },
-      ],
+      // La persona che firma. Prima «founder» e «author» erano due stringhe
+      // scollegate: per un motore l'autore non era un'entita'.
+      '@type': 'Person',
+      '@id': `${SITE_URL}/#marco-dibenedetto`,
+      name: 'Marco Dibenedetto',
+      url: `${SITE_URL}/autore/marco-dibenedetto`,
+      jobTitle: 'Titolare',
+      worksFor: { '@id': `${SITE_URL}/#organization` },
       knowsLanguage: ['it', 'en'],
+      knowsAbout: [
+        'Gestione social media per PMI',
+        'SEO e Generative Engine Optimization',
+        'Automazione dei processi aziendali',
+        'Assistenti telefonici AI',
+        'AI Act e trasparenza nell’uso dell’intelligenza artificiale',
+      ],
+      sameAs: ['https://www.instagram.com/socialwebautomation/'],
     },
     {
       '@type': 'WebSite',

@@ -48,7 +48,7 @@ export default function ContattiPage() {
         name: title,
         description,
         inLanguage: 'it-IT',
-        about: { '@id': `${SITE_URL}/#impresa` },
+        about: { '@id': `${SITE_URL}/#organization` },
       },
       {
         '@type': 'BreadcrumbList',

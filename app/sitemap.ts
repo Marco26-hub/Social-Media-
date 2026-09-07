@@ -102,6 +102,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: languageAlternates(`/settori/${settore.slug}`),
     })),
     {
+      url: `${SITE_URL}/autore/marco-dibenedetto`,
+      lastModified: marketingUpdated,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
       url: `${SITE_URL}/chi-siamo`,
       lastModified: marketingUpdated,
       changeFrequency: 'monthly',

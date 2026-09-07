@@ -18,6 +18,9 @@ export type BlogArticleData = {
   tempo_lettura_min: number | null
   url_pubblicato?: string | null
   data_pubblicazione?: string | null
+  // Data di ultima revisione, distinta dalla pubblicazione: senza, il motore
+  // legge l'articolo come mai aggiornato.
+  updated_at?: string | null
 }
 
 // jsonb dal DB può arrivare come stringa o oggetto: normalizza.
@@ -43,6 +46,7 @@ export function normalizeArticle(row: Record<string, unknown>): BlogArticleData 
     tempo_lettura_min: (row.tempo_lettura_min as number) ?? null,
     url_pubblicato: (row.url_pubblicato as string) ?? null,
     data_pubblicazione: (row.data_pubblicazione as string) ?? null,
+    updated_at: (row.updated_at as string) ?? null,
   }
 }
 
@@ -72,24 +76,23 @@ export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
     // Una persona con nome e pagina, non un marchio: e' il segnale che i motori
     // di risposta leggono come esperienza diretta, e coincide con quello che
     // dice /chi-siamo — «una persona con nome, cognome e partita IVA».
-    author: { '@type': 'Person', name: a.autore, url: `${SITE_URL}/chi-siamo`, jobTitle: 'Titolare, Social Web Automation' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'Social Web Automation',
-      ...(siteUrl ? {
-        url: siteUrl.replace(/\/$/, ''),
-        logo: {
-          '@type': 'ImageObject',
-          url: `${siteUrl.replace(/\/$/, '')}/brand/swa-logo-official.png`,
-        },
-      } : {}),
-    },
+    // Riferimenti al grafo del layout invece di nodi duplicati: l'autore e
+    // l'editore sono gia' definiti li' per esteso, con @id.
+    author: { '@id': `${SITE_URL}/#marco-dibenedetto` },
+    publisher: { '@id': `${SITE_URL}/#organization` },
     keywords: a.keywords_target.join(', '),
     inLanguage: 'it-IT',
     ...(image ? { image } : {}),
     ...(a.data_pubblicazione ? { datePublished: a.data_pubblicazione } : {}),
-    ...(a.data_pubblicazione ? { dateModified: a.data_pubblicazione } : {}),
+    // dateModified era una copia di datePublished: al motore l'articolo
+    // risultava mai aggiornato. Se il record porta una data di modifica si usa
+    // quella, altrimenti resta la pubblicazione.
+    ...(a.updated_at || a.data_pubblicazione ? { dateModified: a.updated_at || a.data_pubblicazione } : {}),
     isPartOf: { '@type': 'Blog', '@id': `${siteUrl?.replace(/\/$/, '') || ''}/blog#blog` },
+    isAccessibleForFree: true,
+    ...(a.tempo_lettura_min ? { timeRequired: `PT${a.tempo_lettura_min}M` } : {}),
+    // Indica al motore quali blocchi sono adatti a essere letti ad alta voce.
+    speakable: { '@type': 'SpeakableSpecification', cssSelector: ['h1', 'h2 + p'] },
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
   }]
   if (a.faq.length) {
