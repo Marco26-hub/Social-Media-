@@ -238,6 +238,42 @@ lasciare codice morto: si rifa in mezz'ora quando serve.
 finanziato dalla Regione e una comunicazione ingannevole. Il costo di un corso
 resta comunque deducibile per l'impresa, e quello si puo dire.
 
+### Verticale imprese di pulizia — stato reale
+
+Il progetto Housekeeping (`/Users/md/REPORT PULIZIE SRL`, repo `Marco26-hub/Housekeeping`)
+**non e' un prodotto in vendita**: e' la build di riferimento con cui SWA impacchetta
+il servizio da vendere — sito, modulo di intervento e pannello di gestione insieme.
+Sul sito pubblico ne parlano `/servizi/gestione-lavorazioni` e le pagine di settore.
+
+Il branch `swa-rebrand` toglie il marchio del cliente e mette quello SWA, ma **non e'
+mergiato apposta**: `netlify.toml` sta dentro lo stesso repo e la landing del cliente
+potrebbe essere costruita da `main`. Prima di mergiare va verificato chi costruisce cosa.
+
+**Da chiudere prima di mostrarlo a un potenziale cliente:**
+
+1. Le sigle `TBC` sono rimaste dove il testo non diceva "Blondes": `public/manifest.webmanifest`
+   (`"short_name": "TBC Report"`, che e' l'etichetta sotto l'icona sul telefono),
+   `app/layout.tsx`, `app/login/LoginForm.tsx`, `public/housekeeping/grazie.html`, i due PDF
+   del cliente in `public/housekeeping/`, e `tests/e2e_go_live.py:41` che **certifica** quel
+   marchio come corretto.
+2. Il modulo di contatto posta su `formsubmit.co` verso un indirizzo cablato nell'HTML di
+   tutte e sette le lingue. Oggi e' corretto (i lead sono nostri); il giorno in cui il sito
+   va a un cliente l'indirizzo deve diventare configurabile, e il passaggio dei dati
+   personali da un relay di terze parti va dichiarato nella sua privacy policy.
+
+**Difetti del prodotto emersi dal fact-check, da girare a chi lo sviluppa:**
+
+- `components/OfflineBanner.tsx` dice all'operatore che "le modifiche verranno sincronizzate
+  automaticamente": non e' vero. Offline restano dati, note e anomalie; spunte, firme e foto
+  richiedono la linea, e `lib/offline-queue.ts` non e' importato da nessuna parte.
+- `app/(app)/reports/new/page.tsx` precompila `time_in` con l'orologio del **server**
+  (server action): in produzione su UTC l'ora iniziale in Italia sbaglia di 1-2 ore.
+- La condivisione WhatsApp non scrive niente in `report_sends`, mentre email e Telegram si.
+- Il prodotto e' tarato su pulizie e housekeeping: le 63 voci, i codici anomalia e le
+  diciture del PDF ("Report Pulizia Giornaliero"). Venderlo a un altro mestiere significa
+  riscriverli, ed e' una lavorazione a preventivo — cosi' e' scritto sulla pagina degli
+  elettricisti, dopo che una prima versione lo dava per gia' pronto.
+
 ### Aperto — da fare
 
 1. **Sezione portfolio "come lavoriamo"**: i media ci sono gia in DB —
