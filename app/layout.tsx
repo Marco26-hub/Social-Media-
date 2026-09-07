@@ -1,9 +1,19 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import JsonLd from '@/components/JsonLd'
 import CookieBanner from '@/components/CookieBanner'
 import MetaPixel from '@/components/MetaPixel'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
+
+// Il colore della barra del browser segue il tema: chiaro il fondo carta,
+// scuro il verde notte. Prima non era dichiarato e su mobile restava bianco
+// anche con il sito in tema notte.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f8f5' },
+    { media: '(prefers-color-scheme: dark)', color: '#0d1512' },
+  ],
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

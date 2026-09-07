@@ -216,13 +216,13 @@ export default function WithdrawalForm() {
           <label>Categoria del contratto<select value={category} onChange={event => setCategory(event.target.value)}>{categories.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
           <label>Stato della prestazione<select value={executionStatus} onChange={event => setExecutionStatus(event.target.value)}>{executionStatuses.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
         </div>
-        <label>Nome e cognome<input value={fullName} onChange={event => setFullName(event.target.value)} required minLength={3} maxLength={160} autoComplete="name" placeholder="Mario Rossi" /></label>
+        <label>Nome e cognome<input value={fullName} onChange={event => setFullName(event.target.value)} required minLength={3} maxLength={160} autoComplete="name" placeholder="Mario Rossi…" /></label>
         <div className={styles.fieldRow}>
-          <label>Email per la ricevuta<input type="email" value={email} onChange={event => setEmail(event.target.value)} required maxLength={254} autoComplete="email" placeholder="mario@email.it" /></label>
-          <label>Ripeti email<input type="email" value={emailConfirm} onChange={event => setEmailConfirm(event.target.value)} required maxLength={254} autoComplete="email" placeholder="mario@email.it" /></label>
+          <label>Email per la ricevuta<input type="email" inputMode="email" spellCheck={false} value={email} onChange={event => setEmail(event.target.value)} required maxLength={254} autoComplete="email" placeholder="mario@email.it…" /></label>
+          <label>Ripeti email<input type="email" inputMode="email" spellCheck={false} value={emailConfirm} onChange={event => setEmailConfirm(event.target.value)} required maxLength={254} autoComplete="email" placeholder="mario@email.it…" /></label>
         </div>
         <div className={styles.fieldRow}>
-          <label>Riferimento del contratto<input value={contractReference} onChange={event => setContractReference(event.target.value)} required minLength={3} maxLength={180} placeholder="Ordine, fattura o ID contratto" /></label>
+          <label>Riferimento del contratto<input value={contractReference} onChange={event => setContractReference(event.target.value)} required minLength={3} maxLength={180} spellCheck={false} autoComplete="off" placeholder="Es. ORD-2026-0148…" /></label>
           <label>Data di conclusione<input type="date" value={contractDate} onChange={event => setContractDate(event.target.value)} required max={maxDate} /></label>
         </div>
 

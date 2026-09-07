@@ -113,7 +113,7 @@ export default function EnglishPricingPage() {
               </p>
               <p className={styles.setup}>{offer.setup}</p>
               <ul>{offer.features.map(feature => <li key={feature}><Check size={15} aria-hidden="true" /> {feature}</li>)}</ul>
-              <Link className={styles.primary} href={offer.href}>{offer.cta} <ArrowRight size={15} /></Link>
+              <Link className={styles.primary} href={offer.href}>{offer.cta} <ArrowRight size={15} aria-hidden="true" /></Link>
               <p className={styles.note}>VAT excluded. Scope and eligibility confirmed before delivery.</p>
             </article>
           ))}

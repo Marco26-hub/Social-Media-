@@ -62,14 +62,14 @@ export default function EnglishServicesPage() {
     <main className={styles.main}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}>
-        <div><p className={styles.eyebrow}>Eleven distinct capabilities</p><h1>One service map, with clear boundaries.</h1><p className={styles.heroLead}>Use social and Blog to build awareness, SEO + GEO to improve discovery, Web to convert, B2B research to find opportunities and compliance to operate responsibly.</p><div className={styles.actions}><Link className={styles.primary} href="/en/pricing">Compare offers <ArrowRight size={16} /></Link><Link className={styles.secondary} href="/servizi">Italian details</Link></div></div>
+        <div><p className={styles.eyebrow}>Eleven distinct capabilities</p><h1>One service map, with clear boundaries.</h1><p className={styles.heroLead}>Use social and Blog to build awareness, SEO + GEO to improve discovery, Web to convert, B2B research to find opportunities and compliance to operate responsibly.</p><div className={styles.actions}><Link className={styles.primary} href="/en/pricing">Compare offers <ArrowRight size={16} aria-hidden="true" /></Link><Link className={styles.secondary} href="/servizi">Italian details</Link></div></div>
         <aside className={styles.heroPanel}><strong>What remains deliberately separate.</strong><ol><li>SEO + GEO means search work plus clearer pages for AI answer tools.</li><li>Blog SEO + GEO produces 12 monthly articles.</li><li>B2B research supplies verified companies, not guaranteed sales.</li><li>Included work is confirmed before activation.</li></ol></aside>
       </section>
       <section className={styles.section}>
         <div className={styles.sectionHeading}><p className={styles.eyebrow}>Service catalogue</p><h2>Choose the operational result you need now.</h2></div>
-        <div className={styles.grid}>{services.map(service => { const Icon = service.icon; return <article id={service.id} className={styles.service} key={service.id}><Icon size={25} /><h3>{service.title}</h3><p>{service.text}</p><Link href="/en/pricing">Scope and pricing <ArrowRight size={15} /></Link></article> })}</div>
+        <div className={styles.grid}>{services.map(service => { const Icon = service.icon; return <article id={service.id} className={styles.service} key={service.id}><Icon size={25} aria-hidden="true" /><h3>{service.title}</h3><p>{service.text}</p><Link href="/en/pricing">Scope and pricing <ArrowRight size={15} aria-hidden="true" /></Link></article> })}</div>
       </section>
-      <section className={styles.closing}><div><p className={styles.eyebrow}>Not sure where to start?</p><h2>Identify the current constraint first.</h2><p>A short assessment can separate visibility, conversion and commercial research problems before work begins.</p></div><Link className={styles.primary} href="/en/pricing">View packages <ArrowRight size={16} /></Link></section>
+      <section className={styles.closing}><div><p className={styles.eyebrow}>Not sure where to start?</p><h2>Identify the current constraint first.</h2><p>A short assessment can separate visibility, conversion and commercial research problems before work begins.</p></div><Link className={styles.primary} href="/en/pricing">View packages <ArrowRight size={16} aria-hidden="true" /></Link></section>
     </main>
   )
 }

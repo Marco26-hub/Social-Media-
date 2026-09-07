@@ -97,3 +97,14 @@
     @apply block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide;
   }
 }
+
+
+/* Interazione tattile.
+   touch-action: manipulation toglie i 300 ms di attesa che il browser lascia
+   per il doppio tocco di zoom; il colore dell'evidenziazione al tocco era
+   quello di sistema, un blu che non c'entra con la palette. Lo zoom della
+   pagina resta attivo: qui si disabilita solo il doppio tocco. */
+a, button, summary, [role='button'], input[type='checkbox'], input[type='radio'], label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(15, 107, 79, .16);
+}

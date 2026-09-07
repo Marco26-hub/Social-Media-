@@ -69,7 +69,7 @@ export default function EnglishHomePage() {
           <h1>Social, SEO, websites and B2B opportunities. One operating method.</h1>
           <p className={styles.heroLead}>We connect visibility, organic discovery, conversion and prospect research. AI speeds up production; human review protects accuracy, brand coherence and decisions.</p>
           <div className={styles.actions}>
-            <Link className={styles.primary} href="/en/services">Explore services <ArrowRight size={16} /></Link>
+            <Link className={styles.primary} href="/en/services">Explore services <ArrowRight size={16} aria-hidden="true" /></Link>
             <Link className={styles.secondary} href="/en/pricing">View pricing</Link>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function EnglishHomePage() {
         <div className={styles.grid}>
           {services.map(service => {
             const Icon = service.icon
-            return <article className={styles.service} key={service.title}><Icon size={24} /><h3>{service.title}</h3><p>{service.text}</p><Link href={service.href}>Details <ArrowRight size={15} /></Link></article>
+            return <article className={styles.service} key={service.title}><Icon size={24} aria-hidden="true" /><h3>{service.title}</h3><p>{service.text}</p><Link href={service.href}>Details <ArrowRight size={15} aria-hidden="true" /></Link></article>
           })}
         </div>
       </section>
@@ -115,7 +115,7 @@ export default function EnglishHomePage() {
 
       <section className={styles.closing}>
         <div><p className={styles.eyebrow}>Choose the right starting point</p><h2>Start with the bottleneck, then connect the system.</h2><p>We can begin with one service and add the next only when it supports a real business need.</p></div>
-        <Link className={styles.primary} href="/en/pricing">Compare offers <ArrowRight size={16} /></Link>
+        <Link className={styles.primary} href="/en/pricing">Compare offers <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
     </main>
   )

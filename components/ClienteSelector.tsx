@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Building2, ChevronDown } from 'lucide-react'
 import {
   readActiveClienteId,
@@ -11,7 +10,6 @@ import {
 } from '@/lib/tenant/client'
 
 export default function ClienteSelector() {
-  const router = useRouter()
   const [rows, setRows] = useState<ClienteAccessRow[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -56,7 +54,7 @@ export default function ClienteSelector() {
   function changeCliente(clienteId: string) {
     writeActiveClienteId(clienteId)
     setActiveId(clienteId)
-    router.refresh()
+    window.location.reload()
   }
 
   return (

@@ -76,3 +76,11 @@
 
 /* Bersagli tattili: sotto i 24px minimi. Cambia l'area, non il testo. */
 .breadcrumbs a, .page a:not(p a):not(li a):not(small a) { padding-block: 4px; }
+
+/* La testata e' fissa a 68px: senza questo, un'ancora porta il titolo sotto
+   la barra e il lettore atterra a meta' del blocco. Il menu inglese punta a
+   sette ancore di questo tipo. */
+.page [id] { scroll-margin-top: 88px; }
+
+/* Titoli senza righe orfane di una parola sola. */
+.page h1, .page h2, .page h3 { text-wrap: balance; }

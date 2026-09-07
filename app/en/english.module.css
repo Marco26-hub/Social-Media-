@@ -172,6 +172,7 @@
   margin: 24px 0 0 !important;
   color: var(--ink) !important;
   font: 500 44px/1 Georgia, 'Times New Roman', serif !important;
+  font-variant-numeric: tabular-nums;
 }
 .priceLabel { flex-basis: 100%; margin-bottom: 6px; color: var(--muted); font: 700 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
 .setup { margin: 8px 0 0 !important; color: var(--green) !important; font-size: 11px !important; font-weight: 800; }
@@ -269,3 +270,8 @@
   .sectionHeading h2, .closing h2 { font-size: 32px; }
   .heroLead { font-size: 16px; }
 }
+
+/* La testata e' fissa a 68px: senza questo, un'ancora porta il titolo sotto
+   la barra e il lettore atterra a meta' del blocco. Il menu inglese punta a
+   sette ancore di questo tipo. */
+.shell [id] { scroll-margin-top: 88px; }

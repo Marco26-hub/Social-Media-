@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { Cliente } from '@/lib/types'
 
 export const ACTIVE_CLIENTE_COOKIE = 'active_cliente_id'
+export const ACTIVE_CLIENTE_EVENT = 'swa-active-cliente-change'
 
 export function readActiveClienteId() {
   if (typeof document === 'undefined') return null
@@ -16,6 +17,7 @@ export function readActiveClienteId() {
 
 export function writeActiveClienteId(clienteId: string) {
   document.cookie = `${ACTIVE_CLIENTE_COOKIE}=${encodeURIComponent(clienteId)}; path=/; max-age=31536000; SameSite=Lax`
+  window.dispatchEvent(new CustomEvent(ACTIVE_CLIENTE_EVENT, { detail: { clienteId } }))
 }
 
 // Cliente di default quando non c'è ancora una scelta (nessun cookie). "Per ora"
@@ -51,6 +53,15 @@ export function useActiveClienteId() {
       })
       .catch(() => setLoading(false))
   }, [clienteId])
+
+  useEffect(() => {
+    const syncFromCookie = () => {
+      setClienteId(readActiveClienteId())
+      setLoading(false)
+    }
+    window.addEventListener(ACTIVE_CLIENTE_EVENT, syncFromCookie)
+    return () => window.removeEventListener(ACTIVE_CLIENTE_EVENT, syncFromCookie)
+  }, [])
 
   return { clienteId, loading }
 }

@@ -216,3 +216,8 @@ h1 .eyebrow, .hero h1 .eyebrow {
 .finalCtaProva { min-height: 24px; display: inline-flex; align-items: center; color: #d5eee5; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
 .finalCtaProva:hover { color: #fff; }
 @media (max-width: 900px) { .finalCtaAzioni { justify-items: flex-start; } }
+
+/* La testata e' fissa a 68px: senza questo, un'ancora porta il titolo sotto
+   la barra e il lettore atterra a meta' del blocco. Il menu inglese punta a
+   sette ancore di questo tipo. */
+.page [id] { scroll-margin-top: 88px; }

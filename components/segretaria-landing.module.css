@@ -530,3 +530,15 @@
 .pagina .citta .vaiAlSettore,
 .pagina .gemella .vaiAlSettore { color: #ff9b82; }
 :global(html[data-theme='dark']) .pagina .vaiAlSettore { color: #ff9b82; }
+
+/* Chi ha chiesto meno movimento al sistema operativo non deve vederne: qui
+   c'erano venticinque regole animate senza alcuna condizione. Le transizioni restano, ridotte a un
+   battito, cosi' lo stato cambia comunque in modo percepibile. */
+@media (prefers-reduced-motion: reduce) {
+  .pagina, .pagina *, .pagina *::before, .pagina *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

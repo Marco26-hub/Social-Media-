@@ -41,7 +41,7 @@ export default function EnglishMethodPage() {
           <h1>A clear method for turning goals into verifiable work.</h1>
           <p className={styles.heroLead}>Every cycle moves through assessment, direction, production and improvement. The process reduces scattered decisions and keeps human control over the work that reaches customers.</p>
           <div className={styles.actions}>
-            <a className={styles.primary} href={EN_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Discuss your project <ArrowRight size={16} /></a>
+            <a className={styles.primary} href={EN_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Discuss your project <ArrowRight size={16} aria-hidden="true" /></a>
             <Link className={styles.secondary} href="/en/pricing">Compare packages</Link>
           </div>
         </div>
@@ -53,7 +53,7 @@ export default function EnglishMethodPage() {
         <div className={styles.grid}>
           {EN_METHOD_STEPS.map((step, index) => {
             const Icon = icons[index]
-            return <article className={styles.service} key={step.n}><Icon size={24} /><h3>{step.n}. {step.title}</h3><p>{step.text}</p><ul className={styles.checkList}>{step.items.map(item => <li key={item}><Check size={14} />{item}</li>)}</ul></article>
+            return <article className={styles.service} key={step.n}><Icon size={24} aria-hidden="true" /><h3>{step.n}. {step.title}</h3><p>{step.text}</p><ul className={styles.checkList}>{step.items.map(item => <li key={item}><Check size={14} aria-hidden="true" />{item}</li>)}</ul></article>
           })}
         </div>
       </section>
@@ -75,7 +75,7 @@ export default function EnglishMethodPage() {
         </div>
       </section>
 
-      <section className={styles.closing}><div><p className={styles.eyebrow}>First assessment</p><h2>Start from the real operating constraint.</h2><p>Channels, goals and available resources determine the most sustainable starting point.</p></div><a className={styles.primary} href={EN_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Talk to us <ArrowRight size={16} /></a></section>
+      <section className={styles.closing}><div><p className={styles.eyebrow}>First assessment</p><h2>Start from the real operating constraint.</h2><p>Channels, goals and available resources determine the most sustainable starting point.</p></div><a className={styles.primary} href={EN_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Talk to us <ArrowRight size={16} aria-hidden="true" /></a></section>
     </main>
   )
 }

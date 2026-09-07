@@ -119,3 +119,15 @@
 /* Testi di servizio a 10-11px su bianco: erano fra 3,7 e 4,5:1. */
 .securityLine, .fieldHelp, .secure { color: #5c6b63 !important; }
 .sectionLabel { color: #0f6b4f !important; }
+
+/* Chi ha chiesto meno movimento al sistema operativo non deve vederne: qui
+   c'erano la rotella di caricamento senza alcuna condizione. Le transizioni restano, ridotte a un
+   battito, cosi' lo stato cambia comunque in modo percepibile. */
+@media (prefers-reduced-motion: reduce) {
+  .page, .page *, .page *::before, .page *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

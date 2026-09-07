@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PLATFORMS, PLATFORM_LIST, type PlatformKey, type FormatoConfig } from '@/lib/social-config'
 import { demoContenuti } from '@/lib/demo-data'
 import { Sparkles, Loader2, Check, X, ArrowLeft, Calendar, Eye, ChevronRight, ImagePlus, Link2, Trash2, UploadCloud } from 'lucide-react'
@@ -126,6 +126,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [prodotti, setProdotti] = useState<Array<{ id: string; product_id: string; nome_prodotto: string; link_img_1: string | null; link_img_2: string | null; link_img_3: string | null }>>([])
   const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
+  const clienteIdRef = useRef(clienteId)
   const gen = useGeneration()
   const activeBusinessCategory = resolveBusinessCategory(businessCategory, {
     sector: brandProfile?.settore,
@@ -139,27 +140,56 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   }, [])
 
   useEffect(() => {
+    clienteIdRef.current = clienteId
+    setBusinessCategory('auto')
+    setBrandProfile(null)
+    setBrandProfileLoading(true)
+    setRecenti([])
+    setProdotti([])
+    setStates({})
+    setErrors({})
+    setWarnings({})
+    setPending(null)
+    setPendingBatch(false)
+    setSelectedFormats(new Set())
+    setCrossCanali(new Set())
+    setQuality('auto')
+    setProdottoNome('')
+    setAssetUrl('')
+    setAssets(previous => {
+      previous.forEach(asset => {
+        if (asset.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(asset.previewUrl)
+      })
+      return []
+    })
+  }, [clienteId])
+
+  useEffect(() => {
+    let cancelled = false
     async function load() {
       if (demo) {
-        setRecenti(demoContenuti.filter(c => c.canale === config.canaleDb).slice(0, 5))
+        if (!cancelled) setRecenti(demoContenuti.filter(c => c.canale === config.canaleDb).slice(0, 5))
         return
       }
       if (loadingCliente) return
       const params = new URLSearchParams({ canale: config.canaleDb, limit: '5' })
       const response = await fetch(`/api/data/calendario?${params.toString()}`)
       const data = response.ok ? await response.json() as Contenuto[] : []
-      setRecenti(data)
+      if (!cancelled) setRecenti(data)
     }
-    load()
+    load().catch(() => { if (!cancelled) setRecenti([]) })
+    return () => { cancelled = true }
   }, [demo, config.canaleDb, clienteId, loadingCliente])
 
   useEffect(() => {
+    let cancelled = false
     if (loadingCliente) return
     if (demo) {
       setBrandProfile({ brand_name: 'SILKinCOM', settore: 'Fashion/Abbigliamento' })
       setBrandProfileLoading(false)
       return
     }
+    setBrandProfile(null)
     setBrandProfileLoading(true)
     fetch('/api/data/brand')
       .then(async response => {
@@ -170,23 +200,29 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
         return response.json() as Promise<BrandProfileSummary | null>
       })
       .then(profile => {
+        if (cancelled) return
         setBrandProfile(profile)
         setErrors(prev => { const next = { ...prev }; delete next.brand_profile; return next })
       })
       .catch(error => {
+        if (cancelled) return
         setBrandProfile(null)
         setErrors(prev => ({ ...prev, brand_profile: (error as Error).message }))
       })
-      .finally(() => setBrandProfileLoading(false))
+      .finally(() => { if (!cancelled) setBrandProfileLoading(false) })
+    return () => { cancelled = true }
   }, [demo, clienteId, loadingCliente])
 
   // Catalogo prodotti (per usarne le foto già caricate senza ri-uploadarle).
   useEffect(() => {
+    let cancelled = false
     if (demo) return
+    setProdotti([])
     fetch('/api/data/prodotti')
       .then(r => r.ok ? r.json() : [])
-      .then(d => setProdotti(Array.isArray(d) ? d : []))
-      .catch(() => setProdotti([]))
+      .then(d => { if (!cancelled) setProdotti(Array.isArray(d) ? d : []) })
+      .catch(() => { if (!cancelled) setProdotti([]) })
+    return () => { cancelled = true }
   }, [demo, clienteId])
 
   // Usa le foto di un prodotto del catalogo come media del contenuto (+ nome prodotto).
@@ -228,6 +264,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     if (!files?.length) return
     try {
       if (!clienteId) throw new Error('Cliente non selezionato')
+      const uploadClienteId = clienteId
       setUploading(true)
       const form = new FormData()
       form.append('cliente_id', clienteId)
@@ -235,6 +272,10 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       selectedFiles.forEach(file => form.append('files', file))
       const previews = new Map(selectedFiles.map(file => [file.name, URL.createObjectURL(file)]))
       const data = await uploadAssetsToStorage(form)
+      if (clienteIdRef.current !== uploadClienteId) {
+        previews.forEach(preview => URL.revokeObjectURL(preview))
+        return
+      }
       // name prefillato dal filename pulito (l'utente può correggerlo).
       const uploaded = (data.assets || []).map(asset => ({ ...asset, previewUrl: previews.get(asset.name) || asset.url, name: prettyName(asset.name) }))
       setAssets(prev => [...prev, ...uploaded].slice(0, MAX_POST_ASSETS))
@@ -281,6 +322,8 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   }
 
   async function genera(f: FormatoConfig, series?: ContentSeries) {
+    const generationClienteId = clienteId
+    if (!demo && clienteIdRef.current !== generationClienteId) return
     setPending(null)
     setErrors(prev => {
       const next = { ...prev }
@@ -335,6 +378,10 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       estMs: isBlog ? 35000 : 22000,
     })
 
+    // La richiesta conserva correttamente il cliente originale nel backend, ma
+    // il suo esito non deve aggiornare la UI se nel frattempo l'admin ha cambiato workspace.
+    if (clienteIdRef.current !== generationClienteId) return
+
     if (result.ok) {
       setStates(s => ({ ...s, [f.id]: 'success' }))
       const response = result.data as { warning?: string; warnings?: string[] } | undefined
@@ -374,7 +421,9 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     const formats = scelti.map(format => format.formato)
     const seriesTheme = prodottoNome.trim()
       || `${brandProfile?.brand_name || 'Brand'}: ${activeBusinessCategory.description}`
+    const batchClienteId = clienteId
     for (const [index, f] of scelti.entries()) {
+      if (clienteIdRef.current !== batchClienteId) break
       await genera(f, { id: seriesId, position: index + 1, total: scelti.length, formats, theme: seriesTheme })
     }
     setSelectedFormats(new Set())

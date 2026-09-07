@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { isDemo } from '@/lib/demo'
+import { readActiveClienteId, writeActiveClienteId } from '@/lib/tenant/client'
 
 type FetchState<T> = { data: T; loading: boolean }
 
@@ -8,8 +9,7 @@ let _clienteId: string | null = null
 function getClienteId() {
   if (typeof document === 'undefined') return ''
   if (_clienteId) return _clienteId
-  const found = document.cookie.split('; ').find(r => r.startsWith('active_cliente_id='))
-  _clienteId = found ? decodeURIComponent(found.split('=')[1]) : ''
+  _clienteId = readActiveClienteId() || ''
   return _clienteId
 }
 
@@ -40,5 +40,5 @@ export function useApi<T>(url: string, demoFallback: T, deps: unknown[] = []): F
 export function readClienteId() { return getClienteId() }
 export function writeClienteId(id: string) {
   _clienteId = id
-  document.cookie = `active_cliente_id=${encodeURIComponent(id)}; path=/; max-age=31536000; SameSite=Lax`
+  writeActiveClienteId(id)
 }

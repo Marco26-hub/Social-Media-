@@ -97,7 +97,7 @@ export default function PacchettiPage() {
         <h1>Cinque soluzioni chiare. Una configurazione su misura quando serve.</h1>
         <p className={base.lead}>Presenza e Crescita gestiscono i social. Blog costruisce copertura organica, Web realizza il punto di conversione e il Pilot B2B qualifica nuove aziende in target.</p>
         <div className={base.heroActions}>
-          <a href="#confronto" className={base.primary}>Confronta le soluzioni <ArrowRight size={17} /></a>
+          <a href="#confronto" className={base.primary}>Confronta le soluzioni <ArrowRight size={17} aria-hidden="true" /></a>
           <a href={wa} target="_blank" rel="noopener noreferrer" className={base.secondary}>Aiutami a scegliere</a>
         </div>
       </section>
@@ -120,8 +120,8 @@ export default function PacchettiPage() {
               <div className={styles.fit}><strong>È adatto a te se</strong><p>{plan.idealePer}</p></div>
               {plan.includeDa && <p className={styles.includes}>Include tutto di {plan.includeDa}, piu:</p>}
               <p className={styles.listLabel}>Nel canone trovi</p>
-              <ul>{plan.features.map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
-              <Link href={`/register?piano=${plan.slug}`}>{plan.cta}<ArrowRight size={16} /></Link>
+              <ul>{plan.features.map(feature => <li key={feature}><CircleCheck size={15} aria-hidden="true" />{feature}</li>)}</ul>
+              <Link href={`/register?piano=${plan.slug}`}>{plan.cta}<ArrowRight size={16} aria-hidden="true" /></Link>
               <p className={styles.note}>Setup incluso · IVA esclusa · rinnovo mensile</p>
             </article>
           ))}
@@ -134,8 +134,8 @@ export default function PacchettiPage() {
             <p className={styles.description}>Piano editoriale SEO + GEO con pubblicazione sul blog collegato o consegna pronta per CMS.</p>
             <div className={styles.fit}><strong>È adatto a te se</strong><p>Vuoi rispondere alle ricerche dei clienti con continuità, senza gestire internamente il calendario editoriale.</p></div>
             <p className={styles.listLabel}>Nel canone trovi</p>
-            <ul>{BLOG_SERVICE.features.map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
-            <Link href="/acquista?servizio=blog-seo"><Newspaper size={16} /> Attiva Blog <ArrowRight size={16} /></Link>
+            <ul>{BLOG_SERVICE.features.map(feature => <li key={feature}><CircleCheck size={15} aria-hidden="true" />{feature}</li>)}</ul>
+            <Link href="/acquista?servizio=blog-seo"><Newspaper size={16} aria-hidden="true" /> Attiva Blog <ArrowRight size={16} aria-hidden="true" /></Link>
             <p className={styles.note}>IVA esclusa · rinnovo mensile</p>
           </article>
 
@@ -147,8 +147,8 @@ export default function PacchettiPage() {
             <p className={styles.description}>Il canone a partire da 19,90 €/mese riguarda una landing page semplice. Siti più articolati, e-commerce e funzioni avanzate vengono quotati prima dell’avvio.</p>
             <div className={styles.fit}><strong>È adatto a te se</strong><p>Ti serve una landing o un sito aziendale collegato a campagne, contenuti e analytics.</p></div>
             <p className={styles.listLabel}>Nel progetto trovi</p>
-            <ul>{['Architettura, UX e design responsive', 'Landing page o sito web base', 'SEO tecnica, sitemap e dati strutturati', 'Moduli, analytics e integrazioni essenziali', 'Collegamento a social e campagne', 'E-commerce su preventivo separato'].map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
-            <Link href="/acquista?servizio=web-commerce"><Globe2 size={16} /> Attiva Sito Web <ArrowRight size={16} /></Link>
+            <ul>{['Architettura, UX e design responsive', 'Landing page o sito web base', 'SEO tecnica, sitemap e dati strutturati', 'Moduli, analytics e integrazioni essenziali', 'Collegamento a social e campagne', 'E-commerce su preventivo separato'].map(feature => <li key={feature}><CircleCheck size={15} aria-hidden="true" />{feature}</li>)}</ul>
+            <Link href="/acquista?servizio=web-commerce"><Globe2 size={16} aria-hidden="true" /> Attiva Sito Web <ArrowRight size={16} aria-hidden="true" /></Link>
             <p className={styles.note}>IVA esclusa · dominio, e-commerce e servizi esterni separati</p>
           </article>
 
@@ -160,8 +160,8 @@ export default function PacchettiPage() {
             <p className={styles.description}>Ricerca e qualificazione con fonti pubbliche tracciabili. Nessun invio automatico e nessuna promessa di appuntamenti o vendite.</p>
             <div className={styles.fit}><strong>È adatto a te se</strong><p>Hai un’offerta B2B chiara e vuoi una base commerciale ordinata prima di investire tempo nel contatto.</p></div>
             <p className={styles.listLabel}>Nel Pilot trovi</p>
-            <ul>{['Profilo cliente ideale e criteri di esclusione', 'Ricerca fino a 30 aziende coerenti', 'Fonti pubbliche consultabili', 'Priorità e motivazione per ogni azienda', 'Rimozione di duplicati e profili fuori target', 'Consegna strutturata per valutazione o CRM'].map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
-            <Link href="/acquista?servizio=lead-pilot"><Target size={16} /> Attiva il Pilot B2B <ArrowRight size={16} /></Link>
+            <ul>{['Profilo cliente ideale e criteri di esclusione', 'Ricerca fino a 30 aziende coerenti', 'Fonti pubbliche consultabili', 'Priorità e motivazione per ogni azienda', 'Rimozione di duplicati e profili fuori target', 'Consegna strutturata per valutazione o CRM'].map(feature => <li key={feature}><CircleCheck size={15} aria-hidden="true" />{feature}</li>)}</ul>
+            <Link href="/acquista?servizio=lead-pilot"><Target size={16} aria-hidden="true" /> Attiva il Pilot B2B <ArrowRight size={16} aria-hidden="true" /></Link>
             <p className={styles.note}>IVA esclusa · servizio una tantum</p>
           </article>
         </div>
@@ -177,10 +177,10 @@ export default function PacchettiPage() {
 
       <section className={styles.custom}>
         <div><span>Configurazione personalizzata</span><h2>Più brand, volumi elevati o integrazioni.</h2><p>Costruiamo un perimetro dedicato quando le cinque soluzioni standard non rappresentano il processo reale dell’azienda.</p></div>
-        <a href={wa} target="_blank" rel="noopener noreferrer">Progettiamo la soluzione <ArrowRight size={17} /></a>
+        <a href={wa} target="_blank" rel="noopener noreferrer">Progettiamo la soluzione <ArrowRight size={17} aria-hidden="true" /></a>
       </section>
       <section className={`${base.section} ${base.faqLayout}`}><div className={base.sectionHeading}><p className={base.eyebrow}>FAQ pacchetti</p><h2>Costi e condizioni in chiaro.</h2></div><div className={base.faqList}>{faq.map(item => <details key={item.q}><summary>{item.q}<span>+</span></summary><p>{item.a}</p></details>)}</div></section>
-      <section className={base.finalCta}><div><p className={base.eyebrow}>Prima di scegliere</p><h2>Valutiamo insieme canali e obiettivi.</h2><p>Ti indichiamo la soluzione sostenibile o il perimetro personalizzato necessario.</p></div><a href={wa} target="_blank" rel="noopener noreferrer">Richiedi una valutazione <ArrowRight size={17} /></a></section>
+      <section className={base.finalCta}><div><p className={base.eyebrow}>Prima di scegliere</p><h2>Valutiamo insieme canali e obiettivi.</h2><p>Ti indichiamo la soluzione sostenibile o il perimetro personalizzato necessario.</p></div><a href={wa} target="_blank" rel="noopener noreferrer">Richiedi una valutazione <ArrowRight size={17} aria-hidden="true" /></a></section>
       <PublicFooter />
       <FloatingNavigation />
     </main>
