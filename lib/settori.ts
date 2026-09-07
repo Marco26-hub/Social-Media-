@@ -1,7 +1,4 @@
-import { BLOG_SERVICE } from '@/lib/blog-service'
-import { PACCHETTI } from '@/lib/pacchetti'
-import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
-import { STANDALONE_SERVICES } from '@/lib/standalone-services'
+import { PREZZI } from '@/lib/prezzi-ingresso'
 
 // Landing verticali di settore.
 //
@@ -10,31 +7,10 @@ import { STANDALONE_SERVICES } from '@/lib/standalone-services'
 // ("marketing per autosaloni"): stesso lavoro, raccontato dal problema del
 // settore invece che dal nome del prodotto.
 //
-// I prezzi NON si scrivono qui: si leggono dalle sorgenti uniche dei servizi,
-// altrimenti un ritocco di listino lascerebbe indietro quattro pagine.
+// I prezzi arrivano da lib/prezzi-ingresso.ts, che li deriva dalle sorgenti
+// uniche dei servizi: nessuna pagina scrive una cifra a mano.
 
-function canoneStandalone(slug: string): string {
-  const servizio = STANDALONE_SERVICES.find(s => s.slug === slug)
-  if (!servizio) throw new Error(`Servizio standalone sconosciuto: ${slug}`)
-  return `${servizio.displayPrice} ${servizio.cadenceLabel}`
-}
-
-function canoneFamiglia(id: 'agenda' | 'voce'): string {
-  const famiglia = SEGRETARIA_LISTINO.find(f => f.id === id)
-  if (!famiglia) throw new Error(`Famiglia sconosciuta: ${id}`)
-  return `da ${Math.min(...famiglia.piani.map(p => p.canone))} € al mese`
-}
-
-/** Prezzi d'ingresso, formattati una volta sola per tutte le pagine. */
-export const PREZZI = {
-  presenza: `${PACCHETTI[0].prezzo} al mese`,
-  crescita: `${PACCHETTI[1].prezzo} al mese`,
-  web: `${canoneStandalone('web-commerce')}`,
-  blog: `${BLOG_SERVICE.displayPrice} al mese`,
-  b2b: `${canoneStandalone('lead-pilot')}`,
-  voce: canoneFamiglia('voce'),
-  agenda: canoneFamiglia('agenda'),
-} as const
+export { PREZZI }
 
 export type BloccoSettore = { title: string; text: string }
 export type PassoSettore = BloccoSettore & { number: string }

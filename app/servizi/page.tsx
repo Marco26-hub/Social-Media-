@@ -3,6 +3,9 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import {
   ArrowRight,
+  Zap,
+  Clapperboard,
+  ClipboardCheck,
   Check,
   CircleCheck,
   FileCheck2,
@@ -26,6 +29,7 @@ import {
 import { PACCHETTI } from '@/lib/pacchetti'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { TITOLARE } from '@/lib/legal-config'
+import { prezzoIngresso } from '@/lib/prezzi-ingresso'
 import { SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicHeader from '@/components/PublicHeader'
@@ -100,7 +104,6 @@ const SERVICES = [
   {
     id: 'social',
     href: '/servizi/gestione-social-media',
-    number: '01',
     icon: Megaphone,
     label: 'Gestione social multicanale',
     title: 'Una presenza costante, coordinata e sotto controllo.',
@@ -114,12 +117,12 @@ const SERVICES = [
       'Portale di approvazione e revisioni tracciate',
       'Programmazione, pubblicazione e report',
     ],
+    strumento: { nome: 'Portale di approvazione', beneficio: 'Vedi i contenuti nel formato reale del canale e approvi dal telefono: niente file avanti e indietro via email.' },
     outcome: 'Meno attività operative interne e una comunicazione riconoscibile ogni settimana.',
   },
   {
     id: 'seo-geo',
     href: '/servizi/seo-geo',
-    number: '02',
     icon: ScanSearch,
     label: 'SEO e GEO',
     title: 'Contenuti progettati per essere trovati e compresi.',
@@ -133,12 +136,12 @@ const SERVICES = [
       'Analisi della citabilità nei sistemi AI',
       'Monitoraggio e priorità di miglioramento',
     ],
+    strumento: { nome: 'Punteggio di citabilità', beneficio: 'Ogni blocco viene misurato su cinque criteri e torna con le correzioni gia scritte, invece di un elenco di buoni consigli.' },
     outcome: 'Una base organica più solida, utile nel tempo e misurabile senza promesse di ranking.',
   },
   {
     id: 'blog-seo',
     href: BLOG_SERVICE.path,
-    number: '03',
     icon: Newspaper,
     label: BLOG_SERVICE.name,
     title: 'Dodici articoli al mese, con una direzione editoriale precisa.',
@@ -152,12 +155,12 @@ const SERVICES = [
       'Revisione umana prima della pubblicazione',
       'Blog collegato o consegna pronta per CMS',
     ],
+    strumento: { nome: 'Dodici articoli pronti', beneficio: 'Arrivano con title, meta description, FAQ e dati strutturati: si pubblicano sul blog collegato o si esportano per il CMS.' },
     outcome: 'Un patrimonio editoriale continuo che amplia copertura organica e autorevolezza.',
   },
   {
     id: 'web',
     href: '/servizi/siti-e-commerce',
-    number: '04',
     icon: Globe2,
     label: 'Siti web e landing',
     title: 'Un’esperienza digitale costruita per il contatto.',
@@ -171,12 +174,31 @@ const SERVICES = [
       'Analytics, eventi e tracciamento',
       'Integrazione con social, ADS e CRM',
     ],
+    strumento: { nome: 'Il sito diventa tuo', beneficio: 'Dopo dodici mesi di canone la proprieta passa a te, con moduli e statistiche di percorso gia collegati.' },
     outcome: 'Un punto di arrivo credibile per trasformare attenzione, traffico e campagne in richieste.',
+  },
+  {
+    id: 'video-produzione',
+    href: '/servizi/video-produzione',
+    icon: Clapperboard,
+    label: 'Riprese video in azienda',
+    title: 'La materia prima girata dove lavori, non cercata negli archivi.',
+    description:
+      'Veniamo in sede con fotografo, luci, microfoni e ottiche e giriamo a blocchi: dalla stessa sessione escono il girato verticale per i social e gli scatti per sito e annunci.',
+    included: [
+      'Sopralluogo su spazi, luce e orari',
+      'Riprese a blocchi, mezza giornata o giornata intera',
+      'Un volto davanti alla camera, se serve',
+      'Scatti fotografici dalla stessa sessione',
+      'Montaggio e sottotitoli nel piano attivo',
+      'Materiale riutilizzabile per settimane',
+    ],
+    strumento: { nome: 'Una sessione, settimane di uscite', beneficio: 'Mezza giornata di riprese alimenta il calendario per settimane: non si organizza un set per ogni contenuto.' },
+    outcome: 'Contenuti girati dove lavori davvero, invece di materiale generico preso altrove.',
   },
   {
     id: 'lead-b2b',
     href: '/servizi/ricerca-clienti-b2b',
-    number: '05',
     icon: Target,
     label: 'Ricerca Clienti B2B',
     title: 'Aziende in target, fonti verificabili e priorità operative.',
@@ -190,12 +212,12 @@ const SERVICES = [
       'Pulizia di duplicati e profili fuori target',
       'Consegna strutturata per valutazione o CRM',
     ],
+    strumento: { nome: 'Lista con la fonte a fianco', beneficio: 'Ogni azienda porta il motivo e la fonte pubblica da cui l’abbiamo presa: si controlla in un minuto invece di fidarsi.' },
     outcome: 'Una base commerciale ordinata per decidere chi approfondire, senza confondere una lista con una vendita garantita.',
   },
   {
     id: 'segretaria-ai',
     href: '/servizi/segretaria-telefonica-ai',
-    number: '06',
     icon: PhoneCall,
     label: 'Segretaria telefonica AI',
     title: 'Risponde al telefono, fissa appuntamenti e riempie l’agenda.',
@@ -209,12 +231,12 @@ const SERVICES = [
       'Messaggi WhatsApp in bozza, approvati prima dell’invio',
       'Consenso, opt-out e tracciamento delle risposte',
     ],
+    strumento: { nome: 'Registro delle chiamate', beneficio: 'Trascrizione ed esito di ogni telefonata: si legge in trenta secondi invece di riascoltare la segreteria.' },
     outcome: 'Meno chiamate perse e meno orari vuoti, senza che nulla raggiunga un cliente senza il tuo controllo.',
   },
   {
     id: 'agenda-whatsapp',
     href: '/servizi/agenda-clienti-whatsapp',
-    number: '07',
     icon: CalendarClock,
     label: 'Agenda, clienti e WhatsApp',
     title: 'I clienti che non tornano non sono persi, sono da richiamare.',
@@ -228,12 +250,31 @@ const SERVICES = [
       'Risposte e appuntamenti recuperati tracciati',
       '1000 invii inclusi al mese',
     ],
+    strumento: { nome: 'Messaggi pronti in bozza', beneficio: 'Ogni giorno trovi chi ricontattare con il motivo, e il messaggio gia scritto: resta solo da approvare.' },
     outcome: 'Il valore che hai già in archivio torna a produrre appuntamenti, senza che nulla parta alle tue spalle.',
+  },
+  {
+    id: 'gestione-lavorazioni',
+    href: '/servizi/gestione-lavorazioni',
+    icon: ClipboardCheck,
+    label: 'Sito e gestione lavorazioni',
+    title: 'Il lavoro si chiude sul posto, l’ufficio approva.',
+    description:
+      'Per chi lavora fuori sede: il sito che porta le richieste, l’applicazione con cui la squadra chiude l’intervento sul telefono e il pannello da cui l’ufficio approva o contesta.',
+    included: [
+      'Checklist gia pronta per tipo di intervento',
+      'Foto e note sulle anomalie dal telefono',
+      'Ore calcolate da entrata, uscita e pausa',
+      'Firma dell’operatore e del cliente',
+      'PDF inviato via email o Telegram',
+      'Pannello con storico, filtri e approvazioni',
+    ],
+    strumento: { nome: 'Rapporto firmato sul posto', beneficio: 'Il cliente riceve il PDF prima che la squadra risalga in furgone: niente fogli da ricopiare in ufficio.' },
+    outcome: 'Una contestazione si chiude con un documento, non con una telefonata da ricostruire.',
   },
   {
     id: 'automazione',
     href: '/servizi/automazione-gestionali',
-    number: '08',
     icon: Workflow,
     label: 'Automazione e gestionali',
     title: 'I sistemi che già usi, collegati e senza passaggi manuali.',
@@ -247,6 +288,7 @@ const SERVICES = [
       'Registro delle esecuzioni e degli errori',
       'Perimetro e costi definiti prima di partire',
     ],
+    strumento: { nome: 'Registro delle esecuzioni', beneficio: 'Ogni passaggio automatico lascia traccia, errori compresi: un guasto notturno si rilancia dal punto che ha ceduto.' },
     outcome: 'Gli stessi dati smettono di essere reinseriti a mano, e ogni passaggio automatico resta tracciabile.',
   },
 ]
@@ -395,12 +437,16 @@ export default function ServiziPage() {
         </div>
 
         <div className={styles.serviceRows}>
-          {SERVICES.map(({ id, href, number, icon: Icon, label, title, description, included, outcome }) => (
+          {SERVICES.map(({ id, href, icon: Icon, label, title, description, included, strumento, outcome }, i) => (
             <article key={id} id={id} className={styles.serviceRow}>
               <div className={styles.serviceIdentity}>
-                <span>{number}</span>
+                <span>{String(i + 1).padStart(2, '0')}</span>
                 <Icon size={25} aria-hidden="true" />
                 <p>{label}</p>
+                {/* Il prezzo d'ingresso sta sulla scheda: senza, la prima
+                    domanda di ogni richiesta e' "quanto costa". Il valore
+                    arriva dalle sorgenti uniche, non e' scritto qui. */}
+                <p className={styles.serviceEntryPrice}>{prezzoIngresso(id)}</p>
               </div>
               <div className={styles.serviceBody}>
                 <h3>{title}</h3>
@@ -408,8 +454,15 @@ export default function ServiziPage() {
                 <ul>
                   {included.map(item => <li key={item}><Check size={15} aria-hidden="true" /> {item}</li>)}
                 </ul>
+                <div className={styles.strumento}>
+                  <Zap size={16} aria-hidden="true" />
+                  <span><strong>{strumento.nome}:</strong> {strumento.beneficio}</span>
+                </div>
                 <div className={styles.outcome}><Target size={17} aria-hidden="true" /><span><strong>Risultato atteso:</strong> {outcome}</span></div>
-                <Link href={href} className={site.outlineButton}>Pagina del servizio <ArrowRight size={16} aria-hidden="true" /></Link>
+                <div className={styles.serviceLinks}>
+                  <Link href={href} className={site.outlineButton}>Pagina del servizio <ArrowRight size={16} aria-hidden="true" /></Link>
+                  <Link href="/pacchetti" className={styles.listinoLink}>Listino completo <ArrowRight size={14} aria-hidden="true" /></Link>
+                </div>
               </div>
             </article>
           ))}
