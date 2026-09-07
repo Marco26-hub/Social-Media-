@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Clapperboard } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
+import { VIDEO_CONSEGNA, VIDEO_ESCLUSO, VIDEO_PACCHETTI, euroVideo } from '@/lib/video-listino'
 import { SITE_URL } from '@/lib/site-config'
 
 // Riprese in azienda: l’anello che mancava. Fino a ieri montavamo il materiale
@@ -29,7 +30,7 @@ const config = {
   serviceName: 'Riprese video in azienda',
   serviceType: 'Produzione video e fotografica in sede per contenuti social',
   promise: 'Materiale girato bene, pensato per il verticale e tagliato sui formati che pubblichiamo. Le riprese chiudono il cerchio: prima montavamo quello che avevi, ora produciamo anche la materia prima.',
-  priceNote: 'Preventivo su misura: dipende da mezza giornata o giornata intera, dalla presenza di un volto e dal numero di location. Definito prima delle riprese, senza sorprese in fattura.',
+  priceNote: 'Quattro canoni mensili, da 5 a 20 video al mese, distribuiti sulle settimane. Il prezzo comprende lo spostamento nell’area concordata; pedaggi, parcheggi e trasferte fuori area sono esclusi e indicati prima. Allestimenti particolari o più location si quotano dopo il sopralluogo.',
   offerHighlight: 'Settimane di contenuti in mezza giornata',
   primaryCtaLabel: 'Parliamo delle riprese',
   primaryCtaHref: 'https://wa.me/393477196603?text=Ciao%21%20Vorrei%20parlare%20di%20riprese%20video%20in%20azienda%20con%20Social%20Web%20Automation.',
@@ -63,7 +64,7 @@ const config = {
     { q: 'Il montaggio è compreso nel prezzo delle riprese?', a: 'Montaggio, sottotitoli e pubblicazione fanno parte del piano social attivo, non delle riprese. Le riprese producono la materia prima; il piano la trasforma in uscite programmate. Si sommano, non si sostituiscono: senza un piano attivo il girato resta materiale che qualcuno deve montare.' },
     { q: 'Che attrezzatura portate?', a: 'Fotografo, luci, microfoni dedicati, stabilizzazione e ottiche. La differenza in un video aziendale non la fa la risoluzione della fotocamera: la fanno luce controllata, audio pulito e inquadrature stabili, che sono esattamente le tre cose che mancano quando si gira in fretta con quello che c’è.' },
     { q: 'Escono anche le foto o solo i video?', a: 'Dalla stessa sessione escono anche gli scatti fotografici, ed è uno dei motivi per cui conviene: le immagini servono ai post, alle copertine e al sito, e organizzare un secondo giorno con un fotografo costa più della mezza giornata in cui si fa tutto insieme.' },
-    { q: 'Quanto costa una giornata di riprese?', a: 'Le riprese sono a preventivo, perché il costo dipende da durata, numero di location, presenza di un volto professionista e complessità dell’allestimento. Il preventivo arriva dopo il sopralluogo e prima delle riprese: nessuna lavorazione parte senza che il costo sia stato approvato.' },
+    { q: 'Quanto costano le riprese?', a: 'Ci sono quattro pacchetti, e il prezzo scende man mano che i video aumentano: Start 5 video al mese a 590 €, Silver 10 a 1.090 €, Gold 15 a 1.490 €, Platinum 20 a 1.790 €. Sono canoni mensili: si disdicono con il preavviso scritto nel contratto. Sono da 118 a 89 € a video, contro gli 800 € da cui parte un singolo video promozionale su misura: la differenza è che si gira a lotto, cinque video per sessione, non uno alla volta. Prezzi IVA esclusa, spostamento nell’area concordata compreso. Allestimenti particolari, più location o un volto professionista si quotano dopo il sopralluogo.' },
     { q: 'I video restano miei?', a: 'Sì, il girato e le foto prodotte sono tuoi. Li usi dove vuoi — social, sito, annunci, presentazioni — anche se un domani cambi fornitore. Quello che paghi è materiale che resta, non un accesso che scade con l’abbonamento.' },
   ],
   related: [
@@ -72,6 +73,23 @@ const config = {
     { href: '/pacchetti', label: 'Piani social' },
     { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
   ],
+  // Era l'unico servizio senza un numero: diceva «su preventivo» mentre il
+  // costo per video e' noto e stabile, perche' si gira a lotto.
+  tabella: {
+    occhiello: 'Pacchetti',
+    h2: 'Quanto costa girare, a pacchetto',
+    intro:
+      VIDEO_CONSEGNA + ' Una sessione produce cinque video: è per questo che il costo per video sta molto sotto quello di un video promozionale su misura, che in Italia parte da 800 €. Canoni mensili, IVA esclusa, spostamento nell’area concordata compreso. ' + VIDEO_ESCLUSO,
+    caption: 'Pacchetti mensili di produzione video verticale: video consegnati, sessioni di ripresa e canone',
+    colonne: ['Pacchetto', 'Prezzo', 'Che cosa ricevi'],
+    righe: VIDEO_PACCHETTI.map(p => [
+      p.nome,
+      euroVideo(p),
+      `${p.video} video al mese in ${p.sessioni} ${p.sessioni === 1 ? 'sessione di ripresa' : 'sessioni di ripresa'} · ${(p.prezzo / p.video).toFixed(0)} € a video · ${p.perChi.toLowerCase()}`,
+    ]),
+  },
+  startingPrice: String(VIDEO_PACCHETTI[0].prezzo),
+  priceCadence: '/mese',
 } satisfies MarketingDetailConfig
 
 export default function VideoProduzionePage() { return <MarketingDetailPage config={config} /> }

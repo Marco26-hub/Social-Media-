@@ -1,7 +1,9 @@
 import { BLOG_SERVICE } from '@/lib/blog-service'
+import { VIDEO_COMPRESO, VIDEO_PACCHETTI } from '@/lib/video-listino'
 
 export type StandaloneService = {
   slug: 'blog-seo' | 'web-commerce' | 'lead-pilot' | 'agenda-clienti' | 'tutto-in-uno' | 'voce-base' | 'voce-attivita' | 'voce-azienda'
+    | 'video-start' | 'video-silver' | 'video-gold' | 'video-platinum'
   name: string
   shortName: string
   amountCents: number
@@ -151,6 +153,22 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
       'Assistenza prioritaria secondo proposta',
     ],
   },
+  // Riprese video: quattro pacchetti una tantum, generati dal listino video
+  // cosi' che prezzo e contenuti non possano divergere da quelli pubblicati.
+  // Sono canoni mensili, come il blog e il sito: il fornitore li quota al mese.
+  ...VIDEO_PACCHETTI.map(v => ({
+    slug: `video-${v.id}` as StandaloneService['slug'],
+    name: `Riprese video — ${v.nome}`,
+    shortName: `Video ${v.nome}`,
+    amountCents: v.prezzo * 100,
+    displayPrice: `€${v.prezzo.toLocaleString('it-IT')}`,
+    billingMode: 'subscription' as const,
+    cadenceLabel: 'al mese',
+    description: `${v.video} video verticali al mese girati in azienda, in ${v.sessioni} ${v.sessioni === 1 ? 'sessione di ripresa' : 'sessioni di ripresa'}.`,
+    onboarding:
+      'Dopo il pagamento fissiamo il sopralluogo, decidiamo insieme le fasce orarie di ripresa e prepariamo gli script. Pedaggi, parcheggi e trasferte fuori dall’area concordata restano esclusi e vengono indicati prima.',
+    features: VIDEO_COMPRESO,
+  })),
 ]
 
 export const STANDALONE_SERVICE_SLUGS = new Set(STANDALONE_SERVICES.map(service => service.slug))

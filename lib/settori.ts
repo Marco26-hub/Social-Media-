@@ -56,7 +56,7 @@ export const SETTORI: Settore[] = [
     tipoServizio: 'Contenuti, sito, visibilità e risposta telefonica per concessionarie e autosaloni',
     promessa:
       'Materiale sul parco prodotto ogni settimana e nessuna richiesta lasciata squillare a vuoto. Sul numero di vendite non prendiamo impegni: dipendono da prezzo, stock e trattativa.',
-    notaPrezzi: `Riprese in salone su preventivo. Gestione social ${PREZZI.presenza} o ${PREZZI.crescita}. Sito ${PREZZI.web}. Assistente telefonico ${PREZZI.voce}. Prezzi IVA esclusa.`,
+    notaPrezzi: `Riprese in salone da ${PREZZI.video}. Gestione social ${PREZZI.presenza} o ${PREZZI.crescita}. Sito ${PREZZI.web}. Assistente telefonico ${PREZZI.voce}. Prezzi IVA esclusa.`,
     segnali: ['Riprese girate in piazzale', 'Richieste raccolte a salone chiuso', 'Ogni pezzo montato passa da te'],
     risultati: [
       { title: 'Cosa esce da una sessione', text: 'Una sessione di riprese in piazzale è il magazzino di più settimane, non di un veicolo solo: alimenta i 16 contenuti mensili del piano Presenza. Il fotografo porta luci e ottiche e gira mentre il salone lavora.' },
@@ -170,7 +170,7 @@ export const SETTORI: Settore[] = [
     tipoServizio: 'Contenuti, video, sito e risposta telefonica per agenzie immobiliari',
     promessa:
       'Ogni immobile esce con materiale suo e ogni richiesta di visita trova risposta anche fuori orario. Su incarichi e compravendite non firmiamo garanzie: contano mercato, prezzo e proprietà.',
-    notaPrezzi: `Riprese su preventivo. Gestione social ${PREZZI.presenza} o ${PREZZI.crescita}. Sito ${PREZZI.web}. Assistente telefonico ${PREZZI.voce}. Prezzi IVA esclusa.`,
+    notaPrezzi: `Riprese da ${PREZZI.video}. Gestione social ${PREZZI.presenza} o ${PREZZI.crescita}. Sito ${PREZZI.web}. Assistente telefonico ${PREZZI.voce}. Prezzi IVA esclusa.`,
     segnali: ['Sopralluogo con luce naturale', 'Richieste raccolte mentre siete in visita', 'Il calendario lo approvate voi'],
     risultati: [
       { title: 'Come si presenta una casa', text: 'Il sopralluogo fotografico è un passaggio unico che produce 2 formati: verticale per i social e scatti orizzontali per annunci e sito. Stanze in sequenza, luce naturale e i dettagli che una scheda non mostra.' },

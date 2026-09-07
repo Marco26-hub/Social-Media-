@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, CalendarClock, CircleCheck, Globe2, Newspaper, PhoneCall, Target } from 'lucide-react'
+import { ArrowRight, CalendarClock, CircleCheck, Clapperboard, Globe2, Newspaper, PhoneCall, Target } from 'lucide-react'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
+import { VIDEO_COMPRESO, VIDEO_CONSEGNA, VIDEO_PACCHETTI, euroVideo } from '@/lib/video-listino'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { SITE_URL } from '@/lib/site-config'
 import base from '../content-page.module.css'
@@ -188,6 +189,29 @@ export default function PacchettiPage() {
             <ul>{AGENDA.voci.slice(0, 6).map(v => <li key={v}><CircleCheck size={15} aria-hidden="true" />{v}</li>)}</ul>
             <Link href="/servizi/agenda-clienti-whatsapp"><CalendarClock size={16} aria-hidden="true" /> Come funziona l’agenda <ArrowRight size={16} aria-hidden="true" /></Link>
             <p className={styles.note}>IVA esclusa · nessun invio senza la tua approvazione</p>
+          </article>
+
+
+          {/* Riprese video: quattro pacchetti a lotto. Era l'unico servizio del
+              listino senza un numero, e il costo per video e' invece noto. */}
+          <article className={`${styles.card} ${styles.videoCard}`}>
+            <div className={styles.top}><div><span className={styles.audience}>Chi vuole materiale girato, non foto d’archivio</span><h2>Riprese video in azienda</h2></div><span className={styles.badge}>Canone</span></div>
+            <p className={styles.result}>Una sessione al mese produce cinque video: il materiale di tutte le settimane.</p>
+            <p className={styles.price}><span className={styles.priceLabel}>a partire da</span><strong>€{VIDEO_PACCHETTI[0].prezzo}</strong><span>/mese</span></p>
+            <p className={styles.setup}>{VIDEO_PACCHETTI[0].video} video al mese in {VIDEO_PACCHETTI[0].sessioni} sessione di ripresa</p>
+            <p className={styles.description}>Veniamo a girare dove lavori, con fotografo, luci e ottiche. Quattro canoni mensili, da 5 a 20 video al mese. {VIDEO_CONSEGNA}</p>
+            <div className={styles.fit}><strong>È adatto a te se</strong><p>Pubblichi ogni settimana e non vuoi che si veda che le immagini sono comprate da un archivio.</p></div>
+            <p className={styles.listLabel}>In ogni video trovi</p>
+            <ul>{VIDEO_COMPRESO.slice(0, 6).map(v => <li key={v}><CircleCheck size={15} aria-hidden="true" />{v}</li>)}</ul>
+            <div className={styles.videoScala}>
+              {VIDEO_PACCHETTI.map(v => (
+                <Link key={v.id} href={`/acquista?servizio=video-${v.id}`}>
+                  <b>{v.nome}</b> {v.video} video/mese · {euroVideo(v)}
+                </Link>
+              ))}
+            </div>
+            <Link href="/servizi/video-produzione"><Clapperboard size={16} aria-hidden="true" /> Come si gira in azienda <ArrowRight size={16} aria-hidden="true" /></Link>
+            <p className={styles.note}>IVA esclusa · rinnovo mensile · spostamento nell’area concordata compreso</p>
           </article>
 
           <article className={`${styles.card} ${styles.leadCard}`}>

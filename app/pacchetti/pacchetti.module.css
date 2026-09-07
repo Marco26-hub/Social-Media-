@@ -31,6 +31,13 @@
 .agendaCard { border-color:#7fa8c9; }
 .voceCard > a { background:#0f6b4f; color:white; }
 .agendaCard > a { background:#0f6b4f; color:white; }
+.videoCard { border-color:#b98fc9; }
+.videoCard > a { background:#0f6b4f; color:white; }
+/* La scala dei quattro pacchetti, compatta dentro la scheda. */
+.videoScala { display:grid; gap:1px; margin:0 0 22px; border:1px solid var(--line); background:var(--line); }
+.videoScala a { display:flex; flex-wrap:wrap; align-items:center; gap:0 8px; padding:11px 12px; background:var(--surface); color:var(--muted); font-size:12px; text-decoration:none; }
+.videoScala a:hover { background:var(--mint); color:var(--ink); }
+.videoScala b { color:var(--ink); }
 .leadCard { grid-column:1 / -1; border-color:#9ba9d5; }
 .leadCard ul { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .leadCard > a { background:#314a8a; border-color:#314a8a; color:white; }

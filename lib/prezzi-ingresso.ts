@@ -2,6 +2,7 @@ import { BLOG_SERVICE } from '@/lib/blog-service'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { STANDALONE_SERVICES } from '@/lib/standalone-services'
+import { VIDEO_DA } from '@/lib/video-listino'
 
 // Prezzi d’ingresso, derivati una volta sola dalle sorgenti uniche dei servizi.
 //
@@ -44,6 +45,8 @@ export const PREZZI = {
   b2b: canoneStandalone('lead-pilot'),
   voce: canoneMinimo('voce'),
   agenda: canoneMinimo('agenda'),
+  // I pacchetti video hanno un prezzo pubblico dal settembre 2026.
+  video: VIDEO_DA,
 } as const
 
 /**
@@ -59,7 +62,7 @@ export const PREZZO_INGRESSO: Record<string, string> = {
   'lead-b2b': convenzioneItaliana(`${STANDALONE_SERVICES.find(s => s.slug === 'lead-pilot')!.displayPrice} una tantum`),
   'segretaria-ai': PREZZI.voce,
   'agenda-whatsapp': PREZZI.agenda,
-  'video-produzione': 'Su preventivo',
+  'video-produzione': VIDEO_DA,
   'gestione-lavorazioni': 'Su preventivo',
   automazione: 'Su preventivo',
   legale: '150 € / 30 minuti',

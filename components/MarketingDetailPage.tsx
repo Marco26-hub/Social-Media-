@@ -44,6 +44,9 @@ export type MarketingDetailConfig = {
   serviceType: string
   promise: string
   startingPrice?: string
+  /** Cadenza mostrata accanto al prezzo. Predefinita mensile; i servizi una
+   *  tantum devono dichiararlo, altrimenti il riquadro promette un canone. */
+  priceCadence?: string
   /** Posizione nel percorso in quattro passi — sito, social, telefono,
    *  agenda. Serve a far vedere al cliente che i servizi non sono un
    *  catalogo ma una sequenza, e dove si trova adesso. */
@@ -88,7 +91,10 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
   const articolo = articoloPerServizio(config.path)
   const pageUrl = `${SITE_URL}${config.path}`
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(isEnglish ? `Hello, I would like to discuss ${config.serviceName} by Social Web Automation.` : `Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Web Automation.`)}`
-  const priceCadence = isEnglish ? '/month' : '/mese'
+  // Non tutti i servizi sono a canone: le riprese video si pagano una volta,
+  // e scrivere «/mese» accanto a 590 € raccontava una cosa falsa.
+  const priceCadence = config.priceCadence
+    ?? (isEnglish ? '/month' : '/mese')
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
