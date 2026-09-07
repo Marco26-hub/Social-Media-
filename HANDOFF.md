@@ -68,6 +68,49 @@ della voce e della frase di apertura.
   nella griglia delle due pagine Segretaria, da sviluppare piu avanti.
 - **Admin del prodotto vocale**: integrazione ancora da decidere.
 
+### Voucher formazione — verifica fatta, esito negativo per ora
+
+Il titolare ricordava "una detrazione di circa 2.000 euro a dipendente". Il
+ricordo era giusto ma la misura non e una detrazione ed e regionale:
+
+**Formazione Continua — IV edizione, Regione Lombardia** (bando RLW12026053243,
+PR FSE+ 2021-2027). Domande dal 13/07/2026, **scade il 31/03/2027**. Voucher da
+**2.000 euro l'anno per lavoratore**, fino a **50.000 euro l'anno per impresa**.
+Beneficiari: imprese con sede operativa in Lombardia, lavoratori autonomi e
+liberi professionisti con domicilio fiscale in Lombardia, ditte individuali, ETS
+e fondazioni con attivita economica.
+
+**Perche non possiamo usarlo oggi.** Dall'Avviso (Allegato A, DDUO 8809/26),
+letto direttamente:
+
+- I corsi devono stare nel **Catalogo regionale** ed essere erogati da soggetti
+  iscritti alle **sezioni A o B dell'Albo regionale degli operatori accreditati**,
+  da universita lombarde o da fondazioni ITS, con numero definitivo di iscrizione
+  gia alla data di presentazione dell'offerta formativa.
+- *"E responsabilita dei soggetti di cui sopra programmare, gestire ed erogare i
+  percorsi formativi; pertanto, **non e ammessa la delega delle attivita**."*
+  Questa frase chiude la scorciatoia di appoggiarsi a un ente accreditato che
+  mette a catalogo un corso erogato da noi.
+- Anche i **docenti** devono avere i requisiti dell'accreditamento ed essere
+  registrati sul sistema SIUO.
+
+Essere avvocato e poter fare formazione non basta: l'accreditamento e un
+requisito amministrativo dell'ente, non professionale del docente.
+
+**Le strade, se un giorno si vuole percorrerle:** accreditarsi alle sezioni A o
+B dell'Albo; oppure far erogare il corso da un ente gia accreditato con il
+docente registrato sul SIUO, dove pero il voucher lo incassa l'ente e noi siamo
+pagati per la docenza.
+
+**Decisione del titolare, 7 settembre 2026: per ora si vende il corso senza
+riferimenti a incentivi.** Il componente che avevo preparato (con interruttore
+per passare al messaggio pieno una volta accreditati) e stato rimosso per non
+lasciare codice morto: si rifa in mezz'ora quando serve.
+
+**Regola che resta valida:** finche il corso non e a catalogo, scrivere che e
+finanziato dalla Regione e una comunicazione ingannevole. Il costo di un corso
+resta comunque deducibile per l'impresa, e quello si puo dire.
+
 ### Aperto — da fare
 
 1. **Sezione portfolio "come lavoriamo"**: i media ci sono gia in DB —
