@@ -76,6 +76,12 @@ La consulenza su AI Act e GDPR è svolta in collaborazione con lo Studio Legale 
 - Privacy: https://www.socialautomation.app/privacy
 - Termini: https://www.socialautomation.app/termini
 
+## Corpus completo
+
+- Contenuto integrale in un file solo: https://www.socialautomation.app/llms-full.txt
+  Comprende listino, pacchetti, piani dell'assistente telefonico, tutte le pagine
+  di settore con le relative domande frequenti e il testo degli articoli.
+
 ## Contatti
 
 - Email: swsdautomation@gmail.com

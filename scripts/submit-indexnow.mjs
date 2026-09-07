@@ -15,7 +15,7 @@ const paths = daRiga.length
   ? daRiga
   : [...(await (await fetch(`${siteUrl}/sitemap.xml`)).text()).matchAll(/<loc>([^<]+)<\/loc>/g)]
       .map(x => x[1].replace(siteUrl, ''))
-      .concat(['/llms.txt'])
+      .concat(['/llms.txt', '/llms-full.txt'])
 
 const payload = {
   host: new URL(siteUrl).host,
