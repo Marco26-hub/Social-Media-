@@ -37,7 +37,7 @@ const faq = [
 ]
 
 const comparisonRows = [
-  ['Canali social', '2', '3', '—', '—', '—'],
+  ['Canali social', '2', '2', '—', '—', '—'],
   ['Contenuti social mensili', '16', '24', '—', '—', '—'],
   ['Reel, Story o Short', '4', '6', '—', '—', '—'],
   ['Articoli SEO + GEO', '—', '1/mese', '12/mese', 'SEO tecnica', '—'],

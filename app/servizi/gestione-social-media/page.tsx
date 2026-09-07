@@ -3,7 +3,7 @@ import { Megaphone } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { SITE_URL } from '@/lib/site-config'
 
-const title = 'Gestione Social Media per PMI su 2 o 3 Canali | SWA'
+const title = 'Gestione Social Media per PMI su 2 Canali | SWA'
 const description = 'Servizio gestito di social media management per PMI: strategia, piano editoriale, copy, grafiche, Reel, approvazione, pubblicazione e report.'
 
 export const metadata: Metadata = {
@@ -46,7 +46,7 @@ const config = {
     { number: '04', title: 'Pubblicazione', text: 'Programmazione, controllo, report e ottimizzazione.' },
   ],
   faq: [
-    { q: 'Quanti social sono inclusi?', a: 'Il piano Presenza include 2 social coordinati; il piano Crescita ne include 3. I canali vengono scelti in base a pubblico, obiettivi e capacità di produrre materiali utili.' },
+    { q: 'Quanti social sono inclusi?', a: 'Presenza e Crescita includono 2 social coordinati; cambia il volume di contenuti, non il numero di canali. I canali vengono scelti in base a pubblico, obiettivi e capacità di produrre materiali utili.' },
     { q: 'Devo preparare io i contenuti?', a: 'No. Social Web Automation gestisce piano editoriale, copy e produzione prevista dal pacchetto. La collaborazione del cliente serve per informazioni, materiali originali e approvazioni.' },
     { q: 'I contenuti vengono pubblicati automaticamente?', a: 'La programmazione avviene solo dopo il flusso di controllo concordato. Il cliente può approvare e richiedere le revisioni incluse prima della pubblicazione.' },
     { q: 'La gestione dei messaggi è inclusa?', a: 'Il monitoraggio operativo di commenti e messaggi può essere inserito in una configurazione personalizzata. Nei piani standard il perimetro principale è produzione, approvazione, pubblicazione e report.' },
