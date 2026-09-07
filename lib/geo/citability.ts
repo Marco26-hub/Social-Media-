@@ -44,7 +44,10 @@ const DEFINITION_RE = /^[A-ZÀ-Ú][^.!?]{2,60}?\s+(è|sono|significa|rappresenta
 const QUANTIFIED_RE = /\d/
 // Pronomi/congiunzioni che tradiscono dipendenza dal contesto precedente.
 const DEPENDENT_START_RE = /^(esso|essa|questo|questa|questi|queste|ciò|ma\s|però|tuttavia|e\s|quindi\s|infatti\s|inoltre\s)/i
-const QUESTION_HEADING_RE = /^(cosa|come|perché|quando|dove|quali|qual è|cos'è)\b/i
+// `\b` in JS resta ancorato ai caratteri ASCII: dopo una vocale accentata non
+// esiste confine di parola, quindi "Perché ..." e "Qual è ..." non venivano mai
+// riconosciuti come domande e perdevano i punti di struttura a torto.
+const QUESTION_HEADING_RE = /^(cosa|come|perch[ée]|quando|dove|quali|qual\s+[èe]|cos'[èe]|quanto|chi|si può|posso|serve|devo)(?=[\s:?,]|$)/i
 // Statistiche: percentuali, valute, date/anni, conteggi con unità.
 const STAT_RE = /\d+([.,]\d+)?\s?%|\€\s?\d+|\$\s?\d+|\b(19|20)\d{2}\b|\b\d+([.,]\d+)?\s?(giorni|mesi|anni|ore|volte|utenti|clienti)\b/gi
 const FIRST_PARTY_RE = /(nella nostra esperienza|dal nostro (test|studio|sondaggio|caso)|abbiamo (analizzato|osservato|testato|raccolto)|i nostri clienti|secondo i nostri dati)/i
