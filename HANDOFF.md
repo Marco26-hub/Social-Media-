@@ -249,16 +249,20 @@ Il branch `swa-rebrand` toglie il marchio del cliente e mette quello SWA, ma **n
 mergiato apposta**: `netlify.toml` sta dentro lo stesso repo e la landing del cliente
 potrebbe essere costruita da `main`. Prima di mergiare va verificato chi costruisce cosa.
 
-**Da chiudere prima di mostrarlo a un potenziale cliente:**
+**Marchio: fatto.** Il branch `swa-rebrand` non contiene piu' ne' "The Blondes" ne'
+l'acronimo `TBC`. La seconda passata (`e0e8955`) ha preso cio' che la prima aveva mancato,
+perche' cercava il nome esteso e non la sigla: `short_name` del manifest — l'etichetta sotto
+l'icona sulla schermata iniziale del telefono — titolo iOS, logo della schermata di accesso e
+filigrana delle sette pagine di ringraziamento. Corretta anche l'asserzione in
+`tests/e2e_go_live.py`, che certificava il marchio del cliente come quello giusto: un test che
+difende l'errore e' peggio di nessun test. Rimosse le due brochure del cliente, che stavano sul
+nostro deploy senza essere referenziate da nessuna pagina.
 
-1. Le sigle `TBC` sono rimaste dove il testo non diceva "Blondes": `public/manifest.webmanifest`
-   (`"short_name": "TBC Report"`, che e' l'etichetta sotto l'icona sul telefono),
-   `app/layout.tsx`, `app/login/LoginForm.tsx`, `public/housekeeping/grazie.html`, i due PDF
-   del cliente in `public/housekeeping/`, e `tests/e2e_go_live.py:41` che **certifica** quel
-   marchio come corretto.
-2. Il modulo di contatto posta su `formsubmit.co` verso un indirizzo cablato nell'HTML di
-   tutte e sette le lingue. Oggi e' corretto (i lead sono nostri); il giorno in cui il sito
-   va a un cliente l'indirizzo deve diventare configurabile, e il passaggio dei dati
+**Da chiudere il giorno in cui il sito va a un cliente, non prima:**
+
+1. Il modulo di contatto posta su `formsubmit.co` verso un indirizzo cablato nell'HTML di tutte
+   e sette le lingue. Oggi e' corretto, perche' **il cliente e' SWA e i lead sono nostri**. Quando
+   il sito passa a un'impresa, l'indirizzo deve diventare configurabile e il passaggio dei dati
    personali da un relay di terze parti va dichiarato nella sua privacy policy.
 
 **Difetti del prodotto emersi dal fact-check, da girare a chi lo sviluppa:**
