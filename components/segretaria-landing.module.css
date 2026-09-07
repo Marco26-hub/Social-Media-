@@ -7,6 +7,8 @@
   /* Non si inverte al tema scuro: serve dove il fondo e' fisso
      (bianco, champagne, grigio chiaro) e il testo deve restare scuro. */
   --ink-fisso: #15231f;
+  /* Come --ink-fisso, per il testo secondario su superfici chiare fisse. */
+  --muted-fisso: #596762;
   --paper: #F7F8F5;
   --white: #FFFDF7;
   --muted: #5C6B63;
@@ -58,7 +60,7 @@
 .pagina :global(.opportunity-card) { align-items:flex-start; background:#f5f5f3; color:var(--ink-fisso); display:flex; gap:12px; justify-content:space-between; margin-top:10px; padding:15px; }
 .pagina :global(.opportunity-card span) { color:#b44531; font-size:11px; font-weight:900; text-transform:uppercase; }
 .pagina :global(.opportunity-card h3) { font-size:16px; line-height:1.2; margin-top:5px; }
-.pagina :global(.opportunity-card p) { color:var(--muted); font-size:12px; line-height:1.4; margin-top:4px; }
+.pagina :global(.opportunity-card p) { color:var(--muted-fisso); font-size:12px; line-height:1.4; margin-top:4px; }
 .pagina :global(.opportunity-card strong) { color:#198864; white-space:nowrap; }
 .pagina :global(.approve-button) { background:var(--coral); border:0; color:white; font-size:15px; font-weight:900; margin-top:15px; min-height:50px; width:100%; }
 .pagina :global(.section), .pagina :global(.page-intro), .pagina :global(.article-page), .pagina :global(.legal-page) { margin:auto; max-width:1180px; padding:96px clamp(16px,3vw,42px); }
@@ -92,11 +94,11 @@
 .pagina :global(.admin-kpis strong) { font-size:23px; }
 .pagina :global(.admin-kpis span) { color:rgba(255,255,255,.6); font-size:12px; margin-top:3px; }
 .pagina :global(.task-list) { display:grid; gap:8px; margin-top:16px; }
-.pagina :global(.task-list article) { align-items:center; background:var(--white); color:var(--ink-fisso); display:grid; gap:9px; grid-template-columns:auto 1fr auto; padding:12px; }
+.pagina :global(.task-list article) { align-items:center; background:var(--white); color:var(--ink); display:grid; gap:9px; grid-template-columns:auto 1fr auto; padding:12px; }
 .pagina :global(.score) { align-items:center; background:#ffddd4; display:flex; font-size:12px; font-weight:900; height:42px; justify-content:center; width:42px; }
 .pagina :global(.task-list h3) { font-size:14px; }
 .pagina :global(.task-list p) { color:var(--muted); font-size:11px; margin-top:3px; }
-.pagina :global(.task-list button) { background:var(--ink); border:0; color:white; font-size:11px; font-weight:800; padding:9px; }
+.pagina :global(.task-list button) { background:var(--ink-fisso); border:0; color:#fffdf7; font-size:11px; font-weight:800; padding:9px; }
 .pagina :global(.audience-grid) { grid-template-columns:1fr 1fr; }
 .pagina :global(.audience-grid a), .pagina :global(.audience-grid div) { background:var(--white); border:1px solid var(--line); min-height:260px; padding:32px; transition:transform .25s,background .25s; }
 .pagina :global(.audience-grid a:hover), .pagina :global(.audience-grid div:hover) { background:#fff7ea; transform:translateY(-5px); }
@@ -496,3 +498,12 @@
    lascia l'ultima cella vuota, che con i filetti si legge come un riquadro
    sbagliato. L'ultimo elemento in posizione dispari occupa tutta la riga. */
 .pagina :global(.audience-grid) > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+/* Oro su crema: --champagne e' una superficie, non un colore di testo.
+   Come occhiello su fondo chiaro faceva 1,6:1; qui prende l'oro scuro. */
+.pagina .gemellaOcchiello,
+.pagina :global(.eyebrow),
+.pagina :global(.phone-top strong) { color: #8a6a12; }
+:global(html[data-theme='dark']) .pagina .gemellaOcchiello,
+:global(html[data-theme='dark']) .pagina :global(.eyebrow),
+:global(html[data-theme='dark']) .pagina :global(.phone-top strong) { color: var(--champagne); }

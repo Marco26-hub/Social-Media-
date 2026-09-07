@@ -11,7 +11,8 @@
 .heroCopy { max-width: 850px; }
 .breadcrumbs { display: flex; gap: 8px; margin-bottom: 38px; color: #8fa099; font-size: 12px; }
 .breadcrumbs a { color: #c5d1cc; text-decoration: none; }
-.eyebrow, .formEyebrow, .sectionLabel { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: #45d3a1; font-size: 11px; font-weight: 800; letter-spacing: 0; }
+/* #45d3a1 su bianco faceva 1,9:1: serve il verde profondo del brand. */
+.eyebrow, .formEyebrow, .sectionLabel { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: #0f6b4f; font-size: 11px; font-weight: 800; letter-spacing: 0; }
 .hero h1 { max-width: 760px; margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 58px; font-weight: 500; line-height: 1.02; letter-spacing: 0; }
 .lead { max-width: 720px; margin: 24px 0 0; color: #aebcb7; font-size: 19px; line-height: 1.6; }
 .proofRow { display: flex; flex-wrap: wrap; gap: 18px 30px; margin-top: 34px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.13); }

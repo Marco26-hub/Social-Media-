@@ -1173,7 +1173,7 @@
 .serviceGrid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
 
 /* Su verde menta acceso il bianco fa 1,84:1: la pastiglia vuole testo scuro. */
-.planBadge { color: #08281d; }
+:global(html[data-theme='dark']) .planBadge { color: #08281d; }
 
 /* Colori espliciti: il token del testo si inverte in tema notte e il salto al
    contenuto diventava bianco su chiaro proprio quando serve. */
@@ -1189,3 +1189,12 @@
   font-weight: 600;
 }
 .planDetailLink a:hover { text-decoration-thickness: 2px; }
+
+/* Superfici verdi che schiariscono in tema notte: sopra ci vuole testo scuro,
+   altrimenti il bianco scende a 1,8:1. In tema giorno il verde e' profondo e
+   il bianco resta corretto. */
+:global(html[data-theme='dark']) .standaloneAction a { color: #08281d; }
+:global(html[data-theme='dark']) .webOffer .standaloneAction a { color: #fffdf7; }
+:global(html[data-theme='dark']) .leadOffer .standaloneAction a { color: #fffdf7; }
+/* Oro su verde profondo: 3,2:1. Oro piu' chiaro per arrivare a 4,5:1. */
+.legalPartner .eyebrow, .legalBand .eyebrow { color: #f0d68a; }

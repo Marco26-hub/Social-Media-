@@ -665,3 +665,8 @@
   font-weight: 600;
 }
 .planDetailLink a:hover { text-decoration-thickness: 2px; }
+
+/* La pastiglia sta su --green, che in tema notte schiarisce a menta: li' il
+   bianco scende a 1,8:1 e vuole testo scuro. In tema giorno il verde e'
+   profondo e il bianco resta corretto. */
+:global(html[data-theme='dark']) .priceHeader b { color: #08281d; }

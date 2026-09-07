@@ -1,5 +1,12 @@
+import { PACCHETTI } from '@/lib/pacchetti'
 import { SITE_URL } from '@/lib/site-config'
 import { TITOLARE } from '@/lib/legal-config'
+
+
+// I prezzi dello schema si ricavano dal listino, non si riscrivono a mano:
+// erano rimasti a 390 e 790 dopo il passaggio a 490 e 990, e ogni motore di
+// ricerca leggeva un listino che il sito non praticava piu'.
+const PREZZO_SCHEMA = PACCHETTI.map(p => p.prezzo.replace(/[^0-9,]/g, '').replace(',', '.'))
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -75,13 +82,13 @@ const jsonLd = {
         itemListElement: [
           {
             '@type': 'Offer',
-            name: 'Piano Presenza',
+            name: `Piano ${PACCHETTI[0].nome}`,
             url: `${SITE_URL}/pacchetti`,
-            price: '390',
+            price: PREZZO_SCHEMA[0],
             priceCurrency: 'EUR',
             priceSpecification: {
               '@type': 'UnitPriceSpecification',
-              price: '390',
+              price: PREZZO_SCHEMA[0],
               priceCurrency: 'EUR',
               unitText: 'MONTH',
               valueAddedTaxIncluded: false,
@@ -94,18 +101,18 @@ const jsonLd = {
               provider: { '@id': `${SITE_URL}/#organization` },
               areaServed: { '@type': 'Country', name: 'Italia' },
               description:
-                'Strategia, piano editoriale, 16 contenuti mensili, gestione di due social, approvazione umana, pubblicazione e report.',
+                'Strategia, piano editoriale, 16 contenuti al mese per ciascuno dei 2 social, approvazione del cliente prima della pubblicazione, pubblicazione e report mensile.',
             },
           },
           {
             '@type': 'Offer',
-            name: 'Piano Crescita',
+            name: `Piano ${PACCHETTI[1].nome}`,
             url: `${SITE_URL}/pacchetti`,
-            price: '790',
+            price: PREZZO_SCHEMA[1],
             priceCurrency: 'EUR',
             priceSpecification: {
               '@type': 'UnitPriceSpecification',
-              price: '790',
+              price: PREZZO_SCHEMA[1],
               priceCurrency: 'EUR',
               unitText: 'MONTH',
               valueAddedTaxIncluded: false,
@@ -113,12 +120,12 @@ const jsonLd = {
             itemOffered: {
               '@type': 'Service',
               '@id': `${SITE_URL}/#digital-growth`,
-              name: 'Gestione social, SEO, GEO e campagne per PMI',
+              name: 'Gestione social e visibilita organica per PMI',
               serviceType: 'Digital marketing management',
               provider: { '@id': `${SITE_URL}/#organization` },
               areaServed: { '@type': 'Country', name: 'Italia' },
               description:
-                'Gestione di tre social, 24 contenuti mensili, articolo SEO e GEO, analisi competitor, gestione di una campagna ADS e report avanzato.',
+                'Gestione di 2 social, 24 contenuti al mese per canale, un articolo SEO + GEO, analisi dei concorrenti e report avanzato. Le campagne a pagamento non sono comprese e vengono concordate a parte.',
             },
           },
           {

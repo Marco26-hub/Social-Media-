@@ -201,7 +201,9 @@
 .finalCta .kicker { color: #b9ead8; }
 .finalCta h2 { margin: 0; font: 500 43px/1.08 Georgia, 'Times New Roman', serif; }
 .finalCta p:not(.kicker) { margin: 15px 0 0; color: #d5eee5; line-height: 1.6; }
-.lightButton { flex: none; background: white; color: var(--green-dark); }
+/* Fondo bianco in entrambi i temi: il testo non puo' venire da un token
+   che si inverte, in notte faceva 2,6:1. */
+.lightButton { flex: none; background: white; color: #094c39; }
 .lightButton:hover { background: #15231f; color: white; }
 
 .footer { min-height: 118px; display: flex; align-items: center; gap: 30px; padding: 24px max(24px, calc((100vw - 1180px) / 2)); background: #15231f; color: #aebcb7; }

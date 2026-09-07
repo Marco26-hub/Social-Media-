@@ -48,3 +48,5 @@
 :global(html[data-theme='dark']) .badge { background:#3a311a; color:#f2c85b; }
 :global(html[data-theme='dark']) .featured > a { background:#0f6b4f; color:white; }
 @media(max-width:760px){.pricing{padding:64px 18px}.grid{grid-template-columns:1fr}.card{padding:24px}.top{gap:10px}.description{min-height:0}.leadCard{grid-column:auto}.leadCard ul{grid-template-columns:1fr}.custom{align-items:flex-start;flex-direction:column;margin:0 18px 64px;padding:25px}.custom a{width:100%}}
+
+:global(html[data-theme='dark']) .note { color: #97a8a1; }
