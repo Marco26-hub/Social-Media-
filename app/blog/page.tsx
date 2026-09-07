@@ -208,8 +208,14 @@ export default async function BlogIndexPage() {
             <Link href={`/blog/${featured.slug}`} className={styles.featuredCard}>
               <div className={styles.featuredVisual}>
                 {featured.immagine_cover ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={featured.immagine_cover} alt={featured.h1} />
+                  <Image
+                    src={featured.immagine_cover}
+                    alt={featured.h1}
+                    fill
+                    sizes="(max-width: 900px) 100vw, 620px"
+                    style={{ objectFit: 'cover' }}
+                    priority
+                  />
                 ) : (
                   <div className={styles.coverFallback} aria-hidden="true">
                     <Image src="/brand/swa-logo-official.png" alt="" width={180} height={82} />
@@ -244,8 +250,13 @@ export default async function BlogIndexPage() {
                   <Link key={article.slug} href={`/blog/${article.slug}`} className={styles.articleCard}>
                     <div className={styles.cardVisual}>
                       {article.immagine_cover ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={article.immagine_cover} alt={article.h1} loading="lazy" decoding="async" />
+                        <Image
+                          src={article.immagine_cover}
+                          alt={article.h1}
+                          fill
+                          sizes="(max-width: 700px) 100vw, 352px"
+                          style={{ objectFit: 'cover' }}
+                        />
                       ) : (
                         <BookOpen size={30} aria-hidden="true" />
                       )}

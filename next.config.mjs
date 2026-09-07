@@ -90,6 +90,10 @@ const nextConfig = {
     ],
   },
   async headers() {
+    const blogCacheHeaders = [
+      ...securityHeaders,
+      { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
+    ]
     return [
       { source: '/login', headers: noIndexHeaders },
       { source: '/register', headers: noIndexHeaders },
@@ -98,6 +102,13 @@ const nextConfig = {
       { source: '/approve/:path*', headers: noIndexHeaders },
       { source: '/preview/:path*', headers: noIndexHeaders },
       { source: '/api/:path*', headers: noIndexHeaders },
+      // /blog e gli articoli sono force-dynamic perche' risolvono il cliente
+      // dall'hostname. Senza questo restavano 'no-store': mai in cache, TTFB
+      // tre volte quello delle pagine statiche, proprio sul contenuto che i
+      // motori di risposta leggono di piu'. La chiave di cache della CDN
+      // include l'hostname, quindi l'isolamento fra domini clienti regge.
+      { source: '/blog', headers: blogCacheHeaders },
+      { source: '/blog/:slug', headers: blogCacheHeaders },
       { source: '/:path*', headers: securityHeaders },
     ]
   },

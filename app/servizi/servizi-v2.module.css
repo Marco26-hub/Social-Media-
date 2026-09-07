@@ -670,3 +670,7 @@
    bianco scende a 1,8:1 e vuole testo scuro. In tema giorno il verde e'
    profondo e il bianco resta corretto. */
 :global(html[data-theme='dark']) .priceHeader b { color: #08281d; }
+
+/* Bersagli tattili: sotto i 24px minimi. Si allarga l'area, non il testo. */
+.listinoLink, .emailLink { padding-block: 3px; }
+.page a:not(p a):not(li a):not(small a) { padding-block: 3px; }

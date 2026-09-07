@@ -141,3 +141,6 @@
   .socialCard { min-height: 138px; padding: 20px; }
   .socialIntro h2 { font-size: 38px; }
 }
+
+/* Bersagli tattili: i link del footer erano alti 18px, sotto i 24px minimi. */
+.footer a { min-height: 24px; display: inline-flex; align-items: center; }

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
@@ -95,8 +96,14 @@ function TenantArticle({ article, jsonLd }: { article: BlogArticleData; jsonLd: 
           {article.tempo_lettura_min ? <span>· {article.tempo_lettura_min} min</span> : null}
         </div>
         {article.immagine_cover && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={article.immagine_cover} alt={article.h1} className="w-full rounded-xl mb-6" />
+          <Image
+            src={article.immagine_cover}
+            alt={article.h1}
+            width={1200}
+            height={675}
+            sizes="(max-width: 800px) 100vw, 760px"
+            className="w-full h-auto rounded-xl mb-6"
+          />
         )}
         {article.intro && <p className="text-lg text-gray-700 leading-relaxed mb-6">{article.intro}</p>}
         {article.sezioni.map((section, index) => (
@@ -156,8 +163,14 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
 
         {article.immagine_cover && (
           <figure className={styles.articleCover}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={article.immagine_cover} alt={BLOG_COVER_DESCRIPTIONS[article.immagine_cover] || article.h1} />
+            <Image
+              src={article.immagine_cover}
+              alt={BLOG_COVER_DESCRIPTIONS[article.immagine_cover] || article.h1}
+              width={1200}
+              height={675}
+              sizes="(max-width: 1060px) 100vw, 1012px"
+              priority
+            />
             {BLOG_COVER_DESCRIPTIONS[article.immagine_cover] && <figcaption>Immagine illustrativa generata con AI.</figcaption>}
           </figure>
         )}

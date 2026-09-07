@@ -1,3 +1,10 @@
+// Su Vercel gira anche per le anteprime di ramo: li' l'invio segnalerebbe le
+// URL di produzione a ogni push, senza che sia cambiato nulla di pubblicato.
+if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production') {
+  console.log(`IndexNow: saltato, ambiente ${process.env.VERCEL_ENV}.`)
+  process.exit(0)
+}
+
 const siteUrl = 'https://www.socialautomation.app'
 const key = '7733113c911856fd13b528aa0a548168'
 // Le URL arrivano dalla sitemap, non da una lista scritta a mano: quella

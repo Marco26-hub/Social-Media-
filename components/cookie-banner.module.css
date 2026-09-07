@@ -27,9 +27,13 @@
 .banner .secondary:hover { background: rgba(255, 250, 240, .12); }
 .banner a:focus-visible, .banner button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
 @media (max-width: 700px) {
-  .banner { right: 8px; bottom: 8px; left: 8px; gap: 6px; padding: 8px; flex-direction: column; align-items: stretch; }
-  .banner p { flex: none; font-size: 10px; line-height: 1.3; }
-  .actions { width: 100%; }
-  .actions button { flex: 1 1 0; padding: 0 8px; }
-  .banner button { min-height: 34px; padding: 0 10px; font-size: 11px; }
+  /* E' la prima interazione della prima visita e aveva i bersagli peggiori
+     della pagina: bottoni da 34px e il link all'informativa a 7px di
+     distanza. Qui i bottoni arrivano ai 44px raccomandati e il testo a 12px. */
+  .banner { right: 8px; bottom: 8px; left: 8px; gap: 10px; padding: 12px; flex-direction: column; align-items: stretch; }
+  .banner p { flex: none; font-size: 12px; line-height: 1.45; }
+  .actions { width: 100%; gap: 12px; }
+  .actions button { flex: 1 1 0; padding: 0 10px; }
+  .banner button { min-height: 44px; padding: 0 12px; font-size: 12px; }
+  .banner a { display: inline-block; padding: 4px 0; }
 }

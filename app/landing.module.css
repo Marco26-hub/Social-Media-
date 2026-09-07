@@ -473,6 +473,9 @@
   border-radius: 50%;
   color: var(--sa-green);
 }
+/* Il cerchio resta di 34px, che a vista e' la misura giusta. L'area toccabile
+   arriva a 44px con uno pseudo-elemento, senza ingrossare il disegno. */
+.journeyGrid a::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; }
 
 .evidenceSection { border-top: 1px solid var(--sa-line); }
 .evidenceGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 48px; }
@@ -1198,3 +1201,9 @@
 :global(html[data-theme='dark']) .leadOffer .standaloneAction a { color: #fffdf7; }
 /* Oro su verde profondo: 3,2:1. Oro piu' chiaro per arrivare a 4,5:1. */
 .legalPartner .eyebrow, .legalBand .eyebrow { color: #f0d68a; }
+
+/* Bersagli tattili: i link testuali autonomi stavano fra 15 e 20px di altezza,
+   sotto i 24px minimi. Si allarga l'area con la spaziatura verticale, che non
+   cambia il flusso ne' la dimensione del testo; i link dentro un periodo sono
+   esclusi, perche' la norma li esenta e cambiarli spezzerebbe l'interlinea. */
+.page a:not(p a):not(li a):not(small a):not(figcaption a) { padding-block: 3px; }
