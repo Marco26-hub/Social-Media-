@@ -1,3 +1,4 @@
+import { SITE_URL } from '@/lib/site-config'
 // Render articoli blog → HTML (con JSON-LD Article + FAQPage per SEO/GEO) e Markdown.
 // Funzioni PURE (nessuna dipendenza server): usabili sia nelle pagine pubbliche sia
 // nell'export client-side della dashboard.
@@ -68,7 +69,10 @@ export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
     '@type': 'BlogPosting',
     headline: a.h1,
     description: a.meta_description || '',
-    author: { '@type': 'Organization', name: a.autore },
+    // Una persona con nome e pagina, non un marchio: e' il segnale che i motori
+    // di risposta leggono come esperienza diretta, e coincide con quello che
+    // dice /chi-siamo — "una persona con nome, cognome e partita IVA".
+    author: { '@type': 'Person', name: a.autore, url: `${SITE_URL}/chi-siamo`, jobTitle: 'Titolare, Social Web Automation' },
     publisher: {
       '@type': 'Organization',
       name: 'Social Web Automation',

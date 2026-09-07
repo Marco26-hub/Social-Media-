@@ -18,7 +18,8 @@
     "render:sync-env": "node scripts/render-sync-env.mjs",
     "ci:verify": "npm run lint && npm test && npm run build && npm audit --audit-level=moderate && npm run migrate:dry",
     "next:start": "next start",
-    "demo:video": "node scripts/demo-walkthrough.mjs"
+    "demo:video": "node scripts/demo-walkthrough.mjs",
+    "indexnow": "node scripts/submit-indexnow.mjs"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.516",

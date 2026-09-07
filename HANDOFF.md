@@ -278,6 +278,50 @@ nostro deploy senza essere referenziate da nessuna pagina.
   riscriverli, ed e' una lavorazione a preventivo — cosi' e' scritto sulla pagina degli
   elettricisti, dopo che una prima versione lo dava per gia' pronto.
 
+### Parte inglese — debug fatto il 7 settembre, da rifare da zero
+
+Stato: **3 pagine su 46**, e tutte e tre sbagliate. Chi arriva dall'inglese
+vede un'azienda diversa da quella che vendiamo oggi.
+
+| Rotta | Stato |
+|---|---|
+| `/en`, `/en/services`, `/en/pricing` | 200, ma contenuti fermi a un listino superato |
+| `/en/settori`, `/en/contatti`, `/en/faq`, tutte le altre | **404** |
+
+Difetti misurati:
+
+1. **`app/en/services/page.tsx:22` dice "Growth covers 3 channels"**. E' lo stesso
+   errore corretto in italiano il 7 settembre (i piani coprono 2 canali): la
+   versione inglese non e' mai stata aggiornata.
+2. **I prezzi sono scritti a mano** in `app/en/pricing/page.tsx` — cinque occorrenze
+   di `€` come stringhe. Le pagine italiane leggono da `lib/prezzi-ingresso.ts`,
+   che deriva dalle sorgenti uniche. L'inglese diverge da solo, ed e' esattamente
+   come `public/llms.txt` era finito a dichiarare 390 e 790.
+3. **Sei servizi su dieci.** Mancano segretaria telefonica, agenda e WhatsApp,
+   riprese video, gestione lavorazioni, automazione gestionali. Mancano anche
+   tutti gli undici settori, che in italiano sono l'asset SEO migliore.
+4. `hreflang` e' corretto: dichiarato solo sulle 3 coppie che esistono davvero.
+   Quando nascono nuove pagine EN va aggiunto sulle rispettive italiane.
+
+**Decisione da prendere prima di tradurre** (e' commerciale, non tecnica):
+tradurre 46 pagine significa mantenere due siti. Ogni prezzo e ogni settore
+nuovo va fatto due volte. Le due strade:
+
+- **Biglietto da visita**: si allineano le 3 pagine esistenti ai servizi e ai
+  prezzi veri, leggendoli dalle sorgenti uniche. Mezza giornata, poi resta
+  piccolo e non diverge piu'.
+- **Inglese sul serio**: si traducono i settori dove un cliente straniero esiste
+  davvero — affitti brevi e housekeeping sul Garda e sul Como, ristoranti,
+  agenzie immobiliari — con un livello di traduzione dei dati, non pagine
+  duplicate a mano. I contenuti stanno gia' in moduli (`lib/settori.ts`,
+  `lib/swa-blog-content.ts`), quindi la strada e' un dizionario per lingua, non
+  un secondo albero di pagine.
+
+Nota di merito sulla traduzione: le pagine di settore vivono di lingua
+idiomatica ("il telefono squilla con le mani nei capelli"). Tradotte alla
+lettera perdono esattamente cio' che le fa funzionare. Vanno riscritte in
+inglese, non tradotte.
+
 ### Aperto — da fare
 
 1. **Sezione portfolio "come lavoriamo"**: i media ci sono gia in DB —
