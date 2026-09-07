@@ -44,6 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/metodo',
       '/pacchetti',
       '/faq',
+      '/contatti',
     ].map(path => ({
       url: `${SITE_URL}${path}`,
       lastModified: marketingUpdated,

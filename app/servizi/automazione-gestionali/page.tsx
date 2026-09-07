@@ -61,6 +61,7 @@ const config = {
     { q: 'Avete già costruito qualcosa di vostro?', a: 'Sì: la piattaforma con cui gestiamo il lavoro dei clienti è sviluppata internamente — generazione dei contenuti, approvazione umana, pubblicazione programmata, verifica di ciò che è uscito davvero e conservazione dei dati. Sviluppiamo da zero solo dove lo strumento standard non arriva.' },
   ],
   related: [
+    { href: '/contatti', label: 'Parla con noi' },
     { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
     { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
     { href: '/consulenza', label: 'Consulenza legale AI' },

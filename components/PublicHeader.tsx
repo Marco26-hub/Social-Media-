@@ -28,6 +28,7 @@ const MOBILE_LINKS = [
   { href: '/blog', label: 'SWA Journal' },
   { href: '/chi-siamo', label: 'Azienda' },
   { href: '/faq', label: 'FAQ' },
+  { href: '/contatti', label: 'Contatti' },
   { href: '/en', label: 'English' },
 ]
 

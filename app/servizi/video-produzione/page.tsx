@@ -67,6 +67,7 @@ const config = {
     { q: 'I video restano miei?', a: 'Sì, il girato e le foto prodotte sono tuoi. Li usi dove vuoi — social, sito, annunci, presentazioni — anche se un domani cambi fornitore. Quello che paghi è materiale che resta, non un accesso che scade con l’abbonamento.' },
   ],
   related: [
+    { href: '/contatti', label: 'Parla con noi' },
     { href: '/servizi/gestione-social-media', label: 'Gestione social' },
     { href: '/pacchetti', label: 'Piani social' },
     { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },

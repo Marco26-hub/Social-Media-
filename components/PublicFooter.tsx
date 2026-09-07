@@ -80,6 +80,7 @@ export default function PublicFooter() {
           <Link href="/blog">Journal</Link>
           <Link href="/chi-siamo">Azienda</Link>
           <Link href="/faq">FAQ</Link>
+          <Link href="/contatti">Contatti</Link>
           <Link href="/en" hrefLang="en">English</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/termini">Termini</Link>
