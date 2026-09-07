@@ -3,7 +3,7 @@ import { PACCHETTI } from '@/lib/pacchetti'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { STANDALONE_SERVICES } from '@/lib/standalone-services'
 
-// Prezzi d'ingresso, derivati una volta sola dalle sorgenti uniche dei servizi.
+// Prezzi d’ingresso, derivati una volta sola dalle sorgenti uniche dei servizi.
 //
 // Le pagine che citano un prezzo — servizi, settori, pacchetti — non lo scrivono
 // a mano: lo leggono da qui. E' la lezione di public/llms.txt, che era rimasto a
@@ -35,7 +35,7 @@ export const PREZZI = {
 } as const
 
 /**
- * Prezzo d'ingresso per ogni area di servizio, con la stessa formula ovunque.
+ * Prezzo d’ingresso per ogni area di servizio, con la stessa formula ovunque.
  * Le aree senza listino pubblico dicono "Su preventivo": una scheda senza
  * prezzo lascia il lettore a indovinare, ed e' la domanda che arriva comunque.
  */

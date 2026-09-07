@@ -19,12 +19,12 @@ export default function CookiePolicyPage() {
   return (
     <LegalShell eyebrow="Cookie Policy" title="Informativa Cookie" currentPath="/cookie-policy">
       <p>
-        Questa pagina descrive l&apos;uso dei cookie e delle tecnologie simili sul sito di {TITOLARE.brand}, in conformità
+        Questa pagina descrive l’uso dei cookie e delle tecnologie simili sul sito di {TITOLARE.brand}, in conformità
         alle <strong>Linee Guida del Garante Privacy sui cookie del 10 giugno 2021</strong> e alla Direttiva ePrivacy.
       </p>
 
       <h2>1. Cosa sono i cookie</h2>
-      <p>I cookie sono piccoli file di testo che i siti salvano sul dispositivo dell&apos;utente. Si distinguono in cookie
+      <p>I cookie sono piccoli file di testo che i siti salvano sul dispositivo dell’utente. Si distinguono in cookie
         <strong> tecnici</strong> (necessari al funzionamento, non richiedono consenso) e cookie <strong>di profilazione/marketing</strong>
         (richiedono consenso esplicito preventivo).</p>
 
@@ -50,7 +50,7 @@ export default function CookiePolicyPage() {
       <h2>3. Cookie di terze parti</h2>
       <p>Il sito può utilizzare Meta Pixel per misurare visite, lead e avvii di checkout collegati alle campagne pubblicitarie.
         Le informazioni sono trattate secondo le impostazioni e le informative di Meta. Eventuali ulteriori strumenti di analisi,
-        pixel pubblicitari o contenuti incorporati verranno indicati in questa tabella prima dell&apos;attivazione.</p>
+        pixel pubblicitari o contenuti incorporati verranno indicati in questa tabella prima dell’attivazione.</p>
 
       <h2>4. Gestione del consenso</h2>
       <p>Puoi modificare o revocare le tue preferenze in qualsiasi momento tramite il banner cookie (che ricompare alla revoca)

@@ -10,9 +10,9 @@ import styles from '../content-page.module.css'
 
 // Pagina contatti.
 //
-// Mancava, ed era il bersaglio di due chiamate all'azione che finivano su un
+// Mancava, ed era il bersaglio di due chiamate all’azione che finivano su un
 // 404. Serve anche a un secondo scopo: dichiarare dove lavoriamo davvero.
-// Esiste un'agenzia omonima in un'altra provincia, e i territori nominati sono
+// Esiste un’agenzia omonima in un’altra provincia, e i territori nominati sono
 // il segnale che distingue le due imprese agli occhi di un motore.
 
 const title = 'Contatti: dove siamo e come raggiungerci | SWA'

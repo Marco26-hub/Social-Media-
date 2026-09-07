@@ -434,8 +434,8 @@ export default function ServiziPage() {
                 <span>{String(i + 1).padStart(2, '0')}</span>
                 <Icon size={25} aria-hidden="true" />
                 <p>{label}</p>
-                {/* Il prezzo d'ingresso sta sulla scheda: senza, la prima
-                    domanda di ogni richiesta e' "quanto costa". Il valore
+                {/* Il prezzo d’ingresso sta sulla scheda: senza, la prima
+                    domanda di ogni richiesta e' «quanto costa». Il valore
                     arriva dalle sorgenti uniche, non e' scritto qui. */}
                 <p className={styles.serviceEntryPrice}>{prezzoIngresso(id)}</p>
               </div>
@@ -535,19 +535,13 @@ export default function ServiziPage() {
               <p className={styles.planResult}>{plan.risultato}</p>
               <p className={styles.price}><strong>{plan.prezzo}</strong><span>/mese</span></p>
               <p className={styles.setup}>{plan.setup}</p>
-              <p className={styles.planDescription}>{plan.sottotitolo}</p>
-              <div className={styles.planFit}>
-                <strong>È adatto a te se</strong>
-                <p>{plan.idealePer}</p>
-              </div>
-              {plan.includeDa && <p className={styles.includes}>Include tutto di {plan.includeDa}, più:</p>}
-              <p className={styles.listLabel}>Nel canone trovi</p>
-                  <ul>
-                {plan.features.map(feature => <li key={feature}><CircleCheck size={16} aria-hidden="true" /> {feature}</li>)}
-              </ul>
+              <p className={styles.planDescription}>{plan.inBreve}</p>
               <Link href={`/register?piano=${plan.slug}`} className={plan.consigliato ? site.primaryButton : site.outlineButton}>
                 {plan.cta} <ArrowRight size={17} aria-hidden="true" />
               </Link>
+              <p className={styles.planDetailLink}>
+                <Link href="/pacchetti">Confronta i due piani voce per voce</Link>
+              </p>
               <small className={styles.ctaNote}>Setup incluso · IVA esclusa · rinnovo mensile</small>
             </article>
           ))}

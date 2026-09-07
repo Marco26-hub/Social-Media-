@@ -62,7 +62,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
   const Icon = config.icon
   const isEnglish = config.locale === 'en'
   const parent = config.breadcrumbParent ?? { label: 'Servizi', href: '/servizi' }
-  // I settori che dichiarano questo servizio, e l'articolo che lo approfondisce:
+  // I settori che dichiarano questo servizio, e l’articolo che lo approfondisce:
   // senza, le verticali e il Journal restano raggiungibili solo dal menu.
   const settori = settoriPerServizio(config.path)
   const articolo = articoloPerServizio(config.path)

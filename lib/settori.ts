@@ -17,9 +17,9 @@ export type PassoSettore = BloccoSettore & { number: string }
 
 export type Settore = {
   slug: string
-  /** Nome della categoria, usato nei menu e nell'elenco. */
+  /** Nome della categoria, usato nei menu e nell’elenco. */
   nome: string
-  /** Una riga per l'elenco dei settori. */
+  /** Una riga per l’elenco dei settori. */
   sommario: string
   titoloSeo: string
   descrizioneSeo: string

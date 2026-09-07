@@ -4,6 +4,9 @@
    toccano il resto del sito. */
 .pagina {
   --ink: #15231f;
+  /* Non si inverte al tema scuro: serve dove il fondo e' fisso
+     (bianco, champagne, grigio chiaro) e il testo deve restare scuro. */
+  --ink-fisso: #15231f;
   --paper: #F7F8F5;
   --white: #FFFDF7;
   --muted: #5C6B63;
@@ -52,7 +55,7 @@
 .pagina :global(.phone-top strong) { color:var(--mint); font-size:19px; }
 .pagina :global(.pulse-card) { align-items:center; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.1); display:flex; gap:9px; margin:20px 0; padding:13px; }
 .pagina :global(.live-dot) { animation:pulse 1.5s infinite; background:var(--mint); border-radius:50%; height:9px; width:9px; }
-.pagina :global(.opportunity-card) { align-items:flex-start; background:#f5f5f3; color:var(--ink); display:flex; gap:12px; justify-content:space-between; margin-top:10px; padding:15px; }
+.pagina :global(.opportunity-card) { align-items:flex-start; background:#f5f5f3; color:var(--ink-fisso); display:flex; gap:12px; justify-content:space-between; margin-top:10px; padding:15px; }
 .pagina :global(.opportunity-card span) { color:#b44531; font-size:11px; font-weight:900; text-transform:uppercase; }
 .pagina :global(.opportunity-card h3) { font-size:16px; line-height:1.2; margin-top:5px; }
 .pagina :global(.opportunity-card p) { color:var(--muted); font-size:12px; line-height:1.4; margin-top:4px; }
@@ -81,7 +84,7 @@
 .pagina :global(.text-link span) { color: var(--coral-testo, #b3452a); }
 .pagina :global(.product-band) { align-items:center; background:var(--night); color:white; display:grid; gap:70px; grid-template-columns:.9fr 1.1fr; margin:34px auto; max-width:1180px; padding:72px clamp(22px,6vw,74px); }
 .pagina :global(.admin-copy p) { color:rgba(255,255,255,.7); font-size:18px; line-height:1.55; margin-top:20px; }
-.pagina :global(.light-action) { background:white; color:var(--ink); margin-top:26px; }
+.pagina :global(.light-action) { background:white; color:var(--ink-fisso); margin-top:26px; }
 .pagina :global(.admin-head b) { color:var(--mint); font-size:12px; }
 .pagina :global(.admin-kpis) { display:grid; gap:8px; grid-template-columns:1fr 1fr; margin-top:18px; }
 .pagina :global(.admin-kpis div) { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.1); padding:14px; }
@@ -89,7 +92,7 @@
 .pagina :global(.admin-kpis strong) { font-size:23px; }
 .pagina :global(.admin-kpis span) { color:rgba(255,255,255,.6); font-size:12px; margin-top:3px; }
 .pagina :global(.task-list) { display:grid; gap:8px; margin-top:16px; }
-.pagina :global(.task-list article) { align-items:center; background:var(--white); color:var(--ink); display:grid; gap:9px; grid-template-columns:auto 1fr auto; padding:12px; }
+.pagina :global(.task-list article) { align-items:center; background:var(--white); color:var(--ink-fisso); display:grid; gap:9px; grid-template-columns:auto 1fr auto; padding:12px; }
 .pagina :global(.score) { align-items:center; background:#ffddd4; display:flex; font-size:12px; font-weight:900; height:42px; justify-content:center; width:42px; }
 .pagina :global(.task-list h3) { font-size:14px; }
 .pagina :global(.task-list p) { color:var(--muted); font-size:11px; margin-top:3px; }
@@ -129,12 +132,12 @@
 .pagina :global(.home-hero .nav) { background:rgba(12,13,11,.45); border-color:rgba(255,255,255,.16); color:white; }
 .pagina :global(.home-hero .nav-links) { color:rgba(255,255,255,.64); }
 .pagina :global(.home-hero .nav-links a:hover) { color:white; }
-.pagina :global(.home-hero .nav-cta) { background:var(--champagne); color:var(--ink); }
+.pagina :global(.home-hero .nav-cta) { background:var(--champagne); color:var(--ink-fisso); }
 .pagina :global(.home-hero .hero-copy) { color:white; text-shadow:0 2px 28px rgba(0,0,0,.28); }
 .pagina :global(.home-hero .hero-copy h1) { text-shadow:0 0 34px rgba(217,248,239,.18), 0 3px 34px rgba(0,0,0,.34); }
 .pagina :global(.home-hero .hero-copy .eyebrow) { color:#e4c98f; }
 .pagina :global(.home-hero .hero-copy p) { color:rgba(255,255,255,.72); }
-.pagina :global(.home-hero .primary-action) { background:var(--champagne); color:var(--ink); }
+.pagina :global(.home-hero .primary-action) { background:var(--champagne); color:var(--ink-fisso); }
 .pagina :global(.home-hero .secondary-action) { background:rgba(10,11,9,.28); border-color:rgba(255,255,255,.28); color:white; }
 .pagina :global(.home-hero .proof-strip) { color:rgba(255,255,255,.65); }
 .pagina :global(.home-hero .proof-strip span) { border-color:rgba(255,255,255,.2); }

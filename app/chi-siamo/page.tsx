@@ -24,7 +24,7 @@ const META_DESCRIPTION =
   'Social Web Automation è la ditta individuale di Marco Dibenedetto, a Cermenate (CO): dieci aree di servizio, undici settori, la tua approvazione su ogni uscita.'
 // Elenco e conteggi arrivano dai dati, non da una lista scritta a mano: una
 // pagina "chi siamo" che dichiara sei aree mentre il sito ne vende dieci e' la
-// prima cosa che un cliente nota, e l'ultima che qualcuno si ricorda di aggiornare.
+// prima cosa che un cliente nota, e l’ultima che qualcuno si ricorda di aggiornare.
 const AREE = [
   'Gestione social media su due canali',
   'Riprese video e foto in azienda',
@@ -47,7 +47,7 @@ const FAQ = [
   },
   {
     q: 'Con quali settori lavorate?',
-    a: `Seguiamo ${SETTORI.length} categorie con un percorso costruito su misura per ognuna: ${SETTORI.slice(0, 5).map(s => s.nome.toLowerCase()).join(', ')} e altre. Ogni settore ha una pagina che dice quali servizi servono davvero in quel mestiere e quali no, perché un salone e un'impresa di pulizia hanno buchi diversi e comprare la stessa cosa non ha senso.`,
+    a: `Seguiamo ${SETTORI.length} categorie con un percorso costruito su misura per ognuna: ${SETTORI.slice(0, 5).map(s => s.nome.toLowerCase()).join(', ')} e altre. Ogni settore ha una pagina che dice quali servizi servono davvero in quel mestiere e quali no, perché un salone e un’impresa di pulizia hanno buchi diversi e comprare la stessa cosa non ha senso.`,
   },
   {
     q: 'Usate l’intelligenza artificiale per scrivere i contenuti?',
@@ -55,7 +55,7 @@ const FAQ = [
   },
   {
     q: 'Quanto costa iniziare?',
-    a: `Si parte da ${PREZZO_MINIMO} al mese per il sito base, ${PREZZO_INGRESSO['blog-seo']} per dodici articoli e ${PREZZO_INGRESSO.social} per la gestione social su due canali. Ogni area ha il suo prezzo d'ingresso pubblico sulla pagina dei servizi, e le aree senza listino sono dichiarate come "su preventivo" invece di essere lasciate in bianco. IVA esclusa.`,
+    a: `Si parte da ${PREZZO_MINIMO} al mese per il sito base, ${PREZZO_INGRESSO['blog-seo']} per dodici articoli e ${PREZZO_INGRESSO.social} per la gestione social su due canali. Ogni area ha il suo prezzo d’ingresso pubblico sulla pagina dei servizi, e le aree senza listino sono dichiarate come «su preventivo» invece di essere lasciate in bianco. IVA esclusa.`,
   },
   {
     q: 'Garantite risultati di posizionamento o di vendita?',

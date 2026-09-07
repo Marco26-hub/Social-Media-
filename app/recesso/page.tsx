@@ -62,11 +62,11 @@ export default function RecessoPage() {
             </div>
             <div className={styles.scopeItem}>
               <CheckCircle2 size={19} aria-hidden="true" />
-              <div><strong>Imprese e professionisti</strong><p>La disciplina consumer non si applica agli acquisti effettuati nell&apos;attivita d&apos;impresa o professionale. Il modulo registra una disdetta secondo il contratto.</p></div>
+              <div><strong>Imprese e professionisti</strong><p>La disciplina consumer non si applica agli acquisti effettuati nell’attivita d’impresa o professionale. Il modulo registra una disdetta secondo il contratto.</p></div>
             </div>
             <div className={styles.legalNote}>
               <strong>Servizio gia iniziato?</strong>
-              <p>Il recesso puo comportare il pagamento proporzionale di quanto gia eseguito se l&apos;avvio anticipato e stato richiesto espressamente. Per un servizio integralmente eseguito possono operare le eccezioni di legge, previa verifica dei consensi raccolti.</p>
+              <p>Il recesso puo comportare il pagamento proporzionale di quanto gia eseguito se l’avvio anticipato e stato richiesto espressamente. Per un servizio integralmente eseguito possono operare le eccezioni di legge, previa verifica dei consensi raccolti.</p>
             </div>
           </aside>
 

@@ -488,19 +488,16 @@ export default function LandingPage() {
               <p className={styles.planResult}>{plan.risultato}</p>
               <p className={styles.price}><strong>{plan.prezzo}</strong><span>/mese</span></p>
               <p className={styles.setup}>{plan.setup === 'Setup incluso' ? plan.setup : `${plan.setup} una tantum`}</p>
-              <p className={styles.planDescription}>{plan.sottotitolo}</p>
-              <div className={styles.planFit}>
-                <strong>È adatto a te se</strong>
-                <p>{plan.idealePer}</p>
-              </div>
-              {plan.includeDa && <p className={styles.includes}>Include tutto di {plan.includeDa}, più:</p>}
-              <p className={styles.listLabel}>Nel canone trovi</p>
+              <p className={styles.listLabel}>In sintesi</p>
               <ul>
-                {plan.features.map(feature => <li key={feature}><Check size={16} aria-hidden="true" /> {feature}</li>)}
+                {plan.sintesi.map(voce => <li key={voce}><Check size={16} aria-hidden="true" /> {voce}</li>)}
               </ul>
               <Link href={`/register?piano=${plan.slug}`} className={plan.consigliato ? styles.primaryButton : styles.outlineButton}>
                 {plan.cta} <ArrowRight size={17} aria-hidden="true" />
               </Link>
+              <p className={styles.planDetailLink}>
+                <Link href="/pacchetti">Voce per voce, che cosa comprende</Link>
+              </p>
               <small className={styles.ctaNote}>Setup incluso · IVA esclusa · rinnovo mensile</small>
             </article>
           ))}

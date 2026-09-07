@@ -4,8 +4,8 @@ import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/Ma
 import { SITE_URL } from '@/lib/site-config'
 
 // Il metodo che vendiamo alle imprese che lavorano fuori sede: il sito che porta
-// la richiesta, l'applicazione con cui la squadra chiude il lavoro sul posto e il
-// pannello da cui l'ufficio approva. I testi descrivono solo funzioni che esistono
+// la richiesta, l’applicazione con cui la squadra chiude il lavoro sul posto e il
+// pannello da cui l’ufficio approva. I testi descrivono solo funzioni che esistono
 // nel prodotto: il fact-check contro il codice ha tolto tutto il resto.
 
 const title = 'Sito, lavorazioni e rapportini per imprese di pulizie | SWA'

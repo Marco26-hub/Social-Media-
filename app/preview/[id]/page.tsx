@@ -9,7 +9,7 @@ import type { Contenuto } from '@/lib/types'
 import { Ban, Check, ArrowLeft, LayoutDashboard, ArrowUp, Music2 } from 'lucide-react'
 
 // La preview mostra il contenuto REALE (il suo canale + formato dal DB), non una
-// lista fissa di piattaforme. Così l'anteprima combacia con il calendario.
+// lista fissa di piattaforme. Così l’anteprima combacia con il calendario.
 const CANALE_LABEL: Record<string, string> = {
   instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', pinterest: 'Pinterest',
   linkedin: 'LinkedIn', youtube_shorts: 'YouTube Shorts', threads: 'Threads', x: 'X', blog: 'Blog',
@@ -106,7 +106,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
   const [campaignSourcePaths, setCampaignSourcePaths] = useState<unknown>(null)
   const [productionNotes, setProductionNotes] = useState('')
   const [hasCampaignFinalAssets, setHasCampaignFinalAssets] = useState(false)
-  // Link condivisibile basato sul preview_token opaco (non sull'id enumerabile).
+  // Link condivisibile basato sul preview_token opaco (non sull’id enumerabile).
   const [shareUrl, setShareUrl] = useState('')
 
   useEffect(() => {
@@ -178,7 +178,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     if (!id) return
     let annullato = false
     // Il link condiviso porta ?token=UUID (via pubblica sicura). Senza token si usa
-    // l'id, ma quel percorso ora richiede login lato API (anti-IDOR).
+    // l’id, ma quel percorso ora richiede login lato API (anti-IDOR).
     const tok = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null
     const query = tok ? `token=${encodeURIComponent(tok)}` : `id=${encodeURIComponent(id)}`
     fetch(`/api/data/preview?${query}`)
@@ -193,7 +193,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         }
         // Contenuto REALE trovato → è la fonte di verità: sovrascrive i dati demo,
         // ANCHE quando un campo è vuoto (es. nessuna foto → mostra placeholder, non
-        // l'immagine demo finta). Prima il ripiego demo restava se il reale era vuoto.
+        // l’immagine demo finta). Prima il ripiego demo restava se il reale era vuoto.
         setHook(s(d.hook))
         setCaption(s(d.caption))
         setHashtag(s(d.hashtag))
@@ -278,7 +278,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     alt_text: altText, tags, thumbnail_url: thumbnailUrl,
     idea_visual: ideaVisual, voiceover_script: voiceoverScript, music_mood: musicMood,
     // Stessa URL usata dal player qui sopra: passa dal proxy same-origin. Con
-    // l'URL grezzo dello storage l'anteprima del reel restava muta, mentre il
+    // l’URL grezzo dello storage l’anteprima del reel restava muta, mentre il
     // player separato — che il proxy lo usava — si sentiva.
     reel_audio_url: reelAudioUrl ? audioPlaybackUrl(reelAudioUrl) : null,
     reel_audio_title: reelAudioTitle || null,
@@ -390,7 +390,7 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
 
             {/* Email */}
             <a
-              href={`mailto:?subject=${encodeURIComponent(`Anteprima contenuto - ${DEMO_DATA.cliente_nome}`)}&body=${encodeURIComponent(`Ciao,\n\nti inviamo l'anteprima del contenuto per ${DEMO_DATA.cliente_nome}.\n\nHook: ${hook}\n\nLink: ${shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}\n\n---\nSocial Web Automation V2`)}`}
+              href={`mailto:?subject=${encodeURIComponent(`Anteprima contenuto - ${DEMO_DATA.cliente_nome}`)}&body=${encodeURIComponent(`Ciao,\n\nti inviamo l’anteprima del contenuto per ${DEMO_DATA.cliente_nome}.\n\nHook: ${hook}\n\nLink: ${shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}\n\n---\nSocial Web Automation V2`)}`}
               className="flex items-center gap-1.5 px-4 py-2 bg-gray-600 text-white text-xs font-medium rounded-full hover:bg-gray-700 transition-colors"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 8L2 4"/></svg>

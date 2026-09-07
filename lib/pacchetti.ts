@@ -12,7 +12,12 @@ export type Pacchetto = {
   risultato: string
   cta: string
   includeDa?: string
+  // features = elenco completo, vive solo su /pacchetti.
+  // sintesi e inBreve servono a home e /servizi: stesso piano, taglio diverso,
+  // cosi' le tre pagine non ripetono le stesse frasi parola per parola.
   features: string[]
+  sintesi: string[]
+  inBreve: string
   consigliato: boolean
 }
 
@@ -36,6 +41,12 @@ export const PACCHETTI: Pacchetto[] = [
       '1 campagna promozionale organica coordinata al mese',
       'Report mensile e call strategica di 30 minuti',
     ],
+    sintesi: [
+      '32 pubblicazioni al mese, divise su 2 canali',
+      'Nulla esce senza il tuo via libera',
+      'Una call da mezz’ora ogni mese',
+    ],
+    inBreve: 'Copre l’area social. Gli altri servizi del listino restano attivabili a parte.',
     consigliato: false,
   },
   {
@@ -58,6 +69,12 @@ export const PACCHETTI: Pacchetto[] = [
       'Report avanzato e call strategica di 45 minuti',
       'Supporto prioritario',
     ],
+    sintesi: [
+      '48 pubblicazioni al mese, divise su 2 canali',
+      'Un articolo organico ogni mese, con analisi dei concorrenti',
+      'Una call da tre quarti d’ora e risposta prioritaria',
+    ],
+    inBreve: 'Copre social e un contenuto organico al mese. Il resto del listino resta separato.',
     consigliato: true,
   },
 ]

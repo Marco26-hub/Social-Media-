@@ -3,8 +3,8 @@ import SegretariaLanding, { type ContenutoLanding } from '@/components/Segretari
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { SITE_URL } from '@/lib/site-config'
 
-// Pagina del servizio VOCE. Risponde a chi cerca "segretaria telefonica AI",
-// "centralino automatico", "chi risponde quando sono occupato": il problema e
+// Pagina del servizio VOCE. Risponde a chi cerca «segretaria telefonica AI»,
+// «centralino automatico», «chi risponde quando sono occupato»: il problema e
 // la chiamata persa. Il recupero clienti sta sulla pagina gemella, cosi le due
 // non competono per la stessa ricerca.
 

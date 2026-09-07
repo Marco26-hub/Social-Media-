@@ -466,7 +466,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
       {
         h2: 'Si parte dal cliente ideale, non dal mercato',
         paragrafi: [
-          'La domanda giusta non è "quante aziende posso contattare", ma "a quali aziende sono già utile". La risposta si trova guardando i clienti che hai: quali sono i più redditizi, quali tornano, quali portano meno problemi.',
+          'La domanda giusta non è «quante aziende posso contattare», ma «a quali aziende sono già utile». La risposta si trova guardando i clienti che hai: quali sono i più redditizi, quali tornano, quali portano meno problemi.',
           'Da lì emergono i criteri veri, che quasi mai coincidono con i filtri di un database. Possono essere il modello organizzativo, il fatto di avere o non avere una figura interna dedicata, la fase in cui si trova l’azienda.',
           'Altrettanto importanti sono i criteri di esclusione: chi non vuoi come cliente. Definirli in anticipo evita di riempire la lista di aziende che ti farebbero perdere tempo.',
         ],

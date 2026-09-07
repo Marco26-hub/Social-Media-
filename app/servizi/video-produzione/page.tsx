@@ -3,7 +3,7 @@ import { Clapperboard } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { SITE_URL } from '@/lib/site-config'
 
-// Riprese in azienda: l'anello che mancava. Fino a ieri montavamo il materiale
+// Riprese in azienda: l’anello che mancava. Fino a ieri montavamo il materiale
 // che il cliente girava da solo, con i limiti che aveva. Qui la materia prima
 // la produciamo noi, con un fotografo e — quando serve — una persona davanti
 // alla camera.

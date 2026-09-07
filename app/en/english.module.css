@@ -58,7 +58,11 @@
 .main { overflow: hidden; }
 .hero, .section, .band, .closing { padding: 92px max(24px, calc((100vw - 1180px) / 2)); }
 .hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 72px; align-items: center; background: #07120f; color: #f5f8f6; }
-.eyebrow { margin: 0 0 18px; color: #49c995; font-size: 13px; font-weight: 900; text-transform: uppercase; }
+/* Stesso occhiello su fondi opposti: sul chiaro #49c995 faceva 1,95:1, quindi
+   il valore base e' il verde profondo del brand (5,8:1). Hero e band sono
+   scuri e riprendono il verde chiaro, che li' fa 9:1. */
+.eyebrow { margin: 0 0 18px; color: #0f6b4f; font-size: 13px; font-weight: 900; text-transform: uppercase; }
+.hero .eyebrow, .band .eyebrow { color: #49c995; }
 .hero h1 { max-width: 760px; margin: 0; font: 700 clamp(48px, 6vw, 78px)/.98 Georgia, serif; }
 .heroLead { max-width: 690px; margin: 28px 0 0; color: #bcc9c4; font-size: 20px; line-height: 1.55; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }

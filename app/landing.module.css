@@ -1178,3 +1178,14 @@
 /* Colori espliciti: il token del testo si inverte in tema notte e il salto al
    contenuto diventava bianco su chiaro proprio quando serve. */
 .skipLink { background: #0D2620; color: #FFFDF7; }
+
+/* Rimanda al listino completo: le voci per esteso vivono solo su /pacchetti,
+   cosi' home e servizi non ripetono la stessa lista parola per parola. */
+.planDetailLink { margin: 12px 0 0; text-align: center; font-size: 13px; }
+.planDetailLink a {
+  color: var(--coral-testo, #b3452a);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+.planDetailLink a:hover { text-decoration-thickness: 2px; }

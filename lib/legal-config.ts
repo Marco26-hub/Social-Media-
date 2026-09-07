@@ -1,7 +1,7 @@
 // FONTE UNICA dei dati del Titolare del trattamento, usata da tutte le pagine
 // legali (Privacy, Cookie, Termini, Trasparenza AI) e dal footer.
 //
-// I campi [DA COMPILARE] devono essere sostituiti con i dati reali dell'azienda.
+// I campi [DA COMPILARE] devono essere sostituiti con i dati reali dell’azienda.
 
 export const TITOLARE = {
   // Ragione sociale completa (o nome e cognome se ditta individuale/freelance)
@@ -35,7 +35,7 @@ export const TITOLARE = {
 }
 
 // Fornitori/sub-responsabili del trattamento realmente usati dalla piattaforma.
-// Rilevanti per l'informativa privacy (art. 13 GDPR) e per i trasferimenti extra-UE.
+// Rilevanti per l’informativa privacy (art. 13 GDPR) e per i trasferimenti extra-UE.
 export const SUB_RESPONSABILI = [
   { nome: 'Neon (database Postgres)', ruolo: 'Hosting database e dati account', extraUe: 'Possibile (USA) — SCC/Data Privacy Framework' },
   { nome: 'Render', ruolo: 'Hosting applicazione', extraUe: 'Possibile (USA) — SCC' },

@@ -247,7 +247,9 @@
   position: absolute;
   top: 24px;
   right: 24px;
-  color: #c8d1cd;
+  /* Il numero e' ordinale, non decorazione: #c8d1cd faceva 1,46:1 su fondo
+     chiaro. Questo valore tiene la sfumatura discreta e arriva a 3:1. */
+  color: #7d8f88;
   font: 500 28px Georgia, serif;
 }
 
@@ -652,3 +654,14 @@
 
 /* Verde acceso su bianco fa 2,6:1: per il testo serve la variante scura. */
 .partnerCta { color: #0b5a41; }
+
+/* Rimanda al listino completo: le voci per esteso vivono solo su /pacchetti,
+   cosi' home e servizi non ripetono la stessa lista parola per parola. */
+.planDetailLink { margin: 12px 0 0; text-align: center; font-size: 13px; }
+.planDetailLink a {
+  color: var(--coral-testo, #b3452a);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+.planDetailLink a:hover { text-decoration-thickness: 2px; }

@@ -1,7 +1,7 @@
 import { SITE_URL } from '@/lib/site-config'
 // Render articoli blog → HTML (con JSON-LD Article + FAQPage per SEO/GEO) e Markdown.
 // Funzioni PURE (nessuna dipendenza server): usabili sia nelle pagine pubbliche sia
-// nell'export client-side della dashboard.
+// nell’export client-side della dashboard.
 
 export type BlogArticleData = {
   slug: string
@@ -71,7 +71,7 @@ export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
     description: a.meta_description || '',
     // Una persona con nome e pagina, non un marchio: e' il segnale che i motori
     // di risposta leggono come esperienza diretta, e coincide con quello che
-    // dice /chi-siamo — "una persona con nome, cognome e partita IVA".
+    // dice /chi-siamo — «una persona con nome, cognome e partita IVA».
     author: { '@type': 'Person', name: a.autore, url: `${SITE_URL}/chi-siamo`, jobTitle: 'Titolare, Social Web Automation' },
     publisher: {
       '@type': 'Organization',
@@ -107,7 +107,7 @@ export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
 }
 
 // CSS premium scoped a .silk-article: aggiungilo UNA volta al tema del blog,
-// oppure è già incluso nell'export HTML completo. Tipografia editoriale luxury, responsive.
+// oppure è già incluso nell’export HTML completo. Tipografia editoriale luxury, responsive.
 export const BLOG_CSS = `.silk-article{max-width:720px;margin:0 auto;padding:0 20px;font-family:Georgia,'Times New Roman',serif;color:#1c1a17;line-height:1.75;font-size:18px}
 .silk-article .cover{width:100%;height:auto;border-radius:14px;margin:0 0 28px;display:block;object-fit:cover}
 .silk-article h1{font-size:2.1rem;line-height:1.2;font-weight:700;margin:0 0 18px;color:#100f0d;letter-spacing:-.01em}
@@ -144,7 +144,7 @@ function buildInner(a: BlogArticleData): string {
 }
 
 // Corpo AUTOSTILIZZATO: CSS premium integrato (scoped a .silk-article) + articolo.
-// Si incolla così com'è in qualsiasi blog/CMS e ha già il layout premium, senza
+// Si incolla così com’è in qualsiasi blog/CMS e ha già il layout premium, senza
 // dover aggiungere CSS al tema.
 export function renderBodyHtml(a: BlogArticleData): string {
   return `<style>\n${BLOG_CSS}\n</style>\n<div class="silk-article">\n${buildInner(a)}\n</div>`
@@ -153,7 +153,7 @@ export function renderBodyHtml(a: BlogArticleData): string {
 // HTML completo AUTOSUFFICIENTE: <style> incluso + immagine + JSON-LD. Pronto da hostare/incollare.
 export function renderHtml(a: BlogArticleData, siteUrl?: string): string {
   // Escape di < → <: se un campo contiene "</script>" spezzerebbe il tag
-  // (XSS nell'HTML esportato incollato in CMS di terzi). Resta JSON-LD valido.
+  // (XSS nell’HTML esportato incollato in CMS di terzi). Resta JSON-LD valido.
   const jsonld = `<script type="application/ld+json">\n${JSON.stringify(buildJsonLd(a, siteUrl), null, 2).replace(/</g, '\\u003c')}\n</script>`
   return `<!-- Meta SEO: title/description (anche nel JSON-LD sotto) -->
 <!-- title: ${esc(a.meta_title)} -->

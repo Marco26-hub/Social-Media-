@@ -3,8 +3,8 @@ import SegretariaLanding, { type ContenutoLanding } from '@/components/Segretari
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { SITE_URL } from '@/lib/site-config'
 
-// Pagina del servizio AGENDA. Risponde a chi cerca "recuperare clienti persi",
-// "riempire l'agenda", "messaggi WhatsApp ai clienti": il problema qui non e la
+// Pagina del servizio AGENDA. Risponde a chi cerca «recuperare clienti persi»,
+// «riempire l’agenda», «messaggi WhatsApp ai clienti»: il problema qui non e la
 // chiamata persa ma il buco in agenda e il cliente che non torna. La parte
 // telefonica sta sulla pagina gemella.
 

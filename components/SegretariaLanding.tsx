@@ -10,8 +10,8 @@ import styles from './segretaria-landing.module.css'
 // Impianto condiviso dalle pagine della Segretaria AI.
 //
 // Le due pagine rispondono a due ricerche diverse — chi ha il telefono che
-// squilla a vuoto e chi ha l'agenda con i buchi — quindi hanno testi, titoli e
-// dati strutturati propri. Qui sta solo l'impaginazione, che e la stessa: il
+// squilla a vuoto e chi ha l’agenda con i buchi — quindi hanno testi, titoli e
+// dati strutturati propri. Qui sta solo l’impaginazione, che e la stessa: il
 // contenuto arriva tutto dalla configurazione, cosi due pagine non diventano
 // due copie della stessa pagina agli occhi di un motore.
 
@@ -42,7 +42,7 @@ export type ContenutoLanding = {
   citta: readonly string[]
   listino: { occhiello: string; h2: string; intro: string; famiglia: FamigliaSegretaria }
   faq: readonly (readonly [string, string])[]
-  /** Rimando all'altra pagina: il ponte fra i due servizi. */
+  /** Rimando all’altra pagina: il ponte fra i due servizi. */
   gemella: { href: string; occhiello: string; h2: string; testo: string; cta: string }
 }
 
@@ -71,7 +71,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
         url,
         provider: { '@type': 'Organization', name: 'Social Web Automation', url: SITE_URL },
         areaServed: { '@type': 'Country', name: 'Italia' },
-        // Un'offerta per piano: un motore che legge il catalogo puo mostrare il
+        // Un’offerta per piano: un motore che legge il catalogo puo mostrare il
         // prezzo giusto invece di indovinarlo dal testo.
         hasOfferCatalog: {
           '@type': 'OfferCatalog',
@@ -278,7 +278,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
           <p className={styles.listinoNota}>{SEGRETARIA_NOTA}</p>
         </section>
 
-        {/* Ponte verso l'altro servizio: tiene i due percorsi collegati senza
+        {/* Ponte verso l’altro servizio: tiene i due percorsi collegati senza
             farne una pagina sola. */}
         <section className={styles.gemella}>
           <div>

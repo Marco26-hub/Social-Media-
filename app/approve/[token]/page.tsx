@@ -130,8 +130,8 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
     link_prodotto_finale: c.link_prodotto_finale || null,
     nome_prodotto: c.nome_prodotto || '',
     tema: c.tema || '',
-    // Senza questi campi il cliente approvava un'anteprima diversa dal pubblicato:
-    // niente traccia audio (che Remotion incorpora nell'MP4) e nessun montaggio
+    // Senza questi campi il cliente approvava un’anteprima diversa dal pubblicato:
+    // niente traccia audio (che Remotion incorpora nell’MP4) e nessun montaggio
     // gia renderizzato, quindi vedeva una foto al posto del video.
     reel_audio_url: c.reel_audio_url || null,
     reel_audio_title: c.reel_audio_title || null,
@@ -207,7 +207,7 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
                   Mi piace
                 </button>
               </div>
-              <p className="text-[10px] text-gray-400 text-center">Il contenuto rimarrà in bozza. L&apos;admin riceverà il tuo feedback.</p>
+              <p className="text-[10px] text-gray-400 text-center">Il contenuto rimarrà in bozza. L’admin riceverà il tuo feedback.</p>
             </div>
           ) : (
             <div className="flex gap-3">

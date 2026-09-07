@@ -24,7 +24,7 @@ export default function PrivacyPage() {
     <LegalShell eyebrow="Informativa Privacy · GDPR" title="Privacy Policy" currentPath="/privacy">
       <p>
         La presente informativa descrive le modalità di trattamento dei dati personali degli utenti che
-        consultano il sito e utilizzano i servizi di {TITOLARE.brand}, ai sensi dell&apos;art. 13 del
+        consultano il sito e utilizzano i servizi di {TITOLARE.brand}, ai sensi dell’art. 13 del
         <strong> Regolamento UE 2016/679 (GDPR)</strong> e del D.Lgs. 196/2003 (Codice Privacy) come modificato dal D.Lgs. 101/2018.
       </p>
 
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
         <p>
           Il Titolare non ha nominato un Responsabile della Protezione dei Dati (DPO).
           Per richieste relative alla privacy è possibile contattare direttamente il Titolare
-          all&apos;indirizzo <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>.
+          all’indirizzo <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>.
         </p>
       )}
 
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
         </table>
       </div>
 
-      <h2>4. Uso dell&apos;intelligenza artificiale</h2>
+      <h2>4. Uso dell’intelligenza artificiale</h2>
       <p>
         La piattaforma utilizza <strong>OpenRouter</strong>, che instrada modelli di AI di terze parti (Google, OpenAI, Anthropic,
         Meta e altri) per generare testi e immagini. I dati che inserisci (brand, prodotti, immagini) possono essere inviati a
@@ -110,14 +110,14 @@ export default function PrivacyPage() {
       </ul>
 
       <h2>7. I tuoi diritti</h2>
-      <p>Ai sensi degli artt. 15-22 GDPR hai diritto di: accesso, rettifica, cancellazione (&quot;diritto all&apos;oblio&quot;), limitazione,
+      <p>Ai sensi degli artt. 15-22 GDPR hai diritto di: accesso, rettifica, cancellazione («diritto all’oblio»), limitazione,
         portabilità, opposizione, e di revocare il consenso in qualsiasi momento. Per esercitarli scrivi a <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>.
         Hai inoltre diritto di proporre reclamo al <strong>Garante per la Protezione dei Dati Personali</strong> (<a href="https://www.garanteprivacy.it" target="_blank" rel="noopener noreferrer">garanteprivacy.it</a>).</p>
 
       <h2>8. Sicurezza</h2>
       <p>Adottiamo misure tecniche e organizzative adeguate: password cifrate (bcrypt), connessioni HTTPS, controllo accessi
         multi-tenant, rate limiting, isolamento dei dati per cliente. Nessun sistema è sicuro al 100%, ma ci impegniamo a
-        proteggere i tuoi dati e a notificarti eventuali violazioni ai sensi dell&apos;art. 33-34 GDPR.</p>
+        proteggere i tuoi dati e a notificarti eventuali violazioni ai sensi dell’art. 33-34 GDPR.</p>
 
       <h2>9. Modifiche</h2>
       <p>Ci riserviamo di aggiornare questa informativa. Le modifiche sostanziali saranno comunicate via email o tramite avviso sul sito.</p>

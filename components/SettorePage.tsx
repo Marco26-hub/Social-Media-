@@ -4,7 +4,7 @@ import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/Ma
 import type { Settore } from '@/lib/settori'
 import { SITE_URL } from '@/lib/site-config'
 
-// Le landing di settore riusano l'impaginazione delle pagine servizio: stessa
+// Le landing di settore riusano l’impaginazione delle pagine servizio: stessa
 // struttura, stessi dati strutturati, stessa resa in tema notte. Cambia solo
 // da dove si entra — la categoria invece del prodotto — e quello vive in
 // lib/settori.ts.
