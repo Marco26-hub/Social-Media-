@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from '../english.module.css'
 
 const title = 'Pricing: Social, Blog, Web and B2B Lead Research | SWA'
-const description = 'Transparent starting prices for managed social media, Blog SEO + GEO, websites and the B2B Lead Research Pilot.'
+const description = 'Transparent starting prices for managed social media, Blog SEO + GEO, websites, the B2B Lead Research Pilot and the AI phone assistant. VAT excluded.'
 
 export const metadata: Metadata = {
   title,

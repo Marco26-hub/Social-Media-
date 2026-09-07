@@ -184,8 +184,11 @@ const FAQ = [
   },
 ]
 
+// La home mostra sei domande: senza FAQPage restano testo qualsiasi per un
+// motore di risposta, che e' il posto in cui oggi si viene citati.
 const homeJsonLd = {
   '@context': 'https://schema.org',
+  '@graph': [{
   '@type': 'WebPage',
   '@id': `${SITE_URL}/#webpage`,
   url: SITE_URL,
@@ -195,6 +198,15 @@ const homeJsonLd = {
   isPartOf: { '@id': `${SITE_URL}/#website` },
   about: { '@id': `${SITE_URL}/#organization` },
   primaryImageOfPage: { '@id': `${SITE_URL}/#logo` },
+  }, {
+    '@type': 'FAQPage',
+    '@id': `${SITE_URL}/#faq`,
+    mainEntity: FAQ.map(item => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a },
+    })),
+  }],
 }
 
 export default function LandingPage() {

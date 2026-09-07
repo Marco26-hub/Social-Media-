@@ -10,7 +10,7 @@ import { SITE_URL } from '@/lib/site-config'
 
 const path = '/servizi/video-produzione'
 const title = 'Riprese video in azienda con fotografo e volto | SWA'
-const description = 'Veniamo da te a girare: fotografo, luci, audio e attrezzatura. Con la possibilità di un volto, uomo o donna, davanti alla camera. Montaggio e pubblicazione sono già nel piano social.'
+const description = 'Veniamo da te a girare con fotografo, luci, audio e ottiche, e se serve un volto davanti alla camera. Montaggio e pubblicazione sono già nel piano social.'
 
 export const metadata: Metadata = {
   title,

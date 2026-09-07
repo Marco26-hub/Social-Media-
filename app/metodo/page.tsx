@@ -7,7 +7,7 @@ import PublicHeader from '@/components/PublicHeader'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '../content-page.module.css'
 
-const title = 'Metodo di Gestione Digitale SWA | Strategia, Produzione e Controllo'
+const title = 'Il metodo SWA: analisi, produzione, approvazione | SWA'
 const description = 'Scopri il metodo operativo Social Web Automation: analisi, strategia, produzione, approvazione, pubblicazione e misurazione per PMI e professionisti.'
 const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei capire come applicare il metodo Social Web Automation alla mia azienda.')}`
 

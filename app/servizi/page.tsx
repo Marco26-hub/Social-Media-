@@ -65,9 +65,44 @@ export const metadata: Metadata = {
   },
 }
 
+const FAQ = [
+  {
+    q: 'Quanto costa affidare la gestione dei social a Social Web Automation?',
+    a: 'Il piano Presenza costa 490 € al mese: 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 990 € al mese: 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, con articolo SEO + GEO e analisi competitor. Entrambi sono piani di sola crescita organica. IVA esclusa.',
+  },
+  {
+    q: 'Il cliente deve gestire il software?',
+    a: 'No. Acquisti un servizio gestito. Il portale serve a rendere semplici approvazioni e risultati; il lavoro operativo resta a nostro carico.',
+  },
+  {
+    q: 'I contenuti vengono pubblicati senza controllo?',
+    a: 'No. Il flusso prevede approvazione e revisioni tracciate prima della pubblicazione, secondo il perimetro del pacchetto.',
+  },
+  {
+    q: 'I piani includono le campagne a pagamento?',
+    a: 'No. Presenza e Crescita coprono la sola crescita organica. Le campagne ADS rientrano nella configurazione personalizzata: la gestione viene concordata e il budget versato alle piattaforme resta separato dal canone.',
+  },
+  {
+    q: 'SEO e GEO garantiscono risultati o citazioni?',
+    a: 'No. Miglioriamo struttura, qualità e reperibilità, ma nessun fornitore può garantire ranking o citazioni da parte dei sistemi AI.',
+  },
+  {
+    q: 'Qual è la differenza tra SEO + GEO e Blog SEO + GEO?',
+    a: 'SEO + GEO analizza struttura, intenti, pagine, dati e priorità del sito. Blog SEO + GEO esegue la produzione continuativa: piano editoriale e 12 articoli al mese.',
+  },
+]
+
 const servicesPageJsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: FAQ.map(item => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
     {
       '@type': 'CollectionPage',
       '@id': `${SITE_URL}/servizi#webpage`,
@@ -323,32 +358,6 @@ const METHOD = [
   ['04', 'Controllo', 'Approvazione, pubblicazione, report e ottimizzazione.'],
 ]
 
-const FAQ = [
-  {
-    q: 'Quanto costa affidare la gestione dei social a Social Web Automation?',
-    a: 'Il piano Presenza costa 490 € al mese: 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 990 € al mese: 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, con articolo SEO + GEO e analisi competitor. Entrambi sono piani di sola crescita organica. IVA esclusa.',
-  },
-  {
-    q: 'Il cliente deve gestire il software?',
-    a: 'No. Acquisti un servizio gestito. Il portale serve a rendere semplici approvazioni e risultati; il lavoro operativo resta a nostro carico.',
-  },
-  {
-    q: 'I contenuti vengono pubblicati senza controllo?',
-    a: 'No. Il flusso prevede approvazione e revisioni tracciate prima della pubblicazione, secondo il perimetro del pacchetto.',
-  },
-  {
-    q: 'I piani includono le campagne a pagamento?',
-    a: 'No. Presenza e Crescita coprono la sola crescita organica. Le campagne ADS rientrano nella configurazione personalizzata: la gestione viene concordata e il budget versato alle piattaforme resta separato dal canone.',
-  },
-  {
-    q: 'SEO e GEO garantiscono risultati o citazioni?',
-    a: 'No. Miglioriamo struttura, qualità e reperibilità, ma nessun fornitore può garantire ranking o citazioni da parte dei sistemi AI.',
-  },
-  {
-    q: 'Qual è la differenza tra SEO + GEO e Blog SEO + GEO?',
-    a: 'SEO + GEO analizza struttura, intenti, pagine, dati e priorità del sito. Blog SEO + GEO esegue la produzione continuativa: piano editoriale e 12 articoli al mese.',
-  },
-]
 
 export default function ServiziPage() {
   return (

@@ -499,3 +499,15 @@
   border-color: #2d3d37;
   box-shadow: 18px 20px 0 #102c24;
 }
+
+/* FAQ in pagina: i dati strutturati dichiarano domande e risposte, e devono
+   esistere anche per chi legge. Un FAQPage senza FAQ visibile e' una promessa
+   fatta al motore e non al lettore. */
+.faq { max-width: 1120px; margin: 0 auto; padding: 84px 24px; }
+.faqList { display: grid; gap: 1px; margin-top: 38px; border: 1px solid var(--line); background: var(--line); }
+.faqList details { padding: 20px 24px; background: var(--surface); }
+.faqList summary { cursor: pointer; font: 600 16px/1.4 Arial, sans-serif; list-style: none; }
+.faqList summary::-webkit-details-marker { display: none; }
+.faqList summary::after { content: '+'; float: right; color: var(--green); font-size: 20px; line-height: 1; }
+.faqList details[open] summary::after { content: '–'; }
+.faqList p { margin: 12px 0 0; max-width: 74ch; color: var(--muted); font-size: 14px; line-height: 1.68; }
