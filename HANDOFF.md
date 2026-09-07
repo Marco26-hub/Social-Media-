@@ -2,12 +2,40 @@
 
 Stato al 2026-09-07. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
 
-## Sessione 2026-09-07: Stripe attivo, offerta Segretaria, riprese video
+## Sessione 2026-09-07: Stripe live attivo, offerta Segretaria, riprese video
 
-### Stripe — configurato e i piani sono acquistabili
+### Stripe — Production configurata e collaudata
 
-Le chiavi sono ora su Vercel (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
-publishable, MCP). **Nota della sessione precedente superata.**
+Stripe e collegato definitivamente al progetto Vercel `social-media`. La sola
+risorsa associata al progetto e `stripe-live-swa` (`ir_2sme05zoOlRtxjZa`),
+limitata a Production. Le variabili `STRIPE_SECRET_KEY`,
+`STRIPE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` e
+`STRIPE_WEBHOOK_SECRET` sono tutte presenti e cifrate. I prefissi sono stati
+verificati senza esporre i valori: `sk_live_` e `pk_live_`.
+
+L'account collegato e **SWA** (`acct_1TgWTfHBk6JfHeZB`), verificato via Stripe:
+`charges_enabled = true` e `payouts_enabled = true`. La vecchia risorsa sandbox
+`stripe-bisque-bell` e stata scollegata dal progetto, quindi non puo piu
+iniettare chiavi `sk_test_`; non e stata cancellata dall'account Vercel.
+
+Il webhook live `https://www.socialautomation.app/api/stripe/webhook` e attivo
+su Stripe (`we_1UCoFTHBk6JfHeZBfHTDU53z`) e ascolta checkout, abbonamenti e
+fatture. Il webhook storico di `socialwebautomation.com` resta separato e
+continua a servire quel dominio sullo stesso account Stripe SWA.
+
+Il deploy Production `dpl_5oetwc6Mv13xCz5vf5p4799kp9oz` e `Ready` ed e
+aliasato su `https://www.socialautomation.app`. Lo smoke test ha creato una
+Checkout Session `cs_live_` per `agenda-clienti`: abbonamento live, EUR 1.180
+totali (EUR 390 mensili + EUR 790 una tantum). La sessione e stata subito
+scaduta senza pagamento. Potrebbe restare nell'admin una riga tecnica
+`stripe-smoke@socialautomation.app`, non pagata e riconoscibile, perche le
+credenziali database gestite da Vercel non erano disponibili alla CLI per la
+pulizia.
+
+I checkout esistenti Presenza/Crescita e i cinque nuovi servizi usano gli stessi
+helper Stripe e quindi lo stesso account live. Le cinque pagine `/acquista`
+rispondono tutte `200`; il webhook in produzione rifiuta correttamente una firma
+non valida, confermando che il signing secret e caricato nel deploy.
 
 Attenzione a un punto verificato sul campo: su Vercel le variabili entrano in
 vigore solo con un nuovo deploy. Le chiavi erano state aggiunte 17 minuti dopo
@@ -58,14 +86,113 @@ della voce e della frase di apertura.
   tantum si legge come un sovrapprezzo invece che come il lavoro che distingue
   il servizio dal software venduto da solo.
 
+### Landing di settore — nove verticali sotto /settori
+
+Le categorie esistevano solo come caselle di testo nella griglia delle due
+pagine Segretaria: nominavano un settore e non portavano da nessuna parte. Ora
+ognuna ha la sua pagina, e la casella lo dichiara con un richiamo visibile
+("Vedi come lavoriamo") invece di lasciarlo indovinare.
+
+Nove pagine: `autosaloni`, `parrucchieri`, `agenzie-immobiliari`,
+`imprese-di-pulizia`, `centri-estetici`, `cliniche-estetiche`,
+`studi-dentistici`, `fisioterapia-osteopatia`, `officine-e-servizi-locali`.
+Le prime quattro sono quelle chieste; le altre cinque completano la griglia,
+perche una sola casella cliccabile su sei si legge come un errore.
+
+- Contenuti in `lib/settori.ts` (sorgente unica), impaginazione in
+  `components/SettorePage.tsx` che riusa `MarketingDetailPage`. La briciola e
+  ora configurabile (`breadcrumbParent`), altrimenti le verticali figuravano
+  sotto /servizi.
+- **I prezzi non sono scritti nelle pagine**: si leggono da `lib/pacchetti.ts`,
+  `lib/standalone-services.ts` e `lib/segretaria-listino.ts`. Un ritocco di
+  listino non puo lasciare indietro nove pagine.
+- Nei settori sanitari (cliniche, dentisti, fisioterapia) il perimetro e
+  esplicito: l'assistente non risponde a domande cliniche, il titolare del
+  trattamento resta lo studio, le registrazioni audio non sono attive di base.
+  E la parte che fa vincere quelle trattative, non un cavillo.
+- Voce "Settori" nel menu desktop e mobile, nove URL in sitemap.
+
+**Da chiudere**: il "modulo di intervento tecnico" citato nella pagina delle
+imprese di pulizia non esiste da nessuna parte nel repo. E stato scritto solo
+con quello che ha detto il titolare, sotto "sviluppo su misura" che invece e
+documentato. Vanno raccolte le funzioni vere (firma sul posto? foto? PDF al
+cliente? collegamento alla commessa?) e riscritto il blocco.
+
+### Prezzo web: "a partire da", e il file per le AI era fermo a un listino morto
+
+Il canone di 19,90 euro al mese vale per una landing page semplice, non per un
+e-commerce. Ovunque compaia la cifra ora si legge "a partire da". Nelle
+pastiglie prezzo l'etichetta sta sopra la cifra: in linea allargava la riga
+oltre la sua colonna.
+
+`public/llms.txt` — il file che leggono i sistemi AI — dichiarava Presenza a
+390 euro e Crescita a 790 su 3 social con una campagna ADS. I piani reali sono
+490 e 990 su 2 canali, di sola crescita organica, e mancavano sei servizi su
+dieci. Numeri sbagliati li diventano risposte sbagliate su di noi. Corretto
+sulle sorgenti vere e completato con i servizi mancanti.
+
+Corretta anche la contraddizione sui canali: tabella di confronto e FAQ della
+gestione social dicevano che Crescita include tre canali, mentre la fonte dei
+pacchetti ne dice due.
+
+### Area cliente: chiede sempre le credenziali
+
+Il pulsante del sito pubblico portava a `/portale`: chi lo apriva con una
+sessione gia attiva — tipicamente l'admin mentre naviga il sito — entrava con
+l'utenza corrente. Ora apre `/login?cambia=1`: il middleware mostra il form
+invece di reindirizzare i loggati e cancella i cookie di sessione.
+
+Dettaglio che sarebbe passato inosservato: il cookie `__Secure-next-auth.
+session-token` si cancella **solo** con l'attributo `Secure`. Senza, il browser
+scarta il Set-Cookie e in produzione la sessione sopravviveva.
+
+### Incidente: il sito non ha compilato per un'ora
+
+Il commit delle pagine di settore ha spedito tre route che importano
+`botid/server` mentre `package.json` — modificato ma non committato da un altro
+autore — non dichiarava la dipendenza. In locale il pacchetto era gia in
+`node_modules` e il build passava; su Vercel no.
+
+`d725b8d` e fallito con "Module not found: Can't resolve 'botid/server'", la
+produzione e rimasta ferma a `59d9da0` e le pagine nuove non sono mai andate
+online finche non e arrivato `2c4b599` con i pezzi mancanti (dipendenza,
+`withBotId`, `instrumentation-client.ts`, limite sul checkout).
+
+**Regola che ne esce**: con due autori sullo stesso albero, `git add` di intere
+cartelle raccoglie lavoro altrui a meta. Un build locale che passa non dimostra
+niente se `node_modules` contiene pacchetti che il `package.json` committato non
+dichiara. Dopo ogni push, guardare lo stato del deploy prima di dire "online".
+
+BotID e ora attivo e verificato: una POST da script a `/api/consulenza` riceve
+403, la stessa POST dal browser reale arriva alla validazione (400 "Nome
+richiesto"). Le persone passano, gli script no.
+
+### Presentazione aziendale (PDF)
+
+Impianto nello scratchpad di sessione: `build-deck.mjs` (impaginazione) +
+`contenuti.json` (testi) -> `SWA-Presentazione.pdf`, 37 pagine. Copia di lavoro
+in `Desktop/preventivi SWA /` (attenzione: il nome della cartella finisce con
+uno spazio).
+
+- 12 sezioni con perimetri esclusivi, per togliere le ripetizioni: la stessa
+  idea era detta fino a otto volte. Aggiunte "Il ciclo completo" e "Listino"
+  (tutti i pacchetti e i costi su una pagina sola).
+- Il fact-check contro il repo ha bocciato affermazioni che il codice smentiva:
+  la seconda approvazione dei video (`requiresRenderedVisualReview()` ritorna
+  sempre `false`), i "contatti da chiamare" del pilot B2B (consegna azienda,
+  fonte e priorita, nessun nominativo), sitemap e dati strutturati dati per
+  compresi nel canone da 19,90.
+- Prezzi in verde scuro: il corallo del brand su fondo crema fa 3,3:1 di
+  contrasto, sotto la soglia di leggibilita. Il corallo resta sui segni grafici.
+- L'impaginatore ora chiude la pagina sul **peso** del testo, non sul numero di
+  blocchi: quattro blocchi densi sfondavano dove quattro corti stanno comodi.
+
 ### Deciso di NON fare
 
 - **Screenshot del pannello sul sito pubblico**: mostrano il metodo, non il
   risultato, e regalano il progetto a un concorrente. Le catture fatte in
   sessione sono state cancellate; erano finite in `public/`, che e servita
   pubblicamente anche senza link.
-- **Pagine per settore** (dentisti, centri estetici, ecc.): restano gli accenni
-  nella griglia delle due pagine Segretaria, da sviluppare piu avanti.
 - **Admin del prodotto vocale**: integrazione ancora da decidere.
 
 ### Voucher formazione — verifica fatta, esito negativo per ora
@@ -124,9 +251,21 @@ resta comunque deducibile per l'impresa, e quello si puo dire.
    una leva libera. Verificare in contratto se gli scaglioni acquistati
    corrispondono a quelli venduti: se compriamo pacchetti piu grandi di quelli
    che rivendiamo, ci sono minuti pagati e non consegnati.
-4. `RESEND_API_KEY` manca: le email di conferma non partono.
+4. `RESEND_API_KEY` manca: le email di conferma non partono. Non blocca
+   checkout, pagamento o attivazione via webhook.
 5. **Remotion**: ancora zero render riusciti in produzione.
 6. `admin` / `1234567` restano validi e leggibili nel repo pubblico.
+7. **Modulo di intervento tecnico**: citato nella pagina delle imprese di
+   pulizia ma inesistente nel repo. Raccogliere le funzioni vere e riscrivere
+   il blocco, oppure toglierlo.
+8. **"32 / 48 pubblicazioni"**: corretto come contratto (`lib/pacchetti.ts`), ma
+   il commento in testa a `lib/packages.ts` avverte che il generatore usa la
+   quota come **totale di periodo**: senza import da cartella campagna, Crescita
+   produce 24 contenuti complessivi, non 48. Sul sito e sul PDF stiamo
+   promettendo il doppio di quello che la macchina fa da sola.
+9. **Blog a 29,90 euro per 12 articoli contro Crescita a 990 che ne include
+   uno**: verificato in sorgente, ma letto di fila in una pagina di listino e
+   una domanda che il cliente fara.
 
 ## Sessione 2026-09-06: incidente Blotato, offerta Segretaria AI, sito
 
