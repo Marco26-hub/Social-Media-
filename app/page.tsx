@@ -136,7 +136,7 @@ const SERVICES = [
     href: '/servizi/seo-geo',
     title: 'Visibilità SEO + GEO',
     text: 'Audit, strategia, struttura e priorità per rendere sito e offerta comprensibili ai motori di ricerca e ai sistemi AI.',
-    items: ['Audit tecnico ed editoriale', 'Architettura, intenti e priorità', 'Entità, fonti e dati strutturati', 'Monitoraggio e piano di miglioramento'],
+    items: ['Controllo del sito e dei testi già online', 'Che cosa cercano davvero i tuoi clienti', 'Chi sei, scritto in modo che Google e le AI lo capiscano', 'Che cosa è cambiato, mese per mese'],
   },
   {
     icon: Newspaper,
@@ -213,7 +213,7 @@ const EVIDENCE = [
   { title: 'Processo social visibile', text: 'Piano, produzione, approvazione e pubblicazione sono descritti passaggio per passaggio.', href: '/metodo', label: 'Verifica il metodo' },
   { title: 'Journal pubblico', text: 'Articoli, struttura editoriale, FAQ e collegamenti mostrano concretamente l’approccio SEO + GEO.', href: '/blog', label: 'Apri il Journal' },
   { title: 'Portfolio Web reale', text: 'SILKinCOM, Studio Legale BCS e Borsieri Car Service sono progetti pubblici consultabili.', href: '/servizi/siti-e-commerce', label: 'Guarda i progetti' },
-  { title: 'Pilot B2B delimitato', text: 'Deliverable, limiti, prezzo e checkout sono dichiarati prima dell’acquisto.', href: '/servizi/ricerca-clienti-b2b', label: 'Esamina il Pilot' },
+  { title: 'Pilot B2B delimitato', text: 'Che cosa ricevi, che cosa resta fuori e quanto costa: scritto prima di pagare, non dopo.', href: '/servizi/ricerca-clienti-b2b', label: 'Esamina il Pilot' },
 ]
 
 const LEGAL_SERVICES = [

@@ -2,6 +2,8 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { altraLingua } from '@/lib/lingue'
 import { ArrowRight, LogIn } from 'lucide-react'
 import DesktopMenu from './DesktopMenu'
 import MobileMenu from './MobileMenu'
@@ -46,6 +48,10 @@ const MOBILE_LINKS_EN = [
 
 export default function PublicHeader({ ctaHref, ctaLabel, locale = 'it' }: { ctaHref: string; ctaLabel: string; locale?: 'it' | 'en' }) {
   const isEnglish = locale === 'en'
+  // Il cambio lingua porta alla stessa pagina nell'altra lingua quando la
+  // traduzione esiste, non sempre alla home.
+  const percorso = usePathname() || '/'
+  const hrefLingua = altraLingua(percorso, isEnglish ? 'it' : 'en')
 
   return (
     <header className={styles.navbar}>
@@ -57,7 +63,7 @@ export default function PublicHeader({ ctaHref, ctaLabel, locale = 'it' }: { cta
       </Link>
       <DesktopMenu locale={locale} />
       <div className={styles.actions}>
-        <Link href={isEnglish ? '/' : '/en'} className={styles.language} lang={isEnglish ? 'it' : 'en'} aria-label={isEnglish ? 'Versione italiana' : 'English version'}>
+        <Link href={hrefLingua} className={styles.language} lang={isEnglish ? 'it' : 'en'} aria-label={isEnglish ? 'Versione italiana' : 'English version'}>
           {isEnglish ? 'IT' : 'EN'}
         </Link>
         <ThemeToggle />

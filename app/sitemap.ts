@@ -4,21 +4,12 @@ import { resolveBlogClienteIdForHost } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
 import { SETTORI } from '@/lib/settori'
 import { SETTORI_EN } from '@/lib/settori.en'
+// Stessa mappa usata dal cambio lingua in testata: una copia sola.
+import { COPPIE_LINGUA as ENGLISH_PAIRS } from '@/lib/lingue'
 import { SWA_BLOG_ARTICLES } from '@/lib/swa-blog-content'
 
 type PublishedArticle = { slug: string; updated_at: string | Date | null }
 
-const ENGLISH_PAIRS: Record<string, string> = {
-  '/': '/en',
-  '/servizi': '/en/services',
-  '/metodo': '/en/method',
-  '/pacchetti': '/en/pricing',
-  '/chi-siamo': '/en/about',
-  '/faq': '/en/faq',
-  '/contatti': '/en/contact',
-  '/settori': '/en/settori',
-  ...Object.fromEntries(SETTORI_EN.map(settore => [`/settori/${settore.slug}`, `/en/settori/${settore.slug}`])),
-}
 
 function languageAlternates(italianPath: string) {
   const englishPath = ENGLISH_PAIRS[italianPath]
