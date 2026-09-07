@@ -13,7 +13,7 @@
 
 ## Sintesi
 
-**Punteggio GEO: 50/100 → 61/100**
+**Punteggio GEO: 50/100 → 62/100 · Punteggio SEO: 67/100 → 68/100**
 
 Il sito era **tecnicamente eccellente e pubblicamente inesistente**. La parte
 tecnica è stata portata da 89 a 95 e i dati strutturati da 51 a 82, ma il tetto
@@ -35,13 +35,14 @@ esterna conferma che questa azienda esista.**
 
 | Categoria | Prima | Dopo | Peso | Che cosa è cambiato |
 |---|---|---|---|---|
-| Citabilità AI | 58 | **72** | 25% | Da 1 a 5 tabelle, H2 in forma di domanda dall'1,4% al 9,2%, 23 fonti citate |
+| Citabilità AI | 58 | **74** | 25% | Da 1 a 5 tabelle, H2 in forma di domanda dall'1,4% al 9,2%, 23 fonti citate, ancore che nominano la destinazione |
 | Autorità di marca | 6 | **8** | 20% | Solo disambiguazione nello schema. Il resto è fuori dal sito |
-| Contenuti E-E-A-T | 53 | **65** | 20% | Pagina autore, entità Person, fonti primarie, date reali |
-| Tecnico | 89 | **95** | 15% | Blog in cache, IndexNow automatico, immagini, bersagli tattili |
-| Dati strutturati | 51 | **82** | 10% | Prezzi corretti, entità unificata, Offer ovunque, Course, speakable |
-| Piattaforme AI | 51 | **58** | 10% | Migliora ciò che dipende dal sito; il resto richiede presenza esterna |
-| **Totale** | **50** | **61** | | |
+| Contenuti E-E-A-T | 53 | **67** | 20% | Pagina autore, entità Person, fonti primarie, date reali, prova gratuita come azione |
+| Tecnico | 89 | **96** | 15% | Blog in cache, IndexNow automatico, immagini, bersagli tattili a zero |
+| Dati strutturati | 51 | **85** | 10% | Prezzi corretti, entità unificata, 368 Offer, Course, speakable, schema anche su /en |
+| Piattaforme AI | 51 | **60** | 10% | Migliora ciò che dipende dal sito; il resto richiede presenza esterna |
+| **Totale GEO** | **50** | **62** | | |
+| **Totale SEO** | **67** | **68** | | Tecnica 96, on-page 92, contenuti 70, autorevolezza fuori dal sito 10 |
 
 ### Punteggio SEO classico: 67/100
 
@@ -79,6 +80,11 @@ sono limitati dallo stesso fattore — l'assenza di conferme esterne — che val
 | Bersagli tattili sotto 24px (home) | 21 | **2** |
 | Prezzi sbagliati nei dati strutturati | su tutte le 55 pagine | **0** |
 | `/llms-full.txt` | 404 | **104 KB, 16.578 parole** |
+| Elementi `<time>` | 0 | **14** |
+| Classi con contrasto insufficiente | 60 | **19** (e i residui sono per lo più artefatti di misura su hero fotografici) |
+| Servizi nella sezione inglese | 6 su 10 | **11 su 11** |
+| Ancore generiche («Approfondisci», «Apri la pagina») | 31 | **0** |
+| Richiami alla prova gratuita | 1 | **22** |
 
 ---
 
