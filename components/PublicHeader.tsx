@@ -20,6 +20,7 @@ const MOBILE_LINKS = [
   { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
   { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
   { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
+  { href: '/settori', label: 'Settori' },
   { href: '/metodo', label: 'Metodo' },
   { href: '/pacchetti', label: 'Pacchetti' },
   { href: '/consulenza', label: 'Consulenza legale AI' },

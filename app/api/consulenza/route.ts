@@ -4,6 +4,7 @@ import { dbReady, q1 } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 import { sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 import { stripeConfigured, createOneOffCheckoutSession } from '@/lib/stripe'
+import { checkBotId } from 'botid/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +19,11 @@ function baseUrl(): string {
 // Checkout Stripe (mode=payment). Ad avvenuto pagamento il webhook la marca 'paid'.
 export async function POST(request: Request) {
   try {
+    const bot = await checkBotId()
+    if (bot.isBot) {
+      return NextResponse.json({ error: 'Richiesta automatizzata bloccata.' }, { status: 403 })
+    }
+
     const body = (await request.json()) as Record<string, unknown>
     const nome = String(body.nome || '').trim()
     const email = String(body.email || '').trim().toLowerCase()

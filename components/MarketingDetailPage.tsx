@@ -28,6 +28,9 @@ type PortfolioBlock = {
 
 export type MarketingDetailConfig = {
   path: string
+  /** Livello intermedio della briciola. Serve alle pagine che non stanno
+   *  sotto /servizi, come le landing di settore. */
+  breadcrumbParent?: { label: string; href: string }
   eyebrow: string
   title: string
   lead: string
@@ -55,6 +58,7 @@ const WHATSAPP_NUMBER = '393477196603'
 
 export default function MarketingDetailPage({ config }: { config: MarketingDetailConfig }) {
   const Icon = config.icon
+  const parent = config.breadcrumbParent ?? { label: 'Servizi', href: '/servizi' }
   const pageUrl = `${SITE_URL}${config.path}`
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Web Automation.`)}`
   const jsonLd = {
@@ -93,7 +97,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-          { '@type': 'ListItem', position: 2, name: 'Servizi', item: `${SITE_URL}/servizi` },
+          { '@type': 'ListItem', position: 2, name: parent.label, item: `${SITE_URL}${parent.href}` },
           { '@type': 'ListItem', position: 3, name: config.serviceName, item: pageUrl },
         ],
       },
@@ -133,7 +137,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       <section className={styles.hero} aria-labelledby="detail-title">
         <div className={styles.heroCopy}>
           <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
-            <Link href="/">Home</Link><span>/</span><Link href="/servizi">Servizi</Link><span>/</span><span>{config.serviceName}</span>
+            <Link href="/">Home</Link><span>/</span><Link href={parent.href}>{parent.label}</Link><span>/</span><span>{config.serviceName}</span>
           </nav>
           <p className={styles.eyebrow}>{config.eyebrow}</p>
           <h1 id="detail-title">{config.title}</h1>

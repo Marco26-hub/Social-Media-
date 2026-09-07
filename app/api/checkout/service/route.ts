@@ -7,6 +7,7 @@ import { ensureRuntimeMigrations } from '@/lib/runtime-migrations'
 import { createStandaloneServiceCheckoutSession, stripeConfigured } from '@/lib/stripe'
 import { sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 import { verifyTurnstile } from '@/lib/turnstile'
+import { checkBotId } from 'botid/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +47,33 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const bot = await checkBotId()
+    if (bot.isBot) {
+      return NextResponse.json({ error: 'Richiesta automatizzata bloccata.' }, { status: 403 })
+    }
+
+    const contentType = request.headers.get('content-type') || ''
+    if (!contentType.toLowerCase().startsWith('application/json')) {
+      return NextResponse.json({ error: 'Formato richiesta non supportato.' }, { status: 415 })
+    }
+    const contentLength = Number(request.headers.get('content-length') || 0)
+    if (Number.isFinite(contentLength) && contentLength > 32_768) {
+      return NextResponse.json({ error: 'Richiesta troppo grande.' }, { status: 413 })
+    }
+    const origin = request.headers.get('origin')
+    if (request.headers.get('sec-fetch-site') === 'cross-site') {
+      return NextResponse.json({ error: 'Origine della richiesta non consentita.' }, { status: 403 })
+    }
+    if (origin) {
+      try {
+        if (new URL(origin).host !== new URL(request.url).host) {
+          return NextResponse.json({ error: 'Origine della richiesta non consentita.' }, { status: 403 })
+        }
+      } catch {
+        return NextResponse.json({ error: 'Origine della richiesta non valida.' }, { status: 403 })
+      }
+    }
+
     const body = await request.json() as Record<string, unknown>
     const service = standaloneServiceBySlug(clean(body.service_slug, 60))
     const nome = clean(body.nome, 120)

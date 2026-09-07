@@ -8,6 +8,7 @@ import { notifyNewRegistration, sendRegistrationReceived } from '@/lib/email'
 import { verifyTurnstile } from '@/lib/turnstile'
 import { passwordProblem } from '@/lib/password-policy'
 import { stripeConfigured, createStripeCheckoutSession, euroStringToCents } from '@/lib/stripe'
+import { checkBotId } from 'botid/server'
 
 function baseUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://www.socialautomation.app').replace(/\/$/, '')
@@ -17,6 +18,33 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(request: Request) {
   try {
+    const bot = await checkBotId()
+    if (bot.isBot) {
+      return NextResponse.json({ error: 'Richiesta automatizzata bloccata.' }, { status: 403 })
+    }
+
+    const contentType = request.headers.get('content-type') || ''
+    if (!contentType.toLowerCase().startsWith('application/json')) {
+      return NextResponse.json({ error: 'Formato richiesta non supportato.' }, { status: 415 })
+    }
+    const contentLength = Number(request.headers.get('content-length') || 0)
+    if (Number.isFinite(contentLength) && contentLength > 32_768) {
+      return NextResponse.json({ error: 'Richiesta troppo grande.' }, { status: 413 })
+    }
+    const origin = request.headers.get('origin')
+    if (request.headers.get('sec-fetch-site') === 'cross-site') {
+      return NextResponse.json({ error: 'Origine della richiesta non consentita.' }, { status: 403 })
+    }
+    if (origin) {
+      try {
+        if (new URL(origin).host !== new URL(request.url).host) {
+          return NextResponse.json({ error: 'Origine della richiesta non consentita.' }, { status: 403 })
+        }
+      } catch {
+        return NextResponse.json({ error: 'Origine della richiesta non valida.' }, { status: 403 })
+      }
+    }
+
     const body = (await request.json()) as Record<string, unknown>
     const nome = String(body.nome || '').trim()
     const azienda = String(body.azienda || '').trim()

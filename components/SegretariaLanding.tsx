@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
 import { SEGRETARIA_AVVIO, SEGRETARIA_NOTA, type FamigliaSegretaria } from '@/lib/segretaria-listino'
@@ -35,7 +36,9 @@ export type ContenutoLanding = {
   flusso: { occhiello: string; h2: string; passi: readonly string[]; chiusura: string }
   pannello: { occhiello: string; h2: string; testo: string; vedi: readonly string[]; righe: readonly (readonly [string, string])[] }
   avvio: { occhiello: string; h2: string; passi: readonly (readonly [string, string])[] }
-  settori: { occhiello: string; h2: string; voci: readonly (readonly [string, string])[] }
+  /** Terzo elemento facoltativo: il percorso della pagina di settore, quando
+   *  esiste. Le caselle senza percorso restano testo, non finti link. */
+  settori: { occhiello: string; h2: string; voci: readonly (readonly [string, string, string?])[] }
   citta: readonly string[]
   listino: { occhiello: string; h2: string; intro: string; famiglia: FamigliaSegretaria }
   faq: readonly (readonly [string, string])[]
@@ -221,9 +224,13 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
         <section className="section audience-section">
           <div className="section-title"><span>{c.settori.occhiello}</span><h2>{c.settori.h2}</h2></div>
           <div className="audience-grid">
-            {c.settori.voci.map(([t, p], i) => (
-              <div key={t}><span>0{i + 1}</span><h3>{t}</h3><p>{p}</p></div>
-            ))}
+            {c.settori.voci.map(([t, p, href], i) => {
+              const dentro = <><span>0{i + 1}</span><h3>{t}</h3><p>{p}</p>
+                {href && <em className={styles.vaiAlSettore}>Vedi come lavoriamo <ArrowRight size={15} aria-hidden="true" /></em>}</>
+              return href
+                ? <Link key={t} href={href}>{dentro}</Link>
+                : <div key={t}>{dentro}</div>
+            })}
           </div>
         </section>
 

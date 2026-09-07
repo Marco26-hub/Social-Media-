@@ -33,6 +33,15 @@ function appendForm(params: URLSearchParams, key: string, value: unknown) {
   params.append(key, String(value))
 }
 
+function appendCheckoutFraudSignals(params: URLSearchParams) {
+  // Stripe Radar valuta meglio il rischio con indirizzo e telefono. Il 3DS resta
+  // adattivo: Stripe lo richiede quando il rischio o le regole SCA lo rendono
+  // necessario, senza imporre attrito a ogni cliente.
+  appendForm(params, 'billing_address_collection', 'required')
+  appendForm(params, 'phone_number_collection[enabled]', true)
+  appendForm(params, 'payment_method_options[card][request_three_d_secure]', 'automatic')
+}
+
 type StripeRequestOptions = {
   idempotencyKey?: string
   attempts?: number
@@ -127,6 +136,7 @@ export async function createStripeCheckoutSession(args: {
 
   const params = new URLSearchParams()
   appendForm(params, 'mode', 'subscription')
+  appendCheckoutFraudSignals(params)
   appendForm(params, 'success_url', args.successUrl)
   appendForm(params, 'cancel_url', args.cancelUrl)
   appendForm(params, 'client_reference_id', args.clienteId)
@@ -184,6 +194,7 @@ export async function createStandaloneServiceCheckoutSession(args: {
 
   const params = new URLSearchParams()
   appendForm(params, 'mode', args.billingMode)
+  appendCheckoutFraudSignals(params)
   appendForm(params, 'success_url', args.successUrl)
   appendForm(params, 'cancel_url', args.cancelUrl)
   appendForm(params, 'client_reference_id', args.orderId)
@@ -244,6 +255,7 @@ export async function createOneOffCheckoutSession(args: {
 
   const params = new URLSearchParams()
   appendForm(params, 'mode', 'payment')
+  appendCheckoutFraudSignals(params)
   appendForm(params, 'success_url', args.successUrl)
   appendForm(params, 'cancel_url', args.cancelUrl)
   appendForm(params, 'client_reference_id', args.refId)

@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { dbReady, q } from '@/lib/db'
 import { resolveBlogClienteIdForHost } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
+import { SETTORI } from '@/lib/settori'
 import { SWA_BLOG_ARTICLES } from '@/lib/swa-blog-content'
 
 type PublishedArticle = { slug: string; updated_at: string | Date | null }
@@ -47,6 +48,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: marketingUpdated,
       changeFrequency: 'monthly' as const,
       priority: path.startsWith('/servizi/') ? 0.85 : 0.75,
+    })),
+    {
+      url: `${SITE_URL}/settori`,
+      lastModified: marketingUpdated,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    ...SETTORI.map(settore => ({
+      url: `${SITE_URL}/settori/${settore.slug}`,
+      lastModified: marketingUpdated,
+      changeFrequency: 'monthly' as const,
+      priority: 0.85,
     })),
     {
       url: `${SITE_URL}/chi-siamo`,

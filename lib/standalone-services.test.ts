@@ -62,4 +62,7 @@ test('Stripe checkout puts setup on the first invoice without making it recurrin
   assert.equal(params.get('line_items[1][price_data][recurring][interval]'), null)
   assert.equal(params.get('line_items[1][price_data][product_data][metadata][tipo]'), 'setup')
   assert.equal(params.get('subscription_data[metadata][service_order_id]'), 'order-contract')
+  assert.equal(params.get('billing_address_collection'), 'required')
+  assert.equal(params.get('phone_number_collection[enabled]'), 'true')
+  assert.equal(params.get('payment_method_options[card][request_three_d_secure]'), 'automatic')
 })

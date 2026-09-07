@@ -17,6 +17,7 @@ import {
   PackageCheck,
   Scale,
   ScanSearch,
+  Store,
   Target,
   Workflow,
   PhoneCall,
@@ -162,6 +163,9 @@ export default function DesktopMenu() {
         )}
       </div>
 
+      <Link className={`${styles.menuLink} ${pathname.startsWith('/settori') ? styles.active : ''}`} href="/settori">
+        <Store size={15} strokeWidth={1.9} aria-hidden="true" /> Settori
+      </Link>
       <Link className={`${styles.menuLink} ${pathname === '/metodo' ? styles.active : ''}`} href="/metodo">
         <Workflow size={15} strokeWidth={1.9} aria-hidden="true" /> Metodo
       </Link>
