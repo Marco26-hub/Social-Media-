@@ -102,6 +102,33 @@ export const EN_FAQ_GROUPS = [
   },
 ]
 
+// FAQ propria della pagina metodo. Prima rendeva EN_FAQ_GROUPS[0], cioe' le
+// stesse tre domande di /en/faq parola per parola: 21,9% di sovrapposizione
+// fra due pagine che devono rispondere a bisogni diversi. Qui si parla solo
+// di come scorre il ciclo, non di che cosa comprende il servizio.
+export const EN_METHOD_FAQ = [
+  {
+    q: 'What happens in the first month?',
+    a: 'The cycle opens with the review that produces the monthly plan: objectives, roles, deadlines and the criteria used to judge the work. Production starts once that plan is agreed, so the first published item follows the approval rather than the signature.',
+  },
+  {
+    q: 'What do I have to do each month?',
+    a: 'Two things: approve the plan at the start of the cycle, and approve the material before it goes out. Everything between those two points is handled on our side.',
+  },
+  {
+    q: 'What happens if I do not approve something?',
+    a: 'It is not published. The item goes back into production with your notes and returns for a second look; how many rounds are included depends on the package you selected.',
+  },
+  {
+    q: 'How are the next priorities chosen?',
+    a: 'From what the previous cycle actually produced. We read the measurable signals first and let them set the order of work, instead of restarting from impressions.',
+  },
+  {
+    q: 'Is the method the same for every service?',
+    a: 'The four stages are. What changes is what is produced inside them: social content, pages, articles, a research list or a workflow configuration.',
+  },
+]
+
 export const EN_ABOUT_FAQ = [
   { q: 'Who is Social Web Automation?', a: `${EN_COMPANY.name} is based in ${EN_COMPANY.location}. It supports SMEs and professionals with social content, websites, search and AI discoverability, B2B research, phone response workflows and operational systems.` },
   { q: 'How many sectors do you cover?', a: `The Italian site currently covers ${EN_COMPANY.sectorCount} sector categories. The English section only shows the sector pages that are ready for English-speaking readers today.` },

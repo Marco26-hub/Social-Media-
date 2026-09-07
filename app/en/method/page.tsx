@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check, ClipboardCheck, Gauge, Search, Workflow } from 'lucide-react'
-import { EN_FAQ_GROUPS, EN_METHOD_STEPS, EN_WHATSAPP_URL } from '@/lib/english-content'
+import { EN_METHOD_FAQ, EN_METHOD_STEPS, EN_WHATSAPP_URL } from '@/lib/english-content'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '../english.module.css'
 
 const title = 'The SWA Method: assessment, production, approval | SWA'
 const description = 'A clear operating method for SMEs: assessment, shared direction, production, approval, publishing and monthly reporting, with human control at every step.'
-const methodFaq = EN_FAQ_GROUPS[0].items
+const methodFaq = EN_METHOD_FAQ
 
 export const metadata: Metadata = {
   title,
