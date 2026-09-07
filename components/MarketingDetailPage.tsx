@@ -37,6 +37,10 @@ export type MarketingDetailConfig = {
   title: string
   lead: string
   serviceName: string
+  /** Nome breve usato dentro i titoli. Su una pagina di settore serviceName
+   *  e' una frase descrittiva («Marketing e agenda per parrucchieri»), che
+   *  dentro un H2 diventa illeggibile. */
+  entityName?: string
   serviceType: string
   promise: string
   startingPrice?: string
@@ -57,6 +61,14 @@ export type MarketingDetailConfig = {
 }
 
 const WHATSAPP_NUMBER = '393477196603'
+
+/** Il nome del servizio dentro una frase vuole l'iniziale minuscola, salvo
+ *  quando e' una sigla o un nome proprio (SEO, GEO, WhatsApp, AI). */
+function minuscolo(nome: string): string {
+  const prima = nome.split(' ')[0]
+  if (prima.length <= 4 && prima === prima.toUpperCase()) return nome
+  return nome.charAt(0).toLowerCase() + nome.slice(1)
+}
 
 export default function MarketingDetailPage({ config }: { config: MarketingDetailConfig }) {
   const Icon = config.icon
@@ -242,7 +254,11 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       <section className={styles.process} aria-labelledby="process-title">
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>{isEnglish ? 'Method' : 'Metodo'}</p>
-          <h2 id="process-title">{isEnglish ? 'A process you can read from start to result.' : 'Un processo leggibile dall’inizio ai risultati.'}</h2>
+          {/* Questi tre titoli erano identici su 19 pagine. Un titolo ripetuto
+              non ancora nulla: quando un motore estrae un blocco si porta
+              dietro il titolo, e diciannove volte lo stesso non distingue una
+              pagina dall'altra. Ora nominano il servizio della pagina. */}
+          <h2 id="process-title">{isEnglish ? (config.entityName ? `How it works for ${minuscolo(config.entityName)}, step by step` : `How ${config.serviceName} works, step by step`) : (config.entityName ? `Come lavoriamo per ${minuscolo(config.entityName)}, passo per passo` : `Come funziona ${minuscolo(config.serviceName)}, passo per passo`)}</h2>
         </div>
         <ol>
           {config.process.map(step => (
@@ -259,7 +275,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       <section className={styles.faq} aria-labelledby="faq-title">
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>{isEnglish ? 'FAQ' : 'Domande frequenti'}</p>
-          <h2 id="faq-title">{isEnglish ? 'Answers before we start.' : 'Risposte prima di iniziare.'}</h2>
+          <h2 id="faq-title">{isEnglish ? `${config.entityName ?? config.serviceName}: the questions we get before we start` : `${config.entityName ?? config.serviceName}: le domande che ci fanno prima di iniziare`}</h2>
         </div>
         <div>
           {config.faq.map(item => (
@@ -276,7 +292,10 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         <section className={styles.settoriBand} aria-labelledby="settori-title">
           <div>
             <p className={styles.eyebrow}>{isEnglish ? 'Where it matters' : 'Dove serve di più'}</p>
-            <h2 id="settori-title">{isEnglish ? `This service in ${settori.length} sectors.` : `Questo servizio in ${settori.length} settori.`}</h2>
+            {/* Con un solo settore usciva «Questo servizio in 1 settori». */}
+            <h2 id="settori-title">{settori.length === 1
+              ? (isEnglish ? 'Where this service is used' : 'Dove si usa questo servizio')
+              : (isEnglish ? `This service in ${settori.length} sectors` : `Questo servizio in ${settori.length} settori`)}</h2>
             <p>{isEnglish ? 'Each page explains what actually matters in that trade, and what can be left alone.' : 'Ogni pagina dice quali attività servono davvero in quel mestiere, e quali si possono lasciare stare.'}</p>
           </div>
           <ul>
@@ -302,7 +321,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       </nav>
 
       <section className={styles.finalCta}>
-        <div><p className={styles.eyebrow}>{isEnglish ? 'Next step' : 'Prossimo passo'}</p><h2>{isEnglish ? 'Turn the goal into a clear plan.' : 'Trasformiamo l’obiettivo in un piano chiaro.'}</h2><p>{isEnglish ? 'A first assessment clarifies priorities, activities, responsibilities and costs.' : 'Una prima valutazione chiarisce priorità, attività, responsabilità e costi.'}</p></div>
+        <div><p className={styles.eyebrow}>{isEnglish ? 'Next step' : 'Prossimo passo'}</p><h2>{isEnglish ? (config.entityName ? `Is this the right fit for ${minuscolo(config.entityName)}?` : `Is ${minuscolo(config.serviceName)} right for you?`) : (config.entityName ? `Fa al caso tuo, se lavori con ${minuscolo(config.entityName)}?` : `${config.serviceName} fa al caso tuo?`)}</h2><p>{isEnglish ? 'A first assessment clarifies priorities, activities, responsibilities and costs.' : 'Una prima valutazione chiarisce priorità, attività, responsabilità e costi.'}</p></div>
         {config.primaryCtaHref ? (
           <Link href={config.primaryCtaHref}>{config.primaryCtaLabel ?? 'Attiva il servizio'} <ArrowRight size={17} aria-hidden="true" /></Link>
         ) : (

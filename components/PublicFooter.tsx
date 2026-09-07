@@ -26,10 +26,14 @@ const socialProfiles = [
 export default function PublicFooter() {
   return (
     <footer className={styles.footer}>
-      <section className={styles.socialSection} aria-labelledby="social-title">
+      {/* Il titolo di questa fascia era un h2, e comparendo nel footer di 37
+          pagine finiva nella struttura dei titoli di tutto il sito come voce
+          senza contenuto informativo. Resta identico a vista, ma non e' piu'
+          un titolo di sezione. */}
+      <section className={styles.socialSection} aria-label="Profili social di Social Web Automation">
         <div className={styles.socialIntro}>
           <span className={styles.eyebrow}>SWA SOCIAL DESK</span>
-          <h2 id="social-title">Seguici sui social.</h2>
+          <p className={styles.socialTitolo}>Seguici sui social.</p>
           <p>Strategia applicata, progetti reali e spunti utili per far crescere la presenza digitale.</p>
         </div>
 

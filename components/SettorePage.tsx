@@ -65,6 +65,7 @@ export default function SettorePage({ settore, locale = 'it' }: { settore: Setto
     title: settore.h1,
     lead: settore.lead,
     serviceName: settore.servizio,
+    entityName: settore.nome,
     serviceType: settore.tipoServizio,
     promise: settore.promessa,
     priceNote: settore.notaPrezzi,

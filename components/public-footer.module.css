@@ -30,6 +30,15 @@
   line-height: 1;
   letter-spacing: 0;
 }
+.socialTitolo {
+  margin: 0;
+  color: #fffdf8;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(34px, 4vw, 54px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+}
 .socialIntro p {
   max-width: 390px;
   margin: 18px 0 0;
