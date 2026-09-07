@@ -29,6 +29,7 @@ type PortfolioBlock = {
 
 export type MarketingDetailConfig = {
   path: string
+  locale?: 'it' | 'en'
   /** Livello intermedio della briciola. Serve alle pagine che non stanno
    *  sotto /servizi, come le landing di settore. */
   breadcrumbParent?: { label: string; href: string }
@@ -59,13 +60,14 @@ const WHATSAPP_NUMBER = '393477196603'
 
 export default function MarketingDetailPage({ config }: { config: MarketingDetailConfig }) {
   const Icon = config.icon
+  const isEnglish = config.locale === 'en'
   const parent = config.breadcrumbParent ?? { label: 'Servizi', href: '/servizi' }
   // I settori che dichiarano questo servizio, e l'articolo che lo approfondisce:
   // senza, le verticali e il Journal restano raggiungibili solo dal menu.
   const settori = settoriPerServizio(config.path)
   const articolo = articoloPerServizio(config.path)
   const pageUrl = `${SITE_URL}${config.path}`
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Web Automation.`)}`
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(isEnglish ? `Hello, I would like to discuss ${config.serviceName} by Social Web Automation.` : `Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Web Automation.`)}`
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -75,7 +77,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         url: pageUrl,
         name: config.title,
         description: config.lead,
-        inLanguage: 'it-IT',
+        inLanguage: isEnglish ? 'en' : 'it-IT',
         isPartOf: { '@id': `${SITE_URL}/#website` },
         about: { '@id': `${pageUrl}#service` },
       },
@@ -86,7 +88,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         serviceType: config.serviceType,
         description: config.lead,
         provider: { '@id': `${SITE_URL}/#organization` },
-        areaServed: { '@type': 'Country', name: 'Italia' },
+        areaServed: { '@type': 'Country', name: isEnglish ? 'Italy' : 'Italia' },
         url: pageUrl,
         ...(config.startingPrice ? {
           offers: {
@@ -136,8 +138,8 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
   return (
     <main id="main-content" className={styles.page}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <a className={styles.skipLink} href="#main-content">Vai al contenuto</a>
-      <PublicHeader ctaHref={whatsappUrl} ctaLabel="Parliamo del progetto" />
+      <a className={styles.skipLink} href="#main-content">{isEnglish ? 'Skip to content' : 'Vai al contenuto'}</a>
+      {!isEnglish && <PublicHeader ctaHref={whatsappUrl} ctaLabel="Parliamo del progetto" />}
 
       <section className={styles.hero} aria-labelledby="detail-title">
         <div className={styles.heroCopy}>
@@ -157,17 +159,17 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
                 {config.primaryCtaLabel ?? 'Richiedi una valutazione'} <ArrowRight size={17} aria-hidden="true" />
               </a>
             )}
-            <Link href="/pacchetti" className={styles.secondary}>Confronta i pacchetti</Link>
+            <Link href={isEnglish ? '/en/pricing' : '/pacchetti'} className={styles.secondary}>{isEnglish ? 'Compare offers' : 'Confronta i pacchetti'}</Link>
           </div>
         </div>
         <aside className={styles.signalPanel} aria-label={`Sintesi ${config.serviceName}`}>
           <div className={styles.signalHeading}>
             <span><Icon size={24} aria-hidden="true" /></span>
-            <div><small>Servizio gestito</small><strong>{config.serviceName}</strong></div>
+            <div><small>{isEnglish ? 'Managed service' : 'Servizio gestito'}</small><strong>{config.serviceName}</strong></div>
           </div>
           {config.startingPrice && (
             <div className={styles.startingPrice}>
-              <span>A partire da</span>
+              <span>{isEnglish ? 'Starting from' : 'A partire da'}</span>
               <strong>€{config.startingPrice.replace('.', ',')}<small>/mese</small></strong>
               {config.offerHighlight && <b>{config.offerHighlight}</b>}
               {config.priceNote && <p>{config.priceNote}</p>}
@@ -184,7 +186,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
 
       <section className={styles.deliverables} aria-labelledby="deliverables-title">
         <div className={styles.sectionHeading}>
-          <p className={styles.eyebrow}>Perimetro operativo</p>
+          <p className={styles.eyebrow}>{isEnglish ? 'Operating scope' : 'Perimetro operativo'}</p>
           <h2 id="deliverables-title">{config.deliverablesTitle}</h2>
           <p>{config.deliverablesIntro}</p>
         </div>
@@ -202,9 +204,9 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       {config.portfolio?.length ? (
         <section className={styles.portfolio} aria-labelledby="portfolio-title">
           <div className={styles.sectionHeading}>
-            <p className={styles.eyebrow}>Lavori realizzati</p>
-            <h2 id="portfolio-title">Progetti online, non semplici promesse.</h2>
-            <p>Tre identità e tre obiettivi diversi, tradotti in esperienze digitali progettate per il pubblico reale.</p>
+            <p className={styles.eyebrow}>{isEnglish ? 'Delivered work' : 'Lavori realizzati'}</p>
+            <h2 id="portfolio-title">{isEnglish ? 'Live projects, not abstract promises.' : 'Progetti online, non semplici promesse.'}</h2>
+            <p>{isEnglish ? 'Different identities and goals, translated into digital experiences built for their real audience.' : 'Tre identità e tre obiettivi diversi, tradotti in esperienze digitali progettate per il pubblico reale.'}</p>
           </div>
           <div className={styles.portfolioGrid}>
             {config.portfolio.map(item => (
@@ -216,7 +218,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
                   <small>{item.type}</small>
                   <strong>{item.name}</strong>
                   <span>{item.text}</span>
-                  <b>Visita il progetto <ExternalLink size={15} aria-hidden="true" /></b>
+                  <b>{isEnglish ? 'Visit project' : 'Visita il progetto'} <ExternalLink size={15} aria-hidden="true" /></b>
                 </span>
               </a>
             ))}
@@ -226,8 +228,8 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
 
       <section className={styles.process} aria-labelledby="process-title">
         <div className={styles.sectionHeading}>
-          <p className={styles.eyebrow}>Metodo</p>
-          <h2 id="process-title">Un processo leggibile dall’inizio ai risultati.</h2>
+          <p className={styles.eyebrow}>{isEnglish ? 'Method' : 'Metodo'}</p>
+          <h2 id="process-title">{isEnglish ? 'A process you can read from start to result.' : 'Un processo leggibile dall’inizio ai risultati.'}</h2>
         </div>
         <ol>
           {config.process.map(step => (
@@ -238,13 +240,13 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
             </li>
           ))}
         </ol>
-        <Link href="/metodo" className={styles.textLink}>Scopri il metodo completo <ArrowRight size={16} aria-hidden="true" /></Link>
+        <Link href={isEnglish ? '/en/services' : '/metodo'} className={styles.textLink}>{isEnglish ? 'Explore the service map' : 'Scopri il metodo completo'} <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
 
       <section className={styles.faq} aria-labelledby="faq-title">
         <div className={styles.sectionHeading}>
-          <p className={styles.eyebrow}>Domande frequenti</p>
-          <h2 id="faq-title">Risposte prima di iniziare.</h2>
+          <p className={styles.eyebrow}>{isEnglish ? 'FAQ' : 'Domande frequenti'}</p>
+          <h2 id="faq-title">{isEnglish ? 'Answers before we start.' : 'Risposte prima di iniziare.'}</h2>
         </div>
         <div>
           {config.faq.map(item => (
@@ -254,15 +256,15 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
             </details>
           ))}
         </div>
-        <Link href="/faq" className={styles.textLink}>Consulta tutte le FAQ <ArrowRight size={16} aria-hidden="true" /></Link>
+        {!isEnglish && <Link href="/faq" className={styles.textLink}>Consulta tutte le FAQ <ArrowRight size={16} aria-hidden="true" /></Link>}
       </section>
 
       {settori.length > 0 && (
         <section className={styles.settoriBand} aria-labelledby="settori-title">
           <div>
-            <p className={styles.eyebrow}>Dove serve di più</p>
-            <h2 id="settori-title">Questo servizio in {settori.length} settori.</h2>
-            <p>Ogni pagina dice quali attività servono davvero in quel mestiere, e quali si possono lasciare stare.</p>
+            <p className={styles.eyebrow}>{isEnglish ? 'Where it matters' : 'Dove serve di più'}</p>
+            <h2 id="settori-title">{isEnglish ? `This service in ${settori.length} sectors.` : `Questo servizio in ${settori.length} settori.`}</h2>
+            <p>{isEnglish ? 'Each page explains what actually matters in that trade, and what can be left alone.' : 'Ogni pagina dice quali attività servono davvero in quel mestiere, e quali si possono lasciare stare.'}</p>
           </div>
           <ul>
             {settori.map(s => (
@@ -276,27 +278,27 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
 
       {articolo && (
         <aside className={styles.approfondimento}>
-          <span>Dal Journal</span>
+          <span>{isEnglish ? 'From the Journal' : 'Dal Journal'}</span>
           <Link href={articolo.href}>{articolo.label}<ArrowRight size={16} aria-hidden="true" /></Link>
         </aside>
       )}
 
       <nav className={styles.related} aria-label="Servizi correlati">
-        <span>Esplora anche</span>
+        <span>{isEnglish ? 'Explore also' : 'Esplora anche'}</span>
         {config.related.map(item => <Link key={item.href} href={item.href}>{item.label}<ChevronRight size={15} aria-hidden="true" /></Link>)}
       </nav>
 
       <section className={styles.finalCta}>
-        <div><p className={styles.eyebrow}>Prossimo passo</p><h2>Trasformiamo l’obiettivo in un perimetro operativo.</h2><p>Una prima valutazione chiarisce priorità, attività, responsabilità e costi.</p></div>
+        <div><p className={styles.eyebrow}>{isEnglish ? 'Next step' : 'Prossimo passo'}</p><h2>{isEnglish ? 'Turn the goal into an operating scope.' : 'Trasformiamo l’obiettivo in un perimetro operativo.'}</h2><p>{isEnglish ? 'A first assessment clarifies priorities, activities, responsibilities and costs.' : 'Una prima valutazione chiarisce priorità, attività, responsabilità e costi.'}</p></div>
         {config.primaryCtaHref ? (
           <Link href={config.primaryCtaHref}>{config.primaryCtaLabel ?? 'Attiva il servizio'} <ArrowRight size={17} aria-hidden="true" /></Link>
         ) : (
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">Parliamo del progetto <ArrowRight size={17} aria-hidden="true" /></a>
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">{isEnglish ? 'Talk to us' : 'Parliamo del progetto'} <ArrowRight size={17} aria-hidden="true" /></a>
         )}
       </section>
 
-      <PublicFooter />
-      <FloatingNavigation />
+      {!isEnglish && <PublicFooter />}
+      {!isEnglish && <FloatingNavigation />}
     </main>
   )
 }

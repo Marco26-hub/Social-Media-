@@ -40,8 +40,9 @@ export default function EnglishLayout({ children }: Readonly<{ children: React.R
         </Link>
         <nav className={styles.nav} aria-label="English navigation">
           <Link href="/en">Home</Link>
-          <Link href="/en/services">Services</Link>
-          <Link href="/en/pricing">Pricing</Link>
+          <Link href="/en/services">Tutti i servizi</Link>
+          <Link href="/en/settori">Settori</Link>
+          <Link href="/en/pricing">Pacchetti</Link>
           <Link href="/" lang="it">Italiano</Link>
         </nav>
         <a className={styles.headerCta} href={WA_URL} target="_blank" rel="noopener noreferrer">
@@ -55,8 +56,9 @@ export default function EnglishLayout({ children }: Readonly<{ children: React.R
           <p>Managed digital operations for SMEs and professionals.</p>
         </div>
         <div className={styles.footerLinks}>
-          <Link href="/en/services">Services</Link>
-          <Link href="/en/pricing">Pricing</Link>
+          <Link href="/en/services">Tutti i servizi</Link>
+          <Link href="/en/settori">Settori</Link>
+          <Link href="/en/pricing">Pacchetti</Link>
           <a href="https://www.instagram.com/socialwebautomation/" target="_blank" rel="noopener noreferrer">Instagram</a>
           <a href="https://www.facebook.com/profile.php?id=61592835840985" target="_blank" rel="noopener noreferrer">Facebook</a>
           <Link href="/privacy">Privacy</Link>

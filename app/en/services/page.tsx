@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 }
 
 const services = [
-  { id: 'social', icon: Share2, title: 'Managed social media', text: 'Monthly strategy, channel-specific content, media planning, approval and publishing. Presence covers 2 channels and 16 pieces; Growth covers 3 channels and 24 pieces.' },
+  { id: 'social', icon: Share2, title: 'Managed social media', text: 'Monthly strategy, channel-specific content, media planning, approval and publishing. Presence covers 2 channels and 16 pieces; Growth covers 2 channels and 24 pieces.' },
   { id: 'seo', icon: FileSearch, title: 'SEO + GEO strategy', text: 'Audit, intent mapping, information architecture, technical priorities, entities and structured data. This defines what to improve; it is not the monthly article-production plan.' },
   { id: 'blog', icon: Newspaper, title: 'Blog SEO + GEO', text: 'The ongoing execution layer: 12 articles each month, editorial planning, on-page metadata, FAQs, human review and publishing or CMS-ready delivery.' },
   { id: 'web', icon: Globe2, title: 'Websites and e-commerce', text: 'Landing pages, corporate websites and online stores built for clear offers, mobile use, analytics, SEO foundations and measurable conversion paths.' },

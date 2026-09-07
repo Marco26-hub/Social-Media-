@@ -23,26 +23,38 @@ const ICONE: Record<string, LucideIcon> = {
   'elettricisti-e-idraulici': Plug,
 }
 
-export function percorsoSettore(settore: Settore): string {
-  return `/settori/${settore.slug}`
+export type SettoreLocale = 'it' | 'en'
+
+export function percorsoSettore(settore: Settore, locale: SettoreLocale = 'it'): string {
+  return locale === 'en' ? `/en/settori/${settore.slug}` : `/settori/${settore.slug}`
 }
 
-export function metadataSettore(settore: Settore): Metadata {
-  const url = `${SITE_URL}${percorsoSettore(settore)}`
+export function metadataSettore(settore: Settore, locale: SettoreLocale = 'it'): Metadata {
+  const path = percorsoSettore(settore, locale)
+  const url = `${SITE_URL}${path}`
+  const italiano = `/settori/${settore.slug}`
+  const inglese = `/en/settori/${settore.slug}`
   return {
     title: settore.titoloSeo,
     description: settore.descrizioneSeo,
     keywords: [settore.nome.toLowerCase(), settore.servizio.toLowerCase()],
-    alternates: { canonical: url },
-    openGraph: { title: settore.titoloSeo, description: settore.descrizioneSeo, url, type: 'website' },
+    alternates: {
+      canonical: url,
+      languages: locale === 'en'
+        ? { 'it-IT': `${SITE_URL}${italiano}`, en: `${SITE_URL}${inglese}`, 'x-default': `${SITE_URL}${italiano}` }
+        : undefined,
+    },
+    openGraph: { title: settore.titoloSeo, description: settore.descrizioneSeo, url, type: 'website', locale: locale === 'en' ? 'en_US' : 'it_IT' },
     twitter: { card: 'summary_large_image', title: settore.titoloSeo, description: settore.descrizioneSeo },
   }
 }
 
-export default function SettorePage({ settore }: { settore: Settore }) {
+export default function SettorePage({ settore, locale = 'it' }: { settore: Settore; locale?: SettoreLocale }) {
+  const isEnglish = locale === 'en'
   const config: MarketingDetailConfig = {
-    path: percorsoSettore(settore),
-    breadcrumbParent: { label: 'Settori', href: '/settori' },
+    path: percorsoSettore(settore, locale),
+    locale: isEnglish ? 'en' : 'it',
+    breadcrumbParent: isEnglish ? { label: 'Sectors', href: '/en/settori' } : { label: 'Settori', href: '/settori' },
     eyebrow: settore.eyebrow,
     title: settore.h1,
     lead: settore.lead,
@@ -50,12 +62,12 @@ export default function SettorePage({ settore }: { settore: Settore }) {
     serviceType: settore.tipoServizio,
     promise: settore.promessa,
     priceNote: settore.notaPrezzi,
-    primaryCtaLabel: 'Richiedi una call',
+    primaryCtaLabel: isEnglish ? 'Book a call' : 'Richiedi una call',
     // /consulenza e' la consulenza legale a pagamento su AI Act e GDPR: chi
     // arriva da una pagina di settore cerca il proprio mestiere, non un
     // avvocato. La richiesta di call va sul canale diretto, con il settore
     // gia' scritto nel messaggio.
-    primaryCtaHref: `https://wa.me/393477196603?text=${encodeURIComponent(`Ciao! Lavoro nel settore ${settore.nome.toLowerCase()} e vorrei una call.`)}`,
+    primaryCtaHref: `https://wa.me/393477196603?text=${encodeURIComponent(isEnglish ? `Hello, I work in ${settore.nome.toLowerCase()} and I would like to book a call.` : `Ciao! Lavoro nel settore ${settore.nome.toLowerCase()} e vorrei una call.`)}`,
     icon: ICONE[settore.slug] ?? Building2,
     signals: settore.segnali,
     outcomes: settore.risultati,

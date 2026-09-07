@@ -3,6 +3,7 @@ import { dbReady, q } from '@/lib/db'
 import { resolveBlogClienteIdForHost } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
 import { SETTORI } from '@/lib/settori'
+import { SETTORI_EN } from '@/lib/settori.en'
 import { SWA_BLOG_ARTICLES } from '@/lib/swa-blog-content'
 
 type PublishedArticle = { slug: string; updated_at: string | Date | null }
@@ -24,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
-    ...['/en', '/en/services', '/en/pricing'].map(path => ({
+    ...['/en', '/en/services', '/en/pricing', '/en/settori'].map(path => ({
       url: `${SITE_URL}${path}`,
       lastModified: marketingUpdated,
       changeFrequency: 'monthly' as const,
@@ -62,6 +63,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: marketingUpdated,
       changeFrequency: 'monthly' as const,
       priority: 0.85,
+    })),
+    ...SETTORI_EN.map(settore => ({
+      url: `${SITE_URL}/en/settori/${settore.slug}`,
+      lastModified: marketingUpdated,
+      changeFrequency: 'monthly' as const,
+      priority: 0.75,
     })),
     {
       url: `${SITE_URL}/chi-siamo`,
