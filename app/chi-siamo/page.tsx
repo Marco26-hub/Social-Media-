@@ -72,7 +72,7 @@ const WHATSAPP_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao
 export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/chi-siamo` },
+  alternates: { canonical: `${SITE_URL}/chi-siamo`, languages: { 'it-IT': `${SITE_URL}/chi-siamo`, en: `${SITE_URL}/en/about`, 'x-default': `${SITE_URL}/chi-siamo` } },
   openGraph: {
     title: META_TITLE,
     description: META_DESCRIPTION,

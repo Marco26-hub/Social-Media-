@@ -27,6 +27,7 @@ type MobileMenuProps = {
   links: MobileMenuLink[]
   ctaHref: string
   ctaLabel: string
+  locale?: 'it' | 'en'
 }
 
 const MENU_ICONS: Record<string, LucideIcon> = {
@@ -41,6 +42,14 @@ const MENU_ICONS: Record<string, LucideIcon> = {
   '/consulenza': Scale,
   '/blog': Newspaper,
   '/chi-siamo': Building2,
+  '/en': Home,
+  '/en/services': LayoutGrid,
+  '/en/method': Workflow,
+  '/en/settori': LayoutGrid,
+  '/en/pricing': PackageCheck,
+  '/en/about': Building2,
+  '/en/faq': CircleHelp,
+  '/en/contact': CircleHelp,
   '#servizi': LayoutGrid,
   '#metodo': Workflow,
   '#prezzi': PackageCheck,
@@ -49,7 +58,8 @@ const MENU_ICONS: Record<string, LucideIcon> = {
   '#faq': CircleHelp,
 }
 
-export default function MobileMenu({ links, ctaHref, ctaLabel }: MobileMenuProps) {
+export default function MobileMenu({ links, ctaHref, ctaLabel, locale = 'it' }: MobileMenuProps) {
+  const isEnglish = locale === 'en'
   const [open, setOpen] = useState(false)
   const menuRootRef = useRef<HTMLDivElement>(null)
 
@@ -107,7 +117,7 @@ export default function MobileMenu({ links, ctaHref, ctaLabel }: MobileMenuProps
       <button
         type="button"
         className={styles.toggle}
-        aria-label={open ? 'Chiudi menu' : 'Apri menu'}
+        aria-label={open ? (isEnglish ? 'Close menu' : 'Chiudi menu') : (isEnglish ? 'Open menu' : 'Apri menu')}
         aria-expanded={open}
         aria-controls="mobile-navigation"
         aria-haspopup="true"
@@ -118,7 +128,7 @@ export default function MobileMenu({ links, ctaHref, ctaLabel }: MobileMenuProps
 
       {open && (
         <>
-          <nav id="mobile-navigation" className={styles.panel} aria-label="Navigazione mobile">
+          <nav id="mobile-navigation" className={styles.panel} aria-label={isEnglish ? 'Mobile navigation' : 'Navigazione mobile'}>
             <div className={styles.links}>
               {links.map(link => {
                 const url = new URL(link.href, 'https://socialautomation.app')
@@ -134,7 +144,7 @@ export default function MobileMenu({ links, ctaHref, ctaLabel }: MobileMenuProps
             </div>
             <div className={styles.actions}>
               <ThemeToggle showLabel />
-              <a href="/login?cambia=1" className={styles.account} onClick={() => setOpen(false)}>Area cliente</a>
+              <a href="/login?cambia=1" className={styles.account} onClick={() => setOpen(false)}>{isEnglish ? 'Client area' : 'Area cliente'}</a>
               <a
                 href={ctaHref}
                 className={styles.cta}

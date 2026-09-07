@@ -1,5 +1,6 @@
 .shell {
   min-height: 100vh;
+  padding-top: 68px;
   background: #f6f8f7;
   color: #14231e;
   font-family: Arial, Helvetica, sans-serif;
@@ -77,6 +78,8 @@
 .service p, .proof p, .priceCard p { margin: 0; color: #5a6863; line-height: 1.55; }
 .service a, .textLink { display: inline-flex; gap: 7px; margin-top: 22px; color: #0f6b4f; font-weight: 800; text-decoration: none; }
 .service svg { color: #0f6b4f; }
+.checkList { display: grid; gap: 9px; margin: 20px 0 0; padding: 0; list-style: none; color: #40514b; }
+.checkList li { display: flex; align-items: center; gap: 8px; line-height: 1.4; }
 .band { background: #0c3025; color: #fff; }
 .journey { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid #376054; border-bottom: 1px solid #376054; }
 .journey article { padding: 24px 20px; border-right: 1px solid #376054; }
@@ -86,8 +89,26 @@
 .journey p { margin: 0; color: #bed0c9; font-size: 14px; line-height: 1.5; }
 .proofGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
 .proof { border-top: 4px solid #d8aa35; }
+.band .proof { background: #123a2e; border-color: #d8aa35; }
+.band .proof p { color: #c9d8d2; }
 .closing { display: flex; justify-content: space-between; align-items: center; gap: 40px; background: #eaf4ef; }
 .closing p { max-width: 680px; color: #52615c; line-height: 1.6; }
+
+.identityPanel { padding: 30px; border: 1px solid #2a463c; background: #10221c; }
+.identityPanel img { width: min(260px, 100%); height: auto; margin-bottom: 22px; background: #fff; border-radius: 4px; }
+.identityPanel dl { display: grid; gap: 14px; margin: 0; }
+.identityPanel div { padding-top: 14px; border-top: 1px solid #294039; }
+.identityPanel dt { color: #d8aa35; font-size: 12px; font-weight: 900; text-transform: uppercase; }
+.identityPanel dd { margin: 5px 0 0; color: #edf4f1; line-height: 1.4; }
+
+.faqLayout { display: grid; grid-template-columns: minmax(240px, 360px) minmax(0, 1fr); gap: 52px; align-items: start; }
+.faqList { display: grid; gap: 12px; }
+.faqList details { border: 1px solid #d5dfda; background: #fff; }
+.faqList summary { cursor: pointer; display: flex; justify-content: space-between; gap: 18px; padding: 20px 22px; color: #14231e; font-weight: 900; list-style: none; }
+.faqList summary::-webkit-details-marker { display: none; }
+.faqList summary span { color: #0f6b4f; }
+.faqList details[open] summary span { transform: rotate(45deg); }
+.faqList details p { margin: 0; padding: 0 22px 22px; color: #52615c; line-height: 1.6; }
 
 .priceGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .priceCard { display: flex; flex-direction: column; border: 1px solid #d5dfda; }
@@ -108,10 +129,12 @@
   .hero { grid-template-columns: 1fr; gap: 36px; }
   .grid, .proofGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .faqLayout { grid-template-columns: 1fr; gap: 24px; }
   .journey article { border-bottom: 1px solid #376054; }
 }
 
 @media (max-width: 640px) {
+  .shell { padding-top: 60px; }
   .header { min-height: 62px; padding: 0 16px; }
   .brand > span:last-child { display: none; }
   .logo { width: 84px; height: 40px; }

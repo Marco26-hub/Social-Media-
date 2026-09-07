@@ -102,8 +102,9 @@ const SOLUTIONS: SolutionLink[] = [
   },
 ]
 
-export default function DesktopMenu() {
+export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' }) {
   const pathname = usePathname()
+  const isEnglish = locale === 'en'
   const menuRef = useRef<HTMLDivElement>(null)
   const [solutionsOpen, setSolutionsOpen] = useState(false)
 
@@ -123,11 +124,21 @@ export default function DesktopMenu() {
     }
   }, [])
 
-  const solutionIsActive = pathname === '/servizi' || SOLUTIONS.some(link => pathname === link.href)
+  const solutionIsActive = isEnglish ? pathname === '/en/services' : pathname === '/servizi' || SOLUTIONS.some(link => pathname === link.href)
+
+  const englishSolutions: SolutionLink[] = [
+    { href: '/en/services#social', label: 'Managed social media', description: 'Strategy, content and publishing.', icon: Megaphone },
+    { href: '/en/services#seo', label: 'SEO + GEO', description: 'Visibility across search and AI systems.', icon: ScanSearch },
+    { href: '/en/services#blog', label: 'SEO + GEO Blog', description: 'Reviewed content ready for your website.', icon: BookOpenText },
+    { href: '/en/services#web', label: 'Websites and e-commerce', description: 'Digital experiences built to convert.', icon: Globe2 },
+    { href: '/en/services#leads', label: 'B2B lead research', description: 'Verified and prioritised target companies.', icon: Target },
+    { href: '/en/services#compliance', label: 'AI and data compliance', description: 'Privacy, AI Act and transparency.', icon: Scale },
+  ]
+  const solutions = isEnglish ? englishSolutions : SOLUTIONS
 
   return (
-    <nav className={styles.desktopMenu} aria-label="Navigazione principale">
-      <Link className={`${styles.menuLink} ${pathname === '/' ? styles.active : ''}`} href="/">
+    <nav className={styles.desktopMenu} aria-label={isEnglish ? 'Main navigation' : 'Navigazione principale'}>
+      <Link className={`${styles.menuLink} ${pathname === (isEnglish ? '/en' : '/') ? styles.active : ''}`} href={isEnglish ? '/en' : '/'}>
         Home
       </Link>
       <div className={styles.solutionRoot} ref={menuRef}>
@@ -139,7 +150,7 @@ export default function DesktopMenu() {
           onClick={() => setSolutionsOpen(open => !open)}
         >
           <Layers3 size={15} strokeWidth={1.9} aria-hidden="true" />
-          Soluzioni
+          {isEnglish ? 'Solutions' : 'Soluzioni'}
           <ChevronDown className={solutionsOpen ? styles.chevronOpen : ''} size={14} aria-hidden="true" />
         </button>
 
@@ -147,15 +158,15 @@ export default function DesktopMenu() {
           <div id="desktop-solutions-menu" className={styles.flyout}>
             <div className={styles.flyoutHeading}>
               <div>
-                <span>Ecosistema SWA</span>
-                <strong>Una pagina per ogni competenza.</strong>
+                <span>{isEnglish ? 'SWA ecosystem' : 'Ecosistema SWA'}</span>
+                <strong>{isEnglish ? 'A clear scope for every capability.' : 'Una pagina per ogni competenza.'}</strong>
               </div>
-              <Link href="/servizi" onClick={() => setSolutionsOpen(false)}>
-                Panoramica <ChevronRight size={14} aria-hidden="true" />
+              <Link href={isEnglish ? '/en/services' : '/servizi'} onClick={() => setSolutionsOpen(false)}>
+                {isEnglish ? 'Overview' : 'Panoramica'} <ChevronRight size={14} aria-hidden="true" />
               </Link>
             </div>
             <div className={styles.solutionGrid}>
-              {SOLUTIONS.map(({ href, label, description, icon: Icon }) => (
+              {solutions.map(({ href, label, description, icon: Icon }) => (
                 <Link key={href} href={href} onClick={() => setSolutionsOpen(false)}>
                   <span className={styles.solutionIcon}><Icon size={18} aria-hidden="true" /></span>
                   <span>
@@ -170,20 +181,20 @@ export default function DesktopMenu() {
         )}
       </div>
 
-      <Link className={`${styles.menuLink} ${pathname.startsWith('/settori') ? styles.active : ''}`} href="/settori">
-        <Store size={15} strokeWidth={1.9} aria-hidden="true" /> Settori
+      <Link className={`${styles.menuLink} ${pathname.startsWith(isEnglish ? '/en/settori' : '/settori') ? styles.active : ''}`} href={isEnglish ? '/en/settori' : '/settori'}>
+        <Store size={15} strokeWidth={1.9} aria-hidden="true" /> {isEnglish ? 'Sectors' : 'Settori'}
       </Link>
-      <Link className={`${styles.menuLink} ${pathname === '/metodo' ? styles.active : ''}`} href="/metodo">
-        <Workflow size={15} strokeWidth={1.9} aria-hidden="true" /> Metodo
+      <Link className={`${styles.menuLink} ${pathname === (isEnglish ? '/en/method' : '/metodo') ? styles.active : ''}`} href={isEnglish ? '/en/method' : '/metodo'}>
+        <Workflow size={15} strokeWidth={1.9} aria-hidden="true" /> {isEnglish ? 'Method' : 'Metodo'}
       </Link>
-      <Link className={`${styles.menuLink} ${pathname === '/pacchetti' ? styles.active : ''}`} href="/pacchetti">
-        <PackageCheck size={15} strokeWidth={1.9} aria-hidden="true" /> Pacchetti
+      <Link className={`${styles.menuLink} ${pathname === (isEnglish ? '/en/pricing' : '/pacchetti') ? styles.active : ''}`} href={isEnglish ? '/en/pricing' : '/pacchetti'}>
+        <PackageCheck size={15} strokeWidth={1.9} aria-hidden="true" /> {isEnglish ? 'Packages' : 'Pacchetti'}
       </Link>
-      <Link className={`${styles.menuLink} ${pathname.startsWith('/blog') ? styles.active : ''}`} href="/blog">
+      {!isEnglish && <Link className={`${styles.menuLink} ${pathname.startsWith('/blog') ? styles.active : ''}`} href="/blog">
         <Newspaper size={15} strokeWidth={1.9} aria-hidden="true" /> Journal
-      </Link>
-      <Link className={`${styles.menuLink} ${pathname === '/chi-siamo' ? styles.active : ''}`} href="/chi-siamo">
-        <Building2 size={15} strokeWidth={1.9} aria-hidden="true" /> Azienda
+      </Link>}
+      <Link className={`${styles.menuLink} ${pathname === (isEnglish ? '/en/about' : '/chi-siamo') ? styles.active : ''}`} href={isEnglish ? '/en/about' : '/chi-siamo'}>
+        <Building2 size={15} strokeWidth={1.9} aria-hidden="true" /> {isEnglish ? 'About' : 'Azienda'}
       </Link>
     </nav>
   )

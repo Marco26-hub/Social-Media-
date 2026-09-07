@@ -33,7 +33,7 @@ const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei p
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: `${SITE_URL}/contatti` },
+  alternates: { canonical: `${SITE_URL}/contatti`, languages: { 'it-IT': `${SITE_URL}/contatti`, en: `${SITE_URL}/en/contact`, 'x-default': `${SITE_URL}/contatti` } },
   openGraph: { title, description, url: `${SITE_URL}/contatti`, type: 'website' },
   twitter: { card: 'summary_large_image', title, description },
 }

@@ -32,29 +32,43 @@ const MOBILE_LINKS = [
   { href: '/en', label: 'English' },
 ]
 
-export default function PublicHeader({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
+const MOBILE_LINKS_EN = [
+  { href: '/en', label: 'Home' },
+  { href: '/en/services', label: 'All services' },
+  { href: '/en/method', label: 'Method' },
+  { href: '/en/settori', label: 'Sectors' },
+  { href: '/en/pricing', label: 'Packages' },
+  { href: '/en/about', label: 'About' },
+  { href: '/en/faq', label: 'FAQ' },
+  { href: '/en/contact', label: 'Contact' },
+  { href: '/', label: 'Italiano' },
+]
+
+export default function PublicHeader({ ctaHref, ctaLabel, locale = 'it' }: { ctaHref: string; ctaLabel: string; locale?: 'it' | 'en' }) {
+  const isEnglish = locale === 'en'
+
   return (
     <header className={styles.navbar}>
-      <Link href="/" className={styles.brand} aria-label="Social Web Automation, home">
+      <Link href={isEnglish ? '/en' : '/'} className={styles.brand} aria-label={`Social Web Automation, ${isEnglish ? 'English ' : ''}home`}>
         <span className={styles.logoShell}>
           <Image src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority />
         </span>
         <span>Social Web Automation</span>
       </Link>
-      <DesktopMenu />
+      <DesktopMenu locale={locale} />
       <div className={styles.actions}>
-        <Link href="/en" className={styles.language} lang="en" aria-label="English version">
-          EN
+        <Link href={isEnglish ? '/' : '/en'} className={styles.language} lang={isEnglish ? 'it' : 'en'} aria-label={isEnglish ? 'Versione italiana' : 'English version'}>
+          {isEnglish ? 'IT' : 'EN'}
         </Link>
         <ThemeToggle />
         <Link href="/login?cambia=1" className={styles.account}>
-          <LogIn size={15} aria-hidden="true" /> Area cliente
+          <LogIn size={15} aria-hidden="true" /> {isEnglish ? 'Client area' : 'Area cliente'}
         </Link>
         <a href={ctaHref} target="_blank" rel="noopener noreferrer" className={styles.cta}>
           {ctaLabel} <ArrowRight size={15} aria-hidden="true" />
         </a>
       </div>
-      <MobileMenu links={MOBILE_LINKS} ctaHref={ctaHref} ctaLabel={ctaLabel} />
+      <MobileMenu links={isEnglish ? MOBILE_LINKS_EN : MOBILE_LINKS} ctaHref={ctaHref} ctaLabel={ctaLabel} locale={locale} />
     </header>
   )
 }

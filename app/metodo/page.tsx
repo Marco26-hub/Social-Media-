@@ -11,7 +11,7 @@ const title = 'Il metodo SWA: analisi, produzione, approvazione | SWA'
 const description = 'Scopri il metodo operativo Social Web Automation: analisi, strategia, produzione, approvazione, pubblicazione e misurazione per PMI e professionisti.'
 const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei capire come applicare il metodo Social Web Automation alla mia azienda.')}`
 
-export const metadata: Metadata = { title, description, alternates:{canonical:`${SITE_URL}/metodo`}, openGraph:{title,description,url:`${SITE_URL}/metodo`}, twitter:{title,description} }
+export const metadata: Metadata = { title, description, alternates:{canonical:`${SITE_URL}/metodo`,languages:{'it-IT':`${SITE_URL}/metodo`,en:`${SITE_URL}/en/method`,'x-default':`${SITE_URL}/metodo`}}, openGraph:{title,description,url:`${SITE_URL}/metodo`}, twitter:{title,description} }
 
 const steps = [
   { n:'01', icon:Search, title:'Analisi del punto di partenza', text:'Raccogliamo obiettivi, offerta, pubblico, canali, materiali e dati disponibili. Distinguiamo ciò che serve da ciò che aggiunge solo complessità.', items:['Audit del brand e dei canali','Priorità commerciali','Vincoli e responsabilità'] },

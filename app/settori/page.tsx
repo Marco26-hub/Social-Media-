@@ -19,7 +19,7 @@ const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei c
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: `${SITE_URL}/settori` },
+  alternates: { canonical: `${SITE_URL}/settori`, languages: { 'it-IT': `${SITE_URL}/settori`, en: `${SITE_URL}/en/settori`, 'x-default': `${SITE_URL}/settori` } },
   openGraph: { title, description, url: `${SITE_URL}/settori`, type: 'website' },
   twitter: { card: 'summary_large_image', title, description },
 }

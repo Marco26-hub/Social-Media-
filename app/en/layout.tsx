@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import PublicHeader from '@/components/PublicHeader'
 import styles from './english.module.css'
 
 const WA_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Hello, I would like to discuss Social Web Automation services.')}`
@@ -33,22 +32,7 @@ export default function EnglishLayout({ children }: Readonly<{ children: React.R
   return (
     <div className={styles.shell} lang="en">
       <script dangerouslySetInnerHTML={{ __html: `document.documentElement.lang='en'` }} />
-      <header className={styles.header}>
-        <Link href="/en" className={styles.brand} aria-label="Social Web Automation, English home">
-          <span className={styles.logo}><Image src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} priority /></span>
-          <span>Social Web Automation</span>
-        </Link>
-        <nav className={styles.nav} aria-label="English navigation">
-          <Link href="/en">Home</Link>
-          <Link href="/en/services">Tutti i servizi</Link>
-          <Link href="/en/settori">Settori</Link>
-          <Link href="/en/pricing">Pacchetti</Link>
-          <Link href="/" lang="it">Italiano</Link>
-        </nav>
-        <a className={styles.headerCta} href={WA_URL} target="_blank" rel="noopener noreferrer">
-          Talk to us <ArrowRight size={15} />
-        </a>
-      </header>
+      <PublicHeader ctaHref={WA_URL} ctaLabel="Talk to us" locale="en" />
       {children}
       <footer className={styles.footer}>
         <div>
@@ -56,9 +40,13 @@ export default function EnglishLayout({ children }: Readonly<{ children: React.R
           <p>Managed digital operations for SMEs and professionals.</p>
         </div>
         <div className={styles.footerLinks}>
-          <Link href="/en/services">Tutti i servizi</Link>
-          <Link href="/en/settori">Settori</Link>
-          <Link href="/en/pricing">Pacchetti</Link>
+          <Link href="/en/services">All services</Link>
+          <Link href="/en/method">Method</Link>
+          <Link href="/en/settori">Sectors</Link>
+          <Link href="/en/pricing">Packages</Link>
+          <Link href="/en/about">About</Link>
+          <Link href="/en/faq">FAQ</Link>
+          <Link href="/en/contact">Contact</Link>
           <a href="https://www.instagram.com/socialwebautomation/" target="_blank" rel="noopener noreferrer">Instagram</a>
           <a href="https://www.facebook.com/profile.php?id=61592835840985" target="_blank" rel="noopener noreferrer">Facebook</a>
           <Link href="/privacy">Privacy</Link>
