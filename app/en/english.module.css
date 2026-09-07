@@ -188,6 +188,8 @@
 .blogCard { border-color: #77b89f; }
 .webCard { border-color: #d2ac4a; }
 .blogCard .primary, .webCard .primary { background: var(--green); color: #fff; }
+.videoCard { border-color: #b98fc9; }
+.videoCard .primary { background: var(--green); color: #fff; }
 .leadCard { grid-column: 1 / -1; border-color: #9ba9d5; }
 .leadCard ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .leadCard .primary { border-color: #314a8a; background: #314a8a; color: #fff; }

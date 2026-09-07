@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
 import { EN_PRICE_LABELS } from '@/lib/english-content'
+import { VIDEO_PACCHETTI } from '@/lib/video-listino'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '../english.module.css'
 
@@ -26,6 +27,12 @@ const offers = [
   { name: 'Growth', audience: 'SMEs focused on results', badge: 'Most chosen', evidenza: true, valore: '990', ricorrente: true, setup: 'Setup included', price: EN_PRICE_LABELS.growth, result: 'A wider system across 2 social channels.', features: ['24 monthly content pieces per channel · 48 published posts', '6 Reels, Stories or Shorts per channel', '1 SEO + GEO article and competitor analysis', 'Organic growth only; paid campaigns sit in the custom plan'], href: '/register?piano=crescita', cta: 'Start Growth' },
   { name: 'Blog SEO + GEO', audience: 'Organic content', accento: 'blog', valore: '29.90', ricorrente: true, setup: '14 days to evaluate the service', price: EN_PRICE_LABELS.blog, result: 'Continuous organic editorial production.', features: ['12 articles per month', 'Metadata, FAQs and structured content', 'Human review', 'Connected-blog publishing or CMS-ready delivery'], href: '/acquista?servizio=blog-seo', cta: 'Activate Blog' },
   { name: 'Basic Website', audience: 'Your own presence', accento: 'web', valore: '19.90', ricorrente: true, setup: 'Yours after 12 months of subscription', price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request website details' },
+  { name: 'Video shot on site', audience: 'Businesses that publish weekly', accento: 'video', valore: String(VIDEO_PACCHETTI[0].prezzo), ricorrente: true, setup: 'Travel inside the agreed area included', price: EN_PRICE_LABELS.video, result: 'Filmed where you work, spread across the month.', features: [
+    `${VIDEO_PACCHETTI[0].video} vertical videos a month in ${VIDEO_PACCHETTI[0].sessioni} filming session`,
+    'Concept, script, shooting, editing, subtitles and graphics',
+    'Videos are spread across the weeks, not delivered in one batch',
+    `Four plans: ${VIDEO_PACCHETTI.map(v => `${v.nome} ${v.video} videos €${v.prezzo}`).join(' · ')}`,
+  ], href: '/acquista?servizio=video-start', cta: 'Start with Start' },
   { name: 'B2B Lead Research Pilot', audience: 'One-off pilot', accento: 'lead', largo: true, valore: '149', ricorrente: false, setup: 'No subscription, no automated outreach', price: EN_PRICE_LABELS.leadPilot, result: 'A verified list for commercial evaluation.', features: ['Ideal-company profile', 'Up to 30 companies researched', 'Public sources and priorities', 'No automated outreach or guaranteed sales'], href: '/acquista?servizio=lead-pilot', cta: 'Activate the Pilot' },
 ]
 
@@ -94,6 +101,7 @@ export default function EnglishPricingPage() {
                 offer.evidenza ? styles.featured : '',
                 offer.accento === 'blog' ? styles.blogCard : '',
                 offer.accento === 'web' ? styles.webCard : '',
+                offer.accento === 'video' ? styles.videoCard : '',
                 offer.accento === 'lead' ? styles.leadCard : '',
               ].filter(Boolean).join(' ')}
             >

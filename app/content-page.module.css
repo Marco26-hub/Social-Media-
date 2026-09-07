@@ -16,7 +16,10 @@
 .secondary { border:1px solid #b6c2bd; color:var(--ink); }
 .primary:hover { background:var(--green-dark); }
 .secondary:hover { border-color:var(--green); color:var(--green); }
-.anchorBand { display:flex; flex-wrap:wrap; justify-content:center; gap:1px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--line); }
+/* La fascia delle ancore andava da bordo a bordo mentre tutto il resto della
+   pagina sta in una colonna da 1120px: a 2000px correva per 880 pixel oltre il
+   testo, allineata a niente. Ora finisce dove finisce il contenuto. */
+.anchorBand { max-width:1120px; margin:0 auto; display:flex; flex-wrap:wrap; justify-content:center; gap:1px; border:1px solid var(--line); background:var(--line); }
 .anchorBand a { min-width:170px; flex:1; padding:18px; background:var(--surface); color:var(--ink); font-size:11px; font-weight:800; text-align:center; text-decoration:none; text-transform:uppercase; }
 .anchorBand a:hover { color:var(--green); background:var(--mint); }
 .section { max-width:1120px; margin:0 auto; padding:86px 24px; }

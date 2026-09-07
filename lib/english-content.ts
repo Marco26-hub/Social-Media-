@@ -1,6 +1,7 @@
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { TITOLARE } from '@/lib/legal-config'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { VIDEO_PACCHETTI } from '@/lib/video-listino'
 import { PREZZO_INGRESSO } from '@/lib/prezzi-ingresso'
 import { SETTORI } from '@/lib/settori'
 import { STANDALONE_SERVICES } from '@/lib/standalone-services'
@@ -18,6 +19,7 @@ export const EN_PRICE_LABELS = {
   blog: `${BLOG_SERVICE.displayPrice.replace(',', '.')} / month`,
   web: `From ${webService?.displayPrice.replace(',', '.') ?? '€19.90'} / month`,
   leadPilot: `${leadPilot?.displayPrice ?? '€149'} one-off`,
+  video: `From €${VIDEO_PACCHETTI[0].prezzo} / month`,
   // «minuti» restava in italiano su una pagina inglese.
   legal: PREZZO_INGRESSO.legale.replace('150 €', '€150').replace('minuti', 'minutes'),
 } as const
