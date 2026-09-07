@@ -131,7 +131,12 @@ export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' })
     { href: '/en/services#seo', label: 'SEO + GEO', description: 'Visibility across search and AI systems.', icon: ScanSearch },
     { href: '/en/services#blog', label: 'SEO + GEO Blog', description: 'Reviewed content ready for your website.', icon: BookOpenText },
     { href: '/en/services#web', label: 'Websites and e-commerce', description: 'Digital experiences built to convert.', icon: Globe2 },
+    { href: '/en/services#video', label: 'Video shot on site', description: 'A half day of filming, weeks of content.', icon: Clapperboard },
     { href: '/en/services#leads', label: 'B2B lead research', description: 'Verified and prioritised target companies.', icon: Target },
+    { href: '/en/services#phone', label: 'AI phone assistant', description: 'Answers while you are working.', icon: PhoneCall },
+    { href: '/en/services#agenda', label: 'Diary and client recall', description: 'Dormant clients come back into view.', icon: CalendarClock },
+    { href: '/en/services#jobs', label: 'Job reports and site', description: 'Signed on site, with photos and PDF.', icon: ClipboardCheck },
+    { href: '/en/services#systems', label: 'Systems automation', description: 'The tools you already use, connected.', icon: Workflow },
     { href: '/en/services#compliance', label: 'AI and data compliance', description: 'Privacy, AI Act and transparency.', icon: Scale },
   ]
   const solutions = isEnglish ? englishSolutions : SOLUTIONS

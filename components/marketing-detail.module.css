@@ -199,3 +199,13 @@ h1 .eyebrow, .hero h1 .eyebrow {
   letter-spacing: .14em;
   text-transform: uppercase;
 }
+
+/* Bersagli tattili: briciole, link correlati e rimandi testuali stavano fra
+   17 e 18px di altezza, sotto i 24px minimi. Si allarga l'area con la
+   spaziatura verticale: non cambia il flusso ne' la dimensione del testo.
+   I link dentro un periodo restano esclusi, come prevede la norma. */
+.breadcrumbs a,
+.breadcrumbs span,
+.textLink,
+.related a,
+.page a:not(p a):not(li a):not(small a) { padding-block: 4px; }

@@ -73,3 +73,6 @@
 /* Il fondo di questo bottone e' bianco in tutti i temi, quindi il testo non
    puo' passare da un token che si inverte: in notte diventava 2,6:1. */
 :global(html[data-theme='dark']) .breadcrumbs { color: #97a8a1; }
+
+/* Bersagli tattili: sotto i 24px minimi. Cambia l'area, non il testo. */
+.breadcrumbs a, .page a:not(p a):not(li a):not(small a) { padding-block: 4px; }

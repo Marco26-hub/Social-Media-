@@ -1,209 +1,271 @@
+/* Sezione inglese — stesso sistema visivo del sito italiano.
+ *
+ * Prima queste pagine avevano un design proprio: contenitore da 1180 invece di
+ * 1120, hero scuro dove l'italiano ce l'ha chiaro, titoli in peso 700 invece
+ * di 500, griglia a tre colonne invece di due, palette scritta a mano. Il
+ * risultato era che passando da /servizi a /en/services sembrava di cambiare
+ * sito. Qui i token, la tipografia e il ritmo delle sezioni sono gli stessi di
+ * content-page.module.css e marketing-detail.module.css; i nomi delle classi
+ * restano quelli di prima, quindi le pagine non cambiano di una riga. */
+
 .shell {
+  --ink: #15231f;
+  --muted: #596762;
+  --green: #0f6b4f;
+  --green-dark: #094c39;
+  --mint: #dceee7;
+  --coral: #e96f51;
+  --coral-testo: #b3452a;
+  --gold: #d8aa35;
+  --line: #dbe2de;
+  --paper: #f5f7f4;
+  --surface: #fff;
   min-height: 100vh;
   padding-top: 68px;
-  background: #f6f8f7;
-  color: #14231e;
+  overflow-x: hidden;
+  background: var(--surface);
+  color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
 }
+.shell *, .shell *::before, .shell *::after { box-sizing: border-box; }
 
-.header {
-  min-height: 70px;
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  padding: 0 max(24px, calc((100vw - 1180px) / 2));
-  border-bottom: 1px solid #dce4e0;
-  background: rgba(255, 255, 255, .96);
-}
+.skipLink { position: fixed; top: 8px; left: 8px; z-index: 100; padding: 10px 14px; background: #0D2620; color: #FFFDF7; transform: translateY(-160%); }
+.skipLink:focus { transform: translateY(0); }
 
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: #14231e;
-  font-weight: 800;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.logo {
-  width: 94px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 4px;
-  background: #0f6b4f;
-}
-
+/* Testata: la sezione inglese usa PublicHeader, quindi queste classi servono
+   solo come riserva se una pagina rendesse la propria. */
+.header { min-height: 70px; display: flex; align-items: center; gap: 28px; padding: 0 max(24px, calc((100vw - 1120px) / 2)); border-bottom: 1px solid var(--line); background: rgba(255, 255, 255, .96); }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 800; text-decoration: none; white-space: nowrap; }
+.logo { width: 94px; height: 44px; display: grid; place-items: center; border-radius: 4px; background: var(--green); }
 .logo img { object-fit: contain; }
 .nav { display: flex; align-items: center; gap: 24px; margin-left: auto; }
-.nav a, .footer a { color: #40514b; font-size: 14px; font-weight: 700; text-decoration: none; }
-.nav a:hover, .footer a:hover { color: #0f6b4f; }
-
-.headerCta, .primary {
-  min-height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 18px;
-  border-radius: 4px;
-  background: #0f6b4f;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 800;
-  text-decoration: none;
-}
+.nav a { color: var(--muted); font-size: 13px; font-weight: 700; text-decoration: none; }
+.nav a:hover { color: var(--green); }
 
 .main { overflow: hidden; }
-.hero, .section, .band, .closing { padding: 92px max(24px, calc((100vw - 1180px) / 2)); }
-.hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 72px; align-items: center; background: #07120f; color: #f5f8f6; }
-/* Stesso occhiello su fondi opposti: sul chiaro #49c995 faceva 1,95:1, quindi
-   il valore base e' il verde profondo del brand (5,8:1). Hero e band sono
-   scuri e riprendono il verde chiaro, che li' fa 9:1. */
-.eyebrow { margin: 0 0 18px; color: #0f6b4f; font-size: 13px; font-weight: 900; text-transform: uppercase; }
-.hero .eyebrow, .band .eyebrow { color: #49c995; }
-.hero h1 { max-width: 760px; margin: 0; font: 700 clamp(48px, 6vw, 78px)/.98 Georgia, serif; }
-.heroLead { max-width: 690px; margin: 28px 0 0; color: #bcc9c4; font-size: 20px; line-height: 1.55; }
-.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
-.secondary { min-height: 42px; display: inline-flex; align-items: center; padding: 0 18px; border: 1px solid #70827b; border-radius: 4px; color: inherit; font-weight: 800; text-decoration: none; }
-.heroPanel { padding: 30px; border: 1px solid #2a463c; background: #10221c; }
-.heroPanel strong { display: block; margin-bottom: 20px; font: 700 26px/1.2 Georgia, serif; }
-.heroPanel ol { margin: 0; padding: 0; list-style: none; counter-reset: steps; }
-.heroPanel li { counter-increment: steps; display: grid; grid-template-columns: 38px 1fr; gap: 12px; padding: 16px 0; border-top: 1px solid #294039; color: #ccd6d2; line-height: 1.45; }
-.heroPanel li::before { content: counter(steps, decimal-leading-zero); color: #d8aa35; font-weight: 900; }
 
-.sectionHeading { max-width: 760px; margin-bottom: 40px; }
-.sectionHeading h2, .closing h2 { margin: 0; font: 700 clamp(36px, 4vw, 54px)/1.05 Georgia, serif; }
-.sectionHeading p:last-child { margin: 18px 0 0; color: #5c6a65; font-size: 18px; line-height: 1.6; }
-/* La band e' scura in entrambi i temi: qui il grigio del chiaro fa 2,5:1. */
-.band .sectionHeading p:last-child { color: #c9d8d2; }
-.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: #cfd9d4; border: 1px solid #cfd9d4; }
-.service, .proof, .priceCard { padding: 28px; background: #fff; }
-.service h3, .proof h3, .priceCard h2 { margin: 16px 0 10px; font: 700 25px/1.15 Georgia, serif; }
-.service p, .proof p, .priceCard p { margin: 0; color: #5a6863; line-height: 1.55; }
-.service a, .textLink { display: inline-flex; gap: 7px; margin-top: 22px; color: #0f6b4f; font-weight: 800; text-decoration: none; }
-.service svg { color: #0f6b4f; }
-.checkList { display: grid; gap: 9px; margin: 20px 0 0; padding: 0; list-style: none; color: #40514b; }
-.checkList li { display: flex; align-items: center; gap: 8px; line-height: 1.4; }
-.band { background: #0c3025; color: #fff; }
-.journey { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid #376054; border-bottom: 1px solid #376054; }
-.journey article { padding: 24px 20px; border-right: 1px solid #376054; }
-.journey article:last-child { border-right: 0; }
-.journey span { color: #d8aa35; font-weight: 900; }
-.journey h3 { margin: 13px 0 8px; font-size: 18px; }
-.journey p { margin: 0; color: #bed0c9; font-size: 14px; line-height: 1.5; }
-.proofGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
-.proof { border-top: 4px solid #d8aa35; }
-.band .proof { background: #123a2e; border-color: #d8aa35; }
-.band .proof p { color: #c9d8d2; }
-.closing { display: flex; justify-content: space-between; align-items: center; gap: 40px; background: #eaf4ef; }
-.closing p { max-width: 680px; color: #52615c; line-height: 1.6; }
+/* Hero — come quello delle pagine di dettaglio italiane: fondo chiaro,
+   titolo serif con il filetto corallo, pannello scuro a destra. */
+.hero {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(390px, .75fr);
+  align-items: center;
+  gap: 72px;
+  padding: 74px 24px 82px;
+}
+.eyebrow { margin: 0 0 14px; color: var(--green); font-size: 11px; font-weight: 850; letter-spacing: .04em; text-transform: uppercase; }
+.hero h1 { max-width: 760px; margin: 0; font: 500 62px/1.02 Georgia, 'Times New Roman', serif; text-wrap: balance; }
+.hero h1::after { width: 78px; height: 5px; display: block; margin-top: 22px; border-radius: 3px; background: var(--coral); content: ''; }
+.heroLead { max-width: 710px; margin: 25px 0 0; color: var(--muted); font-size: 18px; line-height: 1.65; }
+.actions { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 30px; }
+.headerCta, .primary, .secondary { min-height: 49px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 19px; border-radius: 4px; font-size: 13px; font-weight: 800; text-decoration: none; }
+.headerCta, .primary { background: var(--green); color: #fff; }
+.headerCta:hover, .primary:hover { background: var(--green-dark); }
+.secondary { border: 1px solid #b6c2bd; color: var(--ink); }
+.secondary:hover { border-color: var(--green); color: var(--green); }
 
-.identityPanel { padding: 30px; border: 1px solid #2a463c; background: #10221c; }
-.identityPanel img { width: min(260px, 100%); height: auto; margin-bottom: 22px; background: #fff; border-radius: 4px; }
-.identityPanel dl { display: grid; gap: 14px; margin: 0; }
-.identityPanel div { padding-top: 14px; border-top: 1px solid #294039; }
-.identityPanel dt { color: #d8aa35; font-size: 12px; font-weight: 900; text-transform: uppercase; }
-.identityPanel dd { margin: 5px 0 0; color: #edf4f1; line-height: 1.4; }
+/* Pannello dell'hero: stesso trattamento del riquadro segnali italiano —
+   riquadro scuro, ombra menta piena, barra oro in alto a destra. */
+.heroPanel, .identityPanel {
+  position: relative;
+  overflow: hidden;
+  padding: 30px;
+  border: 1px solid #cad5d0;
+  border-radius: 7px;
+  background: #0d1814;
+  color: #fff;
+  box-shadow: 18px 20px 0 var(--mint);
+}
+.heroPanel::before, .identityPanel::before { position: absolute; top: 0; right: 0; width: 70px; height: 5px; background: var(--gold); content: ''; }
+.heroPanel strong { display: block; margin-bottom: 20px; font: 500 24px/1.2 Georgia, 'Times New Roman', serif; }
+.heroPanel ol { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; counter-reset: steps; background: rgba(255, 255, 255, .1); }
+.heroPanel li { counter-increment: steps; display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding: 13px 12px; background: #15251f; color: #cbd8d2; font-size: 12px; line-height: 1.45; }
+.heroPanel li::before { content: counter(steps, decimal-leading-zero); color: var(--gold); font-weight: 900; }
 
-.faqLayout { display: grid; grid-template-columns: minmax(240px, 360px) minmax(0, 1fr); gap: 52px; align-items: start; }
-.faqList { display: grid; gap: 12px; }
-.faqList details { border: 1px solid #d5dfda; background: #fff; }
-.faqList summary { cursor: pointer; display: flex; justify-content: space-between; gap: 18px; padding: 20px 22px; color: #14231e; font-weight: 900; list-style: none; }
+/* Il marchio e' crema su trasparente: su fondo bianco sparisce e restano
+   soltanto i due parallelogrammi. Ovunque nel sito sta dentro una cornice
+   verde, ed e' cosi' che va incassato anche qui. */
+.identityPanel img { width: 100%; max-width: 210px; height: auto; object-fit: contain; }
+.identityLogo { width: fit-content; display: grid; place-items: center; margin-bottom: 22px; padding: 14px 18px; border-radius: 5px; background: var(--green); }
+.identityPanel dl { display: grid; gap: 1px; margin: 0; background: rgba(255, 255, 255, .1); }
+.identityPanel div { padding: 13px 12px; background: #15251f; }
+.identityPanel dt { color: #9cafa7; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.identityPanel dd { margin: 5px 0 0; color: #cbd8d2; font-size: 12px; line-height: 1.45; }
+
+/* Sezioni: stesso contenitore e stesso respiro dell'italiano. */
+.section { max-width: 1120px; margin: 0 auto; padding: 86px 24px; }
+.sectionHeading { max-width: 760px; }
+.sectionHeading h2, .closing h2 { margin: 0; font: 500 43px/1.08 Georgia, 'Times New Roman', serif; text-wrap: balance; }
+.sectionHeading p:last-child { margin: 18px 0 0; color: var(--muted); font-size: 16px; line-height: 1.65; }
+
+/* Griglia delle schede: due colonne con la tecnica del filetto, come
+   .stepGrid italiano. Le ultime schede si allargano per chiudere la riga,
+   altrimenti la cella scoperta mostra il fondo e si legge come una barra. */
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 45px; border: 1px solid var(--line); background: var(--line); }
+.grid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.service, .proof, .priceCard { min-height: 235px; padding: 27px; background: var(--surface); }
+.service h3, .proof h3, .priceCard h3 { margin: 0 0 10px; font: 500 24px Georgia, 'Times New Roman', serif; }
+.service > svg, .proof > svg { margin-bottom: 18px; color: var(--green); }
+.service p, .proof p, .priceCard p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.62; }
+.service a, .textLink { display: inline-flex; align-items: center; gap: 7px; min-height: 24px; margin-top: 22px; color: var(--green); font-size: 13px; font-weight: 800; text-decoration: none; }
+.service a:hover, .textLink:hover { color: var(--green-dark); text-decoration: underline; text-underline-offset: 3px; }
+.checkList { display: grid; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
+.checkList li { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.checkList li svg { flex: none; color: var(--green); }
+
+/* Fascia scura: stesso valore di .darkSection italiano. */
+.band { max-width: none; padding: 86px max(24px, calc((100vw - 1120px) / 2)); background: #0d1814; color: #fff; }
+.band .eyebrow { color: #83dbb9; }
+.band .sectionHeading p:last-child { color: #b8c6c0; }
+.journey { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; margin-top: 42px; background: rgba(255, 255, 255, .13); }
+.journey article { padding: 25px; background: #14251f; }
+.journey span { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-size: 11px; font-weight: 850; }
+.journey h3 { margin: 14px 0 9px; font: 500 20px Georgia, 'Times New Roman', serif; }
+.journey p { margin: 0; color: #b8c6c0; font-size: 12px; line-height: 1.6; }
+.proofGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1px; margin-top: 42px; border: 1px solid var(--line); background: var(--line); }
+.band .proofGrid { border-color: rgba(255, 255, 255, .13); background: rgba(255, 255, 255, .13); }
+.band .proof { background: #14251f; color: #fff; }
+.band .proof h3 { color: #fff; }
+.band .proof p { color: #b8c6c0; }
+
+/* Domande frequenti: filetto sotto ciascuna, come nell'italiano — non
+   riquadri, che nel resto del sito non esistono. */
+.faqLayout { display: grid; grid-template-columns: minmax(260px, .65fr) minmax(0, 1fr); gap: 75px; }
+.faqList { display: block; }
+.faqList details { border-bottom: 1px solid var(--line); }
+.faqList summary { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0; cursor: pointer; color: var(--ink); font-size: 15px; font-weight: 800; line-height: 1.4; list-style: none; }
 .faqList summary::-webkit-details-marker { display: none; }
-.faqList summary span { color: #0f6b4f; }
+.faqList summary span { color: var(--green); font-size: 23px; font-weight: 500; }
 .faqList details[open] summary span { transform: rotate(45deg); }
-.faqList details p { margin: 0; padding: 0 22px 22px; color: #52615c; line-height: 1.6; }
+.faqList details p { margin: 0; padding: 0 35px 23px 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
 
-.priceGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-.priceCard { display: flex; flex-direction: column; border: 1px solid #d5dfda; }
-.price { margin: 20px 0 8px !important; color: #14231e !important; font-size: 32px; font-weight: 900; }
-.priceCard ul { display: grid; gap: 10px; margin: 22px 0; padding-left: 20px; color: #40514b; line-height: 1.45; }
-.priceCard a { margin-top: auto; }
-.note { margin-top: 12px !important; font-size: 12px; }
+/* Listino — stesso trattamento delle schede italiane: riquadri bordati e
+   arrotondati, piano in evidenza con bordo verde e ombra, prezzo in serif
+   grande, elenco con la spunta. Prima erano cinque schede uguali in una
+   griglia piatta, senza gerarchia fra i due piani social e le attivazioni
+   singole. */
+.priceGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 42px; }
+.priceCard {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 31px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+}
+.featured { border: 2px solid var(--green); box-shadow: 0 22px 48px rgba(15, 107, 79, .12); }
+.priceTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.audience { color: var(--green); font-size: 10px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+.priceCard h3 { margin: 8px 0 0; font: 500 34px Georgia, 'Times New Roman', serif; }
+.badge { flex: none; white-space: nowrap; padding: 6px 8px; border-radius: 4px; background: #fff1c9; color: #7a5812; font-size: 10px; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
+.result { margin: 18px 0 0 !important; color: var(--muted); font-size: 13px; }
+.price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 5px;
+  margin: 24px 0 0 !important;
+  color: var(--ink) !important;
+  font: 500 44px/1 Georgia, 'Times New Roman', serif !important;
+}
+.priceLabel { flex-basis: 100%; margin-bottom: 6px; color: var(--muted); font: 700 11px/1 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.setup { margin: 8px 0 0 !important; color: var(--green) !important; font-size: 11px !important; font-weight: 800; }
+.priceCard ul { display: grid; gap: 10px; margin: 22px 0 26px; padding: 0; list-style: none; }
+.priceCard li { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.priceCard li::before { content: none; }
+.priceCard li svg { flex: none; margin-top: 1px; color: var(--green); }
+.priceCard > a { margin-top: auto; }
+.priceCard .primary { border: 1px solid var(--green); background: transparent; color: var(--green); }
+.priceCard .primary:hover { background: var(--green); color: #fff; }
+.featured .primary { background: var(--green); color: #fff; }
+.featured .primary:hover { background: var(--green-dark); }
+.blogCard { border-color: #77b89f; }
+.webCard { border-color: #d2ac4a; }
+.blogCard .primary, .webCard .primary { background: var(--green); color: #fff; }
+.leadCard { grid-column: 1 / -1; border-color: #9ba9d5; }
+.leadCard ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.leadCard .primary { border-color: #314a8a; background: #314a8a; color: #fff; }
+.leadCard .primary:hover { background: #24386b; }
+.note { margin: 10px 0 0 !important; color: var(--muted) !important; font-size: 10px !important; text-align: center; }
 
-.footer { display: grid; grid-template-columns: 1fr auto; gap: 22px 60px; padding: 48px max(24px, calc((100vw - 1180px) / 2)); background: #07120f; color: #dce6e1; }
-.footer p { margin: 8px 0 0; color: #91a39c; }
+/* Chiusura: fascia verde piena, come .finalCta italiano. */
+.closing { display: flex; align-items: center; justify-content: space-between; gap: 55px; padding: 70px max(24px, calc((100vw - 1120px) / 2)); background: var(--green); color: #fff; }
+.closing > div { max-width: 740px; }
+.closing .eyebrow { color: #b9ead8; }
+.closing p { margin: 15px 0 0; color: #d5eee5; font-size: 16px; line-height: 1.6; }
+.closing .primary { flex: none; background: #fff; color: var(--green-dark); }
+.closing .primary:hover { background: var(--mint); }
+
+.footer { display: grid; grid-template-columns: 1fr auto; gap: 22px 60px; padding: 48px max(24px, calc((100vw - 1120px) / 2)); background: #0d1814; color: #dce6e1; }
+.footer strong { font: 500 20px Georgia, 'Times New Roman', serif; }
+.footer p { margin: 8px 0 0; color: #91a39c; font-size: 13px; }
 .footerLinks { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 18px; }
-.footer a { color: #dce6e1; }
-.legal { grid-column: 1 / -1; padding-top: 20px; border-top: 1px solid #253b34; font-size: 12px; }
+.footer a { min-height: 24px; display: inline-flex; align-items: center; color: #dce6e1; font-size: 13px; text-decoration: none; }
+.footer a:hover { color: #83dbb9; }
+.legal { grid-column: 1 / -1; padding-top: 20px; border-top: 1px solid #253b34; color: #91a39c; font-size: 12px; }
 
-@media (max-width: 920px) {
-  .nav { display: none; }
-  .headerCta { margin-left: auto; }
-  .hero { grid-template-columns: 1fr; gap: 36px; }
-  .grid, .proofGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .faqLayout { grid-template-columns: 1fr; gap: 24px; }
-  .journey article { border-bottom: 1px solid #376054; }
+.shell a:focus-visible, .shell summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+
+/* Tema scuro: si ridefiniscono i token, non le regole che li usano. Hero e
+   pannelli restano scuri in entrambi i temi, come nelle pagine italiane. */
+:global(html[data-theme='dark']) .shell {
+  --ink: #edf4f1;
+  --muted: #aab8b2;
+  --green: #49d6a0;
+  --green-dark: #25b67f;
+  --mint: #17372d;
+  --line: #293b35;
+  --paper: #111713;
+  --surface: #0d1512;
 }
-
-@media (max-width: 640px) {
-  .shell { padding-top: 60px; }
-  .header { min-height: 62px; padding: 0 16px; }
-  .brand > span:last-child { display: none; }
-  .logo { width: 84px; height: 40px; }
-  .headerCta { min-height: 38px; padding: 0 12px; }
-  .hero, .section, .band, .closing { padding: 64px 20px; }
-  .hero h1 { font-size: 44px; }
-  .heroLead { font-size: 18px; }
-  .grid, .proofGrid, .priceGrid, .journey { grid-template-columns: 1fr; }
-  .closing { align-items: flex-start; flex-direction: column; }
-  .footer { grid-template-columns: 1fr; padding: 42px 20px; }
-  .footerLinks { justify-content: flex-start; }
-  .legal { grid-column: auto; }
-}
-
-/* Tema scuro per le pagine inglesi.
-   Mancava del tutto: il selettore in testata era visibile anche qui, ma non
-   cambiava nulla, perche' le superfici chiare erano scritte a mano. Hero e
-   band sono scuri in entrambi i temi e restano come sono; qui si ridefinisce
-   solo cio' che era chiaro. */
-:global(html[data-theme='dark']) .shell { background: #0d1512; color: #edf4f1; }
 :global(html[data-theme='dark']) .eyebrow { color: #49c995; }
-:global(html[data-theme='dark']) .sectionHeading p:last-child { color: #aab8b2; }
-:global(html[data-theme='dark']) .grid { background: #293b35; border-color: #293b35; }
 :global(html[data-theme='dark']) .service,
 :global(html[data-theme='dark']) .proof,
 :global(html[data-theme='dark']) .priceCard { background: #151d1a; }
-:global(html[data-theme='dark']) .service p,
-:global(html[data-theme='dark']) .proof p,
-:global(html[data-theme='dark']) .priceCard p { color: #aab8b2; }
-:global(html[data-theme='dark']) .checkList,
-:global(html[data-theme='dark']) .priceCard ul { color: #cbd8d2; }
-:global(html[data-theme='dark']) .closing { background: #12201b; }
-:global(html[data-theme='dark']) .closing p { color: #aab8b2; }
-:global(html[data-theme='dark']) .faqList details { background: #151d1a; border-color: #293b35; }
-:global(html[data-theme='dark']) .faqList details p { color: #aab8b2; }
-/* La domanda aveva #14231e scritto a mano: su scheda scura faceva 1,05:1. */
-:global(html[data-theme='dark']) .faqList summary { color: #edf4f1; }
-:global(html[data-theme='dark']) .nav a { color: #cbd8d2; }
-:global(html[data-theme='dark']) .band .proof { background: #16382c; }
+:global(html[data-theme='dark']) .secondary { border-color: #4b5d56; color: var(--ink); }
+:global(html[data-theme='dark']) .heroPanel,
+:global(html[data-theme='dark']) .identityPanel { border-color: #293b35; }
+/* Su verde menta acceso il bianco scende a 1,8:1: qui il testo va scuro. */
+:global(html[data-theme='dark']) .headerCta,
+:global(html[data-theme='dark']) .primary { color: #08281d; }
+:global(html[data-theme='dark']) .closing { background: #0f3d2d; }
+:global(html[data-theme='dark']) .closing .primary { background: #fff; color: #094c39; }
 /* Il prezzo ha !important: senza pari peso resterebbe scuro su scheda scura. */
-:global(html[data-theme='dark']) .price { color: #edf4f1 !important; }
-:global(html[data-theme='dark']) .service a,
-:global(html[data-theme='dark']) .textLink,
-:global(html[data-theme='dark']) .service svg,
-:global(html[data-theme='dark']) .faqList summary span { color: #49c995; }
-:global(html[data-theme='dark']) .note { color: #93a29c; }
+:global(html[data-theme='dark']) .price { color: var(--ink) !important; }
+:global(html[data-theme='dark']) .featured { box-shadow: 0 22px 48px rgba(0, 0, 0, .45); }
+:global(html[data-theme='dark']) .badge { background: #3a2e0e; color: #f2cf78; }
+:global(html[data-theme='dark']) .priceCard .primary { color: var(--green); }
+:global(html[data-theme='dark']) .priceCard .primary:hover,
+:global(html[data-theme='dark']) .featured .primary,
+:global(html[data-theme='dark']) .blogCard .primary,
+:global(html[data-theme='dark']) .webCard .primary { color: #08281d; }
+:global(html[data-theme='dark']) .leadCard .primary { color: #fff; }
+:global(html[data-theme='dark']) .faqList summary { color: var(--ink); }
 
-/* Griglie sempre piene.
-   Le celle scoperte mostrano il fondo della griglia e si leggono come una
-   barra vuota accanto alle schede. .grid ha tre colonne fisse e il fondo a
-   vista, quindi le ultime schede si allargano fino a chiudere la riga.
-   .journey e .proofGrid non hanno un numero di voci stabile: si adattano da
-   sole al conteggio, cosi' aggiungere una voce non lascia mai un buco. */
-.grid > *:last-child:nth-child(3n + 1) { grid-column: span 3; }
-.grid > *:nth-last-child(2):nth-child(3n + 1) { grid-column: span 2; }
-.journey { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
-.proofGrid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
-
-@media (max-width: 920px) {
-  .grid > *:last-child:nth-child(3n + 1),
-  .grid > *:nth-last-child(2):nth-child(3n + 1) { grid-column: auto; }
-  .grid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media (max-width: 1000px) {
+  .hero { grid-template-columns: 1fr; gap: 44px; padding: 56px 24px 64px; }
+  .hero h1 { font-size: clamp(38px, 8vw, 54px); }
+  .faqLayout { grid-template-columns: 1fr; gap: 30px; }
+  .closing { flex-direction: column; align-items: flex-start; gap: 30px; }
 }
-@media (max-width: 640px) {
-  .grid > * { grid-column: auto; }
+
+@media (max-width: 760px) {
+  .section { padding: 62px 20px; }
+  .band { padding: 62px 20px; }
+  .closing { padding: 56px 20px; }
+  .footer { grid-template-columns: 1fr; padding: 42px 20px; }
+  .footerLinks { justify-content: flex-start; }
+  .legal { grid-column: auto; }
+  .grid, .priceGrid { grid-template-columns: 1fr; }
+  .leadCard ul { grid-template-columns: 1fr; }
+  .priceCard { padding: 24px; }
+  .priceCard h3 { font-size: 28px; }
+  .grid > *, .priceGrid > * { grid-column: auto; }
+  .sectionHeading h2, .closing h2 { font-size: 32px; }
+  .heroLead { font-size: 16px; }
 }

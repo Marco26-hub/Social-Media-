@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 import { EN_PRICE_LABELS } from '@/lib/english-content'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '../english.module.css'
@@ -22,11 +22,11 @@ export const metadata: Metadata = {
 // Il prezzo numerico serve ai dati strutturati: l'etichetta e' testo per il
 // lettore («€490 per month»), non un valore che un motore possa leggere.
 const offers = [
-  { name: 'Presence', valore: '490', ricorrente: true, price: EN_PRICE_LABELS.presence, result: 'Consistent presence across 2 social channels.', features: ['16 monthly content pieces per channel · 32 published posts', '4 Reels, Stories or Shorts per channel', 'Strategy, review and publishing'], href: '/register?piano=presenza', cta: 'Start Presence' },
-  { name: 'Growth', valore: '990', ricorrente: true, price: EN_PRICE_LABELS.growth, result: 'A wider system across 2 social channels.', features: ['24 monthly content pieces per channel · 48 published posts', '6 Reels, Stories or Shorts per channel', '1 SEO + GEO article and competitor analysis', 'Organic growth only; paid campaigns sit in the custom plan'], href: '/register?piano=crescita', cta: 'Start Growth' },
-  { name: 'Blog SEO + GEO', valore: '29.90', ricorrente: true, price: EN_PRICE_LABELS.blog, result: 'Continuous organic editorial production.', features: ['12 articles per month', 'Metadata, FAQs and structured content', 'Human review', 'Connected-blog publishing or CMS-ready delivery'], href: '/acquista?servizio=blog-seo', cta: 'Activate Blog' },
-  { name: 'Basic Website', valore: '19.90', ricorrente: true, price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request website details' },
-  { name: 'B2B Lead Research Pilot', valore: '149', ricorrente: false, price: EN_PRICE_LABELS.leadPilot, result: 'A verified list for commercial evaluation.', features: ['Ideal-company profile', 'Up to 30 companies researched', 'Public sources and priorities', 'No automated outreach or guaranteed sales'], href: '/acquista?servizio=lead-pilot', cta: 'Activate the Pilot' },
+  { name: 'Presence', audience: 'Professionals and small businesses', valore: '490', ricorrente: true, setup: 'Setup included', price: EN_PRICE_LABELS.presence, result: 'Consistent presence across 2 social channels.', features: ['16 monthly content pieces per channel · 32 published posts', '4 Reels, Stories or Shorts per channel', 'Strategy, review and publishing'], href: '/register?piano=presenza', cta: 'Start Presence' },
+  { name: 'Growth', audience: 'SMEs focused on results', badge: 'Most chosen', evidenza: true, valore: '990', ricorrente: true, setup: 'Setup included', price: EN_PRICE_LABELS.growth, result: 'A wider system across 2 social channels.', features: ['24 monthly content pieces per channel · 48 published posts', '6 Reels, Stories or Shorts per channel', '1 SEO + GEO article and competitor analysis', 'Organic growth only; paid campaigns sit in the custom plan'], href: '/register?piano=crescita', cta: 'Start Growth' },
+  { name: 'Blog SEO + GEO', audience: 'Organic content', accento: 'blog', valore: '29.90', ricorrente: true, setup: '14 days to evaluate the service', price: EN_PRICE_LABELS.blog, result: 'Continuous organic editorial production.', features: ['12 articles per month', 'Metadata, FAQs and structured content', 'Human review', 'Connected-blog publishing or CMS-ready delivery'], href: '/acquista?servizio=blog-seo', cta: 'Activate Blog' },
+  { name: 'Basic Website', audience: 'Your own presence', accento: 'web', valore: '19.90', ricorrente: true, setup: 'Yours after 12 months of subscription', price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request website details' },
+  { name: 'B2B Lead Research Pilot', audience: 'One-off pilot', accento: 'lead', largo: true, valore: '149', ricorrente: false, setup: 'No subscription, no automated outreach', price: EN_PRICE_LABELS.leadPilot, result: 'A verified list for commercial evaluation.', features: ['Ideal-company profile', 'Up to 30 companies researched', 'Public sources and priorities', 'No automated outreach or guaranteed sales'], href: '/acquista?servizio=lead-pilot', cta: 'Activate the Pilot' },
 ]
 
 export default function EnglishPricingPage() {
@@ -85,7 +85,39 @@ export default function EnglishPricingPage() {
       </section>
       <section className={styles.section}>
         <div className={styles.sectionHeading}><p className={styles.eyebrow}>Offers</p><h2>Social plans and standalone services.</h2><p>Blog, Web and B2B Lead Research can be activated independently or combined with a social plan.</p></div>
-        <div className={styles.priceGrid}>{offers.map(offer => <article className={styles.priceCard} key={offer.name}><h3>{offer.name}</h3><p>{offer.result}</p><p className={styles.price}>{offer.price}</p><ul>{offer.features.map(feature => <li key={feature}>{feature}</li>)}</ul><Link className={styles.primary} href={offer.href}>{offer.cta} <ArrowRight size={15} /></Link><p className={styles.note}>VAT excluded. Scope and eligibility confirmed before delivery.</p></article>)}</div>
+        <div className={styles.priceGrid}>
+          {offers.map(offer => (
+            <article
+              key={offer.name}
+              className={[
+                styles.priceCard,
+                offer.evidenza ? styles.featured : '',
+                offer.accento === 'blog' ? styles.blogCard : '',
+                offer.accento === 'web' ? styles.webCard : '',
+                offer.accento === 'lead' ? styles.leadCard : '',
+              ].filter(Boolean).join(' ')}
+            >
+              <div className={styles.priceTop}>
+                <div>
+                  <span className={styles.audience}>{offer.audience}</span>
+                  <h3>{offer.name}</h3>
+                </div>
+                {offer.badge && <b className={styles.badge}>{offer.badge}</b>}
+              </div>
+              <p className={styles.result}>{offer.result}</p>
+              <p className={styles.price}>
+                <span className={styles.priceLabel}>{offer.ricorrente ? 'Monthly fee' : 'One-off'}</span>
+                {/* L'etichetta sopra dice gia' la cadenza: ripeterla nel prezzo
+                    dava «Monthly fee — From €19.90 / month». */}
+                {offer.price.replace(' / month', '').replace(' one-off', '')}
+              </p>
+              <p className={styles.setup}>{offer.setup}</p>
+              <ul>{offer.features.map(feature => <li key={feature}><Check size={15} aria-hidden="true" /> {feature}</li>)}</ul>
+              <Link className={styles.primary} href={offer.href}>{offer.cta} <ArrowRight size={15} /></Link>
+              <p className={styles.note}>VAT excluded. Scope and eligibility confirmed before delivery.</p>
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   )
