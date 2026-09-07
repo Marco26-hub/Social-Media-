@@ -43,6 +43,27 @@ esterna conferma che questa azienda esista.**
 | Piattaforme AI | 51 | **58** | 10% | Migliora ciò che dipende dal sito; il resto richiede presenza esterna |
 | **Totale** | **50** | **61** | | |
 
+### Punteggio SEO classico: 67/100
+
+La SEO tradizionale e la GEO condividono la base tecnica ma vengono valutate su
+criteri diversi, quindi vale la pena tenere i due punteggi separati.
+
+| Categoria | Punteggio | Peso | Che cosa dice la misura |
+|---|---|---|---|
+| SEO tecnica | **95**/100 | 30% | 56 URL tutte 200, zero link rotti, zero pagine orfane, zero soft-404. Redirect corretti e permanenti. Core Web Vitals tutti in fascia verde: LCP massimo 1.592 ms su mobile a rete lenta, **CLS esattamente zero** su tutte le combinazioni testate, TBT massimo 16 ms. Contenuto interamente server-side: 556 frasi su 563 nell'HTML grezzo. Sei header di sicurezza, HSTS a due anni con preload |
+| On-page | **88**/100 | 25% | Tutti i title fra 30 e 60 caratteri, tutte le description fra 140 e 168, tutte uniche. Un solo H1 per pagina, gerarchia dei titoli pulita, nessuna cannibalizzazione fra pagine. 95 immagini su 98 con alt. 21,7 link interni per pagina, profondità massima 3 click |
+| Contenuti e copertura | **68**/100 | 20% | 46.119 parole di prosa reale su 56 pagine, 269 blocchi domanda-risposta, testi davvero distinti (sovrapposizione 1,9% fra le pagine settore). Ma quattro servizi su dieci non hanno un solo articolo, gli undici settori ne hanno zero, e mancano schede caso con numeri |
+| Autorevolezza fuori dal sito | **10**/100 | 25% | È il buco. Nessun backlink autorevole rilevato, nessuna scheda Google Business, nessuna citazione di terzi, nessuna recensione. E tre omonimi occupano la query di marca |
+| **Totale SEO** | **67**/100 | | |
+
+**Il punteggio SEO è più alto di quello GEO (61) per un motivo solo:** la SEO
+premia la base tecnica, che qui è ottima, mentre la GEO pesa di più la
+riconoscibilità dell'entità e la citabilità dei singoli blocchi. I due punteggi
+sono limitati dallo stesso fattore — l'assenza di conferme esterne — che vale il
+25% della SEO e il 20% della GEO.
+
+---
+
 ### Misurato in produzione, prima e dopo
 
 | Indicatore | Prima | Dopo |
