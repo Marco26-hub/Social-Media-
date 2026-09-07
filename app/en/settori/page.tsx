@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { SETTORI } from '@/lib/settori'
 import { SETTORI_EN } from '@/lib/settori.en'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '../../content-page.module.css'
@@ -58,8 +59,9 @@ export default function EnglishSettoriPage() {
         <p className={styles.eyebrow}>By trade</p>
         <h1>The same operating method, written for the way your business works.</h1>
         <p className={styles.lead}>
-          These English pages focus on sectors where an international customer or owner is realistic:
-          housekeeping, restaurants and real estate.
+          Three sectors are written in English, because those are the trades where an
+          international owner, tenant or guest is realistic: housekeeping, restaurants and
+          real estate. The other eight exist in Italian and are listed further down.
         </p>
       </section>
 
@@ -80,6 +82,61 @@ export default function EnglishSettoriPage() {
                   Open page <ArrowRight size={16} aria-hidden="true" />
                 </Link>
               </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeading}>
+          <p className={styles.eyebrow}>What is identical everywhere</p>
+          <h2>The trade changes the output, not the method.</h2>
+          <p>
+            Whatever the sector, the cycle is the same one described on the method page:
+            a monthly plan, production, your approval before anything is published, then
+            measurement that sets the next priorities.
+          </p>
+        </div>
+        <div className={styles.stepGrid}>
+          <article>
+            <span>01</span>
+            <h3>What we ask you first</h3>
+            <p>
+              How a request reaches you today, who answers it, and where it stops. That
+              conversation decides the starting point, not a package chosen in advance.
+            </p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>What changes by sector</h3>
+            <p>
+              The deliverables. A cleaning company needs signed job reports; a restaurant
+              needs table bookings; an agency needs listings kept current. The plan around
+              them is built the same way.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeading}>
+          <p className={styles.eyebrow}>Written in Italian only</p>
+          <h2>Eight more trades, on the Italian site.</h2>
+          <p>
+            These pages exist and are kept current, but they are written for an Italian
+            reader and have not been translated. If one of them is your trade, write to us
+            in English and we will answer in English.
+          </p>
+        </div>
+        <div className={styles.stepGrid}>
+          {SETTORI.filter(settore => !SETTORI_EN.some(en => en.slug === settore.slug)).map((settore, i) => (
+            <article key={settore.slug}>
+              <span>{String(i + 1).padStart(2, '0')}</span>
+              <h3>
+                <Link href={`/settori/${settore.slug}`} hrefLang="it" lang="it">{settore.nome}</Link>
+              </h3>
+              <p lang="it">{settore.sommario}</p>
             </article>
           ))}
         </div>
