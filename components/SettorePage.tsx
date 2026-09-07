@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { Building2, Car, Droplets, HeartPulse, Plug, Scissors, Smile, Sparkles, Stethoscope, UtensilsCrossed, Wrench, type LucideIcon } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
-import type { Settore } from '@/lib/settori'
+import { prezzoMinimoSettore, type Settore } from '@/lib/settori'
+import { SETTORI_EN } from '@/lib/settori.en'
 import { SITE_URL } from '@/lib/site-config'
 
 // Le landing di settore riusano l’impaginazione delle pagine servizio: stessa
@@ -32,6 +33,7 @@ export function percorsoSettore(settore: Settore, locale: SettoreLocale = 'it'):
 export function metadataSettore(settore: Settore, locale: SettoreLocale = 'it'): Metadata {
   const path = percorsoSettore(settore, locale)
   const url = `${SITE_URL}${path}`
+  const haTraduzione = SETTORI_EN.some(s => s.slug === settore.slug)
   const italiano = `/settori/${settore.slug}`
   const inglese = `/en/settori/${settore.slug}`
   return {
@@ -40,7 +42,11 @@ export function metadataSettore(settore: Settore, locale: SettoreLocale = 'it'):
     keywords: [settore.nome.toLowerCase(), settore.servizio.toLowerCase()],
     alternates: {
       canonical: url,
-      languages: locale === 'en'
+      // Reciproco: prima il ramo italiano restituiva undefined, quindi la
+      // pagina EN dichiarava la IT e la IT non dichiarava la EN. Senza
+      // reciprocita' il gruppo linguistico non viene consolidato. Si emette
+      // solo quando la traduzione esiste davvero.
+      languages: haTraduzione
         ? { 'it-IT': `${SITE_URL}${italiano}`, en: `${SITE_URL}${inglese}`, 'x-default': `${SITE_URL}${italiano}` }
         : undefined,
     },
@@ -62,6 +68,7 @@ export default function SettorePage({ settore, locale = 'it' }: { settore: Setto
     serviceType: settore.tipoServizio,
     promise: settore.promessa,
     priceNote: settore.notaPrezzi,
+    startingPrice: prezzoMinimoSettore(settore),
     primaryCtaLabel: isEnglish ? 'Book a call' : 'Richiedi una call',
     // /consulenza e' la consulenza legale a pagamento su AI Act e GDPR: chi
     // arriva da una pagina di settore cerca il proprio mestiere, non un

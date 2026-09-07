@@ -104,7 +104,9 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+          // Su una pagina inglese la radice del percorso e' /en, non la home
+          // italiana: prima le briciole inglesi rimandavano tutte al sito IT.
+          { '@type': 'ListItem', position: 1, name: 'Home', item: isEnglish ? `${SITE_URL}/en` : SITE_URL },
           { '@type': 'ListItem', position: 2, name: parent.label, item: `${SITE_URL}${parent.href}` },
           { '@type': 'ListItem', position: 3, name: config.serviceName, item: pageUrl },
         ],
@@ -147,8 +149,18 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
             <Link href="/">Home</Link><span>/</span><Link href={parent.href}>{parent.label}</Link><span>/</span><span>{config.serviceName}</span>
           </nav>
-          <p className={styles.eyebrow}>{config.eyebrow}</p>
-          <h1 id="detail-title">{config.title}</h1>
+          {/* L'occhiello sta dentro l'H1, non sopra.
+              Il titolo di queste pagine e' una frase d'effetto che spesso non
+              nomina il mestiere: «Chi non trova risposta prova il salone dopo»
+              non contiene ne' «parrucchieri» ne' «barberie». Quando un motore
+              estrae un passaggio si porta dietro l'H1 come ancora, e un H1
+              senza l'entita' lascia la risposta senza referente. Portando
+              l'occhiello dentro l'H1 il nome del settore entra nel titolo
+              senza cambiare una virgola del testo ne' l'aspetto della pagina. */}
+          <h1 id="detail-title">
+            <span className={styles.eyebrow}>{config.eyebrow}</span>
+            {config.title}
+          </h1>
           <p className={styles.lead}>{config.lead}</p>
           <div className={styles.actions}>
             {config.primaryCtaHref ? (

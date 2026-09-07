@@ -189,3 +189,13 @@
    puo' passare da un token che si inverte: in notte diventava 2,6:1. */
 :global(html[data-theme='dark']) .breadcrumbs { color: #97a8a1; }
 :global(html[data-theme='dark']) .related > span { color: #97a8a1; }
+
+/* L'occhiello ora vive dentro l'H1: torna a comportarsi come una riga a se',
+   con la sua dimensione, senza ereditare il corpo del titolo. */
+h1 .eyebrow, .hero h1 .eyebrow {
+  display: block;
+  margin-bottom: 14px;
+  font: 800 12px/1.2 Arial, Helvetica, sans-serif;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}

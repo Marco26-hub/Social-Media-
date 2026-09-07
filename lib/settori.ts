@@ -679,3 +679,22 @@ export const SETTORI: Settore[] = [
 export function settoreBySlug(slug: string): Settore | undefined {
   return SETTORI.find(s => s.slug === slug)
 }
+
+
+/**
+ * Prezzo d'ingresso piu' basso fra quelli gia' dichiarati nella nota prezzi
+ * del settore. Non e' un numero nuovo: e' il minimo di cio' che la pagina
+ * scrive gia'. Serve a far comparire l'Offer nei dati strutturati — le pagine
+ * di settore citavano i prezzi nel testo e non ne dichiaravano nessuno — e a
+ * mostrare il riquadro del prezzo, che senza questo campo restava nascosto.
+ * I settori quotati solo su preventivo restituiscono undefined, e li' non
+ * compare nulla: meglio niente che un prezzo inventato.
+ */
+export function prezzoMinimoSettore(settore: Settore): string | undefined {
+  const valori = [...settore.notaPrezzi.matchAll(/([0-9]+(?:[.,][0-9]+)?)\s*€/g)]
+    .map(m => parseFloat(m[1].replace('.', '').replace(',', '.')))
+    .filter(n => Number.isFinite(n) && n > 0)
+  if (!valori.length) return undefined
+  const minimo = Math.min(...valori)
+  return Number.isInteger(minimo) ? String(minimo) : minimo.toFixed(2)
+}
