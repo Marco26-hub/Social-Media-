@@ -21,6 +21,10 @@ export type BlogArticleData = {
   // Data di ultima revisione, distinta dalla pubblicazione: senza, il motore
   // legge l'articolo come mai aggiornato.
   updated_at?: string | null
+  // Fonti primarie citate. Il sito non aveva un solo link in uscita verso una
+  // fonte terza: un contenuto che afferma senza ancorare si presenta come
+  // opinione, ed e' piu' difficile da citare per un motore di risposta.
+  fonti?: { titolo: string; url: string; nota?: string }[]
 }
 
 // jsonb dal DB può arrivare come stringa o oggetto: normalizza.
@@ -47,6 +51,7 @@ export function normalizeArticle(row: Record<string, unknown>): BlogArticleData 
     url_pubblicato: (row.url_pubblicato as string) ?? null,
     data_pubblicazione: (row.data_pubblicazione as string) ?? null,
     updated_at: (row.updated_at as string) ?? null,
+    fonti: asArray<{ titolo: string; url: string; nota?: string }>(row.fonti),
   }
 }
 
@@ -93,6 +98,9 @@ export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
     ...(a.tempo_lettura_min ? { timeRequired: `PT${a.tempo_lettura_min}M` } : {}),
     // Indica al motore quali blocchi sono adatti a essere letti ad alta voce.
     speakable: { '@type': 'SpeakableSpecification', cssSelector: ['h1', 'h2 + p'] },
+    ...(a.fonti?.length ? {
+      citation: a.fonti.map(f => ({ '@type': 'CreativeWork', name: f.titolo, url: f.url })),
+    } : {}),
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
   }]
   if (a.faq.length) {

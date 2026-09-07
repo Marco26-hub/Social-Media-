@@ -66,6 +66,12 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     autore: 'Marco Dibenedetto',
     tempo_lettura_min: 7,
     data_pubblicazione: '2026-08-11T08:00:00.000Z',
+    // Fonti primarie: un contenuto ancorato e' piu' facile da citare per un
+    // motore di risposta di uno che afferma e basta.
+    fonti: [
+      { titolo: 'Instagram, account professionali e strumenti per le aziende', url: 'https://help.instagram.com/1038071743007909', nota: 'Guida ufficiale Meta: che cosa cambia fra profilo personale e account professionale.' },
+      { titolo: 'Google Search Central, contenuti utili e affidabili', url: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content', nota: 'I criteri con cui Google giudica se un contenuto è scritto per le persone.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/gestione-social-media-pmi-cosa-include-costi`,
   },
   {
@@ -131,6 +137,14 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     autore: 'Marco Dibenedetto',
     tempo_lettura_min: 7,
     data_pubblicazione: '2026-08-11T08:10:00.000Z',
+    // Fonti primarie: un contenuto ancorato e' piu' facile da citare per un
+    // motore di risposta di uno che afferma e basta.
+    fonti: [
+      { titolo: 'Google Search Central, funzionalità AI nella ricerca', url: 'https://developers.google.com/search/docs/appearance/ai-features', nota: 'Come Google seleziona le pagine da mostrare nelle risposte generate.' },
+      { titolo: 'Schema.org, tipo FAQPage', url: 'https://schema.org/FAQPage', nota: 'La specifica del vocabolario usato per marcare le domande frequenti.' },
+      { titolo: 'llms.txt, la proposta di standard', url: 'https://llmstxt.org/', nota: 'Il formato con cui un sito dichiara i propri contenuti ai modelli linguistici.' },
+      { titolo: 'OpenAI, i crawler e come consentirli', url: 'https://platform.openai.com/docs/bots', nota: 'Elenco ufficiale degli user agent di OpenAI e regole per robots.txt.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/seo-geo-differenze-visibilita-motori-ai`,
   },
   {
@@ -194,6 +208,12 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     autore: 'Marco Dibenedetto',
     tempo_lettura_min: 6,
     data_pubblicazione: '2026-08-11T08:20:00.000Z',
+    // Fonti primarie: un contenuto ancorato e' piu' facile da citare per un
+    // motore di risposta di uno che afferma e basta.
+    fonti: [
+      { titolo: 'Google Search Central, contenuti utili e affidabili', url: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content', nota: 'I criteri di qualità editoriale a cui si allinea anche un piano social.' },
+      { titolo: 'Instagram, account professionali e strumenti per le aziende', url: 'https://help.instagram.com/1038071743007909', nota: 'Che cosa mette a disposizione la piattaforma a chi pubblica come azienda.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/piano-editoriale-social-esempio-pmi`,
   },
   {
@@ -286,6 +306,13 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     autore: 'Marco Dibenedetto',
     tempo_lettura_min: 8,
     data_pubblicazione: '2026-09-07T09:00:00.000Z',
+    // Fonti primarie: un contenuto ancorato e' piu' facile da citare per un
+    // motore di risposta di uno che afferma e basta.
+    fonti: [
+      { titolo: 'WhatsApp Business Messaging Policy', url: 'https://business.whatsapp.com/policy', nota: 'Le regole di Meta su che cosa si può scrivere a un cliente e con quale consenso.' },
+      { titolo: 'Regolamento (UE) 2016/679, GDPR', url: 'https://eur-lex.europa.eu/eli/reg/2016/679/oj', nota: 'Testo ufficiale su EUR-Lex: basi giuridiche del trattamento e diritti dell’interessato.' },
+      { titolo: 'Registro Pubblico delle Opposizioni', url: 'https://www.registrodelleopposizioni.it/', nota: 'Il registro con cui una persona si oppone alle chiamate promozionali.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/chiamate-perse-agenda-vuota-cosa-fare`,
   },
   {
@@ -371,6 +398,13 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     autore: 'Marco Dibenedetto',
     tempo_lettura_min: 9,
     data_pubblicazione: '2026-09-07T14:00:00.000Z',
+    // Fonti primarie: un contenuto ancorato e' piu' facile da citare per un
+    // motore di risposta di uno che afferma e basta.
+    fonti: [
+      { titolo: 'Regolamento (UE) 2024/1689, AI Act', url: 'https://eur-lex.europa.eu/eli/reg/2024/1689/oj', nota: 'Testo ufficiale su EUR-Lex. Alfabetizzazione all’articolo 4, pratiche vietate all’articolo 5, trasparenza all’articolo 50, sanzioni all’articolo 99.' },
+      { titolo: 'Commissione europea, quadro normativo sull’intelligenza artificiale', url: 'https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai', nota: 'La pagina istituzionale con il calendario di applicazione.' },
+      { titolo: 'Garante per la protezione dei dati personali', url: 'https://www.garanteprivacy.it/', nota: 'L’autorità italiana competente quando l’AI tratta dati personali.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/ai-act-obblighi-pmi-cosa-fare`,
   },
   {
@@ -446,6 +480,12 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     autore: 'Marco Dibenedetto',
     tempo_lettura_min: 8,
     data_pubblicazione: '2026-09-07T16:00:00.000Z',
+    // Fonti primarie: un contenuto ancorato e' piu' facile da citare per un
+    // motore di risposta di uno che afferma e basta.
+    fonti: [
+      { titolo: 'Google Search Central, buone pratiche per i video', url: 'https://developers.google.com/search/docs/appearance/video', nota: 'Come rendere un video comprensibile e indicizzabile.' },
+      { titolo: 'Instagram, account professionali e strumenti per le aziende', url: 'https://help.instagram.com/1038071743007909', nota: 'I formati e gli strumenti che la piattaforma mette a disposizione delle aziende.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/video-social-aziendali-come-farli-bene`,
   },
   {
@@ -521,6 +561,13 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     autore: 'Marco Dibenedetto',
     tempo_lettura_min: 8,
     data_pubblicazione: '2026-09-07T17:30:00.000Z',
+    // Fonti primarie: un contenuto ancorato e' piu' facile da citare per un
+    // motore di risposta di uno che afferma e basta.
+    fonti: [
+      { titolo: 'Regolamento (UE) 2016/679, GDPR', url: 'https://eur-lex.europa.eu/eli/reg/2016/679/oj', nota: 'Testo ufficiale su EUR-Lex: legittimo interesse, informativa e diritto di opposizione.' },
+      { titolo: 'Registro Pubblico delle Opposizioni', url: 'https://www.registrodelleopposizioni.it/', nota: 'Da consultare prima di qualsiasi contatto telefonico promozionale.' },
+      { titolo: 'Garante per la protezione dei dati personali', url: 'https://www.garanteprivacy.it/', nota: 'L’autorità che vigila sui contatti commerciali non richiesti.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/ricerca-clienti-b2b-come-costruire-lista`,
   },
 ]

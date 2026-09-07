@@ -155,8 +155,20 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           <h1>{article.h1}</h1>
           {article.intro && <p className={styles.articleLead}>{article.intro}</p>}
           <div className={styles.articleMeta}>
-            <span>{article.autore}</span>
-            {formatDate(article.data_pubblicazione) && <span>{formatDate(article.data_pubblicazione)}</span>}
+            {/* La firma porta alla pagina dell'autore, e le date sono elementi
+                <time>: prima erano testo semplice, che un motore non riconosce
+                come data di pubblicazione o di revisione. */}
+            <span>
+              <Link href="/autore/marco-dibenedetto" rel="author">{article.autore}</Link>
+            </span>
+            {article.data_pubblicazione && formatDate(article.data_pubblicazione) && (
+              <time dateTime={article.data_pubblicazione}>{formatDate(article.data_pubblicazione)}</time>
+            )}
+            {article.updated_at
+              && article.updated_at !== article.data_pubblicazione
+              && formatDate(article.updated_at) && (
+              <time dateTime={article.updated_at}>Aggiornato il {formatDate(article.updated_at)}</time>
+            )}
             {article.tempo_lettura_min && <span><Clock3 size={14} aria-hidden="true" /> {article.tempo_lettura_min} min di lettura</span>}
           </div>
         </header>
@@ -196,6 +208,20 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
                     <p>{item.risposta}</p>
                   </details>
                 ))}
+              </section>
+            )}
+
+            {article.fonti && article.fonti.length > 0 && (
+              <section className={styles.articleFonti}>
+                <h2>Fonti</h2>
+                <ul>
+                  {article.fonti.map(f => (
+                    <li key={f.url}>
+                      <a href={f.url} target="_blank" rel="noopener noreferrer">{f.titolo}</a>
+                      {f.nota && <span> — {f.nota}</span>}
+                    </li>
+                  ))}
+                </ul>
               </section>
             )}
 
