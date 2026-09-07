@@ -20,6 +20,7 @@ const jsonLd = {
       image: { '@id': `${SITE_URL}/#logo` },
       description:
         'Servizi digitali integrati per PMI e professionisti: social media management, Blog SEO e GEO, siti, e-commerce, ricerca clienti B2B e compliance AI.',
+      alternateName: ['SWA', 'Social Web Automation'],
       sameAs: [
         'https://www.instagram.com/socialwebautomation/',
         'https://www.facebook.com/profile.php?id=61592835840985',
@@ -40,14 +41,20 @@ const jsonLd = {
         addressRegion: 'CO',
         addressCountry: 'IT',
       },
-      areaServed: { '@type': 'Place', name: 'Worldwide' },
+      areaServed: [
+        { '@type': 'Country', name: 'Italia' },
+        { '@type': 'AdministrativeArea', name: 'Provincia di Como' },
+        { '@type': 'AdministrativeArea', name: 'Città metropolitana di Milano' },
+        { '@type': 'AdministrativeArea', name: 'Provincia di Monza e della Brianza' },
+        { '@type': 'AdministrativeArea', name: 'Provincia di Varese' },
+      ],
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer service',
         email: TITOLARE.email,
         telephone: TITOLARE.telefono,
         availableLanguage: ['it'],
-        areaServed: 'Worldwide',
+        areaServed: 'IT',
       },
       knowsAbout: [
         'Social media management',
@@ -85,7 +92,7 @@ const jsonLd = {
               name: 'Gestione social media per PMI',
               serviceType: 'Social media management',
               provider: { '@id': `${SITE_URL}/#organization` },
-              areaServed: { '@type': 'Place', name: 'Worldwide' },
+              areaServed: { '@type': 'Country', name: 'Italia' },
               description:
                 'Strategia, piano editoriale, 16 contenuti mensili, gestione di due social, approvazione umana, pubblicazione e report.',
             },
@@ -109,7 +116,7 @@ const jsonLd = {
               name: 'Gestione social, SEO, GEO e campagne per PMI',
               serviceType: 'Digital marketing management',
               provider: { '@id': `${SITE_URL}/#organization` },
-              areaServed: { '@type': 'Place', name: 'Worldwide' },
+              areaServed: { '@type': 'Country', name: 'Italia' },
               description:
                 'Gestione di tre social, 24 contenuti mensili, articolo SEO e GEO, analisi competitor, gestione di una campagna ADS e report avanzato.',
             },
@@ -133,7 +140,7 @@ const jsonLd = {
               name: 'Blog SEO + GEO',
               serviceType: 'Produzione e pubblicazione articoli blog',
               provider: { '@id': `${SITE_URL}/#organization` },
-              areaServed: { '@type': 'Place', name: 'Worldwide' },
+              areaServed: { '@type': 'Country', name: 'Italia' },
               description: 'Dodici articoli SEO e GEO al mese con piano editoriale, revisione umana e pubblicazione sul blog collegato o consegna per CMS.',
             },
           },
@@ -149,7 +156,7 @@ const jsonLd = {
               name: 'Sito Web Base',
               serviceType: 'Web design e sviluppo landing page',
               provider: { '@id': `${SITE_URL}/#organization` },
-              areaServed: { '@type': 'Place', name: 'Worldwide' },
+              areaServed: { '@type': 'Country', name: 'Italia' },
               description:
                 'Pacchetto separato per landing page semplici e siti web base a partire da 19,90 euro al mese. E-commerce e funzioni avanzate vengono quotati a parte.',
             },
@@ -191,12 +198,45 @@ const jsonLd = {
               name: 'Pilot Ricerca Clienti B2B',
               serviceType: 'Ricerca e qualificazione aziende B2B',
               provider: { '@id': `${SITE_URL}/#organization` },
-              areaServed: { '@type': 'Place', name: 'Worldwide' },
+              areaServed: { '@type': 'Country', name: 'Italia' },
               description: 'Pilot una tantum con definizione del profilo ideale, ricerca fino a 30 aziende, verifica delle fonti e lista prioritaria.',
             },
           },
         ],
       },
+    },
+    {
+      // Tipo locale: dice ai motori che questa impresa sta in un posto preciso.
+      // Serve a non farla confondere con omonime di altre province, e a farla
+      // comparire nelle ricerche con intento locale del suo territorio.
+      '@type': 'ProfessionalService',
+      '@id': `${SITE_URL}/#impresa`,
+      name: 'Social Web Automation',
+      legalName: TITOLARE.ragioneSociale,
+      url: SITE_URL,
+      image: { '@id': `${SITE_URL}/#logo` },
+      parentOrganization: { '@id': `${SITE_URL}/#organization` },
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Via Giuseppe Verdi 2B',
+        postalCode: '22072',
+        addressLocality: 'Cermenate',
+        addressRegion: 'CO',
+        addressCountry: 'IT',
+      },
+      email: TITOLARE.email,
+      telephone: TITOLARE.telefono,
+      vatID: `IT${TITOLARE.partitaIva}`,
+      priceRange: '€€',
+      currenciesAccepted: 'EUR',
+      areaServed: [
+        { '@type': 'AdministrativeArea', name: 'Provincia di Como' },
+        { '@type': 'AdministrativeArea', name: 'Città metropolitana di Milano' },
+        { '@type': 'AdministrativeArea', name: 'Provincia di Monza e della Brianza' },
+        { '@type': 'AdministrativeArea', name: 'Provincia di Varese' },
+        { '@type': 'Country', name: 'Italia' },
+      ],
+      knowsLanguage: ['it', 'en'],
     },
     {
       '@type': 'WebSite',

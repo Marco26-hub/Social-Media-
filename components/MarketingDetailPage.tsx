@@ -86,7 +86,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         serviceType: config.serviceType,
         description: config.lead,
         provider: { '@id': `${SITE_URL}/#organization` },
-        areaServed: { '@type': 'Place', name: 'Worldwide' },
+        areaServed: { '@type': 'Country', name: 'Italia' },
         url: pageUrl,
         ...(config.startingPrice ? {
           offers: {
