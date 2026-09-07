@@ -58,8 +58,8 @@ export default function EnglishSettoriPage() {
         <p className={styles.eyebrow}>By trade</p>
         <h1>The same operating method, written for the way your business works.</h1>
         <p className={styles.lead}>
-          These English pages are not literal translations. They focus on sectors where an international
-          customer or owner is realistic: housekeeping, restaurants and real estate.
+          These English pages focus on sectors where an international customer or owner is realistic:
+          housekeeping, restaurants and real estate.
         </p>
       </section>
 
@@ -67,7 +67,7 @@ export default function EnglishSettoriPage() {
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Sectors</p>
           <h2>Choose your sector.</h2>
-          <p>Each page explains what is worth building for that trade, and what should stay out of scope.</p>
+          <p>Each page explains what is worth building for that trade, and what should stay separate.</p>
         </div>
         <div className={styles.stepGrid}>
           {SETTORI_EN.map((settore, i) => (
@@ -89,7 +89,7 @@ export default function EnglishSettoriPage() {
         <div>
           <p className={styles.eyebrow}>Your sector is missing?</p>
           <h2>We start from the real bottleneck, not from a generic package.</h2>
-          <p>Tell us how the work happens today and we will clarify what belongs in scope.</p>
+          <p>Tell us how the work happens today and we will clarify what is useful to handle first.</p>
         </div>
         <a href={wa} target="_blank" rel="noopener noreferrer">
           Talk on WhatsApp <ArrowRight size={17} aria-hidden="true" />

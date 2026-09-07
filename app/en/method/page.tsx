@@ -6,7 +6,7 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from '../english.module.css'
 
 const title = 'The SWA Method: assessment, production, approval | SWA'
-const description = 'A clear operating method for SMEs: assessment, shared direction, production, approval, publishing and improvement with human control.'
+const description = 'A clear operating method for SMEs: assessment, shared direction, production, approval, publishing and monthly reporting, with human control at every step.'
 const methodFaq = EN_FAQ_GROUPS[0].items
 
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export default function EnglishMethodPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}>
         <div>
-          <p className={styles.eyebrow}>SWA operating system</p>
+          <p className={styles.eyebrow}>SWA method</p>
           <h1>A clear method for turning goals into verifiable work.</h1>
           <p className={styles.heroLead}>Every cycle moves through assessment, direction, production and improvement. The process reduces scattered decisions and keeps human control over the work that reaches customers.</p>
           <div className={styles.actions}>
@@ -45,7 +45,7 @@ export default function EnglishMethodPage() {
             <Link className={styles.secondary} href="/en/pricing">Compare packages</Link>
           </div>
         </div>
-        <aside className={styles.heroPanel}><strong>What the method protects.</strong><ol><li>Scope is agreed before production.</li><li>Each channel has a measurable role.</li><li>Approvals happen before publication.</li><li>Priorities improve from evidence.</li></ol></aside>
+        <aside className={styles.heroPanel}><strong>What the method protects.</strong><ol><li>Included work is agreed before production.</li><li>Each channel has a practical role.</li><li>Approvals happen before publication.</li><li>Priorities improve from evidence.</li></ol></aside>
       </section>
 
       <section className={styles.section}>
@@ -65,6 +65,13 @@ export default function EnglishMethodPage() {
           <article className={styles.proof}><h3>Client</h3><p>Shares accurate information, approves work and owns business decisions.</p></article>
           <article className={styles.proof}><h3>Artificial intelligence</h3><p>Supports analysis and production inside a supervised, transparent process.</p></article>
           <article className={styles.proof}><h3>Evidence</h3><p>Reporting highlights usable signals, limits and priorities for the next cycle.</p></article>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeading}><p className={styles.eyebrow}>FAQ</p><h2>Practical answers before production starts.</h2></div>
+        <div className={styles.grid}>
+          {methodFaq.map(item => <article className={styles.service} key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}
         </div>
       </section>
 

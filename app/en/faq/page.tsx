@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from '../english.module.css'
 
 const title = 'FAQ: Social Media, SEO, GEO, Websites and AI | SWA'
-const description = 'Clear answers about packages, organic social media, approvals, SEO, GEO, websites, AI compliance and Social Web Automation service terms.'
+const description = 'Clear answers on packages and prices, organic social media, approvals, SEO and GEO, websites, AI compliance and the terms of every Social Web Automation service.'
 
 export const metadata: Metadata = {
   title,
@@ -32,7 +32,7 @@ export default function EnglishFaqPage() {
   return (
     <main className={styles.main}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <section className={styles.hero}><div><p className={styles.eyebrow}>Clear information</p><h1>Frequent questions, direct answers.</h1><p className={styles.heroLead}>Costs, included work, approvals, SEO, GEO, technology and legal consulting: the practical answers before choosing a scope.</p></div><aside className={styles.heroPanel}><strong>Before you start.</strong><ol><li>Check what is included.</li><li>Confirm what remains outside scope.</li><li>Understand approval points.</li><li>Ask about your specific case.</li></ol></aside></section>
+      <section className={styles.hero}><div><p className={styles.eyebrow}>Clear information</p><h1>Frequent questions, direct answers.</h1><p className={styles.heroLead}>Costs, included work, approvals, SEO, GEO, technology and legal consulting: practical answers before choosing a service.</p></div><aside className={styles.heroPanel}><strong>Before you start.</strong><ol><li>Check what is included.</li><li>Confirm what remains separate.</li><li>Understand approval points.</li><li>Ask about your specific case.</li></ol></aside></section>
       {EN_FAQ_GROUPS.map((group, index) => <section id={`faq-${index}`} className={`${styles.section} ${styles.faqLayout}`} key={group.title}><div className={styles.sectionHeading}><p className={styles.eyebrow}>FAQ {String(index + 1).padStart(2, '0')}</p><h2>{group.title}</h2></div><div className={styles.faqList}>{group.items.map(item => <details key={item.q}><summary>{item.q}<span>+</span></summary><p>{item.a}</p></details>)}</div></section>)}
       <section className={styles.closing}><div><p className={styles.eyebrow}>Still unsure?</p><h2>Talk through the concrete case.</h2><p>We can separate visibility, conversion and operational issues before work begins.</p></div><a className={styles.primary} href={EN_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Ask on WhatsApp <ArrowRight size={16} /></a></section>
     </main>

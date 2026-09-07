@@ -8,6 +8,7 @@ import { normalizeArticle, buildJsonLd, type BlogArticleData } from '@/lib/blog-
 import { resolveBlogClienteId } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
 import { getSwaBlogArticle } from '@/lib/swa-blog-content'
+import { BLOG_COVER_DESCRIPTIONS } from '@/lib/blog-covers'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import { BlogFooter, BlogHeader } from '../BlogChrome'
 import styles from '../blog.module.css'
@@ -154,10 +155,11 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
         </header>
 
         {article.immagine_cover && (
-          <div className={styles.articleCover}>
+          <figure className={styles.articleCover}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={article.immagine_cover} alt={article.h1} />
-          </div>
+            <img src={article.immagine_cover} alt={BLOG_COVER_DESCRIPTIONS[article.immagine_cover] || article.h1} />
+            {BLOG_COVER_DESCRIPTIONS[article.immagine_cover] && <figcaption>Immagine illustrativa generata con AI.</figcaption>}
+          </figure>
         )}
 
         <div className={styles.articleLayout}>

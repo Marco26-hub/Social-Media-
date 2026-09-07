@@ -198,30 +198,12 @@ const PROCESS = [
 ]
 
 const FAQ = [
-  {
-    q: 'Quanto costa la gestione social media per una PMI?',
-    a: 'Il piano Presenza costa 490 € al mese e comprende 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 990 € al mese e comprende 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, più un articolo SEO + GEO e l’analisi competitor. Entrambi i piani sono di sola crescita organica: le campagne a pagamento rientrano nella configurazione personalizzata. IVA esclusa.',
-  },
-  {
-    q: 'Devo imparare a utilizzare un nuovo software?',
-    a: 'No. Social Web Automation è un servizio gestito. Il portale semplifica approvazioni e consultazione dei risultati; strategia, produzione e pubblicazione restano a nostro carico.',
-  },
-  {
-    q: 'Posso approvare i contenuti prima della pubblicazione?',
-    a: 'Sì. Il processo prevede controllo e approvazione prima della pubblicazione, nel rispetto del numero di revisioni incluso nel pacchetto.',
-  },
-  {
-    q: 'SEO e GEO garantiscono il posizionamento?',
-    a: 'No. Applichiamo buone pratiche tecniche ed editoriali per migliorare comprensione, indicizzazione e citabilità, ma nessun operatore può garantire posizioni o citazioni da parte di motori e assistenti AI.',
-  },
-  {
-    q: 'I piani Presenza e Crescita includono le campagne a pagamento?',
-    a: 'No. Presenza e Crescita sono piani di sola crescita organica: produzione, approvazione e pubblicazione dei contenuti. Le campagne ADS rientrano nella configurazione personalizzata, dove la gestione viene concordata e il budget versato alle piattaforme resta separato dal canone.',
-  },
-  {
-    q: 'Cosa comprende la soluzione personalizzata?',
-    a: 'Può includere più brand e canali, e-commerce, campagne ADS, produzione video, automazioni, lead generation, integrazioni e supporto dedicato. La configurazione viene definita dopo un’analisi iniziale.',
-  },
+  { q: 'Che cosa fate, in concreto?', a: 'Ci occupiamo del lavoro digitale che un’azienda non ha tempo di fare: i contenuti social e i video, il sito, la visibilità sui motori di ricerca, la ricerca di clienti B2B, il telefono che risponde quando sei occupato e i sistemi che tolgono passaggi manuali. Sono dieci aree: si attivano una alla volta oppure insieme, e ognuna ha il suo prezzo pubblico.' },
+  { q: 'Chi ci lavora davvero?', a: 'Social Web Automation è la ditta individuale di Marco Dibenedetto, con sede a Cermenate in provincia di Como. Il lavoro è coordinato da una persona sola, con specialisti selezionati area per area: quando chiami risponde sempre la stessa persona, e quella persona conosce anche il tuo sito. Non è un centralino e non è un software da imparare.' },
+  { q: 'Da quanto si parte?', a: 'Il gradino più basso è il sito, a partire da 19,90 € al mese per una landing semplice. Il blog costa 29,90 € al mese per dodici articoli, la ricerca clienti B2B 149 € una tantum, l’assistente telefonico da 199 € al mese e la gestione social 490 € al mese. Tutti i prezzi sono pubblici sulla pagina dei pacchetti, IVA esclusa.' },
+  { q: 'In quanto tempo si vedono le prime cose?', a: 'I primi contenuti arrivano entro il primo mese di lavoro, e li vedi prima che escano. Quello che non si può promettere è quando arrivano i risultati commerciali: dipendono dal mercato, dai concorrenti e da quanto è già solida la tua presenza. Per questo garantiamo il processo e non il posizionamento.' },
+  { q: 'E se non mi trovo bene?', a: 'Il rinnovo è mensile e non ci sono vincoli di durata nascosti: si disdice per il periodo successivo. I contenuti prodotti restano tuoi, gli account social sono sempre stati tuoi, e dopo dodici mesi di canone il sito diventa di tua proprietà. Perimetro, costi esclusi e modalità di uscita sono scritti prima della firma.' },
+  { q: 'Posso vedere come lavorate prima di pagare?', a: 'Sì. Richiedi un contenuto di prova gratuito: lo produciamo sul tuo caso reale, così valuti tono, qualità e metodo su qualcosa che riguarda la tua attività invece che su un portfolio di altri. Da lì si decide se ha senso andare avanti.' },
 ]
 
 // La home mostra sei domande: senza FAQPage restano testo qualsiasi per un
@@ -265,12 +247,12 @@ export default function LandingPage() {
       <section className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.heroCopy}>
           <p className={styles.kicker}><Sparkles size={16} aria-hidden="true" /> Servizi digitali integrati per PMI</p>
-          <h1 id="hero-title">Un fornitore solo, per il lavoro che oggi ne richiede quattro.</h1>
+          <h1 id="hero-title">Tutto il digitale della tua azienda, un interlocutore solo.</h1>
           <p className={styles.heroLead}>
-            Contenuti social e video girati in azienda, sito, visibilità sui motori e dentro le
-            risposte AI, ricerca clienti B2B. E i sistemi che tolgono lavoro manuale: il telefono
-            che risponde, l’agenda che si riempie, i rapporti di intervento, i gestionali collegati.
-            Approvi tu ogni uscita, prima che esca.
+            Ci occupiamo di quello che oggi affideresti a tre o quattro fornitori diversi:
+            i contenuti, il sito, la visibilità sui motori, il telefono che risponde quando
+            sei occupato. Tu approvi prima che esca qualcosa, e quando serve una risposta
+            sai già chi chiamare.
           </p>
           <div className={styles.heroActions}>
             <Link href="/servizi" className={styles.primaryButton}>
@@ -325,8 +307,8 @@ export default function LandingPage() {
 
       <section className={styles.journeySection} aria-labelledby="journey-title">
         <div className={styles.sectionHeading}>
-          <p className={styles.eyebrow}>Un percorso commerciale unico</p>
-          <h2 id="journey-title">Dalla visibilità all’opportunità, senza pezzi scollegati.</h2>
+          <p className={styles.eyebrow}>Dal primo contatto alla vendita</p>
+          <h2 id="journey-title">Come una richiesta diventa un cliente</h2>
           <p>Ogni servizio ha un compito preciso. Puoi attivarlo da solo oppure inserirlo in un sistema coordinato.</p>
         </div>
         <ol className={styles.journeyGrid}>
@@ -350,8 +332,8 @@ export default function LandingPage() {
 
       <section className={styles.section} aria-labelledby="benefit-title">
         <div className={styles.sectionHeading}>
-          <p className={styles.eyebrow}>Un processo completo</p>
-          <h2 id="benefit-title">Non solo contenuti. Una regia continuativa.</h2>
+          <p className={styles.eyebrow}>Il lavoro di ogni mese</p>
+          <h2 id="benefit-title">Che cosa esce ogni mese, e chi lo decide</h2>
         </div>
         <div className={styles.benefitGrid}>
           {BENEFITS.map(({ icon: Icon, title, text }) => (
@@ -366,8 +348,8 @@ export default function LandingPage() {
 
       <section id="servizi" className={`${styles.section} ${styles.sectionTint}`} aria-labelledby="services-title">
         <div className={styles.sectionHeading}>
-          <p className={styles.eyebrow}>Competenze integrate</p>
-          <h2 id="services-title">Un’unica direzione per tutti i punti di contatto.</h2>
+          <p className={styles.eyebrow}>Che cosa facciamo</p>
+          <h2 id="services-title">Dieci aree di lavoro, una squadra sola</h2>
           <p>Riduciamo frammentazione, passaggi tra fornitori e attività operative interne.</p>
         </div>
         <div className={styles.serviceGrid}>
@@ -388,8 +370,8 @@ export default function LandingPage() {
       <section id="metodo" className={styles.section} aria-labelledby="process-title">
         <div className={styles.processLayout}>
           <div className={styles.sectionHeading}>
-            <p className={styles.eyebrow}>Metodo operativo</p>
-            <h2 id="process-title">Dalla strategia alla pubblicazione, senza dispersioni.</h2>
+            <p className={styles.eyebrow}>Come lavoriamo</p>
+            <h2 id="process-title">Come lavoriamo, passo per passo</h2>
             <p>Un ciclo mensile trasparente mantiene il lavoro ordinato e rende ogni decisione verificabile.</p>
           </div>
           <ol className={styles.processList}>
@@ -425,7 +407,7 @@ export default function LandingPage() {
       <section id="compliance" className={styles.compliance} aria-labelledby="compliance-title">
         <div className={styles.complianceIntro}>
           <p className={styles.eyebrow}>SEO &amp; GEO</p>
-          <h2 id="compliance-title">Contenuti progettati per essere trovati e compresi.</h2>
+          <h2 id="compliance-title">Farsi trovare su Google e dentro le risposte AI</h2>
           <p>
             Rendiamo i contenuti più chiari per persone, motori di ricerca e sistemi
             di risposta AI, intervenendo su struttura, autorevolezza, fonti e qualità
@@ -444,7 +426,7 @@ export default function LandingPage() {
         <div className={styles.legalHeading}>
           <div>
             <p className={styles.eyebrow}>Consulenza legale AI &amp; Compliance</p>
-            <h2 id="legal-title">Innovare con regole, responsabilità e processi chiari.</h2>
+            <h2 id="legal-title">AI Act e GDPR: chi risponde di che cosa</h2>
           </div>
           <div>
             <p>
@@ -490,7 +472,7 @@ export default function LandingPage() {
       <section id="prezzi" className={styles.pricingSection} aria-labelledby="pricing-title">
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Soluzioni</p>
-          <h2 id="pricing-title">Scegli il risultato. Al resto pensiamo noi.</h2>
+          <h2 id="pricing-title">Quanto costa iniziare</h2>
           <p>Due pacchetti social e tre servizi autonomi: Blog SEO + GEO, Sito Web Base e Ricerca Clienti B2B.</p>
         </div>
         <div className={styles.pricingGrid}>
@@ -594,7 +576,7 @@ export default function LandingPage() {
       <section id="faq" className={styles.faqSection} aria-labelledby="faq-title">
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Domande frequenti</p>
-          <h2 id="faq-title">Tutto ciò che serve per decidere con chiarezza.</h2>
+          <h2 id="faq-title">Le domande che ci fanno prima di firmare</h2>
         </div>
         <div className={styles.faqList}>
           {FAQ.map(item => (

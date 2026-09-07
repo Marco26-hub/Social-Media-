@@ -5,7 +5,6 @@ import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
 import { TITOLARE } from '@/lib/legal-config'
-import { SETTORI } from '@/lib/settori'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '../content-page.module.css'
 
@@ -95,7 +94,7 @@ export default function ContattiPage() {
         <div className={styles.stepGrid}>
           <article>
             <span><MessageCircle size={15} aria-hidden="true" /> WhatsApp</span>
-            <h3>{TITOLARE.telefono}</h3>
+            <h3><a href={wa} target="_blank" rel="noopener noreferrer">{TITOLARE.telefono}</a></h3>
             <p>
               Il canale più rapido: scrivi che cosa fai e che problema vuoi risolvere.
               Rispondiamo negli orari di lavoro, in italiano.
@@ -103,7 +102,7 @@ export default function ContattiPage() {
           </article>
           <article>
             <span><Phone size={15} aria-hidden="true" /> Telefono</span>
-            <h3>{TITOLARE.telefono}</h3>
+            <h3><a href={`tel:${TITOLARE.telefono.replace(/\s/g, '')}`}>{TITOLARE.telefono}</a></h3>
             <p>
               Stesso numero. Se stiamo lavorando con un cliente non sempre rispondiamo
               al primo squillo: lascia un messaggio e richiamiamo.
@@ -111,7 +110,7 @@ export default function ContattiPage() {
           </article>
           <article>
             <span><Mail size={15} aria-hidden="true" /> Email</span>
-            <h3>{TITOLARE.email}</h3>
+            <h3><a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a></h3>
             <p>
               Per preventivi, materiali e domande che richiedono allegati.
               È l’indirizzo a cui arrivano anche le richieste dal sito.
@@ -119,7 +118,7 @@ export default function ContattiPage() {
           </article>
           <article>
             <span><Mail size={15} aria-hidden="true" /> PEC</span>
-            <h3>{TITOLARE.pec}</h3>
+            <h3><a href={`mailto:${TITOLARE.pec}`}>{TITOLARE.pec}</a></h3>
             <p>
               Per le comunicazioni formali: contratti, recessi, contestazioni.
               Fa fede la data di consegna della posta certificata.
@@ -162,7 +161,7 @@ export default function ContattiPage() {
           <article>
             <span>Identificativi</span>
             <h3>P.IVA {TITOLARE.partitaIva}</h3>
-            <p>Codice fiscale {TITOLARE.codiceFiscale}. Foro competente: {TITOLARE.foroCompetente}.</p>
+            <p>Codice fiscale {TITOLARE.codiceFiscale}.</p>
           </article>
         </div>
       </section>
@@ -171,21 +170,10 @@ export default function ContattiPage() {
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Se preferisci partire dal tuo mestiere</p>
           <h2>Undici settori, con la loro pagina</h2>
-          <p>Ognuna dice quali servizi servono davvero in quella categoria, e quali no.</p>
-        </div>
-        <div className={styles.stepGrid}>
-          {SETTORI.slice(0, 6).map(settore => (
-            <article key={settore.slug}>
-              <span>Settore</span>
-              <h3>{settore.nome}</h3>
-              <p>{settore.sommario}</p>
-              <p style={{ marginTop: 16 }}>
-                <Link href={`/settori/${settore.slug}`} className={styles.primary}>
-                  Apri la pagina <ArrowRight size={16} aria-hidden="true" />
-                </Link>
-              </p>
-            </article>
-          ))}
+          <p>
+            Ognuna dice quali servizi servono davvero in quella categoria e quali no.
+            {' '}<Link href="/settori">Vedi tutti i settori</Link>.
+          </p>
         </div>
       </section>
 

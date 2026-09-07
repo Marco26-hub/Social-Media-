@@ -81,8 +81,8 @@ export const EN_FAQ_GROUPS = [
     title: 'Packages and costs',
     items: [
       { q: 'How much does managed social media cost?', a: `Presence costs ${EN_PRICE_LABELS.presence}: 16 pieces for each of 2 social channels, or 32 publications. Growth costs ${EN_PRICE_LABELS.growth}: 24 pieces for each of 2 channels, or 48 publications, plus one SEO + GEO article and competitor analysis. VAT excluded.` },
-      { q: 'Do the plans include paid advertising?', a: 'No. Presence and Growth are organic-growth plans. Paid campaigns are handled in a custom scope, and media budget paid to platforms remains separate from the service fee.' },
-      { q: 'Can you build a custom setup?', a: 'Yes. Multiple brands, higher volumes, automation, e-commerce, video production and integrations are scoped after an initial assessment.' },
+      { q: 'Do the plans include paid advertising?', a: 'No. Presence and Growth are organic publishing plans. Paid campaigns are agreed separately, and the media budget paid to platforms remains separate from the service fee.' },
+      { q: 'Can you build a custom setup?', a: 'Yes. Multiple brands, higher volumes, automation, e-commerce, video production and integrations are assessed and priced after an initial review.' },
     ],
   },
   {
@@ -104,6 +104,6 @@ export const EN_FAQ_GROUPS = [
 
 export const EN_ABOUT_FAQ = [
   { q: 'Who is Social Web Automation?', a: `${EN_COMPANY.name} is based in ${EN_COMPANY.location}. It supports SMEs and professionals with social content, websites, search and AI discoverability, B2B research, phone response workflows and operational systems.` },
-  { q: 'How many sectors do you cover?', a: `The Italian site currently covers ${EN_COMPANY.sectorCount} sector categories. The English section exposes only the localized sector pages available today, instead of translating unsupported areas prematurely.` },
-  { q: 'Do you guarantee sales or rankings?', a: 'No. We guarantee process, scope, review points and deliverables. Rankings, AI citations, appointments and sales depend on external systems and market response.' },
+  { q: 'How many sectors do you cover?', a: `The Italian site currently covers ${EN_COMPANY.sectorCount} sector categories. The English section only shows the sector pages that are ready for English-speaking readers today.` },
+  { q: 'Do you guarantee sales or rankings?', a: 'No. We guarantee process, included work, review points and deliverables. Rankings, AI citations, appointments and sales depend on external systems and market response.' },
 ]

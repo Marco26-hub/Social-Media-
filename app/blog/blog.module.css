@@ -161,8 +161,8 @@
 .sectionLabel p { margin: 0; color: var(--muted); font-size: 12px; }
 .featuredCard { display: grid; grid-template-columns: 1.1fr .9fr; min-height: 430px; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: inherit; text-decoration: none; transition: transform .22s ease, box-shadow .22s ease; }
 .featuredCard:hover { transform: translateY(-4px); box-shadow: 0 22px 50px rgba(21, 35, 31, .1); }
-.featuredVisual { min-height: 360px; overflow: hidden; background: #0d1814; }
-.featuredVisual > img { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .4s ease; }
+.featuredVisual { position: relative; min-height: 360px; overflow: hidden; background: #0d1814; }
+.featuredVisual > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .4s ease; }
 .featuredCard:hover .featuredVisual > img { transform: scale(1.025); }
 .coverFallback { width: 100%; height: 100%; min-height: 430px; display: grid; place-content: center; justify-items: center; gap: 20px; background: linear-gradient(135deg, #0b1511 0 62%, #16372c 62%); color: #8ed8bb; font-size: 11px; font-weight: 800; text-transform: uppercase; }
 .coverFallback img { width: 180px; height: auto; }
@@ -218,7 +218,8 @@
 .articleLead { max-width: 790px; margin: 22px 0 0; color: var(--muted); font-size: 18px; line-height: 1.65; }
 .articleHero .articleMeta { margin-top: 24px; }
 .articleCover { max-width: 1060px; margin: 0 auto; padding: 42px 24px 0; }
-.articleCover img { width: 100%; max-height: 580px; display: block; border-radius: 7px; object-fit: cover; }
+.articleCover img { width: 100%; aspect-ratio: 16 / 9; display: block; border-radius: 7px; object-fit: cover; }
+.articleCover figcaption { margin-top: 10px; color: var(--muted); font: 12px/1.5 Arial, Helvetica, sans-serif; }
 .articleLayout { max-width: 940px; margin: 0 auto; padding: 62px 24px 92px; }
 .articleBody { max-width: 760px; margin: 0 auto; color: #34433e; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; line-height: 1.78; }
 .articleBody section { margin-top: 42px; }

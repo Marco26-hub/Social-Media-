@@ -183,7 +183,7 @@ export default function ChiSiamoPage() {
           <article>
             <MessageCircle size={24} aria-hidden="true" />
             <h3>Chi risponde quando qualcosa non va</h3>
-            <p>Una persona con nome, cognome e partita IVA, non un centralino. Perimetro, attività incluse, revisioni e budget pubblicitari sono dichiarati prima di partire.</p>
+            <p>Una persona con nome, cognome e partita IVA, non un centralino. Attività incluse, revisioni e budget pubblicitari sono dichiarati prima di partire.</p>
           </article>
         </div>
       </section>
@@ -236,7 +236,7 @@ export default function ChiSiamoPage() {
 
       <section className={styles.cta}>
         <h2>Valutiamo insieme il punto di partenza.</h2>
-        <p>Raccontaci obiettivi, canali e attività già in corso. Ti indichiamo il perimetro più adatto senza promesse irrealistiche.</p>
+        <p>Raccontaci obiettivi, canali e attività già in corso. Ti indichiamo da dove conviene partire senza promesse irrealistiche.</p>
         <Link href="/pacchetti" className={styles.primary}>
           Confronta i pacchetti <ArrowRight size={18} aria-hidden="true" />
         </Link>

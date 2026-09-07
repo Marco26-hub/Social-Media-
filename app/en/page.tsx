@@ -79,12 +79,12 @@ export default function EnglishHomePage() {
       </section>
 
       <section className={styles.section}>
-        <div className={styles.sectionHeading}><p className={styles.eyebrow}>Evidence before claims</p><h2>See the process and scope before you buy.</h2></div>
+        <div className={styles.sectionHeading}><p className={styles.eyebrow}>Evidence before claims</p><h2>See the process and included work before you buy.</h2></div>
         <div className={styles.proofGrid}>
           <article className={styles.proof}><h3>Public method</h3><p>Scope, approvals, responsibilities and limits are stated clearly.</p></article>
           <article className={styles.proof}><h3>Real portfolio</h3><p>Website projects can be inspected instead of being described through generic claims.</p></article>
           <article className={styles.proof}><h3>Editorial examples</h3><p>The public Journal shows content structure, tone and publishing quality.</p></article>
-          <article className={styles.proof}><h3>Transparent pilots</h3><p>The B2B Pilot has a fixed scope, verifiable sources and no guaranteed outcomes.</p></article>
+          <article className={styles.proof}><h3>Transparent pilots</h3><p>The B2B Pilot has fixed deliverables, verifiable sources and no guaranteed outcomes.</p></article>
         </div>
       </section>
 

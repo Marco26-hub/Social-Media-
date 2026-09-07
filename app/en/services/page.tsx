@@ -24,7 +24,7 @@ const services = [
   { id: 'blog', icon: Newspaper, title: 'Blog SEO + GEO', text: 'The ongoing execution layer: 12 articles each month, editorial planning, on-page metadata, FAQs, human review and publishing or CMS-ready delivery.' },
   { id: 'web', icon: Globe2, title: 'Websites and e-commerce', text: 'Landing pages, corporate websites and online stores built for clear offers, mobile use, analytics, SEO foundations and measurable conversion paths.' },
   { id: 'leads', icon: Target, title: 'B2B lead research', text: 'We define the ideal company profile, research up to 30 matching organisations and provide sources, exclusions and priorities. No automated outreach and no guaranteed meetings or sales.' },
-  { id: 'compliance', icon: Scale, title: 'AI Act, GDPR and compliance', text: 'Operational assessment, policies and documented responsibilities for companies using AI and personal data. Legal representation and certifications are outside the stated scope.' },
+  { id: 'compliance', icon: Scale, title: 'AI Act, GDPR and compliance', text: 'Operational assessment, policies and documented responsibilities for companies using AI and personal data. Legal representation and certifications are not included unless agreed separately.' },
 ]
 
 export default function EnglishServicesPage() {
@@ -32,7 +32,7 @@ export default function EnglishServicesPage() {
     <main className={styles.main}>
       <section className={styles.hero}>
         <div><p className={styles.eyebrow}>Six distinct capabilities</p><h1>One service map, with clear boundaries.</h1><p className={styles.heroLead}>Use social and Blog to build awareness, SEO + GEO to improve discovery, Web to convert, B2B research to find opportunities and compliance to operate responsibly.</p><div className={styles.actions}><Link className={styles.primary} href="/en/pricing">Compare offers <ArrowRight size={16} /></Link><Link className={styles.secondary} href="/servizi">Italian details</Link></div></div>
-        <aside className={styles.heroPanel}><strong>What remains deliberately separate.</strong><ol><li>SEO + GEO defines audit, architecture and priorities.</li><li>Blog SEO + GEO produces 12 monthly articles.</li><li>B2B research supplies verified companies, not guaranteed sales.</li><li>Every scope is confirmed before activation.</li></ol></aside>
+        <aside className={styles.heroPanel}><strong>What remains deliberately separate.</strong><ol><li>SEO + GEO means search work plus clearer pages for AI answer tools.</li><li>Blog SEO + GEO produces 12 monthly articles.</li><li>B2B research supplies verified companies, not guaranteed sales.</li><li>Included work is confirmed before activation.</li></ol></aside>
       </section>
       <section className={styles.section}>
         <div className={styles.sectionHeading}><p className={styles.eyebrow}>Service catalogue</p><h2>Choose the operational result you need now.</h2></div>

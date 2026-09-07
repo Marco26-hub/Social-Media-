@@ -23,7 +23,7 @@ const offers = [
   { name: 'Presence', price: EN_PRICE_LABELS.presence, result: 'Consistent presence across 2 social channels.', features: ['16 monthly content pieces per channel · 32 published posts', '4 Reels, Stories or Shorts per channel', 'Strategy, review and publishing'], href: '/register?piano=presenza', cta: 'Start Presence' },
   { name: 'Growth', price: EN_PRICE_LABELS.growth, result: 'A wider system across 2 social channels.', features: ['24 monthly content pieces per channel · 48 published posts', '6 Reels, Stories or Shorts per channel', '1 SEO + GEO article and competitor analysis', 'Organic growth only; paid campaigns sit in the custom plan'], href: '/register?piano=crescita', cta: 'Start Growth' },
   { name: 'Blog SEO + GEO', price: EN_PRICE_LABELS.blog, result: 'Continuous organic editorial production.', features: ['12 articles per month', 'Metadata, FAQs and structured content', 'Human review', 'Connected-blog publishing or CMS-ready delivery'], href: '/acquista?servizio=blog-seo', cta: 'Activate Blog' },
-  { name: 'Basic Website', price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request Web scope' },
+  { name: 'Basic Website', price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request website details' },
   { name: 'B2B Lead Research Pilot', price: EN_PRICE_LABELS.leadPilot, result: 'A verified list for commercial evaluation.', features: ['Ideal-company profile', 'Up to 30 companies researched', 'Public sources and priorities', 'No automated outreach or guaranteed sales'], href: '/acquista?servizio=lead-pilot', cta: 'Activate the Pilot' },
 ]
 
@@ -31,8 +31,8 @@ export default function EnglishPricingPage() {
   return (
     <main className={styles.main}>
       <section className={styles.hero}>
-        <div><p className={styles.eyebrow}>Transparent commercial scope</p><h1>Start with one measurable service.</h1><p className={styles.heroLead}>All prices exclude VAT. External platform, advertising, domain and third-party costs remain separate unless explicitly included.</p></div>
-        <aside className={styles.heroPanel}><strong>Before activation.</strong><ol><li>We confirm the intended result and service scope.</li><li>You see deliverables, exclusions and review points.</li><li>Checkout uses the live SWA payment flow.</li><li>Custom integrations are quoted separately.</li></ol></aside>
+        <div><p className={styles.eyebrow}>Transparent pricing</p><h1>Start with one measurable service.</h1><p className={styles.heroLead}>All prices exclude VAT. External platform, advertising, domain and third-party costs remain separate unless explicitly included.</p></div>
+        <aside className={styles.heroPanel}><strong>Before activation.</strong><ol><li>We confirm the intended result and included work.</li><li>You see deliverables, exclusions and review points.</li><li>Checkout uses the live SWA payment flow.</li><li>Custom integrations are quoted separately.</li></ol></aside>
       </section>
       <section className={styles.section}>
         <div className={styles.sectionHeading}><p className={styles.eyebrow}>Offers</p><h2>Social plans and standalone services.</h2><p>Blog, Web and B2B Lead Research can be activated independently or combined with a social plan.</p></div>

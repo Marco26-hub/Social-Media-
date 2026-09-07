@@ -184,10 +184,10 @@ export default async function BlogIndexPage() {
       <section className={styles.hero} aria-labelledby="blog-title">
         <div className={styles.heroCopy}>
           <p className={styles.kicker}><Sparkles size={16} aria-hidden="true" /> SWA Journal</p>
-          <h1 id="blog-title">Strategia digitale, spiegata per decidere meglio.</h1>
+          <h1 id="blog-title">Social, siti e AI: guide per la tua impresa.</h1>
           <p>
-            Guide concrete per gestire social, contenuti, visibilità organica e
-            intelligenza artificiale con più metodo e meno rumore.
+            Quanto costano i servizi, cosa comprendono e come scegliere quelli utili
+            alla tua attività. Con esempi e risposte alle domande dei clienti.
           </p>
         </div>
         <div className={styles.topicRail} aria-label="Argomenti del blog">
@@ -213,7 +213,7 @@ export default async function BlogIndexPage() {
                 ) : (
                   <div className={styles.coverFallback} aria-hidden="true">
                     <Image src="/brand/swa-logo-official.png" alt="" width={180} height={82} />
-                    <span>Insight operativo</span>
+                    <span>Guida pratica</span>
                   </div>
                 )}
               </div>
@@ -245,7 +245,7 @@ export default async function BlogIndexPage() {
                     <div className={styles.cardVisual}>
                       {article.immagine_cover ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={article.immagine_cover} alt={article.h1} />
+                        <img src={article.immagine_cover} alt={article.h1} loading="lazy" decoding="async" />
                       ) : (
                         <BookOpen size={30} aria-hidden="true" />
                       )}

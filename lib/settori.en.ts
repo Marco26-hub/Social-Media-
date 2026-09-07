@@ -1,7 +1,12 @@
 import { PREZZI, type Settore } from '@/lib/settori'
 
-// English sector copy is rewritten, not translated line by line. The structure
-// mirrors lib/settori.ts so pages can share the same component and pricing source.
+const EN_PRICES = {
+  presenza: PREZZI.presenza.replace('€ al mese', 'per month').replace(' al mese', ' per month'),
+  crescita: PREZZI.crescita.replace('€ al mese', 'per month').replace(' al mese', ' per month'),
+  web: PREZZI.web.replace('a partire da ', 'from ').replace(' al mese', ' per month'),
+  agenda: PREZZI.agenda.replace('da ', 'from ').replace('€ al mese', 'per month').replace(' al mese', ' per month'),
+  voce: PREZZI.voce.replace('da ', 'from ').replace('€ al mese', 'per month').replace(' al mese', ' per month'),
+} as const
 
 export const SETTORI_EN: Settore[] = [
   {
@@ -10,7 +15,7 @@ export const SETTORI_EN: Settore[] = [
     sommario: 'Jobs are signed on site, reports leave immediately and repeat clients are easier to follow up.',
     titoloSeo: 'Housekeeping and cleaning company operations | SWA',
     descrizioneSeo:
-      'Digital job reports, signed checklists, websites, phone support and client follow-up for cleaning and housekeeping teams in Italy.',
+      'Signed job reports from the phone, a multilingual website that brings in quote requests and an assistant that answers while your teams are on site.',
     eyebrow: 'Housekeeping and cleaning',
     h1: 'The work happens on site. The proof should not wait for the office.',
     lead:
@@ -19,7 +24,7 @@ export const SETTORI_EN: Settore[] = [
     tipoServizio: 'Job reporting, client follow-up, website and phone response for cleaning and housekeeping teams',
     promessa:
       'Each job can close with photos, notes and a client signature, while recurring clients remain visible before the next service is due. We do not promise new contracts.',
-    notaPrezzi: `Job reporting is quoted after scope. Website ${PREZZI.web}. Phone assistant ${PREZZI.voce}. Client agenda ${PREZZI.agenda}. Prices exclude VAT.`,
+    notaPrezzi: `Job reporting is quoted after review. Website ${EN_PRICES.web}. Phone assistant ${EN_PRICES.voce}. Client agenda ${EN_PRICES.agenda}. Prices exclude VAT.`,
     segnali: ['Signed report on site', 'Photos and notes in one document', 'Recurring clients reviewed before they go cold'],
     risultati: [
       { title: 'Less office catch-up', text: 'The operator records the job while still on site, with photos, notes and signature attached to the same report.' },
@@ -33,9 +38,9 @@ export const SETTORI_EN: Settore[] = [
       { title: 'Digital job reports', text: 'Custom checklists for the services you provide, with rooms, tasks, anomalies, products used, notes and photos.' },
       { title: 'Client signature', text: 'The client signs on the phone at the end of the visit, so the report closes before the team leaves.' },
       { title: 'PDF delivery', text: 'The final report can be sent to the client and kept in the dashboard for later checks.' },
-      { title: 'Recurring agenda', text: `Dormant clients, periodic services and open follow-ups are reviewed inside the agenda plan, ${PREZZI.agenda}.` },
-      { title: 'Phone coverage', text: `The assistant answers routine calls, collects requests and routes exceptions. Entry plan: ${PREZZI.voce}.` },
-      { title: 'A website that explains the service', text: `A fast mobile page for services, areas covered and contact requests. From ${PREZZI.web}.` },
+      { title: 'Recurring agenda', text: `Dormant clients, periodic services and open follow-ups are reviewed inside the agenda plan, ${EN_PRICES.agenda}.` },
+      { title: 'Phone coverage', text: `The assistant answers routine calls, collects requests and routes exceptions. Entry plan: ${EN_PRICES.voce}.` },
+      { title: 'A website that explains the service', text: `A fast mobile page for services, areas covered and contact requests, ${EN_PRICES.web}.` },
     ],
     ciclo: [
       { number: '01', title: 'Map the jobs', text: 'We turn your recurring services into practical checklists instead of generic forms.' },
@@ -70,7 +75,7 @@ export const SETTORI_EN: Settore[] = [
     tipoServizio: 'QR ordering, table payments, bookings, website and content for restaurants and bars',
     promessa:
       'Orders and payments move through the customer phone, bookings enter one dashboard and electronic invoicing can be handled from the flow. No promise on cover numbers.',
-    notaPrezzi: 'Restaurant systems are quoted after scope: tables, menu, payment flow and integrations change the project. Payment fees are stated before activation. Prices exclude VAT.',
+    notaPrezzi: 'Restaurant systems are quoted after review: tables, menu, payment flow and integrations change the project. Payment fees are stated before activation. Prices exclude VAT.',
     segnali: ['QR ordering at the table', 'Bookings and live orders in one dashboard', 'Electronic invoice flow when needed'],
     risultati: [
       { title: 'Fewer trips for payment', text: 'Guests who are finished can pay without searching for staff, which helps tables close more smoothly.' },
@@ -86,8 +91,8 @@ export const SETTORI_EN: Settore[] = [
       { title: 'Electronic invoice flow', text: 'When the customer asks for an invoice, the data can move through an accredited intermediary instead of being handled manually later.' },
       { title: 'Bookings in one place', text: 'Reservations enter the same dashboard with time, table and notes.' },
       { title: 'Editable menu', text: 'Dishes, prices, availability and allergens are updated from the panel and reflected across all tables.' },
-      { title: 'Restaurant website', text: `Menu, booking and location on a fast mobile page. From ${PREZZI.web}.` },
-      { title: 'Content from the real venue', text: `Dishes, room and people, planned and published consistently. Presence ${PREZZI.presenza}, Growth ${PREZZI.crescita}.` },
+      { title: 'Restaurant website', text: `Menu, booking and location on a fast mobile page, ${EN_PRICES.web}.` },
+      { title: 'Content from the real venue', text: `Dishes, room and people, planned and published consistently. Presence ${EN_PRICES.presenza}, Growth ${EN_PRICES.crescita}.` },
     ],
     ciclo: [
       { number: '01', title: 'Room check', text: 'We review tables, menu, current payment flow and booking habits before proposing the setup.' },
@@ -111,7 +116,7 @@ export const SETTORI_EN: Settore[] = [
     slug: 'agenzie-immobiliari',
     nome: 'Real estate agencies',
     sommario: 'Properties need visibility, but owners and buyers also need fast, organised answers.',
-    titoloSeo: 'Marketing and digital operations for real estate agencies | SWA',
+    titoloSeo: 'Digital operations for real estate agencies | SWA',
     descrizioneSeo:
       'Content, landing pages, local SEO, request handling and digital workflows for real estate agencies working with Italian and international clients.',
     eyebrow: 'Real estate agencies',
@@ -122,7 +127,7 @@ export const SETTORI_EN: Settore[] = [
     tipoServizio: 'Content, website, local discovery and phone response for real estate agencies',
     promessa:
       'Listings become clearer content, requests are collected in one place and routine answers do not wait for office time. We do not promise mandates or sales.',
-    notaPrezzi: `Social management ${PREZZI.presenza} or ${PREZZI.crescita}. Website ${PREZZI.web}. Phone assistant ${PREZZI.voce}. Local SEO after audit. Prices exclude VAT.`,
+    notaPrezzi: `Social management ${EN_PRICES.presenza} or ${EN_PRICES.crescita}. Website ${EN_PRICES.web}. Phone assistant ${EN_PRICES.voce}. Local SEO after audit. Prices exclude VAT.`,
     segnali: ['Property content approved before publishing', 'Requests collected outside office hours', 'Local pages for real search intent'],
     risultati: [
       { title: 'A listing with context', text: 'Photos and videos explain the property, area and next step instead of leaving the portal to do all the work.' },
@@ -134,9 +139,9 @@ export const SETTORI_EN: Settore[] = [
       'Real estate work depends on trust, timing and local context. The digital system should support all three.',
     cosaFacciamo: [
       { title: 'Property content', text: 'Short videos, posts and page copy built from real listings, not generic market phrases.' },
-      { title: 'Landing pages', text: `Pages for properties, areas or acquisition campaigns, from ${PREZZI.web}.` },
-      { title: 'Phone assistant', text: `Routine information, first qualification and appointment requests can be covered from ${PREZZI.voce}.` },
-      { title: 'Local SEO and GEO', text: 'Search structure, area pages and content that can be understood by search engines and AI answer systems. Quoted after audit.' },
+      { title: 'Landing pages', text: `Pages for properties, areas or acquisition campaigns, ${EN_PRICES.web}.` },
+      { title: 'Phone assistant', text: `Routine information, first qualification and appointment requests can be covered ${EN_PRICES.voce}.` },
+      { title: 'Local SEO and GEO', text: 'Search structure, area pages and clear content that search engines and AI answer systems can understand. Quoted after audit.' },
       { title: 'Social calendar', text: `Presence covers 16 monthly pieces per channel; Growth covers 24. Both keep publishing under approval.` },
       { title: 'Owner-facing clarity', text: 'Acquisition content can explain method, valuation limits and process without promising outcomes.' },
     ],
@@ -148,7 +153,7 @@ export const SETTORI_EN: Settore[] = [
     ],
     faq: [
       { q: 'Do you promise more mandates?', a: 'No. Mandates depend on reputation, pricing, relationship and local market conditions. We commit to the process and deliverables.' },
-      { q: 'Can you work with foreign buyers?', a: 'Yes, especially when the property or area already attracts international demand. English pages should be written for that buyer, not literally translated.' },
+      { q: 'Can you work with foreign buyers?', a: 'Yes, especially when the property or area already attracts international demand. English pages should answer the buyer’s real questions, not just repeat the Italian page.' },
       { q: 'Do you manage paid ads?', a: 'Paid campaigns are separate from Presence and Growth plans. Budget, accounts and objectives are agreed before activation.' },
       { q: 'Who approves listings and content?', a: 'The agency approves what matters before publication, especially prices, claims, property details and sensitive wording.' },
     ],

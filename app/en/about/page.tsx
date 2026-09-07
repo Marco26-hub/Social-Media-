@@ -7,7 +7,7 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from '../english.module.css'
 
 const title = 'About Social Web Automation | SWA'
-const description = 'Social Web Automation is the business of Marco Dibenedetto in Cermenate, Italy: managed digital operations for SMEs with human approval and transparent scope.'
+const description = 'Social Web Automation is the business of Marco Dibenedetto in Cermenate, Italy: managed digital work for SMEs with human approval and clear prices.'
 
 export const metadata: Metadata = {
   title,
@@ -41,10 +41,17 @@ export default function EnglishAboutPage() {
 
       <section className={styles.section}>
         <div className={styles.sectionHeading}><p className={styles.eyebrow}>How we work</p><h2>AI supports the process. People remain responsible.</h2><p>Automation helps with analysis and production, but objectives, brand tone, review and publication approval remain human decisions.</p></div>
-        <div className={styles.proofGrid}><article className={styles.proof}><Workflow size={24} /><h3>One operating flow</h3><p>Assessment, plan, production, approval and publishing are connected instead of handled as isolated tasks.</p></article><article className={styles.proof}><ShieldCheck size={24} /><h3>Approval first</h3><p>Client approval is required before content reaches a channel or a deliverable is finalised.</p></article><article className={styles.proof}><Building2 size={24} /><h3>Clear scope</h3><p>Included work, revisions, exclusions and third-party costs are stated before activation.</p></article><article className={styles.proof}><CheckCircle2 size={24} /><h3>Public prices</h3><p>Entry points start from {EN_PRICE_LABELS.web}, {EN_PRICE_LABELS.blog} and {EN_PRICE_LABELS.presence}, VAT excluded.</p></article></div>
+        <div className={styles.proofGrid}><article className={styles.proof}><Workflow size={24} /><h3>One work flow</h3><p>Assessment, plan, production, approval and publishing are connected instead of handled as isolated tasks.</p></article><article className={styles.proof}><ShieldCheck size={24} /><h3>Approval first</h3><p>Client approval is required before content reaches a channel or a deliverable is finalised.</p></article><article className={styles.proof}><Building2 size={24} /><h3>Clear inclusions</h3><p>Included work, revisions, exclusions and third-party costs are stated before activation.</p></article><article className={styles.proof}><CheckCircle2 size={24} /><h3>Public prices</h3><p>Entry points start from {EN_PRICE_LABELS.web}, {EN_PRICE_LABELS.blog} and {EN_PRICE_LABELS.presence}, VAT excluded.</p></article></div>
       </section>
 
-      <section className={styles.closing}><div><p className={styles.eyebrow}>Evaluate the fit</p><h2>Tell us where work gets stuck today.</h2><p>We will point you to the smallest useful scope before adding more moving parts.</p></div><a className={styles.primary} href={EN_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Start a conversation <ArrowRight size={16} /></a></section>
+      <section className={styles.section}>
+        <div className={styles.sectionHeading}><p className={styles.eyebrow}>FAQ</p><h2>Before we start.</h2></div>
+        <div className={styles.grid}>
+          {EN_ABOUT_FAQ.map(item => <article className={styles.service} key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}
+        </div>
+      </section>
+
+      <section className={styles.closing}><div><p className={styles.eyebrow}>Evaluate the fit</p><h2>Tell us where work gets stuck today.</h2><p>We will point you to the smallest useful starting point before adding more moving parts.</p></div><a className={styles.primary} href={EN_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Start a conversation <ArrowRight size={16} /></a></section>
     </main>
   )
 }

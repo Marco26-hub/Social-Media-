@@ -15,7 +15,7 @@ export const metadata: Metadata = { title, description, alternates:{canonical:`$
 
 const steps = [
   { n:'01', icon:Search, title:'Analisi del punto di partenza', text:'Raccogliamo obiettivi, offerta, pubblico, canali, materiali e dati disponibili. Distinguiamo ciò che serve da ciò che aggiunge solo complessità.', items:['Audit del brand e dei canali','Priorità commerciali','Vincoli e responsabilità'] },
-  { n:'02', icon:Workflow, title:'Direzione condivisa', text:'Traduciamo l’analisi in messaggi, rubriche, calendario, pagine e indicatori. Il perimetro viene approvato prima della produzione.', items:['Piano mensile','Ruoli e scadenze','Criteri di misurazione'] },
+  { n:'02', icon:Workflow, title:'Direzione condivisa', text:'Traduciamo l’analisi in messaggi, rubriche, calendario, pagine e indicatori. Attività incluse e responsabilità vengono approvate prima della produzione.', items:['Piano mensile','Ruoli e scadenze','Criteri di misurazione'] },
   { n:'03', icon:ClipboardCheck, title:'Produzione e approvazione', text:'Copy, visual, video e pagine seguono la stessa direzione. Il controllo umano protegge tono, correttezza e responsabilità editoriale.', items:['Produzione coordinata','Revisioni tracciate','Approvazione prima dell’uscita'] },
   { n:'04', icon:Gauge, title:'Pubblicazione e miglioramento', text:'Programmiamo, misuriamo e leggiamo i risultati utili. Il ciclo successivo parte dalle evidenze, non da impressioni isolate.', items:['Pubblicazione controllata','Report leggibile','Priorità successive'] },
 ]

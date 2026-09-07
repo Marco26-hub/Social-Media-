@@ -68,6 +68,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
   const articolo = articoloPerServizio(config.path)
   const pageUrl = `${SITE_URL}${config.path}`
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(isEnglish ? `Hello, I would like to discuss ${config.serviceName} by Social Web Automation.` : `Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Web Automation.`)}`
+  const priceCadence = isEnglish ? '/month' : '/mese'
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -170,7 +171,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           {config.startingPrice && (
             <div className={styles.startingPrice}>
               <span>{isEnglish ? 'Starting from' : 'A partire da'}</span>
-              <strong>€{config.startingPrice.replace('.', ',')}<small>/mese</small></strong>
+              <strong>€{config.startingPrice.replace('.', ',')}<small>{priceCadence}</small></strong>
               {config.offerHighlight && <b>{config.offerHighlight}</b>}
               {config.priceNote && <p>{config.priceNote}</p>}
             </div>
@@ -186,7 +187,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
 
       <section className={styles.deliverables} aria-labelledby="deliverables-title">
         <div className={styles.sectionHeading}>
-          <p className={styles.eyebrow}>{isEnglish ? 'Operating scope' : 'Perimetro operativo'}</p>
+          <p className={styles.eyebrow}>{isEnglish ? 'Included work' : 'Cosa comprende'}</p>
           <h2 id="deliverables-title">{config.deliverablesTitle}</h2>
           <p>{config.deliverablesIntro}</p>
         </div>
@@ -206,7 +207,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           <div className={styles.sectionHeading}>
             <p className={styles.eyebrow}>{isEnglish ? 'Delivered work' : 'Lavori realizzati'}</p>
             <h2 id="portfolio-title">{isEnglish ? 'Live projects, not abstract promises.' : 'Progetti online, non semplici promesse.'}</h2>
-            <p>{isEnglish ? 'Different identities and goals, translated into digital experiences built for their real audience.' : 'Tre identità e tre obiettivi diversi, tradotti in esperienze digitali progettate per il pubblico reale.'}</p>
+            <p>{isEnglish ? 'Different identities and goals, turned into digital experiences built for their real audience.' : 'Tre identità e tre obiettivi diversi, trasformati in esperienze digitali progettate per il pubblico reale.'}</p>
           </div>
           <div className={styles.portfolioGrid}>
             {config.portfolio.map(item => (
@@ -267,8 +268,8 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
             <p>{isEnglish ? 'Each page explains what actually matters in that trade, and what can be left alone.' : 'Ogni pagina dice quali attività servono davvero in quel mestiere, e quali si possono lasciare stare.'}</p>
           </div>
           <ul>
-            {settori.map(s => (
-              <li key={s.href}>
+            {settori.map((s, index) => (
+              <li key={`${s.href}-${index}`}>
                 <Link href={s.href}>{s.label}<ChevronRight size={15} aria-hidden="true" /></Link>
               </li>
             ))}
@@ -285,11 +286,11 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
 
       <nav className={styles.related} aria-label="Servizi correlati">
         <span>{isEnglish ? 'Explore also' : 'Esplora anche'}</span>
-        {config.related.map(item => <Link key={item.href} href={item.href}>{item.label}<ChevronRight size={15} aria-hidden="true" /></Link>)}
+        {config.related.map((item, index) => <Link key={`${item.href}-${index}`} href={item.href}>{item.label}<ChevronRight size={15} aria-hidden="true" /></Link>)}
       </nav>
 
       <section className={styles.finalCta}>
-        <div><p className={styles.eyebrow}>{isEnglish ? 'Next step' : 'Prossimo passo'}</p><h2>{isEnglish ? 'Turn the goal into an operating scope.' : 'Trasformiamo l’obiettivo in un perimetro operativo.'}</h2><p>{isEnglish ? 'A first assessment clarifies priorities, activities, responsibilities and costs.' : 'Una prima valutazione chiarisce priorità, attività, responsabilità e costi.'}</p></div>
+        <div><p className={styles.eyebrow}>{isEnglish ? 'Next step' : 'Prossimo passo'}</p><h2>{isEnglish ? 'Turn the goal into a clear plan.' : 'Trasformiamo l’obiettivo in un piano chiaro.'}</h2><p>{isEnglish ? 'A first assessment clarifies priorities, activities, responsibilities and costs.' : 'Una prima valutazione chiarisce priorità, attività, responsabilità e costi.'}</p></div>
         {config.primaryCtaHref ? (
           <Link href={config.primaryCtaHref}>{config.primaryCtaLabel ?? 'Attiva il servizio'} <ArrowRight size={17} aria-hidden="true" /></Link>
         ) : (

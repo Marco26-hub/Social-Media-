@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import styles from './theme-toggle.module.css'
 
 type Theme = 'light' | 'dark'
@@ -18,6 +19,7 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle({ showLabel = false }: ThemeToggleProps) {
+  const isEnglish = usePathname()?.startsWith('/en') ?? false
   const [theme, setTheme] = useState<Theme>('light')
 
   useEffect(() => {
@@ -33,7 +35,9 @@ export default function ThemeToggle({ showLabel = false }: ThemeToggleProps) {
   }, [])
 
   const nextTheme = theme === 'dark' ? 'light' : 'dark'
-  const label = theme === 'dark' ? 'Usa sfondo chiaro' : 'Usa sfondo notte'
+  const label = theme === 'dark'
+    ? (isEnglish ? 'Use light theme' : 'Usa sfondo chiaro')
+    : (isEnglish ? 'Use dark theme' : 'Usa sfondo scuro')
 
   return (
     <button
@@ -49,7 +53,7 @@ export default function ThemeToggle({ showLabel = false }: ThemeToggleProps) {
       {theme === 'dark'
         ? <Sun size={17} strokeWidth={1.9} aria-hidden="true" />
         : <Moon size={17} strokeWidth={1.9} aria-hidden="true" />}
-      {showLabel && <span>{theme === 'dark' ? 'Sfondo chiaro' : 'Sfondo notte'}</span>}
+      {showLabel && <span>{label}</span>}
     </button>
   )
 }

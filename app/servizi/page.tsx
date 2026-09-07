@@ -66,30 +66,12 @@ export const metadata: Metadata = {
 }
 
 const FAQ = [
-  {
-    q: 'Quanto costa affidare la gestione dei social a Social Web Automation?',
-    a: 'Il piano Presenza costa 490 € al mese: 16 contenuti per ciascuno dei 2 social, cioè 32 pubblicazioni. Il piano Crescita costa 990 € al mese: 24 contenuti per ciascuno dei 2 social, cioè 48 pubblicazioni, con articolo SEO + GEO e analisi competitor. Entrambi sono piani di sola crescita organica. IVA esclusa.',
-  },
-  {
-    q: 'Il cliente deve gestire il software?',
-    a: 'No. Acquisti un servizio gestito. Il portale serve a rendere semplici approvazioni e risultati; il lavoro operativo resta a nostro carico.',
-  },
-  {
-    q: 'I contenuti vengono pubblicati senza controllo?',
-    a: 'No. Il flusso prevede approvazione e revisioni tracciate prima della pubblicazione, secondo il perimetro del pacchetto.',
-  },
-  {
-    q: 'I piani includono le campagne a pagamento?',
-    a: 'No. Presenza e Crescita coprono la sola crescita organica. Le campagne ADS rientrano nella configurazione personalizzata: la gestione viene concordata e il budget versato alle piattaforme resta separato dal canone.',
-  },
-  {
-    q: 'SEO e GEO garantiscono risultati o citazioni?',
-    a: 'No. Miglioriamo struttura, qualità e reperibilità, ma nessun fornitore può garantire ranking o citazioni da parte dei sistemi AI.',
-  },
-  {
-    q: 'Qual è la differenza tra SEO + GEO e Blog SEO + GEO?',
-    a: 'SEO + GEO analizza struttura, intenti, pagine, dati e priorità del sito. Blog SEO + GEO esegue la produzione continuativa: piano editoriale e 12 articoli al mese.',
-  },
+  { q: 'Da quale area conviene partire?', a: 'Dipende da dove perdi di più oggi. Se il telefono squilla a vuoto si parte da lì, perché una chiamata persa è lavoro perso subito. Se il problema è che nessuno ti trova, si parte da sito e visibilità. Se hai già clienti ma non tornano, dal recupero contatti. Durante la call guardiamo insieme quale buco costa di più e si comincia da quello.' },
+  { q: 'Posso attivare un servizio solo?', a: 'Sì, ogni area funziona da sola e ha il suo prezzo d’ingresso. Metterle insieme conviene quando si alimentano a vicenda — le riprese danno materiale al piano social, il blog nutre la visibilità — ma nessuna richiede le altre per funzionare. Quando ne aggiungi una l’analisi non si rifà da capo: si estende quella già fatta.' },
+  { q: 'Che differenza c’è fra SEO + GEO e il servizio Blog?', a: 'SEO + GEO è il lavoro di analisi e struttura: audit, mappa degli intenti di ricerca, dati strutturati e priorità. Dice che cosa cambiare e in quale ordine. Il servizio Blog è la produzione continuativa: dodici articoli al mese a 29,90 €, scritti e revisionati. Il primo decide la rotta, il secondo cammina.' },
+  { q: 'Che differenza c’è fra segretaria telefonica e agenda WhatsApp?', a: 'Coprono due buchi diversi. La segretaria telefonica risponde a chi ti chiama e non trova nessuno, da 199 € al mese. Agenda e WhatsApp si occupa di chi non ti chiama più: legge lo storico, segnala chi ricontattare e prepara i messaggi, da 390 € al mese. Chi confonde i due problemi compra il servizio sbagliato.' },
+  { q: 'Posso cambiare piano dopo?', a: 'Sì, e senza rifare la configurazione. Sui piani vocali si sale di scaglione quando i minuti non bastano più; sui piani social si passa da Presenza a Crescita mantenendo profilo, tono e materiali già impostati. Il cambio vale dal periodo di fatturazione successivo.' },
+  { q: 'Quali aree non hanno un prezzo pubblico, e perché?', a: 'Riprese video, SEO + GEO, gestione lavorazioni e automazione dei gestionali sono su preventivo, perché il costo dipende da cose che cambiano molto: quante location si girano, quanti sistemi vanno collegati, quanti operatori usano l’applicazione. Il preventivo arriva prima di iniziare e nessuna lavorazione fuori piano genera un costo senza il tuo via libera.' },
 ]
 
 const servicesPageJsonLd = {
@@ -321,7 +303,7 @@ const SERVICES = [
       'Automazione delle operazioni ricorrenti',
       'Sviluppo su misura quando serve davvero',
       'Registro delle esecuzioni e degli errori',
-      'Perimetro e costi definiti prima di partire',
+      'Attività e costi definiti prima di partire',
     ],
     strumento: { nome: 'Registro delle esecuzioni', beneficio: 'Ogni passaggio automatico lascia traccia, errori compresi: un guasto notturno si rilancia dal punto che ha ceduto.' },
     outcome: 'Gli stessi dati smettono di essere reinseriti a mano, e ogni passaggio automatico resta tracciabile.',
@@ -396,7 +378,7 @@ export default function ServiziPage() {
           <ul className={styles.heroProof}>
             <li><Check size={16} aria-hidden="true" /> Servizio gestito</li>
             <li><Check size={16} aria-hidden="true" /> Approvazione umana</li>
-            <li><Check size={16} aria-hidden="true" /> Perimetro e costi dichiarati</li>
+            <li><Check size={16} aria-hidden="true" /> Attività e costi dichiarati</li>
           </ul>
         </div>
 
@@ -632,7 +614,7 @@ export default function ServiziPage() {
       <section className={styles.finalCta}>
         <div>
           <p className={site.eyebrow}>Consulenza iniziale</p>
-          <h2>Costruiamo il perimetro giusto per la tua azienda.</h2>
+          <h2>Costruiamo il punto di partenza giusto per la tua azienda.</h2>
           <p>Partiamo da obiettivi, canali e capacità interne. Poi definiamo attività, responsabilità e costi.</p>
         </div>
         <div>
