@@ -577,6 +577,120 @@ export const SETTORI: Settore[] = [
       { href: '/servizi/gestione-social-media', label: 'Gestione social media' },
     ],
   },
+  {
+    slug: 'ristoranti-e-bar',
+    nome: 'Ristoranti e bar',
+    sommario: 'Ordine e pagamento al tavolo dal QR, prenotazioni e sala che gira senza attese.',
+    titoloSeo: 'Ordine e pagamento al tavolo con QR per ristoranti | SWA',
+    descrizioneSeo:
+      'Il cliente inquadra il QR al tavolo, ordina e paga dal telefono. Prenotazioni, menu e ordini live nel pannello di sala, più sito e contenuti social.',
+    eyebrow: 'Ristoranti e bar',
+    h1: 'Il conto arriva prima che tu lo porti.',
+    lead:
+      'Il tempo perso in sala è quasi sempre lo stesso: prendere l’ordine e chiudere il conto. Con il QR al tavolo il cliente fa entrambe le cose dal telefono, e il personale resta libero per il servizio.',
+    servizio: 'Sistema di ordine e pagamento al tavolo per ristoranti',
+    tipoServizio: 'Ordine e pagamento al tavolo via QR, prenotazioni, sito e contenuti per ristoranti e bar',
+    promessa:
+      'Ordine e pagamento passano dal telefono del cliente, le prenotazioni entrano in un posto solo e la fattura elettronica parte da sola. Nessuna promessa sul numero di coperti.',
+    notaPrezzi: 'Sistema di sala su preventivo: dipende da tavoli, menu e modalità di pagamento. Le commissioni degli incassi sono quelle del circuito di pagamento e vengono dichiarate prima dell’attivazione. Sito e contenuti hanno il loro listino. Prezzi IVA esclusa.',
+    segnali: ['Ordine e pagamento dal QR al tavolo', 'Prenotazioni e ordini in un pannello solo', 'Fattura elettronica verso lo SDI'],
+    risultati: [
+      { title: 'Meno viaggi per il conto', text: 'Chi ha finito paga dal telefono senza cercare nessuno: il tavolo si libera prima e il personale non fa la spola con il POS.' },
+      { title: 'Ordini senza fraintendimenti', text: 'L’ordine arriva scritto dal cliente, con le note e le varianti che ha scelto: niente da ricopiare e niente da interpretare.' },
+      { title: 'Una sala sola da guardare', text: 'Prenotazioni, tavoli, ordini in corso e incassi stanno nello stesso pannello, invece che fra quaderno, telefono e cassa.' },
+    ],
+    cosaTitolo: 'Che cosa mettiamo in sala, e intorno alla sala.',
+    cosaIntro:
+      'Il sistema copre il giro completo del cliente: prenota, si siede, ordina, paga e riceve la fattura. Intorno ci sono il sito e i contenuti che lo hanno fatto arrivare.',
+    cosaFacciamo: [
+      { title: 'QR al tavolo', text: 'Ogni tavolo ha il suo codice: il cliente inquadra, vede il menu aggiornato e ordina dal proprio telefono, senza scaricare niente.' },
+      { title: 'Pagamento dal telefono', text: 'Si paga con carta, Apple Pay, Google Pay o Satispay. Le commissioni del circuito vengono dichiarate prima, non scoperte sull’estratto conto.' },
+      { title: 'Fattura elettronica', text: 'Quando il cliente la chiede, la fattura parte verso lo SDI tramite un intermediario accreditato: nessun modulo da compilare il giorno dopo.' },
+      { title: 'Prenotazioni in un posto solo', text: 'Le prenotazioni entrano nel pannello con tavolo, orario e note, invece di stare fra un quaderno, il telefono e i messaggi.' },
+      { title: 'Menu che cambi tu', text: 'Piatti, prezzi, disponibilità e allergeni si aggiornano dal pannello e cambiano subito su tutti i tavoli.' },
+      { title: 'Ordini live per la cucina', text: 'Gli ordini arrivano in tempo reale con il numero del tavolo e restano tracciati fino alla chiusura del conto.' },
+      { title: 'Il sito del locale', text: `Menu, prenotazione e posizione su una pagina che si apre veloce dal telefono. Da ${PREZZI.web}.` },
+      { title: 'Contenuti del locale', text: `Piatti, sala e persone, girati e pubblicati con continuità. Presenza ${PREZZI.presenza}, Crescita ${PREZZI.crescita}.` },
+    ],
+    ciclo: [
+      { number: '01', title: 'Sopralluogo', text: 'Guardiamo sala, tavoli, menu e come incassate oggi, prima di proporre qualsiasi cosa.' },
+      { number: '02', title: 'Configurazione', text: 'Carichiamo menu e tavoli, generiamo i QR e colleghiamo il circuito di pagamento.' },
+      { number: '03', title: 'Prova in sala', text: 'Si parte da pochi tavoli con il personale presente, finché il giro non fila.' },
+      { number: '04', title: 'A regime', text: 'Il pannello mostra ordini, prenotazioni e incassi, e il menu lo aggiornate voi.' },
+    ],
+    faq: [
+      { q: 'Il cliente deve scaricare un’applicazione?', a: 'No. Il QR apre una pagina web nel browser del telefono: menu, ordine e pagamento stanno lì. Non c’è niente da installare e nessun account da creare per mangiare.' },
+      { q: 'Come funziona il pagamento al tavolo?', a: 'Il cliente paga dal proprio telefono con carta, Apple Pay, Google Pay o Satispay quando ha finito. L’incasso arriva sul conto del locale tramite il circuito di pagamento, e nel pannello resta la riga dell’ordine con il suo stato.' },
+      { q: 'Quanto costa in commissioni?', a: 'Le commissioni sono quelle del circuito di pagamento e vengono messe per iscritto prima dell’attivazione, insieme a qualunque quota di servizio. Far scoprire una trattenuta sull’estratto conto non è una pratica che consideriamo accettabile: per questo la voce sta nella proposta.' },
+      { q: 'Emette la fattura elettronica?', a: 'Sì, quando il cliente la chiede. Il documento viene trasmesso allo SDI attraverso un intermediario accreditato, quindi non resta un modulo da compilare a mano il giorno dopo.' },
+      { q: 'Sostituisce il registratore di cassa?', a: 'No. Il sistema gestisce ordine, pagamento e fattura elettronica. Gli obblighi fiscali del locale, registratore telematico compreso, restano quelli previsti dalla normativa e vanno verificati con il vostro consulente.' },
+      { q: 'Il personale deve imparare un programma nuovo?', a: 'Il pannello serve a guardare e correggere, non a lavorare tutto il giorno: ordini in corso, prenotazioni, tavoli e menu. Durante la prova in sala si parte da pochi tavoli con qualcuno di noi presente.' },
+      { q: 'Posso cambiare il menu da solo?', a: 'Sì. Piatti, prezzi, disponibilità e allergeni si modificano dal pannello e cambiano subito su tutti i tavoli, senza ristampare i codici: il QR punta al tavolo, non al menu.' },
+      { q: 'Serve anche se ho già un gestionale?', a: 'Dipende da che cosa copre. Se il gestionale fa già ordini e conti valutiamo un collegamento invece di una sostituzione; se copre solo la contabilità, il sistema di sala gli sta accanto senza toccarlo.' },
+    ],
+    correlati: [
+      { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
+      { href: '/servizi/gestione-social-media', label: 'Gestione social media' },
+      { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
+      { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
+    ],
+  },
+  {
+    slug: 'elettricisti-e-idraulici',
+    nome: 'Elettricisti e idraulici',
+    sommario: 'Il rapporto di intervento firmato sul posto, invece del blocchetto in furgone.',
+    titoloSeo: 'Rapporto di intervento e sito per elettricisti e idraulici | SWA',
+    descrizioneSeo:
+      'Rapporto di intervento compilato e firmato sul telefono, PDF al cliente prima di ripartire, sito che raccoglie le chiamate e assistente che risponde.',
+    eyebrow: 'Elettricisti e idraulici',
+    h1: 'Il rapporto si chiude prima di risalire in furgone.',
+    lead:
+      'Il blocchetto delle ricevute è ancora lo strumento più diffuso, e il più lento: si scrive due volte, si perde, e quando il cliente contesta non c’è niente da mostrare. Lo stesso intervento, sul telefono, si chiude con foto e firma.',
+    servizio: 'Rapporto di intervento e presenza online per artigiani',
+    tipoServizio: 'Rapporto di intervento digitale, sito e risposta telefonica per elettricisti, idraulici e manutentori',
+    promessa:
+      'Ogni intervento resta documentato con foto e firma del cliente, e le chiamate che arrivano mentre lavori trovano risposta. Nessuna promessa sul numero di lavori.',
+    notaPrezzi: `Modulo di intervento su preventivo: dipende dal numero di operatori e dai modelli di scheda. Sito ${PREZZI.web}. Assistente telefonico ${PREZZI.voce}. Prezzi IVA esclusa.`,
+    segnali: ['Firma del cliente sul telefono', 'PDF inviato prima di ripartire', 'Chiamate raccolte mentre lavori'],
+    risultati: [
+      { title: 'Niente doppia scrittura', text: 'Quello che scrivi in cantiere è già il documento finale: non si ricopia in ufficio la sera e non si perde per strada.' },
+      { title: 'Contestazioni che si chiudono', text: 'Foto dell’impianto, materiali usati e firma del cliente stanno nello stesso rapporto: la discussione finisce con un documento.' },
+      { title: 'Chiamate non perse', text: 'Chi chiama mentre hai le mani in un quadro elettrico trova risposta, orari e un appuntamento fissato.' },
+    ],
+    cosaTitolo: 'Che cosa facciamo per un artigiano.',
+    cosaIntro:
+      'Il percorso è lo stesso delle altre categorie, tarato sul furgone: il sito porta la chiamata, il telefono la raccoglie, il rapporto chiude il lavoro.',
+    cosaFacciamo: [
+      { title: 'Rapporto sul telefono', text: 'Scheda precompilata per tipo di intervento, materiali, note sulle anomalie e foto: si compila sul posto, anche con poca linea.' },
+      { title: 'Firma del cliente', text: 'Il cliente firma direttamente sullo schermo a fine lavoro, e la firma resta dentro il documento insieme alla data e all’ora.' },
+      { title: 'PDF subito al cliente', text: 'Il rapporto esce in PDF e parte via email, WhatsApp o Telegram prima che tu risalga in furgone.' },
+      { title: 'Ore che si contano da sole', text: 'Entrata, uscita e pausa diventano il totale delle ore, pronte da riportare in fattura senza rifare i conti.' },
+      { title: 'Il sito che porta chiamate', text: `Una pagina che dice che cosa fai, dove intervieni e come chiamarti, costruita per il telefono. Da ${PREZZI.web}.` },
+      { title: 'Chi risponde per te', text: `L’assistente informa su zone e disponibilità, raccoglie la richiesta e fissa l’intervento. ${PREZZI.voce}.` },
+    ],
+    ciclo: [
+      { number: '01', title: 'Modelli', text: 'Scriviamo insieme le schede dei tuoi interventi tipo, così il rapporto è già mezzo compilato.' },
+      { number: '02', title: 'Prova sul campo', text: 'Provi su lavori veri per qualche giorno e correggiamo le schede dove sono scomode.' },
+      { number: '03', title: 'In esercizio', text: 'Ogni intervento si chiude sul posto e il cliente riceve il documento firmato.' },
+      { number: '04', title: 'Chiamate', text: 'Sito e assistente raccolgono le richieste mentre sei sotto un lavandino.' },
+    ],
+    faq: [
+      { q: 'Funziona anche senza campo in cantina?', a: 'Sì. Il rapporto si compila anche con una connessione lenta: le foto vengono compresse sul telefono prima di partire e il testo resta salvato mentre scrivi, così una cantina o un tunnel non fanno perdere il lavoro già fatto.' },
+      { q: 'La firma sul telefono ha valore?', a: 'La firma raccolta sullo schermo vale come prova della presa in consegna del lavoro, insieme a foto, data e ora registrate nel documento. Per gli usi che richiedono una firma elettronica qualificata serve un servizio dedicato, da valutare con il vostro consulente.' },
+      { q: 'Posso usarlo con più operatori?', a: 'Sì. Ogni operatore ha il proprio accesso e compila i rapporti dei suoi interventi, mentre chi sta in ufficio vede la giornata di tutti, filtra per operatore o cliente e approva o contesta.' },
+      { q: 'Che differenza c’è con un blocchetto?', a: 'Il blocchetto si scrive due volte, si perde e non contiene foto. Il rapporto digitale parte già compilato dalla scheda del tipo di intervento, porta le immagini dentro il documento e arriva al cliente lo stesso giorno.' },
+      { q: 'Sostituisce la fattura?', a: 'No. È il documento del lavoro svolto, non un documento fiscale: descrive intervento, materiali, ore e firma. La fattura resta al vostro gestionale o al commercialista.' },
+      { q: 'Quanto costa mettere in piedi tutto?', a: `Il modulo di intervento è su preventivo, perché dipende dagli operatori e dai modelli di scheda. Il sito parte da ${PREZZI.web} e l’assistente telefonico da ${PREZZI.voce}, con il costo di avvio indicato prima dell’attivazione.` },
+      { q: 'Serve un telefono nuovo?', a: 'No. L’applicazione si installa dal browser sui telefoni Android e iPhone già in uso e occupa poco: è pensata per essere aperta con una mano mentre l’altra tiene un attrezzo.' },
+      { q: 'Vale anche per altri mestieri?', a: 'Sì. Lo stesso impianto serve manutentori, installatori di impianti, condizionamento, antincendio e assistenza tecnica: cambia la scheda del tipo di intervento, non il modo in cui funziona.' },
+    ],
+    correlati: [
+      { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
+      { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
+      { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
+      { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B' },
+    ],
+  },
 ]
 
 

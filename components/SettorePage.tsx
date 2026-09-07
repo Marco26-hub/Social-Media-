@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Building2, Car, Droplets, HeartPulse, Scissors, Smile, Sparkles, Stethoscope, Wrench, type LucideIcon } from 'lucide-react'
+import { Building2, Car, Droplets, HeartPulse, Plug, Scissors, Smile, Sparkles, Stethoscope, UtensilsCrossed, Wrench, type LucideIcon } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import type { Settore } from '@/lib/settori'
 import { SITE_URL } from '@/lib/site-config'
@@ -19,6 +19,8 @@ const ICONE: Record<string, LucideIcon> = {
   'studi-dentistici': Smile,
   'fisioterapia-osteopatia': HeartPulse,
   'officine-e-servizi-locali': Wrench,
+  'ristoranti-e-bar': UtensilsCrossed,
+  'elettricisti-e-idraulici': Plug,
 }
 
 export function percorsoSettore(settore: Settore): string {
