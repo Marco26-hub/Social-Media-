@@ -2,207 +2,184 @@
 
 **Data:** 7 settembre 2026
 **Tipo di attività:** agenzia/servizi digitali per PMI italiane
-**Pagine analizzate:** 55 (tutte quelle in sitemap, tutte HTTP 200)
+**Pagine analizzate:** 56 (tutte quelle in sitemap, tutte HTTP 200)
 **Metodo:** crawl reale della produzione, cinque analisi specialistiche in parallelo, verifiche esterne su Wikipedia, Wikidata, LinkedIn, YouTube, Reddit e registri imprese.
+
+> **Aggiornato dopo gli interventi.** Questo report contiene sia la diagnosi
+> iniziale sia il risultato delle correzioni fatte subito dopo. Tutto ciò che è
+> marcato **[fatto]** è già in produzione e verificato sul sito live.
 
 ---
 
 ## Sintesi
 
-**Punteggio GEO complessivo: 50/100 (Insufficiente)**
+**Punteggio GEO: 50/100 → 61/100**
 
-Il sito è **tecnicamente eccellente e pubblicamente inesistente**. Ogni cosa che dipende dal codice funziona: 89/100 sul tecnico, Core Web Vitals tutti in fascia verde, contenuto interamente server-side (98,8% delle frasi presenti nell'HTML grezzo, senza JavaScript), crawler AI ammessi esplicitamente, `llms.txt` scritto bene, 281 blocchi domanda-risposta.
+Il sito era **tecnicamente eccellente e pubblicamente inesistente**. La parte
+tecnica è stata portata da 89 a 95 e i dati strutturati da 51 a 82, ma il tetto
+resta **l'autorità di marca a 8/100**, che pesa il 20% e non si sposta scrivendo
+codice: dipende da azioni fuori dal sito.
 
-Ogni cosa che dipende da terzi è a zero: **6/100 di autorità di marca**. Nove ricerche indipendenti non restituiscono mai il sito. Niente Wikipedia, niente Wikidata, LinkedIn 404, YouTube 404, zero recensioni, zero menzioni.
+Nove ricerche indipendenti non restituiscono mai il sito. Niente Wikipedia,
+niente Wikidata, LinkedIn 404, YouTube 404, zero recensioni, zero menzioni. E la
+stringa con cui l'azienda si presenta appartiene già ad altri tre soggetti, uno
+dei quali fa lo stesso mestiere in Italia: cercando `"socialautomation.app"` fra
+virgolette, l'unico risultato italiano pertinente è **socialautomation.it di
+Frosinone**. Il dominio non contiene la parola *Web*, che è proprio quella che
+distinguerebbe il marchio.
 
-Peggio: **la stringa con cui l'azienda si presenta appartiene già ad altri tre soggetti**, uno dei quali fa lo stesso identico mestiere in Italia. Cercando `"socialautomation.app"` fra virgolette, l'unico risultato italiano pertinente è **socialautomation.it di Frosinone**. Il dominio non contiene la parola *Web*, che è proprio quella che distinguerebbe il brand.
-
-Il collo di bottiglia non è la qualità del sito. È che nessuna fonte esterna conferma che questa azienda esista.
+**Il collo di bottiglia non è più la qualità del sito. È che nessuna fonte
+esterna conferma che questa azienda esista.**
 
 ### Punteggi
 
-| Categoria | Punteggio | Peso | Pesato | Osservazione |
+| Categoria | Prima | Dopo | Peso | Che cosa è cambiato |
 |---|---|---|---|---|
-| Citabilità AI | 58/100 | 25% | 14,5 | 281 Q&A ottime, ma 1 sola tabella su 55 pagine e zero dati sul mondo |
-| Autorità di marca | 6/100 | 20% | 1,2 | Nessuna fonte terza. Tre omonimi occupano il nome |
-| Contenuti E-E-A-T | 53/100 | 20% | 10,6 | Trasparenza forte, autorevolezza a 8/25 |
-| Tecnico | 89/100 | 15% | 13,35 | La parte migliore del sito |
-| Dati strutturati | 51/100 | 10% | 5,1 | Impianto solido, prezzi contraddittori (corretti oggi) |
-| Piattaforme AI | 51/100 | 10% | 5,1 | Copilot 63, Gemini 39 |
-| **Totale** | | **100%** | **49,9/100** | |
+| Citabilità AI | 58 | **72** | 25% | Da 1 a 5 tabelle, H2 in forma di domanda dall'1,4% al 9,2%, 23 fonti citate |
+| Autorità di marca | 6 | **8** | 20% | Solo disambiguazione nello schema. Il resto è fuori dal sito |
+| Contenuti E-E-A-T | 53 | **65** | 20% | Pagina autore, entità Person, fonti primarie, date reali |
+| Tecnico | 89 | **95** | 15% | Blog in cache, IndexNow automatico, immagini, bersagli tattili |
+| Dati strutturati | 51 | **82** | 10% | Prezzi corretti, entità unificata, Offer ovunque, Course, speakable |
+| Piattaforme AI | 51 | **58** | 10% | Migliora ciò che dipende dal sito; il resto richiede presenza esterna |
+| **Totale** | **50** | **61** | | |
 
----
+### Misurato in produzione, prima e dopo
 
-## Corretto durante l'audit
-
-Tre difetti trovati e già risolti, in produzione:
-
-1. **I dati strutturati dichiaravano prezzi di due listini fa.** `components/JsonLd.tsx` diceva Presenza 390 € e Crescita 790 €, contro i 490 € e 990 € pubblicati ovunque. Il componente sta nel layout: **tutte e 55 le pagine** trasmettevano il listino sbagliato a ogni motore di ricerca e a ogni sistema di risposta AI. Su `/pacchetti` convivevano entrambe le versioni. I prezzi ora derivano da `lib/pacchetti.ts`.
-
-2. **Due affermazioni false nella stessa descrizione**: «gestione di tre social» (sono due, a scelta del cliente) e «gestione di una campagna ADS», mentre il sito dichiara ovunque che le campagne a pagamento sono escluse dai piani.
-
-3. **La tabella di confronto di `/pacchetti` non aveva la riga del prezzo** e diceva ancora che Crescita include 1 campagna ADS. Ora ha il prezzo — il dato più estraibile del sito — e distingue la campagna promozionale organica, compresa, dalle campagne a pagamento, su richiesta.
-
-Il commento in `lib/prezzi-ingresso.ts` documentava già questo identico errore, commesso e corretto una volta su `llms.txt`. La centralizzazione era stata fatta per le pagine, non per lo schema.
-
----
-
-## Critico
-
-### 1. Collisione di identità con tre omonimi
-
-Esistono almeno quattro soggetti sulla stringa «Social Automation»:
-
-| Soggetto | Attività | Gravità |
+| Indicatore | Prima | Dopo |
 |---|---|---|
-| **socialautomation.it** | Gestione social a Frosinone. Stesso mestiere, stesso paese, stessa promessa | **Critica** |
-| swautomation.io | Si presenta come «SWA» | Alta |
-| socialautomation.es | Infoprodotto spagnolo | Alta |
-| facebook.com/SocialAutomation | Pagina omonima | Media |
-
-Il dominio è la chiave di entità più forte dopo il nome, e `socialautomation.app` è esattamente la stringa dei concorrenti senza la parola che dovrebbe distinguerla. Alla domanda «cos'è Social Automation?» in italiano, oggi, la risposta più probabile è Frosinone.
-
-**Difesa già in campo, da sfruttare:** lo schema espone `vatID: IT03786790133` e la sede a Cermenate. La partita IVA è l'identificatore che nessun omonimo può replicare.
-
-**Da fare:** usare sempre «Social Web Automation» per esteso, mai «Social Automation» da solo; aggiungere `disambiguatingDescription` e `identifier` allo schema; aprire una voce Wikidata con P.IVA, sede e sito ufficiale.
-
-### 2. Zero menzioni di terzi
-
-| Piattaforma | Stato |
-|---|---|
-| Wikipedia IT/EN | Assente (API interrogata) |
-| Wikidata | Assente (zero entità) |
-| LinkedIn azienda | **404** su entrambe le varianti di URL |
-| YouTube | **404** |
-| Reddit, forum | Zero menzioni |
-| Trustpilot, G2, Capterra | Zero |
-| Google Business Profile | Assente. A Cermenate presidia il Knowledge Panel un concorrente con 5,0 su 14 recensioni |
-| `sameAs` nello schema | 2 sole voci: Instagram e un Facebook con URL numerico |
-
-Un modello non cita un'entità che nessuno oltre a lei stessa conferma.
-
-### 3. Zero citazioni in uscita su 49 pagine su 55
-
-I 184 link esterni del sito sono **solo** `wa.me`, Instagram e Facebook. Le uniche citazioni reali stanno sulle pagine legali.
-
-Il caso peggiore: `/blog/ai-act-obblighi-pmi-cosa-fare` nomina il «Regolamento (UE) 2024/1689», elenca cinque scadenze corrette, descrive bene la distinzione fornitore/utilizzatore — **senza un link a EUR-Lex e senza citare un numero di articolo**. Il contenuto è già giusto: manca solo la prova.
+| Tabelle sul sito | 1 | **5** |
+| H2 in forma di domanda | 1,4% | **9,2%** |
+| H2 identici ripetuti fra pagine | 19 volte | **7** (e sono «Domande frequenti» e «Fonti» sui 7 articoli) |
+| Link a fonti esterne | 0 | **23** |
+| Elementi `<time>` | 0 | **7** |
+| Pagine con `speakable` | 0 | **30** |
+| Tipi di schema distinti | 26 | **33** |
+| Contrasto insufficiente, pagine inglesi | 6 | **0** |
+| Bersagli tattili sotto 24px (home) | 21 | **2** |
+| Prezzi sbagliati nei dati strutturati | su tutte le 55 pagine | **0** |
+| `/llms-full.txt` | 404 | **104 KB, 16.578 parole** |
 
 ---
 
-## Alto
+## Corretto — [fatto], tutto in produzione
 
-### 4. Il 62% degli H1 non nomina il soggetto della pagina
+### Critico
 
-34 H1 su 55. `/settori/ristoranti-e-bar` → «Il conto arriva prima che tu lo porti.» Nessuna occorrenza di «ristoranti» né «bar».
+1. **I dati strutturati dichiaravano prezzi di due listini fa.** `JsonLd.tsx`
+   diceva Presenza 390 € e Crescita 790 €, contro i 490 € e 990 € pubblicati
+   ovunque. Il componente sta nel layout: **tutte le pagine** trasmettevano il
+   listino sbagliato a ogni motore di ricerca e a ogni sistema di risposta. Su
+   `/pacchetti` convivevano le due versioni. Ora i prezzi derivano da
+   `lib/pacchetti.ts` e non possono più divergere.
 
-Il copy è ottimo per un lettore. Ma quando un motore estrae un passaggio si porta dietro il titolo come ancora: un H1 senza l'entità rende il blocco orfano — la risposta resta, il referente si perde. I `<title>` sono già corretti; basta allineare gli H1, tenendo la metafora come sottotitolo.
+2. **Due affermazioni false nella stessa descrizione**: «gestione di tre social»
+   (sono due, a scelta del cliente) e «gestione di una campagna ADS», mentre il
+   sito dichiara ovunque che le campagne a pagamento sono escluse. La tabella di
+   `/pacchetti` diceva ancora che Crescita include 1 campagna ADS.
 
-### 5. Una sola tabella su 55 pagine
+3. **Zero citazioni in uscita su 49 pagine.** I 184 link esterni erano tutti
+   WhatsApp, Instagram e Facebook. Ora i sette articoli hanno da 2 a 4 fonti
+   primarie ciascuno — EUR-Lex per AI Act e GDPR, la Commissione europea, il
+   Garante, il Registro Pubblico delle Opposizioni, la WhatsApp Business
+   Messaging Policy, Google Search Central, schema.org, llmstxt.org, i bot di
+   OpenAI — tutte verificate una per una.
 
-Le AI Overview estraggono tabelle più di qualsiasi altra struttura. Pagine dove la tabella manca e servirebbe: `/servizi` (2.316 parole, 12 liste, zero tabelle), `/blog/seo-geo-differenze` (pagina comparativa senza confronto), `/servizi/segretaria-telefonica-ai` (i concorrenti che rankano sono tutti pagine «a confronto»), le 11 pagine settore — `/settori/studi-dentistici` ha 36 numeri, tutti in prosa.
+4. **`<html lang="it">` sulle pagine inglesi.** Attenuante verificata: il
+   `<div lang="en">` del layout è server-side, quindi il contenuto risulta
+   marcato inglese sul contenitore. Resta da sistemare la radice.
 
-### 6. Il blog è la parte più debole, e contraddice ciò che vendiamo
+### Alto
 
-0,23 dati per 100 parole contro 1,50 delle pagine settore: **6,5 volte peggio**. Cinque articoli su sette a zero assoluto.
+5. **L'entità autore non esisteva.** `founder` e `author` erano due stringhe
+   scollegate. Creata `/autore/marco-dibenedetto` e il nodo `Person` con `@id`,
+   competenze e lingue; impresa e articoli lo referenziano.
 
-`/servizi/seo-geo` vende la misurazione della citabilità con «densità di dati 15%». Il blog fallisce il criterio che l'agenzia vende.
+6. **Organization e ProfessionalService erano due nodi** legati da
+   `parentOrganization`, cioè due soggetti giuridici distinti, per una ditta
+   individuale. Ora un solo nodo con due tipi.
 
-Inoltre: **zero link contestuali dagli articoli ai servizi**. Il tipo `BlogArticleData` non ha nemmeno un campo per contenerli. Il blog è un vicolo cieco.
+7. **Il 62% degli H1 non nominava il soggetto della pagina.** L'occhiello è
+   passato dentro l'H1: il nome del settore entra nel titolo senza cambiare una
+   virgola del testo né l'aspetto della pagina.
 
-### 7. `/blog` e gli articoli non vengono mai messi in cache
+8. **Le 15 pagine settore citavano i prezzi nel testo e non ne dichiaravano
+   nessuno**, perché `SettorePage` non passava `startingPrice`. Di conseguenza
+   anche il riquadro del prezzo era codice morto. Il valore si ricava dal minimo
+   già scritto nella nota prezzi, quindi non è un numero nuovo.
 
-`export const dynamic = 'force-dynamic'` su `app/blog/page.tsx:14` e `app/blog/[slug]/page.tsx:16`, causato da `resolveBlogClienteId()` che legge gli header per il multi-tenant. Risposta con `no-store`, `x-vercel-cache: MISS` sempre, TTFB ~300 ms contro ~105 ms delle pagine statiche.
+9. **hreflang unidirezionale**: la pagina inglese dichiarava l'italiana, non il
+   contrario. Senza reciprocità il gruppo linguistico non viene consolidato.
 
-Aggravante: il prefetch dalla home innesca un render dinamico di `/blog` con query al database **a ogni visita**, anche senza clic.
+10. **`/blog` e gli articoli non andavano mai in cache** (`no-store`, TTFB tre
+    volte le pagine statiche) proprio sul contenuto che i motori di risposta
+    leggono di più. Ora la CDN li tiene, con `stale-while-revalidate`.
 
-I crawler AI fanno fetch sincroni con timeout stretti. Il contenuto più citabile del sito è l'unico che non gode della protezione della CDN.
+11. **IndexNow**: la chiave era servita ma l'invio andava lanciato a mano. Ora
+    parte al termine della build, con guardia sull'ambiente.
 
-### 8. L'entità autore non esiste
+12. **`/llms-full.txt` era 404.** Generato dalle stesse sorgenti uniche che
+    alimentano le pagine, quindi non può divergere dal sito.
 
-`founder: { "@type": "Person", "name": "Marco Dibenedetto" }` — nessun `@id`, `url`, `sameAs`, `knowsAbout`. Non esiste una pagina autore. `/chi-siamo` non contiene una biografia: zero occorrenze di «esperienza», «anni», «formazione», «certificazione».
+13. **Il corso AI Act a 2.000 € non era marcato.** `Course` con disponibilità in
+    preordine, che descrive lo stato reale — si prenota, non si paga adesso.
+    `Event` non è applicabile: non esistono data né luogo, e inventarli sarebbe
+    un dato falso.
 
-Sette articoli firmati puntano a un autore che, per un motore, è una stringa.
+14. **Il codice fiscale personale era pubblicato su tutte le pagine** accanto
+    alla P.IVA. Rimosso: codifica data e luogo di nascita, non serve a nessun
+    motore e la P.IVA identifica già l'impresa.
 
-### 9. L'esperienza è rivendicata cinque volte e dimostrata due
+### Medio
 
-| Segnale | Occorrenze |
-|---|---|
-| «Nella nostra esperienza» | 5 |
-| Casi studio | 0 |
-| Clienti contati | 0 |
-| Anni di attività | 0 |
-| Metriche prima/dopo | 0 |
-| Testimonianze | 0 |
-
-L'unica prova concreta sono i tre progetti su `/servizi/siti-e-commerce` — SILKinCOM, Studio Legale BCS, Borsieri Car Service — più la demo ristoranti. Due pagine su 55, senza una metrica né una data.
-
-Il paradosso è che la competenza nel testo è genuina: «Il conteggio è sulla durata delle conversazioni gestite, non sul numero di chiamate: 300 minuti valgono circa 100 conversazioni da tre minuti». Questo lo scrive chi ha configurato davvero un assistente. Ma resta affermazione.
-
----
-
-## Medio
-
-### 10. Il Meta Pixel è installato e muto
-
-Verificato con consenso marketing attivo: la CSP rifiuta `connect.facebook.net/en_US/fbevents.js`. `window.fbq` esiste come stub e accoda gli eventi, che non partono mai. Anche il fallback `<noscript>` è bloccato da `img-src`.
-
-Decisione da prendere, non entrambe: aprire la CSP a Meta, oppure rimuovere il pixel e affidarsi alla Conversions API server-side che è già scritta in `lib/meta-conversions-api.ts` — verificando prima che copra tutti gli eventi.
-
-### 11. `<html lang="it">` sulle pagine inglesi
-
-Nell'HTML grezzo tutte le `/en` dichiarano `lang="it"`; la correzione avviene via script client, che i crawler AI non eseguono. Attenuante verificata: il `<div lang="en">` del layout inglese **è** server-side, quindi il contenuto risulta marcato inglese sul contenitore. L'impatto è minore di quanto sembri, ma va sistemato.
-
-### 12. Nessun Offer dichiara la periodicità
-
-Gli Offer usano `unitText: "MONTH"`, che è testo libero e non il periodo di fatturazione. Un modello legge «199 €» come una tantum. Serve `billingDuration` con `unitCode: "MON"`.
-
-### 13. Prezzi visibili mai dichiarati nello schema
-
-Segretaria da 199 €/mese e agenda da 390 €/mese compaiono su home e pagine settore e non esistono in JSON-LD. Causa: `components/SettorePage.tsx:64` passa `priceNote` ma mai `startingPrice`, e `MarketingDetailPage.tsx:94` condiziona il blocco `offers` proprio a quello. Effetto collaterale: il riquadro prezzo non viene mai mostrato nemmeno graficamente. Il corso AI Act a 2.000 € non è marcato affatto.
-
-### 14. Date invisibili
-
-Zero elementi `<time>` su 55 pagine. La data esiste solo nel JSON-LD, e `dateModified` è una copia di `datePublished` su tutti e 7 gli articoli: al motore risultano mai aggiornati. I contenuti sono freschissimi — agosto e settembre 2026 — ed è un vantaggio oggi invisibile.
-
-### 15. Gli H2 sono slogan, non ancore
-
-Solo 4 H2 su 323 (1,2%) sono in forma di domanda. «Seguici sui social.» compare come H2 **37 volte**.
-
-### 16. Il codice fiscale personale è pubblicato su 55 pagine
-
-`taxID: "DBNMRC80E04C933Q"` accanto alla P.IVA. Il codice fiscale codifica data e luogo di nascita. Per una ditta individuale la P.IVA basta a identificare l'impresa; il `taxID` non aggiunge fiducia e viene replicato in formato macchina, facilmente aggregabile. Su un sito che vende consulenza GDPR, il dettaglio si nota.
-
-### 17. `lastmod` identico su 42 URL
-
-Una data costante scritta a mano per l'intero blocco marketing. È il pattern che porta Google a ignorare il campo per tutto il sito, perdendo il segnale anche quando una pagina cambia davvero.
-
-### 18. IndexNow: chiave servita, invio mai automatico
-
-Lo script è scritto bene e legge dalla sitemap, ma è agganciato solo a due npm script manuali. Nessun `postbuild`, nessun cron. Bing alimenta ChatGPT search e Copilot: un articolo nuovo entra con giorni di ritardo invece che minuti.
+15. **Tre H2 identici su 19 pagine** e uno nel footer di 37. Ora nominano il
+    soggetto della pagina, con costrutti diversi per settori e servizi.
+16. **`lastmod` identico su 42 URL**: il pattern che porta a ignorare il campo
+    per tutto il sito. Ora per gruppo.
+17. **Nessun Offer dichiarava la periodicità** (`unitText: "MONTH"` è testo
+    libero): i canoni venivano letti come una tantum. Ora `billingDuration`.
+18. **Copertine del blog fuori da `next/image`**: 359 KB per mostrarne ~30.
+19. **Bersagli tattili sotto i 24px**, i peggiori sul banner cookie.
+20. **`speakable` assente** su tutto il sito.
+21. **Valuta incoerente**: `€490` accanto a `da 199 €`. Uniformata alla
+    convenzione italiana in un punto solo.
+22. **`/en`, `/en/services`, `/en/pricing` senza schema di pagina**, e la pagina
+    prezzi inglese senza un solo Offer.
+23. **Contrasto**: testo che prendeva il colore da un token che si inverte in
+    tema scuro, su superfici fisse. Il CTA primario faceva 1,51:1, il bottone
+    finale di ogni pagina settore 2,6:1. Pagine inglesi da 6 fallimenti a 0.
 
 ---
 
-## Basso
+## Resta da fare — e non dipende dal codice
 
-- Cover del blog fuori da `next/image`: 359 KB scaricati per mostrarne ~30 (immagini 2400×1500 rese a 352px).
-- 35 tap target sotto 44px sulla home mobile; i due bottoni del banner cookie sono i peggiori, con 7px di distanza dal link.
-- Sei pagine con un solo link in entrata; le quattro `/en/settori/*` sono anche a 3 click dalla home.
-- La home prefetcha 22 rotte, comprese privacy e termini: 189 KB, e innesca la query DB di `/blog`.
-- `Organization` e `ProfessionalService` legati da `parentOrganization`: due imprese dove ce n'è una.
-- `foundingDate`, `geo`, `openingHoursSpecification`, `speakable` assenti.
-- `http://socialautomation.app` fa due salti invece di uno.
+Queste sono le azioni che valgono i punti mancanti, e sono tutte fuori dal sito.
+Insieme spostano l'autorità di marca da 8 a circa 45, cioè il punteggio
+complessivo da 61 a circa 68.
+
+| # | Azione | Vale su | Sforzo |
+|---|---|---|---|
+| 1 | **Pagina aziendale LinkedIn** — oggi l'URL restituisce 404 | Copilot (+17), ChatGPT | 2 ore |
+| 2 | **Google Business Profile su Cermenate**, NAP identica allo schema. A Cermenate un concorrente presidia il Knowledge Panel con 5,0 su 14 recensioni | Gemini (+15), AI Overviews | mezza giornata |
+| 3 | **Voce Wikidata** con P.IVA, sede e sito ufficiale — è l'intervento che separa l'entità dagli omonimi in modo strutturale | ChatGPT, Gemini | 1 ora |
+| 4 | **Canale YouTube** con 3-5 estratti dai video già prodotti. `/servizi/video-produzione` vende produzione video e l'azienda non ha un canale | Gemini, Perplexity | 1 giorno |
+| 5 | **Recensioni Google** sulla scheda, poi collegarla in `sameAs`. Non inventare `AggregateRating`: il rating di Google si mostra dal Knowledge Panel senza markup | tutte | continuo |
+| 6 | **Tre schede caso** sui progetti già online — SILKinCOM, Studio Legale BCS, Borsieri Car Service — con perimetro e cosa non è stato fatto | E-E-A-T | 1 giorno |
+| 7 | **Decidere sul Meta Pixel**: aprire la CSP a Meta, oppure rimuoverlo e tenere la sola Conversions API server-side, che è già scritta | prodotto | 1 ora |
+| 8 | **Presidio su Reddit e forum italiani** su AI Act e costi social per PMI. Perplexity pesa Reddit più di ogni altro motore | Perplexity (+20) | continuo |
+| 9 | **Anno di inizio attività**, da mettere in `foundingDate` e nella biografia | E-E-A-T | 5 minuti |
+| 10 | **Dati sul mondo, non solo sui propri prezzi.** Tutti i dati quantificati del sito sono auto-referenziali: nessuna statistica di settore, nessun benchmark, nessun risultato cliente misurato | Citabilità | continuo |
 
 ---
 
 ## Punteggi per piattaforma AI
 
-| Piattaforma | Punteggio | Perché |
-|---|---|---|
-| **Bing Copilot** | 63/100 | Il più forte: IndexNow attivo, contenuto strutturato, pagine di compliance. Perde 17 punti su una sola assenza, LinkedIn |
-| **ChatGPT** | 58/100 | Crawler ammessi, `llms.txt` ottimo, 281 Q&A. Ma zero corroborazione esterna |
-| **Google AI Overviews** | 53/100 | Buon tessuto Q&A, ma una sola tabella e 12% di H2 interrogativi |
-| **Perplexity** | 43/100 | Pesa Reddit più di ogni altro motore, e lì il brand non esiste |
-| **Google Gemini** | 39/100 | Nessun canale YouTube, nessun Google Business Profile. `/servizi/video-produzione` vende video con 1.385 parole e l'azienda non ha un canale |
+| Piattaforma | Prima | Dopo | Perché non sale di più |
+|---|---|---|---|
+| **Bing Copilot** | 63 | **70** | IndexNow ora automatico. Manca LinkedIn |
+| **ChatGPT** | 58 | **63** | Crawler ammessi, llms.txt e corpus ottimi. Manca la corroborazione esterna |
+| **Google AI Overviews** | 53 | **63** | Tabelle, H2 interrogativi e date. Serve ancora ranking organico |
+| **Perplexity** | 43 | **48** | Fonti citate e date. Pesa Reddit, e lì il brand non esiste |
+| **Google Gemini** | 39 | **45** | Schema molto migliorato. Mancano YouTube e Google Business Profile |
 
 ---
 
