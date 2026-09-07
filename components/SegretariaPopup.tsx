@@ -91,7 +91,7 @@ export default function SegretariaPopup() {
       </p>
 
       <div className={styles.azioni}>
-        <Link href="/servizi/segretaria-ai" className={styles.cta} onClick={chiudi}>
+        <Link href="/servizi/segretaria-telefonica-ai" className={styles.cta} onClick={chiudi}>
           <PhoneCall size={16} aria-hidden="true" />
           Scopri come funziona
           <ArrowRight size={15} aria-hidden="true" />

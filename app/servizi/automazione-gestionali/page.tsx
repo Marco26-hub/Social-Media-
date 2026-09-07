@@ -26,7 +26,7 @@ const config = {
   priceNote: 'Servizio su misura: il preventivo dipende dai sistemi coinvolti e dal numero di flussi da automatizzare. Rientra nella configurazione personalizzata.',
   offerHighlight: 'Perimetro e costi definiti prima di partire',
   primaryCtaLabel: 'Descrivi il tuo caso',
-  primaryCtaHref: '/contatti',
+  primaryCtaHref: 'https://wa.me/393477196603?text=Ciao%21%20Vorrei%20parlare%20di%20automazione%20e%20gestionali%20con%20Social%20Web%20Automation.',
   icon: Workflow,
   signals: ['Analisi dei flussi prima del codice', 'Integrazioni su sistemi esistenti', 'Sviluppo su misura solo quando serve'],
   outcomes: [
@@ -57,7 +57,7 @@ const config = {
     { q: 'Che cosa avete già costruito?', a: 'La piattaforma con cui gestiamo il lavoro dei clienti: generazione dei contenuti, approvazione umana, pubblicazione programmata sui social, verifica di ciò che è uscito davvero e conservazione dei dati.' },
   ],
   related: [
-    { href: '/servizi/segretaria-ai', label: 'Segretaria telefonica AI' },
+    { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
     { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
     { href: '/consulenza', label: 'Consulenza legale AI' },
   ],

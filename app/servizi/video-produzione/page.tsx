@@ -32,7 +32,7 @@ const config = {
   priceNote: 'Preventivo su misura: dipende da mezza giornata o giornata intera, dalla presenza di un volto e dal numero di location. Definito prima delle riprese, senza sorprese in fattura.',
   offerHighlight: 'Settimane di contenuti in mezza giornata',
   primaryCtaLabel: 'Parliamo delle riprese',
-  primaryCtaHref: '/contatti',
+  primaryCtaHref: 'https://wa.me/393477196603?text=Ciao%21%20Vorrei%20parlare%20di%20riprese%20video%20in%20azienda%20con%20Social%20Web%20Automation.',
   icon: Clapperboard,
   signals: ['Illuminazione, audio e ottiche professionali', 'Volto maschile o femminile a scelta', 'Girato pensato per il formato verticale'],
   outcomes: [
