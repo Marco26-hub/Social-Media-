@@ -2,6 +2,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
 import {
+  Workflow,
+  ClipboardCheck,
+  CalendarClock,
+  PhoneCall,
+  Clapperboard,
   ArrowRight,
   BarChart3,
   Bot,
@@ -102,6 +107,41 @@ const SERVICES = [
     title: 'Siti web e landing',
     text: 'Landing page semplici a partire da 19,90 € al mese. Siti più articolati ed e-commerce vengono quotati in base al progetto.',
     items: ['Architettura e messaggi di conversione', 'Sviluppo responsive e mobile-first', 'Moduli, analytics e tracciamento', 'Integrazione con social, ADS e contenuti'],
+  },
+  {
+    icon: Clapperboard,
+    href: '/servizi/video-produzione',
+    title: 'Riprese video in azienda',
+    text: 'Veniamo a girare dove lavori, con fotografo, luci e ottiche. Dalla stessa sessione escono video e foto.',
+    items: ['Sopralluogo su spazi, luce e orari', 'Mezza giornata, materiale per settimane', 'Un volto davanti alla camera se serve', 'Scatti fotografici dalla stessa sessione'],
+  },
+  {
+    icon: PhoneCall,
+    href: '/servizi/segretaria-telefonica-ai',
+    title: 'Il telefono che squilla mentre lavori',
+    text: 'Risponde al posto tuo con il tuo listino, informa, fissa l’appuntamento e ti lascia la trascrizione.',
+    items: ['Da 199 € al mese, 300 minuti inclusi', 'Dice solo cose che hai approvato', 'Passa a una persona quando serve', 'Registro delle chiamate con esito'],
+  },
+  {
+    icon: CalendarClock,
+    href: '/servizi/agenda-clienti-whatsapp',
+    title: 'I clienti spariti da mesi',
+    text: 'Ogni giorno trovi chi ricontattare, con il motivo e il messaggio già scritto. Parte solo se ci metti il sì.',
+    items: ['Da 390 € al mese, 1000 invii inclusi', 'Legge agenda e storico ogni giorno', 'Messaggi pronti, mai inviati da soli', 'Spazi liberi proposti a chi è già cliente'],
+  },
+  {
+    icon: ClipboardCheck,
+    href: '/servizi/gestione-lavorazioni',
+    title: 'Il lavoro che si chiude sul posto',
+    text: 'Per chi lavora fuori sede: checklist, foto e firma del cliente dal telefono, PDF prima di ripartire.',
+    items: ['Checklist già pronta per tipo di lavoro', 'Firma dell’operatore e del cliente', 'Ore calcolate da entrata e uscita', 'Pannello con storico e approvazioni'],
+  },
+  {
+    icon: Workflow,
+    href: '/servizi/automazione-gestionali',
+    title: 'Sistemi che si parlano',
+    text: 'Gestionale, CRM, moduli e archivio smettono di richiedere lo stesso dato tre volte.',
+    items: ['Analisi dei flussi prima del codice', 'Integrazioni sui sistemi esistenti', 'Registro delle esecuzioni e degli errori', 'Sviluppo su misura solo dove serve'],
   },
   {
     icon: Target,
@@ -225,11 +265,12 @@ export default function LandingPage() {
       <section className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.heroCopy}>
           <p className={styles.kicker}><Sparkles size={16} aria-hidden="true" /> Servizi digitali integrati per PMI</p>
-          <h1 id="hero-title">Social, SEO, siti e ricerca clienti per PMI.</h1>
+          <h1 id="hero-title">Un fornitore solo, per il lavoro che oggi ne richiede quattro.</h1>
           <p className={styles.heroLead}>
-            Un’unica regia collega contenuti social, visibilità organica, Blog,
-            presenza Web e ricerca di opportunità B2B. L’intelligenza artificiale
-            accelera il lavoro; specialisti e controllo umano proteggono qualità e responsabilità.
+            Contenuti social e video girati in azienda, sito, visibilità sui motori e dentro le
+            risposte AI, ricerca clienti B2B. E i sistemi che tolgono lavoro manuale: il telefono
+            che risponde, l’agenda che si riempie, i rapporti di intervento, i gestionali collegati.
+            Approvi tu ogni uscita, prima che esca.
           </p>
           <div className={styles.heroActions}>
             <Link href="/servizi" className={styles.primaryButton}>
@@ -241,7 +282,7 @@ export default function LandingPage() {
           <ul className={styles.trustList} aria-label="Caratteristiche principali">
             <li><Check size={16} aria-hidden="true" /> Approvazione prima della pubblicazione</li>
             <li><Check size={16} aria-hidden="true" /> Nessun software complesso da gestire</li>
-            <li><Check size={16} aria-hidden="true" /> Servizi disponibili in Italia e all’estero</li>
+            <li><Check size={16} aria-hidden="true" /> In Brianza di persona, in Italia da remoto</li>
           </ul>
         </div>
 
@@ -254,9 +295,9 @@ export default function LandingPage() {
             <span className={styles.liveStatus}><i /> Operativo</span>
           </div>
           <div className={styles.visualStats}>
-            <div><span>Contenuti</span><strong>20</strong><small>questo mese</small></div>
+            <div><span>Contenuti</span><strong>32</strong><small>questo mese</small></div>
             <div><span>Da approvare</span><strong>4</strong><small>entro venerdì</small></div>
-            <div><span>Canali</span><strong>3</strong><small>coordinati</small></div>
+            <div><span>Canali</span><strong>2</strong><small>coordinati</small></div>
           </div>
           <div className={styles.contentPreview}>
             <div className={styles.previewMedia}>
