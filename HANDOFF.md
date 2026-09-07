@@ -2,6 +2,91 @@
 
 Stato al 2026-09-07. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
 
+## Sessione 2026-09-07 (2): passata «impeccabile» — editoriale, contrasto, tema scuro inglese
+
+Sei commit, da `e34bcc4` a `da7df54`, tutti in produzione e verificati sul live.
+
+### Che cosa e stato misurato, non stimato
+
+Tre strumenti nello scratchpad di sessione, riusabili:
+`audit-finale.mjs` (55 pagine da sitemap: stato HTTP, meta, H1, hreflang,
+link interni, JSON-LD), `rip.mjs` (sovrapposizione 5-gram **escludendo
+header/footer/nav** — senza quell'esclusione il rumore era 75 coppie su 81),
+`enscan.mjs` e `visivo.mjs` (contrasto WCAG su entrambi i temi),
+`gap.mjs` (griglie con l'ultima riga scoperta, 3 larghezze),
+`editor.mjs` (ortografia, punteggiatura, terminologia, burocratese).
+
+Attenzione a due trappole gia pagate: `innerText` incolla le voci di una card
+in un'unica «frase», quindi il conteggio delle frasi lunghe e gonfiato; e il
+calcolo del fondo per il contrasto risale al primo antenato opaco, quindi un
+titolo bianco su fotografia risulta falsamente illeggibile. Verificare sempre
+a schermo prima di correggere un colore.
+
+### Editoriale
+
+- 38 apostrofi dritti + 46 entita `&quot;`/`&apos;` nelle pagine pubbliche:
+  ora apostrofo tipografico e caporali. Il sito ne usava due tipi, spesso
+  nella stessa pagina.
+- Prezzi nel **testo corrente** uniformati alla convenzione italiana
+  (`199 €`, non `€199`). Il prezzo grande delle schede resta `€490`: e un
+  lockup grafico, non prosa. Regola da mantenere.
+- 17 frasi oltre 35 parole in `lib/settori.ts` spezzate in due. Erano il
+  residuo della passata GEO, che attaccava il dato in coda a frasi complete.
+
+### Duplicazione fra pagine
+
+Le vere sovrapposizioni erano 6, non 81. Risolte 5:
+
+- `PACCHETTI` veniva reso per intero su `/`, `/servizi` e `/pacchetti`.
+  Aggiunti a `lib/pacchetti.ts` i campi `sintesi` (home) e `inBreve`
+  (/servizi); `features` resta solo su `/pacchetti`. **Se aggiungi un piano,
+  compila tutti e tre.**
+- `/en/method` rendeva `EN_FAQ_GROUPS[0]`, cioe le stesse tre domande di
+  `/en/faq`. Ora usa `EN_METHOD_FAQ`, sul ciclo di lavoro.
+
+Restano due coppie fra pagine sorelle (16,5% e 15,7%) che condividono le note
+di perimetro: fisiologico, non toccare.
+
+### Contrasto — il bug ricorrente
+
+Il colore preso da un token che si inverte in tema scuro, su una superficie
+che invece resta fissa (bianco, champagne, `#f5f5f3`). Trovato tre volte:
+
+- `components/segretaria-landing.module.css`: CTA primario a 1,51:1.
+  Introdotto `--ink-fisso`, da usare ovunque il fondo sia fisso.
+- `.finalCta > a` in `content-page.module.css` e `marketing-detail.module.css`:
+  fondo bianco, testo da `--green-dark`. 2,6:1 sul bottone finale di **ogni**
+  pagina settore e contenuto, italiane comprese.
+- Occhiello inglese: stesso `.eyebrow` su hero scuro e sezione chiara. Ora
+  scoped per contesto.
+
+Pagine inglesi: da 6 fallimenti a 0 su entrambi i temi.
+
+### Pagine inglesi
+
+- **Il selettore chiaro/scuro non faceva nulla su `/en`**: le superfici erano
+  scritte a mano in chiaro. Aggiunto il blocco notte in `english.module.css`.
+- `/en/settori` 147 → 449 parole, `/en/contact` 200 → 480.
+- Quarto settore inglese: `parrucchieri`. I conteggi nel testo di
+  `/en/settori` sono calcolati da `SETTORI_EN.length`, non scritti a mano.
+- Sitemap: 55 URL.
+
+### Griglie
+
+Quattro schede in una griglia a tre colonne lasciavano due celle scoperte, e
+il fondo della griglia si leggeva come una barra colorata. Regola aggiunta in
+`english.module.css`: le ultime schede si allargano fino a chiudere la riga;
+`.journey` e `.proofGrid` passano a `auto-fit`. Stessa logica gia presente
+sulle griglie a due colonne italiane. **Verificato su 55 pagine a 3 larghezze.**
+
+### Aperto, non codice
+
+Profilo Google Business e recensioni; Meta Pixel bloccato dalla CSP;
+RLS disattivo su 34 tabelle Supabase; cannibalizzazione di listino fra
+Crescita (990 €) e Presenza + Blog (519,90 €); collisione di marchio con
+socialautomation.it. Servizi `/en` di dettaglio: le 8 pagine italiane sotto
+`/servizi/*` non hanno equivalente inglese.
+
 ## Sessione 2026-09-07: Stripe live attivo, offerta Segretaria, riprese video
 
 ### Stripe — Production configurata e collaudata
