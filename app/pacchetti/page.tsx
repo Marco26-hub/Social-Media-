@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, CircleCheck, Globe2, Newspaper, Target } from 'lucide-react'
+import { ArrowRight, CalendarClock, CircleCheck, Globe2, Newspaper, PhoneCall, Target } from 'lucide-react'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
 import { BLOG_SERVICE } from '@/lib/blog-service'
+import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { SITE_URL } from '@/lib/site-config'
 import base from '../content-page.module.css'
@@ -35,6 +36,11 @@ const faq = [
   { q: 'Qual è la differenza tra SEO + GEO e Blog SEO + GEO?', a: 'SEO + GEO definisce audit, struttura, intenti e priorità. Blog SEO + GEO produce con continuità il piano editoriale e 12 articoli al mese.' },
   { q: 'Posso richiedere una configurazione diversa?', a: 'Sì. Più brand, canali, volumi, video, automazioni e integrazioni vengono quotati dopo una valutazione iniziale.' },
 ]
+
+// Piani d'ingresso delle due famiglie: prezzi, soglie e voci vengono dal
+// listino, non riscritti qui.
+const VOCE = SEGRETARIA_LISTINO.find(f => f.id === 'voce')!.piani[0]
+const AGENDA = SEGRETARIA_LISTINO.find(f => f.id === 'agenda')!.piani[0]
 
 const comparisonRows = [
   ['Prezzo mensile, IVA esclusa', PACCHETTI[0].prezzo, PACCHETTI[1].prezzo, BLOG_SERVICE.displayPrice, 'da 19,90 €', '149 € una tantum'],
@@ -152,6 +158,38 @@ export default function PacchettiPage() {
             <p className={styles.note}>IVA esclusa · dominio, e-commerce e servizi esterni separati</p>
           </article>
 
+
+          {/* Il telefono e l'agenda.
+              Sono i passi 3 e 4 del percorso descritto in home, hanno un prezzo
+              pubblico e non comparivano qui: la pagina dei pacchetti ne mostrava
+              cinque su sette, e chi arrivava dal percorso non li ritrovava. I
+              dati vengono dal listino, non riscritti. */}
+          <article className={`${styles.card} ${styles.voceCard}`}>
+            <div className={styles.top}><div><span className={styles.audience}>Chi lavora su appuntamento</span><h2>Segretaria telefonica AI</h2></div><span className={styles.badge}>Passo 3</span></div>
+            <p className={styles.result}>Una voce che risponde mentre hai le mani occupate.</p>
+            <p className={styles.price}><span className={styles.priceLabel}>a partire da</span><strong>€199</strong><span>/mese</span></p>
+            <p className={styles.setup}>{VOCE.avvio} · {VOCE.soglia}</p>
+            <p className={styles.description}>Dice servizi, prezzi e orari che hai approvato tu, legge il calendario e fissa l’appuntamento. Se la richiesta esce dalle regole, prende i dati e la passa a te.</p>
+            <div className={styles.fit}><strong>È adatto a te se</strong><p>Perdi chiamate mentre lavori, la sera o nel giorno di chiusura, e ogni chiamata persa è un appuntamento andato altrove.</p></div>
+            <p className={styles.listLabel}>Nel canone trovi</p>
+            <ul>{VOCE.voci.slice(0, 6).map(v => <li key={v}><CircleCheck size={15} aria-hidden="true" />{v}</li>)}</ul>
+            <Link href="/servizi/segretaria-telefonica-ai"><PhoneCall size={16} aria-hidden="true" /> Come risponde al telefono <ArrowRight size={16} aria-hidden="true" /></Link>
+            <p className={styles.note}>IVA esclusa · numero e traffico dell’operatore non inclusi</p>
+          </article>
+
+          <article className={`${styles.card} ${styles.agendaCard}`}>
+            <div className={styles.top}><div><span className={styles.audience}>Chi ha già un archivio clienti</span><h2>Agenda, clienti e WhatsApp</h2></div><span className={styles.badge}>Passo 4</span></div>
+            <p className={styles.result}>Chi non torna da mesi rientra fra le priorità del giorno.</p>
+            <p className={styles.price}><span className={styles.priceLabel}>a partire da</span><strong>€390</strong><span>/mese</span></p>
+            <p className={styles.setup}>{AGENDA.avvio} · {AGENDA.soglia}</p>
+            <p className={styles.description}>Ogni giorno il sistema legge agenda e storico, trova chi manca da troppo tempo e prepara il messaggio. Resta in bozza: parte solo dopo il tuo sì.</p>
+            <div className={styles.fit}><strong>È adatto a te se</strong><p>Hai clienti che smettono di tornare senza dirlo, e spazi liberi in settimana che nessuno ha il tempo di riempire.</p></div>
+            <p className={styles.listLabel}>Nel canone trovi</p>
+            <ul>{AGENDA.voci.slice(0, 6).map(v => <li key={v}><CircleCheck size={15} aria-hidden="true" />{v}</li>)}</ul>
+            <Link href="/servizi/agenda-clienti-whatsapp"><CalendarClock size={16} aria-hidden="true" /> Come funziona l’agenda <ArrowRight size={16} aria-hidden="true" /></Link>
+            <p className={styles.note}>IVA esclusa · nessun invio senza la tua approvazione</p>
+          </article>
+
           <article className={`${styles.card} ${styles.leadCard}`}>
             <div className={styles.top}><div><span className={styles.audience}>Imprese che cercano aziende in target</span><h2>Pilot Ricerca Clienti B2B</h2></div><span className={styles.badge}>Una tantum</span></div>
             <p className={styles.result}>Una lista verificata per decidere chi approfondire.</p>
@@ -229,6 +267,35 @@ export default function PacchettiPage() {
             <a href="https://alessandromazzadigital.com/quanto-costa-la-gestione-dei-social-media-guida-ai-prezzi-in-italia-2026/" target="_blank" rel="noopener noreferrer">alessandromazzadigital.com</a>.
             Il budget pubblicitario resta separato dal canone in tutte le fasce, compresa la nostra.
           </p>
+        </div>
+      </section>
+
+      {/* Le due voci legali hanno un prezzo pubblico ma non sono servizi nostri:
+          li eroga lo Studio Legale BCS. Stanno in una fascia a parte, perche'
+          mescolarli alle schede farebbe credere che li facciamo noi. */}
+      <section className={`${base.section}`} aria-labelledby="legale-title">
+        <div className={base.sectionHeading}>
+          <p className={base.eyebrow}>Erogato dal partner legale</p>
+          <h2 id="legale-title">Le due voci che non facciamo noi.</h2>
+          <p>
+            Consulenza e formazione su AI Act e GDPR sono erogate dallo Studio Legale BCS,
+            con l’Avv. Vincenzo Sapone, cassazionista. Hanno un prezzo pubblico come il
+            resto, ma la responsabilità professionale è sua, non nostra.
+          </p>
+        </div>
+        <div className={styles.legaleGrid}>
+          <article>
+            <span>Consulenza individuale</span>
+            <h3>AI Act e GDPR, sul tuo caso</h3>
+            <p><strong>150 €</strong> per 30 minuti, IVA esclusa</p>
+            <Link href="/consulenza">Prenota la consulenza <ArrowRight size={15} aria-hidden="true" /></Link>
+          </article>
+          <article>
+            <span>In arrivo</span>
+            <h3>Video corsi AI Act per PMI</h3>
+            <p><strong>2.000 €</strong> a persona, IVA esclusa</p>
+            <Link href="/consulenza#corso-ai-act">Prenota il posto <ArrowRight size={15} aria-hidden="true" /></Link>
+          </article>
         </div>
       </section>
 

@@ -26,6 +26,11 @@
 .webCard > a { background:#0f6b4f; color:white; }
 .blogCard { border-color:#77b89f; }
 .blogCard > a { background:#0f6b4f; color:white; }
+/* I due servizi del percorso: accento proprio, come le altre schede. */
+.voceCard { border-color:#c98f6f; }
+.agendaCard { border-color:#7fa8c9; }
+.voceCard > a { background:#0f6b4f; color:white; }
+.agendaCard > a { background:#0f6b4f; color:white; }
 .leadCard { grid-column:1 / -1; border-color:#9ba9d5; }
 .leadCard ul { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .leadCard > a { background:#314a8a; border-color:#314a8a; color:white; }
@@ -91,3 +96,14 @@
   .custom span,
   .mercato thead th { font-size: 12.5px; }
 }
+
+/* Le due voci legali: griglia a due, distinte dalle schede dei servizi. */
+.legaleGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 42px; border: 1px solid var(--line); background: var(--line); }
+.legaleGrid article { display: grid; gap: 8px; align-content: start; padding: 27px; background: var(--surface); }
+.legaleGrid span { color: var(--green); font-size: 11px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+.legaleGrid h3 { margin: 6px 0 0; font: 500 22px Georgia, 'Times New Roman', serif; }
+.legaleGrid p { margin: 0; color: var(--muted); font-size: 13px; }
+.legaleGrid strong { color: var(--ink); font: 500 26px Georgia, 'Times New Roman', serif; font-variant-numeric: tabular-nums; }
+.legaleGrid a { min-height: 24px; display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding-block: 3px; color: var(--green); font-size: 13px; font-weight: 800; text-decoration: none; }
+.legaleGrid a:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) { .legaleGrid { grid-template-columns: 1fr; } .legaleGrid p, .legaleGrid a { font-size: 15px; } .legaleGrid span { font-size: 12.5px; } }
