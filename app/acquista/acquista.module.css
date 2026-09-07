@@ -30,3 +30,12 @@
 .error { padding: 12px 14px; border: 1px solid #efc4bd; border-radius: 6px; background: #fff0ee; color: #a83e2f; font-size: 13px; font-weight: 700; }
 .invalid { width: min(540px, calc(100% - 32px)); margin: 15vh auto; padding: 32px; border: 1px solid #d5dfd9; border-radius: 8px; background: white; }.invalid a { display: inline-flex; gap: 7px; align-items: center; color: #176347; font-weight: 800; }
 @media (max-width: 760px) { .header > span { display: none; }.layout { grid-template-columns: 1fr; gap: 22px; margin-top: 22px; }.summary h1 { font-size: 40px; }.fieldsRow, .segmented { grid-template-columns: 1fr; }.formPanel { padding: 22px 18px; } }
+
+/* Il primo addebito, scomposto. Sta sopra il modulo perche' la sorpresa sul
+   prezzo va tolta prima che la persona investa tempo, non dopo. */
+.totale { margin: 4px 0 24px; padding: 16px 18px; border: 1px solid #d8e1dc; border-radius: 6px; background: #f7faf8; }
+.totale > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 5px 0; font-size: 13px; color: #3c4b45; }
+.totale > div b { font-variant-numeric: tabular-nums; font-weight: 600; }
+.totaleRiga { margin-top: 6px; padding-top: 11px !important; border-top: 1px solid #d8e1dc; font-size: 15px !important; color: #15231f !important; }
+.totaleRiga b { font-size: 19px; }
+.totale > p { margin: 10px 0 0; color: #5C6B63; font-size: 12px; line-height: 1.5; }

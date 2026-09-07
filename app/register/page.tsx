@@ -6,7 +6,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
-import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, LockKeyhole } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
 import TurnstileWidget from '@/components/TurnstileWidget'
 import styles from './register.module.css'
@@ -88,6 +88,11 @@ function RegisterForm() {
     }
   }
 
+  const pianoScelto = PACCHETTI.find(p => p.slug === pacchetto)
+  // Il prezzo arriva dalla sorgente unica dei pacchetti, non da una cifra scritta qui.
+  const prezzoCentesimi = Math.round(Number((pianoScelto?.prezzo || '0').replace(/[^\d,]/g, '').replace(',', '.')) * 100)
+
+
   if (done) {
     return (
       <div className={styles.card}>
@@ -130,6 +135,25 @@ function RegisterForm() {
             </button>
           ))}
         </div>
+
+        {pianoScelto && (
+          <div className={styles.riepilogo}>
+            <div className={styles.riepilogoTotale}>
+              <div><span>Canone mensile</span><b>{euro(prezzoCentesimi)}</b></div>
+              <div><span>IVA 22%</span><b>{euro(Math.round(prezzoCentesimi * 0.22))}</b></div>
+              <div className={styles.riepilogoRiga}><span>Primo addebito</span><b>{euro(Math.round(prezzoCentesimi * 1.22))}</b></div>
+              <p>Setup incluso. Rinnovo mensile, disdicibile per il periodo successivo.</p>
+            </div>
+            <ul className={styles.riepilogoVoci}>
+              {pianoScelto.features.slice(0, 5).map(f => <li key={f}>{f}</li>)}
+            </ul>
+            <p className={styles.riepilogoDopo}>
+              <strong>Dopo il pagamento</strong> raccogliamo canali, tono del brand e materiali,
+              e prepariamo i primi contenuti da approvare. Ti contattiamo entro un giorno lavorativo.
+            </p>
+            <p className={styles.riepilogoSicuro}><LockKeyhole size={14} aria-hidden="true" /> Pagamento protetto da Stripe</p>
+          </div>
+        )}
 
         <span className={styles.label}>Acquisti come</span>
         <div className={styles.customerType} role="group" aria-label="Categoria cliente">
@@ -207,6 +231,8 @@ function RegisterForm() {
     </div>
   )
 }
+
+const euro = (c: number) => (c / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })
 
 export default function RegisterPage() {
   return (

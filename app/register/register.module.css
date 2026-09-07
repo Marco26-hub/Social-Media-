@@ -279,3 +279,18 @@
   font-size: 14px;
   text-decoration: none;
 }
+
+/* Riepilogo del piano scelto: su un ordine da 990 euro mancava tutta la
+   rassicurazione che c'era su uno da 19,90. Il primo addebito con l'IVA sta
+   prima del modulo, non sulla pagina di pagamento. */
+.riepilogo { margin: 6px 0 26px; padding: 18px; border: 1px solid #d8e1dc; border-radius: 7px; background: #f7faf8; }
+.riepilogoTotale > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 5px 0; color: #3c4b45; font-size: 13px; }
+.riepilogoTotale > div b { font-variant-numeric: tabular-nums; font-weight: 600; }
+.riepilogoRiga { margin-top: 6px; padding-top: 11px !important; border-top: 1px solid #d8e1dc; color: #15231f !important; font-size: 15px !important; }
+.riepilogoRiga b { font-size: 19px; }
+.riepilogoTotale > p { margin: 9px 0 0; color: #5C6B63; font-size: 12px; line-height: 1.5; }
+.riepilogoVoci { display: grid; gap: 6px; margin: 16px 0 0; padding: 14px 0 0; border-top: 1px solid #e2eae6; list-style: none; }
+.riepilogoVoci li { position: relative; padding-left: 18px; color: #3c4b45; font-size: 12.5px; line-height: 1.45; }
+.riepilogoVoci li::before { position: absolute; left: 0; color: #168553; content: '✓'; font-weight: 700; }
+.riepilogoDopo { margin: 16px 0 0; padding: 12px 14px; border-left: 3px solid #168553; background: #e9f3ee; color: #21332c; font-size: 12.5px; line-height: 1.5; }
+.riepilogoSicuro { display: flex; align-items: center; gap: 7px; margin: 12px 0 0; color: #5C6B63; font-size: 12px; }

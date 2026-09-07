@@ -40,6 +40,8 @@ function CheckoutForm() {
     )
   }
 
+  const imponibile = service.amountCents + (service.setupCents ?? 0)
+
   const servicePage = service.slug === 'blog-seo'
     ? '/servizi/blog-seo'
     : service.slug === 'web-commerce'
@@ -104,8 +106,22 @@ function CheckoutForm() {
           <p className={styles.eyebrow}>Riepilogo ordine</p>
           <h1>{service.shortName}</h1>
           <p>{service.description}</p>
+          {/* Il primo addebito per intero, prima del modulo.
+              Mostrare "349 €" e poi far scoprire 1.389,58 € sulla pagina di
+              pagamento significa perdere la persona quando ha gia' investito
+              tempo: chi si sente sorpreso sul prezzo non riapre la trattativa. */}
           <div className={styles.price}><strong>{service.displayPrice}</strong><span>{service.cadenceLabel}</span></div>
-          {service.setupCents ? <p className={styles.renewal}>Avvio una tantum: {(service.setupCents / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} sulla prima fattura.</p> : null}
+          <div className={styles.totale}>
+            <div><span>{service.billingMode === 'subscription' ? 'Canone mensile' : 'Importo'}</span><b>{euro(service.amountCents)}</b></div>
+            {service.setupCents ? <div><span>Avvio una tantum</span><b>{euro(service.setupCents)}</b></div> : null}
+            <div><span>IVA 22%</span><b>{euro(Math.round(imponibile * 0.22))}</b></div>
+            <div className={styles.totaleRiga}><span>Primo addebito</span><b>{euro(Math.round(imponibile * 1.22))}</b></div>
+            {service.billingMode === 'subscription' ? (
+              <p>Poi {euro(Math.round(service.amountCents * 1.22))} al mese, IVA inclusa. Disdicibile per il periodo successivo.</p>
+            ) : (
+              <p>Pagamento unico. Nessun rinnovo automatico.</p>
+            )}
+          </div>
           <ul>{service.features.map(feature => <li key={feature}><Check size={17} />{feature}</li>)}</ul>
           <div className={styles.onboarding}><strong>Dopo il pagamento</strong><p>{service.onboarding}</p></div>
           <p className={styles.renewal}>{service.billingMode === 'subscription'
@@ -147,6 +163,10 @@ function CheckoutForm() {
     </main>
   )
 }
+
+// Prezzi in centesimi: l'importo mostrato deve coincidere con quello addebitato.
+const euro = (centesimi: number) =>
+  (centesimi / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })
 
 export default function CheckoutPage() {
   return <Suspense fallback={<main className={styles.shell}><p>Caricamento checkout...</p></main>}><CheckoutForm /></Suspense>
