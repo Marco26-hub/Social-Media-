@@ -7,7 +7,8 @@
 .top h2 { margin:8px 0 0; font:500 34px Georgia,'Times New Roman',serif; }
 .badge { flex:none; white-space:nowrap; padding:6px 8px; border-radius:4px; background:#fff1c9; color:#7a5812; font-size:10px; font-weight:850; text-transform:uppercase; }
 .result { margin:18px 0 0; color:var(--muted); font-size:13px; }
-.price { display:flex; align-items:baseline; gap:5px; margin:24px 0 0; }
+.price { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 5px; margin:24px 0 0; }
+.priceLabel { flex-basis:100%; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
 .price strong { font:500 48px Georgia,'Times New Roman',serif; }
 .price span { color:var(--muted); font-size:13px; }
 .setup { margin:4px 0 0; color:var(--green); font-size:11px; font-weight:800; }

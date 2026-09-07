@@ -10,8 +10,8 @@ import { SITE_URL } from '@/lib/site-config'
 import base from '../content-page.module.css'
 import styles from './pacchetti.module.css'
 
-const title = 'Pacchetti Social, Blog, Web e Lead B2B | SWA'
-const description = 'Confronta Presenza, Crescita, Blog SEO + GEO, Web & Commerce e Pilot Lead B2B: servizi gestiti per visibilità, conversione e opportunità.'
+const title = 'Pacchetti Social, Blog, Siti Web e Lead B2B | SWA'
+const description = 'Confronta Presenza, Crescita, Blog SEO + GEO, Sito Web Base e Pilot Lead B2B: servizi gestiti per visibilità, conversione e opportunità.'
 const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei capire quale pacchetto Social Web Automation è adatto alla mia azienda.')}`
 
 export const metadata: Metadata = {
@@ -30,7 +30,7 @@ const faq = [
   { q: 'Il setup iniziale ha un costo?', a: 'Nei pacchetti social Presenza e Crescita il setup è incluso. Per Blog e Web eventuali integrazioni esterne vengono definite prima dell’avvio.' },
   { q: 'Il piano Crescita comprende le campagne a pagamento?', a: 'No. Presenza e Crescita sono piani di sola crescita organica. Le campagne ADS rientrano nella configurazione personalizzata: la gestione viene concordata e il budget versato alla piattaforma resta separato e sotto il controllo del cliente.' },
   { q: 'Blog SEO + GEO è incluso nei pacchetti social?', a: 'Crescita include un articolo al mese. Il servizio Blog autonomo comprende invece 12 articoli mensili e può essere combinato con qualsiasi piano.' },
-  { q: 'Sito web ed e-commerce sono inclusi nei pacchetti social?', a: 'No. Web & Commerce è un servizio separato, combinabile con gli altri. Il canone parte da 19,90 euro al mese e dopo 12 mesi il sito diventa tuo.' },
+  { q: 'Sito web ed e-commerce sono inclusi nei pacchetti social?', a: 'No. Il sito web è un servizio separato, combinabile con gli altri. Il canone è a partire da 19,90 euro al mese per una landing page semplice; e-commerce e funzioni avanzate vengono quotati a parte.' },
   { q: 'Cosa comprende il Pilot Ricerca Clienti B2B?', a: 'È un servizio una tantum da 149 euro: definiamo il profilo ideale, analizziamo fino a 30 aziende e consegniamo una lista verificata e prioritaria. Non comprende invii automatici e non garantisce appuntamenti o vendite.' },
   { q: 'Qual è la differenza tra SEO + GEO e Blog SEO + GEO?', a: 'SEO + GEO definisce audit, struttura, intenti e priorità. Blog SEO + GEO produce con continuità il piano editoriale e 12 articoli al mese.' },
   { q: 'Posso richiedere una configurazione diversa?', a: 'Sì. Più brand, canali, volumi, video, automazioni e integrazioni vengono quotati dopo una valutazione iniziale.' },
@@ -43,7 +43,7 @@ const comparisonRows = [
   ['Articoli SEO + GEO', '—', '1/mese', '12/mese', 'SEO tecnica', '—'],
   ['Gestione campagna ADS', '—', '1', '—', 'Tracking', '—'],
   ['Pubblicazione blog', '—', '1 articolo', 'Inclusa o export CMS', 'Integrazione', '—'],
-  ['Sito / e-commerce', '—', '—', '—', 'Da €19,90/mese', '—'],
+  ['Sito web base', '—', '—', '—', 'A partire da €19,90/mese', '—'],
   ['Aziende B2B analizzate', '—', '—', '—', '—', 'Fino a 30'],
   ['Fonti e priorità', '—', '—', '—', '—', 'Incluse'],
   ['Proprietà dopo 12 mesi', '—', '—', '—', 'Sì', '—'],
@@ -67,8 +67,8 @@ export default function PacchettiPage() {
             url: `${SITE_URL}${BLOG_SERVICE.path}`, description: `${BLOG_SERVICE.articlesPerMonth} articoli SEO e GEO al mese.`,
           },
           {
-            '@type': 'Offer', name: 'Web & Commerce', price: '19.90', priceCurrency: 'EUR',
-            url: `${SITE_URL}/servizi/siti-e-commerce`, description: 'Siti ed e-commerce mobile-first. Dopo 12 mesi di canone il sito diventa del cliente.',
+            '@type': 'Offer', name: 'Sito Web Base', price: '19.90', priceCurrency: 'EUR',
+            url: `${SITE_URL}/servizi/siti-e-commerce`, description: 'Landing page o sito web base mobile-first. E-commerce e funzioni avanzate su preventivo.',
           },
           {
             '@type': 'Offer', name: 'Pilot Ricerca Clienti B2B', price: '149', priceCurrency: 'EUR',
@@ -113,7 +113,7 @@ export default function PacchettiPage() {
               <p className={styles.price}><strong>{plan.prezzo}</strong><span>/mese</span></p>
               <p className={styles.setup}>{plan.setup}</p>
               <p className={styles.description}>{plan.sottotitolo}</p>
-              <div className={styles.fit}><strong>E adatto a te se</strong><p>{plan.idealePer}</p></div>
+              <div className={styles.fit}><strong>È adatto a te se</strong><p>{plan.idealePer}</p></div>
               {plan.includeDa && <p className={styles.includes}>Include tutto di {plan.includeDa}, piu:</p>}
               <p className={styles.listLabel}>Nel canone trovi</p>
               <ul>{plan.features.map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
@@ -136,16 +136,16 @@ export default function PacchettiPage() {
           </article>
 
           <article className={`${styles.card} ${styles.webCard}`}>
-            <div className={styles.top}><div><span className={styles.audience}>Professionisti, PMI e negozi</span><h2>Web &amp; Commerce</h2></div><span className={styles.badge}>Sito tuo</span></div>
-            <p className={styles.result}>Un sito credibile che trasforma visite in contatti o vendite.</p>
-            <p className={styles.price}><span>da</span><strong>€19,90</strong><span>/mese</span></p>
+            <div className={styles.top}><div><span className={styles.audience}>Professionisti, PMI e negozi</span><h2>Sito Web Base</h2></div><span className={styles.badge}>Sito tuo</span></div>
+            <p className={styles.result}>Una landing o un sito credibile che trasforma visite in contatti.</p>
+            <p className={styles.price}><span className={styles.priceLabel}>a partire da</span><strong>€19,90</strong><span>/mese</span></p>
             <p className={styles.setup}>Dopo 12 mesi di canone, il sito è tuo</p>
-            <p className={styles.description}>Canone tecnologico di partenza. Progettazione, configurazione e funzioni vengono quotate prima dell’avvio.</p>
-            <div className={styles.fit}><strong>E adatto a te se</strong><p>Ti serve una landing, un sito aziendale o un e-commerce collegato a campagne, contenuti e analytics.</p></div>
+            <p className={styles.description}>Il canone a partire da 19,90 €/mese riguarda una landing page semplice. Siti più articolati, e-commerce e funzioni avanzate vengono quotati prima dell’avvio.</p>
+            <div className={styles.fit}><strong>È adatto a te se</strong><p>Ti serve una landing o un sito aziendale collegato a campagne, contenuti e analytics.</p></div>
             <p className={styles.listLabel}>Nel progetto trovi</p>
-            <ul>{['Architettura, UX e design responsive', 'Landing page, sito o catalogo e-commerce', 'SEO tecnica, sitemap e dati strutturati', 'Moduli, checkout, analytics e integrazioni', 'Collegamento a social e campagne', 'Proprietà del sito dopo 12 mesi'].map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
-            <Link href="/acquista?servizio=web-commerce"><Globe2 size={16} /> Attiva Web &amp; Commerce <ArrowRight size={16} /></Link>
-            <p className={styles.note}>IVA esclusa · dominio e servizi esterni separati</p>
+            <ul>{['Architettura, UX e design responsive', 'Landing page o sito web base', 'SEO tecnica, sitemap e dati strutturati', 'Moduli, analytics e integrazioni essenziali', 'Collegamento a social e campagne', 'E-commerce su preventivo separato'].map(feature => <li key={feature}><CircleCheck size={15} />{feature}</li>)}</ul>
+            <Link href="/acquista?servizio=web-commerce"><Globe2 size={16} /> Attiva Sito Web <ArrowRight size={16} /></Link>
+            <p className={styles.note}>IVA esclusa · dominio, e-commerce e servizi esterni separati</p>
           </article>
 
           <article className={`${styles.card} ${styles.leadCard}`}>

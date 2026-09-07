@@ -1,6 +1,6 @@
 # Social Web Automation
 
-> Servizio italiano di gestione social media per PMI e professionisti. Social Web Automation coordina strategia, piano editoriale, contenuti, approvazione, pubblicazione e report. Offre inoltre SEO, GEO, siti web, e-commerce e gestione campagne.
+> Servizio italiano di gestione social media per PMI e professionisti. Social Web Automation coordina strategia, piano editoriale, contenuti, approvazione, pubblicazione e report. Offre inoltre SEO, GEO, siti web, riprese video in azienda, ricerca clienti B2B, segretaria telefonica AI, automazione dei gestionali e consulenza legale su AI Act e GDPR.
 
 ## Identità
 
@@ -22,20 +22,31 @@
 - Programma e pubblica i contenuti approvati.
 - Produce report e priorità di miglioramento.
 - Realizza siti web, landing page ed e-commerce.
-- Offre soluzioni per siti ed e-commerce con canone tecnologico da 19,90 euro al mese; dopo 12 mesi di canone il sito diventa di proprietà del cliente. Progettazione, funzioni ed eventuali servizi esterni sono definiti prima dell'avvio.
+- Offre landing page semplici e siti web base con canone tecnologico da 19,90 euro al mese; dopo 12 mesi di canone il sito diventa di proprietà del cliente. E-commerce, progettazione avanzata, funzioni ed eventuali servizi esterni sono definiti prima dell'avvio.
 - Esegue attività SEO e GEO per migliorare comprensione, indicizzazione e citabilità.
-- Gestisce campagne ADS; il budget pubblicitario è separato dal canone.
+- Risponde alle chiamate con una segretaria telefonica AI, informa e fissa appuntamenti.
+- Recupera i clienti fermi e riempie gli spazi liberi in agenda con messaggi WhatsApp approvati prima dell'invio.
+- Gira video e foto in azienda, con fotografo, luci e un volto davanti alla camera se richiesto.
+- Ricerca e qualifica aziende B2B coerenti con il cliente ideale.
+- Collega gestionali e automatizza i passaggi manuali fra i sistemi.
+- Offre consulenza legale su AI Act e GDPR con uno studio legale esterno.
+- Gestisce campagne ADS nelle configurazioni personalizzate; il budget pubblicitario è separato dal canone.
 
 L'intelligenza artificiale supporta analisi e produzione. La decisione editoriale e l'approvazione finale restano umane.
 
 ## Pacchetti
 
-- Presenza: 390 euro al mese, IVA esclusa. Include 16 contenuti mensili e gestione di 2 social.
-- Crescita: 790 euro al mese, IVA esclusa. Include 24 contenuti su 3 social, un articolo SEO e GEO e gestione di una campagna ADS.
-- Web & Commerce: pacchetto separato da 19,90 euro al mese per siti web ed e-commerce mobile-first. Dopo 12 mesi di canone il sito diventa di proprietà del cliente; progettazione e servizi esterni vengono definiti prima dell'avvio.
+- Presenza: 490 euro al mese, IVA esclusa. 16 contenuti al mese per ogni social su 2 canali, fino a 32 pubblicazioni. Solo crescita organica.
+- Crescita: 990 euro al mese, IVA esclusa. 24 contenuti al mese per ogni social su 2 canali, fino a 48 pubblicazioni, più un articolo SEO e GEO. Solo crescita organica.
+- Blog SEO + GEO: 29,90 euro al mese per 12 articoli al mese, con piano editoriale e controllo umano.
+- Sito Web Base: pacchetto separato a partire da 19,90 euro al mese per landing page semplici e siti web base mobile-first. Dopo 12 mesi di canone il sito diventa di proprietà del cliente; e-commerce, progettazione avanzata e servizi esterni vengono definiti prima dell'avvio.
+- Pilot Ricerca Clienti B2B: 149 euro una tantum, fino a 30 aziende analizzate su fonti pubbliche verificate. Nessun invio automatico, nessuna garanzia di appuntamenti o vendite.
+- Segretaria telefonica AI: Voce Base 199 euro al mese con 300 minuti, Voce Attività 349 euro al mese con 700 minuti, Voce Azienda 649 euro al mese con 1500 minuti.
+- Agenda, clienti e WhatsApp: 390 euro al mese con 1000 invii inclusi; Tutto in uno 569 euro al mese con 300 minuti e 1000 invii.
+- Riprese video in azienda, automazione e gestionali: quotati sul progetto.
 - Soluzione personalizzata: preventivo per e-commerce, più brand, volumi elevati, video, automazioni e integrazioni.
 
-Il setup è incluso. Il budget versato alle piattaforme pubblicitarie non è incluso.
+Nei piani social il setup è incluso. I servizi vocali e di agenda hanno un costo di avvio una tantum, indicato prima dell'attivazione. Numero telefonico, traffico dell'operatore e costi delle piattaforme di messaggistica restano fuori dal canone. Il budget versato alle piattaforme pubblicitarie non è incluso.
 
 ## Consulenza legale AI
 
@@ -47,7 +58,13 @@ La consulenza su AI Act e GDPR è svolta in collaborazione con lo Studio Legale 
 - Servizi: https://www.socialautomation.app/servizi
 - Gestione social media: https://www.socialautomation.app/servizi/gestione-social-media
 - SEO e GEO: https://www.socialautomation.app/servizi/seo-geo
-- Siti ed e-commerce: https://www.socialautomation.app/servizi/siti-e-commerce
+- Siti web e landing page: https://www.socialautomation.app/servizi/siti-e-commerce
+- Blog SEO e GEO: https://www.socialautomation.app/servizi/blog-seo
+- Segretaria telefonica AI: https://www.socialautomation.app/servizi/segretaria-telefonica-ai
+- Agenda, clienti e WhatsApp: https://www.socialautomation.app/servizi/agenda-clienti-whatsapp
+- Riprese video in azienda: https://www.socialautomation.app/servizi/video-produzione
+- Automazione e gestionali: https://www.socialautomation.app/servizi/automazione-gestionali
+- Ricerca clienti B2B: https://www.socialautomation.app/servizi/ricerca-clienti-b2b
 - Metodo: https://www.socialautomation.app/metodo
 - Pacchetti: https://www.socialautomation.app/pacchetti
 - FAQ: https://www.socialautomation.app/faq

@@ -744,12 +744,15 @@
 .standaloneCopy li { display: flex; align-items: flex-start; gap: 7px; color: #40504a; font-size: 11px; line-height: 1.4; }
 .standaloneCopy li svg { flex: none; color: var(--sa-green); }
 .standaloneAction { min-width: 128px; display: grid; justify-items: end; gap: 12px; }
-.standaloneAction p { display: flex; align-items: baseline; gap: 4px; margin: 0; white-space: nowrap; }
+.standaloneAction p { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: 0 4px; margin: 0; white-space: nowrap; }
+.standaloneAction p small:first-child { flex-basis: 100%; text-align: right; letter-spacing: .06em; text-transform: uppercase; }
 .standaloneAction strong { font: 500 29px Georgia, serif; }
 .standaloneAction span, .standaloneAction small { color: var(--sa-muted); font-size: 10px; }
 .standaloneAction a { min-height: 40px; display: inline-flex; align-items: center; gap: 6px; padding: 0 13px; border-radius: 4px; background: var(--sa-green); color: white; font-size: 11px; font-weight: 800; text-decoration: none; }
 .webOffer { border-color: #e0c36d; background: #fff8e5; }
-.webOffer .standaloneIcon, .webOffer .standaloneAction a { background: var(--sa-ink); }
+/* Colori espliciti, non il token: --sa-ink si inverte in tema notte, quindi la
+   pastiglia diventava chiara con il testo bianco sopra, illeggibile. */
+.webOffer .standaloneIcon, .webOffer .standaloneAction a { background: #15231f; color: #fffdf7; }
 .leadOffer { grid-column: 1 / -1; border-color: #bfc9e9; background: #f2f4fb; }
 .leadOffer .standaloneIcon, .leadOffer .standaloneAction a { background: #314a8a; }
 .pricingAssurance > div,
@@ -987,6 +990,9 @@
 }
 :global(html[data-theme='dark']) .standaloneOffer { border-color: #2f4a40; background: #11241d; }
 :global(html[data-theme='dark']) .webOffer { border-color: #5d4d25; background: #211c0f; }
+/* Su fondo scuro la pastiglia scura sparirebbe: qui vale l'oro della card. */
+:global(html[data-theme='dark']) .webOffer .standaloneIcon,
+:global(html[data-theme='dark']) .webOffer .standaloneAction a { background: #e0c36d; color: #1a160b; }
 :global(html[data-theme='dark']) .leadOffer { border-color: #394a75; background: #151c31; }
 :global(html[data-theme='dark']) .standaloneCopy li { color: #c0cbc7; }
 

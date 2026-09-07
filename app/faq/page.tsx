@@ -24,7 +24,7 @@ const groups=[
   {title:'SEO, GEO e tecnologia',items:[
     {q:'SEO e GEO garantiscono il posizionamento?',a:'No. Miglioriamo struttura, qualità, reperibilità e citabilità, ma nessuno può garantire posizioni o citazioni da parte di Google o dei sistemi AI.'},
     {q:'Usate intelligenza artificiale?',a:'Sì, come supporto ad analisi e produzione. Direzione, verifica e responsabilità editoriale restano umane.'},
-    {q:'Realizzate anche siti ed e-commerce?',a:'Sì. Progettiamo siti, landing page ed e-commerce mobile-first collegati a contenuti, campagne, analytics e obiettivi commerciali.'},
+    {q:'Realizzate anche siti ed e-commerce?',a:'Sì. Il canone a partire da 19,90 € al mese riguarda una landing page semplice o un sito web base. E-commerce, cataloghi e funzioni avanzate vengono valutati e quotati a parte.'},
   ]},
   {title:'Legale e AI compliance',items:[
     {q:'Chi eroga la consulenza legale?',a:'Le consulenze legali vengono svolte dall’Avv. Vincenzo Sapone, Cassazionista dello Studio Legale BCS, professionista abilitato.'},

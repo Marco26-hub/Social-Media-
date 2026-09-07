@@ -146,12 +146,12 @@ const jsonLd = {
             itemOffered: {
               '@type': 'Service',
               '@id': `${SITE_URL}/#web-development`,
-              name: 'Siti web ed e-commerce',
-              serviceType: 'Web design e sviluppo e-commerce',
+              name: 'Sito Web Base',
+              serviceType: 'Web design e sviluppo landing page',
               provider: { '@id': `${SITE_URL}/#organization` },
               areaServed: { '@type': 'Place', name: 'Worldwide' },
               description:
-                'Pacchetto separato per siti web ed e-commerce responsive da 19,90 euro al mese. Dopo 12 mesi di canone il sito diventa di proprietà del cliente.',
+                'Pacchetto separato per landing page semplici e siti web base a partire da 19,90 euro al mese. E-commerce e funzioni avanzate vengono quotati a parte.',
             },
           },
           {

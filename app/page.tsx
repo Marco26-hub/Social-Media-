@@ -99,9 +99,9 @@ const SERVICES = [
   {
     icon: Globe2,
     href: '/servizi/siti-e-commerce',
-    title: 'Siti ed e-commerce',
-    text: 'Soluzioni da 19,90 € al mese, orientate al contatto e alla vendita. Dopo 12 mesi di canone, il sito è tuo.',
-    items: ['Architettura e messaggi di conversione', 'Sviluppo responsive e mobile-first', 'Catalogo, pagamenti e tracciamento', 'Integrazione con social, ADS e contenuti'],
+    title: 'Siti web e landing',
+    text: 'Landing page semplici a partire da 19,90 € al mese. Siti più articolati ed e-commerce vengono quotati in base al progetto.',
+    items: ['Architettura e messaggi di conversione', 'Sviluppo responsive e mobile-first', 'Moduli, analytics e tracciamento', 'Integrazione con social, ADS e contenuti'],
   },
   {
     icon: Target,
@@ -115,7 +115,7 @@ const SERVICES = [
 const JOURNEY = [
   { number: '01', title: 'Farsi conoscere', text: 'Social e Blog costruiscono presenza, continuità e autorevolezza.', href: '/servizi/gestione-social-media' },
   { number: '02', title: 'Essere trovati', text: 'SEO + GEO organizza struttura, intenti, entità e priorità del sito.', href: '/servizi/seo-geo' },
-  { number: '03', title: 'Convertire', text: 'Siti ed e-commerce trasformano attenzione e traffico in azioni misurabili.', href: '/servizi/siti-e-commerce' },
+  { number: '03', title: 'Convertire', text: 'Landing e siti web trasformano attenzione e traffico in azioni misurabili.', href: '/servizi/siti-e-commerce' },
   { number: '04', title: 'Trovare opportunità', text: 'Il Pilot B2B ricerca aziende in target, fonti e priorità commerciali.', href: '/servizi/ricerca-clienti-b2b' },
   { number: '05', title: 'Operare correttamente', text: 'AI Act, GDPR e controllo umano proteggono processo e responsabilità.', href: '/consulenza' },
   { number: '06', title: 'Misurare e migliorare', text: 'Report e risultati indicano cosa funziona e guidano le priorità del ciclo successivo.', href: '/metodo' },
@@ -438,7 +438,7 @@ export default function LandingPage() {
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Soluzioni</p>
           <h2 id="pricing-title">Scegli il risultato. Al resto pensiamo noi.</h2>
-          <p>Due pacchetti social e tre servizi autonomi: Blog SEO + GEO, Web & Commerce e Ricerca Clienti B2B.</p>
+          <p>Due pacchetti social e tre servizi autonomi: Blog SEO + GEO, Sito Web Base e Ricerca Clienti B2B.</p>
         </div>
         <div className={styles.pricingGrid}>
           {PACCHETTI.map(plan => (
@@ -491,15 +491,16 @@ export default function LandingPage() {
             <div className={styles.standaloneIcon}><Globe2 size={22} aria-hidden="true" /></div>
             <div className={styles.standaloneCopy}>
               <span>Presenza proprietaria</span>
-              <h3>Web &amp; Commerce</h3>
-              <p>Landing page, sito aziendale o e-commerce mobile-first collegato a contenuti, campagne e analytics.</p>
+              <h3>Sito Web Base</h3>
+              <p>Landing page o sito aziendale mobile-first collegato a contenuti, campagne e analytics. E-commerce su preventivo.</p>
               <ul>
                 <li><Check size={15} aria-hidden="true" /> Architettura, design responsive e SEO tecnica</li>
                 <li><Check size={15} aria-hidden="true" /> Dopo 12 mesi di canone, il sito è tuo</li>
+                <li><Check size={15} aria-hidden="true" /> Il prezzo base riguarda una landing semplice</li>
               </ul>
             </div>
             <div className={styles.standaloneAction}>
-              <p><small>da</small><strong>€19,90</strong><span>/mese</span></p>
+              <p><small>a partire da</small><strong>€19,90</strong><span>/mese</span></p>
               <Link href="/servizi/siti-e-commerce">Scopri Web <ArrowRight size={16} aria-hidden="true" /></Link>
             </div>
           </article>

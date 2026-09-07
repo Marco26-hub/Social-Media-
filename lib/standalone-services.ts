@@ -29,14 +29,14 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
   },
   {
     slug: 'web-commerce',
-    name: 'Web & Commerce Base',
-    shortName: 'Web & Commerce',
+    name: 'Sito Web Base',
+    shortName: 'Sito Web',
     amountCents: 1990,
     displayPrice: '€19,90',
     billingMode: 'subscription',
     cadenceLabel: 'al mese',
-    description: 'Canone base per landing page, sito aziendale o progetto e-commerce mobile-first.',
-    onboarding: 'Dopo il pagamento definiamo struttura e materiali. Funzioni, dominio e lavorazioni fuori dal piano base vengono approvati prima di ogni costo aggiuntivo.',
+    description: 'Canone base per una landing page semplice o un sito web essenziale mobile-first. E-commerce e funzioni avanzate vengono quotati a parte.',
+    onboarding: 'Dopo il pagamento definiamo struttura e materiali della landing o del sito base. E-commerce, funzioni, dominio e lavorazioni fuori dal piano base vengono approvati prima di ogni costo aggiuntivo.',
     features: [
       'Hosting e manutenzione del progetto base',
       'Design responsive e SEO tecnica essenziale',

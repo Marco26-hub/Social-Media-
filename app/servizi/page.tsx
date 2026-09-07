@@ -159,19 +159,19 @@ const SERVICES = [
     href: '/servizi/siti-e-commerce',
     number: '04',
     icon: Globe2,
-    label: 'Siti ed e-commerce',
-    title: 'Un’esperienza digitale costruita per il contatto e la vendita.',
+    label: 'Siti web e landing',
+    title: 'Un’esperienza digitale costruita per il contatto.',
     description:
-      'Soluzioni web da 19,90 € al mese. Dopo 12 mesi di canone, il sito è tuo: progettato mobile-first e collegato a campagne e contenuti social.',
+      'Landing page semplici a partire da 19,90 € al mese. Siti più articolati ed e-commerce vengono quotati in base al progetto.',
     included: [
       'Architettura informativa e messaggi',
       'Design responsive e mobile-first',
       'Landing page e percorsi di conversione',
-      'Catalogo, prodotti, pagamenti e ordini',
+      'E-commerce su preventivo separato',
       'Analytics, eventi e tracciamento',
       'Integrazione con social, ADS e CRM',
     ],
-    outcome: 'Un punto di arrivo credibile per trasformare attenzione, traffico e campagne in opportunità.',
+    outcome: 'Un punto di arrivo credibile per trasformare attenzione, traffico e campagne in richieste.',
   },
   {
     id: 'lead-b2b',
@@ -517,7 +517,7 @@ export default function ServiziPage() {
           </Link>
           <Link href="/servizi/siti-e-commerce" className={styles.autonomousOffer}>
             <Globe2 size={21} aria-hidden="true" />
-            <span><small>Servizio autonomo</small><strong>Web &amp; Commerce</strong><em>Sito tuo dopo 12 mesi</em></span>
+            <span><small>Servizio autonomo</small><strong>Sito Web Base</strong><em>Landing semplice a partire da 19,90 €/mese</em></span>
             <b>€19,90<small>/mese</small></b>
             <ArrowRight size={17} aria-hidden="true" />
           </Link>
