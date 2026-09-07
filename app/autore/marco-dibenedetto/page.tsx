@@ -166,10 +166,19 @@ export default function AutorePage() {
           </div>
           <div className={styles.stepGrid}>
             {articoli.map((a, i) => (
+              // Titolo, data e lettura: la descrizione la porta /blog, e
+              // ripeterla qui faceva delle due pagine quasi la stessa cosa.
               <article key={a.slug}>
                 <span>{String(i + 1).padStart(2, '0')}</span>
                 <h3><Link href={`/blog/${a.slug}`}>{a.h1}</Link></h3>
-                <p>{a.meta_description}</p>
+                <p>
+                  {a.data_pubblicazione && (
+                    <time dateTime={a.data_pubblicazione}>
+                      {new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(a.data_pubblicazione))}
+                    </time>
+                  )}
+                  {a.tempo_lettura_min ? ` · ${a.tempo_lettura_min} min di lettura` : ''}
+                </p>
               </article>
             ))}
           </div>
