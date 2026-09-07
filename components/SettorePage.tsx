@@ -51,7 +51,11 @@ export default function SettorePage({ settore }: { settore: Settore }) {
     promise: settore.promessa,
     priceNote: settore.notaPrezzi,
     primaryCtaLabel: 'Richiedi una call',
-    primaryCtaHref: '/consulenza',
+    // /consulenza e' la consulenza legale a pagamento su AI Act e GDPR: chi
+    // arriva da una pagina di settore cerca il proprio mestiere, non un
+    // avvocato. La richiesta di call va sul canale diretto, con il settore
+    // gia' scritto nel messaggio.
+    primaryCtaHref: `https://wa.me/393477196603?text=${encodeURIComponent(`Ciao! Lavoro nel settore ${settore.nome.toLowerCase()} e vorrei una call.`)}`,
     icon: ICONE[settore.slug] ?? Building2,
     signals: settore.segnali,
     outcomes: settore.risultati,
