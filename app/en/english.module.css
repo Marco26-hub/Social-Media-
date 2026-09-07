@@ -187,3 +187,23 @@
 :global(html[data-theme='dark']) .service svg,
 :global(html[data-theme='dark']) .faqList summary span { color: #49c995; }
 :global(html[data-theme='dark']) .note { color: #93a29c; }
+
+/* Griglie sempre piene.
+   Le celle scoperte mostrano il fondo della griglia e si leggono come una
+   barra vuota accanto alle schede. .grid ha tre colonne fisse e il fondo a
+   vista, quindi le ultime schede si allargano fino a chiudere la riga.
+   .journey e .proofGrid non hanno un numero di voci stabile: si adattano da
+   sole al conteggio, cosi' aggiungere una voce non lascia mai un buco. */
+.grid > *:last-child:nth-child(3n + 1) { grid-column: span 3; }
+.grid > *:nth-last-child(2):nth-child(3n + 1) { grid-column: span 2; }
+.journey { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.proofGrid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+
+@media (max-width: 920px) {
+  .grid > *:last-child:nth-child(3n + 1),
+  .grid > *:nth-last-child(2):nth-child(3n + 1) { grid-column: auto; }
+  .grid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .grid > * { grid-column: auto; }
+}

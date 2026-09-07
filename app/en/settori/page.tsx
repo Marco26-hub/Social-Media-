@@ -22,6 +22,12 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title, description },
 }
 
+// I due conteggi sono calcolati: aggiungere un settore inglese non deve
+// lasciare a testo un numero che diventa falso.
+const SOLO_ITALIANI = SETTORI.filter(settore => !SETTORI_EN.some(en => en.slug === settore.slug))
+const NUMERI = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven'] as const
+const parola = (n: number) => NUMERI[n] ?? String(n)
+
 export default function EnglishSettoriPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -59,9 +65,10 @@ export default function EnglishSettoriPage() {
         <p className={styles.eyebrow}>By trade</p>
         <h1>The same operating method, written for the way your business works.</h1>
         <p className={styles.lead}>
-          Three sectors are written in English, because those are the trades where an
-          international owner, tenant or guest is realistic: housekeeping, restaurants and
-          real estate. The other eight exist in Italian and are listed further down.
+          {parola(SETTORI_EN.length).replace(/^./, c => c.toUpperCase())} sectors are written in
+          English, because those are the trades where an international owner, tenant or guest is
+          realistic. The other {parola(SOLO_ITALIANI.length)} exist in Italian and are listed
+          further down.
         </p>
       </section>
 
@@ -122,7 +129,7 @@ export default function EnglishSettoriPage() {
       <section className={styles.section}>
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Written in Italian only</p>
-          <h2>Eight more trades, on the Italian site.</h2>
+          <h2>{parola(SOLO_ITALIANI.length).replace(/^./, c => c.toUpperCase())} more trades, on the Italian site.</h2>
           <p>
             These pages exist and are kept current, but they are written for an Italian
             reader and have not been translated. If one of them is your trade, write to us
@@ -130,7 +137,7 @@ export default function EnglishSettoriPage() {
           </p>
         </div>
         <div className={styles.stepGrid}>
-          {SETTORI.filter(settore => !SETTORI_EN.some(en => en.slug === settore.slug)).map((settore, i) => (
+          {SOLO_ITALIANI.map((settore, i) => (
             <article key={settore.slug}>
               <span>{String(i + 1).padStart(2, '0')}</span>
               <h3>

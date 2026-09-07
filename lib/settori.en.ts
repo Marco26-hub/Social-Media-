@@ -163,6 +163,61 @@ export const SETTORI_EN: Settore[] = [
       { href: '/en/pricing', label: 'Pricing' },
     ],
   },
+  {
+    slug: 'parrucchieri',
+    nome: 'Hair salons and barbershops',
+    sommario: 'The phone rings while your hands are in someone’s hair, and whoever gets no answer books elsewhere.',
+    titoloSeo: 'Hair salons and barbershops: phone, diary and social | SWA',
+    descrizioneSeo:
+      'For salons: an assistant answers while your hands are busy, clients who stopped coming get a message you approve, and the salon publishes every week.',
+    eyebrow: 'Hair salons and barbershops',
+    h1: 'Whoever gets no answer tries the next salon.',
+    lead:
+      'A missed call in a salon is usually an appointment that went somewhere else. The entry plan covers 300 minutes a month, roughly 100 conversations of three minutes. And clients who start coming less often never announce it: they simply stop.',
+    servizio: 'Phone cover, client recall and content for hair salons',
+    tipoServizio: 'Phone answering, client recall and social content for hair salons and barbershops',
+    promessa:
+      'Callers reach a voice even when your hands are busy, and clients who have not booked for months get a message you approved first. We make no promise about how many chairs get filled.',
+    notaPrezzi: `Phone assistant ${EN_PRICES.voce}. Client diary and recall ${EN_PRICES.agenda}. Managed social ${EN_PRICES.presenza} or ${EN_PRICES.crescita}. One-off setup is stated before activation. Prices exclude VAT.`,
+    segnali: ['Answers while your hands are busy', 'Every message is approved by you', 'Filmed between two clients'],
+    risultati: [
+      { title: 'The call you cannot take', text: 'The salon number is covered during a colour, in the evening and on the closing day, within the 300 monthly minutes of the entry plan. The caller hears a voice instead of three rings and a voicemail.' },
+      { title: 'The gap in the week', text: 'Empty slots are offered to people already in the salon’s records, inside the 1000 monthly messages of the diary plan. The message reaches WhatsApp and only leaves once you say yes.' },
+      { title: 'What people see before they call', text: `The salon that gets found is the one that publishes every week. Presence is ${EN_PRICES.presenza} and produces 16 pieces per channel each month: cuts, colour, hands and faces, not stock photography.` },
+    ],
+    cosaTitolo: 'The work we take off the hands of the person cutting.',
+    cosaIntro:
+      'A salon loses clients at two opposite points: the ones looking for you while you work, and the ones who stopped looking. They are two separate tools and can be switched on one at a time.',
+    cosaFacciamo: [
+      { title: 'How the phone answers', text: `The salon phone becomes a monthly service, ${EN_PRICES.voce}, with 300 minutes. The assistant gives the services, prices and opening hours you approved, reads the diary and books into a free slot while you are with a client.` },
+      { title: 'Which clients get a message', text: `A daily pass over the salon’s records brings back whoever has not been in for months, with the reason attached. The 1000 monthly messages are already part of the plan, ${EN_PRICES.agenda}.` },
+      { title: 'When the week has a hole', text: 'An empty Tuesday morning becomes a ready proposal for someone already on file. The text only goes out if you say yes, and the monthly messages cover free slots as well as recalls.' },
+      { title: 'What goes out on social', text: `The salon’s editorial plan is 16 pieces per channel per month with Presence (${EN_PRICES.presenza}) and 24 with Growth (${EN_PRICES.crescita}). Plan, copy, editing and publishing across 2 channels.` },
+      { title: 'How filming works in a salon', text: 'Filming is a half day with a photographer and lights, shot between one client and the next. One session produces several weeks of vertical clips plus stills. A face in front of the camera only if you want one.' },
+      { title: 'Being found nearby', text: 'Local search is three things: the salon’s business listing, pages that answer someone looking for a hairdresser nearby, and text that AI systems can quote. Quoted after a review.' },
+    ],
+    ciclo: [
+      { number: '01', title: 'What we collect', text: 'Services, prices, opening hours, salon rules and the phrases the assistant must never say. One session with you is enough; we prepare the rest and you correct it.' },
+      { number: '02', title: 'How you test it', text: 'You listen to how it answers and read the sample messages before the salon number is connected. Words, prices, hours and greeting change until you are convinced. No real call arrives before you say so.' },
+      { number: '03', title: 'When it goes live', text: 'The number goes into service and the 300 monthly minutes start covering calls. Messages to dormant clients stay in draft and leave only after your yes, one by one or in groups.' },
+      { number: '04', title: 'What you see', text: 'A panel you can read from your phone: calls handled, appointments booked and messages sent out of the 1000 included. Every month rules and wording are reviewed against those numbers.' },
+    ],
+    faq: [
+      { q: 'How does the assistant answer while I am doing a colour?', a: `It is a number that answers in your place when your hands are busy, with 300 minutes a month in the entry plan, ${EN_PRICES.voce}. It gives the services, prices and hours you approved, reads the calendar and books into a free slot. If the request falls outside the rules, it takes the details and passes them to you.` },
+      { q: 'What can it say about cuts and prices?', a: 'Only what you loaded: the service list, list prices, indicative duration, opening hours and the two or three answers you repeat every day. Technical advice on colour, bleaching or scalp is never given, because it requires seeing the hair. Those calls reach you with the name and reason already noted.' },
+      { q: 'How are the minutes counted?', a: 'On the length of the conversations handled, not on how many calls arrive. 300 minutes a month is roughly 100 conversations of three minutes, that is 5 hours of phone. Beyond that, minutes are charged at your plan rate without renegotiating the fee. The phone number and the carrier traffic stay outside the fee and are stated in the proposal.' },
+      { q: 'When does a message reach a client who stopped coming?', a: 'Sending is your action, separate from preparation. Each day the system reads the diary and the history, flags who has not been in for a while and drafts the text, within the ceiling of 1000 messages a month. Anyone who asks not to be contacted is excluded permanently.' },
+      { q: 'Can I activate only the phone answering?', a: `Yes. The phone on its own is ${EN_PRICES.voce}, with 300 minutes included and a one-off setup stated in the proposal. WhatsApp client recall is a separate service, ${EN_PRICES.agenda}, and can be added later without redoing the configuration.` },
+      { q: 'Where do the client numbers end up?', a: 'They belong to the salon. They are used only for the contacts you approve, within the monthly messages, and are never sold, passed on or used to train systems. The panel shows who was contacted, when and with what outcome. Deleting a contact can be requested at any time, at no cost.' },
+      { q: 'What if the caller wants a person?', a: 'That is written into the rules at setup. The assistant does not insist: it takes the name, number and reason and closes with a promise to call back. It can be set as an immediate transfer during opening hours or as a note to read at the end of the day. Callers are told they are speaking to an assistant in the first sentence.' },
+      { q: 'Do you work with salons outside Italy?', a: 'The phone assistant and the recall messages work in Italian and English. Filming needs someone on site, so it depends on distance; everything else is configured and run remotely.' },
+    ],
+    correlati: [
+      { href: '/en/services', label: 'Managed social media' },
+      { href: '/en/pricing', label: 'Pricing' },
+      { href: '/en/method', label: 'How we work' },
+    ],
+  },
 ]
 
 export function settoreEnBySlug(slug: string): Settore | undefined {
