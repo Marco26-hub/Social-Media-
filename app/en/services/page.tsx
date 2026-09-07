@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from '../english.module.css'
 
 const title = 'Digital Services for SMEs | Social Web Automation'
-const description = 'Managed social media, SEO and GEO strategy, 12-article Blog plans, websites, B2B lead research and AI compliance for SMEs.'
+const description = 'Managed social media, SEO and GEO, blog content, websites, B2B lead research and an AI phone assistant, coordinated by one team with published prices.'
 
 export const metadata: Metadata = {
   title,

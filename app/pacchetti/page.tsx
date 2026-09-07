@@ -11,7 +11,7 @@ import base from '../content-page.module.css'
 import styles from './pacchetti.module.css'
 
 const title = 'Pacchetti Social, Blog, Siti Web e Lead B2B | SWA'
-const description = 'Confronta Presenza, Crescita, Blog SEO + GEO, Sito Web Base e Pilot Lead B2B: servizi gestiti per visibilità, conversione e opportunità.'
+const description = 'Listino Social Web Automation: piani social Presenza e Crescita, blog, sito web, ricerca clienti B2B, segretaria telefonica AI e agenda. Prezzi IVA esclusa.'
 const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei capire quale pacchetto Social Web Automation è adatto alla mia azienda.')}`
 
 export const metadata: Metadata = {

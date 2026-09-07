@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from '@/components/legal.module.css'
 
 const META_TITLE = 'Cookie Policy — Social Web Automation'
-const META_DESCRIPTION = 'Informativa estesa sull’uso dei cookie ai sensi delle Linee Guida del Garante Privacy (2021).'
+const META_DESCRIPTION = 'Cookie policy di Social Web Automation: quali cookie usiamo, quali richiedono il tuo consenso, come cambiarlo in ogni momento e per quanto restano attivi.'
 
 export const metadata: Metadata = {
   title: META_TITLE,

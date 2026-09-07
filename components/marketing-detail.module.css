@@ -163,3 +163,18 @@
    lascia l'ultima cella vuota, che con i filetti si legge come un riquadro
    sbagliato. L'ultimo elemento in posizione dispari occupa tutta la riga. */
 .deliverableGrid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+/* Settori in cui il servizio conta, e l'articolo che lo approfondisce: sono i
+   due link in entrata che mancavano alle verticali e al Journal. */
+.settoriBand { max-width: 1180px; margin: 0 auto; padding: 70px 24px; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 42px; align-items: start; border-top: 1px solid var(--line); }
+.settoriBand h2 { margin: 8px 0 0; font: 500 30px/1.14 Georgia, 'Times New Roman', serif; text-wrap: balance; }
+.settoriBand > div > p:last-child { margin: 12px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.settoriBand ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 0; padding: 0; border: 1px solid var(--line); background: var(--line); list-style: none; }
+.settoriBand li > a { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; padding: 12px 16px; background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; }
+.settoriBand li > a:hover { background: var(--mint); color: var(--green); }
+.settoriBand ul > li:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.approfondimento { max-width: 1180px; margin: 0 auto; padding: 0 24px 60px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.approfondimento > span { color: var(--coral); font-size: 11px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+.approfondimento > a { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); font-size: 15px; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.approfondimento > a:hover { color: var(--green); }
+@media (max-width: 860px) { .settoriBand { grid-template-columns: 1fr; gap: 26px; padding: 52px 20px; } }

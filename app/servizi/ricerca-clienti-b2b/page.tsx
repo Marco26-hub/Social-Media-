@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/site-config'
 
 const path = '/servizi/ricerca-clienti-b2b'
 const title = 'Ricerca Clienti B2B e qualificazione aziende | SWA'
-const description = 'Pilot di ricerca clienti B2B: definiamo il profilo ideale, analizziamo fino a 30 aziende e consegniamo una lista verificata e prioritaria.'
+const description = 'Ricerca clienti B2B: definiamo il cliente ideale e consegniamo fino a 30 aziende verificate su fonti pubbliche, con motivo e priorità. 149 € una tantum.'
 
 export const metadata: Metadata = {
   title,

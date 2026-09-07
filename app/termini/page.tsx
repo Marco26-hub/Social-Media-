@@ -4,7 +4,7 @@ import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 
 const META_TITLE = 'Termini e Condizioni — Social Web Automation'
-const META_DESCRIPTION = 'Condizioni generali di utilizzo del servizio Social Web Automation.'
+const META_DESCRIPTION = 'Termini e condizioni dei servizi Social Web Automation: canoni, attività incluse, revisioni, recesso, responsabilità e limiti dichiarati prima della firma.'
 
 export const metadata: Metadata = {
   title: META_TITLE,

@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from '@/components/legal.module.css'
 
 const META_TITLE = 'Privacy Policy — Social Web Automation'
-const META_DESCRIPTION = 'Informativa sul trattamento dei dati personali ai sensi del Regolamento UE 2016/679 (GDPR).'
+const META_DESCRIPTION = 'Informativa privacy di Social Web Automation: quali dati trattiamo, per quali finalità, per quanto tempo li conserviamo e come esercitare i tuoi diritti.'
 
 export const metadata: Metadata = {
   title: META_TITLE,

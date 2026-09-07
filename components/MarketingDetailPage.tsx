@@ -8,6 +8,7 @@ import {
   ExternalLink,
   type LucideIcon,
 } from 'lucide-react'
+import { articoloPerServizio, settoriPerServizio } from '@/lib/collegamenti'
 import { SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from './FloatingNavigation'
 import PublicFooter from './PublicFooter'
@@ -59,6 +60,10 @@ const WHATSAPP_NUMBER = '393477196603'
 export default function MarketingDetailPage({ config }: { config: MarketingDetailConfig }) {
   const Icon = config.icon
   const parent = config.breadcrumbParent ?? { label: 'Servizi', href: '/servizi' }
+  // I settori che dichiarano questo servizio, e l'articolo che lo approfondisce:
+  // senza, le verticali e il Journal restano raggiungibili solo dal menu.
+  const settori = settoriPerServizio(config.path)
+  const articolo = articoloPerServizio(config.path)
   const pageUrl = `${SITE_URL}${config.path}`
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Web Automation.`)}`
   const jsonLd = {
@@ -251,6 +256,30 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         </div>
         <Link href="/faq" className={styles.textLink}>Consulta tutte le FAQ <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
+
+      {settori.length > 0 && (
+        <section className={styles.settoriBand} aria-labelledby="settori-title">
+          <div>
+            <p className={styles.eyebrow}>Dove serve di più</p>
+            <h2 id="settori-title">Questo servizio in {settori.length} settori.</h2>
+            <p>Ogni pagina dice quali attività servono davvero in quel mestiere, e quali si possono lasciare stare.</p>
+          </div>
+          <ul>
+            {settori.map(s => (
+              <li key={s.href}>
+                <Link href={s.href}>{s.label}<ChevronRight size={15} aria-hidden="true" /></Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {articolo && (
+        <aside className={styles.approfondimento}>
+          <span>Dal Journal</span>
+          <Link href={articolo.href}>{articolo.label}<ArrowRight size={16} aria-hidden="true" /></Link>
+        </aside>
+      )}
 
       <nav className={styles.related} aria-label="Servizi correlati">
         <span>Esplora anche</span>

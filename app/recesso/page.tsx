@@ -9,7 +9,7 @@ import { SITE_URL } from '@/lib/site-config'
 import styles from './recesso.module.css'
 
 const META_TITLE = 'Recedere dal contratto qui | Social Web Automation'
-const META_DESCRIPTION = 'Funzione online per comunicare il recesso consumer o la disdetta contrattuale e ricevere una ricevuta con data e ora.'
+const META_DESCRIPTION = 'Come esercitare il recesso dai servizi Social Web Automation: chi ne ha diritto, entro quando, la procedura in due passaggi e la ricevuta con codice pratica.'
 
 export const metadata: Metadata = {
   title: META_TITLE,

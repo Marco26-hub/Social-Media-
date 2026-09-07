@@ -5,7 +5,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
   {
     slug: 'gestione-social-media-pmi-cosa-include-costi',
     meta_title: 'Gestione social media per PMI: servizi e costi | SWA',
-    meta_description: 'Scopri cosa comprende la gestione social media per una PMI, quali attività servono davvero e come valutare costi, pacchetti e risultati.',
+    meta_description: 'Che cosa comprende davvero la gestione social per una PMI, quanto costa al mese e come si contano i contenuti per canale, senza promesse di risultato.',
     h1: 'Gestione social media per PMI: cosa comprende e quanto costa',
     intro: 'La gestione social media per una PMI non consiste nel pubblicare qualche post. È un processo continuativo che unisce strategia, piano editoriale, produzione, approvazione, pubblicazione e analisi dei risultati. Il costo dipende soprattutto da numero di canali, quantità e formato dei contenuti, campagne e livello di supporto richiesto.',
     sezioni: [
@@ -71,7 +71,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
   {
     slug: 'seo-geo-differenze-visibilita-motori-ai',
     meta_title: 'SEO e GEO: differenze e strategia per le PMI | SWA',
-    meta_description: 'SEO e GEO non sono alternative. Scopri come rendere il sito comprensibile a Google e ai motori di risposta AI senza promesse irrealistiche.',
+    meta_description: 'SEO e GEO non sono la stessa cosa: la prima lavora sull’essere trovati in un elenco, la seconda sull’essere compresi e citati dai sistemi di risposta AI.',
     h1: 'SEO e GEO: differenze e strategia per essere trovati anche dai motori AI',
     intro: 'La SEO migliora la visibilità nei risultati dei motori di ricerca. La GEO lavora sulla probabilità che contenuti, fonti ed entità siano compresi e utilizzati dai sistemi generativi. Le due discipline condividono la stessa base: contenuti utili, accessibili, verificabili e collegati a un’identità chiara.',
     sezioni: [
@@ -136,7 +136,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
   {
     slug: 'piano-editoriale-social-esempio-pmi',
     meta_title: 'Piano editoriale social per PMI: metodo ed esempio | SWA',
-    meta_description: 'Come costruire un piano editoriale social per una PMI: obiettivi, rubriche, formati, calendario, approvazione e misurazione.',
+    meta_description: 'Come si costruisce un piano editoriale che regge un mese intero: rubriche, formati, quantità di materiale da procurare e chi approva prima della pubblicazione.',
     h1: 'Piano editoriale social per PMI: metodo, struttura ed esempio pratico',
     intro: 'Un piano editoriale social traduce obiettivi e posizionamento in un calendario sostenibile di contenuti. Non è un elenco di ricorrenze: stabilisce pubblico, messaggi, rubriche, formati, responsabilità, date di approvazione e indicatori da osservare.',
     sezioni: [
@@ -291,7 +291,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
   {
     slug: 'ai-act-obblighi-pmi-cosa-fare',
     meta_title: 'AI Act: quali obblighi ha davvero una PMI | SWA',
-    meta_description: 'Le date di applicazione dell’AI Act, la differenza fra fornitore e utilizzatore, gli obblighi di trasparenza e di formazione. Che cosa riguarda una piccola impresa che usa strumenti AI.',
+    meta_description: 'Quali obblighi dell’AI Act riguardano una PMI italiana, la differenza fra chi sviluppa e chi usa l’AI, le scadenze e la formazione del personale già in vigore.',
     h1: 'AI Act: che cosa riguarda davvero una piccola impresa',
     intro: 'Il regolamento europeo sull’intelligenza artificiale è in vigore e le regole principali si applicano dal 2 agosto 2026. Molte imprese non sanno di rientrarci, perché pensano che riguardi chi sviluppa sistemi AI. In realtà riguarda anche chi li usa, e usare un assistente che risponde ai clienti o uno strumento che scrive testi basta a far scattare qualche obbligo. Non tutti, però, e la differenza conta.',
     sezioni: [
@@ -376,7 +376,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
   {
     slug: 'video-social-aziendali-come-farli-bene',
     meta_title: 'Video per i social aziendali: cosa fa la differenza | SWA',
-    meta_description: 'Illuminazione, audio, stabilizzazione e ottiche: gli strumenti professionali che cambiano il risultato di un video aziendale, e come organizzare una giornata di riprese.',
+    meta_description: 'Dove si perde davvero la qualità di un video aziendale: luce, audio e stabilità contano più della fotocamera. Perché conviene girare a blocchi, non uno alla volta.',
     h1: 'Video per i social: cosa cambia con strumenti professionali',
     intro: 'Un telefono recente gira video ottimi, e non è lì che si perde. La differenza la fanno gli strumenti che stanno intorno alla camera — illuminazione controllata, microfoni dedicati, stabilizzazione, ottiche — e chi sa usarli. Sono strumenti professionali, e sono il motivo per cui due video girati nello stesso posto sembrano fatti da due aziende diverse.',
     sezioni: [
@@ -450,7 +450,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
   },
   {
     slug: 'ricerca-clienti-b2b-come-costruire-lista',
-    meta_title: 'Ricerca clienti B2B: come costruire una lista che serve | SWA',
+    meta_title: 'Ricerca clienti B2B: una lista che serve davvero | SWA',
     meta_description: 'Perché i database comprati non funzionano, come si definisce il cliente ideale, quali segnali pubblici verificare e che cosa dice il GDPR sul contatto B2B.',
     h1: 'Ricerca clienti B2B: come si costruisce una lista che serve davvero',
     intro: 'Comprare un database di aziende è la scorciatoia più tentata e quella che delude di più. Non perché i dati siano falsi, ma perché rispondono alla domanda sbagliata: dicono quali aziende esistono, non quali hanno motivo di ascoltarti adesso. La differenza fra un elenco e una lista di lavoro sta tutta lì.',

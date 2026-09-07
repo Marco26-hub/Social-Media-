@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/site-config'
 
 const META_TITLE = 'Trasparenza AI — Social Web Automation'
 const META_DESCRIPTION =
-  'Nota di trasparenza sull’uso dell’intelligenza artificiale ai sensi del Regolamento UE 2024/1689 (AI Act).'
+  'Come usiamo l’intelligenza artificiale in Social Web Automation: dove accelera il lavoro, dove decidono le persone e quali contenuti vengono etichettati.'
 
 export const metadata: Metadata = {
   title: META_TITLE,

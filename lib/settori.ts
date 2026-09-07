@@ -217,7 +217,7 @@ export const SETTORI: Settore[] = [
     slug: 'imprese-di-pulizia',
     nome: 'Imprese di pulizia',
     sommario: 'Si vince su preventivi e referenze, mentre le squadre sono già in cantiere.',
-    titoloSeo: 'Imprese di pulizia: clienti B2B e rapporti d’intervento | SWA',
+    titoloSeo: 'Imprese di pulizia: clienti B2B e rapportini | SWA',
     descrizioneSeo:
       'Imprese di pulizia: fino a 30 aziende verificate da contattare, un assistente che prende le richieste di preventivo e il rapporto firmato in cantiere.',
     eyebrow: 'Imprese di pulizia',
@@ -336,7 +336,7 @@ export const SETTORI: Settore[] = [
     slug: 'cliniche-estetiche',
     nome: 'Cliniche estetiche',
     sommario: 'Prime informazioni e prenotazioni al telefono, le domande cliniche al personale.',
-    titoloSeo: 'Cliniche estetiche: reception, prenotazioni e perimetro | SWA',
+    titoloSeo: 'Cliniche estetiche: reception e prenotazioni | SWA',
     descrizioneSeo:
       'Cliniche estetiche: prime informazioni e prenotazioni gestite al telefono, mentre ogni domanda clinica viene passata al personale sanitario.',
     eyebrow: 'Cliniche estetiche',
@@ -448,7 +448,7 @@ export const SETTORI: Settore[] = [
     slug: 'fisioterapia-osteopatia',
     nome: 'Fisioterapia e osteopatia',
     sommario: 'Chi sta meglio dopo tre sedute su sei sparisce e nessuno lo richiama.',
-    titoloSeo: 'Fisioterapia e osteopatia: cicli ripresi e sedute fissate | SWA',
+    titoloSeo: 'Fisioterapia: cicli ripresi e sedute fissate | SWA',
     descrizioneSeo:
       'Fisioterapia e osteopatia: chi si ferma a metà ciclo torna visibile ogni giorno, con un messaggio pronto che lo studio approva prima dell’invio.',
     eyebrow: 'Fisioterapia e osteopatia',
@@ -620,7 +620,7 @@ export const SETTORI: Settore[] = [
     slug: 'elettricisti-e-idraulici',
     nome: 'Elettricisti e idraulici',
     sommario: 'Il rapporto di intervento firmato sul posto, invece del blocchetto in furgone.',
-    titoloSeo: 'Rapporto di intervento e sito per elettricisti e idraulici | SWA',
+    titoloSeo: 'Rapportini e sito per elettricisti e idraulici | SWA',
     descrizioneSeo:
       'Rapporto di intervento compilato e firmato sul telefono, PDF al cliente prima di ripartire, sito che raccoglie le chiamate e assistente che risponde.',
     eyebrow: 'Elettricisti e idraulici',

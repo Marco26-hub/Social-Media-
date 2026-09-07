@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic'
 
 const META_TITLE = 'Guide su Social Media, SEO, GEO e AI per PMI | SWA'
 const META_DESCRIPTION =
-  'Guide pratiche per PMI su gestione social media, contenuti, SEO, GEO, siti web e uso responsabile dell’intelligenza artificiale.'
+  'SWA Journal: articoli su gestione social, SEO e GEO, video aziendali, ricerca clienti B2B e obblighi dell’AI Act per le piccole e medie imprese italiane.'
 
 type Item = {
   slug: string

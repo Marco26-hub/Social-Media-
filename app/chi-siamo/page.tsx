@@ -21,7 +21,7 @@ import styles from './chi-siamo.module.css'
 
 const META_TITLE = 'Chi siamo: agenzia digitale per PMI a Como e Milano | SWA'
 const META_DESCRIPTION =
-  'Social Web Automation è la ditta individuale di Marco Dibenedetto, a Cermenate (CO): dieci aree di servizio, undici settori, la tua approvazione prima di ogni uscita.'
+  'Social Web Automation è la ditta individuale di Marco Dibenedetto, a Cermenate (CO): dieci aree di servizio, undici settori, la tua approvazione su ogni uscita.'
 // Elenco e conteggi arrivano dai dati, non da una lista scritta a mano: una
 // pagina "chi siamo" che dichiara sei aree mentre il sito ne vende dieci e' la
 // prima cosa che un cliente nota, e l'ultima che qualcuno si ricorda di aggiornare.

@@ -9,7 +9,7 @@ import { SITE_URL } from '@/lib/site-config'
 // non competono per la stessa ricerca.
 
 const path = '/servizi/segretaria-telefonica-ai'
-const title = 'Segretaria telefonica AI: risponde e fissa appuntamenti | SWA'
+const title = 'Segretaria telefonica AI che risponde e prenota | SWA'
 const description = 'Una segretaria telefonica AI che risponde quando non puoi: informa su servizi e orari, fissa gli appuntamenti e passa la chiamata a una persona. Da 199 € al mese.'
 
 export const metadata: Metadata = {
