@@ -674,3 +674,24 @@
 /* Bersagli tattili: sotto i 24px minimi. Si allarga l'area, non il testo. */
 .listinoLink, .emailLink { padding-block: 3px; }
 .page a:not(p a):not(li a):not(small a) { padding-block: 3px; }
+
+/* Tabella riassuntiva dei servizi.
+   Le tabelle sono la struttura che i motori di risposta estraggono piu'
+   volentieri, e su tutto il sito ne esisteva una sola. Il contenitore scorre
+   in orizzontale da solo, cosi' la pagina non scorre mai di lato. */
+.tableSection { padding: 96px max(24px, calc((100vw - 1180px) / 2)); }
+.tableWrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.summaryTable { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 14px; text-align: left; }
+.summaryTable caption { padding: 16px 20px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; text-align: left; }
+.summaryTable th, .summaryTable td { padding: 15px 20px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.summaryTable thead th { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.summaryTable tbody th { width: 26%; font-weight: 700; }
+.summaryTable tbody th a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.summaryTable tbody th a:hover { color: var(--green); }
+.summaryTable td { color: var(--muted); line-height: 1.5; }
+.summaryTable tbody tr:last-child th, .summaryTable tbody tr:last-child td { border-bottom: 0; }
+.tablePrice { width: 20%; color: var(--ink) !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .tableSection { padding: 64px 20px; }
+}

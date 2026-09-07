@@ -11,10 +11,20 @@ import { STANDALONE_SERVICES } from '@/lib/standalone-services'
 // due copie dello stesso numero divergono sempre, e la copia sbagliata e' quella
 // che il cliente legge per prima.
 
+/**
+ * Porta il simbolo dopo il numero, come vuole l'italiano: «490 €», non «€490».
+ * Le sorgenti uniche tengono il simbolo davanti perche' li' e' un lockup
+ * grafico — il prezzo grande della scheda. In un elenco o in una tabella i
+ * due formati finiscono affiancati, e l'incoerenza si vede subito.
+ */
+function convenzioneItaliana(prezzo: string): string {
+  return prezzo.replace(/€\s?([\d.,]+)/g, '$1 €')
+}
+
 function canoneStandalone(slug: string): string {
   const servizio = STANDALONE_SERVICES.find(s => s.slug === slug)
   if (!servizio) throw new Error(`Servizio standalone sconosciuto: ${slug}`)
-  return `${servizio.displayPrice} ${servizio.cadenceLabel}`
+  return convenzioneItaliana(`${servizio.displayPrice} ${servizio.cadenceLabel}`)
 }
 
 function canoneMinimo(id: 'agenda' | 'voce'): string {
@@ -25,10 +35,12 @@ function canoneMinimo(id: 'agenda' | 'voce'): string {
 
 /** Usato nei testi discorsivi delle pagine di settore. */
 export const PREZZI = {
-  presenza: `${PACCHETTI[0].prezzo} al mese`,
-  crescita: `${PACCHETTI[1].prezzo} al mese`,
-  web: canoneStandalone('web-commerce'),
-  blog: `${BLOG_SERVICE.displayPrice} al mese`,
+  presenza: convenzioneItaliana(`${PACCHETTI[0].prezzo} al mese`),
+  crescita: convenzioneItaliana(`${PACCHETTI[1].prezzo} al mese`),
+  // «a partire da» e' obbligatorio qui: 19,90 e' una landing semplice, e da li'
+  // si sale. Senza il prefisso il prezzo si legge come se coprisse tutto.
+  web: `a partire da ${canoneStandalone('web-commerce')}`,
+  blog: convenzioneItaliana(`${BLOG_SERVICE.displayPrice} al mese`),
   b2b: canoneStandalone('lead-pilot'),
   voce: canoneMinimo('voce'),
   agenda: canoneMinimo('agenda'),
@@ -40,11 +52,11 @@ export const PREZZI = {
  * prezzo lascia il lettore a indovinare, ed e' la domanda che arriva comunque.
  */
 export const PREZZO_INGRESSO: Record<string, string> = {
-  social: `${PACCHETTI[0].prezzo} al mese`,
+  social: convenzioneItaliana(`${PACCHETTI[0].prezzo} al mese`),
   'seo-geo': 'Su preventivo',
-  'blog-seo': `${BLOG_SERVICE.displayPrice} al mese`,
-  web: `a partire da ${STANDALONE_SERVICES.find(s => s.slug === 'web-commerce')!.displayPrice} al mese`,
-  'lead-b2b': `${STANDALONE_SERVICES.find(s => s.slug === 'lead-pilot')!.displayPrice} una tantum`,
+  'blog-seo': convenzioneItaliana(`${BLOG_SERVICE.displayPrice} al mese`),
+  web: convenzioneItaliana(`a partire da ${STANDALONE_SERVICES.find(s => s.slug === 'web-commerce')!.displayPrice} al mese`),
+  'lead-b2b': convenzioneItaliana(`${STANDALONE_SERVICES.find(s => s.slug === 'lead-pilot')!.displayPrice} una tantum`),
   'segretaria-ai': PREZZI.voce,
   'agenda-whatsapp': PREZZI.agenda,
   'video-produzione': 'Su preventivo',

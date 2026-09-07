@@ -120,6 +120,7 @@ const servicesPageJsonLd = {
 const SERVICES = [
   {
     id: 'social',
+    consegna: 'Da 16 a 24 contenuti al mese per ciascuno dei 2 canali scelti',
     href: '/servizi/gestione-social-media',
     icon: Megaphone,
     label: 'Gestione social multicanale',
@@ -139,6 +140,7 @@ const SERVICES = [
   },
   {
     id: 'seo-geo',
+    consegna: 'Audit, mappa degli intenti e priorità di intervento scritte',
     href: '/servizi/seo-geo',
     icon: ScanSearch,
     label: 'SEO e GEO',
@@ -158,6 +160,7 @@ const SERVICES = [
   },
   {
     id: 'blog-seo',
+    consegna: '12 articoli al mese, revisionati da una persona e pubblicati',
     href: BLOG_SERVICE.path,
     icon: Newspaper,
     label: BLOG_SERVICE.name,
@@ -177,6 +180,7 @@ const SERVICES = [
   },
   {
     id: 'web',
+    consegna: 'Landing page o sito aziendale. Dopo 12 mesi di canone è tuo',
     href: '/servizi/siti-e-commerce',
     icon: Globe2,
     label: 'Siti web e landing',
@@ -196,6 +200,7 @@ const SERVICES = [
   },
   {
     id: 'video-produzione',
+    consegna: 'Mezza giornata di riprese in azienda, da cui escono verticali e scatti per più settimane',
     href: '/servizi/video-produzione',
     icon: Clapperboard,
     label: 'Riprese video in azienda',
@@ -215,6 +220,7 @@ const SERVICES = [
   },
   {
     id: 'lead-b2b',
+    consegna: 'Fino a 30 aziende verificate, con fonti pubbliche e priorità motivata',
     href: '/servizi/ricerca-clienti-b2b',
     icon: Target,
     label: 'Ricerca Clienti B2B',
@@ -234,6 +240,7 @@ const SERVICES = [
   },
   {
     id: 'segretaria-ai',
+    consegna: '300 minuti al mese di risposta al telefono, circa 5 ore',
     href: '/servizi/segretaria-telefonica-ai',
     icon: PhoneCall,
     label: 'Segretaria telefonica AI',
@@ -253,6 +260,7 @@ const SERVICES = [
   },
   {
     id: 'agenda-whatsapp',
+    consegna: '1000 messaggi al mese, preparati dal sistema e inviati dopo il tuo sì',
     href: '/servizi/agenda-clienti-whatsapp',
     icon: CalendarClock,
     label: 'Agenda, clienti e WhatsApp',
@@ -272,6 +280,7 @@ const SERVICES = [
   },
   {
     id: 'gestione-lavorazioni',
+    consegna: 'Rapportini firmati sul posto, con foto, ore e PDF al cliente',
     href: '/servizi/gestione-lavorazioni',
     icon: ClipboardCheck,
     label: 'Sito e gestione lavorazioni',
@@ -291,6 +300,7 @@ const SERVICES = [
   },
   {
     id: 'automazione',
+    consegna: 'Collegamenti fra i sistemi già in uso, con registro delle esecuzioni',
     href: '/servizi/automazione-gestionali',
     icon: Workflow,
     label: 'Automazione e gestionali',
@@ -517,6 +527,45 @@ export default function ServiziPage() {
           </Link>
         </div>
         <p className={styles.disclaimer}>Le informazioni pubblicate non sostituiscono una consulenza legale individuale.</p>
+      </section>
+
+      {/* Tabella riassuntiva.
+          Su tutto il sito ne esisteva una sola, e i motori di risposta
+          estraggono le tabelle piu' di qualsiasi altra struttura. Qui i dieci
+          servizi stanno in una griglia leggibile a colpo d'occhio: che cosa
+          esce, da quanto parte, dove si approfondisce. I prezzi vengono dalla
+          fonte unica, non riscritti. */}
+      <section id="riepilogo" className={styles.tableSection} aria-labelledby="table-title">
+        <div className={styles.sectionHeading}>
+          <p className={site.eyebrow}>Tutto in una tabella</p>
+          <h2 id="table-title">Che cosa esce, e da quanto parte.</h2>
+          <p>
+            Dieci aree di lavoro, attivabili una alla volta o insieme. I prezzi sono
+            d’ingresso e IVA esclusa: il preventivo cambia con il perimetro, e viene
+            scritto prima di cominciare.
+          </p>
+        </div>
+        <div className={styles.tableWrap}>
+          <table className={styles.summaryTable}>
+            <caption>Servizi di Social Web Automation: consegna mensile e prezzo d’ingresso</caption>
+            <thead>
+              <tr>
+                <th scope="col">Servizio</th>
+                <th scope="col">Che cosa consegniamo</th>
+                <th scope="col">Da</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SERVICES.map(service => (
+                <tr key={service.id}>
+                  <th scope="row"><Link href={service.href}>{service.label}</Link></th>
+                  <td>{service.consegna}</td>
+                  <td className={styles.tablePrice}>{prezzoIngresso(service.id)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section id="pacchetti" className={styles.pricingSection} aria-labelledby="pricing-title">
