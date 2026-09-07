@@ -1,3 +1,5 @@
+import { withBotId } from 'botid/next/config'
+
 // CSP pragmatica. NB: 'unsafe-inline' su script-src resta NECESSARIO perché le
 // pagine sono per lo più statiche/prerenderizzate e il bootstrap inline di Next su
 // una pagina statica non può ricevere un nonce per-richiesta (il nonce forzerebbe
@@ -101,4 +103,4 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withBotId(nextConfig)

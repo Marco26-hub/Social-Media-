@@ -93,8 +93,9 @@ export async function middleware(request: NextRequest) {
     if (!rl.ok) return tooMany(rl.retryAfter)
   }
 
-  // Anti-spam sui form pubblici: consulenza e dichiarazioni di recesso/disdetta.
-  if ((pathname === '/api/consulenza' || pathname === '/api/recesso') && request.method === 'POST') {
+  // Anti-spam sui form pubblici. Il checkout servizi crea sia una riga DB sia
+  // una sessione Stripe e deve condividere il limite dei form a pagamento.
+  if ((pathname === '/api/consulenza' || pathname === '/api/recesso' || pathname === '/api/checkout/service') && request.method === 'POST') {
     const rl = rateLimit(formHits, clientIp(request), FORM_WINDOW_MS, FORM_MAX)
     if (!rl.ok) return tooMany(rl.retryAfter)
   }
