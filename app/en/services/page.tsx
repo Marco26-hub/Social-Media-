@@ -28,8 +28,34 @@ const services = [
 ]
 
 export default function EnglishServicesPage() {
+  // Queste pagine avevano solo il grafo del layout: nessun WebPage, nessuna
+  // lingua dichiarata, nessuna briciola. Per un motore erano senza contesto.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${SITE_URL}/en/services#webpage`,
+        url: `${SITE_URL}/en/services`,
+        name: title,
+        description,
+        inLanguage: 'en',
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        about: { '@id': `${SITE_URL}/#organization` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/en` },
+          { '@type': 'ListItem', position: 2, name: 'Services', item: `${SITE_URL}/en/services` },
+        ],
+      },
+    ],
+  }
+
   return (
     <main className={styles.main}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}>
         <div><p className={styles.eyebrow}>Six distinct capabilities</p><h1>One service map, with clear boundaries.</h1><p className={styles.heroLead}>Use social and Blog to build awareness, SEO + GEO to improve discovery, Web to convert, B2B research to find opportunities and compliance to operate responsibly.</p><div className={styles.actions}><Link className={styles.primary} href="/en/pricing">Compare offers <ArrowRight size={16} /></Link><Link className={styles.secondary} href="/servizi">Italian details</Link></div></div>
         <aside className={styles.heroPanel}><strong>What remains deliberately separate.</strong><ol><li>SEO + GEO means search work plus clearer pages for AI answer tools.</li><li>Blog SEO + GEO produces 12 monthly articles.</li><li>B2B research supplies verified companies, not guaranteed sales.</li><li>Included work is confirmed before activation.</li></ol></aside>

@@ -18,7 +18,8 @@ export const EN_PRICE_LABELS = {
   blog: `${BLOG_SERVICE.displayPrice.replace(',', '.')} / month`,
   web: `From ${webService?.displayPrice.replace(',', '.') ?? '€19.90'} / month`,
   leadPilot: `${leadPilot?.displayPrice ?? '€149'} one-off`,
-  legal: PREZZO_INGRESSO.legale.replace('150 €', '€150'),
+  // «minuti» restava in italiano su una pagina inglese.
+  legal: PREZZO_INGRESSO.legale.replace('150 €', '€150').replace('minuti', 'minutes'),
 } as const
 
 export const EN_COMPANY = {

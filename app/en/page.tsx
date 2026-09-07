@@ -36,8 +36,33 @@ const journey = [
 ]
 
 export default function EnglishHomePage() {
+  // Queste pagine avevano solo il grafo del layout: nessun WebPage, nessuna
+  // lingua dichiarata, nessuna briciola. Per un motore erano senza contesto.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${SITE_URL}/en#webpage`,
+        url: `${SITE_URL}/en`,
+        name: title,
+        description,
+        inLanguage: 'en',
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        about: { '@id': `${SITE_URL}/#organization` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/en` },
+        ],
+      },
+    ],
+  }
+
   return (
     <main className={styles.main}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}>
         <div>
           <p className={styles.eyebrow}>Managed digital operations for SMEs</p>

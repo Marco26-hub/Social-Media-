@@ -19,24 +19,73 @@ export const metadata: Metadata = {
   twitter: { title, description },
 }
 
+// Il prezzo numerico serve ai dati strutturati: l'etichetta e' testo per il
+// lettore («€490 per month»), non un valore che un motore possa leggere.
 const offers = [
-  { name: 'Presence', price: EN_PRICE_LABELS.presence, result: 'Consistent presence across 2 social channels.', features: ['16 monthly content pieces per channel · 32 published posts', '4 Reels, Stories or Shorts per channel', 'Strategy, review and publishing'], href: '/register?piano=presenza', cta: 'Start Presence' },
-  { name: 'Growth', price: EN_PRICE_LABELS.growth, result: 'A wider system across 2 social channels.', features: ['24 monthly content pieces per channel · 48 published posts', '6 Reels, Stories or Shorts per channel', '1 SEO + GEO article and competitor analysis', 'Organic growth only; paid campaigns sit in the custom plan'], href: '/register?piano=crescita', cta: 'Start Growth' },
-  { name: 'Blog SEO + GEO', price: EN_PRICE_LABELS.blog, result: 'Continuous organic editorial production.', features: ['12 articles per month', 'Metadata, FAQs and structured content', 'Human review', 'Connected-blog publishing or CMS-ready delivery'], href: '/acquista?servizio=blog-seo', cta: 'Activate Blog' },
-  { name: 'Basic Website', price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request website details' },
-  { name: 'B2B Lead Research Pilot', price: EN_PRICE_LABELS.leadPilot, result: 'A verified list for commercial evaluation.', features: ['Ideal-company profile', 'Up to 30 companies researched', 'Public sources and priorities', 'No automated outreach or guaranteed sales'], href: '/acquista?servizio=lead-pilot', cta: 'Activate the Pilot' },
+  { name: 'Presence', valore: '490', ricorrente: true, price: EN_PRICE_LABELS.presence, result: 'Consistent presence across 2 social channels.', features: ['16 monthly content pieces per channel · 32 published posts', '4 Reels, Stories or Shorts per channel', 'Strategy, review and publishing'], href: '/register?piano=presenza', cta: 'Start Presence' },
+  { name: 'Growth', valore: '990', ricorrente: true, price: EN_PRICE_LABELS.growth, result: 'A wider system across 2 social channels.', features: ['24 monthly content pieces per channel · 48 published posts', '6 Reels, Stories or Shorts per channel', '1 SEO + GEO article and competitor analysis', 'Organic growth only; paid campaigns sit in the custom plan'], href: '/register?piano=crescita', cta: 'Start Growth' },
+  { name: 'Blog SEO + GEO', valore: '29.90', ricorrente: true, price: EN_PRICE_LABELS.blog, result: 'Continuous organic editorial production.', features: ['12 articles per month', 'Metadata, FAQs and structured content', 'Human review', 'Connected-blog publishing or CMS-ready delivery'], href: '/acquista?servizio=blog-seo', cta: 'Activate Blog' },
+  { name: 'Basic Website', valore: '19.90', ricorrente: true, price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request website details' },
+  { name: 'B2B Lead Research Pilot', valore: '149', ricorrente: false, price: EN_PRICE_LABELS.leadPilot, result: 'A verified list for commercial evaluation.', features: ['Ideal-company profile', 'Up to 30 companies researched', 'Public sources and priorities', 'No automated outreach or guaranteed sales'], href: '/acquista?servizio=lead-pilot', cta: 'Activate the Pilot' },
 ]
 
 export default function EnglishPricingPage() {
+  // La pagina prezzi inglese non dichiarava un solo Offer: i prezzi
+  // esistevano come testo e nessun motore poteva leggerli.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${SITE_URL}/en/pricing#webpage`,
+        url: `${SITE_URL}/en/pricing`,
+        name: title,
+        description,
+        inLanguage: 'en',
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        about: { '@id': `${SITE_URL}/#organization` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/en` },
+          { '@type': 'ListItem', position: 2, name: 'Pricing', item: `${SITE_URL}/en/pricing` },
+        ],
+      },
+      {
+        '@type': 'OfferCatalog',
+        '@id': `${SITE_URL}/en/pricing#catalog`,
+        name: 'Social Web Automation services and packages',
+        itemListElement: offers.map(offer => ({
+          '@type': 'Offer',
+          name: offer.name,
+          url: `${SITE_URL}${offer.href}`,
+          price: offer.valore,
+          priceCurrency: 'EUR',
+          availability: 'https://schema.org/InStock',
+          seller: { '@id': `${SITE_URL}/#organization` },
+          priceSpecification: {
+            '@type': 'UnitPriceSpecification',
+            price: offer.valore,
+            priceCurrency: 'EUR',
+            valueAddedTaxIncluded: false,
+            ...(offer.ricorrente ? { unitCode: 'MON', billingDuration: 1, billingIncrement: 1 } : {}),
+          },
+        })),
+      },
+    ],
+  }
+
   return (
     <main className={styles.main}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}>
         <div><p className={styles.eyebrow}>Transparent pricing</p><h1>Start with one measurable service.</h1><p className={styles.heroLead}>All prices exclude VAT. External platform, advertising, domain and third-party costs remain separate unless explicitly included.</p></div>
         <aside className={styles.heroPanel}><strong>Before activation.</strong><ol><li>We confirm the intended result and included work.</li><li>You see deliverables, exclusions and review points.</li><li>Checkout uses the live SWA payment flow.</li><li>Custom integrations are quoted separately.</li></ol></aside>
       </section>
       <section className={styles.section}>
         <div className={styles.sectionHeading}><p className={styles.eyebrow}>Offers</p><h2>Social plans and standalone services.</h2><p>Blog, Web and B2B Lead Research can be activated independently or combined with a social plan.</p></div>
-        <div className={styles.priceGrid}>{offers.map(offer => <article className={styles.priceCard} key={offer.name}><h2>{offer.name}</h2><p>{offer.result}</p><p className={styles.price}>{offer.price}</p><ul>{offer.features.map(feature => <li key={feature}>{feature}</li>)}</ul><Link className={styles.primary} href={offer.href}>{offer.cta} <ArrowRight size={15} /></Link><p className={styles.note}>VAT excluded. Scope and eligibility confirmed before delivery.</p></article>)}</div>
+        <div className={styles.priceGrid}>{offers.map(offer => <article className={styles.priceCard} key={offer.name}><h3>{offer.name}</h3><p>{offer.result}</p><p className={styles.price}>{offer.price}</p><ul>{offer.features.map(feature => <li key={feature}>{feature}</li>)}</ul><Link className={styles.primary} href={offer.href}>{offer.cta} <ArrowRight size={15} /></Link><p className={styles.note}>VAT excluded. Scope and eligibility confirmed before delivery.</p></article>)}</div>
       </section>
     </main>
   )
