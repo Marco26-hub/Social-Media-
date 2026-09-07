@@ -697,7 +697,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
               <button
                 type="button"
                 onClick={() => chiediGenera(ugcFormat, 'ugc')}
-                disabled={st === 'loading' || loadingCliente}
+                disabled={st === 'loading'}
                 className={`md:w-64 text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors inline-flex items-center justify-center gap-2 ${
                   st === 'success' ? 'bg-green-100 text-green-700' :
                   st === 'error' ? 'bg-red-100 text-red-700' :
