@@ -39,6 +39,9 @@ export type ContenutoLanding = {
   /** Terzo elemento facoltativo: il percorso della pagina di settore, quando
    *  esiste. Le caselle senza percorso restano testo, non finti link. */
   settori: { occhiello: string; h2: string; voci: readonly (readonly [string, string, string?])[] }
+  /** Posizione nel percorso in quattro passi. Il cliente deve vedere che i
+   *  servizi sono una sequenza, non un catalogo. */
+  passo: { n: number; titolo: string; primaHref?: string; primaLabel?: string; poiHref?: string; poiLabel?: string }
   citta: readonly string[]
   listino: { occhiello: string; h2: string; intro: string; famiglia: FamigliaSegretaria }
   faq: readonly (readonly [string, string])[]
@@ -242,6 +245,19 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
           </div>
           <div className="area-list">{c.citta.map(x => <span key={x}>{c.briciola} a {x}</span>)}</div>
         </section>
+
+        <nav className={styles.passo} aria-label="Percorso in quattro passi">
+          <span className={styles.passoEtichetta}>Passo {c.passo.n} di 4 · {c.passo.titolo}</span>
+          <span className={styles.passoLink}>
+            {c.passo.primaHref && c.passo.primaLabel && (
+              <Link href={c.passo.primaHref}>← Prima: {c.passo.primaLabel}</Link>
+            )}
+            {c.passo.poiHref && c.passo.poiLabel && (
+              <Link href={c.passo.poiHref}>Poi: {c.passo.poiLabel} →</Link>
+            )}
+            <Link href="/#percorso">Vedi tutto il percorso</Link>
+          </span>
+        </nav>
 
         <section className="section" id="listino">
           <div className="section-title">

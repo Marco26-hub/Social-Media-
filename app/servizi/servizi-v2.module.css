@@ -695,3 +695,42 @@
 @media (max-width: 760px) {
   .tableSection { padding: 64px 20px; }
 }
+
+/* Leggibilita' sul telefono.
+   Il sito e' nato per lo schermo grande e le etichette da 10-11px arrivavano
+   al mobile invariate: su 390px sono al limite del leggibile. Qui il pavimento
+   sale, solo sotto i 760px e solo sui ruoli piccoli — occhielli, note,
+   pastiglie, didascalie, celle di tabella. Il corpo del testo non cambia. */
+@media (max-width: 760px) {
+  .eyebrow, .ctaNote, .planResult, .disclaimer, .listinoLink { font-size: 12.5px !important; }
+  .serviceBody p, .sectionHeading > p, .planDescription { font-size: 15.5px; }
+  .serviceBody li { font-size: 15px; }
+  .summaryTable { font-size: 14px; }
+}
+
+/* Pavimento tipografico sul telefono.
+   Queste regole nascono per lo schermo grande e valgono 10-11px: su 390px
+   sono al limite del leggibile. Sotto i 760px salgono a 12,5px, che e' il
+   minimo perche' un'etichetta resti nitida senza cambiare la gerarchia. */
+@media (max-width: 760px) {
+  .mapCore small,
+  .mapStatus,
+  .valueBand span,
+  .methodGrid span,
+  .legalPartner span,
+  .legalPrice small,
+  .disclaimer,
+  .priceHeader > div > span,
+  .priceHeader b,
+  .planResult,
+  .planFit strong, .listLabel,
+  .planFit p,
+  .includes,
+  .pricingAssurance > div,
+  .pricingAssurance > a,
+  .autonomousOffer small,
+  .autonomousOffer em,
+  .autonomousOffer > b small,
+  .legalGrid p,
+  .summaryTable thead th { font-size: 12.5px; }
+}

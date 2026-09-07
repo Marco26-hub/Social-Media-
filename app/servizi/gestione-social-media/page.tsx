@@ -60,6 +60,16 @@ const config = {
     { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
     { href: '/pacchetti', label: 'Pacchetti mensili' },
   ],
+  // Posizione nel percorso: il cliente deve vedere che i servizi sono una
+  // sequenza, non un catalogo.
+  passo: {
+    n: 2,
+    titolo: 'I contenuti',
+    primaHref: '/servizi/siti-e-commerce',
+    primaLabel: 'il sito',
+    poiHref: '/servizi/segretaria-telefonica-ai',
+    poiLabel: 'chi risponde al telefono',
+  },
 } satisfies MarketingDetailConfig
 
 export default function GestioneSocialMediaPage() { return <MarketingDetailPage config={config} /> }

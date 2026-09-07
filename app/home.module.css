@@ -1398,3 +1398,15 @@
   .faqItem[open] p { animation: none; }
   .hoverLift, .comingCard, .blogBullet { transition: none; }
 }
+
+/* Pavimento tipografico sul telefono.
+   Queste regole nascono per lo schermo grande e valgono 10-11px: su 390px
+   sono al limite del leggibile. Sotto i 760px salgono a 12,5px, che e' il
+   minimo perche' un'etichetta resti nitida senza cambiare la gerarchia. */
+@media (max-width: 760px) {
+  .panelStat small,
+  .panelPipeline span,
+  .comingBadge,
+  .partnerBadge,
+  .blogBadge { font-size: 12.5px; }
+}

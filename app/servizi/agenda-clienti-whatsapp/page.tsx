@@ -79,6 +79,12 @@ const contenuto: ContenutoLanding = {
       ['Riempi l’orario libero di venerdì', 'Clienti adatti già selezionati'],
     ],
   },
+  passo: {
+    n: 4,
+    titolo: 'L’agenda',
+    primaHref: '/servizi/segretaria-telefonica-ai',
+    primaLabel: 'il telefono',
+  },
   avvio: {
     occhiello: 'Come si parte',
     h2: 'Operativo in quattro passaggi.',

@@ -81,6 +81,14 @@ const contenuto: ContenutoLanding = {
       ['Richiesta non prevista', 'Trasferita al numero indicato'],
     ],
   },
+  passo: {
+    n: 3,
+    titolo: 'Il telefono',
+    primaHref: '/servizi/gestione-social-media',
+    primaLabel: 'i contenuti',
+    poiHref: '/servizi/agenda-clienti-whatsapp',
+    poiLabel: 'chi si ricorda dei clienti',
+  },
   avvio: {
     occhiello: 'Come si parte',
     h2: 'Operativa in quattro passaggi.',

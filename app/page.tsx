@@ -27,6 +27,7 @@ import {
   Target,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { PREZZO_INGRESSO } from '@/lib/prezzi-ingresso'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
@@ -78,6 +79,49 @@ const BENEFITS = [
     text: 'Report leggibili trasformano le metriche in decisioni operative per il ciclo editoriale successivo.',
   },
 ]
+
+// L'ordine in cui i servizi hanno senso, che non e' l'ordine del listino.
+// Prima un posto dove far atterrare le persone, poi qualcosa che ce le porti,
+// poi qualcuno che risponda quando arrivano, infine chi si ricorda di quelle
+// che sono gia' passate. I prezzi vengono dalla fonte unica.
+const PERCORSO = [
+  {
+    n: '01',
+    titolo: 'Il sito, prima di tutto',
+    perche:
+      'Serve un posto dove far atterrare chi ti cerca, con i servizi scritti, i prezzi chiari e un modo per scriverti. Senza, ogni euro speso in contenuti porta traffico a niente. Dopo dodici mesi di canone il sito è tuo.',
+    prezzo: PREZZO_INGRESSO.web,
+    href: '/servizi/siti-e-commerce',
+    cta: 'Come lavoriamo sui siti',
+  },
+  {
+    n: '02',
+    titolo: 'I contenuti che ci portano le persone',
+    perche:
+      'Un sito che nessuno visita non lavora. La gestione social è ciò che ogni settimana dà un motivo per arrivarci: piano, produzione, tua approvazione e pubblicazione su 2 canali a scelta.',
+    prezzo: PREZZO_INGRESSO.social,
+    href: '/servizi/gestione-social-media',
+    cta: 'Come funziona la gestione social',
+  },
+  {
+    n: '03',
+    titolo: 'Qualcuno che risponde quando arrivano',
+    perche:
+      'Quando sito e social iniziano a portare richieste, la chiamata persa diventa lavoro perso. L’assistente risponde con il tuo listino e i tuoi orari, anche mentre hai le mani occupate, e fissa l’appuntamento.',
+    prezzo: PREZZO_INGRESSO['segretaria-ai'],
+    href: '/servizi/segretaria-telefonica-ai',
+    cta: 'Come risponde al telefono',
+  },
+  {
+    n: '04',
+    titolo: 'Chi si ricorda di chi è già passato',
+    perche:
+      'Un cliente che hai già costa meno di uno nuovo. Ogni giorno il sistema legge agenda e storico, trova chi non torna da mesi e prepara il messaggio: parte solo dopo il tuo sì.',
+    prezzo: PREZZO_INGRESSO['agenda-whatsapp'],
+    href: '/servizi/agenda-clienti-whatsapp',
+    cta: 'Come funziona l’agenda',
+  },
+] as const
 
 const SERVICES = [
   {
@@ -350,10 +394,37 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Il percorso.
+          Il sito elencava dieci servizi in fila, senza dire da dove si parte
+          ne' perche' una cosa venga prima di un'altra. Un titolare che arriva
+          qui non deve scegliere fra dieci voci: deve capire il primo passo. */}
+      <section id="percorso" className={styles.section} aria-labelledby="percorso-title">
+        <div className={styles.sectionHeading}>
+          <p className={styles.eyebrow}>Da dove si parte</p>
+          <h2 id="percorso-title">Quattro passi, in quest’ordine.</h2>
+          <p>
+            Non serve attivare tutto insieme. Ogni passo ha senso perché regge quello
+            dopo, e si può fermare dove serve: nessun vincolo di durata oltre a quello
+            scritto nel piano.
+          </p>
+        </div>
+        <ol className={styles.percorso}>
+          {PERCORSO.map(({ n, titolo, perche, prezzo, href, cta }) => (
+            <li key={n}>
+              <span className={styles.percorsoNumero}>{n}</span>
+              <h3>{titolo}</h3>
+              <p>{perche}</p>
+              <p className={styles.percorsoPrezzo}>{prezzo}</p>
+              <Link href={href}>{cta} <ChevronRight size={15} aria-hidden="true" /></Link>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <section id="servizi" className={`${styles.section} ${styles.sectionTint}`} aria-labelledby="services-title">
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Che cosa facciamo</p>
-          <h2 id="services-title">Dieci aree di lavoro, una squadra sola</h2>
+          <h2 id="services-title">Tutto quello che possiamo aggiungere dopo</h2>
           <p>Riduciamo frammentazione, passaggi tra fornitori e attività operative interne.</p>
         </div>
         <div className={styles.serviceGrid}>

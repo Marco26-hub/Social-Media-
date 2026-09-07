@@ -1214,3 +1214,104 @@
 /* Etichette a 11-12px su fondi chiari, fra 3,8 e 4,2:1. */
 .visualLabel { color: #5c6b63; }
 .planAudience { color: #4a3705; }
+
+/* Il percorso: quattro passi in ordine.
+   E' la sezione che dice da dove si parte. Numerata, con il prezzo d'ingresso
+   accanto a ogni passo, perche' la domanda che segue subito «da dove comincio»
+   e' «quanto mi costa cominciare». Su due colonne resta leggibile, su una
+   diventa una sequenza verticale. */
+.percorso {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 45px 0 0;
+  padding: 0;
+  border: 1px solid var(--sa-line);
+  background: var(--sa-line);
+  list-style: none;
+  counter-reset: passo;
+}
+.percorso > li {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  background: var(--sa-white);
+}
+.percorsoNumero {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--coral-testo, #b3452a);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .1em;
+}
+.percorso h3 { margin: 18px 0 10px; font: 500 25px/1.15 Georgia, 'Times New Roman', serif; text-wrap: balance; }
+.percorso p { margin: 0; color: var(--sa-muted); font-size: 13px; line-height: 1.62; }
+.percorsoPrezzo {
+  margin: 16px 0 0 !important;
+  color: var(--sa-ink) !important;
+  font: 500 20px Georgia, 'Times New Roman', serif;
+  font-variant-numeric: tabular-nums;
+}
+.percorso a {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  padding-block: 3px;
+  color: var(--sa-green);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.percorso a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 860px) {
+  .percorso { grid-template-columns: 1fr; }
+  .percorso > li { padding: 24px; }
+}
+
+/* Leggibilita' sul telefono.
+   Il sito e' nato per lo schermo grande e le etichette da 10-11px arrivavano
+   al mobile invariate: su 390px sono al limite del leggibile. Qui il pavimento
+   sale, solo sotto i 760px e solo sui ruoli piccoli — occhielli, note,
+   pastiglie, didascalie, celle di tabella. Il corpo del testo non cambia. */
+@media (max-width: 760px) {
+  .eyebrow, .listLabel, .ctaNote, .planAudience, .channelBadge, .visualLabel,
+  .planBadge, .setup, .percorsoNumero { font-size: 12.5px !important; }
+  .benefit p, .service p, .serviceList li, .journeyGrid p, .percorso p,
+  .sectionHeading > p, .planDescription, .fit p { font-size: 15.5px; }
+  .service li, .planFit p, .priceCard li { font-size: 15px; }
+  .page small { font-size: 12.5px; }
+}
+
+/* Pavimento tipografico sul telefono.
+   Queste regole nascono per lo schermo grande e valgono 10-11px: su 390px
+   sono al limite del leggibile. Sotto i 760px salgono a 12,5px, che e' il
+   minimo perche' un'etichetta resti nitida senza cambiare la gerarchia. */
+@media (max-width: 760px) {
+  .liveStatus,
+  .visualStats span, .visualStats small,
+  .channelBadge,
+  .previewActions,
+  .visualFlow span,
+  .journeyGrid li > span,
+  .processList li > span,
+  .legalPartnerCopy > span, .legalPrice > span,
+  .legalPartnerCopy li,
+  .legalPrice small,
+  .legalDisclaimer,
+  .planAudience,
+  .planBadge,
+  .planResult,
+  .planFit strong, .listLabel,
+  .standaloneCopy > span,
+  .standaloneCopy li,
+  .standaloneAction span, .standaloneAction small,
+  .standaloneAction a,
+  .percorsoNumero { font-size: 12.5px; }
+}

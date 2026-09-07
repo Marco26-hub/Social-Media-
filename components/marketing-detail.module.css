@@ -59,7 +59,11 @@
 .signalPanel ul { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; background: rgba(255, 255, 255, .1); }
 .signalPanel li { display: flex; align-items: center; gap: 9px; padding: 13px 12px; background: #15251f; color: #cbd8d2; font-size: 12px; }
 .signalPanel li svg { flex: none; color: #55ce9e; }
-.outcomeBand { display: grid; grid-template-columns: repeat(3, 1fr); padding: 0 max(24px, calc((100vw - 1180px) / 2)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper); }
+/* La fascia era a tutta larghezza con le schede spinte al centro dal padding:
+   i filetti sopra e sotto correvano per l'intero schermo, e le due zone ai
+   lati — a 2000px sono 410 pixel per parte — si leggevano come celle vuote
+   bordate. Ora la fascia finisce dove finiscono le schede. */
+.outcomeBand { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper); }
 .outcomeBand article { min-height: 112px; display: grid; align-content: center; gap: 7px; padding: 23px 28px; border-right: 1px solid var(--line); }
 .outcomeBand article:first-child { border-left: 1px solid var(--line); }
 .outcomeBand strong { font: 500 19px Georgia, 'Times New Roman', serif; }
@@ -232,3 +236,57 @@ h1 .eyebrow, .hero h1 .eyebrow {
 .tabella td { color: var(--muted); line-height: 1.55; }
 .tabella td:nth-child(2) { color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tabella tbody tr:last-child th, .tabella tbody tr:last-child td { border-bottom: 0; }
+
+/* Barra del percorso: dice al cliente a che punto e' e che cosa viene prima
+   e dopo. Senza, i servizi si leggono come un catalogo di voci scollegate. */
+.passo {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 28px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.passoEtichetta { color: var(--ink); font-size: 12px; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
+.passoLink { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+.passoLink a { min-height: 24px; display: inline-flex; align-items: center; padding-block: 3px; color: var(--green); font-size: 13px; font-weight: 700; text-decoration: none; }
+.passoLink a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Leggibilita' sul telefono.
+   Il sito e' nato per lo schermo grande e le etichette da 10-11px arrivavano
+   al mobile invariate: su 390px sono al limite del leggibile. Qui il pavimento
+   sale, solo sotto i 760px e solo sui ruoli piccoli — occhielli, note,
+   pastiglie, didascalie, celle di tabella. Il corpo del testo non cambia. */
+@media (max-width: 760px) {
+  .eyebrow, .related > span, .passoEtichetta { font-size: 12.5px; }
+  .breadcrumbs { font-size: 12px; }
+  /* Selettori con lo stesso peso di quelli base, altrimenti non vincono. */
+  .deliverableGrid p, .faq details p, .portfolioCopy > span,
+  .outcomeBand span, .lead, .sectionHeading > p { font-size: 15.5px; }
+  .signalPanel li, .deliverableGrid li, .settoriBand li > a { font-size: 15px; }
+  .startingPrice > p { font-size: 12.5px; }
+  .tabella, .tabella thead th { font-size: 13px; }
+}
+
+/* Pavimento tipografico sul telefono.
+   Queste regole nascono per lo schermo grande e valgono 10-11px: su 390px
+   sono al limite del leggibile. Sotto i 760px salgono a 12,5px, che e' il
+   minimo perche' un'etichetta resti nitida senza cambiare la gerarchia. */
+@media (max-width: 760px) {
+  .breadcrumbs,
+  .eyebrow,
+  .signalHeading small,
+  .startingPrice > span,
+  .startingPrice > b,
+  .startingPrice > p,
+  .portfolioCopy small,
+  .process li > span,
+  .related > span,
+  .approfondimento > span,
+  .tabella thead th { font-size: 12.5px; }
+}

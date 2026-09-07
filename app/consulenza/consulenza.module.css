@@ -54,3 +54,16 @@
 
 /* Note a 10-11px su bianco: erano a 3,4 e 3,7:1. */
 .disclaimer, .secure { color: #5c6b63 !important; }
+
+/* Pavimento tipografico sul telefono.
+   Queste regole nascono per lo schermo grande e valgono 10-11px: su 390px
+   sono al limite del leggibile. Sotto i 760px salgono a 12,5px, che e' il
+   minimo perche' un'etichetta resti nitida senza cambiare la gerarchia. */
+@media (max-width: 760px) {
+  .breadcrumbs,
+  .eyebrow,.formEyebrow,
+  .areas p,
+  .disclaimer,
+  .secure,
+  .corsoEyebrow { font-size: 12.5px; }
+}

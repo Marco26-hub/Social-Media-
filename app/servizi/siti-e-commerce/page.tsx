@@ -91,6 +91,14 @@ const config = {
     { href: '/servizi/seo-geo', label: 'SEO + GEO' },
     { href: '/pacchetti', label: 'Pacchetti e soluzioni' },
   ],
+  // Posizione nel percorso: il cliente deve vedere che i servizi sono una
+  // sequenza, non un catalogo.
+  passo: {
+    n: 1,
+    titolo: 'Il sito',
+    poiHref: '/servizi/gestione-social-media',
+    poiLabel: 'i contenuti che ci portano le persone',
+  },
 } satisfies MarketingDetailConfig
 
 export default function SitiEcommercePage() { return <MarketingDetailPage config={config} /> }

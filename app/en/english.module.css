@@ -275,3 +275,29 @@
    la barra e il lettore atterra a meta' del blocco. Il menu inglese punta a
    sette ancore di questo tipo. */
 .shell [id] { scroll-margin-top: 88px; }
+
+/* Leggibilita' sul telefono.
+   Il sito e' nato per lo schermo grande e le etichette da 10-11px arrivavano
+   al mobile invariate: su 390px sono al limite del leggibile. Qui il pavimento
+   sale, solo sotto i 760px e solo sui ruoli piccoli — occhielli, note,
+   pastiglie, didascalie, celle di tabella. Il corpo del testo non cambia. */
+@media (max-width: 760px) {
+  .eyebrow, .audience, .note, .badge, .priceLabel, .setup { font-size: 12.5px !important; }
+  .service p, .proof p, .priceCard p, .sectionHeading p, .result { font-size: 15.5px; }
+  .priceCard li, .checkList li, .journey p { font-size: 15px; }
+}
+
+/* Pavimento tipografico sul telefono.
+   Queste regole nascono per lo schermo grande e valgono 10-11px: su 390px
+   sono al limite del leggibile. Sotto i 760px salgono a 12,5px, che e' il
+   minimo perche' un'etichetta resti nitida senza cambiare la gerarchia. */
+@media (max-width: 760px) {
+  .eyebrow,
+  .identityPanel dt,
+  .journey span,
+  .audience,
+  .badge,
+  .priceLabel,
+  .setup,
+  .note { font-size: 12.5px; }
+}

@@ -44,6 +44,10 @@ export type MarketingDetailConfig = {
   serviceType: string
   promise: string
   startingPrice?: string
+  /** Posizione nel percorso in quattro passi — sito, social, telefono,
+   *  agenda. Serve a far vedere al cliente che i servizi non sono un
+   *  catalogo ma una sequenza, e dove si trova adesso. */
+  passo?: { n: number; titolo: string; primaHref?: string; primaLabel?: string; poiHref?: string; poiLabel?: string }
   /** Tabella facoltativa: i motori di risposta estraggono le tabelle piu'
    *  volentieri di qualsiasi altra struttura, e su una pagina servizio il
    *  metodo si legge meglio in griglia che in prosa. */
@@ -330,6 +334,23 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         <span>{isEnglish ? 'Explore also' : 'Esplora anche'}</span>
         {config.related.map((item, index) => <Link key={`${item.href}-${index}`} href={item.href}>{item.label}<ChevronRight size={15} aria-hidden="true" /></Link>)}
       </nav>
+
+      {config.passo && (
+        <nav className={styles.passo} aria-label="Percorso in quattro passi">
+          <span className={styles.passoEtichetta}>
+            Passo {config.passo.n} di 4 · {config.passo.titolo}
+          </span>
+          <span className={styles.passoLink}>
+            {config.passo.primaHref && config.passo.primaLabel && (
+              <Link href={config.passo.primaHref}>← Prima: {config.passo.primaLabel}</Link>
+            )}
+            {config.passo.poiHref && config.passo.poiLabel && (
+              <Link href={config.passo.poiHref}>Poi: {config.passo.poiLabel} →</Link>
+            )}
+            <Link href="/#percorso">Vedi tutto il percorso</Link>
+          </span>
+        </nav>
+      )}
 
       {config.tabella && (
         <section className={styles.section} aria-labelledby="tabella-title">
