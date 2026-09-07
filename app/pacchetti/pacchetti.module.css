@@ -29,7 +29,7 @@
 .leadCard { grid-column:1 / -1; border-color:#9ba9d5; }
 .leadCard ul { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .leadCard > a { background:#314a8a; border-color:#314a8a; color:white; }
-.note { margin:10px 0 0; color:#7b8782; font-size:10px; text-align:center; }
+.note { margin:10px 0 0; color:#5C6B63; font-size:10px; text-align:center; }
 .comparison { margin-top:28px; overflow-x:auto; border:1px solid var(--line); }
 .comparison table { width:100%; min-width:1050px; border-collapse:collapse; }
 .comparison caption { padding:18px; background:var(--paper); font:500 21px Georgia,'Times New Roman',serif; text-align:left; }

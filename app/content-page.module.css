@@ -1,9 +1,10 @@
-.page { --ink:#15231f; --muted:#596762; --green:#0f6b4f; --green-dark:#094c39; --mint:#dceee7; --coral:#e96f51; --gold:#d8aa35; --line:#dbe2de; --paper:#f5f7f4; --surface:#fff; min-height:100vh; padding-top:68px; overflow-x:hidden; background:var(--surface); color:var(--ink); font-family:Arial,Helvetica,sans-serif; }
+.page { --ink:#15231f; --muted:#596762; --green:#0f6b4f; --green-dark:#094c39; --mint:#dceee7; --coral:#e96f51;
+  --coral-testo: #b3452a; --gold:#d8aa35; --line:#dbe2de; --paper:#f5f7f4; --surface:#fff; min-height:100vh; padding-top:68px; overflow-x:hidden; background:var(--surface); color:var(--ink); font-family:Arial,Helvetica,sans-serif; }
 .page *, .page *::before, .page *::after { box-sizing:border-box; }
 .skipLink { position:fixed; top:8px; left:8px; z-index:100; padding:10px 14px; background:var(--ink); color:white; transform:translateY(-160%); }
 .skipLink:focus { transform:translateY(0); }
 .hero { padding:80px max(24px,calc((100vw - 1120px)/2)) 70px; background:var(--paper); }
-.breadcrumbs { display:flex; flex-wrap:wrap; gap:7px; margin:0 0 30px; color:#7b8782; font-size:11px; }
+.breadcrumbs { display:flex; flex-wrap:wrap; gap:7px; margin:0 0 30px; color:#5C6B63; font-size:11px; }
 .breadcrumbs a { color:var(--green); text-decoration:none; }
 .eyebrow { margin:0 0 14px; color:var(--green); font-size:11px; font-weight:850; text-transform:uppercase; }
 .hero h1 { max-width:900px; margin:0; font:500 62px/1.02 Georgia,'Times New Roman',serif; text-wrap:balance; }
@@ -24,7 +25,7 @@
 .sectionHeading > p:last-child { margin:18px 0 0; color:var(--muted); font-size:16px; line-height:1.65; }
 .stepGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1px; margin-top:45px; border:1px solid var(--line); background:var(--line); }
 .stepGrid article { min-height:235px; padding:27px; background:var(--surface); }
-.stepGrid article > span { display:inline-flex; align-items:center; gap:8px; color:var(--coral); font-size:11px; font-weight:850; }
+.stepGrid article > span { display:inline-flex; align-items:center; gap:8px; color: var(--coral-testo, #b3452a); font-size:11px; font-weight:850; }
 .stepGrid h3 { margin:36px 0 10px; font:500 24px Georgia,'Times New Roman',serif; }
 .stepGrid p { margin:0; color:var(--muted); font-size:13px; line-height:1.62; }
 .stepGrid ul { display:grid; gap:8px; margin:18px 0 0; padding:0; list-style:none; }
@@ -51,7 +52,8 @@
 .finalCta p:last-child { margin:15px 0 0; color:#d5eee5; line-height:1.6; }
 .finalCta a { min-height:48px; display:inline-flex; align-items:center; justify-content:center; gap:8px; flex:none; padding:0 18px; border-radius:4px; background:white; color:var(--green-dark); font-size:13px; font-weight:800; text-decoration:none; }
 .page a:focus-visible,.page summary:focus-visible { outline:3px solid var(--gold); outline-offset:3px; }
-:global(html[data-theme='dark']) .page { --ink:#edf4f1; --muted:#aab8b2; --green:#49d6a0; --green-dark:#25b67f; --mint:#17372d; --line:#293b35; --paper:#0d110f; --surface:#080b09; background:#080b09; }
+:global(html[data-theme='dark']) .page {
+  --coral-testo: #ff9b82; --ink:#edf4f1; --muted:#aab8b2; --green:#49d6a0; --green-dark:#25b67f; --mint:#17372d; --line:#293b35; --paper:#0d110f; --surface:#080b09; background:#080b09; }
 :global(html[data-theme='dark']) .primary { background:#0f6b4f; }
 :global(html[data-theme='dark']) .secondary { border-color:#4b5d56; color:#edf4f1; }
 :global(html[data-theme='dark']) .faqList summary { color:#edf4f1; }
@@ -63,3 +65,7 @@
    lascia l'ultima cella vuota, che con i filetti si legge come un riquadro
    sbagliato. L'ultimo elemento in posizione dispari occupa tutta la riga. */
 .stepGrid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+/* Colori espliciti: il token del testo si inverte in tema notte e il salto al
+   contenuto diventava bianco su chiaro proprio quando serve. */
+.skipLink { background: #0D2620; color: #FFFDF7; }

@@ -5,6 +5,7 @@
   --green-dark: #094c39;
   --mint: #dceee7;
   --coral: #e96f51;
+  --coral-testo: #b3452a;
   --gold: #d8aa35;
   --line: #dbe2de;
   --paper: #f7f8f5;
@@ -292,12 +293,12 @@
   line-height: 1.5;
 }
 
-.outcome svg { flex: none; color: var(--coral); }
+.outcome svg { flex: none; color: var(--coral-testo, #b3452a); }
 
 .methodSection { display: grid; grid-template-columns: .75fr 1fr; gap: 80px; }
 .methodGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; margin: 0; padding: 0; background: var(--line); list-style: none; }
 .methodGrid li { min-height: 190px; padding: 26px; background: white; }
-.methodGrid span { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid #efb4a5; border-radius: 50%; color: var(--coral); font-size: 10px; font-weight: 800; }
+.methodGrid span { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid #efb4a5; border-radius: 50%; color: var(--coral-testo, #b3452a); font-size: 10px; font-weight: 800; }
 .methodGrid h3 { margin: 22px 0 8px; font-size: 17px; }
 .methodGrid p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 
@@ -356,7 +357,7 @@
 .setup { margin: 3px 0 0; }
 .planDescription { min-height: 68px; margin: 20px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
 .planFit { min-height: 105px; margin-top: 17px; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); }
-.planFit strong, .listLabel { color: var(--green); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.planFit strong, .listLabel { color: var(--green); font-size: 11px; font-weight: 800; text-transform: uppercase; }
 .planFit p { margin: 7px 0 0; color: #485650; font-size: 11px; line-height: 1.5; }
 .includes { margin: 18px 0 0; color: var(--green); font-size: 11px; font-weight: 800; }
 .listLabel { margin: 18px 0 0; }
@@ -364,7 +365,7 @@
 .priceCard li { display: flex; align-items: flex-start; gap: 8px; color: #35443e; font-size: 13px; line-height: 1.35; }
 .priceCard li svg { flex: none; color: var(--green); }
 .priceCard > a { width: 100%; margin-top: auto; }
-.ctaNote { display: block; margin-top: 10px; color: #74807c; font-size: 9px; text-align: center; }
+.ctaNote { display: block; margin-top: 10px; color: #5C6B63; font-size: 12px; text-align: center; }
 .pricingAssurance { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 18px; padding: 18px 21px; border: 1px solid #c9d8d2; border-radius: 7px; background: #edf6f2; }
 .pricingAssurance > div, .pricingAssurance > a { display: flex; align-items: center; gap: 8px; }
 .pricingAssurance > div { color: #3e4d47; font-size: 11px; }
@@ -378,7 +379,7 @@
 .autonomousOffer:hover { transform: translateY(-3px); border-color: var(--green); }
 .autonomousOffer > svg:first-child { box-sizing: content-box; padding: 10px; border-radius: 6px; background: var(--mint); color: var(--green); }
 .autonomousOffer > span { min-width: 0; display: grid; gap: 4px; }
-.autonomousOffer small { color: var(--green); font-size: 9px; font-style: normal; font-weight: 850; text-transform: uppercase; }
+.autonomousOffer small { color: var(--green); font-size: 11px; font-style: normal; font-weight: 850; text-transform: uppercase; }
 .autonomousOffer strong { font: 500 20px Georgia, serif; }
 .autonomousOffer em { overflow: hidden; color: var(--muted); font-size: 11px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
 .autonomousOffer > b { white-space: nowrap; font: 500 24px Georgia, serif; }
@@ -407,6 +408,7 @@
 .emailLink { margin-top: 12px; color: white; font-size: 12px; }
 
 :global(html[data-theme='dark']) .page {
+  --coral-testo: #ff9b82;
   --ink: #edf4f1;
   --muted: #aab8b2;
   --green: #49d6a0;
@@ -633,3 +635,20 @@
    lascia l'ultima cella vuota, che con i filetti si legge come un riquadro
    sbagliato. L'ultimo elemento in posizione dispari occupa tutta la riga. */
 .legalGrid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+/* L'occhiello usa il verde del brand, ma dentro le fasce verdi o scure
+   quel verde e' il fondo: li' il testo deve schiarire, non restare verde. */
+.finalCta :global([class*="eyebrow"]),
+.legalSection :global([class*="eyebrow"]) { color: #E2B023; }
+.finalCta h2, .finalCta p, .legalSection h2, .legalSection p { color: #FFFDF7; }
+
+/* Riquadro dei servizi autonomi: il fondo chiaro non era ridefinito in tema
+   notte, quindi restava chiaro con il testo chiaro sopra. */
+:global(html[data-theme='dark']) .autonomousOffer { background: #151c31; border-color: #394a75; color: #edf4f1; }
+:global(html[data-theme='dark']) .autonomousOffer small { color: #9db4ea; }
+:global(html[data-theme='dark']) .autonomousOffer b,
+:global(html[data-theme='dark']) .autonomousOffer strong,
+:global(html[data-theme='dark']) .autonomousOffer em { color: #edf4f1; }
+
+/* Verde acceso su bianco fa 2,6:1: per il testo serve la variante scura. */
+.partnerCta { color: #0b5a41; }

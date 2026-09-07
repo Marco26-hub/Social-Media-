@@ -5,6 +5,7 @@
   --sa-green-dark: #094c39;
   --sa-mint: #dceee7;
   --sa-coral: #e96f51;
+  --coral-testo: #b3452a;
   --sa-gold: #d8aa35;
   --sa-line: #dbe2de;
   --sa-paper: #f7f8f5;
@@ -202,7 +203,7 @@
 .outlineButton { border-color: #b7c2bd; color: var(--sa-ink); background: transparent; }
 .secondaryButton:hover,
 .outlineButton:hover { border-color: var(--sa-green); color: var(--sa-green); }
-.microcopy { margin: 11px 0 0; color: #74807c; font-size: 13px; }
+.microcopy { margin: 11px 0 0; color: #5C6B63; font-size: 13px; }
 .trustList {
   display: flex;
   flex-wrap: wrap;
@@ -284,9 +285,9 @@
 .previewActions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--sa-line); font-size: 10px; }
 .previewActions b { display: flex; align-items: center; gap: 5px; color: var(--sa-green); }
 .visualFlow { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 20px; }
-.visualFlow span { position: relative; padding-top: 11px; color: #85908c; font-size: 10px; text-align: center; border-top: 2px solid #d3dbd7; }
+.visualFlow span { position: relative; padding-top: 11px; color: #5C6B63; font-size: 10px; text-align: center; border-top: 2px solid #d3dbd7; }
 .visualFlow .flowDone { color: var(--sa-green); border-color: var(--sa-green); }
-.visualFlow .flowActive { color: #aa7817; border-color: var(--sa-gold); font-weight: 800; }
+.visualFlow .flowActive { color: #7a5812; border-color: var(--sa-gold); font-weight: 800; }
 
 .signalBand {
   display: flex;
@@ -373,7 +374,7 @@
   transform: translateY(-7px);
   box-shadow: 0 18px 42px rgba(21, 35, 31, .1);
 }
-.benefit > svg { color: var(--sa-coral); }
+.benefit > svg { color: var(--coral-testo, #b3452a); }
 .benefit h3,
 .service h3,
 .complianceItems h3,
@@ -454,7 +455,7 @@
   place-items: center;
   border: 1px solid #efb4a5;
   border-radius: 50%;
-  color: var(--sa-coral);
+  color: var(--coral-testo, #b3452a);
   font-size: 10px;
   font-weight: 800;
 }
@@ -491,7 +492,7 @@
   place-items: center;
   border: 1px solid #f0b6a7;
   border-radius: 50%;
-  color: var(--sa-coral);
+  color: var(--coral-testo, #b3452a);
   font-size: 11px;
   font-weight: 800;
 }
@@ -572,7 +573,7 @@
   padding: 10px;
   border-radius: 6px;
   background: #fff0ea;
-  color: var(--sa-coral);
+  color: var(--coral-testo, #b3452a);
 }
 .legalGrid h3 { margin: 18px 0 8px; font-size: 16px; }
 .legalGrid p { margin: 0; color: var(--sa-muted); font-size: 13px; line-height: 1.6; }
@@ -712,7 +713,7 @@
 .priceCard li { display: flex; align-items: flex-start; gap: 9px; color: #35443e; font-size: 14px; line-height: 1.35; }
 .priceCard li svg { flex: none; color: var(--sa-green); }
 .priceCard > a { width: 100%; margin-top: auto; }
-.ctaNote { display: block; margin-top: 10px; color: #74807c; font-size: 10px; text-align: center; }
+.ctaNote { display: block; margin-top: 10px; color: #5C6B63; font-size: 12px; text-align: center; }
 .pricingAssurance {
   display: flex;
   align-items: center;
@@ -761,7 +762,10 @@
 .pricingAssurance svg { flex: none; color: var(--sa-green); }
 .pricingAssurance > a { color: var(--sa-green); font-size: 12px; font-weight: 800; text-decoration: none; }
 .pricingAssurance > a:hover { color: var(--sa-green-dark); }
-.customPlan { display: flex; align-items: center; justify-content: space-between; gap: 35px; margin-top: 18px; padding: 32px 34px; border-radius: 7px; background: #e4b757; }
+.customPlan { display: flex; align-items: center; justify-content: space-between; gap: 35px; margin-top: 18px; padding: 32px 34px; border-radius: 7px; background: #e4b757; color: #241d07; }
+/* Su oro si scrive scuro: il testo chiaro faceva 1,68:1, praticamente invisibile. */
+.customPlan h3, .customPlan p, .customPlan span, .customPlan strong { color: #241d07; }
+.customPlan > div > span:first-child { color: #6b4e07; }
 .customPlan p { max-width: 760px; margin: 8px 0 0; color: #4d4025; line-height: 1.5; }
 .darkButton { flex: none; background: var(--sa-ink); color: white; }
 .darkButton:hover { background: #000; }
@@ -823,6 +827,7 @@
 .page summary:focus-visible { outline: 3px solid var(--sa-gold); outline-offset: 3px; }
 
 :global(html[data-theme='dark']) .page {
+  --coral-testo: #ff9b82;
   --sa-ink: #edf4f1;
   --sa-muted: #aab8b2;
   --sa-green: #49d6a0;
@@ -1058,7 +1063,7 @@
   .visualStats strong { font-size: 21px; }
   .contentPreview { grid-template-columns: 90px 1fr; }
   .previewMedia span { display: none; }
-  .visualFlow span { font-size: 8px; }
+  .visualFlow span { font-size: 11px; }
   .signalBand { align-items: flex-start; flex-direction: column; padding: 22px 18px; }
   .signalBand div { gap: 11px 16px; }
   .section,
@@ -1166,3 +1171,10 @@
    lascia l'ultima cella vuota, che con i filetti si legge come un riquadro
    sbagliato. L'ultimo elemento in posizione dispari occupa tutta la riga. */
 .serviceGrid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+/* Su verde menta acceso il bianco fa 1,84:1: la pastiglia vuole testo scuro. */
+.planBadge { color: #08281d; }
+
+/* Colori espliciti: il token del testo si inverte in tema notte e il salto al
+   contenuto diventava bianco su chiaro proprio quando serve. */
+.skipLink { background: #0D2620; color: #FFFDF7; }

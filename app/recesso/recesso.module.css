@@ -107,3 +107,7 @@
   .contentGrid { display: block; }
   .formCard { border: 0; box-shadow: none; }
 }
+
+/* Colori espliciti: il token del testo si inverte in tema notte e il salto al
+   contenuto diventava bianco su chiaro proprio quando serve. */
+.skipLink { background: #0D2620; color: #FFFDF7; }

@@ -5,6 +5,7 @@
   --green-dark: #094c39;
   --mint: #dceee7;
   --coral: #e96f51;
+  --coral-testo: #b3452a;
   --gold: #d8aa35;
   --line: #dbe2de;
   --paper: #f5f7f4;
@@ -237,6 +238,7 @@
 .backLink { display: inline-flex; align-items: center; gap: 7px; margin-top: 44px; color: var(--green); font: 800 12px Arial, Helvetica, sans-serif; text-decoration: none; }
 
 :global(html[data-theme='dark']) .page {
+  --coral-testo: #ff9b82;
   --ink: #edf4f1;
   --muted: #aab8b2;
   --green: #49d6a0;
@@ -314,3 +316,7 @@
   .page *::before,
   .page *::after { animation: none !important; transition-duration: .01ms !important; }
 }
+
+/* Colori espliciti: il token del testo si inverte in tema notte e il salto al
+   contenuto diventava bianco su chiaro proprio quando serve. */
+.skipLink { background: #0D2620; color: #FFFDF7; }
