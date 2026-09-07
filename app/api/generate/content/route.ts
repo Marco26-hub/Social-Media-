@@ -23,6 +23,7 @@ import { filterExistingColumnPairs, getTableColumns } from '@/lib/db-schema'
 import { adaptRowForPlatform } from '@/lib/social-adapt'
 import { buildBusinessCategoryContext, resolveBusinessCategory, type BusinessCategory } from '@/lib/business-categories'
 import { buildContentSeriesContext } from '@/lib/content-series'
+import { buildCreativeModeContext, normalizeCreativeMode } from '@/lib/creative-mode'
 
 type PromptSpec = {
   persona: string
@@ -501,7 +502,7 @@ function buildSystemPrompt(brand: Record<string, unknown> | null, quality: strin
 export async function POST(request: Request) {
   try {
     await requireAuth()
-    const { cliente_id, canale, formato, model, openrouter_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls, also_canali, visual_effects, visual_preset, use_trending_effects, consenso_utilizzo, business_category, series_id, series_position, series_total, series_formats, series_theme } = await request.json()
+    const { cliente_id, canale, formato, model, openrouter_key, tema, nome_prodotto, product_id, quality, quality_level, post_quality, qualita, obiettivo, uploaded_assets, media_urls, also_canali, visual_effects, visual_preset, use_trending_effects, consenso_utilizzo, business_category, creative_mode, series_id, series_position, series_total, series_formats, series_theme } = await request.json()
     if (!canale || !formato) {
       return NextResponse.json({ error: 'canale, formato richiesti' }, { status: 400 })
     }
@@ -515,6 +516,7 @@ export async function POST(request: Request) {
     if (!effectiveClienteId) return NextResponse.json({ error: 'Nessun cliente selezionato' }, { status: 400 })
     await requireClienteAccess(effectiveClienteId)
     const requestedQuality = quality ?? quality_level ?? post_quality ?? qualita
+    const creativeMode = normalizeCreativeMode(creative_mode)
     if (isDemo() || !dbReady()) {
       const demoQuality = resolveContentQuality({ requestedQuality })
       const demoCategory = resolveBusinessCategory(business_category)
@@ -526,6 +528,7 @@ export async function POST(request: Request) {
         tipo: 'calendario',
         quality_level: demoQuality,
         business_category: demoCategory.id,
+        creative_mode: creativeMode,
         quality_downgraded: isQualityDowngraded(requestedQuality, demoQuality),
         warning: 'Fallback demo: DATABASE_URL non configurato, contenuto non persistito su Neon.',
       })
@@ -591,6 +594,15 @@ export async function POST(request: Request) {
     const mediaUrls = userAssets.map(asset => asset.url)
     const visionUrls = userAssets.filter(asset => !isVideoAsset(asset)).map(asset => asset.url)
     const assetContext = buildAssetContext(userAssets)
+    const creativeModeContext = buildCreativeModeContext({
+      mode: creativeMode,
+      canale,
+      formato,
+      hasAssets: userAssets.length > 0,
+    })
+    if (creativeMode === 'ugc' && !userAssets.length) {
+      warnings.push('UGC generato come script e brief di produzione: aggiungi media reali del creator/prodotto prima dell approvazione.')
+    }
 
     const basePrompt = build(
       spec,
@@ -606,7 +618,7 @@ export async function POST(request: Request) {
     )
 
     // Prepend brand context for richer generation
-    const userPrompt = `${businessCategoryContext}\n---\n${series ? `${series.prompt}\n---\n` : ''}${brandContext ? `${brandContext}\n---\n` : ''}${basePrompt}`
+    const userPrompt = `${businessCategoryContext}\n---\n${creativeModeContext ? `${creativeModeContext}\n---\n` : ''}${series ? `${series.prompt}\n---\n` : ''}${brandContext ? `${brandContext}\n---\n` : ''}${basePrompt}`
 
     const aiRes = await callAI({
       model: model || 'google/gemma-4-31b-it:free',
@@ -819,6 +831,7 @@ export async function POST(request: Request) {
       tipo: 'calendario',
       quality_level: generatedQuality,
       business_category: activeBusinessCategory.id,
+      creative_mode: creativeMode,
       ...(series ? { series_id: series.id, series_position: series.position, series_total: series.total, series_theme: series.theme } : {}),
       quality_downgraded: isQualityDowngraded(requestedQuality, generatedQuality),
       ...(crossPosted.length ? { cross_posted: crossPosted } : {}),

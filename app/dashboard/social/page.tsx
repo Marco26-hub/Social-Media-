@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, useRef } from 'react'
 import { PLATFORMS, PLATFORM_LIST, type PlatformKey, type FormatoConfig } from '@/lib/social-config'
 import { demoContenuti } from '@/lib/demo-data'
-import { Sparkles, Loader2, Check, X, ArrowLeft, Calendar, Eye, ChevronRight, ImagePlus, Link2, Trash2, UploadCloud } from 'lucide-react'
+import { Sparkles, Loader2, Check, X, ArrowLeft, Calendar, Eye, ChevronRight, ImagePlus, Link2, Trash2, UploadCloud, UserRound } from 'lucide-react'
 import Link from 'next/link'
 import StatusBadge from '@/components/StatusBadge'
 import ConfirmModal from '@/components/ConfirmModal'
@@ -18,6 +18,7 @@ import { useRuntimeDemo } from '@/lib/demo-client'
 import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-quality'
 import { GENERATION_OPTIMIZATION_CYCLE } from '@/lib/production-cycle'
 import { BUSINESS_CATEGORY_OPTIONS, resolveBusinessCategory, type BusinessCategoryId } from '@/lib/business-categories'
+import type { CreativeMode } from '@/lib/creative-mode'
 
 // Cap asset per singolo post/carosello = max carosello Instagram (10).
 // Altre piattaforme limitano di più in publish (X 4) — vedi warning nel form.
@@ -54,6 +55,28 @@ type ContentSeries = {
   total: number
   formats: string[]
   theme: string
+}
+
+type PendingGeneration = {
+  format: FormatoConfig
+  creativeMode: CreativeMode
+}
+
+function getUgcFormat(config: typeof PLATFORMS[PlatformKey]): FormatoConfig | null {
+  if (config.key === 'blog') return null
+  const priority = ['reel', 'video', 'short', 'story', 'post', 'pin']
+  const format = priority
+    .map(value => config.formati.find(item => item.formato === value))
+    .find((item): item is FormatoConfig => Boolean(item))
+  if (!format) return null
+  return {
+    ...format,
+    id: `${format.id}-UGC`,
+    nome: 'UGC',
+    desc: `Concept creator-style nativo per ${config.nome}`,
+    esempio: 'Hook, script, scene, caption e CTA pronti da produrre',
+    goal: 'Fiducia e conversione con una creativita autentica e verificabile',
+  }
 }
 
 // Pagina UNICA "Crea contenuti social": la piattaforma si sceglie qui in cima
@@ -110,7 +133,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [states, setStates]   = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({})
   const [errors, setErrors]   = useState<Record<string, string>>({})
   const [warnings, setWarnings] = useState<Record<string, string>>({})
-  const [pending, setPending] = useState<FormatoConfig | null>(null)
+  const [pending, setPending] = useState<PendingGeneration | null>(null)
   const [selectedFormats, setSelectedFormats] = useState<Set<string>>(new Set())
   const [pendingBatch, setPendingBatch] = useState(false)
   const [crossCanali, setCrossCanali] = useState<Set<string>>(new Set())
@@ -132,6 +155,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     sector: brandProfile?.settore,
     brandName: brandProfile?.brand_name,
   })
+  const ugcFormat = getUgcFormat(config)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -243,9 +267,9 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     })
   }
 
-  function chiediGenera(f: FormatoConfig) {
+  function chiediGenera(f: FormatoConfig, creativeMode: CreativeMode = 'standard') {
     setAiModel(readAISettings().model)
-    setPending(f)
+    setPending({ format: f, creativeMode })
   }
 
   // Primo nome prodotto ricavato dal filename: "camicia-riva_azzurra.jpg" → "Camicia Riva Azzurra".
@@ -321,7 +345,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     setAssets(prev => prev.map((a, i) => (i === index ? { ...a, name: nome } : a)))
   }
 
-  async function genera(f: FormatoConfig, series?: ContentSeries) {
+  async function genera(f: FormatoConfig, series?: ContentSeries, creativeMode: CreativeMode = 'standard') {
     const generationClienteId = clienteId
     if (!demo && clienteIdRef.current !== generationClienteId) return
     setPending(null)
@@ -355,9 +379,12 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
           nome_prodotto: prodottoNome.trim() || undefined,
           quality,
           business_category: businessCategory,
+          creative_mode: creativeMode,
           uploaded_assets: assets,
           media_urls: assets.map(asset => asset.url),
-          also_canali: [...crossCanali],
+          // Un UGC deve essere progettato nativamente per il social aperto.
+          // Gli altri canali hanno ciascuno il proprio bottone UGC dedicato.
+          also_canali: creativeMode === 'ugc' ? [] : [...crossCanali],
           ...(series ? {
             series_id: series.id,
             series_position: series.position,
@@ -646,6 +673,51 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
         )}
       </div>
 
+      {ugcFormat && (() => {
+        const st = states[ugcFormat.id] ?? 'idle'
+        return (
+          <div className="card p-4 md:p-5 mb-5 border-emerald-200 bg-emerald-50/50">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0">
+                  <UserRound className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-900">UGC dedicato a {config.nome}</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Genera un concept {ugcFormat.formato} nativo con hook, script, scene, caption e CTA usando il Profilo Brand attivo.
+                  </p>
+                  <p className={`text-[11px] mt-1 ${assets.length ? 'text-emerald-700' : 'text-amber-700'}`}>
+                    {assets.length
+                      ? `${assets.length} media real${assets.length === 1 ? 'e' : 'i'} collegat${assets.length === 1 ? 'o' : 'i'} al brief.`
+                      : 'Senza media reali crea il brief da produrre e segnala gli asset mancanti.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => chiediGenera(ugcFormat, 'ugc')}
+                disabled={st === 'loading' || loadingCliente}
+                className={`md:w-64 text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors inline-flex items-center justify-center gap-2 ${
+                  st === 'success' ? 'bg-green-100 text-green-700' :
+                  st === 'error' ? 'bg-red-100 text-red-700' :
+                  'bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-60'
+                }`}
+              >
+                {st === 'loading' && <Loader2 className="w-4 h-4 animate-spin" />}
+                {st === 'success' && <Check className="w-4 h-4" />}
+                {st === 'error' && <X className="w-4 h-4" />}
+                {st === 'idle' && <Sparkles className="w-4 h-4" />}
+                {st === 'loading' ? 'Generando UGC...' :
+                 st === 'success' ? 'UGC nel calendario' :
+                 st === 'error' ? 'Errore - riprova' :
+                 `Genera UGC ${config.nome}`}
+              </button>
+            </div>
+          </div>
+        )
+      })()}
+
       {Object.values(errors).length > 0 && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           AI: {Object.values(errors)[0]}
@@ -764,13 +836,17 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       {/* Confirm modal */}
       {pending && (() => {
         const isFree = aiModel.endsWith(':free')
+        const f = pending.format
+        const isUgc = pending.creativeMode === 'ugc'
         return (
           <ConfirmModal
             open={true}
             onClose={() => setPending(null)}
-            onConfirm={() => genera(pending)}
-            title={`Generare ${pending.nome} ${config.nome}?`}
-            desc={`L'AI scriverà hook, caption, hashtag e CTA per un ${pending.nome.toLowerCase()} ${config.nome}. Verrà aggiunto al calendario in stato DA_APPROVARE.`}
+            onConfirm={() => genera(f, undefined, pending.creativeMode)}
+            title={isUgc ? `Generare UGC dedicato a ${config.nome}?` : `Generare ${f.nome} ${config.nome}?`}
+            desc={isUgc
+              ? `L'AI creerà un UGC ${f.formato} nativo per ${config.nome}, separato dagli altri social, usando il Profilo Brand del cliente attivo. Verrà aggiunto al calendario in stato DA_APPROVARE.`
+              : `L'AI scriverà hook, caption, hashtag e CTA per un ${f.nome.toLowerCase()} ${config.nome}. Verrà aggiunto al calendario in stato DA_APPROVARE.`}
             modello={aiModel}
             isFree={isFree}
             tokenEstimate={{
