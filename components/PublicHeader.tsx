@@ -44,7 +44,7 @@ export default function PublicHeader({ ctaHref, ctaLabel }: { ctaHref: string; c
           EN
         </Link>
         <ThemeToggle />
-        <Link href="/portale" className={styles.account}>
+        <Link href="/login?cambia=1" className={styles.account}>
           <LogIn size={15} aria-hidden="true" /> Area cliente
         </Link>
         <a href={ctaHref} target="_blank" rel="noopener noreferrer" className={styles.cta}>

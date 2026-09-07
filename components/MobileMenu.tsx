@@ -134,7 +134,7 @@ export default function MobileMenu({ links, ctaHref, ctaLabel }: MobileMenuProps
             </div>
             <div className={styles.actions}>
               <ThemeToggle showLabel />
-              <a href="/portale" className={styles.account} onClick={() => setOpen(false)}>Area cliente</a>
+              <a href="/login?cambia=1" className={styles.account} onClick={() => setOpen(false)}>Area cliente</a>
               <a
                 href={ctaHref}
                 className={styles.cta}
