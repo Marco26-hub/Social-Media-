@@ -60,6 +60,24 @@ const config = {
     { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
     { href: '/metodo', label: 'Metodo operativo' },
   ],
+  // La rubrica stava dentro una FAQ chiusa: e' il pezzo piu' originale della
+  // pagina — cinque criteri pesati, calcolati — ed e' esattamente cio' che un
+  // motore di risposta cita volentieri, perche' e' denso di dati e autonomo.
+  tabella: {
+    occhiello: 'Come misuriamo',
+    h2: 'I cinque criteri con cui pesiamo la citabilità di un blocco',
+    intro:
+      'Non è una valutazione a occhio: ogni blocco di testo torna con un punteggio e con le correzioni già scritte. È lo stesso metodo con cui misuriamo le nostre pagine prima di pubblicarle.',
+    caption: 'Rubrica di citabilità: peso di ciascun criterio e che cosa misura',
+    colonne: ['Criterio', 'Peso', 'Che cosa misura'],
+    righe: [
+      ['Qualità della risposta', '30%', 'Se la prima frase risponde davvero alla domanda, invece di girarci intorno.'],
+      ['Autonomia del blocco', '25%', 'Se il passaggio si capisce estratto dalla pagina, senza il contesto intorno.'],
+      ['Struttura', '20%', 'Titoli, elenchi e tabelle che un motore possa leggere senza interpretare.'],
+      ['Densità di dati', '15%', 'Quante quantità verificabili ci sono ogni cento parole.'],
+      ['Unicità', '10%', 'Quanto il passaggio differisce da ciò che dicono già tutti gli altri.'],
+    ],
+  },
 } satisfies MarketingDetailConfig
 
 export default function SeoGeoPage() { return <MarketingDetailPage config={config} /> }

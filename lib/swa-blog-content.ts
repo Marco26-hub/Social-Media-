@@ -72,6 +72,13 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
       { titolo: 'Instagram, account professionali e strumenti per le aziende', url: 'https://help.instagram.com/1038071743007909', nota: 'Guida ufficiale Meta: che cosa cambia fra profilo personale e account professionale.' },
       { titolo: 'Google Search Central, contenuti utili e affidabili', url: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content', nota: 'I criteri con cui Google giudica se un contenuto è scritto per le persone.' },
     ],
+    // Rimandi ai servizi di cui l’articolo parla: senza, il blog non porta
+    // da nessuna parte.
+    collegamenti: [
+      { href: '/servizi/gestione-social-media', label: 'Gestione social multicanale', nota: 'Piano, produzione, tua approvazione e pubblicazione su 2 canali a scelta.' },
+      { href: '/pacchetti', label: 'Pacchetti e prezzi', nota: 'Presenza e Crescita voce per voce, con quello che resta fuori.' },
+      { href: '/servizi/video-produzione', label: 'Riprese video in azienda', nota: 'Mezza giornata sul posto, da cui escono i verticali di più settimane.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/gestione-social-media-pmi-cosa-include-costi`,
   },
   {
@@ -163,6 +170,13 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
       { titolo: 'llms.txt, la proposta di standard', url: 'https://llmstxt.org/', nota: 'Il formato con cui un sito dichiara i propri contenuti ai modelli linguistici.' },
       { titolo: 'OpenAI, i crawler e come consentirli', url: 'https://platform.openai.com/docs/bots', nota: 'Elenco ufficiale degli user agent di OpenAI e regole per robots.txt.' },
     ],
+    // Rimandi ai servizi di cui l’articolo parla: senza, il blog non porta
+    // da nessuna parte.
+    collegamenti: [
+      { href: '/servizi/seo-geo', label: 'SEO e GEO', nota: 'Audit, intenti, entità e dati strutturati: che cosa cambiare e in che ordine.' },
+      { href: '/servizi/blog-seo', label: 'Blog SEO + GEO', nota: 'Dodici articoli al mese, revisionati da una persona.' },
+      { href: '/servizi/siti-e-commerce', label: 'Siti web e landing', nota: 'La base tecnica su cui poggia tutto il resto.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/seo-geo-differenze-visibilita-motori-ai`,
   },
   {
@@ -231,6 +245,13 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     fonti: [
       { titolo: 'Google Search Central, contenuti utili e affidabili', url: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content', nota: 'I criteri di qualità editoriale a cui si allinea anche un piano social.' },
       { titolo: 'Instagram, account professionali e strumenti per le aziende', url: 'https://help.instagram.com/1038071743007909', nota: 'Che cosa mette a disposizione la piattaforma a chi pubblica come azienda.' },
+    ],
+    // Rimandi ai servizi di cui l’articolo parla: senza, il blog non porta
+    // da nessuna parte.
+    collegamenti: [
+      { href: '/servizi/gestione-social-media', label: 'Gestione social multicanale', nota: 'Il piano editoriale che descriviamo qui, fatto per la tua attività.' },
+      { href: '/pacchetti', label: 'Quanti contenuti al mese', nota: '16 o 24 per canale, secondo il piano.' },
+      { href: '/settori', label: 'Il tuo settore', nota: 'Undici categorie, ognuna con le sue rubriche.' },
     ],
     url_pubblicato: `${SITE_URL}/blog/piano-editoriale-social-esempio-pmi`,
   },
@@ -331,6 +352,14 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
       { titolo: 'Regolamento (UE) 2016/679, GDPR', url: 'https://eur-lex.europa.eu/eli/reg/2016/679/oj', nota: 'Testo ufficiale su EUR-Lex: basi giuridiche del trattamento e diritti dell’interessato.' },
       { titolo: 'Registro Pubblico delle Opposizioni', url: 'https://www.registrodelleopposizioni.it/', nota: 'Il registro con cui una persona si oppone alle chiamate promozionali.' },
     ],
+    // Rimandi ai servizi di cui l’articolo parla: senza, il blog non porta
+    // da nessuna parte.
+    collegamenti: [
+      { href: '/servizi/segretaria-telefonica-ai', label: 'Assistente telefonico AI', nota: 'Risponde mentre lavori, con il tuo listino e i tuoi orari.' },
+      { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda e recupero clienti', nota: 'Chi non torna da mesi rientra fra le priorità del giorno.' },
+      { href: '/settori/parrucchieri', label: 'Parrucchieri e barberie', nota: 'Come funziona in salone, con le mani occupate.' },
+      { href: '/settori/studi-dentistici', label: 'Studi dentistici', nota: 'Richiami di igiene e cure preventivate mai iniziate.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/chiamate-perse-agenda-vuota-cosa-fare`,
   },
   {
@@ -423,6 +452,12 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
       { titolo: 'Commissione europea, quadro normativo sull’intelligenza artificiale', url: 'https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai', nota: 'La pagina istituzionale con il calendario di applicazione.' },
       { titolo: 'Garante per la protezione dei dati personali', url: 'https://www.garanteprivacy.it/', nota: 'L’autorità italiana competente quando l’AI tratta dati personali.' },
     ],
+    // Rimandi ai servizi di cui l’articolo parla: senza, il blog non porta
+    // da nessuna parte.
+    collegamenti: [
+      { href: '/consulenza', label: 'Consulenza AI Act e GDPR', nota: 'Erogata dallo Studio Legale BCS, con l’Avv. Vincenzo Sapone.' },
+      { href: '/trasparenza-ai', label: 'Come usiamo l’AI', nota: 'Che cosa produciamo con assistenza AI e chi risponde delle scelte.' },
+    ],
     url_pubblicato: `${SITE_URL}/blog/ai-act-obblighi-pmi-cosa-fare`,
   },
   {
@@ -503,6 +538,12 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     fonti: [
       { titolo: 'Google Search Central, buone pratiche per i video', url: 'https://developers.google.com/search/docs/appearance/video', nota: 'Come rendere un video comprensibile e indicizzabile.' },
       { titolo: 'Instagram, account professionali e strumenti per le aziende', url: 'https://help.instagram.com/1038071743007909', nota: 'I formati e gli strumenti che la piattaforma mette a disposizione delle aziende.' },
+    ],
+    // Rimandi ai servizi di cui l’articolo parla: senza, il blog non porta
+    // da nessuna parte.
+    collegamenti: [
+      { href: '/servizi/video-produzione', label: 'Riprese video in azienda', nota: 'Fotografo, luci e ottiche, girate dove lavori.' },
+      { href: '/servizi/gestione-social-media', label: 'Gestione social multicanale', nota: 'Dove finiscono i video girati: piano, montaggio e uscita.' },
     ],
     url_pubblicato: `${SITE_URL}/blog/video-social-aziendali-come-farli-bene`,
   },
@@ -585,6 +626,12 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
       { titolo: 'Regolamento (UE) 2016/679, GDPR', url: 'https://eur-lex.europa.eu/eli/reg/2016/679/oj', nota: 'Testo ufficiale su EUR-Lex: legittimo interesse, informativa e diritto di opposizione.' },
       { titolo: 'Registro Pubblico delle Opposizioni', url: 'https://www.registrodelleopposizioni.it/', nota: 'Da consultare prima di qualsiasi contatto telefonico promozionale.' },
       { titolo: 'Garante per la protezione dei dati personali', url: 'https://www.garanteprivacy.it/', nota: 'L’autorità che vigila sui contatti commerciali non richiesti.' },
+    ],
+    // Rimandi ai servizi di cui l’articolo parla: senza, il blog non porta
+    // da nessuna parte.
+    collegamenti: [
+      { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B', nota: 'Il Pilot: fino a 30 aziende verificate, con fonti e priorità.' },
+      { href: '/settori/imprese-di-pulizia', label: 'Imprese di pulizia', nota: 'Un settore dove la lista si costruisce per zona e per tipo di edificio.' },
     ],
     url_pubblicato: `${SITE_URL}/blog/ricerca-clienti-b2b-come-costruire-lista`,
   },

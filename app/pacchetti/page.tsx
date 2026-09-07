@@ -175,6 +175,63 @@ export default function PacchettiPage() {
         </div>
       </section>
 
+      {/* Dove stanno questi prezzi rispetto al mercato.
+          Il sito dichiarava i propri numeri senza mai dire a che altezza
+          cadono: il lettore non ha un metro. I valori di riferimento sono
+          pubblici e citati, non nostri, ed e' l'unico dato sul mondo esterno
+          che il sito porta. */}
+      <section className={`${base.section}`} aria-labelledby="mercato-title">
+        <div className={base.sectionHeading}>
+          <p className={base.eyebrow}>Dove cadono questi prezzi</p>
+          <h2 id="mercato-title">Quanto costa la stessa cosa altrove.</h2>
+          <p>
+            Numeri pubblici, non nostri. Servono a darti un metro: senza, un canone
+            e&rsquo; solo una cifra.
+          </p>
+        </div>
+        <div className={styles.mercato}>
+          <table>
+            <caption>Gestione social continuativa per una PMI italiana, canone mensile IVA esclusa</caption>
+            <thead>
+              <tr>
+                <th scope="col">Chi</th>
+                <th scope="col">Canone mensile</th>
+                <th scope="col">Che cosa comprende di solito</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Freelance</th>
+                <td>300 – 1.500 &euro;</td>
+                <td>Una persona sola, di norma senza riprese ne&rsquo; sviluppo.</td>
+              </tr>
+              <tr>
+                <th scope="row"><strong>Social Web Automation</strong></th>
+                <td><strong>490 – 990 &euro;</strong></td>
+                <td>Piano, produzione, approvazione e pubblicazione su 2 canali. Setup compreso.</td>
+              </tr>
+              <tr>
+                <th scope="row">Agenzia, fascia d&rsquo;ingresso</th>
+                <td>1.500 – 2.000 &euro;</td>
+                <td>Struttura piu&rsquo; ampia, spesso con minimi di durata.</td>
+              </tr>
+              <tr>
+                <th scope="row">Agenzia, fascia dove sta il 70% delle PMI</th>
+                <td>2.000 – 5.000 &euro;</td>
+                <td>Multicanale, con campagne a pagamento gestite a parte.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className={styles.mercatoNota}>
+            Fasce rilevate a settembre 2026 da{' '}
+            <a href="https://www.migliore-agenzia.com/it/blog/costo-gestione-social-media-agenzia-2026" target="_blank" rel="noopener noreferrer">migliore-agenzia.com</a>{' '}
+            e{' '}
+            <a href="https://alessandromazzadigital.com/quanto-costa-la-gestione-dei-social-media-guida-ai-prezzi-in-italia-2026/" target="_blank" rel="noopener noreferrer">alessandromazzadigital.com</a>.
+            Il budget pubblicitario resta separato dal canone in tutte le fasce, compresa la nostra.
+          </p>
+        </div>
+      </section>
+
       <section className={styles.custom}>
         <div><span>Configurazione personalizzata</span><h2>Più brand, volumi elevati o integrazioni.</h2><p>Costruiamo un perimetro dedicato quando le cinque soluzioni standard non rappresentano il processo reale dell’azienda.</p></div>
         <a href={wa} target="_blank" rel="noopener noreferrer">Progettiamo la soluzione <ArrowRight size={17} aria-hidden="true" /></a>

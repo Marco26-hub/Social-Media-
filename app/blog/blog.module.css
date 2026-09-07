@@ -347,3 +347,12 @@
 .articleTable tbody th { width: 28%; color: var(--ink); font-weight: 700; }
 .articleTable td { color: var(--muted); }
 .articleTable tbody tr:last-child th, .articleTable tbody tr:last-child td { border-bottom: 0; }
+
+/* Rimandi dall'articolo ai servizi di cui parla. Prima ogni articolo aveva
+   solo i link del menu e del footer: il blog non portava da nessuna parte. */
+.articleCollegamenti { margin-top: 48px; padding-top: 26px; border-top: 1px solid var(--line); }
+.articleCollegamenti h2 { margin: 0 0 18px; font-size: 21px; }
+.articleCollegamenti ul { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); background: var(--line); }
+.articleCollegamenti li { display: grid; gap: 5px; padding: 16px 18px; background: var(--surface, #fff); font-family: Arial, Helvetica, sans-serif; }
+.articleCollegamenti a { color: var(--green); font-size: 14px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.articleCollegamenti span { color: var(--muted); font-size: 13px; line-height: 1.5; }

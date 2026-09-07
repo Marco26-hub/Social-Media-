@@ -50,3 +50,16 @@
 @media(max-width:760px){.pricing{padding:64px 18px}.grid{grid-template-columns:1fr}.card{padding:24px}.top{gap:10px}.description{min-height:0}.leadCard{grid-column:auto}.leadCard ul{grid-template-columns:1fr}.custom{align-items:flex-start;flex-direction:column;margin:0 18px 64px;padding:25px}.custom a{width:100%}}
 
 :global(html[data-theme='dark']) .note { color: #97a8a1; }
+
+/* Confronto col mercato. Scorre da solo in orizzontale sul telefono. */
+.mercato { margin-top: 42px; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.mercato table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; text-align: left; }
+.mercato caption { padding: 16px 20px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; text-align: left; }
+.mercato th, .mercato td { padding: 15px 20px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.mercato thead th { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.mercato tbody th { width: 30%; font-weight: 700; }
+.mercato td { color: var(--muted); line-height: 1.5; }
+.mercato td:nth-child(2) { color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mercato tbody tr:last-child th, .mercato tbody tr:last-child td { border-bottom: 0; }
+.mercatoNota { margin: 16px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.mercatoNota a { color: var(--green); text-decoration: underline; text-underline-offset: 3px; }

@@ -32,6 +32,10 @@ export type BlogArticleData = {
   // fonte terza: un contenuto che afferma senza ancorare si presenta come
   // opinione, ed e' piu' difficile da citare per un motore di risposta.
   fonti?: { titolo: string; url: string; nota?: string }[]
+  // Rimandi ai servizi e ai settori di cui l'articolo parla. Senza, il blog
+  // resta un vicolo cieco: i 25 collegamenti che ogni articolo mostrava erano
+  // tutti menu, footer e schede correlate, identici su tutti e sette.
+  collegamenti?: { href: string; label: string; nota: string }[]
 }
 
 // jsonb dal DB può arrivare come stringa o oggetto: normalizza.
@@ -59,6 +63,7 @@ export function normalizeArticle(row: Record<string, unknown>): BlogArticleData 
     data_pubblicazione: (row.data_pubblicazione as string) ?? null,
     updated_at: (row.updated_at as string) ?? null,
     fonti: asArray<{ titolo: string; url: string; nota?: string }>(row.fonti),
+    collegamenti: asArray<{ href: string; label: string; nota: string }>(row.collegamenti),
   }
 }
 

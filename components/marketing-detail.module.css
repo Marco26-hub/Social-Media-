@@ -221,3 +221,14 @@ h1 .eyebrow, .hero h1 .eyebrow {
    la barra e il lettore atterra a meta' del blocco. Il menu inglese punta a
    sette ancore di questo tipo. */
 .page [id] { scroll-margin-top: 88px; }
+
+/* Tabella facoltativa della pagina servizio. Scorre da sola in orizzontale. */
+.tabellaWrap { margin-top: 42px; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.tabella { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; text-align: left; }
+.tabella caption { padding: 16px 20px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; text-align: left; }
+.tabella th, .tabella td { padding: 15px 20px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tabella thead th { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.tabella tbody th { width: 28%; color: var(--ink); font-weight: 700; }
+.tabella td { color: var(--muted); line-height: 1.55; }
+.tabella td:nth-child(2) { color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabella tbody tr:last-child th, .tabella tbody tr:last-child td { border-bottom: 0; }

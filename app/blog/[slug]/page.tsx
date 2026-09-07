@@ -230,6 +230,20 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
               </section>
             )}
 
+            {article.collegamenti && article.collegamenti.length > 0 && (
+              <section className={styles.articleCollegamenti}>
+                <h2>Su questo lavoriamo così</h2>
+                <ul>
+                  {article.collegamenti.map(c => (
+                    <li key={c.href}>
+                      <Link href={c.href}>{c.label}</Link>
+                      <span>{c.nota}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {article.fonti && article.fonti.length > 0 && (
               <section className={styles.articleFonti}>
                 <h2>Fonti</h2>

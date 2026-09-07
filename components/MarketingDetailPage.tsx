@@ -44,6 +44,10 @@ export type MarketingDetailConfig = {
   serviceType: string
   promise: string
   startingPrice?: string
+  /** Tabella facoltativa: i motori di risposta estraggono le tabelle piu'
+   *  volentieri di qualsiasi altra struttura, e su una pagina servizio il
+   *  metodo si legge meglio in griglia che in prosa. */
+  tabella?: { occhiello: string; h2: string; intro?: string; caption: string; colonne: string[]; righe: string[][] }
   priceNote?: string
   offerHighlight?: string
   primaryCtaLabel?: string
@@ -326,6 +330,33 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         <span>{isEnglish ? 'Explore also' : 'Esplora anche'}</span>
         {config.related.map((item, index) => <Link key={`${item.href}-${index}`} href={item.href}>{item.label}<ChevronRight size={15} aria-hidden="true" /></Link>)}
       </nav>
+
+      {config.tabella && (
+        <section className={styles.section} aria-labelledby="tabella-title">
+          <div className={styles.sectionHeading}>
+            <p className={styles.eyebrow}>{config.tabella.occhiello}</p>
+            <h2 id="tabella-title">{config.tabella.h2}</h2>
+            {config.tabella.intro && <p>{config.tabella.intro}</p>}
+          </div>
+          <div className={styles.tabellaWrap}>
+            <table className={styles.tabella}>
+              <caption>{config.tabella.caption}</caption>
+              <thead>
+                <tr>{config.tabella.colonne.map(c => <th scope="col" key={c}>{c}</th>)}</tr>
+              </thead>
+              <tbody>
+                {config.tabella.righe.map((riga, r) => (
+                  <tr key={r}>
+                    {riga.map((cella, c) => c === 0
+                      ? <th scope="row" key={c}>{cella}</th>
+                      : <td key={c}>{cella}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       <section className={styles.finalCta}>
         <div><p className={styles.eyebrow}>{isEnglish ? 'Next step' : 'Prossimo passo'}</p><h2>{isEnglish ? (config.entityName ? `Is this the right fit for ${minuscolo(config.entityName)}?` : `Is ${minuscolo(config.serviceName)} right for you?`) : (config.entityName ? `Fa al caso tuo, se lavori con ${minuscolo(config.entityName)}?` : `${config.serviceName} fa al caso tuo?`)}</h2><p>{isEnglish ? 'A first assessment clarifies priorities, activities, responsibilities and costs.' : 'Una prima valutazione chiarisce priorità, attività, responsabilità e costi.'}</p></div>
