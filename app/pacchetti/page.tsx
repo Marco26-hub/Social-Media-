@@ -37,11 +37,15 @@ const faq = [
 ]
 
 const comparisonRows = [
-  ['Canali social', '2', '2', '—', '—', '—'],
+  ['Prezzo mensile, IVA esclusa', PACCHETTI[0].prezzo, PACCHETTI[1].prezzo, BLOG_SERVICE.displayPrice, 'da 19,90 €', '149 € una tantum'],
+  ['Canali social a scelta', '2', '2', '—', '—', '—'],
   ['Contenuti social mensili', '16', '24', '—', '—', '—'],
   ['Reel, Story o Short', '4', '6', '—', '—', '—'],
   ['Articoli SEO + GEO', '—', '1/mese', '12/mese', 'SEO tecnica', '—'],
-  ['Gestione campagna ADS', '—', '1', '—', 'Tracking', '—'],
+  // Le campagne a pagamento sono uscite dai piani: restano nelle
+  // configurazioni personalizzate, con budget separato dal canone.
+  ['Campagna promozionale organica', '1/mese', '1/mese', '—', '—', '—'],
+  ['Campagne a pagamento (ADS)', 'Su richiesta', 'Su richiesta', '—', 'Tracking', '—'],
   ['Pubblicazione blog', '—', '1 articolo', 'Inclusa o export CMS', 'Integrazione', '—'],
   ['Sito web base', '—', '—', '—', 'A partire da 19,90 €/mese', '—'],
   ['Aziende B2B analizzate', '—', '—', '—', '—', 'Fino a 30'],

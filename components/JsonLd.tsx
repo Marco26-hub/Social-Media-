@@ -101,7 +101,7 @@ const jsonLd = {
               provider: { '@id': `${SITE_URL}/#organization` },
               areaServed: { '@type': 'Country', name: 'Italia' },
               description:
-                'Strategia, piano editoriale, 16 contenuti al mese per ciascuno dei 2 social, approvazione del cliente prima della pubblicazione, pubblicazione e report mensile.',
+                'Strategia, piano editoriale, 16 contenuti al mese per ciascuno dei 2 social scelti dal cliente, approvazione prima della pubblicazione, pubblicazione e report mensile.',
             },
           },
           {
@@ -125,7 +125,7 @@ const jsonLd = {
               provider: { '@id': `${SITE_URL}/#organization` },
               areaServed: { '@type': 'Country', name: 'Italia' },
               description:
-                'Gestione di 2 social, 24 contenuti al mese per canale, un articolo SEO + GEO, analisi dei concorrenti e report avanzato. Le campagne a pagamento non sono comprese e vengono concordate a parte.',
+                'Gestione di 2 social scelti dal cliente, 24 contenuti al mese per canale, un articolo SEO + GEO, analisi dei concorrenti e report avanzato. Le campagne a pagamento non sono comprese.',
             },
           },
           {
