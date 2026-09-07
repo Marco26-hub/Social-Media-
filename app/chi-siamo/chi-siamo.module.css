@@ -511,3 +511,6 @@
 .faqList summary::after { content: '+'; float: right; color: var(--green); font-size: 20px; line-height: 1; }
 .faqList details[open] summary::after { content: '–'; }
 .faqList p { margin: 12px 0 0; max-width: 74ch; color: var(--muted); font-size: 14px; line-height: 1.68; }
+
+/* In tema notte l'occhiello verde profondo finisce su fondo scuro: 2,91:1. */
+:global(html[data-theme='dark']) .eyebrow { color: #49c995; }

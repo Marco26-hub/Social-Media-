@@ -499,11 +499,16 @@
    sbagliato. L'ultimo elemento in posizione dispari occupa tutta la riga. */
 .pagina :global(.audience-grid) > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
 
-/* Oro su crema: --champagne e' una superficie, non un colore di testo.
-   Come occhiello su fondo chiaro faceva 1,6:1; qui prende l'oro scuro. */
-.pagina .gemellaOcchiello,
+/* Oro su crema: --champagne e' una superficie, non un colore di testo, e come
+   occhiello su fondo chiaro faceva 1,6:1. L'oro scuro vale pero' solo dove il
+   fondo e' chiaro: sulle fasce verdi scure (.gemella, .citta) faceva 2,4:1,
+   peggio di prima. Li' serve l'oro chiaro. */
 .pagina :global(.eyebrow),
 .pagina :global(.phone-top strong) { color: #8a6a12; }
+.pagina .gemella .gemellaOcchiello,
+.pagina .gemella :global(.eyebrow),
+.pagina .citta :global(.eyebrow),
+.pagina .citta span { color: #f0d68a; }
 :global(html[data-theme='dark']) .pagina .gemellaOcchiello,
 :global(html[data-theme='dark']) .pagina :global(.eyebrow),
 :global(html[data-theme='dark']) .pagina :global(.phone-top strong) { color: var(--champagne); }
@@ -519,3 +524,9 @@
 .tabellaPiani td { color: var(--muted); }
 .tabellaPiani tbody tr:last-child th, .tabellaPiani tbody tr:last-child td { border-bottom: 0; }
 .tabellaPrezzo { color: var(--ink) !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Corallo pieno su fondo scuro fa 2,2:1: qui il testo prende la variante
+   chiara del token, che sul grigio scuro arriva sopra soglia. (vaiAlSettore chiaro) */
+.pagina .citta .vaiAlSettore,
+.pagina .gemella .vaiAlSettore { color: #ff9b82; }
+:global(html[data-theme='dark']) .pagina .vaiAlSettore { color: #ff9b82; }

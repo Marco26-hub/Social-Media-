@@ -345,5 +345,5 @@
 .articleTable th, .articleTable td { padding: 13px 18px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.5; }
 .articleTable thead th { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
 .articleTable tbody th { width: 28%; color: var(--ink); font-weight: 700; }
-.articleTable td { color: #4a5852; }
+.articleTable td { color: var(--muted); }
 .articleTable tbody tr:last-child th, .articleTable tbody tr:last-child td { border-bottom: 0; }

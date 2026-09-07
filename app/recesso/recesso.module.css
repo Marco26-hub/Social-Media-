@@ -112,3 +112,10 @@
 /* Colori espliciti: il token del testo si inverte in tema notte e il salto al
    contenuto diventava bianco su chiaro proprio quando serve. */
 .skipLink { background: #0D2620; color: #FFFDF7; }
+
+/* Occhiello verde profondo su fascia scura: 2,95:1. Sul fondo scuro serve la
+   variante chiara del verde, come nelle altre fasce del sito. */
+.hero .eyebrow, .darkBand .eyebrow, [class*="dark"] .eyebrow { color: #83dbb9; }
+/* Testi di servizio a 10-11px su bianco: erano fra 3,7 e 4,5:1. */
+.securityLine, .fieldHelp, .secure { color: #5c6b63 !important; }
+.sectionLabel { color: #0f6b4f !important; }

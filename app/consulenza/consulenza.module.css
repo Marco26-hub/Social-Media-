@@ -51,3 +51,6 @@
 /* Colori espliciti: il token del testo si inverte in tema notte e il salto al
    contenuto diventava bianco su chiaro proprio quando serve. */
 .skipLink { background: #0D2620; color: #FFFDF7; }
+
+/* Note a 10-11px su bianco: erano a 3,4 e 3,7:1. */
+.disclaimer, .secure { color: #5c6b63 !important; }

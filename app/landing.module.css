@@ -1207,3 +1207,10 @@
    cambia il flusso ne' la dimensione del testo; i link dentro un periodo sono
    esclusi, perche' la norma li esenta e cambiarli spezzerebbe l'interlinea. */
 .page a:not(p a):not(li a):not(small a):not(figcaption a) { padding-block: 3px; }
+
+/* Oro su verde profondo a 12px: 3,23:1, sotto la soglia del testo piccolo.
+   L'oro piu' chiaro sullo stesso verde arriva a 4,6:1. */
+.legalBand .eyebrow, .legalSection .eyebrow, .legalPartner .eyebrow { color: #f0d68a; }
+/* Etichette a 11-12px su fondi chiari, fra 3,8 e 4,2:1. */
+.visualLabel { color: #5c6b63; }
+.planAudience { color: #4a3705; }
