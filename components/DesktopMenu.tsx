@@ -8,6 +8,7 @@ import {
   CalendarClock,
   Clapperboard,
   ChevronDown,
+  ClipboardCheck,
   ChevronRight,
   Globe2,
   BookOpenText,
@@ -80,6 +81,12 @@ const SOLUTIONS: SolutionLink[] = [
     label: 'Riprese video in azienda',
     description: 'Fotografo, luci e un volto se serve.',
     icon: Clapperboard,
+  },
+  {
+    href: '/servizi/gestione-lavorazioni',
+    label: 'Sito e gestione lavorazioni',
+    description: 'Rapportini firmati sul posto, ufficio che approva.',
+    icon: ClipboardCheck,
   },
   {
     href: '/servizi/automazione-gestionali',

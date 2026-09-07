@@ -19,6 +19,7 @@ const MOBILE_LINKS = [
   { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
   { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
   { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
+  { href: '/servizi/gestione-lavorazioni', label: 'Sito e gestione lavorazioni' },
   { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
   { href: '/settori', label: 'Settori' },
   { href: '/metodo', label: 'Metodo' },

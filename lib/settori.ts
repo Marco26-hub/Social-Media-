@@ -293,6 +293,7 @@ export const SETTORI: Settore[] = [
       { q: 'Come funziona la firma del cliente sul rapporto?', a: 'La firma è raccolta sullo schermo del telefono a fine intervento: firma l’operatore e firma il referente del cliente, e le 2 firme entrano nello stesso PDF insieme a checklist, foto e ore. Se il referente non c’è, il rapporto parte comunque e resta in stato inviato finché non viene ricevuto o approvato. Ogni passaggio è registrato con data e ora.' },
     ],
     correlati: [
+      { href: '/servizi/gestione-lavorazioni', label: 'Sito e gestione lavorazioni' },
       { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B' },
       { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
       { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
@@ -573,6 +574,7 @@ export const SETTORI: Settore[] = [
       { q: 'Perché un sito serve a un’officina di quartiere?', a: `Il sito è il posto in cui una richiesta delle 22 diventa un appuntamento del mattino dopo, e il canone base è ${PREZZI.web}, con il progetto tuo dopo 12 mesi. Chi cerca un’officina di sera non aspetta l’apertura per chiamare: o trova un modulo, o passa al nome successivo. Moduli, statistiche di percorso e servizi elencati per nome sono compresi nel canone.` },
     ],
     correlati: [
+      { href: '/servizi/gestione-lavorazioni', label: 'Sito e gestione lavorazioni' },
       { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
       { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
       { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
@@ -685,9 +687,10 @@ export const SETTORI: Settore[] = [
       { q: 'Sostituisce la fattura?', a: 'No. È il documento del lavoro svolto, non un documento fiscale: descrive intervento, materiali, ore e firma. La fattura resta al vostro gestionale o al commercialista.' },
       { q: 'Quanto costa mettere in piedi tutto?', a: `Il modulo di intervento è su preventivo, perché dipende dagli operatori e dai modelli di scheda. Il sito parte da ${PREZZI.web} e l’assistente telefonico da ${PREZZI.voce}, con il costo di avvio indicato prima dell’attivazione.` },
       { q: 'Serve un telefono nuovo?', a: 'No. L’applicazione si installa dal browser sui telefoni Android e iPhone già in uso e occupa poco: è pensata per essere aperta con una mano mentre l’altra tiene un attrezzo.' },
-      { q: 'Vale anche per altri mestieri?', a: 'Sì. Lo stesso impianto serve manutentori, installatori di impianti, condizionamento, antincendio e assistenza tecnica: cambia la scheda del tipo di intervento, non il modo in cui funziona.' },
+      { q: 'Vale anche per altri mestieri?', a: 'Sì, ma con una lavorazione di adattamento. L’impianto è lo stesso — scheda, foto, firme, PDF, stati, pannello — mentre le voci della checklist, l’elenco delle anomalie e le diciture del documento oggi sono tarate sulle imprese di pulizia. Riscriverle per impianti, condizionamento, antincendio o assistenza tecnica è parte del progetto e viene quotata prima di partire.' },
     ],
     correlati: [
+      { href: '/servizi/gestione-lavorazioni', label: 'Sito e gestione lavorazioni' },
       { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
       { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
       { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },

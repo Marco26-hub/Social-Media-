@@ -40,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/servizi/agenda-clienti-whatsapp',
       '/servizi/video-produzione',
       '/servizi/automazione-gestionali',
+      '/servizi/gestione-lavorazioni',
       '/metodo',
       '/pacchetti',
       '/faq',

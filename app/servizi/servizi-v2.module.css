@@ -473,6 +473,19 @@
   color: #f2c85b;
 }
 
+/* Le righe 4 e 5 erano rimaste con la pastiglia chiara del tema giorno: su
+   card scura restavano due macchie bianche in mezzo a sei pastiglie scure.
+   Ogni riga con un colore proprio nel tema chiaro ne vuole uno anche qui. */
+:global(html[data-theme='dark']) .serviceRow:nth-child(4) .serviceIdentity svg {
+  background: #16283a;
+  color: #7fc0ee;
+}
+
+:global(html[data-theme='dark']) .serviceRow:nth-child(5) .serviceIdentity svg {
+  background: #1b2340;
+  color: #9aa9ea;
+}
+
 :global(html[data-theme='dark']) .outcome {
   background: #271816;
   color: #d8c5bf;
