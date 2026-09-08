@@ -4,6 +4,7 @@ import { resolveBlogClienteIdForHost } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
 import { SETTORI } from '@/lib/settori'
 import { SETTORI_EN } from '@/lib/settori.en'
+import { SERVIZI_EN } from '@/lib/servizi.en'
 // Le coppie reciproche, non quelle del cambio lingua: hreflang e' una
 // dichiarazione di equivalenza fra due pagine, e vale solo se e' vera in
 // tutte e due le direzioni.
@@ -94,6 +95,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
       priority: 0.85,
       alternates: languageAlternates(`/settori/${settore.slug}`),
+    })),
+    // Le schede di servizio tradotte. La coppia la dichiara il servizio stesso,
+    // quindi non c'e' un secondo elenco da tenere allineato.
+    ...SERVIZI_EN.map(servizio => ({
+      url: `${SITE_URL}/en/services/${servizio.slug}`,
+      lastModified: englishUpdated,
+      changeFrequency: 'monthly' as const,
+      priority: 0.75,
+      alternates: languageAlternates(servizio.slugIt),
     })),
     ...SETTORI_EN.map(settore => ({
       url: `${SITE_URL}/en/settori/${settore.slug}`,

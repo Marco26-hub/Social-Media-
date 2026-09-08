@@ -1,4 +1,5 @@
 import { SETTORI_EN } from '@/lib/settori.en'
+import { SERVIZI_EN } from '@/lib/servizi.en'
 import { SWA_BLOG_ARTICLES_EN } from '@/lib/swa-blog-content.en'
 
 // Corrispondenze fra pagine italiane e inglesi.
@@ -31,11 +32,15 @@ export const COPPIE_LINGUA: Record<string, string> = {
   '/contatti': '/en/contact',
   '/settori': '/en/settori',
   ...Object.fromEntries(SETTORI_EN.map(s => [`/settori/${s.slug}`, `/en/settori/${s.slug}`])),
-  // Le pagine di dettaglio dei servizi non hanno una gemella inglese una per
-  // una: in inglese i servizi stanno tutti su /en/services, che li descrive
-  // tutti. Mandarle li' e' diverso dal ripiegare sulla home — il lettore trova
-  // comunque il servizio che stava leggendo, tradotto.
-  ...Object.fromEntries(SERVIZI_IT.map(percorso => [percorso, '/en/services'])),
+  // Le schede di servizio tradotte hanno la loro gemella, una per una: la
+  // corrispondenza la dichiara il servizio stesso, non un elenco a parte.
+  ...Object.fromEntries(SERVIZI_EN.map(s => [s.slugIt, `/en/services/${s.slug}`])),
+  // Quelle non ancora tradotte finiscono sulla panoramica: il lettore trova
+  // comunque il servizio che stava leggendo, in inglese. Per gli hreflang non
+  // basta — vedi TRADUZIONI qui sotto — ma per chi legge e' meglio della home.
+  ...Object.fromEntries(
+    SERVIZI_IT.filter(p => !SERVIZI_EN.some(s => s.slugIt === p)).map(percorso => [percorso, '/en/services']),
+  ),
   '/consulenza': '/en/services',
   // Il Journal e i suoi articoli: lo slug inglese e' diverso da quello italiano
   // (/en/blog/ai-act-obligations-small-business, non il titolo in italiano),

@@ -1,6 +1,7 @@
 import { CANONE, PREZZI } from '@/lib/prezzi-ingresso'
 import { SETTORI } from '@/lib/settori'
 import { SETTORI_EN } from '@/lib/settori.en'
+import { SERVIZI_EN } from '@/lib/servizi.en'
 import { SITE_URL } from '@/lib/site-config'
 
 // L'anteprima di ogni pagina: quello che si vede quando un link finisce su
@@ -263,7 +264,19 @@ const EN: Record<string, Anteprima> = {
   },
 }
 
-const FISSE: Record<string, Anteprima> = { ...IT, ...EN }
+// Le schede di servizio inglesi prendono l'anteprima dal servizio stesso:
+// sono dieci pagine e scriverne il testo due volte significa che una delle due
+// copie invecchia.
+const SERVIZI: Record<string, Anteprima> = Object.fromEntries(
+  SERVIZI_EN.map(s => [`/en/services/${s.slug}`, {
+    occhiello: s.config.eyebrow,
+    titolo: s.config.serviceName,
+    sottotitolo: s.config.promise,
+    tinta: 'verde' as const,
+  }]),
+)
+
+const FISSE: Record<string, Anteprima> = { ...IT, ...EN, ...SERVIZI }
 
 /**
  * Il sommario di un settore e' gia' una riga sola: e' quello che va
