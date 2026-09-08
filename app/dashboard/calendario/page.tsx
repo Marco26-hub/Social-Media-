@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { Fragment, useEffect, useState, useCallback, Suspense } from 'react'
+import { Fragment, useEffect, useState, useCallback, useRef, Suspense } from 'react'
 import StatusBadge from '@/components/StatusBadge'
 import type { Contenuto, Status } from '@/lib/types'
 import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkles, Share2, Download, Trash2, AlertTriangle, Camera, ImagePlus, Search, CalendarDays, Clock, Layers, BarChart3, Zap, List, LayoutGrid, CalendarClock, Music2, GripVertical, Move, ClipboardCheck } from 'lucide-react'
@@ -178,6 +178,8 @@ export default function CalendarioPage() {
 
 function CalendarioInner() {
   const searchParams = useSearchParams()
+  const requestedContentId = searchParams.get('open')?.trim() || ''
+  const openedContentIdRef = useRef<string | null>(null)
   const [contenuti, setContenuti]   = useState<Contenuto[]>([])
   const [loading, setLoading]       = useState(true)
   const [selected, setSelected]     = useState<Contenuto | null>(null)
@@ -185,7 +187,7 @@ function CalendarioInner() {
   const [filterCanale, setCanale]   = useState('tutti')
   const [filterFormato, setFormato] = useState('tutti')
   const [filterCategoria, setCategoria] = useState('tutti')
-  const [searchText, setSearchText] = useState('')
+  const [searchText, setSearchText] = useState(searchParams.get('q') ?? requestedContentId)
   const [saving, setSaving]         = useState<string | null>(null)
   const [scoring, setScoring]       = useState<string | null>(null)
   const [scoreError, setScoreError] = useState<string | null>(null)
@@ -319,6 +321,16 @@ function CalendarioInner() {
   }, [filterStatus, filterCanale, filterFormato, filterCategoria, searchText, demo, demoData, clienteId])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  // I link provenienti dal generatore puntano a un record preciso: dopo il
+  // caricamento apri quel contenuto, non una scheda vicina o l'intero elenco.
+  useEffect(() => {
+    if (!requestedContentId || loading || openedContentIdRef.current === requestedContentId) return
+    const found = contenuti.find(content => content.id_contenuto === requestedContentId)
+    if (!found) return
+    openedContentIdRef.current = requestedContentId
+    setSelected(found)
+  }, [contenuti, loading, requestedContentId])
 
   async function refreshSelected(idContenuto: string) {
     if (!clienteId) return

@@ -19,6 +19,8 @@ import { CONTENT_QUALITY_OPTIONS, type ContentQuality } from '@/lib/content-qual
 import { GENERATION_OPTIMIZATION_CYCLE } from '@/lib/production-cycle'
 import { BUSINESS_CATEGORY_OPTIONS, resolveBusinessCategory, type BusinessCategoryId } from '@/lib/business-categories'
 import type { CreativeMode } from '@/lib/creative-mode'
+import { calendarContentHref } from '@/lib/calendar-content-link'
+import { useRouter } from 'next/navigation'
 
 // Cap asset per singolo post/carosello = max carosello Instagram (10).
 // Altre piattaforme limitano di più in publish (X 4) — vedi warning nel form.
@@ -129,8 +131,10 @@ export default function SocialPage() {
 }
 
 function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) {
+  const router = useRouter()
   const [recenti, setRecenti] = useState<Contenuto[]>([])
   const [states, setStates]   = useState<Record<string, 'idle' | 'loading' | 'success' | 'error'>>({})
+  const [generatedContentIds, setGeneratedContentIds] = useState<Record<string, string>>({})
   const [errors, setErrors]   = useState<Record<string, string>>({})
   const [warnings, setWarnings] = useState<Record<string, string>>({})
   const [pending, setPending] = useState<PendingGeneration | null>(null)
@@ -171,6 +175,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     setRecenti([])
     setProdotti([])
     setStates({})
+    setGeneratedContentIds({})
     setErrors({})
     setWarnings({})
     setPending(null)
@@ -411,8 +416,15 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
 
     if (result.ok) {
       setStates(s => ({ ...s, [f.id]: 'success' }))
-      const response = result.data as { warning?: string; warnings?: string[] } | undefined
+      const response = result.data as { id_contenuto?: string; warning?: string; warnings?: string[] } | undefined
+      const generatedContentId = response?.id_contenuto
+      if (generatedContentId) {
+        setGeneratedContentIds(previous => ({ ...previous, [f.id]: generatedContentId }))
+      }
       const responseWarnings = [response?.warning, ...(response?.warnings || [])].filter((value): value is string => Boolean(value))
+      if (creativeMode === 'ugc' && !generatedContentId) {
+        responseWarnings.push('UGC creato, ma il server non ha restituito il riferimento preciso: verra aperto l’elenco Da approvare.')
+      }
       if (responseWarnings.length) {
         setWarnings(prev => ({ ...prev, [f.id]: responseWarnings.join(' ') }))
       }
@@ -420,7 +432,11 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
       setErrors(prev => ({ ...prev, [f.id]: result.error || `Generazione ${f.nome} fallita` }))
       setStates(s => ({ ...s, [f.id]: 'error' }))
     }
-    setTimeout(() => setStates(s => ({ ...s, [f.id]: 'idle' })), 4000)
+    // L'esito UGC resta cliccabile finche l'utente apre il record appena creato.
+    // Per i contenuti standard conserviamo il feedback temporaneo precedente.
+    if (!result.ok || creativeMode !== 'ugc') {
+      setTimeout(() => setStates(s => ({ ...s, [f.id]: 'idle' })), 4000)
+    }
   }
 
   function toggleFormat(id: string) {
@@ -675,6 +691,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
 
       {ugcFormat && (() => {
         const st = states[ugcFormat.id] ?? 'idle'
+        const generatedContentId = generatedContentIds[ugcFormat.id]
         return (
           <div className="card p-4 md:p-5 mb-5 border-emerald-200 bg-emerald-50/50">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -696,7 +713,15 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
               </div>
               <button
                 type="button"
-                onClick={() => chiediGenera(ugcFormat, 'ugc')}
+                onClick={() => {
+                  if (st === 'success') {
+                    router.push(generatedContentId
+                      ? calendarContentHref(generatedContentId)
+                      : '/dashboard/calendario?filter=DA_APPROVARE')
+                    return
+                  }
+                  chiediGenera(ugcFormat, 'ugc')
+                }}
                 disabled={st === 'loading'}
                 className={`md:w-64 text-sm font-semibold py-2.5 px-4 rounded-lg transition-colors inline-flex items-center justify-center gap-2 ${
                   st === 'success' ? 'bg-green-100 text-green-700' :
@@ -709,7 +734,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
                 {st === 'error' && <X className="w-4 h-4" />}
                 {st === 'idle' && <Sparkles className="w-4 h-4" />}
                 {st === 'loading' ? 'Generando UGC...' :
-                 st === 'success' ? 'UGC nel calendario' :
+                 st === 'success' ? 'Apri UGC nel calendario' :
                  st === 'error' ? 'Errore - riprova' :
                  `Genera UGC ${config.nome}`}
               </button>
@@ -928,7 +953,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
                     {c.data_pubblicazione} {c.ora_pubblicazione?.slice(0,5)}
                   </p>
                 </div>
-                <Link href={`/dashboard/calendario`} className="btn-secondary py-1.5 px-2">
+                <Link href={calendarContentHref(c.id_contenuto)} className="btn-secondary py-1.5 px-2" title="Apri questo contenuto nel calendario">
                   <Eye className="w-3.5 h-3.5" />
                 </Link>
               </div>
