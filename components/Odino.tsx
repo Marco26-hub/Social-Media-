@@ -3,9 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { X } from 'lucide-react'
-import { cerca, nodo, settoreCitato, type Nodo } from '@/lib/odino/percorsi'
+import { usePathname } from 'next/navigation'
+import { MOTORE } from '@/lib/odino/percorsi'
+import { MOTORE_EN, settoreCitatoEn } from '@/lib/odino/percorsi.en'
+import { settoreCitato } from '@/lib/odino/percorsi'
+import { type Nodo } from '@/lib/odino/ricerca'
 import { cercaDomande, type Domanda } from '@/lib/odino/domande'
-import { ODINO_NOME, ODINO_PRESENTAZIONE } from '@/lib/odino/identita'
+import { ODINO_NOME } from '@/lib/odino/identita'
+import { TESTI, WHATSAPP_ODINO } from '@/lib/odino/testi'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
 import { EVENTO_RIQUADRO, chiOccupa, liberaAngolo, mostraMascotte, occupaAngolo } from '@/lib/riquadri'
 import OdinoFaccia from './OdinoFaccia'
@@ -24,6 +29,15 @@ import styles from './odino.module.css'
 // rispondere a caso.
 
 export default function Odino() {
+  // La lingua si deduce dal percorso, come altrove nel sito: cosi' ODINO vive
+  // in tutte e due le versioni senza che ogni layout debba passargli qualcosa.
+  const percorso = usePathname() || '/'
+  const inglese = percorso === '/en' || percorso.startsWith('/en/')
+  const t = inglese ? TESTI.en : TESTI.it
+  const motore = inglese ? MOTORE_EN : MOTORE
+  const lingua = inglese ? 'en' as const : 'it' as const
+  const riconosci = inglese ? settoreCitatoEn : settoreCitato
+
   const [aperto, setAperto] = useState(false)
   // Nessun percorso preselezionato: all'apertura ODINO chiede, non propone.
   // Aprirsi con un listino significa vendere prima che qualcuno abbia chiesto
@@ -89,17 +103,26 @@ export default function Odino() {
   useEffect(() => () => { liberaAngolo('odino'); mostraMascotte(false) }, [])
 
   const seguenti = useMemo(
-    () => (corrente?.risposta.poi ?? []).map(id => nodo(id)).filter((n): n is Nodo => Boolean(n)),
-    [corrente],
+    () => (corrente?.risposta.poi ?? []).map(id => motore.nodo(id)).filter((n): n is Nodo => Boolean(n)),
+    [corrente, motore],
   )
 
   // Le domande di partenza: le piu' chieste, non tutte. Un elenco lungo si
   // legge come un menu di un centralino, e non aiuta a scegliere.
   const iniziali = useMemo(
-    () => ['da-dove-parto', 'quanto-costa-social', 'telefono-come-funziona', 'cosa-resta-fuori', 'garantite-risultati', 'parlare-con-persona']
-      .map(id => nodo(id)).filter((n): n is Nodo => Boolean(n)),
-    [],
+    () => t.iniziali.map(id => motore.nodo(id)).filter((n): n is Nodo => Boolean(n)),
+    [t, motore],
   )
+
+  // Che cosa ODINO saprebbe rispondere a quello che stai scrivendo, mostrato
+  // prima di premere invio. Sono ventitre percorsi: cercarli a ogni tasto costa
+  // niente, e vedere la risposta comparire mentre si scrive dice quello che
+  // ODINO sa molto meglio di un elenco di domande frequenti.
+  const suggeriti = useMemo(() => {
+    const testo = scritto.trim()
+    if (testo.length < 3) return []
+    return motore.cerca(testo, { nodoCorrente: corrente?.id, settore: settore?.slug }).slice(0, 3)
+  }, [scritto, motore, corrente, settore])
 
   function vai(n: Nodo, dalSito: Domanda[] = []) {
     setCorrente(n)
@@ -117,7 +140,7 @@ export default function Odino() {
       void fetch('/api/odino/domande', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domanda, trovata, percorso, fonte, pagina: window.location.pathname }),
+        body: JSON.stringify({ domanda, trovata, percorso, fonte, pagina: window.location.pathname, lingua }),
         keepalive: true,
       }).catch(() => {})
     } catch { /* niente */ }
@@ -128,10 +151,13 @@ export default function Odino() {
     const testo = scritto.trim()
     if (!testo) return
     setScritto('')
-    const mestiere = settoreCitato(testo)
+    const mestiere = riconosci(testo)
     if (mestiere) setSettore(mestiere)
-    const dalSito = cercaDomande(testo, 3)
-    const trovati = cerca(testo)
+    const dalSito = cercaDomande(testo, 3, lingua)
+    // Il contesto: che cosa si stava dicendo un attimo fa. «E quanto costa?»
+    // dopo la segretaria telefonica parla della segretaria, non del sito — e'
+    // la cosa che chiunque da' per scontata parlando, e che ODINO perdeva.
+    const trovati = motore.cerca(testo, { nodoCorrente: corrente?.id, settore: settore?.slug })
     if (trovati.length) { registra(testo, true, trovati[0].id); vai(trovati[0], dalSito); return }
     if (dalSito.length) {
       // Nessun percorso curato, ma il sito una risposta ce l'ha: si mostra
@@ -143,7 +169,7 @@ export default function Odino() {
       registra(testo, true, undefined, dalSito[0].fonte.href)
       return
     }
-    if (mestiere) { registra(testo, true, 'settore:' + mestiere.slug); vai(nodo('da-dove-parto')!); return }
+    if (mestiere) { registra(testo, true, 'settore:' + mestiere.slug); vai(motore.nodo('da-dove-parto')!); return }
     registra(testo, false)
     setNonCapito(testo)
     setApprofondimenti([])
@@ -161,8 +187,8 @@ export default function Odino() {
         type="button"
         className={styles.lancio}
         onClick={() => setAperto(true)}
-        aria-label={`Chiedi a ${ODINO_NOME}, l’assistente del sito`}
-        title={`Chiedi a ${ODINO_NOME}`}
+        aria-label={t.apri}
+        title={t.apriBreve}
       >
         <OdinoFaccia className={styles.faccia} intero />
       </button>
@@ -170,14 +196,14 @@ export default function Odino() {
   }
 
   return (
-    <aside className={styles.pannello} role="dialog" aria-modal="false" aria-label={`${ODINO_NOME}, assistente di Social Web Automation`}>
+    <aside className={styles.pannello} role="dialog" aria-modal="false" aria-label={t.pannello} lang={inglese ? 'en' : 'it'}>
       <header className={styles.testa}>
         <OdinoFaccia className={styles.faccia} />
         <div>
           <strong>{ODINO_NOME}</strong>
-          <small>{ODINO_PRESENTAZIONE.replace('Sono ODINO, l’', 'L’')}</small>
+          <small>{t.presentazione}</small>
         </div>
-        <button ref={chiudiRef} type="button" className={styles.chiudi} onClick={() => setAperto(false)} aria-label="Chiudi">
+        <button ref={chiudiRef} type="button" className={styles.chiudi} onClick={() => setAperto(false)} aria-label={t.chiudi}>
           <X size={16} aria-hidden="true" />
         </button>
       </header>
@@ -185,34 +211,35 @@ export default function Odino() {
       <div className={styles.corpo} ref={corpoRef}>
         {nonCapito ? (
           <>
-            <h2 className={styles.titolo}>Questa non la so.</h2>
-            <p className={styles.testo}>
-              Rispondo solo con quello che è scritto sul sito, e su «{nonCapito}» non ho niente di verificato.
-              Preferisco dirtelo che inventare una risposta. Prova a chiedere in un altro modo, oppure scrivi a una persona.
+            <h2 className={styles.titolo}>{t.titoloNonSo}</h2>
+            <p className={styles.testo}>{t.nonSo(nonCapito)}</p>
+            {/* Il passaggio a una persona, con la domanda gia' scritta dentro.
+                Prima ODINO diceva «scrivi a una persona» e lasciava il lavoro a
+                chi aveva gia' fatto la fatica di formulare la domanda. */}
+            <p className={styles.link}>
+              <a
+                href={`https://wa.me/${WHATSAPP_ODINO}?text=${encodeURIComponent(t.whatsapp(nonCapito))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t.scriviAUnaPersona}
+              </a>
             </p>
           </>
         ) : !corrente ? (
           <>
-            <h2 className={styles.titolo}>Che cosa ti serve sapere?</h2>
-            <p className={styles.testo}>
-              Scrivi la tua domanda come la diresti a voce — «quanto costa la gestione social», «ho un centro
-              estetico e perdo chiamate», «posso disdire quando voglio». Rispondo con quello che è scritto sul
-              sito: prezzi di listino, che cosa è compreso e che cosa resta fuori.
-            </p>
-            <p className={styles.testo}>
-              Se preferisci, parti da una di queste.
-            </p>
+            <h2 className={styles.titolo}>{t.titoloVuoto}</h2>
+            <p className={styles.testo}>{t.introVuoto}</p>
+            <p className={styles.testo}>{t.introVuoto2}</p>
           </>
         ) : (
           <>
             {settore && (
-              <p className={styles.etichetta}>
-                Per {settore.nome.toLowerCase()} c’è una pagina dedicata
-              </p>
+              <p className={styles.etichetta}>{t.settoreEtichetta(settore.nome)}</p>
             )}
             {settore && (
               <p className={styles.link}>
-                <Link href={`/settori/${settore.slug}`}>Apri la pagina {settore.nome}</Link>
+                <Link href={`${t.settoriBase}/${settore.slug}`}>{t.settoreLink(settore.nome)}</Link>
               </p>
             )}
             <h2 className={styles.titolo}>{corrente.risposta.titolo}</h2>
@@ -240,7 +267,7 @@ export default function Odino() {
           </>
         )}
 
-        <p className={styles.etichetta}>{nonCapito || !corrente ? 'Domande frequenti' : 'Da qui'}</p>
+        <p className={styles.etichetta}>{nonCapito || !corrente ? t.frequenti : t.daQui}</p>
         <ul className={styles.domande}>
           {(nonCapito || !corrente ? iniziali : seguenti).map(n => (
             <li key={n.id}>
@@ -251,23 +278,31 @@ export default function Odino() {
       </div>
 
       <div className={styles.piede}>
+        {suggeriti.length > 0 && (
+          <ul className={styles.suggerimenti} aria-label={t.suggerite}>
+            {suggeriti.map(n => (
+              <li key={n.id}>
+                <button type="button" onClick={() => { setScritto(''); registra(n.domanda, true, n.id); vai(n) }}>
+                  {n.domanda}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <form onSubmit={invia}>
           <label htmlFor="odino-domanda" className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
-            Scrivi la tua domanda
+            {t.campoEtichetta}
           </label>
           <input
             id="odino-domanda"
             value={scritto}
             onChange={e => setScritto(e.target.value)}
-            placeholder="Oppure scrivi: «ho un centro estetico»"
+            placeholder={t.campoPlaceholder}
             autoComplete="off"
           />
-          <button type="submit">Chiedi</button>
+          <button type="submit">{t.invia}</button>
         </form>
-        <p className={styles.nota}>
-          Sono un assistente automatico, non una persona. Le cifre che ti mostro sono quelle del listino
-          pubblico: non le invento e non le tratto. Per un preventivo serve una persona.
-        </p>
+        <p className={styles.nota}>{t.nota}</p>
       </div>
     </aside>
   )

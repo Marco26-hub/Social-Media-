@@ -20,7 +20,7 @@ function enPrice(prezzo: string): string {
     .replace(/ una tantum/g, ' one-off')
 }
 
-const EN_PRICES = {
+export const EN_PRICES = {
   presenza: enPrice(PREZZI.presenza),
   crescita: enPrice(PREZZI.crescita),
   web: enPrice(PREZZI.web),

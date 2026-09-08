@@ -8,7 +8,9 @@ import { SETTORI } from '@/lib/settori'
 import { VIDEO_PACCHETTI } from '@/lib/video-listino'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { STANDALONE_SERVICES } from '@/lib/standalone-services'
-import { termini } from '@/lib/odino/domande'
+import { motore, riconosciSettore, type Nodo, type Risposta } from '@/lib/odino/ricerca'
+
+export type { Nodo, Risposta }
 
 // I percorsi di ODINO: che cosa può chiedere e che cosa risponde.
 //
@@ -19,27 +21,6 @@ import { termini } from '@/lib/odino/domande'
 //
 // È una scelta, non un limite di mezzi: per un assistente che parla di prezzi e
 // di contratti, non poter improvvisare vale più che saper conversare.
-
-export type Risposta = {
-  /** Il titolo della risposta: risponde alla domanda, non la ripete. */
-  titolo: string
-  testo: string
-  /** Cifre da mostrare in evidenza, già formattate. */
-  cifre?: { voce: string; valore: string; nota?: string }[]
-  /** Dove andare per approfondire. */
-  link?: { href: string; label: string }[]
-  /** Domande che nascono da questa risposta. */
-  poi?: string[]
-}
-
-export type Nodo = {
-  id: string
-  /** Come la persona formula la domanda, non come la formuleremmo noi. */
-  domanda: string
-  /** Parole con cui questa domanda si riconosce, se qualcuno scrive invece di cliccare. */
-  chiavi: string[]
-  risposta: Risposta
-}
 
 const voce = (id: string) => SEGRETARIA_LISTINO.find(f => f.id === id)!
 const pianoVoce = voce('voce').piani
@@ -384,161 +365,10 @@ export const NODI: Nodo[] = [
 
 export const NODO_INIZIALE = 'da-dove-parto'
 
-export function nodo(id: string): Nodo | undefined {
-  return NODI.find(n => n.id === id)
-}
+export const MOTORE = motore(NODI)
+export const nodo = MOTORE.nodo
+export const cerca = MOTORE.cerca
 
-/**
- * Riconosce una domanda scritta a mano libera senza modelli di AI: conta quante
- * chiavi del nodo compaiono nel testo. Non "capisce" la frase, e non finge di
- * farlo — se nessun nodo raggiunge una soglia minima, ODINO lo dice e passa a
- * una persona invece di rispondere a caso.
- */
-/** I termini di ogni percorso, calcolati una volta sola. */
-// Le chiavi e la prosa non valgono uguale, ed e' la correzione piu' importante
-// fatta a questa ricerca.
-//
-// Le chiavi sono scritte a mano: dicono di che cosa parla il percorso. Le
-// parole della domanda e del titolo ci finiscono dentro per caso — «fate»,
-// «tutto», «mesi», «funziona». Mettendole nello stesso insieme, e pesandole con
-// l'IDF su diciannove nodi, una parola qualunque che capita in un titolo solo
-// sembrava distintiva quanto «disdetta»: «fate sconti» finiva su «farsi
-// trovare» per la parola «fate», «chi approva i post» sul prezzo dei social per
-// la parola «post», «come funziona il metodo» sulla segretaria telefonica per
-// la parola «funziona». Rispondere alla domanda sbagliata con sicurezza e'
-// peggio che dire «questa non la so».
-//
-// Ora la prosa puo' solo rafforzare un percorso che le chiavi hanno gia'
-// scelto. Da sola non ne apre nessuno.
-// Una chiave di due parole vale come frase, non come due parole sciolte.
-// «quanto costa» spezzato dava a «quanto» il potere di aprire da solo il
-// percorso dei social, e «quanto dura il contratto» finiva sul prezzo di
-// Instagram. Una chiave composta si accende quando ci sono tutte le sue parole.
-const CHIAVI_NODO = new Map<string, Set<string>>(
-  NODI.map(n => [n.id, new Set(n.chiavi.filter(k => termini(k).length === 1).flatMap(k => termini(k)))]),
-)
-
-const FRASI_NODO = new Map<string, string[][]>(
-  NODI.map(n => [n.id, n.chiavi.map(k => termini(k)).filter(parti => parti.length > 1)]),
-)
-
-const PROSA_NODO = new Map<string, Set<string>>(
-  NODI.map(n => {
-    const chiavi = CHIAVI_NODO.get(n.id)!
-    const dalleFrasi = new Set(FRASI_NODO.get(n.id)!.flat())
-    return [n.id, new Set([...termini(n.domanda), ...termini(n.risposta.titolo)].filter(t => !chiavi.has(t) && !dalleFrasi.has(t)))]
-  }),
-)
-
-const TERMINI_NODO = new Map<string, Set<string>>(
-  NODI.map(n => [n.id, new Set([...CHIAVI_NODO.get(n.id)!, ...FRASI_NODO.get(n.id)!.flat(), ...PROSA_NODO.get(n.id)!])]),
-)
-
-/**
- * Peso di un termine fra i percorsi: «costa» compare in quasi tutti e non
- * sceglie niente, «disdetta» compare in uno e sceglie da solo. Senza questo,
- * «quanto costa il blog» finiva sul percorso social perche' arrivava prima
- * nell'elenco: un pareggio risolto dall'ordine di scrittura, non dal senso.
- */
-const PESO_NODO = (() => {
-  const n = new Map<string, number>()
-  for (const s of TERMINI_NODO.values()) for (const t of s) n.set(t, (n.get(t) ?? 0) + 1)
-  const peso = new Map<string, number>()
-  for (const [t, c] of n) peso.set(t, Math.log(NODI.length / c) + 0.3)
-  return peso
-})()
-
-/**
- * Quanto due parole si somigliano, fermandosi appena diventa inutile saperlo.
- *
- * Serve per i refusi: chi scrive «segretria» o «ristorane» cerca la segretaria
- * e il ristorante. Prima ci arrivava un confronto sui primi caratteri, che pero'
- * faceva combaciare anche «contratto» con «controllo» — cinque lettere in comune
- * e due significati che non si toccano — e «quanto dura il contratto» rispondeva
- * col prezzo dei social.
- */
-function vicine(a: string, b: string, massimo: number): boolean {
-  if (Math.abs(a.length - b.length) > massimo) return false
-  let riga = Array.from({ length: b.length + 1 }, (_, i) => i)
-  for (let i = 1; i <= a.length; i++) {
-    const nuova = [i]
-    let minimo = i
-    for (let j = 1; j <= b.length; j++) {
-      const costo = a[i - 1] === b[j - 1] ? 0 : 1
-      nuova[j] = Math.min(riga[j] + 1, nuova[j - 1] + 1, riga[j - 1] + costo)
-      minimo = Math.min(minimo, nuova[j])
-    }
-    if (minimo > massimo) return false
-    riga = nuova
-  }
-  return riga[b.length] <= massimo
-}
-
-/** Un refuso, o una parola troncata: «gestion» per «gestionale». */
-function somigliano(cercata: string, chiave: string): boolean {
-  if (chiave.startsWith(cercata) && cercata.length >= 4 && chiave.length - cercata.length <= 4) return true
-  // Il plurale italiano cambia l'ultima lettera: «siti» e «sito», «post» e
-  // «posti». Quattro lettere uguali e l'ultima diversa bastano.
-  if (cercata.length >= 4 && cercata.length === chiave.length && cercata.slice(0, -1) === chiave.slice(0, -1)) return true
-  if (cercata.length < 6) return false
-  return vicine(cercata, chiave, cercata.length >= 8 ? 2 : 1)
-}
-
-/**
- * Cerca fra i percorsi curati. Sono risposte scritte per essere la PRIMA cosa
- * che una persona legge: hanno le cifre in evidenza e i passi successivi.
- * Vengono prima dell'indice completo del sito, che serve ad approfondire.
- */
-export function cerca(testo: string): Nodo[] {
-  const cercati = [...new Set(termini(testo))]
-  if (!cercati.length) return []
-  // La prima parola piena di una domanda italiana e' quasi sempre l'intento:
-  // in «chi approva i post» il verbo dice che si chiede dell'approvazione, e
-  // «post» e' solo l'oggetto. Senza questo peso i due percorsi pareggiavano e
-  // vinceva quello scritto prima nel file.
-  const primaParola = cercati[0]
-  const punteggi = NODI.map(n => {
-    const chiavi = CHIAVI_NODO.get(n.id)!
-    const prosa = PROSA_NODO.get(n.id)!
-    let p = 0
-    // Un percorso si apre solo se almeno una parola cade sulle sue chiavi.
-    // Senza questa condizione bastava una parola qualunque del titolo.
-    let ancorato = false
-    // Le chiavi composte per prime: valgono piu' di una parola sola, perche'
-    // «quanto costa» detto per intero dice molto piu' di «quanto».
-    for (const parti of FRASI_NODO.get(n.id)!) {
-      if (parti.every(parte => cercati.includes(parte))) {
-        p += parti.reduce((somma, parte) => somma + (PESO_NODO.get(parte) ?? 1.2), 0) * 2.5
-        ancorato = true
-      }
-    }
-    for (const t of cercati) {
-      const w = PESO_NODO.get(t) ?? 1.2
-      if (chiavi.has(t)) { p += w * 3 * (t === primaParola ? 1.35 : 1); ancorato = true }
-      else if ([...chiavi].some(x => somigliano(t, x))) { p += w * 2; ancorato = true }
-      else if (prosa.has(t)) p += w
-    }
-    return { n, p: ancorato ? p : 0 }
-  })
-  return punteggi.filter(x => x.p >= 2.4).sort((a, b) => b.p - a.p).map(x => x.n)
-}
-
-/**
- * Il mestiere nominato nella frase, se c'e'. «Ho una gelateria» non contiene
- * nessuna parola del listino, ma dice la cosa piu' utile di tutte: chi sei. I
- * nomi non sono scritti a mano, vengono dai settori — quindi un settore nuovo
- * viene riconosciuto senza toccare ODINO.
- */
-export function settoreCitato(testo: string): { slug: string; nome: string } | undefined {
-  const cercati = termini(testo)
-  if (!cercati.length) return undefined
-  for (const s of SETTORI) {
-    const suoi = [...termini(s.nome), ...termini(s.slug.replace(/-/g, ' '))]
-      .filter(p => p.length > 4 && !['servizi', 'locali'].includes(p))
-    // «gelaterie» deve riconoscere anche «gelateria»: si confronta la radice.
-    if (suoi.some(p => cercati.some(c => c.slice(0, 5) === p.slice(0, 5)))) {
-      return { slug: s.slug, nome: s.nome }
-    }
-  }
-  return undefined
+export function settoreCitato(testo: string) {
+  return riconosciSettore(testo, SETTORI)
 }

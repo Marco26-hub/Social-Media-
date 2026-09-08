@@ -1,6 +1,7 @@
 import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Odino from '@/components/Odino'
 import PublicHeader from '@/components/PublicHeader'
 import styles from '@/styles/english.module.css'
 
@@ -67,6 +68,10 @@ export default function EnglishLayout({ children }: Readonly<{ children: React.R
         </div>
         <p className={styles.legal}>Social Web Automation di Marco Dibenedetto · VAT IT03786790133 · Cermenate (CO), Italy</p>
       </footer>
+      {/* ODINO viveva solo sulle pagine italiane: ventotto pagine inglesi
+          spiegavano tutto e non avevano nessuno a cui chiedere. Parla inglese
+          da se', la lingua la deduce dal percorso. */}
+      <Odino />
     </div>
   )
 }
