@@ -49,6 +49,68 @@
 }
 .robotLayer img { object-fit: contain; object-position: center bottom }
 .lancio:not(:hover) .robotLayer { animation: odinoGuarda 5.4s ease-in-out infinite }
+
+/* La scatola dei livelli: proporzione 2:3 come l'immagine, centrata nel
+   bottone. Ogni livello e' una copia intera dell'immagine con un ritaglio
+   (clip-path): le percentuali sono quelle dell'immagine, non del bottone. */
+.corpoBox {
+  position: absolute;
+  top: 0; bottom: 0; left: 50%;
+  aspect-ratio: 2 / 3;
+  transform: translateX(-50%);
+  transform-style: preserve-3d;
+}
+.strato { position: absolute; inset: 0; display: block }
+.strato img { object-fit: contain; object-position: center bottom }
+/* Il corpo: tutto tranne il braccio che saluta (x 0-41%, y 37-56%) e le
+   gambe (sotto il 68%). Quei pezzi vivono nelle altre due copie. */
+.corpo { clip-path: polygon(0 0, 100% 0, 100% 68%, 0 68%, 0 56%, 41% 56%, 41% 37%, 0 37%) }
+/* Il braccio: ruota sulla spalla, che sta al bordo del ritaglio. Il saluto e'
+   breve e ogni sei secondi, come prima: un braccio che si agita di continuo
+   e' un banner. */
+.braccio {
+  clip-path: inset(37% 59% 44% 0);
+  transform-origin: 41% 46%;
+  animation: odinoSaluto 6s ease-in-out infinite;
+}
+/* Le gambe: un'oscillazione di poco piu' di un grado sulle anche, in
+   controfase col galleggiamento, cosi' sembra che si sposti il peso. */
+.gambe {
+  clip-path: inset(68% 0 0 0);
+  transform-origin: 50% 66%;
+  animation: odinoPasso 4.2s ease-in-out infinite;
+}
+/* Le palpebre: il colore del visore, scendono e risalgono in due decimi di
+   secondo. Sinistra e destra battono insieme. */
+.palpebra {
+  position: absolute;
+  height: 6.5%;
+  border-radius: 45%;
+  background: #0f2019;
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  animation: odinoBatte 5.6s infinite;
+}
+.palpebraSinistra { left: 37%; top: 23.4%; width: 13% }
+.palpebraDestra { left: 60.5%; top: 25%; width: 12% }
+
+@keyframes odinoSaluto {
+  0%, 60%, 100% { transform: rotate(0deg) }
+  66% { transform: rotate(-9deg) }
+  73% { transform: rotate(3deg) }
+  80% { transform: rotate(-7deg) }
+  88% { transform: rotate(0deg) }
+}
+@keyframes odinoPasso {
+  0%, 100% { transform: rotate(0deg) translateY(0) }
+  25% { transform: rotate(1.3deg) translateY(.5px) }
+  50% { transform: rotate(0deg) translateY(0) }
+  75% { transform: rotate(-1.3deg) translateY(.5px) }
+}
+@keyframes odinoBatte {
+  0%, 91%, 100% { transform: scaleY(0) }
+  93%, 95% { transform: scaleY(1) }
+}
 .stato {
   position: absolute; right: 8px; bottom: 18px; width: 13px; height: 13px;
   border: 3px solid #fffdf7; border-radius: 50%; background: #27a875;
@@ -193,6 +255,8 @@
   .mascotte,
   .robotLayer,
   .lancio::before,
+  .strato,
+  .palpebra,
   .stato { animation: none !important; transition: none !important }
 }
 

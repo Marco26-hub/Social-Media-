@@ -286,6 +286,7 @@
   .band { padding: 62px 20px; }
   .closing { padding: 56px 20px; }
   .footer { grid-template-columns: 1fr; padding: 42px 20px; padding-right: 100px; }
+  .footerLinks nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; }
   .legal { grid-column: auto; }
   .grid, .priceGrid { grid-template-columns: 1fr; }
   .leadCard ul { grid-template-columns: 1fr; }

@@ -206,9 +206,30 @@ export default function Odino() {
         aria-label={t.apri}
         title={t.apriBreve}
       >
+        {/* La mascotte e' un'immagine sola, e un'immagine sola non muove le
+            braccia. Qui ne stanno tre copie ritagliate: il corpo senza il
+            braccio che saluta e senza le gambe, il braccio da solo che ruota
+            sulla spalla, le gambe da sole che oscillano sulle anche. Ogni
+            copia mostra solo il suo pezzo, cosi' non si vede niente di doppio.
+            Le palpebre sono due rettangoli del colore del visore che scendono
+            sugli occhi: il battito. La scatola ha le proporzioni esatte
+            dell'immagine (2:3), altrimenti le percentuali dei ritagli
+            finirebbero sulla fascia vuota ai lati. */}
         <span className={styles.mascotte} aria-hidden="true">
           <span className={styles.robotLayer}>
-            <Image src="/images/odino-mascotte.webp" alt="" fill sizes="112px" priority />
+            <span className={styles.corpoBox}>
+              <span className={`${styles.strato} ${styles.corpo}`}>
+                <Image src="/images/odino-mascotte.webp" alt="" fill sizes="112px" priority />
+              </span>
+              <span className={`${styles.strato} ${styles.gambe}`}>
+                <Image src="/images/odino-mascotte.webp" alt="" fill sizes="112px" />
+              </span>
+              <span className={`${styles.strato} ${styles.braccio}`}>
+                <Image src="/images/odino-mascotte.webp" alt="" fill sizes="112px" />
+              </span>
+              <span className={`${styles.palpebra} ${styles.palpebraSinistra}`} />
+              <span className={`${styles.palpebra} ${styles.palpebraDestra}`} />
+            </span>
           </span>
         </span>
         <span className={styles.stato} aria-hidden="true" />
