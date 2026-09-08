@@ -88,7 +88,13 @@
    soltanto i due parallelogrammi. Ovunque nel sito sta dentro una cornice
    verde, ed e' cosi' che va incassato anche qui. */
 .identityPanel img { width: 100%; max-width: 210px; height: auto; object-fit: contain; }
-.identityLogo { width: fit-content; display: grid; place-items: center; margin-bottom: 22px; padding: 14px 18px; border-radius: 5px; background: var(--green); }
+/* Il riquadro del logo prende il verde del marchio, non var(--green): quel
+   token cambia col tema e in scuro diventa menta, quindi la stessa pagina
+   mostrava un logo su fondo brillante in inglese e su fondo verde scuro in
+   italiano. Il marchio non cambia colore con il tema del sito. Misure come
+   nella pagina italiana: riquadro contenuto, logo dentro con aria intorno. */
+.identityLogo { width: fit-content; display: grid; place-items: center; margin-bottom: 22px; padding: 12px 16px; border-radius: 4px; background: #0f6b4f; }
+.identityPanel .identityLogo img { width: 168px; max-width: none; height: auto; }
 .identityPanel dl { display: grid; gap: 1px; margin: 0; background: rgba(255, 255, 255, .1); }
 .identityPanel div { padding: 13px 12px; background: #15251f; }
 .identityPanel dt { color: #9cafa7; font-size: 10px; font-weight: 800; text-transform: uppercase; }

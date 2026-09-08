@@ -149,12 +149,12 @@
 @media (max-width: 820px) {
   .socialSection { padding: 40px 18px; }
   .footerBottom { grid-template-columns: 1fr; align-items: start; padding: 34px 18px; padding-right: 100px; }
-  /* Sul telefono i link andavano a capo in righe irregolari, tre e quattro per
-     riga a seconda della lunghezza delle parole. Una griglia a due colonne li
-     mette in ordine; il pulsante del recesso prende la riga intera perche' e'
-     l'unico che non e' un semplice collegamento. */
-  .footerBottom nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
-  .footerBottom nav .withdrawalLink { grid-column: 1 / -1; justify-content: center; }
+  /* I link restano in fila e vanno a capo da soli, com'erano: la griglia a due
+     colonne li incolonnava ma lasciava buchi larghi fra parole corte e lunghe.
+     Serviva solo una spaziatura regolare — stessa distanza fra tutti, verticale
+     e orizzontale — e il pulsante del recesso staccato dagli altri. */
+  .footerBottom nav { justify-content: flex-start; gap: 16px; }
+  .footerBottom nav .withdrawalLink { margin-top: 4px; }
   .footerBottom p { text-align: left; }
 }
 @media (max-width: 620px) {
