@@ -45,6 +45,36 @@ export const COPPIE_LINGUA: Record<string, string> = {
   ...Object.fromEntries(SWA_BLOG_ARTICLES_EN.map(a => [`/blog/${a.slugIt}`, `/en/blog/${a.slug}`])),
 }
 
+/**
+ * Le traduzioni vere, una a una. Sono un'altra cosa dal cambio lingua.
+ *
+ * hreflang vuole coppie reciproche: se A dichiara B come versione inglese, B
+ * deve dichiarare A come versione italiana. Undici pagine italiane puntavano
+ * tutte a /en/services, che di italiane ne puo' dichiarare una sola — e infatti
+ * dichiara /servizi. Le altre dieci erano annunci che nessuno ricambiava, e
+ * davanti a un gruppo non reciproco Google scarta il gruppo intero: l'inglese
+ * non veniva consolidato, ed era l'unica cosa che nel sito non tornava.
+ *
+ * Per il lettore mandare /servizi/seo-geo su /en/services resta giusto: trova
+ * il servizio che stava leggendo, tradotto. Per un motore e' un'altra
+ * affermazione — «questa pagina e' quella pagina» — e non e' vera.
+ *
+ * Delle doppie sopravvive la prima, come nella mappa inversa qui sotto:
+ * l'ordine di COPPIE_LINGUA mette l'indice prima dei dettagli, quindi la
+ * coppia che resta e' /servizi ↔ /en/services, che e' quella vera. Le altre
+ * dieci escono da se', senza un elenco da tenere aggiornato a mano.
+ */
+export const TRADUZIONI: Record<string, string> = (() => {
+  const visti = new Set<string>()
+  const out: Record<string, string> = {}
+  for (const [it, en] of Object.entries(COPPIE_LINGUA)) {
+    if (visti.has(en)) continue
+    visti.add(en)
+    out[it] = en
+  }
+  return out
+})()
+
 // L'inverso si costruisce dalla prima corrispondenza, non dall'ultima: undici
 // pagine italiane puntano a /en/services, e senza questo il ritorno in italiano
 // finiva sull'ultima della lista invece che sull'indice dei servizi.

@@ -4,8 +4,10 @@ import { resolveBlogClienteIdForHost } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
 import { SETTORI } from '@/lib/settori'
 import { SETTORI_EN } from '@/lib/settori.en'
-// Stessa mappa usata dal cambio lingua in testata: una copia sola.
-import { COPPIE_LINGUA as ENGLISH_PAIRS } from '@/lib/lingue'
+// Le coppie reciproche, non quelle del cambio lingua: hreflang e' una
+// dichiarazione di equivalenza fra due pagine, e vale solo se e' vera in
+// tutte e due le direzioni.
+import { TRADUZIONI as ENGLISH_PAIRS } from '@/lib/lingue'
 import { SWA_BLOG_ARTICLES } from '@/lib/swa-blog-content'
 import { SWA_BLOG_ARTICLES_EN } from '@/lib/swa-blog-content.en'
 
