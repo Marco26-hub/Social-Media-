@@ -22,6 +22,15 @@ const SERVIZI_IT = [
   '/servizi/automazione-gestionali',
 ] as const
 
+// Le due pagine con impianto proprio: non passano da SERVIZI_EN perche' usano
+// una landing loro, ma la gemella ce l'hanno. Stanno in una costante perche'
+// vanno tolte anche dal ripiego sulla panoramica qui sotto: senza, quella
+// riga le riscriverebbe subito dopo e la coppia sparirebbe.
+const ALTRE_LANDING: Record<string, string> = {
+  '/servizi/segretaria-telefonica-ai': '/en/services/ai-phone-assistant',
+  '/servizi/agenda-clienti-whatsapp': '/en/services/client-diary-whatsapp',
+}
+
 export const COPPIE_LINGUA: Record<string, string> = {
   '/': '/en',
   '/servizi': '/en/services',
@@ -35,11 +44,14 @@ export const COPPIE_LINGUA: Record<string, string> = {
   // Le schede di servizio tradotte hanno la loro gemella, una per una: la
   // corrispondenza la dichiara il servizio stesso, non un elenco a parte.
   ...Object.fromEntries(SERVIZI_EN.map(s => [s.slugIt, `/en/services/${s.slug}`])),
+  ...ALTRE_LANDING,
   // Quelle non ancora tradotte finiscono sulla panoramica: il lettore trova
   // comunque il servizio che stava leggendo, in inglese. Per gli hreflang non
   // basta — vedi TRADUZIONI qui sotto — ma per chi legge e' meglio della home.
   ...Object.fromEntries(
-    SERVIZI_IT.filter(p => !SERVIZI_EN.some(s => s.slugIt === p)).map(percorso => [percorso, '/en/services']),
+    SERVIZI_IT
+      .filter(p => !SERVIZI_EN.some(s => s.slugIt === p) && !(p in ALTRE_LANDING))
+      .map(percorso => [percorso, '/en/services']),
   ),
   '/consulenza': '/en/services',
   // Il Journal e i suoi articoli: lo slug inglese e' diverso da quello italiano

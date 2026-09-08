@@ -116,6 +116,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.3,
       alternates: languageAlternates(it),
     })),
+    // Le due landing inglesi: non passano da SERVIZI_EN perche' hanno un
+    // componente proprio, ma la coppia e' reciproca come le altre.
+    ...[
+      ['/en/services/ai-phone-assistant', '/servizi/segretaria-telefonica-ai'],
+      ['/en/services/client-diary-whatsapp', '/servizi/agenda-clienti-whatsapp'],
+    ].map(([en, it]) => ({
+      url: `${SITE_URL}${en}`,
+      lastModified: englishUpdated,
+      changeFrequency: 'monthly' as const,
+      priority: 0.75,
+      alternates: languageAlternates(it),
+    })),
     ...SERVIZI_EN.map(servizio => ({
       url: `${SITE_URL}/en/services/${servizio.slug}`,
       lastModified: englishUpdated,

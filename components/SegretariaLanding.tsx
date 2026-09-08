@@ -49,7 +49,39 @@ export type ContenutoLanding = {
   gemella: { href: string; occhiello: string; h2: string; testo: string; cta: string }
 }
 
-export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
+export default function SegretariaLanding({ c, locale = 'it' }: { c: ContenutoLanding; locale?: 'it' | 'en' }) {
+  // Il contenuto arriva dall'esterno, ma queste righe stavano scritte qui in
+  // italiano: intestazioni di tabella, etichette dei riquadri, briciole. Erano
+  // l'unica ragione per cui la landing non poteva esistere in inglese.
+  const inglese = locale === 'en'
+  const et = inglese
+    ? {
+        salta: 'Skip to content', home: 'Home', servizi: 'Services', serviziHref: '/en/services',
+        call: 'Book a call', piani: 'See the plans',
+        prove: ['Italian and English', 'You set the rules', 'Nothing is sent without your approval'],
+        pannelloEsempio: 'Example dashboard', oggi: 'Today', attiva: 'Assistant live',
+        cheVedi: 'What you see', controlla: 'Check',
+        vediSettore: 'See how we work', percorso: 'See the whole path', percorsoHref: '/en#percorso',
+        attivaPiano: 'Activate the plan',
+        inItalia: 'Across Italy', vicino: 'Close to the way your business actually works.',
+        colonne: ['Plan', 'Who it is for', 'Fee', 'Setup', 'Included each month'],
+        domande: 'Questions', domandeH2: 'The questions we get most often.',
+        ivaEsclusa: 'Prices exclude VAT.',
+      }
+    : {
+        salta: 'Vai al contenuto', home: 'Home', servizi: 'Servizi', serviziHref: '/servizi',
+        call: 'Richiedi una call', piani: 'Vedi i piani',
+        prove: ['Italiano e inglese', 'Le regole le scegli tu', 'Nessun invio senza la tua approvazione'],
+        pannelloEsempio: 'Esempio di pannello', oggi: 'Oggi', attiva: 'Assistente attiva',
+        cheVedi: 'Che cosa vedi', controlla: 'Controlla',
+        vediSettore: 'Vedi come lavoriamo', percorso: 'Vedi tutto il percorso', percorsoHref: '/#percorso',
+        attivaPiano: 'Attiva il piano',
+        inItalia: 'In tutta Italia', vicino: 'Vicino al modo in cui lavora la tua attività.',
+        colonne: ['Piano', 'Per chi', 'Canone', 'Avvio', 'Compreso nel mese'],
+        domande: 'Domande', domandeH2: 'Le domande che ci fanno più spesso.',
+        ivaEsclusa: 'Prezzi IVA esclusa.',
+      }
+
   const wa = `https://wa.me/393477196603?text=${encodeURIComponent(c.waTesto)}`
   const url = `${SITE_URL}${c.path}`
 
@@ -84,7 +116,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
             name: p.nome,
             price: String(p.canone),
             priceCurrency: 'EUR',
-            description: `${p.perChi}. ${p.soglia}. Avvio ${p.avvio}. Prezzi IVA esclusa.`,
+            description: `${p.perChi}. ${p.soglia}. ${p.avvio}. ${et.ivaEsclusa}`,
             availability: 'https://schema.org/InStock',
           })),
         },
@@ -124,7 +156,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
 
       {/* Il bersaglio c'era, il link no: chi naviga da tastiera doveva
           attraversare tutto il menu su due pagine servizio. */}
-      <a className={styles.skipLink} href="#main-content">Vai al contenuto</a>
+      <a className={styles.skipLink} href="#main-content">{et.salta}</a>
       <main id="main-content">
         <div className="home-hero">
           <div className="cinematic-media" aria-hidden="true">
@@ -140,28 +172,26 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
             <div className="hero-copy">
               <nav className={styles.briciole} aria-label="Percorso">
                 <Link href="/">Home</Link><span aria-hidden="true">/</span>
-                <Link href="/servizi">Servizi</Link><span aria-hidden="true">/</span>
+                <Link href={et.serviziHref}>{et.servizi}</Link><span aria-hidden="true">/</span>
                 <span>{c.briciola}</span>
               </nav>
               <span className="eyebrow">{c.occhiello}</span>
               <h1>{c.h1}</h1>
               <p>{c.lead}</p>
               <div className="hero-actions">
-                <a className="primary-action" href={wa}>Richiedi una call</a>
-                <a className="secondary-action" href="#listino">Vedi i piani</a>
+                <a className="primary-action" href={wa}>{et.call}</a>
+                <a className="secondary-action" href="#listino">{et.piani}</a>
               </div>
               <div className="proof-strip" aria-label="In sintesi">
-                <span>Italiano e inglese</span>
-                <span>Le regole le scegli tu</span>
-                <span>Nessun invio senza la tua approvazione</span>
+                {et.prove.map(x => <span key={x}>{x}</span>)}
               </div>
             </div>
 
             <div className="hero-stage luxury-stage" aria-label="Esempio del pannello">
               <span className="live-caption"><i /> {c.consolePrima}</span>
               <div className="phone-frame floating-console">
-                <div className="phone-top"><span>Esempio di pannello</span><strong>Oggi</strong></div>
-                <div className="pulse-card"><span className="live-dot" />Assistente attiva</div>
+                <div className="phone-top"><span>{et.pannelloEsempio}</span><strong>{et.oggi}</strong></div>
+                <div className="pulse-card"><span className="live-dot" />{et.attiva}</div>
                 {c.console.map(([tag, titolo, dettaglio]) => (
                   <article className="opportunity-card" key={titolo}>
                     <div><span>{tag}</span><h3>{titolo}</h3><p>{dettaglio}</p></div>
@@ -219,16 +249,16 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
             <span>{c.pannello.occhiello}</span>
             <h2>{c.pannello.h2}</h2>
             <p>{c.pannello.testo}</p>
-            <a className="light-action" href={wa}>Richiedi una call</a>
+            <a className="light-action" href={wa}>{et.call}</a>
           </div>
           <div className="admin-phone">
-            <div className="admin-head"><span>Esempio di pannello</span><b>Che cosa vedi</b></div>
+            <div className="admin-head"><span>{et.pannelloEsempio}</span><b>{et.cheVedi}</b></div>
             <div className="admin-kpis">
               {c.pannello.vedi.map(v => <div key={v}><span>{v}</span></div>)}
             </div>
             <div className="task-list">
               {c.pannello.righe.map(([t, p]) => (
-                <article key={t}><div><h3>{t}</h3><p>{p}</p></div><button>Controlla</button></article>
+                <article key={t}><div><h3>{t}</h3><p>{p}</p></div><button>{et.controlla}</button></article>
               ))}
             </div>
           </div>
@@ -248,7 +278,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
           <div className="audience-grid">
             {c.settori.voci.map(([t, p, href], i) => {
               const dentro = <><span>0{i + 1}</span><h3>{t}</h3><p>{p}</p>
-                {href && <em className={styles.vaiAlSettore}>Vedi come lavoriamo <ArrowRight size={15} aria-hidden="true" /></em>}</>
+                {href && <em className={styles.vaiAlSettore}>{et.vediSettore} <ArrowRight size={15} aria-hidden="true" /></em>}</>
               return href
                 ? <Link key={t} href={href}>{dentro}</Link>
                 : <div key={t}>{dentro}</div>
@@ -258,8 +288,8 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
 
         <section className="geo-section">
           <div className="section-title">
-            <span>In tutta Italia</span>
-            <h2>Vicino al modo in cui lavora la tua attività.</h2>
+            <span>{et.inItalia}</span>
+            <h2>{et.vicino}</h2>
             <p>Configurazione e affiancamento da remoto, con messaggi in italiano naturale e attenzione al rapporto con ogni cliente.</p>
           </div>
           <div className="area-list">{c.citta.map(x => <span key={x}>{c.briciola} a {x}</span>)}</div>
@@ -274,7 +304,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
             {c.passo.poiHref && c.passo.poiLabel && (
               <Link href={c.passo.poiHref}>Poi: {c.passo.poiLabel} →</Link>
             )}
-            <Link href="/#percorso">Vedi tutto il percorso</Link>
+            <Link href={et.percorsoHref}>{et.percorso}</Link>
           </span>
         </nav>
 
@@ -294,7 +324,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
                   <p className={styles.pianoAvvio}>Avvio {p.avvio} · {p.soglia}</p>
                   <ul>{p.voci.map(v => <li key={v}>{v}</li>)}</ul>
                   <p className={styles.pianoExtra}>{p.extra}</p>
-                  <a className={styles.pianoCta} href={`/acquista?servizio=${encodeURIComponent(p.id)}`}>Attiva il piano</a>
+                  <a className={styles.pianoCta} href={`/acquista?servizio=${encodeURIComponent(p.id)}`}>{et.attivaPiano}</a>
                 </article>
               ))}
             </div>
@@ -319,11 +349,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
               <caption>{c.listino.famiglia.nome}: soglie comprese e costi di avvio, IVA esclusa</caption>
               <thead>
                 <tr>
-                  <th scope="col">Piano</th>
-                  <th scope="col">Per chi</th>
-                  <th scope="col">Canone</th>
-                  <th scope="col">Avvio</th>
-                  <th scope="col">Compreso nel mese</th>
+                  {et.colonne.map(x => <th key={x} scope="col">{x}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -355,7 +381,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
         </section>
 
         <section className="section">
-          <div className="section-title"><span>Domande</span><h2>Le domande che ci fanno più spesso.</h2></div>
+          <div className="section-title"><span>{et.domande}</span><h2>{et.domandeH2}</h2></div>
           <div className={styles.faq}>
             {c.faq.map(([q, a]) => (
               <details key={q}><summary>{q}</summary><p>{a}</p></details>
