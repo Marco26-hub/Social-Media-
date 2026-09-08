@@ -108,6 +108,9 @@
   white-space: nowrap;
 }
 .socialCardPending { opacity: 0.78; }
+/* Il margine destro e' garantito piu' largo del pannello fisso — la mascotte
+   di ODINO e i pulsanti «torna su» e «indietro» — che a fine pagina cade
+   proprio qui. Senza, la ragione sociale e gli ultimi link finivano sotto. */
 .footerBottom {
   min-height: 124px;
   display: grid;
@@ -115,6 +118,7 @@
   align-items: center;
   gap: 30px;
   padding: 26px max(24px, calc((100vw - 1180px) / 2));
+  padding-right: max(150px, calc((100vw - 1180px) / 2));
 }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: white; font-size: 14px; font-weight: 800; text-decoration: none; white-space: nowrap; }
 .brand > span { width: 86px; height: 40px; display: grid; place-items: center; border-radius: 4px; background: #0f6b4f; }
@@ -141,7 +145,7 @@
 }
 @media (max-width: 820px) {
   .socialSection { padding: 40px 18px; }
-  .footerBottom { grid-template-columns: 1fr; align-items: start; padding: 34px 18px; }
+  .footerBottom { grid-template-columns: 1fr; align-items: start; padding: 34px 18px; padding-right: 100px; }
   .footerBottom nav { justify-content: flex-start; }
   .footerBottom p { text-align: left; }
 }

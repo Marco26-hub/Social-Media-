@@ -209,10 +209,29 @@
 .closing .primary { flex: none; background: #fff; color: var(--green-dark); }
 .closing .primary:hover { background: var(--mint); }
 
-.footer { display: grid; grid-template-columns: 1fr auto; gap: 22px 60px; padding: 48px max(24px, calc((100vw - 1120px) / 2)); background: #0d1814; color: #dce6e1; }
+/* Il footer aveva due difetti che si vedevano insieme.
+   La griglia era «1fr auto»: diciotto link in fila si prendevano tutta la
+   larghezza e il marchio restava in una colonna di pochi pixel, a capo una
+   parola per riga. E i link erano allineati a destra, esattamente dove stanno
+   la mascotte di ODINO e i pulsanti «torna su» e «indietro»: a fine pagina il
+   pannello fisso cadeva sulla riga dei link e ne copriva l'ultimo.
+   Ora il marchio ha una colonna sua, i link partono da sinistra, e il margine
+   destro e' garantito piu' largo del pannello: 106px la mascotte su desktop,
+   78 su telefono, piu' aria. */
+.footer {
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+  gap: 22px 48px;
+  padding: 48px max(24px, calc((100vw - 1120px) / 2));
+  padding-right: max(150px, calc((100vw - 1120px) / 2));
+  background: #0d1814;
+  color: #dce6e1;
+}
 .footer strong { font: 500 20px Georgia, 'Times New Roman', serif; }
 .footer p { margin: 8px 0 0; color: #91a39c; font-size: 13px; }
-.footerLinks { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 18px; }
+.footerLinks { display: grid; gap: 12px; align-content: start; }
+.footerLinks nav { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.footerLinks nav + nav { padding-top: 12px; border-top: 1px solid #253b34; }
 .footer a { min-height: 24px; display: inline-flex; align-items: center; color: #dce6e1; font-size: 13px; text-decoration: none; }
 .footer a:hover { color: #83dbb9; }
 .legal { grid-column: 1 / -1; padding-top: 20px; border-top: 1px solid #253b34; color: #91a39c; font-size: 12px; }
@@ -266,8 +285,7 @@
   .section { padding: 62px 20px; }
   .band { padding: 62px 20px; }
   .closing { padding: 56px 20px; }
-  .footer { grid-template-columns: 1fr; padding: 42px 20px; }
-  .footerLinks { justify-content: flex-start; }
+  .footer { grid-template-columns: 1fr; padding: 42px 20px; padding-right: 100px; }
   .legal { grid-column: auto; }
   .grid, .priceGrid { grid-template-columns: 1fr; }
   .leadCard ul { grid-template-columns: 1fr; }
