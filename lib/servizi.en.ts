@@ -1,7 +1,9 @@
-import { Globe2, Megaphone, Newspaper, ScanSearch, type LucideIcon } from 'lucide-react'
+import { Clapperboard, ClipboardCheck, Globe2, Megaphone, Newspaper, ScanSearch, Target, Workflow } from 'lucide-react'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { CANONE_A_CARICO_CLIENTE_EN } from '@/lib/canone-incluso'
 import { EN_PRICES } from '@/lib/settori.en'
+import { STANDALONE_SERVICES } from '@/lib/standalone-services'
+import { VIDEO_PACCHETTI } from '@/lib/video-listino'
 import { metodoServizioEn } from '@/lib/metodo.en'
 import type { MarketingDetailConfig } from '@/components/MarketingDetailPage'
 
@@ -26,6 +28,8 @@ export type ServizioEn = {
   description: string
   config: Omit<MarketingDetailConfig, 'path' | 'locale'>
 }
+
+const LEAD_PILOT = STANDALONE_SERVICES.find(s => s.slug === 'lead-pilot')!
 
 const CTA = 'Book a call'
 const CTA_HREF = 'https://wa.me/393477196603?text=' + encodeURIComponent('Hello! I would like to talk about Social Web Automation services.')
@@ -265,6 +269,237 @@ export const SERVIZI_EN: ServizioEn[] = [
         { href: '/en/services/seo-geo', label: 'SEO + GEO' },
         { href: '/en/services/websites-ecommerce', label: 'Websites and e-commerce' },
         { href: '/en/blog', label: 'SWA Journal' },
+      ],
+    },
+  },
+  {
+    slug: 'video-production',
+    slugIt: '/servizi/video-produzione',
+    title: 'Video filmed on your premises | SWA',
+    description:
+      'A photographer, lights and proper lenses come to you. Four monthly plans, from 5 to 20 vertical videos a month, edited and published inside your plan.',
+    config: {
+      eyebrow: 'Filming on your premises',
+      title: 'Professional equipment, at your place.',
+      lead: 'A recent phone films perfectly well, and that is not where quality is lost. The difference is made by what surrounds the camera: controlled lighting, dedicated microphones, stabilisation and lenses, with someone who knows how to use them. We come to you with a photographer, lights and equipment, and film several weeks of material in half a day. If you would rather not be in front of the camera, we bring a face: a man or a woman, your choice.',
+      serviceName: 'Filming on site',
+      serviceType: 'Video and photo production on site for social content',
+      promise: 'Material filmed properly, thought for vertical and cut to the formats we publish. Filming closes the loop: we used to edit what you had, now we produce the raw material too.',
+      priceNote: 'Four monthly fees, from 5 to 20 videos a month, spread across the weeks. The price includes travel inside the agreed area; tolls, parking and trips outside the area are excluded and stated first. Special set-ups or several locations are quoted after the site visit.',
+      offerHighlight: 'Weeks of content in half a day',
+      primaryCtaLabel: CTA,
+      primaryCtaHref: CTA_HREF,
+      icon: Clapperboard,
+      startingPrice: String(VIDEO_PACCHETTI[0].prezzo),
+      priceCadence: '/month',
+      signals: ['Professional lighting, audio and lenses', 'A male or female presenter, your choice', 'Filmed for the vertical format'],
+      outcomes: [
+        { title: 'Equipment', text: 'Controlled lighting, dedicated microphones, stabilisation and lenses: the kit that changes the result for the same subject.' },
+        { title: 'Volume', text: 'One session produces weeks of material: we film in blocks, not one video at a time.' },
+        { title: 'Consistency', text: 'The footage enters the editorial plan and is edited and published by us, with nothing changing hands.' },
+      ],
+      deliverablesTitle: 'What happens on filming day.',
+      deliverablesIntro: 'We do not arrive to improvise. The plan of what gets filmed exists first, because we already know what will be published in the following weeks.',
+      deliverables: [
+        { title: 'Shooting plan', text: 'Before the day we decide scenes, messages and formats: we arrive knowing what is needed, and avoid reshoots.' },
+        { title: 'Photographer and equipment', text: 'Lenses, lights and microphones, and above all someone who knows where to put them. A light crew that comes in without stopping your work.' },
+        { title: 'A presenter, if you want one', text: 'You can appear, a member of your staff can, or we bring a professional presenter, a man or a woman.' },
+        { title: 'The place and the craft', text: 'The premises, the gestures, the details of the trade. This is the material that makes a profile credible even without speaking.' },
+        { title: 'Photos from the same set', text: 'The same session also produces stills for posts, covers and the website, without organising a second day.' },
+        { title: 'Delivery and editing', text: 'The footage enters the plan: editing, subtitles and publication are already included in the active social plan.' },
+      ],
+      process: metodoServizioEn('video-produzione'),
+      tabella: {
+        occhiello: 'Plans',
+        h2: 'What filming costs, by plan',
+        intro:
+          'One session produces five videos: that is why the cost per video sits well below a bespoke promotional video, which in Italy starts at €800. Monthly fees, VAT excluded, travel inside the agreed area included.',
+        caption: 'Monthly vertical video production plans: videos delivered, filming sessions and fee',
+        colonne: ['Plan', 'Price', 'What you get'],
+        righe: VIDEO_PACCHETTI.map(p => [
+          p.nome,
+          `€${p.prezzo} per month`,
+          `${p.video} videos a month in ${p.sessioni} filming session${p.sessioni === 1 ? '' : 's'}`,
+        ]),
+      },
+      faq: [
+        { q: 'How long does a filming session take?', a: 'Half a day is almost always enough for several weeks of material, because we film in blocks instead of one piece at a time. A full day is needed when there are several locations, several people on camera or products to set up. We fix the length at the site visit, before the quote.' },
+        { q: 'Do I have to appear in the videos?', a: 'No. You can appear, a member of your staff can, or we bring a professional presenter, a man or a woman. The choice follows who your service speaks to, not taste: a format without a face carried on consistently beats a talking format abandoned after three weeks.' },
+        { q: 'Do we have to close the business to film?', a: 'No, and we do not recommend it: footage shot while you work is the most credible. At the site visit we choose the quieter hours and film in blocks, without stopping customers. It is why the site visit comes before the quote and not after.' },
+        { q: 'Is editing included in the filming price?', a: 'Editing, subtitles and publication are part of the active social plan, not of the filming. Filming produces the raw material; the plan turns it into scheduled posts. They add up, they do not replace each other: without an active plan the footage stays material someone has to edit.' },
+        { q: 'What equipment do you bring?', a: 'A photographer, lights, dedicated microphones, stabilisation and lenses. What makes the difference in a business video is not camera resolution: it is controlled light, clean audio and steady framing — exactly the three things missing when you film in a hurry with whatever is at hand.' },
+        { q: 'Do we get photos as well, or only video?', a: 'The same session also produces stills, and it is one of the reasons it is worth it: images are needed for posts, covers and the website, and organising a second day with a photographer costs more than the half day where everything is done together.' },
+        { q: 'What does filming cost?', a: `There are four plans, and the fee per video falls as the volume rises: ${VIDEO_PACCHETTI.map(v => `${v.nome} ${v.video} videos at €${v.prezzo}`).join(', ')}. These are monthly fees, cancelled with the notice written in the contract. A single bespoke promotional video starts at €800 on the Italian market: here we film in a batch, five videos per session instead of one at a time, and that is the reason for the difference. Prices exclude VAT, travel inside the agreed area included.` },
+        { q: 'Do the videos stay mine?', a: 'Yes. The footage and photos produced are yours. You use them wherever you like — social, website, ads, presentations — even if one day you change supplier. What you pay for is material that stays, not access that expires with the subscription.' },
+      ],
+      related: [
+        { href: '/en/services/social-media-management', label: 'Managed social media' },
+        { href: '/en/pricing', label: 'Social plans' },
+        { href: '/en/contact', label: 'Talk to us' },
+      ],
+    },
+  },
+  {
+    slug: 'b2b-lead-research',
+    slugIt: '/servizi/ricerca-clienti-b2b',
+    title: 'B2B lead research and qualification | SWA',
+    description:
+      'We start from your ideal client and build a qualified list of up to 30 matching companies, each with its public source and a stated priority. €149 one-off.',
+    config: {
+      eyebrow: 'Assisted commercial research',
+      title: 'Companies on target, verifiable sources and clear priorities.',
+      lead: 'We start from your ideal client and build a first qualified list of matching companies. Every entry is checked against public sources and comes with the reason it deserves attention.',
+      serviceName: 'B2B lead research',
+      serviceType: 'Research and qualification of B2B companies',
+      promise: 'A tidier commercial base for deciding who to pursue, with no automated outreach and no promise of guaranteed clients.',
+      startingPrice: LEAD_PILOT.displayPrice.replace('€', ''),
+      priceCadence: ' one-off',
+      priceLabel: 'Price',
+      priceNote: 'A one-off pilot, VAT excluded. The proprietary research engine runs on separate infrastructure; SWA handles the search criteria, the verification and the delivery.',
+      offerHighlight: 'Up to 30 companies analysed',
+      primaryCtaLabel: CTA,
+      primaryCtaHref: CTA_HREF,
+      icon: Target,
+      signals: ['Ideal client profile agreed first', 'Traceable public sources', 'A stated priority for every company'],
+      outcomes: [
+        { title: 'Focus', text: 'Market, size and useful signals are defined before the research starts.' },
+        { title: 'Verification', text: 'Companies come with sources you can open, not with invented data.' },
+        { title: 'Priority', text: 'The list separates the closest matches from the ones to look at later.' },
+      ],
+      deliverablesTitle: 'A concrete pilot, with readable criteria.',
+      deliverablesIntro: 'The service covers research and qualification. It does not include automated outbound campaigns, email sending, or guarantees of meetings and sales.',
+      deliverables: [
+        { title: 'Ideal client profile', text: 'Sector, geography, size, exclusions and commercial signals are agreed before we start.' },
+        { title: 'Company research', text: 'We analyse up to 30 organisations matching the ideal client defined together.' },
+        { title: 'Verifiable sources', text: 'The official website and other relevant public sources are reported so you can check.' },
+        { title: 'Qualification', text: 'Every company gets a short reason and an operational priority.' },
+        { title: 'Cleaning the results', text: 'We remove duplicates, off-target profiles and data that is not reliable enough.' },
+        { title: 'Structured delivery', text: 'You receive a list usable for commercial assessment and for your CRM.' },
+      ],
+      process: metodoServizioEn('ricerca-clienti-b2b'),
+      faq: [
+        { q: 'How many companies does the service include?', a: 'The pilot costs €149 one-off, VAT excluded, and covers the research and qualification of up to 30 companies matching your ideal client. The actual number depends on how selective the criteria are: twenty companies genuinely on target beat thirty padded out to reach a number.' },
+        { q: 'What exactly do I receive?', a: 'A list where every company carries the public source we took it from, the reason it matches you and a priority. It checks in a minute: open the source and verify. It is not a file of rows to trust, it is a list to challenge.' },
+        { q: 'Are phone numbers and emails included?', a: 'No, and this is the most important difference to understand before buying. The pilot delivers company, source, reason and priority: a qualified list to work. It does not include named contact details, and anyone selling you those without explaining where they came from is creating a GDPR problem for you, not solving one.' },
+        { q: 'Do you send the emails to prospects?', a: 'No. The service includes no automated sending and no cold campaigns: research and contact are distinct activities, including in regulatory terms. The list is worked by your own sales people, who talk about your product better than any automated sequence.' },
+        { q: 'Do you guarantee meetings or new clients?', a: 'No, and we do not write it anywhere. We guarantee the research and qualification work agreed, not the replies, not the meetings and not the sales: those depend on how you make contact, what you offer and when you arrive.' },
+        { q: 'How is this different from a bought database?', a: 'A bought database answers the wrong question: it contains who exists, not who makes sense for you, and it was sold to your competitors too. Here every entry comes from your ideal client profile and carries its source, so you can verify it today instead of discovering it is stale in six months.' },
+        { q: 'How is the ideal client defined?', a: 'With an initial brief where we set the sector, the geography, the size, the exclusion criteria and the public signals that make a company interesting to you. It is the step that decides the quality of the result: vague criteria produce a vague list, and no amount of research can save it afterwards.' },
+        { q: 'Can I repeat the research on another market?', a: 'Yes. The pilot is designed to be repeated on different perimeters: another geography, another sector, another company size. Each cycle starts from the brief and produces its own verifiable list, so you can test a market before putting a sales team into it.' },
+      ],
+      related: [
+        { href: '/en/services/social-media-management', label: 'Managed social media' },
+        { href: '/en/services/seo-geo', label: 'SEO + GEO' },
+        { href: '/en/services/websites-ecommerce', label: 'Websites and e-commerce' },
+      ],
+    },
+  },
+  {
+    slug: 'systems-automation',
+    slugIt: '/servizi/automazione-gestionali',
+    title: 'Systems automation and integration | SWA',
+    description:
+      'We connect the management system, CRM, e-commerce, forms and analytics you already use, and remove the steps repeated every day. Custom development only where needed.',
+    config: {
+      eyebrow: 'Automation and integrations',
+      title: 'The systems you already use, connected and without manual steps.',
+      lead: 'Management systems, CRM, e-commerce, forms and analytics often do not talk to each other, and the joining-up is left to people. We connect those systems and remove the steps repeated every day. When a standard tool is not enough, we build one.',
+      serviceName: 'Software and systems automation',
+      serviceType: 'Integration of management systems and bespoke software development',
+      promise: 'Less retyping of the same data and a traceable flow between systems. Included work and costs are defined first, and anything outside the plan is approved before it generates a cost.',
+      priceNote: 'A bespoke service: the quote depends on the systems involved and on how many flows are automated. It falls under a custom configuration.',
+      offerHighlight: 'Work and costs defined before we start',
+      primaryCtaLabel: CTA,
+      primaryCtaHref: CTA_HREF,
+      icon: Workflow,
+      signals: ['Flow analysis before any code', 'Integration with existing systems', 'Custom development only where needed'],
+      outcomes: [
+        { title: 'Less double work', text: 'The same data stops being retyped by hand into two or three different systems.' },
+        { title: 'Traceability', text: 'Every automatic step leaves a trace, so an error can be found instead of disappearing.' },
+        { title: 'The right size', text: 'First we integrate what exists. We build from scratch only where standard software does not reach.' },
+      ],
+      deliverablesTitle: 'From mapping the flows to the tool that was missing.',
+      deliverablesIntro: 'The work starts from how you work today, not from a platform to adopt. We do not replace the management system if the management system works: we connect it to the rest.',
+      deliverables: [
+        { title: 'Flow analysis', text: 'We map the manual steps that repeat and which systems actually hold the reference data.' },
+        { title: 'Integrations', text: 'We connect the management system, CRM, e-commerce, forms and analytics through the available interfaces.' },
+        { title: 'Flow automation', text: 'Recurring operations become automatic, with a log of executions and errors.' },
+        { title: 'Bespoke development', text: 'When the tool does not exist, we build it: the platform we produce, approve and publish content with is developed in-house.' },
+        { title: 'Human control', text: 'Operations affecting clients or publications still require an approval; they do not start on their own.' },
+        { title: 'Documentation', text: 'We hand over what was connected, how to intervene and what happens when a system does not respond.' },
+      ],
+      process: metodoServizioEn('automazione-gestionali'),
+      faq: [
+        { q: 'Do you have to replace my management system?', a: 'No. If it works it stays where it is and we connect it to the other systems: replacing it is a business decision, not a technical requirement we impose. Replacing a system people know how to use costs far more than making it talk to the rest.' },
+        { q: 'Do my systems need APIs?', a: 'It is the most convenient condition but not the only one. Where there is no interface we look at scheduled exports or other available hooks, and we say up front if a connection cannot be made reliably. A fragile integration that breaks at every update is worse than the manual work it replaces.' },
+        { q: 'What does an automation project cost?', a: 'It is quoted, because it depends on the systems involved and on how many flows are automated. We define the work and the cost before starting, and any additional work is approved before it generates a cost: asking for more money after invoicing is the worst possible conversation with a new client.' },
+        { q: 'Where do we start?', a: 'From the map of the flows, not from software. We look at which manual steps repeat every day and which system actually holds the reference data: from there it becomes clear what is worth connecting first and what is better left as it is.' },
+        { q: 'What happens when an automatic step fails?', a: 'It stays in the queue with its error, instead of being skipped silently. Every execution leaves a trace — succeeded or failed — so a night-time fault is retried from the point that gave way instead of rerunning the whole chain. It is the difference between an automation you trust and one you have to check by hand.' },
+        { q: 'Do operations run on their own without any check?', a: 'Not the ones touching clients or publications: those still require an approval. Automation removes the repetitive steps, not the decisions. One wrong message sent automatically to a thousand clients costs more than all the time the automation saved.' },
+        { q: 'What do you hand over at the end?', a: 'What was connected, how to intervene when something does not respond and what happens in case of an error. It is operational documentation, not a manual: it exists so the system stays manageable by someone else, including another supplier.' },
+        { q: 'Have you built anything of your own?', a: 'Yes: the platform we run client work on is developed in-house — content generation, human approval, scheduled publication, verification of what actually went out and data retention. We build from scratch only where the standard tool does not reach.' },
+      ],
+      related: [
+        { href: '/en/services/ai-phone-assistant', label: 'AI phone assistant' },
+        { href: '/en/services/websites-ecommerce', label: 'Websites and e-commerce' },
+        { href: '/en/contact', label: 'Talk to us' },
+      ],
+    },
+  },
+  {
+    slug: 'job-reporting',
+    slugIt: '/servizi/gestione-lavorazioni',
+    title: 'Website and job reporting for field teams | SWA',
+    description:
+      'Requests arrive from the website, the job closes on site: checklist, hours, photos and the client signature on the phone, with a PDF before the team leaves.',
+    config: {
+      eyebrow: 'Website and job reporting',
+      title: 'Requests arrive from the website, the work closes on site.',
+      lead: 'Whoever works away from the office fills in the report on their phone, with the service checklist, the hours, the photos and the client signature, and whoever is in the office sees it arrive, approves it or disputes it with a written reason. The website that collects the requests is part of the same project, so website, app and dashboard come from one supplier, with one point of contact.',
+      serviceName: 'Website and job reporting',
+      serviceType: 'Website and field application for job reports',
+      promise: 'Requests arrive from the website form to the inbox you choose, the report closes on site with hours, photos and signature, and the office approves or disputes it with a written reason. We do not promise commercial results: we put in writing what the system does and what it does not.',
+      priceNote: `The complete system is quoted, because it depends on the number of operators and on how many report templates have to be written for your service. The website starts at €19.90 per month for a simple landing page or a basic site, and you own it after 12 months. The phone assistant that answers calls starts at €199 per month with €590 setup. Prices exclude VAT.`,
+      offerHighlight: 'Website, field app and office dashboard',
+      primaryCtaLabel: CTA,
+      primaryCtaHref: CTA_HREF,
+      icon: ClipboardCheck,
+      signals: ['A system built and tested end to end', 'Website, field app and dashboard from one supplier', 'We only write down features that actually exist'],
+      outcomes: [
+        { title: 'The report leaves the site', text: 'The operator closes the job on the phone: hours, checklist, photos and signature stay inside the report, instead of being described out loud back at the office.' },
+        { title: 'The office sees the day', text: 'The dashboard shows today’s reports and hours, plus the totals awaiting approval and disputed, with filters by date, operator, client and status.' },
+        { title: 'One system, not three', text: 'Website, team app and office dashboard are the same project and the same supplier. Website requests arrive by email: they do not enter the reports on their own.' },
+      ],
+      deliverablesTitle: 'From the form on the website to the signed PDF.',
+      deliverablesIntro: 'Three pieces working together: the website that brings the request in, the app the team uses on site and the dashboard the office checks from. Below is what each contains, with nothing added that is not already in the product.',
+      deliverables: [
+        { title: 'Multilingual website', text: 'The reference site is published in seven languages, Arabic included with right-to-left layout, with the legal pages and structured data. A site like that is a quoted project, not the base fee.' },
+        { title: 'Request form', text: 'A contact form for each language with name, phone, location, property type and service, plus direct WhatsApp calls from the sections of the page.' },
+        { title: 'An app installed from the browser', text: 'The application installs from the browser as a full-screen icon, in portrait, without going through the stores: the operator signs in with the credentials you give them.' },
+        { title: 'Report templates', text: 'The office governs the sections and the checklist items: eight sections and, in the full template, sixty-three items the operator finds ready to tick.' },
+        { title: 'Hours and job data', text: 'Client, address, type, date, start, end and break: total hours are calculated automatically and the arithmetic holds even when a shift passes midnight.' },
+        { title: 'Photos taken on site', text: 'Up to ten photos per report across six categories — before, after, anomaly and pre-existing damage among them — compressed on the phone before sending, each with its own note.' },
+        { title: 'Coded anomalies', text: 'Anomalies are ticked from a closed list of twelve entries, plus “no anomaly”: today it is tuned to cleaning and housekeeping, and adapting it to another service is quoted work.' },
+        { title: 'Signatures and report PDF', text: 'The operator signature is required, the client one optional: the A4 PDF gathers data, checklist, anomalies, photos and signatures, ready to download or print.' },
+        { title: 'Sending, with a log', text: 'The report goes by email to the manager or to the company chat, with the PDF attached: every send, successful or failed, stays written at the bottom of the record.' },
+        { title: 'Office dashboard', text: 'Filterable history, approval or dispute with a written reason, photo archive, client and address records, team logins and data isolated per company.' },
+      ],
+      process: metodoServizioEn('gestione-lavorazioni'),
+      faq: [
+        { q: 'How does an operator fill in the report on site?', a: 'They open the app on the phone, choose the template and find the checklist ready: they tick items as they work, enter the hours, attach the photos and sign before leaving. Every ticked item is written immediately, and the rest of the form saves itself four seconds after the last change. The report moves from draft to complete only when client, address, times and the operator signature are genuinely there: while something is missing, the app warns and does not close it.' },
+        { q: 'Does the app have to be downloaded from a store?', a: 'No. It installs from the phone browser and stays as a full-screen icon, in portrait, without going through the App Store or Play Store. The operator does not register themselves: the office creates the account with a temporary password, shown once and handed over in person. From then on they sign in with email and password, and change it whenever they like from their profile.' },
+        { q: 'Does it work where there is no signal?', a: 'Without a connection the job data, the notes and the anomalies stay saved on the phone, in a draft tied to that report, with a yellow bar warning that you are offline. Checklist ticks, signatures and photos do need a connection. Recovery happens by reopening the same report on the same phone and the same browser: the draft comes back and you finish from there. There is no synchronisation between different devices, and while the connection is missing the report does not move to complete.' },
+        { q: 'Who checks the reports before they are used?', a: 'The office does. From the dashboard it sees completed reports, opens them one by one and decides whether to approve or dispute them with a mandatory written reason. The reason appears in a red box inside the record, so the operator reads what needs correcting. Once out of draft, the report can no longer be edited by whoever wrote it. Approval and dispute send no automatic notifications: whoever checks tells the team the usual way.' },
+        { q: 'How is a problem found during the job reported?', a: 'Inside the report, by ticking one of the twelve anomalies provided — property found very dirty, items already broken, areas not accessible, not enough time and so on — where only “other” opens a free text field. The report carries it along: it ends up in the record, in the PDF and in the message reaching the manager, and it can be accompanied by a photo in the “anomaly” category. It is not a support queue: an anomaly has no priority, assignee or deadline, and the only formal response is disputing the report.' },
+        { q: 'Does the end client receive the signed report?', a: 'Not automatically. The system sends the PDF to the manager’s email or to the company chat, while sharing on WhatsApp is done by a person who chooses the recipient. The client can sign on the phone at the end of the job, but the signature is optional and remains a mark on the report, with no verified identity and no certified timestamp. There is no client portal: whoever wants to send them the document downloads the PDF and forwards it.' },
+        { q: 'Does the system schedule jobs and shifts?', a: 'No. The report is created when the operator opens it on site, not from a scheduled job: there is no calendar, no shifts, no reminders and no push notifications. There is no geolocation or clocking either, and the start time is prefilled from the phone, correctable by hand. If you need the diary side and messages to clients, that is a different service with its own prices.' },
+        { q: 'What does it cost and what is needed to start?', a: 'The complete system is quoted, because it depends on the number of operators and on how many templates have to be written for your service. The website starts at €19.90 per month for a simple landing page or basic site, with ownership after twelve months, and the phone assistant that answers calls starts at €199 per month plus €590 setup, VAT excluded. To start you need the list of clients and addresses, the check items you use today and the inbox or chat where reports should arrive.' },
+      ],
+      related: [
+        { href: '/en/settori/imprese-di-pulizia', label: 'Housekeeping and cleaning companies' },
+        { href: '/en/settori/elettricisti-e-idraulici', label: 'Electricians and plumbers' },
+        { href: '/en/services/systems-automation', label: 'Systems automation' },
+        { href: '/en/services/websites-ecommerce', label: 'Websites and e-commerce' },
       ],
     },
   },
