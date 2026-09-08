@@ -208,7 +208,7 @@ export default function WithdrawalForm() {
             <button type="button" aria-pressed={customerType === 'impresa_professionista'} className={customerType === 'impresa_professionista' ? styles.segmentActive : ''} onClick={() => setCustomerType('impresa_professionista')}>Impresa o professionista</button>
           </div>
           <p className={styles.fieldHelp}>{customerType === 'consumatore'
-            ? 'Persona fisica che ha acquistato per finalita estranee all’attivita professionale.'
+            ? 'Persona fisica che ha acquistato per finalità estranee all’attività professionale.'
             : 'Acquisto collegato all’attivita imprenditoriale, commerciale, artigianale o professionale.'}</p>
         </fieldset>
 

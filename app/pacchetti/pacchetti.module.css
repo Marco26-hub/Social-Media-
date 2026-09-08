@@ -33,6 +33,12 @@
 .agendaCard > a { background:#0f6b4f; color:white; }
 .videoCard { border-color:#b98fc9; }
 .videoCard > a { background:#0f6b4f; color:white; }
+/* Sito impresa e apertura profili: il gradino sopra il sito base e il primo
+   passo di chi non ha ancora una presenza da gestire. */
+.impresaCard { border-color:#c9a227; }
+.impresaCard > a { background:#0f6b4f; color:white; }
+.profiliCard { border-color:#8fb9c9; }
+.profiliCard > a { background:#0f6b4f; color:white; }
 /* La scala dei quattro pacchetti, compatta dentro la scheda. */
 .videoScala { display:grid; gap:1px; margin:0 0 22px; border:1px solid var(--line); background:var(--line); }
 .videoScala a { display:flex; flex-wrap:wrap; align-items:center; gap:0 8px; padding:11px 12px; background:var(--surface); color:var(--muted); font-size:12px; text-decoration:none; }

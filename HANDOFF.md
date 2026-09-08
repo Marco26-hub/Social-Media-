@@ -414,12 +414,35 @@ inglese, non tradotte.
    4 pubblicati con URL pubblico in `blotato_post_url`. Lo storage e pubblico su
    Supabase. Instagram non e utilizzabile come fonte: profilo ed embed
    rispondono con il muro di login senza autenticazione.
-2. **Terza card del Journal**: copertina pronta in
-   `public/blog/chiamate-perse-segretaria-ai.webp`, articolo mai scritto.
+2. **Sito inglese**: dall'8 settembre 2026 il lato inglese copre tutti e undici i
+   settori, tutti e sette gli articoli del Journal (con slug inglesi propri e
+   `slugIt` che tiene il legame con l'originale) e la pagina autore. Restano in
+   solo italiano le cinque pagine legali — privacy, cookie, termini, recesso,
+   trasparenza AI — e non sono state tradotte di proposito: sono documenti che
+   vanno rivisti da chi ne risponde, non tradotti da noi. Il cambio lingua su
+   quelle cinque ripiega ancora sulla home inglese.
 3. **Minuti dei piani voce**: seguono i pacchetti acquistati a monte, non sono
-   una leva libera. Verificare in contratto se gli scaglioni acquistati
-   corrispondono a quelli venduti: se compriamo pacchetti piu grandi di quelli
-   che rivendiamo, ci sono minuti pagati e non consegnati.
+   una leva libera. Le soglie sono state alzate l'8 settembre 2026 — Voce Base
+   300 -> 600, Voce Attivita 700 -> 1.000, Voce Azienda 1.500 -> 3.000, Tutto in
+   uno 300 -> 600 — a canone invariato, perche i minuti non consegnati erano gia
+   pagati.
+
+   La mappatura e' questa: Voce Base e Voce Attivita sul pacchetto da 1.000
+   minuti, Voce Azienda su quello da 3.600. Voce Attivita consuma quindi tutto il
+   pacchetto, e **e' voluto**: chi sfora paga i minuti extra, e chi non vuole
+   pagarli passa al piano superiore. Il margine di sicurezza serviva a noi, non
+   al cliente, e teneva fermi minuti gia' pagati.
+
+   Il costo oltre soglia resta 0,40 / 0,35 / 0,30: lo sconto da rivenditore sul
+   listino a monte copre gia' il margine sui minuti aggiuntivi, quindi non si
+   ricalcola sul prezzo di listino del fornitore.
+
+   Il margine 49-75% dichiarato sopra e' stato ricalcolato l'8 settembre 2026 dal
+   listino pubblico del fornitore e torna esatto: al livello partner piu basso
+   Voce Base rende il 49%, Voce Attivita il 71%, Voce Azienda il 53%; il 75% si
+   raggiunge al livello successivo. Resta invece incoerente la glossa "circa
+   quattro clienti sul piano medio" per i 10.000 euro l'anno, che non torna con
+   nessuna delle due letture: da rivedere quando si riapre il contratto.
 4. `RESEND_API_KEY` manca: le email di conferma non partono. Non blocca
    checkout, pagamento o attivazione via webhook.
 5. **Remotion**: ancora zero render riusciti in produzione.

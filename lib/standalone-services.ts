@@ -2,13 +2,17 @@ import { BLOG_SERVICE } from '@/lib/blog-service'
 import { VIDEO_COMPRESO, VIDEO_PACCHETTI } from '@/lib/video-listino'
 
 export type StandaloneService = {
-  slug: 'blog-seo' | 'web-commerce' | 'lead-pilot' | 'agenda-clienti' | 'tutto-in-uno' | 'voce-base' | 'voce-attivita' | 'voce-azienda'
+  slug: 'blog-seo' | 'web-commerce' | 'web-impresa' | 'lead-pilot' | 'agenda-clienti' | 'tutto-in-uno' | 'voce-base' | 'voce-attivita' | 'voce-azienda'
     | 'video-start' | 'video-silver' | 'video-gold' | 'video-platinum'
+    | 'profili-social-gbp'
   name: string
   shortName: string
   amountCents: number
   setupCents?: number
   displayPrice: string
+  /** Prefisso del prezzo per i canoni che sono una soglia: «a partire da 19,90 €».
+   *  Senza, la cifra si legge come se coprisse tutto il progetto. */
+  pricePrefix?: string
   billingMode: 'subscription' | 'payment'
   cadenceLabel: string
   description: string
@@ -21,7 +25,10 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
     slug: 'blog-seo',
     name: BLOG_SERVICE.name,
     shortName: 'Blog SEO + GEO',
-    amountCents: 2990,
+    // Dalla sorgente, non a mano: alzando il canone a 149 il display era gia
+    // cambiato mentre l'importo restava 2990, cioe' la pagina prometteva un
+    // prezzo e Stripe ne avrebbe addebitato un altro.
+    amountCents: Math.round(parseFloat(BLOG_SERVICE.price) * 100),
     displayPrice: BLOG_SERVICE.displayPrice,
     billingMode: 'subscription',
     cadenceLabel: 'al mese',
@@ -35,6 +42,7 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
     shortName: 'Sito Web',
     amountCents: 1990,
     displayPrice: '€19,90',
+    pricePrefix: 'a partire da',
     billingMode: 'subscription',
     cadenceLabel: 'al mese',
     description: 'Canone base per una landing page semplice o un sito web essenziale mobile-first. E-commerce e funzioni avanzate vengono quotati a parte.',
@@ -44,6 +52,42 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
       'Design responsive e SEO tecnica essenziale',
       'Collegamento a moduli, analytics e contenuti',
       'Proprietà del sito dopo 12 mesi di canone',
+    ],
+  },
+  {
+    slug: 'web-impresa',
+    name: 'Sito impresa',
+    shortName: 'Sito impresa',
+    amountCents: 30000,
+    displayPrice: '€300',
+    pricePrefix: 'a partire da',
+    billingMode: 'subscription',
+    cadenceLabel: 'al mese',
+    description: 'Sito aziendale su misura: più pagine, struttura pensata sugli intenti di ricerca del settore e i moduli che raccolgono le richieste. Il canone parte da questa cifra e viene fissato dopo il progetto.',
+    onboarding: 'Prima del pagamento definiamo pagine, contenuti e funzioni, e il canone definitivo viene scritto nella proposta. Dominio, e-commerce, multilingua e sviluppi su misura vengono approvati prima di ogni costo aggiuntivo.',
+    features: [
+      'Progetto di struttura e testi sugli intenti del settore',
+      'Hosting, manutenzione e aggiornamenti compresi',
+      'Moduli, statistiche di percorso e dati strutturati',
+      'Proprietà del sito dopo 12 mesi di canone',
+    ],
+  },
+  {
+    slug: 'profili-social-gbp',
+    name: 'Creazione profili social e Google Business Profile',
+    shortName: 'Profili social e GBP',
+    amountCents: 80000,
+    displayPrice: '€800',
+    billingMode: 'payment',
+    cadenceLabel: 'una tantum',
+    description: 'Apertura e configurazione dei profili social e della scheda Google Business Profile, con nome, categorie, descrizioni, contatti, orari e immagini coerenti fra loro. È il lavoro che rende trovabile un’attività prima ancora di pubblicare qualcosa.',
+    onboarding: 'Dopo il pagamento raccogliamo dati, logo, foto e informazioni dell’attività, apriamo o rivendichiamo i profili e la scheda Google, e consegniamo gli accessi intestati a te. La verifica della scheda Google dipende dai tempi di Google, non da noi.',
+    features: [
+      'Apertura o rivendicazione dei profili social scelti',
+      'Scheda Google Business Profile con categorie, orari e area servita',
+      'Nome, descrizioni, contatti e link uniformi su tutti i canali',
+      'Immagine di profilo e copertina preparate nei formati giusti',
+      'Accessi intestati al cliente, consegnati a fine lavoro',
     ],
   },
   {
@@ -94,7 +138,7 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
     onboarding: 'Dopo il pagamento definiamo dati agenda, regole telefoniche, messaggi e prove prima dell’attivazione. L’avvio copre la configurazione standard; eventuali lavorazioni aggiuntive vengono concordate prima di ogni costo. Ti contattiamo entro un giorno lavorativo per fissare la call conoscitiva e l’onboarding.',
     features: [
       'Tutte le funzioni del piano Agenda e clienti',
-      '300 minuti di chiamate al mese',
+      '600 minuti di chiamate al mese',
       '1000 invii WhatsApp inclusi',
       'Un solo pannello per agenda, messaggi e chiamate',
     ],
@@ -111,7 +155,7 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
     description: 'Segretaria telefonica AI per rispondere, informare e fissare appuntamenti quando sei occupato.',
     onboarding: 'Dopo il pagamento raccogliamo servizi, prezzi, orari e regole. L’avvio una tantum viene addebitato sulla prima fattura. Ti contattiamo entro un giorno lavorativo per fissare la call conoscitiva e l’onboarding.',
     features: [
-      '300 minuti al mese',
+      '600 minuti al mese',
       'Una segretaria e un numero telefonico collegato',
       'Risposte su servizi, prezzi e orari approvati',
       'Prenotazione dopo conferma del cliente',
@@ -126,10 +170,10 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
     displayPrice: '€349',
     billingMode: 'subscription',
     cadenceLabel: 'al mese',
-    description: 'Segretaria telefonica AI per studi, saloni, officine e team con piu chiamate mensili.',
+    description: 'Segretaria telefonica AI per studi, saloni, officine e team con più chiamate mensili.',
     onboarding: 'Dopo il pagamento configuriamo regole, prove voce, agenda e registro chiamate. L’avvio una tantum viene addebitato sulla prima fattura. Ti contattiamo entro un giorno lavorativo per fissare la call conoscitiva e l’onboarding.',
     features: [
-      '700 minuti al mese',
+      '1000 minuti al mese',
       'Italiano o inglese in base a chi chiama',
       'Registro chiamate con trascrizione e riepilogo',
       'Controllo mensile su risposte e regole',
@@ -144,10 +188,10 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
     displayPrice: '€649',
     billingMode: 'subscription',
     cadenceLabel: 'al mese',
-    description: 'Segretaria telefonica AI per cliniche, reparti e volumi piu alti.',
+    description: 'Segretaria telefonica AI per cliniche, reparti e volumi più alti.',
     onboarding: 'Dopo il pagamento valutiamo percorsi, sedi, numeri e collegamenti. L’avvio copre la configurazione standard; sedi, numeri e sviluppi aggiuntivi vengono concordati prima di ogni costo. Ti contattiamo entro un giorno lavorativo per fissare la call conoscitiva e l’onboarding.',
     features: [
-      '1500 minuti al mese',
+      '3000 minuti al mese',
       'Percorsi per reparto o tipo di richiesta',
       'Controllo qualita su esiti e conversazioni',
       'Assistenza prioritaria secondo proposta',

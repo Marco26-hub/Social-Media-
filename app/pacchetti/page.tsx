@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, CalendarClock, CircleCheck, Clapperboard, Globe2, Newspaper, PhoneCall, Target } from 'lucide-react'
+import { ArrowRight, CalendarClock, CircleCheck, Clapperboard, Globe2, MapPin, Newspaper, PhoneCall, Target } from 'lucide-react'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
@@ -8,9 +8,11 @@ import { BLOG_SERVICE } from '@/lib/blog-service'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { VIDEO_COMPRESO, VIDEO_CONSEGNA, VIDEO_PACCHETTI, euroVideo } from '@/lib/video-listino'
 import { PACCHETTI } from '@/lib/pacchetti'
+import { STANDALONE_SERVICES } from '@/lib/standalone-services'
 import { SITE_URL } from '@/lib/site-config'
 import base from '../content-page.module.css'
 import styles from './pacchetti.module.css'
+import { PREZZI } from '@/lib/prezzi-ingresso'
 
 const title = 'Pacchetti Social, Blog, Siti Web e Lead B2B | SWA'
 const description = 'Listino Social Web Automation: piani social Presenza e Crescita, blog, sito web, ricerca clienti B2B, segretaria telefonica AI e agenda. Prezzi IVA esclusa.'
@@ -42,9 +44,12 @@ const faq = [
 // listino, non riscritti qui.
 const VOCE = SEGRETARIA_LISTINO.find(f => f.id === 'voce')!.piani[0]
 const AGENDA = SEGRETARIA_LISTINO.find(f => f.id === 'agenda')!.piani[0]
+const WEB_BASE = STANDALONE_SERVICES.find(s => s.slug === 'web-commerce')!
+const SITO_IMPRESA = STANDALONE_SERVICES.find(s => s.slug === 'web-impresa')!
+const PROFILI = STANDALONE_SERVICES.find(s => s.slug === 'profili-social-gbp')!
 
 const comparisonRows = [
-  ['Prezzo mensile, IVA esclusa', PACCHETTI[0].prezzo, PACCHETTI[1].prezzo, BLOG_SERVICE.displayPrice, 'da 19,90 €', '149 € una tantum'],
+  ['Prezzo mensile, IVA esclusa', PACCHETTI[0].prezzo, PACCHETTI[1].prezzo, BLOG_SERVICE.displayPrice, PREZZI.web.replace('a partire da ', 'da '), PREZZI.b2b],
   ['Canali social a scelta', '2', '2', '—', '—', '—'],
   ['Contenuti social mensili', '16', '24', '—', '—', '—'],
   ['Reel, Story o Short', '4', '6', '—', '—', '—'],
@@ -149,14 +154,45 @@ export default function PacchettiPage() {
           <article className={`${styles.card} ${styles.webCard}`}>
             <div className={styles.top}><div><span className={styles.audience}>Professionisti, PMI e negozi</span><h2>Sito Web Base</h2></div><span className={styles.badge}>Sito tuo</span></div>
             <p className={styles.result}>Una landing o un sito credibile che trasforma visite in contatti.</p>
-            <p className={styles.price}><span className={styles.priceLabel}>a partire da</span><strong>€19,90</strong><span>/mese</span></p>
+            <p className={styles.price}><span className={styles.priceLabel}>a partire da</span><strong>{WEB_BASE.displayPrice}</strong><span>/mese</span></p>
             <p className={styles.setup}>Dopo 12 mesi di canone, il sito è tuo</p>
-            <p className={styles.description}>Il canone a partire da 19,90 €/mese riguarda una landing page semplice. Siti più articolati, e-commerce e funzioni avanzate vengono quotati prima dell’avvio.</p>
+            <p className={styles.description}>Il canone {PREZZI.web} riguarda una landing page semplice. Siti più articolati, e-commerce e funzioni avanzate vengono quotati prima dell’avvio.</p>
             <div className={styles.fit}><strong>È adatto a te se</strong><p>Ti serve una landing o un sito aziendale collegato a campagne, contenuti e analytics.</p></div>
             <p className={styles.listLabel}>Nel progetto trovi</p>
             <ul>{['Architettura, UX e design responsive', 'Landing page o sito web base', 'SEO tecnica, sitemap e dati strutturati', 'Moduli, analytics e integrazioni essenziali', 'Collegamento a social e campagne', 'E-commerce su preventivo separato'].map(feature => <li key={feature}><CircleCheck size={15} aria-hidden="true" />{feature}</li>)}</ul>
             <Link href="/acquista?servizio=web-commerce"><Globe2 size={16} aria-hidden="true" /> Attiva Sito Web <ArrowRight size={16} aria-hidden="true" /></Link>
             <p className={styles.note}>IVA esclusa · dominio, e-commerce e servizi esterni separati</p>
+          </article>
+
+          {/* Sopra il sito base e sotto il progetto su misura: 19,90 e' la
+              landing, e senza un gradino intermedio la scala si leggeva come
+              un'offerta sola, troppo bassa per un'azienda strutturata. */}
+          <article className={`${styles.card} ${styles.impresaCard}`}>
+            <div className={styles.top}><div><span className={styles.audience}>Aziende con più servizi da spiegare</span><h2>{SITO_IMPRESA.name}</h2></div><span className={styles.badge}>Su misura</span></div>
+            <p className={styles.result}>Un sito costruito sugli intenti di ricerca del tuo settore.</p>
+            <p className={styles.price}><span className={styles.priceLabel}>{SITO_IMPRESA.pricePrefix}</span><strong>{SITO_IMPRESA.displayPrice}</strong><span>/mese</span></p>
+            <p className={styles.setup}>Dopo 12 mesi di canone, il sito è tuo</p>
+            <p className={styles.description}>{SITO_IMPRESA.description}</p>
+            <div className={styles.fit}><strong>È adatto a te se</strong><p>Hai più servizi o più sedi da spiegare, e una landing sola non basta a far arrivare la richiesta giusta.</p></div>
+            <p className={styles.listLabel}>Nel canone trovi</p>
+            <ul>{SITO_IMPRESA.features.map(feature => <li key={feature}><CircleCheck size={15} aria-hidden="true" />{feature}</li>)}</ul>
+            <Link href="/acquista?servizio=web-impresa"><Globe2 size={16} aria-hidden="true" /> Attiva Sito impresa <ArrowRight size={16} aria-hidden="true" /></Link>
+            <p className={styles.note}>IVA esclusa · canone definitivo scritto nella proposta</p>
+          </article>
+
+          {/* Il passo zero: chi non ha profili né scheda Google non ha niente da
+              gestire, e finora la pagina partiva dal secondo passo. */}
+          <article className={`${styles.card} ${styles.profiliCard}`}>
+            <div className={styles.top}><div><span className={styles.audience}>Chi parte da zero o ha profili abbandonati</span><h2>Profili social e Google</h2></div><span className={styles.badge}>Una tantum</span></div>
+            <p className={styles.result}>Trovabile su Google e sui social prima ancora di pubblicare.</p>
+            <p className={styles.price}><strong>{PROFILI.displayPrice}</strong><span>{PROFILI.cadenceLabel}</span></p>
+            <p className={styles.setup}>Accessi intestati a te, consegnati a fine lavoro</p>
+            <p className={styles.description}>{PROFILI.description}</p>
+            <div className={styles.fit}><strong>È adatto a te se</strong><p>Non hai profili, oppure ne hai di vecchi con nome, orari e contatti diversi da quelli veri.</p></div>
+            <p className={styles.listLabel}>Nel lavoro trovi</p>
+            <ul>{PROFILI.features.map(feature => <li key={feature}><CircleCheck size={15} aria-hidden="true" />{feature}</li>)}</ul>
+            <Link href="/acquista?servizio=profili-social-gbp"><MapPin size={16} aria-hidden="true" /> Apri i profili <ArrowRight size={16} aria-hidden="true" /></Link>
+            <p className={styles.note}>IVA esclusa · i tempi di verifica della scheda Google dipendono da Google</p>
           </article>
 
 
@@ -168,7 +204,7 @@ export default function PacchettiPage() {
           <article className={`${styles.card} ${styles.voceCard}`}>
             <div className={styles.top}><div><span className={styles.audience}>Chi lavora su appuntamento</span><h2>Segretaria telefonica AI</h2></div><span className={styles.badge}>Passo 3</span></div>
             <p className={styles.result}>Una voce che risponde mentre hai le mani occupate.</p>
-            <p className={styles.price}><span className={styles.priceLabel}>a partire da</span><strong>€199</strong><span>/mese</span></p>
+            <p className={styles.price}><span className={styles.priceLabel}>a partire da</span><strong>{`€${VOCE.canone}`}</strong><span>/mese</span></p>
             <p className={styles.setup}>{VOCE.avvio} · {VOCE.soglia}</p>
             <p className={styles.description}>Dice servizi, prezzi e orari che hai approvato tu, legge il calendario e fissa l’appuntamento. Se la richiesta esce dalle regole, prende i dati e la passa a te.</p>
             <div className={styles.fit}><strong>È adatto a te se</strong><p>Perdi chiamate mentre lavori, la sera o nel giorno di chiusura, e ogni chiamata persa è un appuntamento andato altrove.</p></div>

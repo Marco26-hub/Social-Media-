@@ -66,6 +66,12 @@
 .outcomeBand { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper); }
 .outcomeBand article { min-height: 112px; display: grid; align-content: center; gap: 7px; padding: 23px 28px; border-right: 1px solid var(--line); }
 .outcomeBand article:first-child { border-left: 1px solid var(--line); }
+/* Stessa regola della griglia a due colonne piu sotto, per la fascia a tre e
+   per il processo a quattro: l'ultima riga non deve mai restare scoperta. */
+.outcomeBand > article:last-child:nth-child(3n + 1) { grid-column: 1 / -1; }
+.outcomeBand > article:nth-child(3n + 1):nth-last-child(2),
+.outcomeBand > article:nth-child(3n + 2):last-child { grid-column: span 1; }
+.outcomeBand > article:nth-child(3n + 1):nth-last-child(2) { grid-column-start: 1; }
 .outcomeBand strong { font: 500 19px Georgia, 'Times New Roman', serif; }
 .outcomeBand span { color: var(--muted); font-size: 12px; line-height: 1.45; }
 .deliverables, .portfolio, .process, .faq { max-width: 1180px; margin: 0 auto; padding: 88px 24px; }
@@ -93,6 +99,7 @@
 .process { max-width: none; padding-right: max(24px, calc((100vw - 1180px) / 2)); padding-left: max(24px, calc((100vw - 1180px) / 2)); background: #0d1814; color: white; }
 .process .eyebrow { color: #83dbb9; }
 .process ol { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 44px 0 0; padding: 0; background: rgba(255, 255, 255, .13); list-style: none; }
+.process > ol > li:last-child:nth-child(4n + 1) { grid-column: 1 / -1; }
 .process li { min-height: 210px; padding: 25px; background: #14251f; }
 .process li > span { color: #e8be56; font-size: 11px; font-weight: 800; }
 .process h3 { margin: 32px 0 10px; font: 500 21px Georgia, 'Times New Roman', serif; }

@@ -95,7 +95,11 @@ export async function middleware(request: NextRequest) {
 
   // Anti-spam sui form pubblici. Il checkout servizi crea sia una riga DB sia
   // una sessione Stripe e deve condividere il limite dei form a pagamento.
-  if ((pathname === '/api/consulenza' || pathname === '/api/recesso' || pathname === '/api/checkout/service') && request.method === 'POST') {
+  // Moduli pubblici che scrivono: tutti sotto la stessa soglia. /api/corso-ai-act
+  // era rimasto fuori dall'elenco pur essendo un POST anonimo come gli altri,
+  // quindi era l'unico endpoint pubblico che si poteva martellare senza limite.
+  const MODULI_PUBBLICI = ['/api/consulenza', '/api/recesso', '/api/checkout/service', '/api/corso-ai-act']
+  if (MODULI_PUBBLICI.includes(pathname) && request.method === 'POST') {
     const rl = rateLimit(formHits, clientIp(request), FORM_WINDOW_MS, FORM_MAX)
     if (!rl.ok) return tooMany(rl.retryAfter)
   }

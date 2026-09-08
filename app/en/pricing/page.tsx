@@ -5,6 +5,7 @@ import { EN_PRICE_LABELS } from '@/lib/english-content'
 import { VIDEO_PACCHETTI } from '@/lib/video-listino'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '../english.module.css'
+import { BLOG_SERVICE } from '@/lib/blog-service'
 
 const title = 'Pricing: Social, Blog, Web and B2B Lead Research | SWA'
 const description = 'Transparent starting prices for managed social media, Blog SEO + GEO, websites, the B2B Lead Research Pilot and the AI phone assistant. VAT excluded.'
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 const offers = [
   { name: 'Presence', audience: 'Professionals and small businesses', valore: '490', ricorrente: true, setup: 'Setup included', price: EN_PRICE_LABELS.presence, result: 'Consistent presence across 2 social channels.', features: ['16 monthly content pieces per channel · 32 published posts', '4 Reels, Stories or Shorts per channel', 'Strategy, review and publishing'], href: '/register?piano=presenza', cta: 'Start Presence' },
   { name: 'Growth', audience: 'SMEs focused on results', badge: 'Most chosen', evidenza: true, valore: '990', ricorrente: true, setup: 'Setup included', price: EN_PRICE_LABELS.growth, result: 'A wider system across 2 social channels.', features: ['24 monthly content pieces per channel · 48 published posts', '6 Reels, Stories or Shorts per channel', '1 SEO + GEO article and competitor analysis', 'Organic growth only; paid campaigns sit in the custom plan'], href: '/register?piano=crescita', cta: 'Start Growth' },
-  { name: 'Blog SEO + GEO', audience: 'Organic content', accento: 'blog', valore: '29.90', ricorrente: true, setup: '14 days to evaluate the service', price: EN_PRICE_LABELS.blog, result: 'Continuous organic editorial production.', features: ['12 articles per month', 'Metadata, FAQs and structured content', 'Human review', 'Connected-blog publishing or CMS-ready delivery'], href: '/acquista?servizio=blog-seo', cta: 'Activate Blog' },
+  { name: 'Blog SEO + GEO', audience: 'Organic content', accento: 'blog', valore: BLOG_SERVICE.price, ricorrente: true, setup: '14 days to evaluate the service', price: EN_PRICE_LABELS.blog, result: 'Continuous organic editorial production.', features: ['12 articles per month', 'Metadata, FAQs and structured content', 'Human review', 'Connected-blog publishing or CMS-ready delivery'], href: '/acquista?servizio=blog-seo', cta: 'Activate Blog' },
   { name: 'Basic Website', audience: 'Your own presence', accento: 'web', valore: '19.90', ricorrente: true, setup: 'Yours after 12 months of subscription', price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request website details' },
   { name: 'Video shot on site', audience: 'Businesses that publish weekly', accento: 'video', valore: String(VIDEO_PACCHETTI[0].prezzo), ricorrente: true, setup: 'Travel inside the agreed area included', price: EN_PRICE_LABELS.video, result: 'Filmed where you work, spread across the month.', features: [
     `${VIDEO_PACCHETTI[0].video} vertical videos a month in ${VIDEO_PACCHETTI[0].sessioni} filming session`,

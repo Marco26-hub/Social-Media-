@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import LegalShell, { PH } from '@/components/LegalShell'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
+import { PREZZI } from '@/lib/prezzi-ingresso'
 
 const META_TITLE = 'Termini e Condizioni — Social Web Automation'
 const META_DESCRIPTION = 'Termini e condizioni dei servizi Social Web Automation: canoni, attività incluse, revisioni, recesso, responsabilità e limiti dichiarati prima della firma.'
@@ -44,7 +45,7 @@ export default function TerminiPage() {
       <ul>
         <li>I canoni e gli eventuali costi iniziali sono indicati nella pagina <a href="/pacchetti">Pacchetti</a>. I prezzi sono mensili e IVA esclusa, salvo diversa indicazione.</li>
         <li>La fatturazione degli abbonamenti è gestita tramite Stripe, con rinnovo automatico mensile salvo disdetta.</li>
-        <li><strong>Blog SEO + GEO:</strong> il canone di €29,90/mese comprende il ciclo editoriale descritto nella relativa pagina. Tempi, accessi al CMS e modalità di pubblicazione vengono definiti nella fase di avvio.</li>
+        <li><strong>Blog SEO + GEO:</strong> il canone di {PREZZI.blog} comprende il ciclo editoriale descritto nella relativa pagina. Tempi, accessi al CMS e modalità di pubblicazione vengono definiti nella fase di avvio.</li>
         <li><strong>Sito Web Base:</strong> il canone è a partire da €19,90/mese per una landing page semplice o un sito web base. Siti multi-pagina, e-commerce, progettazione avanzata, configurazioni, dominio, licenze e funzioni ulteriori vengono definiti e approvati prima di eventuali costi aggiuntivi.</li>
         <li><strong>Pilot Ricerca Clienti B2B:</strong> il prezzo di €149 è una tantum e comprende la definizione del profilo ideale, la ricerca e la qualificazione di un massimo di 30 aziende. Non include invii automatici, campagne outbound, garanzie di risposta, appuntamenti o vendite.</li>
         <li>Il budget destinato alle campagne pubblicitarie è sempre separato dal canone del servizio.</li>

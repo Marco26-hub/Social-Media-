@@ -32,9 +32,9 @@ export const metadata: Metadata = {
 
 const COMPETENZE = [
   { t: 'Gestione social per PMI', d: 'Piano editoriale, produzione, approvazione del cliente e pubblicazione su 2 canali, con il ciclo mensile descritto nel metodo.' },
-  { t: 'SEO e GEO', d: 'Struttura, intenti, entita e dati strutturati, perche una pagina sia comprensibile a un motore di ricerca e citabile da un sistema di risposta AI.' },
+  { t: 'SEO e GEO', d: 'Struttura, intenti, entità e dati strutturati, perché una pagina sia comprensibile a un motore di ricerca e citabile da un sistema di risposta AI.' },
   { t: 'Assistenti telefonici e recupero clienti', d: 'Configurazione della risposta al telefono e dei richiami su WhatsApp, con le regole scritte dal cliente prima dell’attivazione.' },
-  { t: 'Automazione dei processi', d: 'Collegamento fra gestionali, moduli e archivi esistenti, per togliere i passaggi in cui lo stesso dato viene riscritto piu volte.' },
+  { t: 'Automazione dei processi', d: 'Collegamento fra gestionali, moduli e archivi esistenti, per togliere i passaggi in cui lo stesso dato viene riscritto più volte.' },
   { t: 'Trasparenza nell’uso dell’AI', d: 'Che cosa viene prodotto con assistenza AI, chi risponde delle scelte e che cosa non viene mai automatizzato. Le questioni legali passano dal partner abilitato.' },
   { t: 'Siti e e-commerce', d: 'Landing page, siti aziendali e negozi online, con la SEO tecnica di base e il passaggio di proprieta dopo 12 mesi di canone.' },
 ]

@@ -6,9 +6,9 @@ import { Suspense, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
-import { ArrowLeft, ArrowRight, Check, LockKeyhole } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ShieldCheck, Check, LockKeyhole } from 'lucide-react'
 import TurnstileWidget from '@/components/TurnstileWidget'
-import { standaloneServiceBySlug } from '@/lib/standalone-services'
+import { standaloneServiceBySlug, type StandaloneService } from '@/lib/standalone-services'
 import styles from './acquista.module.css'
 
 function CheckoutForm() {
@@ -42,15 +42,11 @@ function CheckoutForm() {
 
   const imponibile = service.amountCents + (service.setupCents ?? 0)
 
-  const servicePage = service.slug === 'blog-seo'
-    ? '/servizi/blog-seo'
-    : service.slug === 'web-commerce'
-      ? '/servizi/siti-e-commerce'
-      : service.slug === 'lead-pilot'
-        ? '/servizi/ricerca-clienti-b2b'
-        : service.slug === 'agenda-clienti' || service.slug === 'tutto-in-uno'
-          ? '/servizi/agenda-clienti-whatsapp'
-          : '/servizi/segretaria-telefonica-ai'
+  // La catena di ternari finiva sulla segretaria telefonica per ogni slug non
+  // previsto: i due servizi aggiunti dopo — sito impresa e apertura profili —
+  // mandavano «Torna al servizio» su una pagina che non c'entrava. Una mappa
+  // esplicita sbaglia in modo visibile invece che in silenzio.
+  const servicePage = PAGINA_SERVIZIO[service.slug] ?? '/servizi'
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -110,7 +106,7 @@ function CheckoutForm() {
               Mostrare "349 €" e poi far scoprire 1.389,58 € sulla pagina di
               pagamento significa perdere la persona quando ha gia' investito
               tempo: chi si sente sorpreso sul prezzo non riapre la trattativa. */}
-          <div className={styles.price}><strong>{service.displayPrice}</strong><span>{service.cadenceLabel}</span></div>
+          <div className={styles.price}>{service.pricePrefix ? <em>{service.pricePrefix} </em> : null}<strong>{service.displayPrice}</strong><span>{service.cadenceLabel}</span></div>
           <div className={styles.totale}>
             <div><span>{service.billingMode === 'subscription' ? 'Canone mensile' : 'Importo'}</span><b>{euro(service.amountCents)}</b></div>
             {service.setupCents ? <div><span>Avvio una tantum</span><b>{euro(service.setupCents)}</b></div> : null}
@@ -157,6 +153,16 @@ function CheckoutForm() {
               </div>
             )}
             <button type="submit" className={styles.submit} disabled={loading}>{loading ? 'Apertura pagamento...' : <>Vai al pagamento <ArrowRight size={17} /></>}</button>
+            {/* Detto accanto al pulsante, non sepolto nei termini: chi sta per
+                pagare vuole sapere dove finisce la carta prima di cliccare, e
+                sapere che non passa da noi vale piu' di un badge decorativo. */}
+            <p className={styles.pagamentoSicuro}>
+              <ShieldCheck size={15} aria-hidden="true" />
+              <span>
+                Il pagamento si apre su <strong>Stripe</strong>, su dominio Stripe. I dati della carta non passano dai nostri
+                sistemi e non vengono conservati da noi. <a href="/sicurezza">Come proteggiamo i dati</a>.
+              </span>
+            </p>
           </form>
         </section>
       </div>
@@ -167,6 +173,23 @@ function CheckoutForm() {
 // Prezzi in centesimi: l'importo mostrato deve coincidere con quello addebitato.
 const euro = (centesimi: number) =>
   (centesimi / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })
+
+const PAGINA_SERVIZIO: Partial<Record<StandaloneService['slug'], string>> = {
+  'blog-seo': '/servizi/blog-seo',
+  'web-commerce': '/servizi/siti-e-commerce',
+  'web-impresa': '/servizi/siti-e-commerce',
+  'profili-social-gbp': '/servizi/gestione-social-media',
+  'lead-pilot': '/servizi/ricerca-clienti-b2b',
+  'agenda-clienti': '/servizi/agenda-clienti-whatsapp',
+  'tutto-in-uno': '/servizi/agenda-clienti-whatsapp',
+  'voce-base': '/servizi/segretaria-telefonica-ai',
+  'voce-attivita': '/servizi/segretaria-telefonica-ai',
+  'voce-azienda': '/servizi/segretaria-telefonica-ai',
+  'video-start': '/servizi/video-produzione',
+  'video-silver': '/servizi/video-produzione',
+  'video-gold': '/servizi/video-produzione',
+  'video-platinum': '/servizi/video-produzione',
+}
 
 export default function CheckoutPage() {
   return <Suspense fallback={<main className={styles.shell}><p>Caricamento checkout...</p></main>}><CheckoutForm /></Suspense>

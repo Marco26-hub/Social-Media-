@@ -65,10 +65,20 @@ export default function EnglishSettoriPage() {
         <p className={styles.eyebrow}>By trade</p>
         <h1>The same operating method, written for the way your business works.</h1>
         <p className={styles.lead}>
-          {parola(SETTORI_EN.length).replace(/^./, c => c.toUpperCase())} sectors are written in
-          English, because those are the trades where an international owner, tenant or guest is
-          realistic. The other {parola(SOLO_ITALIANI.length)} exist in Italian and are listed
-          further down.
+          {SOLO_ITALIANI.length === 0 ? (
+            <>
+              Every sector we serve is written in English, with the same prices, the same
+              thresholds and the same rules as the Italian pages. Nothing is summarised for
+              the translation.
+            </>
+          ) : (
+            <>
+              {parola(SETTORI_EN.length).replace(/^./, c => c.toUpperCase())} sectors are written in
+              English, because those are the trades where an international owner, tenant or guest is
+              realistic. The other {parola(SOLO_ITALIANI.length)} exist in Italian and are listed
+              further down.
+            </>
+          )}
         </p>
       </section>
 
@@ -126,28 +136,32 @@ export default function EnglishSettoriPage() {
         </div>
       </section>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHeading}>
-          <p className={styles.eyebrow}>Written in Italian only</p>
-          <h2>{parola(SOLO_ITALIANI.length).replace(/^./, c => c.toUpperCase())} more trades, on the Italian site.</h2>
-          <p>
-            These pages exist and are kept current, but they are written for an Italian
-            reader and have not been translated. If one of them is your trade, write to us
-            in English and we will answer in English.
-          </p>
-        </div>
-        <div className={styles.stepGrid}>
-          {SOLO_ITALIANI.map((settore, i) => (
-            <article key={settore.slug}>
-              <span>{String(i + 1).padStart(2, '0')}</span>
-              <h3>
-                <Link href={`/settori/${settore.slug}`} hrefLang="it" lang="it">{settore.nome}</Link>
-              </h3>
-              <p lang="it">{settore.sommario}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+      {/* Sezione che esiste solo finche' esiste un settore non tradotto: a zero
+          restavano un titolo che diceva «Zero more trades» e una griglia vuota. */}
+      {SOLO_ITALIANI.length > 0 && (
+        <section className={styles.section}>
+          <div className={styles.sectionHeading}>
+            <p className={styles.eyebrow}>Written in Italian only</p>
+            <h2>{parola(SOLO_ITALIANI.length).replace(/^./, c => c.toUpperCase())} more trades, on the Italian site.</h2>
+            <p>
+              These pages exist and are kept current, but they are written for an Italian
+              reader and have not been translated. If one of them is your trade, write to us
+              in English and we will answer in English.
+            </p>
+          </div>
+          <div className={styles.stepGrid}>
+            {SOLO_ITALIANI.map((settore, i) => (
+              <article key={settore.slug}>
+                <span>{String(i + 1).padStart(2, '0')}</span>
+                <h3>
+                  <Link href={`/settori/${settore.slug}`} hrefLang="it" lang="it">{settore.nome}</Link>
+                </h3>
+                <p lang="it">{settore.sommario}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className={styles.finalCta}>
         <div>

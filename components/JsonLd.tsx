@@ -1,3 +1,4 @@
+import { BLOG_SERVICE } from '@/lib/blog-service'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { SITE_URL } from '@/lib/site-config'
 import { TITOLARE } from '@/lib/legal-config'
@@ -148,11 +149,11 @@ const jsonLd = {
             '@type': 'Offer',
             name: 'Blog SEO + GEO',
             url: `${SITE_URL}/servizi/blog-seo`,
-            price: '29.90',
+            price: BLOG_SERVICE.price,
             priceCurrency: 'EUR',
             priceSpecification: {
               '@type': 'UnitPriceSpecification',
-              price: '29.90',
+              price: BLOG_SERVICE.price,
               priceCurrency: 'EUR',
               valueAddedTaxIncluded: false,
               unitCode: 'MON',

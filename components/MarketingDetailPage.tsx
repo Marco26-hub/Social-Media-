@@ -213,14 +213,19 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
             <span><Icon size={24} aria-hidden="true" /></span>
             <div><small>{isEnglish ? 'Managed service' : 'Servizio gestito'}</small><strong>{config.serviceName}</strong></div>
           </div>
-          {config.startingPrice && (
-            <div className={styles.startingPrice}>
-              <span>{isEnglish ? 'Starting from' : 'A partire da'}</span>
-              <strong>€{config.startingPrice.replace('.', ',')}<small>{priceCadence}</small></strong>
-              {config.offerHighlight && <b>{config.offerHighlight}</b>}
-              {config.priceNote && <p>{config.priceNote}</p>}
-            </div>
-          )}
+          <div className={styles.startingPrice}>
+            <span>{config.startingPrice ? (isEnglish ? 'Starting from' : 'A partire da') : (isEnglish ? 'Price' : 'Prezzo')}</span>
+            <strong>
+              {config.startingPrice
+                ? (isEnglish
+                    ? `\u20ac${config.startingPrice}`
+                    : `${config.startingPrice.replace('.', ',')} \u20ac`)
+                : (isEnglish ? 'On request' : 'Su preventivo')}
+              {config.startingPrice && <small>{priceCadence}</small>}
+            </strong>
+            {config.offerHighlight && <b>{config.offerHighlight}</b>}
+            {config.priceNote && <p>{config.priceNote}</p>}
+          </div>
           <p>{config.promise}</p>
           <ul>{config.signals.map(signal => <li key={signal}><CircleCheck size={16} aria-hidden="true" /> {signal}</li>)}</ul>
         </aside>
