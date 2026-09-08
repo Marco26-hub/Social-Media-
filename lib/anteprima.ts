@@ -266,9 +266,11 @@ const EN: Record<string, Anteprima> = {
 const FISSE: Record<string, Anteprima> = { ...IT, ...EN }
 
 /**
- * La promessa di un settore e' scritta per stare in una pagina: tre righe vanno
- * bene sotto un titolo, in un'anteprima riempiono l'immagine. Ne resta la prima
- * frase, che e' quella che dice la cosa.
+ * Il sommario di un settore e' gia' una riga sola: e' quello che va
+ * nell'anteprima. La promessa serve solo se un settore il sommario non ce
+ * l'ha, e allora se ne prende la prima frase — perche' scritta per stare
+ * sotto un titolo, non dentro un'immagine, e a taglio secco finisce a meta'
+ * parola come «sull'incassato non tratteniamo…».
  */
 function prima(frase: string, massimo = 130): string {
   const punto = frase.indexOf('. ')
@@ -284,11 +286,11 @@ function settoreAnteprima(percorso: string): Anteprima | undefined {
   if (en) {
     const s = SETTORI_EN.find(x => x.slug === slug)
     if (!s) return undefined
-    return { occhiello: 'Sector', titolo: s.nome, sottotitolo: prima(s.promessa), tinta: 'oro' }
+    return { occhiello: 'Sector', titolo: s.nome, sottotitolo: s.sommario || prima(s.promessa), tinta: 'oro' }
   }
   const s = SETTORI.find(x => x.slug === slug)
   if (!s) return undefined
-  return { occhiello: 'Settore', titolo: s.nome, sottotitolo: prima(s.promessa), tinta: 'oro' }
+  return { occhiello: 'Settore', titolo: s.nome, sottotitolo: s.sommario || prima(s.promessa), tinta: 'oro' }
 }
 
 /** Il testo dell'anteprima per un percorso. Sconosciuto ⇒ la scheda dell'azienda. */
