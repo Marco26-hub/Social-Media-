@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { X } from 'lucide-react'
-import { NODI, NODO_INIZIALE, cerca, nodo, settoreCitato, type Nodo } from '@/lib/odino/percorsi'
+import { cerca, nodo, settoreCitato, type Nodo } from '@/lib/odino/percorsi'
 import { cercaDomande, type Domanda } from '@/lib/odino/domande'
 import { ODINO_NOME, ODINO_PRESENTAZIONE } from '@/lib/odino/identita'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
@@ -25,7 +25,10 @@ import styles from './odino.module.css'
 
 export default function Odino() {
   const [aperto, setAperto] = useState(false)
-  const [corrente, setCorrente] = useState<Nodo>(() => nodo(NODO_INIZIALE)!)
+  // Nessun percorso preselezionato: all'apertura ODINO chiede, non propone.
+  // Aprirsi con un listino significa vendere prima che qualcuno abbia chiesto
+  // qualcosa, ed e' il contrario del tono del sito.
+  const [corrente, setCorrente] = useState<Nodo | null>(null)
   const [scritto, setScritto] = useState('')
   const [nonCapito, setNonCapito] = useState<string | null>(null)
   const [settore, setSettore] = useState<{ slug: string; nome: string } | null>(null)
@@ -72,8 +75,16 @@ export default function Odino() {
   useEffect(() => { corpoRef.current?.scrollTo({ top: 0, behavior: 'smooth' }) }, [corrente])
 
   const seguenti = useMemo(
-    () => (corrente.risposta.poi ?? []).map(id => nodo(id)).filter((n): n is Nodo => Boolean(n)),
+    () => (corrente?.risposta.poi ?? []).map(id => nodo(id)).filter((n): n is Nodo => Boolean(n)),
     [corrente],
+  )
+
+  // Le domande di partenza: le piu' chieste, non tutte. Un elenco lungo si
+  // legge come un menu di un centralino, e non aiuta a scegliere.
+  const iniziali = useMemo(
+    () => ['da-dove-parto', 'quanto-costa-social', 'telefono-come-funziona', 'cosa-resta-fuori', 'garantite-risultati', 'parlare-con-persona']
+      .map(id => nodo(id)).filter((n): n is Nodo => Boolean(n)),
+    [],
   )
 
   function vai(n: Nodo, dalSito: Domanda[] = []) {
@@ -81,6 +92,21 @@ export default function Odino() {
     setNonCapito(null)
     setApprofondimenti(dalSito)
     setAperta(null)
+  }
+
+  // Ogni domanda scritta viene registrata con il suo esito: e' l'unico modo in
+  // cui ODINO impara. Non impara a rispondere — senza un modello non puo' — ma
+  // impara che cosa non sa, e quella lista e' il piano editoriale del sito.
+  // Fallisce in silenzio: una statistica non deve rompere una conversazione.
+  function registra(domanda: string, trovata: boolean, percorso?: string, fonte?: string) {
+    try {
+      void fetch('/api/odino/domande', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domanda, trovata, percorso, fonte, pagina: window.location.pathname }),
+        keepalive: true,
+      }).catch(() => {})
+    } catch { /* niente */ }
   }
 
   function invia(e: React.FormEvent) {
@@ -92,17 +118,19 @@ export default function Odino() {
     if (mestiere) setSettore(mestiere)
     const dalSito = cercaDomande(testo, 3)
     const trovati = cerca(testo)
-    if (trovati.length) { vai(trovati[0], dalSito); return }
+    if (trovati.length) { registra(testo, true, trovati[0].id); vai(trovati[0], dalSito); return }
     if (dalSito.length) {
       // Nessun percorso curato, ma il sito una risposta ce l'ha: si mostra
       // quella, con la pagina da cui viene.
-      setCorrente(nodo('da-dove-parto')!)
+      setCorrente(null)
       setNonCapito(null)
       setApprofondimenti(dalSito)
       setAperta(dalSito[0].q)
+      registra(testo, true, undefined, dalSito[0].fonte.href)
       return
     }
-    if (mestiere) { vai(nodo('da-dove-parto')!); return }
+    if (mestiere) { registra(testo, true, 'settore:' + mestiere.slug); vai(nodo('da-dove-parto')!); return }
+    registra(testo, false)
     setNonCapito(testo)
     setApprofondimenti([])
   }
@@ -112,9 +140,17 @@ export default function Odino() {
 
   if (!aperto) {
     return (
-      <button type="button" className={styles.lancio} onClick={() => setAperto(true)}>
+      // Solo la mascotte, senza etichetta: il personaggio si riconosce da se' e
+      // una pillola con la scritta somiglia a un banner pubblicitario. Il nome
+      // resta come etichetta accessibile, che e' dove serve davvero.
+      <button
+        type="button"
+        className={styles.lancio}
+        onClick={() => setAperto(true)}
+        aria-label={`Chiedi a ${ODINO_NOME}, l’assistente del sito`}
+        title={`Chiedi a ${ODINO_NOME}`}
+      >
         <OdinoFaccia className={styles.faccia} intero />
-        <span>Chiedi a {ODINO_NOME}</span>
       </button>
     )
   }
@@ -138,7 +174,19 @@ export default function Odino() {
             <h2 className={styles.titolo}>Questa non la so.</h2>
             <p className={styles.testo}>
               Rispondo solo con quello che è scritto sul sito, e su «{nonCapito}» non ho niente di verificato.
-              Preferisco dirtelo piuttosto che inventare. Queste invece le so trattare, oppure scrivi a una persona.
+              Preferisco dirtelo che inventare una risposta. Prova a chiedere in un altro modo, oppure scrivi a una persona.
+            </p>
+          </>
+        ) : !corrente ? (
+          <>
+            <h2 className={styles.titolo}>Che cosa ti serve sapere?</h2>
+            <p className={styles.testo}>
+              Scrivi la tua domanda come la diresti a voce — «quanto costa la gestione social», «ho un centro
+              estetico e perdo chiamate», «posso disdire quando voglio». Rispondo con quello che è scritto sul
+              sito: prezzi di listino, che cosa è compreso e che cosa resta fuori.
+            </p>
+            <p className={styles.testo}>
+              Se preferisci, parti da una di queste.
             </p>
           </>
         ) : (
@@ -178,24 +226,9 @@ export default function Odino() {
           </>
         )}
 
-        {approfondimenti.length > 0 && (
-          <>
-            <p className={styles.etichetta}>Risposte dal sito</p>
-            <div className={styles.dalSito}>
-              {approfondimenti.map(d => (
-                <details key={d.q} open={aperta === d.q}>
-                  <summary onClick={() => setAperta(aperta === d.q ? null : d.q)}>{d.q}</summary>
-                  <p>{d.a}</p>
-                  <Link href={d.fonte.href}>{d.fonte.label}</Link>
-                </details>
-              ))}
-            </div>
-          </>
-        )}
-
-        <p className={styles.etichetta}>{nonCapito ? 'Posso rispondere su' : 'Da qui'}</p>
+        <p className={styles.etichetta}>{nonCapito || !corrente ? 'Domande frequenti' : 'Da qui'}</p>
         <ul className={styles.domande}>
-          {(nonCapito ? NODI.slice(0, 6) : seguenti).map(n => (
+          {(nonCapito || !corrente ? iniziali : seguenti).map(n => (
             <li key={n.id}>
               <button type="button" onClick={() => vai(n)}>{n.domanda}</button>
             </li>

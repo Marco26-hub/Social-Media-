@@ -68,6 +68,27 @@ const RUNTIME_MIGRATIONS: RuntimeMigration[] = [
         ON corso_iscrizioni (created_at DESC);
     `,
   },
+  {
+    filename: '051_odino_domande.sql',
+    checksum: '0ff42ea0b9a306b2b657e9f0721e38cb8d4f663b7fff155ac97bad90551434dc',
+    sql: `
+      CREATE TABLE IF NOT EXISTS odino_domande (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        domanda text NOT NULL,
+        risposta_trovata boolean NOT NULL,
+        percorso text,
+        fonte text,
+        pagina text,
+        lingua text NOT NULL DEFAULT 'it',
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+
+      CREATE INDEX IF NOT EXISTS odino_domande_senza_risposta_idx
+        ON odino_domande (created_at DESC) WHERE risposta_trovata = false;
+      CREATE INDEX IF NOT EXISTS odino_domande_created_idx
+        ON odino_domande (created_at DESC);
+    `,
+  },
 ]
 
 let migrationPromise: Promise<void> | null = null

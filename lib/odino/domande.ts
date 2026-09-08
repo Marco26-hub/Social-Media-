@@ -85,6 +85,42 @@ function costruisci(): Domanda[] {
     out.push({ q: f.q, a: f.a, fonte: f.fonte, termini: [...termini(f.q), ...termini(f.fonte.label)], terminiRisposta: termini(f.a) })
   }
 
+  // Oltre alle domande, il sito spiega molto altro: che cosa produciamo per un
+  // settore, che risultato porta, come si svolge il ciclo di lavoro, e il corpo
+  // degli articoli. Sono duecento blocchi di testo gia' scritti e revisionati,
+  // ognuno con un titolo che funziona da domanda. Indicizzarli significa che
+  // ODINO sa rispondere anche a chi non fa una delle domande previste.
+  for (const s of SETTORI) {
+    const blocchi = [
+      ...s.cosaFacciamo.map(b => ({ t: b.title, x: b.text })),
+      ...s.risultati.map(b => ({ t: b.title, x: b.text })),
+      ...s.ciclo.map(b => ({ t: b.title, x: b.text })),
+    ]
+    for (const b of blocchi) {
+      out.push({
+        q: b.t,
+        a: b.x,
+        fonte: { href: `/settori/${s.slug}`, label: s.nome },
+        termini: [...termini(b.t), ...termini(s.nome)],
+        terminiRisposta: termini(b.x),
+      })
+    }
+  }
+
+  for (const a of SWA_BLOG_ARTICLES) {
+    for (const sez of a.sezioni ?? []) {
+      const testo = [...(sez.paragrafi ?? []), ...(sez.lista_punti ?? [])].join(' ')
+      if (!testo) continue
+      out.push({
+        q: sez.h2,
+        a: testo,
+        fonte: { href: `/blog/${a.slug}`, label: a.h1 },
+        termini: [...termini(sez.h2), ...termini(a.h1)],
+        terminiRisposta: termini(testo),
+      })
+    }
+  }
+
   for (const f of FAQ_GENERALI) {
     out.push({ q: f.q, a: f.a, fonte: { href: '/faq', label: 'Domande frequenti' }, termini: termini(f.q), terminiRisposta: termini(f.a) })
   }
