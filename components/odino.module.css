@@ -69,12 +69,27 @@
    un livello della mascotte, il suo clip-path finiva sul testo delle risposte e
    ne ritagliava via una fetta larga il 41% fra il 37% e il 56% dell'altezza.
    Sono due file diversi nello stesso modulo CSS, e il modulo non se ne accorge. */
-.tronco { clip-path: polygon(0 0, 100% 0, 100% 68%, 0 68%, 0 56%, 41% 56%, 41% 37%, 0 37%) }
+.tronco {
+  clip-path: polygon(0 0, 100% 0, 100% 68%, 0 68%, 0 56%, 41% 56%, 41% 37%, 0 37%);
+  /* Un accenno di slancio del busto insieme al saluto, sulle anche: due gradi
+     e mezzo, non di piu'. E' quello che fa leggere il gesto come un saluto
+     invece che come un braccio che si muove da solo. Il perno sta a due punti
+     dalla cucitura con le gambe, quindi li' lo scarto e' sotto il pixel. */
+  transform-origin: 50% 66%;
+  animation: odinoSlancio 6s ease-in-out infinite;
+}
 /* Il braccio: ruota sulla spalla, che sta al bordo del ritaglio. Il saluto e'
    breve e ogni sei secondi, come prima: un braccio che si agita di continuo
    e' un banner. */
 .braccio {
-  clip-path: inset(37% 59% 44% 0);
+  /* Il ritaglio e' il rettangolo del braccio (x 0-41%, y 37-56%) piu' una
+     linguetta di 2% x 6% centrata sul perno (x 41-43%, y 43-49%). A riposo
+     sono gli stessi pixel del tronco, quindi non si vede; quando il braccio
+     ruota la linguetta sta sul perno, si sposta quasi zero e copre il cuneo che
+     una rotazione ampia aprirebbe alla spalla. Una striscia alta quanto tutto
+     il braccio prendeva anche il bordo del petto, che ruotava col braccio e
+     lasciava una scheggia chiara. */
+  clip-path: polygon(0 37%, 41% 37%, 41% 43%, 43% 43%, 43% 49%, 41% 49%, 41% 56%, 0 56%);
   transform-origin: 41% 46%;
   animation: odinoSaluto 6s ease-in-out infinite;
 }
@@ -99,11 +114,24 @@
 .palpebraSinistra { left: 37%; top: 23.4%; width: 13% }
 .palpebraDestra { left: 60.5%; top: 25%; width: 12% }
 
+/* Saluto doppio, ampio: ventiquattro gradi all'andata, sei di rimbalzo,
+   venti al ritorno. Dura meno di due secondi ogni sei: resta un gesto, non un
+   banner che si agita. Il segno e' positivo perche' il perno e' la spalla,
+   all'estremo destro del braccio: in CSS la rotazione positiva e' oraria e
+   con il perno a destra e' quella che porta la mano in alto. Con il segno
+   negativo il braccio scendeva, e un saluto verso il basso non e' un saluto. */
 @keyframes odinoSaluto {
-  0%, 60%, 100% { transform: rotate(0deg) }
-  66% { transform: rotate(-9deg) }
-  73% { transform: rotate(3deg) }
-  80% { transform: rotate(-7deg) }
+  0%, 58%, 100% { transform: rotate(0deg) }
+  63% { transform: rotate(24deg) }
+  69% { transform: rotate(-6deg) }
+  75% { transform: rotate(20deg) }
+  81% { transform: rotate(-4deg) }
+  88% { transform: rotate(0deg) }
+}
+@keyframes odinoSlancio {
+  0%, 58%, 100% { transform: rotate(0deg) }
+  66% { transform: rotate(-2.5deg) }
+  80% { transform: rotate(-1.5deg) }
   88% { transform: rotate(0deg) }
 }
 @keyframes odinoPasso {
