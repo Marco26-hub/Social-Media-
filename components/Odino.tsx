@@ -16,6 +16,8 @@ import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
 import { EVENTO_RIQUADRO, chiOccupa, liberaAngolo, mostraMascotte, occupaAngolo } from '@/lib/riquadri'
 import styles from './odino.module.css'
 
+let salutoMostrato = false
+
 // ODINO, l'assistente del sito.
 //
 // Non e' collegato a nessun modello di AI ed e' una scelta, non un ripiego: le
@@ -39,6 +41,8 @@ export default function Odino() {
   const riconosci = inglese ? settoreCitatoEn : settoreCitato
 
   const [aperto, setAperto] = useState(false)
+  const [mostraSaluto, setMostraSaluto] = useState(false)
+  const salutoControllato = useRef(false)
   // Nessun percorso preselezionato: all'apertura ODINO chiede, non propone.
   // Aprirsi con un listino significa vendere prima che qualcuno abbia chiesto
   // qualcosa, ed e' il contrario del tono del sito.
@@ -95,6 +99,18 @@ export default function Odino() {
   // mezzo schermo. Chiuso, ODINO resta comunque una mascotte alta 116 pixel:
   // l'angolo non e' occupato, ma non e' nemmeno vuoto.
   const visibile = consensoDato && (angoloDisponibile || aperto)
+  useEffect(() => {
+    if (!visibile || aperto) { setMostraSaluto(false); return }
+    if (salutoControllato.current) return
+    salutoControllato.current = true
+    let giaSalutato = salutoMostrato
+    try {
+      giaSalutato ||= sessionStorage.getItem('swa-odino-saluto') === '1'
+      sessionStorage.setItem('swa-odino-saluto', '1')
+    } catch { /* Il saluto resta unico anche con lo storage non disponibile. */ }
+    salutoMostrato = true
+    if (!giaSalutato) setMostraSaluto(true)
+  }, [visibile, aperto])
   useEffect(() => {
     if (!visibile) { mostraMascotte(false); return }
     if (aperto) { occupaAngolo('odino'); mostraMascotte(false) }
@@ -235,12 +251,15 @@ export default function Odino() {
         {/* Il saluto nasce dalla mano: tre bolle salgono mentre il braccio si
             alza e si uniscono nella nuvoletta. E' testo vero, non impresso in
             un'immagine, quindi resta nitido su ogni schermo. */}
-        <span className={styles.saluto} aria-hidden="true">
+        {mostraSaluto && <span className={styles.saluto} aria-hidden="true">
           <i className={styles.bollaUno} />
           <i className={styles.bollaDue} />
           <i className={styles.bollaTre} />
-          <strong>Ciao</strong>
-        </span>
+          <strong>{inglese ? 'Hi' : 'Ciao'}</strong>
+          <strong className={styles.aiuto} onAnimationEnd={() => setMostraSaluto(false)}>
+            {inglese ? 'Can I help you?' : 'Posso aiutarti?'}
+          </strong>
+        </span>}
         <span className={styles.stato} aria-hidden="true" />
       </button>
     )
