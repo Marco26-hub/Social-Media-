@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { X } from 'lucide-react'
+import Image from 'next/image'
+import { Send, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { MOTORE } from '@/lib/odino/percorsi'
 import { MOTORE_EN, settoreCitatoEn } from '@/lib/odino/percorsi.en'
@@ -13,7 +14,6 @@ import { ODINO_NOME } from '@/lib/odino/identita'
 import { TESTI, WHATSAPP_ODINO } from '@/lib/odino/testi'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
 import { EVENTO_RIQUADRO, chiOccupa, liberaAngolo, mostraMascotte, occupaAngolo } from '@/lib/riquadri'
-import OdinoFaccia from './OdinoFaccia'
 import styles from './odino.module.css'
 
 // ODINO, l'assistente del sito.
@@ -190,7 +190,10 @@ export default function Odino() {
         aria-label={t.apri}
         title={t.apriBreve}
       >
-        <OdinoFaccia className={styles.faccia} intero />
+        <span className={styles.mascotte} aria-hidden="true">
+          <Image src="/images/odino-mascotte.png" alt="" fill sizes="112px" priority />
+        </span>
+        <span className={styles.stato} aria-hidden="true" />
       </button>
     )
   }
@@ -198,7 +201,9 @@ export default function Odino() {
   return (
     <aside className={styles.pannello} role="dialog" aria-modal="false" aria-label={t.pannello} lang={inglese ? 'en' : 'it'}>
       <header className={styles.testa}>
-        <OdinoFaccia className={styles.faccia} />
+        <span className={styles.avatar} aria-hidden="true">
+          <Image src="/images/odino-mascotte.png" alt="" fill sizes="52px" />
+        </span>
         <div>
           <strong>{ODINO_NOME}</strong>
           <small>{t.presentazione}</small>
@@ -300,7 +305,9 @@ export default function Odino() {
             placeholder={t.campoPlaceholder}
             autoComplete="off"
           />
-          <button type="submit">{t.invia}</button>
+          <button type="submit" aria-label={t.invia} title={t.invia}>
+            <Send size={17} aria-hidden="true" />
+          </button>
         </form>
         <p className={styles.nota}>{t.nota}</p>
       </div>

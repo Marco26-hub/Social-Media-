@@ -5,50 +5,29 @@
    schermo e' un problema reale per chi soffre di vertigini. */
 
 .lancio {
-  position: fixed; right: 22px; bottom: 18px; z-index: 60;
-  display: block; padding: 0;
-  border: none; background: none; cursor: pointer;
-  filter: drop-shadow(0 12px 22px rgba(8, 20, 15, .45));
-  transition: transform .18s ease;
+  position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 60;
+  width: 88px; height: 110px; padding: 0;
+  border: 0; background: transparent; cursor: pointer;
+  filter: drop-shadow(0 18px 24px rgba(8, 20, 15, .34));
+  transition: transform .2s ease, filter .2s ease;
 }
-.lancio:hover { transform: translateY(-3px) scale(1.04) }
-.lancio:focus-visible { outline: 3px solid #c9a227; outline-offset: 6px; border-radius: 12px }
+.lancio:hover { transform: translateY(-5px); filter: drop-shadow(0 22px 28px rgba(8, 20, 15, .42)) }
+.lancio:focus-visible { outline: 3px solid #d8aa35; outline-offset: 4px; border-radius: 12px }
 
-.faccia {
-  width: 84px; height: 116px; flex: none;
-  border-radius: 50%; object-fit: cover; object-position: 50% 22%;
-  background: radial-gradient(circle at 50% 38%, #1d4a3a 0%, #0d2620 72%);
-  animation: galleggia 4.5s ease-in-out infinite;
+.mascotte { position: absolute; inset: 0; overflow: hidden }
+.mascotte img { object-fit: contain; object-position: center bottom }
+.stato {
+  position: absolute; right: 8px; bottom: 18px; width: 13px; height: 13px;
+  border: 3px solid #fffdf7; border-radius: 50%; background: #27a875;
+  box-shadow: 0 2px 8px rgba(8, 20, 15, .24);
 }
-/* La mascotte e' disegnata, non fotografata: ogni parte ha il suo gruppo e puo'
-   muoversi da sola. Le palpebre si chiudono ogni tanto e il braccio saluta —
-   due gesti brevi e distanti, non un movimento continuo: un pupazzo che si
-   agita ai bordi dello schermo diventa un banner da chiudere. */
-.faccia { border-radius: 0; background: none; overflow: visible }
-.faccia :global(.odino-occhi) { animation: odinoBatti 7s infinite }
-.faccia :global(.odino-braccio) { animation: odinoSaluta 6s ease-in-out infinite }
-.faccia :global(.odino-antenna) { animation: odinoAntenna 4.5s ease-in-out infinite }
-.faccia :global(.odino-onde) { animation: odinoOnde 3s ease-in-out infinite }
 
-@keyframes odinoBatti {
-  0%, 90%, 100% { transform: scaleY(1) }
-  93%, 96% { transform: scaleY(.08) }
+.avatar {
+  position: relative; width: 48px; height: 48px; flex: none; overflow: hidden;
+  border: 1px solid rgba(216, 170, 53, .6); border-radius: 8px;
+  background: #173c30;
 }
-@keyframes odinoSaluta {
-  0%, 55%, 100% { transform: rotate(0deg) }
-  62% { transform: rotate(-22deg) }
-  70% { transform: rotate(6deg) }
-  78% { transform: rotate(-16deg) }
-  86% { transform: rotate(0deg) }
-}
-@keyframes odinoAntenna {
-  0%, 100% { transform: rotate(0deg); transform-origin: 60px 20px }
-  50% { transform: rotate(5deg); transform-origin: 60px 20px }
-}
-@keyframes odinoOnde {
-  0%, 100% { opacity: .55 }
-  50% { opacity: 1 }
-}
+.avatar img { object-fit: cover; object-position: 50% 22% }
 @keyframes galleggia {
   0%, 100% { transform: translateY(0) }
   50% { transform: translateY(-4px) }
@@ -64,12 +43,12 @@
 }
 
 .pannello {
-  position: fixed; right: 20px; bottom: 20px; z-index: 61;
+  position: fixed; right: 0; bottom: 0; left: 0; z-index: 61;
   display: flex; flex-direction: column;
-  width: min(400px, calc(100vw - 32px)); max-height: min(620px, calc(100vh - 40px));
-  border: 1px solid rgba(201, 162, 39, .35); border-radius: 16px;
-  background: var(--surface, #fffdf7); color: var(--ink, #10120e);
-  box-shadow: 0 26px 70px rgba(8, 20, 15, .36);
+  width: 100%; height: min(82dvh, 680px); max-height: calc(100dvh - 8px);
+  border: 1px solid rgba(21, 54, 44, .2); border-bottom: 0; border-radius: 14px 14px 0 0;
+  background: #fffdf7; color: #15231f;
+  box-shadow: 0 30px 80px rgba(8, 20, 15, .32), 0 8px 24px rgba(8, 20, 15, .16);
   overflow: hidden;
   animation: entra .22s ease-out;
 }
@@ -77,10 +56,10 @@
 
 .testa {
   display: flex; align-items: center; gap: 11px;
-  padding: 14px 14px 13px; background: #0d2620; color: #fffdf7;
+  padding: 15px 15px 14px; background: #0d2620; color: #fffdf7;
+  border-bottom: 3px solid #d8aa35;
 }
-.testa > svg { width: 36px; height: 30px; flex: none }
-.testa strong { display: block; font: 800 14px Arial, sans-serif; letter-spacing: .02em }
+.testa strong { display: block; font: 800 15px Arial, sans-serif; letter-spacing: 0 }
 .testa small { display: block; margin-top: 2px; color: #b9cdc3; font-size: 11.5px; line-height: 1.35 }
 .chiudi {
   margin-left: auto; width: 30px; height: 30px; flex: none;
@@ -90,8 +69,8 @@
 }
 .chiudi:hover { background: rgba(255, 253, 247, .1) }
 
-.corpo { flex: 1; overflow-y: auto; padding: 16px 15px 6px }
-.titolo { margin: 0 0 8px; font: 500 19px/1.25 Georgia, 'Times New Roman', serif }
+.corpo { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 20px 18px 8px }
+.titolo { margin: 0 0 9px; color: #15362c; font: 500 22px/1.2 Georgia, 'Times New Roman', serif }
 .testo { margin: 0 0 14px; color: var(--muted, #56655d); font-size: 13.5px; line-height: 1.62 }
 
 .cifre { display: grid; gap: 1px; margin: 0 0 14px; border: 1px solid var(--line, #dbe3de); background: var(--line, #dbe3de) }
@@ -102,7 +81,7 @@
 
 .link { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 16px }
 .link a {
-  padding: 7px 12px; border: 1px solid var(--line, #dbe3de); border-radius: 999px;
+  padding: 8px 11px; border: 1px solid var(--line, #dbe3de); border-radius: 6px;
   color: var(--ink, #10120e); font-size: 12.5px; font-weight: 600; text-decoration: none;
 }
 .link a:hover { border-color: #0f6b4f; color: #0f6b4f }
@@ -110,36 +89,52 @@
 .etichetta { margin: 0 0 8px; color: var(--muted, #56655d); font: 800 10.5px Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase }
 .domande { display: grid; gap: 6px; margin: 0 0 4px; padding: 0; list-style: none }
 .domande button {
-  width: 100%; padding: 11px 13px; text-align: left;
-  border: 1px solid var(--line, #dbe3de); border-radius: 9px;
+  width: 100%; min-height: 44px; padding: 11px 13px; text-align: left;
+  border: 1px solid #d9e3de; border-radius: 7px;
   background: var(--surface, #fffdf7); color: var(--ink, #10120e);
   font: 600 13px Arial, sans-serif; line-height: 1.4; cursor: pointer;
 }
 .domande button:hover { border-color: #0f6b4f; background: rgba(15, 107, 79, .05) }
 
-.piede { padding: 11px 14px 13px; border-top: 1px solid var(--line, #dbe3de) }
+.piede { flex: none; padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #dbe3de; background: #f7f4eb }
 .piede form { display: flex; gap: 7px }
 .piede input {
   flex: 1; min-width: 0; min-height: 40px; padding: 9px 12px;
   border: 1px solid var(--line, #dbe3de); border-radius: 9px;
-  background: var(--surface, #fffdf7); color: var(--ink, #10120e); font: inherit; font-size: 13px;
+  background: var(--surface, #fffdf7); color: var(--ink, #10120e); font: inherit; font-size: 16px;
 }
 .piede input:focus { outline: 2px solid #0f6b4f; outline-offset: 1px }
 .piede button[type='submit'] {
-  min-height: 40px; padding: 0 15px; border: none; border-radius: 9px;
+  width: 42px; min-height: 42px; padding: 0; display: grid; place-items: center; border: none; border-radius: 7px;
   background: #0f6b4f; color: #fffdf7; font: 700 13px Arial, sans-serif; cursor: pointer;
 }
 .nota { margin: 9px 0 0; color: var(--muted, #56655d); font-size: 11px; line-height: 1.45 }
 
-@media (max-width: 520px) {
-  .lancio { right: 12px; bottom: 12px }
-  .lancio .faccia { width: 66px; height: 92px }
-  .pannello { right: 8px; left: 8px; bottom: 8px; width: auto; max-height: calc(100vh - 24px) }
+@media (min-width: 521px) {
+  .lancio {
+    right: 18px;
+    bottom: 14px;
+    width: 108px;
+    height: 132px;
+  }
+
+  .pannello {
+    right: 20px;
+    bottom: 20px;
+    left: auto;
+    width: min(420px, calc(100vw - 32px));
+    height: auto;
+    max-height: min(680px, calc(100vh - 40px));
+    border-bottom: 1px solid rgba(21, 54, 44, .2);
+    border-radius: 14px;
+  }
+
+  .piede { padding-bottom: 14px }
+  .piede input { font-size: 13px }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .faccia, .pannello, .faccia :global(.odino-occhi), .faccia :global(.odino-braccio),
-  .faccia :global(.odino-antenna), .faccia :global(.odino-onde) { animation: none !important }
+  .pannello { animation: none !important }
 }
 
 /* Risposte prese dalle domande gia' scritte sul sito. Ognuna dichiara da quale
