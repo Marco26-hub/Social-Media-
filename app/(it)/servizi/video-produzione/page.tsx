@@ -5,6 +5,7 @@ import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/Ma
 import { VIDEO_CONSEGNA, VIDEO_ESCLUSO, VIDEO_PACCHETTI, euroVideo } from '@/lib/video-listino'
 import { SITE_URL } from '@/lib/site-config'
 import { euro } from '@/lib/euro'
+import { metodoServizio } from '@/lib/metodo'
 
 // Riprese in azienda: l’anello che mancava. Fino a ieri montavamo il materiale
 // che il cliente girava da solo, con i limiti che aveva. Qui la materia prima
@@ -53,12 +54,7 @@ const config = {
     { title: 'Foto dallo stesso set', text: 'Dalla stessa sessione escono anche gli scatti per post, copertine e sito, senza organizzare un secondo giorno.' },
     { title: 'Consegna e montaggio', text: 'Il girato entra nel piano: montaggio, sottotitoli e pubblicazione sono già compresi nel piano social attivo.' },
   ],
-  process: [
-    { number: '01', title: 'Sopralluogo', text: 'Guardiamo spazi, luce naturale e orari in cui si può girare senza fermare l’attività.' },
-    { number: '02', title: 'Piano di ripresa', text: 'Scene, messaggi e formati decisi prima, in base al piano editoriale dei mesi successivi.' },
-    { number: '03', title: 'Giornata di riprese', text: 'Mezza giornata o giornata intera, con fotografo e, se previsto, il volto scelto.' },
-    { number: '04', title: 'Montaggio e uscita', text: 'Selezione, montaggio, sottotitoli e pubblicazione dentro il calendario che già gestiamo.' },
-  ],
+  process: metodoServizio('video-produzione').fasi,
   faq: [
     { q: 'Quanto dura una sessione di riprese?', a: 'Mezza giornata basta quasi sempre per il materiale di diverse settimane, perché si gira a blocchi invece che un contenuto alla volta. La giornata intera serve quando ci sono più location, più persone davanti alla camera o prodotti da allestire. La durata la fissiamo nel sopralluogo, prima del preventivo.' },
     { q: 'Devo comparire io nei video?', a: 'No. Puoi comparire tu, può farlo una persona del tuo staff, oppure portiamo noi un volto professionista, uomo o donna. La scelta si fa guardando a chi parla il tuo servizio, non per gusto: un formato senza volto portato avanti con continuità batte un formato parlato abbandonato dopo tre settimane.' },

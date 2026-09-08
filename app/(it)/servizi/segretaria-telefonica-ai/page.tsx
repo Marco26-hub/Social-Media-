@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import SegretariaLanding, { type ContenutoLanding } from '@/components/SegretariaLanding'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { SITE_URL } from '@/lib/site-config'
+import { passiAvvio } from '@/lib/metodo'
 
 // Pagina del servizio VOCE. Risponde a chi cerca «segretaria telefonica AI»,
 // «centralino automatico», «chi risponde quando sono occupato»: il problema e
@@ -93,12 +94,7 @@ const contenuto: ContenutoLanding = {
   avvio: {
     occhiello: 'Come si parte',
     h2: 'Operativa in quattro passaggi.',
-    passi: [
-      ['Raccogliamo le informazioni', 'Servizi, prezzi, orari, regole e che cosa non deve mai dire.'],
-      ['Colleghiamo agenda e numero', 'L’assistente legge le disponibilità vere e risponde sul tuo numero.'],
-      ['Provi prima di attivare', 'Ascolti come risponde e correggi finché non ti convince.'],
-      ['Va online', 'Da lì in avanti guardi gli esiti e correggi quando serve.'],
-    ],
+    passi: passiAvvio('segretaria-telefonica-ai'),
   },
   settori: {
     occhiello: 'Per chi lavora su appuntamento',

@@ -98,6 +98,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     // Le schede di servizio tradotte. La coppia la dichiara il servizio stesso,
     // quindi non c'e' un secondo elenco da tenere allineato.
+    // Le pagine legali inglesi. Le italiane hanno gia' la loro riga altrove:
+    // qui ci sono le gemelle, che senza questa aggiunta sarebbero pubblicate e
+    // invisibili.
+    ...[
+      ['/en/privacy', '/privacy'],
+      ['/en/cookie-policy', '/cookie-policy'],
+      ['/en/terms', '/termini'],
+      ['/en/ai-transparency', '/trasparenza-ai'],
+      ['/en/withdrawal', '/recesso'],
+      ['/en/security', '/sicurezza'],
+      ['/en/accessibility', '/accessibilita'],
+    ].map(([en, it]) => ({
+      url: `${SITE_URL}${en}`,
+      lastModified: legalUpdated,
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
+      alternates: languageAlternates(it),
+    })),
     ...SERVIZI_EN.map(servizio => ({
       url: `${SITE_URL}/en/services/${servizio.slug}`,
       lastModified: englishUpdated,

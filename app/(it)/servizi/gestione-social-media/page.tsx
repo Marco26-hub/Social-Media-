@@ -5,6 +5,7 @@ import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/Ma
 import { PACCHETTI } from '@/lib/pacchetti'
 import { PREZZI } from '@/lib/prezzi-ingresso'
 import { SITE_URL } from '@/lib/site-config'
+import { metodoServizio } from '@/lib/metodo'
 
 const title = 'Gestione Social Media per PMI su 2 Canali | SWA'
 const description = 'Servizio gestito di social media management per PMI: strategia, piano editoriale, testi, grafiche, Reel, approvazione, pubblicazione e report.'
@@ -46,12 +47,7 @@ const config = {
     { title: 'Quando si spinge un’offerta', text: 'La campagna organica è 1 blocco al mese in cui più contenuti portano avanti la stessa offerta o lo stesso servizio, su tutti e 2 i profili. Il budget verso le piattaforme è 0 €: si lavora solo con la pubblicazione normale.' },
     { title: 'Cosa dice il report', text: 'Il report è il riepilogo di fine mese di che cosa è uscito e come è andato, letto insieme in una call di 30 minuti con Presenza e di 45 con Crescita. Da lì si decide che cosa tenere e che cosa cambiare il mese dopo.' },
   ],
-  process: [
-    { number: '01', title: 'Cosa raccogliamo in avvio', text: 'L’avvio è la sessione in cui raccogliamo servizi, prezzi, foto, materiali e le frasi che non vuoi mai leggere sui tuoi 2 profili. Basta un incontro solo: il resto lo scriviamo noi e tu correggi tutto quello che non ti somiglia.' },
-    { number: '02', title: 'Quando vedi il calendario', text: 'Il calendario del primo mese è pronto prima che il mese cominci, con date, formati e argomenti già assegnati ai 2 canali. Lo leggi con calma, togli quello che non ti convince, e solo dopo parte la produzione dei contenuti veri.' },
-    { number: '03', title: 'Come si produce', text: 'La produzione è il blocco in cui si scrivono i testi, si disegnano le grafiche e si montano i video brevi dei 2 profili, tutto dentro il canone del piano attivo. Ogni pezzo arriva sul tuo pannello prima di uscire davvero.' },
-    { number: '04', title: 'Quando esce e chi controlla', text: 'La pubblicazione è programmata sui 2 profili nei giorni e negli orari fissati nel piano, e parte solo dopo il tuo sì. Se un contenuto non esce per un problema tecnico ce ne accorgiamo noi e lo rimettiamo in coda.' },
-  ],
+  process: metodoServizio('gestione-social-media').fasi,
   faq: [
     { q: 'Quanti social sono inclusi nella gestione?', a: 'Entrambi i piani coprono 2 canali social coordinati da un calendario solo. Cambia il volume: Presenza produce 16 contenuti al mese per ciascun canale, cioè fino a 32 uscite, mentre Crescita ne produce 24 per canale, fino a 48 uscite, più un articolo SEO + GEO. I canali si scelgono in base al pubblico e alla capacità di produrre materiale utile, non per essere presenti ovunque: due canali curati battono quattro abbandonati.' },
     { q: 'Quanto costa la gestione social al mese?', a: 'Presenza costa 490 € al mese e Crescita 990 € al mese, IVA esclusa, con il setup compreso in entrambi. La differenza sono i volumi e la direzione creativa mensile: Crescita aggiunge un articolo, l’analisi dei concorrenti, il report avanzato e una call strategica di 45 minuti invece di 30. Non ci sono costi di attivazione nascosti, e il rinnovo è mensile.' },

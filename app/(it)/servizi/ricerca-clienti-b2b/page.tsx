@@ -4,6 +4,7 @@ import { Target } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { SITE_URL } from '@/lib/site-config'
 import { STANDALONE_SERVICES } from '@/lib/standalone-services'
+import { metodoServizio } from '@/lib/metodo'
 
 const LEAD_PILOT = STANDALONE_SERVICES.find(s => s.slug === 'lead-pilot')!
 
@@ -51,12 +52,7 @@ const config = {
     { title: 'Pulizia dei risultati', text: 'Rimuoviamo duplicati, profili fuori target e dati non sufficientemente attendibili.' },
     { title: 'Consegna strutturata', text: 'Ricevi una lista utilizzabile per la successiva valutazione commerciale e per il CRM.' },
   ],
-  process: [
-    { number: '01', title: 'Brief', text: 'Offerta, cliente ideale, mercati e criteri di esclusione.' },
-    { number: '02', title: 'Ricerca', text: 'Il motore separato individua candidati e relative fonti pubbliche.' },
-    { number: '03', title: 'Verifica', text: 'Controlliamo coerenza, duplicati e qualità delle informazioni.' },
-    { number: '04', title: 'Consegna', text: 'Lista prioritaria, fonti e motivazioni pronte per il lavoro commerciale.' },
-  ],
+  process: metodoServizio('ricerca-clienti-b2b').fasi,
   faq: [
     { q: 'Quante aziende comprende il servizio?', a: 'Il Pilot costa 149 € una tantum, IVA esclusa, e comprende la ricerca e la qualificazione di un massimo di 30 aziende coerenti con il tuo cliente ideale. Il numero effettivo dipende da quanto sono selettivi i criteri: meglio venti aziende davvero in target che trenta riempite per arrivare al numero.' },
     { q: 'Che cosa ricevo esattamente?', a: 'Ricevi un elenco in cui ogni azienda porta con sé la fonte pubblica da cui l’abbiamo presa, il motivo per cui è coerente con te e una priorità. Si controlla in un minuto: apri la fonte e verifichi. Non è un file di righe da fidarsi, è un elenco da mettere in discussione.' },

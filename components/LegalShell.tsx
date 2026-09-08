@@ -7,18 +7,8 @@ import { TITOLARE } from '@/lib/legal-config'
 // Layout condiviso per le pagine legali (Privacy, Cookie, Termini, Trasparenza AI,
 // Recesso, Sicurezza, Accessibilita).
 // Header sticky con navigazione, titolo, data di aggiornamento e documenti correlati.
-export default function LegalShell({
-  eyebrow,
-  title,
-  children,
-  currentPath,
-}: {
-  eyebrow: string
-  title: string
-  children: React.ReactNode
-  currentPath: string
-}) {
-  const related = [
+export const DOCUMENTI_LEGALI = {
+  it: [
     { href: '/privacy', label: 'Privacy Policy' },
     { href: '/cookie-policy', label: 'Cookie Policy' },
     { href: '/termini', label: 'Termini e Condizioni' },
@@ -26,7 +16,41 @@ export default function LegalShell({
     { href: '/recesso', label: 'Recesso e disdetta' },
     { href: '/sicurezza', label: 'Sicurezza' },
     { href: '/accessibilita', label: 'Accessibilità' },
-  ].filter(r => r.href !== currentPath)
+  ],
+  en: [
+    { href: '/en/privacy', label: 'Privacy Policy' },
+    { href: '/en/cookie-policy', label: 'Cookie Policy' },
+    { href: '/en/terms', label: 'Terms and Conditions' },
+    { href: '/en/ai-transparency', label: 'AI Transparency' },
+    { href: '/en/withdrawal', label: 'Withdrawal and cancellation' },
+    { href: '/en/security', label: 'Security' },
+    { href: '/en/accessibility', label: 'Accessibility' },
+  ],
+} as const
+
+export default function LegalShell({
+  eyebrow,
+  title,
+  children,
+  currentPath,
+  locale = 'it',
+  altraLinguaHref,
+}: {
+  eyebrow: string
+  title: string
+  children: React.ReactNode
+  currentPath: string
+  locale?: 'it' | 'en'
+  /** La gemella nell'altra lingua. Senza, si torna alla radice dell'altra lingua. */
+  altraLinguaHref?: string
+}) {
+  const inglese = locale === 'en'
+  const t = inglese
+    ? { salta: 'Skip to content', indietro: 'Back to the site', aggiornato: 'Last updated', titolare: 'Data controller', contatti: 'Contact', altra: 'Versione italiana', altraTitolo: 'Vai alla versione italiana di questo documento' }
+    : { salta: 'Vai al contenuto', indietro: 'Torna al sito', aggiornato: 'Ultimo aggiornamento', titolare: 'Titolare', contatti: 'Contatti', altra: altraLinguaHref ? 'English' : 'English site', altraTitolo: altraLinguaHref ? 'Read this document in English' : 'Go to the English site — this document is published in Italian only' }
+  const home = inglese ? '/en' : '/'
+  const altra = altraLinguaHref ?? (inglese ? '/' : '/en')
+  const related = DOCUMENTI_LEGALI[inglese ? 'en' : 'it'].filter(r => r.href !== currentPath)
 
   // Chi arriva qui dal sito inglese resta senza via d'uscita: queste pagine non
   // hanno una gemella tradotta — sono atti che vincolano e vanno riviste da chi
@@ -40,19 +64,19 @@ export default function LegalShell({
       {/* Landmark e salto al contenuto: mancavano su tutte e sette le pagine
           legali, e /accessibilita e' la pagina che dichiara di averli. Il
           documento e' il contenuto principale, quindi <main> sta sul .doc. */}
-      <a className={styles.skipLink} href="#main-content">Vai al contenuto</a>
+      <a className={styles.skipLink} href="#main-content">{t.salta}</a>
       <header className={styles.header}>
-        <Link href="/" className={styles.back}><ArrowLeft size={16} /> Torna al sito</Link>
+        <Link href={home} className={styles.back}><ArrowLeft size={16} /> {t.indietro}</Link>
         <Link
-          href="/en"
+          href={altra}
           className={styles.altraLingua}
-          hrefLang="en"
-          lang="en"
-          title="Go to the English site — this document is published in Italian only"
+          hrefLang={inglese ? 'it' : 'en'}
+          lang={inglese ? 'it' : 'en'}
+          title={t.altraTitolo}
         >
-          English site
+          {t.altra}
         </Link>
-        <Link href="/" className={styles.headerBrand} aria-label={`${TITOLARE.brand}, home`}>
+        <Link href={home} className={styles.headerBrand} aria-label={`${TITOLARE.brand}, home`}>
           <span className={styles.headerMark}>
             <Image src="/brand/swa-logo-official.png" alt="SWA" width={68} height={30} priority />
           </span>
@@ -63,13 +87,13 @@ export default function LegalShell({
       <main id="main-content" className={styles.doc}>
         <p className={styles.eyebrow}>{eyebrow}</p>
         <h1 className={styles.title}>{title}</h1>
-        <p className={styles.updated}>Ultimo aggiornamento: {TITOLARE.ultimoAggiornamento}</p>
+        <p className={styles.updated}>{t.aggiornato}: {TITOLARE.ultimoAggiornamento}</p>
 
         <div className={styles.body}>{children}</div>
 
         <div className={styles.footerNote}>
           <p>
-            Titolare: {TITOLARE.ragioneSociale} · {TITOLARE.brand} · Contatti: <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>
+            {t.titolare}: {TITOLARE.ragioneSociale} · {TITOLARE.brand} · {t.contatti}: <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>
           </p>
           <div className={styles.relatedLinks}>
             {related.map(r => <Link key={r.href} href={r.href}>{r.label}</Link>)}

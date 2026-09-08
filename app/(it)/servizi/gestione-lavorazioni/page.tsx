@@ -4,6 +4,7 @@ import { ClipboardCheck } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { CANONE } from '@/lib/prezzi-ingresso'
 import { SITE_URL } from '@/lib/site-config'
+import { metodoServizio } from '@/lib/metodo'
 
 // Il metodo che vendiamo alle imprese che lavorano fuori sede: il sito che porta
 // la richiesta, l’applicazione con cui la squadra chiude il lavoro sul posto e il
@@ -59,12 +60,7 @@ const config: MarketingDetailConfig = {
     { title: 'Invii con registro', text: 'Il rapporto parte via email al responsabile o sulla chat Telegram aziendale, con il PDF allegato: ogni invio, riuscito o fallito, resta scritto in fondo alla scheda. La condivisione WhatsApp la fa una persona e non viene registrata.' },
     { title: 'Pannello dell’ufficio', text: 'Storico filtrabile, approvazione o contestazione con motivo scritto, archivio foto, anagrafica di clienti e indirizzi, accessi della squadra e dati isolati per azienda.' },
   ],
-  process: [
-    { number: '01', title: 'Analisi del giro di lavoro', text: 'Guardiamo come nascono oggi le richieste e come tornano indietro i rapporti: chi compila, chi controlla e cosa serve davvero per fatturare a fine mese.' },
-    { number: '02', title: 'Modelli e anagrafiche', text: 'Scriviamo insieme sezioni e voci della scheda, carichiamo clienti e indirizzi, creiamo gli accessi della squadra e configuriamo i canali su cui arrivano i rapporti.' },
-    { number: '03', title: 'Prova sul campo', text: 'Una settimana di rapporti veri, compilati dagli operatori sul posto: poi correggiamo voci, categorie di foto e testi prima di estendere il metodo a tutta la squadra.' },
-    { number: '04', title: 'Esercizio e manutenzione', text: 'Il sistema resta in esercizio con il sito collegato: nuove voci, nuovi modelli e nuove integrazioni si concordano prima, e ogni lavorazione extra è approvata prima del costo.' },
-  ],
+  process: metodoServizio('gestione-lavorazioni').fasi,
   faq: [
     { q: 'Come fa un operatore a compilare il rapportino direttamente sul posto?', a: 'Apre l’applicazione dal telefono, sceglie il modello di scheda e trova la checklist già pronta: spunta le voci mentre lavora, scrive le ore, allega le foto e firma prima di uscire. Ogni voce spuntata viene scritta subito, e il resto del modulo si salva da solo quattro secondi dopo l’ultima modifica. Il rapporto passa da bozza a completato solo quando cliente, indirizzo, orari e firma dell’operatore ci sono davvero: finché manca qualcosa, l’app avvisa e non chiude.' },
     { q: 'Serve scaricare un’app dallo store?', a: 'No, l’applicazione si installa dal browser del telefono e resta come icona a schermo intero, in verticale, senza passare da App Store o Play Store. L’operatore non si registra da solo: l’account lo crea l’ufficio con una password temporanea, mostrata una volta sola e consegnata a mano. Da quel momento entra con email e password, e la cambia quando vuole dal proprio profilo.' },

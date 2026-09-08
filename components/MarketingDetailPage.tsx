@@ -69,7 +69,7 @@ export type MarketingDetailConfig = {
   deliverablesTitle: string
   deliverablesIntro: string
   deliverables: TextBlock[]
-  process: ProcessBlock[]
+  process: readonly ProcessBlock[]
   faq: FaqBlock[]
   related: { href: string; label: string }[]
   portfolio?: PortfolioBlock[]
@@ -120,6 +120,12 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
   // il pilot, non parte da niente: parte e finisce li'.
   const priceLabel = config.priceLabel
     ?? (config.startingPrice ? (isEnglish ? 'Starting from' : 'A partire da') : (isEnglish ? 'Price' : 'Prezzo'))
+  // Il titolo del metodo sta in una costante perche' lo leggono in due:
+  // l'h2 visibile e il nodo HowTo. Se divergessero, i dati strutturati
+  // dichiarerebbero un titolo che sulla pagina non c'e'.
+  const processTitle = isEnglish
+    ? (config.entityName ? `How it works for ${minuscolo(config.entityName)}, step by step` : `How ${config.serviceName} works, step by step`)
+    : (config.entityName ? `Come lavoriamo per ${minuscolo(config.entityName)}, passo per passo` : `Come funziona ${minuscolo(config.serviceName)}, passo per passo`)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -175,6 +181,23 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           '@type': 'Question',
           name: item.q,
           acceptedAnswer: { '@type': 'Answer', text: item.a },
+        })),
+      },
+      // Le quattro fasi erano solo testo: un motore le leggeva come un
+      // paragrafo qualunque. Dichiarate come HowTo diventano una sequenza
+      // ordinata, con un ancoraggio per ogni passo.
+      {
+        '@type': 'HowTo',
+        '@id': `${pageUrl}#howto`,
+        name: processTitle,
+        description: config.promise,
+        inLanguage: isEnglish ? 'en' : 'it-IT',
+        step: config.process.map((step, index) => ({
+          '@type': 'HowToStep',
+          position: index + 1,
+          name: step.title,
+          text: step.text,
+          url: `${pageUrl}#metodo`,
         })),
       },
       ...(config.portfolio?.length ? [{
@@ -346,14 +369,14 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         </section>
       ) : null}
 
-      <section className={styles.process} aria-labelledby="process-title">
+      <section id="metodo" className={styles.process} aria-labelledby="process-title">
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>{isEnglish ? 'Method' : 'Metodo'}</p>
           {/* Questi tre titoli erano identici su 19 pagine. Un titolo ripetuto
               non ancora nulla: quando un motore estrae un blocco si porta
               dietro il titolo, e diciannove volte lo stesso non distingue una
               pagina dall'altra. Ora nominano il servizio della pagina. */}
-          <h2 id="process-title">{isEnglish ? (config.entityName ? `How it works for ${minuscolo(config.entityName)}, step by step` : `How ${config.serviceName} works, step by step`) : (config.entityName ? `Come lavoriamo per ${minuscolo(config.entityName)}, passo per passo` : `Come funziona ${minuscolo(config.serviceName)}, passo per passo`)}</h2>
+          <h2 id="process-title">{processTitle}</h2>
         </div>
         <ol>
           {config.process.map(step => (
@@ -364,7 +387,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
             </li>
           ))}
         </ol>
-        <Link href={isEnglish ? '/en/services' : '/metodo'} className={styles.textLink}>{isEnglish ? 'Explore the service map' : 'Scopri il metodo completo'} <ArrowRight size={16} aria-hidden="true" /></Link>
+        <Link href={isEnglish ? '/en/method' : '/metodo'} className={styles.textLink}>{isEnglish ? 'How this fits the SWA method' : 'Come si inserisce nel metodo SWA'} <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
 
       <section className={styles.faq} aria-labelledby="faq-title">

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Workflow } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { SITE_URL } from '@/lib/site-config'
+import { metodoServizio } from '@/lib/metodo'
 
 const path = '/servizi/automazione-gestionali'
 const title = 'Automazione software e integrazione gestionali | SWA'
@@ -45,12 +46,7 @@ const config = {
     { title: 'Controllo umano', text: 'Le operazioni che incidono su clienti o pubblicazioni restano soggette a un’approvazione, non partono da sole.' },
     { title: 'Documentazione', text: 'Consegniamo cosa è stato collegato, come si interviene e cosa succede quando un sistema non risponde.' },
   ],
-  process: [
-    { number: '01', title: 'Mappa', text: 'Sistemi in uso, dati che si duplicano e passaggi manuali ricorrenti.' },
-    { number: '02', title: 'Priorità', text: 'Cosa automatizzare per primo, con costi e responsabilità definiti prima di partire.' },
-    { number: '03', title: 'Realizzazione', text: 'Integrazione o sviluppo, con verifica su casi reali prima dell’attivazione.' },
-    { number: '04', title: 'Esercizio', text: 'Monitoraggio, correzioni e nuovi flussi solo dopo aver verificato i precedenti.' },
-  ],
+  process: metodoServizio('automazione-gestionali').fasi,
   faq: [
     { q: 'Dovete sostituire il mio gestionale?', a: 'No. Se il gestionale funziona resta dov’è e lo colleghiamo agli altri sistemi: la sostituzione è una scelta aziendale, non un requisito tecnico che imponiamo. Sostituire un gestionale che le persone sanno usare costa molto più di quanto costi farlo parlare con il resto.' },
     { q: 'Serve che i miei sistemi abbiano delle API?', a: 'È la condizione più comoda ma non l’unica. Dove non c’è un’interfaccia valutiamo esportazioni programmate o altri appigli disponibili, e lo diciamo prima se un collegamento non è realizzabile in modo affidabile. Un’integrazione fragile che si rompe ogni aggiornamento è peggio del lavoro manuale che sostituisce.' },

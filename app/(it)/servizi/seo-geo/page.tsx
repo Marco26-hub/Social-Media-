@@ -4,6 +4,7 @@ import { ScanSearch } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { SITE_URL } from '@/lib/site-config'
 import { PREZZI } from '@/lib/prezzi-ingresso'
+import { metodoServizio } from '@/lib/metodo'
 
 const title = 'Consulenza SEO e GEO per PMI e Visibilità AI | SWA'
 const description = 'Consulenza SEO e GEO per PMI: audit, strategia, architettura, dati strutturati ed entità. La produzione continuativa degli articoli è nel servizio Blog.'
@@ -41,12 +42,7 @@ const config = {
     { title: 'Fonti, entità e segnali GEO', text: 'Rafforziamo identità, relazioni, attribuzione e passaggi citabili utili ai motori generativi.' },
     { title: 'Monitoraggio e priorità', text: 'Osserviamo copertura, query, pagine, menzioni e opportunità per definire il lavoro successivo.' },
   ],
-  process: [
-    { number: '01', title: 'Scansione', text: 'Tecnica, contenuti, query, entità e presenza del brand.' },
-    { number: '02', title: 'Architettura', text: 'Una URL e una gerarchia chiare per ogni intento strategico.' },
-    { number: '03', title: 'Ottimizzazione', text: 'Pagine strategiche, FAQ, collegamenti e dati strutturati.' },
-    { number: '04', title: 'Misurazione', text: 'Copertura, traffico qualificato, conversioni e segnali AI.' },
-  ],
+  process: metodoServizio('seo-geo').fasi,
   faq: [
     { q: 'Qual è la differenza tra SEO e GEO?', a: 'La SEO lavora sull’essere trovati dentro un elenco di risultati, la GEO sulla probabilità che i tuoi contenuti vengano compresi e citati da un sistema di risposta AI. Sono due lavori diversi sullo stesso materiale: la prima ottimizza pagine e struttura, la seconda misura quanto un blocco di testo risponde subito, sta in piedi da solo e porta un dato verificabile.' },
     { q: 'Come si misura la citabilità di un contenuto?', a: 'Con cinque criteri pesati, calcolati e non stimati a occhio: qualità della risposta 30%, autonomia del blocco 25%, struttura 20%, densità di dati 15%, unicità 10%. Ogni blocco torna con il suo punteggio e con le correzioni già scritte, non con un elenco di buoni consigli. È lo stesso metodo con cui misuriamo le nostre pagine prima di pubblicarle.' },

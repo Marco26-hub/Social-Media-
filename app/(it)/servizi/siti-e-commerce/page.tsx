@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Globe2 } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { SITE_URL } from '@/lib/site-config'
+import { metodoServizio } from '@/lib/metodo'
 
 const title = 'Siti Web per PMI a partire da 19,90 €/mese | SWA'
 const description = 'Landing page e siti web mobile-first a partire da 19,90 €/mese. E-commerce e funzioni avanzate vengono quotati a parte. Dopo 12 mesi il sito è tuo.'
@@ -47,12 +48,7 @@ const config = {
     { title: 'SEO tecnica e contenuti', text: 'Metadata, sitemap, schema, performance, pagine servizio e collegamenti interni vengono impostati fin dall’inizio.' },
     { title: 'Analytics e integrazioni', text: 'Eventi, form, CRM, social e campagne vengono collegati per leggere il percorso e non soltanto le visite.' },
   ],
-  process: [
-    { number: '01', title: 'Obiettivi', text: 'Pubblico, offerta, conversioni e requisiti commerciali.' },
-    { number: '02', title: 'Prototipo', text: 'Architettura, contenuti, gerarchie e percorsi mobile-first.' },
-    { number: '03', title: 'Sviluppo', text: 'Interfaccia, funzioni, integrazioni e controlli di qualità.' },
-    { number: '04', title: 'Lancio', text: 'Analytics, indicizzazione, monitoraggio e miglioramenti.' },
-  ],
+  process: metodoServizio('siti-e-commerce').fasi,
   portfolio: [
     {
       name: 'SILKinCOM',

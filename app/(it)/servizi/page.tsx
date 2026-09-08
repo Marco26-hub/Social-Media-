@@ -5,8 +5,6 @@ import type { Metadata } from 'next'
 import {
   ArrowRight,
   Zap,
-  Clapperboard,
-  ClipboardCheck,
   Check,
   CircleCheck,
   FileCheck2,
@@ -17,15 +15,11 @@ import {
   Megaphone,
   MessageCircle,
   Newspaper,
-  CalendarClock,
-  PhoneCall,
   Scale,
-  ScanSearch,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Target,
-  Workflow,
 } from 'lucide-react'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { BLOG_SERVICE } from '@/lib/blog-service'
@@ -37,6 +31,7 @@ import PublicHeader from '@/components/PublicHeader'
 import site from '@/styles/landing.module.css'
 import styles from './servizi-v2.module.css'
 import { PREZZI } from '@/lib/prezzi-ingresso'
+import { metodoServizio } from '@/lib/metodo'
 
 const META_TITLE = 'Servizi Digitali per PMI: Social, SEO, Web e Lead | SWA'
 const META_DESCRIPTION =
@@ -122,11 +117,8 @@ const servicesPageJsonLd = {
 
 const SERVICES = [
   {
+    ...metodoServizio('gestione-social-media'),
     id: 'social',
-    consegna: 'Da 16 a 24 contenuti al mese per ciascuno dei 2 canali scelti',
-    href: '/servizi/gestione-social-media',
-    icon: Megaphone,
-    label: 'Gestione social multicanale',
     title: 'Una presenza costante, coordinata e sotto controllo.',
     description:
       'Gestiamo l’intero ciclo editoriale: dalla strategia alla produzione, fino all’approvazione e alla pubblicazione. Ogni canale mantiene il proprio linguaggio senza perdere coerenza con il brand.',
@@ -142,11 +134,8 @@ const SERVICES = [
     outcome: 'Meno attività operative interne e una comunicazione riconoscibile ogni settimana.',
   },
   {
+    ...metodoServizio('seo-geo'),
     id: 'seo-geo',
-    consegna: 'Audit, mappa degli intenti e priorità di intervento scritte',
-    href: '/servizi/seo-geo',
-    icon: ScanSearch,
-    label: 'SEO e GEO',
     title: 'Contenuti progettati per essere trovati e compresi.',
     description:
       'Analizziamo e miglioriamo struttura tecnica, architettura informativa, intenti e segnali di autorevolezza. Qui si definisce la strategia organica; la produzione continuativa degli articoli appartiene al servizio Blog.',
@@ -162,11 +151,8 @@ const SERVICES = [
     outcome: 'Una base organica più solida, utile nel tempo e misurabile senza promesse di ranking.',
   },
   {
+    ...metodoServizio('blog-seo'),
     id: 'blog-seo',
-    consegna: '12 articoli al mese, revisionati da una persona e pubblicati',
-    href: BLOG_SERVICE.path,
-    icon: Newspaper,
-    label: BLOG_SERVICE.name,
     title: 'Dodici articoli al mese, con una direzione editoriale precisa.',
     description:
       'Trasformiamo servizi, competenze e domande reali del pubblico in un calendario di articoli SEO + GEO, controllati prima della pubblicazione.',
@@ -182,11 +168,8 @@ const SERVICES = [
     outcome: 'Un patrimonio editoriale continuo che amplia copertura organica e autorevolezza.',
   },
   {
+    ...metodoServizio('siti-e-commerce'),
     id: 'web',
-    consegna: 'Landing page o sito aziendale. Dopo 12 mesi di canone è tuo',
-    href: '/servizi/siti-e-commerce',
-    icon: Globe2,
-    label: 'Siti web e landing',
     title: 'Un’esperienza digitale costruita per il contatto.',
     description:
       'Landing page semplici a partire da 19,90 € al mese. Siti più articolati ed e-commerce vengono quotati in base al progetto.',
@@ -202,11 +185,8 @@ const SERVICES = [
     outcome: 'Un punto di arrivo credibile per trasformare attenzione, traffico e campagne in richieste.',
   },
   {
+    ...metodoServizio('video-produzione'),
     id: 'video-produzione',
-    consegna: 'Mezza giornata di riprese in azienda, da cui escono verticali e scatti per più settimane',
-    href: '/servizi/video-produzione',
-    icon: Clapperboard,
-    label: 'Riprese video in azienda',
     title: 'La materia prima girata dove lavori, non cercata negli archivi.',
     description:
       'Veniamo in sede con fotografo, luci, microfoni e ottiche e giriamo a blocchi: dalla stessa sessione escono il girato verticale per i social e gli scatti per sito e annunci.',
@@ -222,11 +202,8 @@ const SERVICES = [
     outcome: 'Contenuti girati dove lavori davvero, invece di materiale generico preso altrove.',
   },
   {
+    ...metodoServizio('ricerca-clienti-b2b'),
     id: 'lead-b2b',
-    consegna: 'Fino a 30 aziende verificate, con fonti pubbliche e priorità motivata',
-    href: '/servizi/ricerca-clienti-b2b',
-    icon: Target,
-    label: 'Ricerca Clienti B2B',
     title: 'Aziende in target, fonti verificabili e priorità operative.',
     description:
       'Definiamo il profilo cliente ideale, analizziamo fino a 30 aziende e consegniamo una lista qualificata. Il Pilot riguarda ricerca e verifica: non invia messaggi automatici e non promette appuntamenti.',
@@ -242,11 +219,8 @@ const SERVICES = [
     outcome: 'Una base commerciale ordinata per decidere chi approfondire, senza confondere una lista con una vendita garantita.',
   },
   {
+    ...metodoServizio('segretaria-telefonica-ai'),
     id: 'segretaria-ai',
-    consegna: '600 minuti al mese di risposta al telefono, circa 10 ore',
-    href: '/servizi/segretaria-telefonica-ai',
-    icon: PhoneCall,
-    label: 'Segretaria telefonica AI',
     title: 'Risponde al telefono, fissa appuntamenti e riempie l’agenda.',
     description:
       'Per le attività che lavorano su appuntamento. Risponde alle chiamate quando non puoi, prenota negli orari liberi e prepara i messaggi per recuperare chi non torna. I messaggi partono solo dopo la tua approvazione.',
@@ -262,11 +236,8 @@ const SERVICES = [
     outcome: 'Meno chiamate perse e meno orari vuoti, senza che nulla raggiunga un cliente senza il tuo controllo.',
   },
   {
+    ...metodoServizio('agenda-clienti-whatsapp'),
     id: 'agenda-whatsapp',
-    consegna: '1000 messaggi al mese, preparati dal sistema e inviati dopo il tuo sì',
-    href: '/servizi/agenda-clienti-whatsapp',
-    icon: CalendarClock,
-    label: 'Agenda, clienti e WhatsApp',
     title: 'I clienti che non tornano non sono persi, sono da richiamare.',
     description:
       'Il sistema legge agenda e storico, trova chi manca da troppo tempo e chi può coprire un orario rimasto libero, e prepara il messaggio WhatsApp. Parte solo dopo la tua approvazione.',
@@ -282,11 +253,8 @@ const SERVICES = [
     outcome: 'Il valore che hai già in archivio torna a produrre appuntamenti, senza che nulla parta alle tue spalle.',
   },
   {
+    ...metodoServizio('gestione-lavorazioni'),
     id: 'gestione-lavorazioni',
-    consegna: 'Rapportini firmati sul posto, con foto, ore e PDF al cliente',
-    href: '/servizi/gestione-lavorazioni',
-    icon: ClipboardCheck,
-    label: 'Sito e gestione lavorazioni',
     title: 'Il lavoro si chiude sul posto, l’ufficio approva.',
     description:
       'Per chi lavora fuori sede: il sito che porta le richieste, l’applicazione con cui la squadra chiude l’intervento sul telefono e il pannello da cui l’ufficio approva o contesta.',
@@ -302,11 +270,8 @@ const SERVICES = [
     outcome: 'Una contestazione si chiude con un documento, non con una telefonata da ricostruire.',
   },
   {
+    ...metodoServizio('automazione-gestionali'),
     id: 'automazione',
-    consegna: 'Collegamenti fra i sistemi già in uso, con registro delle esecuzioni',
-    href: '/servizi/automazione-gestionali',
-    icon: Workflow,
-    label: 'Automazione e gestionali',
     title: 'I sistemi che già usi, collegati e senza passaggi manuali.',
     description:
       'Gestionale, CRM, e-commerce, moduli e analytics spesso non si parlano. Colleghiamo quei sistemi e togliamo le operazioni che si ripetono. Quando lo strumento standard non basta, lo sviluppiamo su misura.',

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import SegretariaLanding, { type ContenutoLanding } from '@/components/SegretariaLanding'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { SITE_URL } from '@/lib/site-config'
+import { passiAvvio } from '@/lib/metodo'
 
 // Pagina del servizio AGENDA. Risponde a chi cerca «recuperare clienti persi»,
 // «riempire l’agenda», «messaggi WhatsApp ai clienti»: il problema qui non e la
@@ -89,12 +90,7 @@ const contenuto: ContenutoLanding = {
   avvio: {
     occhiello: 'Come si parte',
     h2: 'Operativo in quattro passaggi.',
-    passi: [
-      ['Colleghiamo i dati', 'Importiamo clienti e agenda dal file o dal gestionale che usi già.'],
-      ['Definiamo le regole', 'Ogni quanto ricontattare, chi escludere, che tono usare.'],
-      ['Tu approvi', 'Ogni mattina poche azioni chiare, con i messaggi già scritti.'],
-      ['Misuriamo', 'Risposte, appuntamenti recuperati e orari riempiti, mese per mese.'],
-    ],
+    passi: passiAvvio('agenda-clienti-whatsapp'),
   },
   settori: {
     occhiello: 'Per chi lavora su appuntamento',

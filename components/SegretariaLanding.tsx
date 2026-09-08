@@ -98,6 +98,22 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
           acceptedAnswer: { '@type': 'Answer', text: a },
         })),
       },
+      // I quattro passaggi di avvio sono il metodo di questo servizio: senza
+      // HowTo restavano tre righe di testo, indistinguibili da un paragrafo.
+      {
+        '@type': 'HowTo',
+        '@id': `${url}#howto`,
+        name: `Come funziona ${c.servizio}, passo per passo`,
+        description: c.lead,
+        inLanguage: 'it-IT',
+        step: c.avvio.passi.map(([titolo, testo], i) => ({
+          '@type': 'HowToStep',
+          position: i + 1,
+          name: titolo,
+          text: testo,
+          url: `${url}#metodo`,
+        })),
+      },
     ],
   }
 
@@ -218,7 +234,7 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
           </div>
         </section>
 
-        <section className="section">
+        <section id="metodo" className="section">
           <div className="section-title"><span>{c.avvio.occhiello}</span><h2>{c.avvio.h2}</h2></div>
           <div className="workflow-grid">
             {c.avvio.passi.map(([t, p], i) => (

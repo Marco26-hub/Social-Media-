@@ -2,6 +2,7 @@ import { BLOG_SERVICE } from '@/lib/blog-service'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { SITE_URL } from '@/lib/site-config'
 import { TITOLARE } from '@/lib/legal-config'
+import { TRUSTPILOT_PROFILO_URL } from '@/lib/trustpilot'
 
 
 // I prezzi dello schema si ricavano dal listino, non si riscrivono a mano:
@@ -47,6 +48,13 @@ const jsonLd = {
       sameAs: [
         'https://www.instagram.com/socialwebautomation/',
         'https://www.facebook.com/profile.php?id=61592835840985',
+        // Profilo Trustpilot del dominio. Serve a legare l'impresa a una fonte
+        // terza verificabile: e' esattamente il tipo di riscontro che i motori
+        // generativi cercano per distinguere questa impresa dalle omonime.
+        // Nessun aggregateRating dichiarato qui: le stelle le pubblica
+        // Trustpilot dal proprio widget, e un punteggio scritto a mano nello
+        // schema del venditore e' una recensione auto-attribuita.
+        TRUSTPILOT_PROFILO_URL,
       ],
       founder: { '@id': `${SITE_URL}/#marco-dibenedetto` },
       employee: { '@id': `${SITE_URL}/#marco-dibenedetto` },

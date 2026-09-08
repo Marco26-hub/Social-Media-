@@ -219,6 +219,30 @@ const EVIDENCE = [
   { title: 'Pilot B2B delimitato', text: 'Che cosa ricevi, che cosa resta fuori e quanto costa: scritto prima di pagare, non dopo.', href: '/servizi/ricerca-clienti-b2b', label: 'Esamina il Pilot' },
 ]
 
+const CASES = [
+  {
+    metric: '24',
+    unit: 'contenuti',
+    title: 'Caso studio Bowling',
+    text: 'Un mese di campagna con 10 Reel, 6 caroselli, 4 Story e 4 post: dal problema del gestore alla CTA commerciale.',
+    href: '/servizi/gestione-social-media',
+  },
+  {
+    metric: '3',
+    unit: 'progetti',
+    title: 'Portfolio web consultabile',
+    text: 'SILKinCOM, Studio Legale BCS e Borsieri Car Service mostrano siti reali, non mockup isolati.',
+    href: '/servizi/siti-e-commerce',
+  },
+  {
+    metric: '30',
+    unit: 'aziende',
+    title: 'Pilot ricerca B2B',
+    text: 'Analisi fino a 30 aziende con criteri concordati, fonti pubbliche e priorità motivata per ogni prospect.',
+    href: '/servizi/ricerca-clienti-b2b',
+  },
+]
+
 const LEGAL_SERVICES = [
   {
     icon: Scale,
@@ -470,6 +494,15 @@ export default function LandingPage() {
           <h2 id="evidence-title">Controlla il lavoro prima di credere alle promesse.</h2>
           <p>Niente percentuali senza fonte: mostriamo processi, contenuti, progetti pubblici e limiti dell’offerta.</p>
         </div>
+        <div className={styles.caseGrid} aria-label="Casi e numeri verificabili">
+          {CASES.map(item => (
+            <Link key={item.title} href={item.href} className={styles.caseCard}>
+              <span className={styles.caseMetric}>{item.metric}<small>{item.unit}</small></span>
+              <strong>{item.title}</strong>
+              <p>{item.text}</p>
+            </Link>
+          ))}
+        </div>
         <div className={styles.evidenceGrid}>
           {EVIDENCE.map(item => (
             <article key={item.title}>
@@ -480,6 +513,24 @@ export default function LandingPage() {
             </article>
           ))}
         </div>
+        <aside className={styles.companyProof} aria-label="Dati aziendali verificabili">
+          <div>
+            <span>Impresa identificata</span>
+            <strong>{TITOLARE.ragioneSociale}</strong>
+          </div>
+          <div>
+            <span>P.IVA</span>
+            <strong>{TITOLARE.partitaIva}</strong>
+          </div>
+          <div>
+            <span>Codice fiscale</span>
+            <strong>{TITOLARE.codiceFiscale}</strong>
+          </div>
+          <div>
+            <span>Sede</span>
+            <strong>{TITOLARE.sedeLegale}</strong>
+          </div>
+        </aside>
       </section>
 
       <section id="compliance" className={styles.compliance} aria-labelledby="compliance-title">

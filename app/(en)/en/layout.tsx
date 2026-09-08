@@ -56,12 +56,12 @@ export default function EnglishLayout({ children }: Readonly<{ children: React.R
           {/* I documenti legali sono in italiano — sono atti che vincolano e non
               vanno tradotti senza revisione — ma devono essere raggiungibili
               anche da qui: prima dall'inglese si arrivava solo alla privacy. */}
-          <Link href="/privacy" hrefLang="it" lang="it">Privacy</Link>
-          <Link href="/termini" hrefLang="it" lang="it">Terms</Link>
-          <Link href="/cookie-policy" hrefLang="it" lang="it">Cookie</Link>
-          <Link href="/recesso" hrefLang="it" lang="it">Withdrawal</Link>
-          <Link href="/accessibilita" hrefLang="it" lang="it">Accessibility</Link>
-          <Link href="/sicurezza" hrefLang="it" lang="it">Security</Link>
+          <Link href="/en/privacy">Privacy</Link>
+          <Link href="/en/terms">Terms</Link>
+          <Link href="/en/cookie-policy">Cookie</Link>
+          <Link href="/en/withdrawal">Withdrawal</Link>
+          <Link href="/en/accessibility">Accessibility</Link>
+          <Link href="/en/security">Security</Link>
           <Link href="/en/author/marco-dibenedetto">Author</Link>
           <Link href="/en/blog">Journal</Link>
           <Link href="/" lang="it">Italiano</Link>

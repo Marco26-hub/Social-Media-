@@ -5,6 +5,7 @@ import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/Ma
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { SITE_URL } from '@/lib/site-config'
 import { PREZZI } from '@/lib/prezzi-ingresso'
+import { metodoServizio } from '@/lib/metodo'
 
 const title = 'Blog SEO e GEO: 12 articoli al mese | SWA'
 const description = 'Servizio Blog SEO + GEO: 12 articoli mensili pianificati, revisionati e pubblicati sul blog collegato, con FAQ, metadati e dati strutturati.'
@@ -48,12 +49,7 @@ const config = {
     { title: 'Revisione umana', text: 'Controlliamo accuratezza, tono del brand, claim e leggibilita prima della pubblicazione.' },
     { title: 'Pubblicazione o consegna', text: 'Pubblicazione automatica sul blog collegato a SWA; per CMS esterni definiamo integrazione o consegna HTML.' },
   ],
-  process: [
-    { number: '01', title: 'Raccolta', text: 'Servizi, pubblico, fonti, tono e priorita commerciali.' },
-    { number: '02', title: 'Piano', text: 'Dodici temi ordinati per intento e collegamenti interni.' },
-    { number: '03', title: 'Produzione', text: 'Articoli, metadati, FAQ, immagini e dati strutturati.' },
-    { number: '04', title: 'Controllo', text: 'Revisione, approvazione e pubblicazione sul canale concordato.' },
-  ],
+  process: metodoServizio('blog-seo').fasi,
   faq: [
     { q: 'Quanti articoli sono compresi ogni mese?', a: `Il piano comprende ${BLOG_SERVICE.articlesPerMonth} articoli al mese a ${PREZZI.blog}, IVA esclusa, distribuiti su un calendario editoriale costruito sugli intenti di ricerca reali. Ogni articolo arriva completo di title, meta description, slug, FAQ visibili e dati strutturati: è pronto da pubblicare, non una bozza da sistemare.` },
     { q: 'Che differenza c’è rispetto alla consulenza SEO + GEO?', a: 'Sono due lavori diversi: SEO + GEO definisce audit, struttura, intenti e priorità, mentre Blog SEO + GEO produce con continuità i contenuti. La consulenza decide dove andare, il blog cammina. Si possono attivare separatamente, ma un piano editoriale costruito su una mappa degli intenti rende molto più della somma delle due cose.' },

@@ -2,7 +2,8 @@ import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check, ClipboardCheck, Gauge, Search, Workflow } from 'lucide-react'
-import { EN_METHOD_FAQ, EN_METHOD_STEPS, EN_WHATSAPP_URL } from '@/lib/english-content'
+import { EN_METHOD_FAQ, EN_METHOD_SERVICES, EN_METHOD_STEPS, EN_WHATSAPP_URL } from '@/lib/english-content'
+import { metodoServizio } from '@/lib/metodo'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '@/styles/english.module.css'
 
@@ -27,6 +28,8 @@ export default function EnglishMethodPage() {
     '@graph': [
       { '@type': 'WebPage', url: `${SITE_URL}/en/method`, name: title, description, inLanguage: 'en-US', isPartOf: { '@id': `${SITE_URL}/#website` } },
       { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/en` }, { '@type': 'ListItem', position: 2, name: 'Method', item: `${SITE_URL}/en/method` }] },
+      { '@type': 'HowTo', '@id': `${SITE_URL}/en/method#howto`, name: 'The Social Web Automation method, phase by phase', description, inLanguage: 'en', step: EN_METHOD_STEPS.map((step, index) => ({ '@type': 'HowToStep', position: index + 1, name: step.title, text: step.text, url: `${SITE_URL}/en/method#phase-${step.n}` })) },
+      { '@type': 'ItemList', '@id': `${SITE_URL}/en/method#service-methods`, name: 'The method applied to each Social Web Automation service', itemListOrder: 'https://schema.org/ItemListOrderAscending', numberOfItems: EN_METHOD_SERVICES.length, itemListElement: EN_METHOD_SERVICES.map((service, index) => ({ '@type': 'ListItem', position: index + 1, name: `How ${service.label} works, step by step`, url: `${SITE_URL}/en/services#${service.anchor}` })) },
       { '@type': 'FAQPage', mainEntity: methodFaq.map(item => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } })) },
     ],
   }
@@ -45,10 +48,10 @@ export default function EnglishMethodPage() {
         <div>
           <p className={styles.eyebrow}>SWA method</p>
           <h1>A clear method for turning goals into verifiable work.</h1>
-          <p className={styles.heroLead}>Every cycle moves through assessment, direction, production and improvement. The process reduces scattered decisions and keeps human control over the work that reaches customers.</p>
+          <p className={styles.heroLead}>Every cycle moves through assessment, direction, production and improvement. The same four phases apply to all ten services, from social content to the phone assistant: what gets produced changes, how it is decided, approved and measured does not.</p>
           <div className={styles.actions}>
             <a className={styles.primary} href={EN_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Discuss your project <ArrowRight size={16} aria-hidden="true" /></a>
-            <Link className={styles.secondary} href="/en/pricing">Compare packages</Link>
+            <Link className={styles.secondary} href="#service-methods">The method, service by service</Link>
           </div>
         </div>
         <aside className={styles.heroPanel}><strong>What the method protects.</strong><ol><li>Included work is agreed before production.</li><li>Each channel has a practical role.</li><li>Approvals happen before publication.</li><li>Priorities improve from evidence.</li></ol></aside>
@@ -59,7 +62,25 @@ export default function EnglishMethodPage() {
         <div className={styles.grid}>
           {EN_METHOD_STEPS.map((step, index) => {
             const Icon = icons[index]
-            return <article className={styles.service} key={step.n}><Icon size={24} aria-hidden="true" /><h3>{step.n}. {step.title}</h3><p>{step.text}</p><ul className={styles.checkList}>{step.items.map(item => <li key={item}><Check size={14} aria-hidden="true" />{item}</li>)}</ul></article>
+            return <article id={`phase-${step.n}`} className={styles.service} key={step.n}><Icon size={24} aria-hidden="true" /><h3>{step.n}. {step.title}</h3><p>{step.text}</p><ul className={styles.checkList}>{step.items.map(item => <li key={item}><Check size={14} aria-hidden="true" />{item}</li>)}</ul></article>
+          })}
+        </div>
+      </section>
+
+      <section id="service-methods" className={styles.section}>
+        <div className={styles.sectionHeading}><p className={styles.eyebrow}>Service by service</p><h2>The same four phases, ten different jobs.</h2><p>An editorial plan and a link between two management systems are not built the same way, but they follow the same cycle. Each card shows what comes out at the end and the four steps that get there.</p></div>
+        <div className={styles.grid}>
+          {EN_METHOD_SERVICES.map(service => {
+            const Icon = metodoServizio(service.slug).icon
+            return (
+              <article id={`method-${service.anchor}`} className={styles.service} key={service.slug}>
+                <Icon size={24} aria-hidden="true" />
+                <h3>{service.label}</h3>
+                <p><strong>What you get:</strong> {service.delivery}</p>
+                <ul className={styles.checkList}>{service.phases.map((phase, index) => <li key={phase}><b>{String(index + 1).padStart(2, '0')}</b>{phase}</li>)}</ul>
+                <Link href={`/en/services#${service.anchor}`}>See {service.label} <ArrowRight size={15} aria-hidden="true" /></Link>
+              </article>
+            )
           })}
         </div>
       </section>

@@ -45,6 +45,16 @@ export const COPPIE_LINGUA: Record<string, string> = {
   // Il Journal e i suoi articoli: lo slug inglese e' diverso da quello italiano
   // (/en/blog/ai-act-obligations-small-business, non il titolo in italiano),
   // quindi il legame lo tiene `slugIt` invece della coincidenza del percorso.
+  // Le pagine legali tradotte. Sono traduzioni di cortesia: ognuna dichiara in
+  // cima che in caso di divergenza prevale l'italiano, perche' l'atto che
+  // vincola resta quello redatto nella lingua in cui l'azienda opera.
+  '/privacy': '/en/privacy',
+  '/cookie-policy': '/en/cookie-policy',
+  '/termini': '/en/terms',
+  '/trasparenza-ai': '/en/ai-transparency',
+  '/recesso': '/en/withdrawal',
+  '/sicurezza': '/en/security',
+  '/accessibilita': '/en/accessibility',
   '/autore/marco-dibenedetto': '/en/author/marco-dibenedetto',
   '/blog': '/en/blog',
   ...Object.fromEntries(SWA_BLOG_ARTICLES_EN.map(a => [`/blog/${a.slugIt}`, `/en/blog/${a.slug}`])),

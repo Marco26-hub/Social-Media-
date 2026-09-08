@@ -137,3 +137,41 @@ export const EN_ABOUT_FAQ = [
   { q: 'How many sectors do you cover?', a: `The Italian site currently covers ${EN_COMPANY.sectorCount} sector categories. The English section only shows the sector pages that are ready for English-speaking readers today.` },
   { q: 'Do you guarantee sales or rankings?', a: 'No. We guarantee process, included work, review points and deliverables. Rankings, AI citations, appointments and sales depend on external systems and market response.' },
 ]
+
+// Il metodo servizio per servizio, in inglese. La pagina /en/method raccontava
+// solo le quattro fasi generali, come faceva /metodo prima dell'hub: chi legge
+// in inglese non trovava da nessuna parte come si lavora sui singoli servizi.
+// I servizi inglesi non hanno una pagina ciascuno, quindi ogni scheda rimanda
+// all'ancora corrispondente su /en/services.
+export type EnMethodService = {
+  /** Lo stesso slug di METODO_SERVIZI: tiene allineate le due lingue. */
+  slug: string
+  /** Ancora della scheda su /en/services. */
+  anchor: string
+  label: string
+  delivery: string
+  phases: readonly string[]
+}
+
+export const EN_METHOD_SERVICES: readonly EnMethodService[] = [
+  { slug: 'gestione-social-media', anchor: 'social', label: 'Managed social media', delivery: '16 to 24 pieces a month for each of the 2 chosen channels',
+    phases: ['What we collect at kick-off', 'When you see the calendar', 'How production works', 'When it goes out and who checks'] },
+  { slug: 'seo-geo', anchor: 'seo', label: 'SEO + GEO strategy', delivery: 'An audit, an intent map and written intervention priorities',
+    phases: ['Scan', 'Architecture', 'Optimisation', 'Measurement'] },
+  { slug: 'blog-seo', anchor: 'blog', label: 'Blog SEO + GEO', delivery: '12 articles a month, reviewed by a person and published',
+    phases: ['Collection', 'Plan', 'Production', 'Review'] },
+  { slug: 'siti-e-commerce', anchor: 'web', label: 'Websites and e-commerce', delivery: 'A landing page or a company website. Yours after 12 months of subscription',
+    phases: ['Goals', 'Prototype', 'Build', 'Launch'] },
+  { slug: 'video-produzione', anchor: 'video', label: 'Video shot on site', delivery: 'Half a day of filming on site, producing verticals and stills for several weeks',
+    phases: ['Site visit', 'Shooting plan', 'Filming day', 'Edit and release'] },
+  { slug: 'ricerca-clienti-b2b', anchor: 'leads', label: 'B2B lead research', delivery: 'Up to 30 verified companies, with public sources and a reasoned priority',
+    phases: ['Brief', 'Research', 'Verification', 'Delivery'] },
+  { slug: 'segretaria-telefonica-ai', anchor: 'phone', label: 'AI phone assistant', delivery: '600 minutes a month of answered calls, about ten hours',
+    phases: ['We collect the information', 'We connect the calendar and the number', 'You test before it goes live', 'It goes live'] },
+  { slug: 'agenda-clienti-whatsapp', anchor: 'agenda', label: 'Diary and client recall', delivery: '1000 messages a month, drafted by the system and sent after your yes',
+    phases: ['We connect the data', 'We set the rules', 'You approve', 'We measure'] },
+  { slug: 'gestione-lavorazioni', anchor: 'jobs', label: 'Job reports and field work', delivery: 'Job reports signed on site, with photos, hours and a PDF for the client',
+    phases: ['Reviewing the work cycle', 'Templates and records', 'Field trial', 'Running and maintenance'] },
+  { slug: 'automazione-gestionali', anchor: 'systems', label: 'Systems automation', delivery: 'Connections between the systems already in use, with an execution log',
+    phases: ['Map', 'Priorities', 'Build', 'Operation'] },
+]
