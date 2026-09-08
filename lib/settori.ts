@@ -1,4 +1,4 @@
-import { PREZZI } from '@/lib/prezzi-ingresso'
+import { CANONE, PREZZI } from '@/lib/prezzi-ingresso'
 
 // Landing verticali di settore.
 //
@@ -30,6 +30,12 @@ export type Settore = {
   tipoServizio: string
   promessa: string
   notaPrezzi: string
+  /** Prezzo del servizio principale quando non deve coincidere con il prezzo
+   *  piu' basso citato nella nota (per esempio un gestionale su preventivo). */
+  prezzoPrincipale?: { label: string; valore?: string; cadenza?: string }
+  /** Offerta semplice che apre la relazione commerciale e introduce i
+   *  servizi piu' strutturati senza confonderne i prezzi. */
+  offertaIngresso?: { label: string; prezzo: string; cadenza: string; testo: string; href: string; cta: string }
   segnali: string[]
   risultati: BloccoSettore[]
   cosaTitolo: string
@@ -613,6 +619,74 @@ export const SETTORI: Settore[] = [
       { href: 'https://ristoranti-dashboard.vercel.app/', label: 'Guarda il sistema di sala' },
       { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
       { href: '/servizi/gestione-social-media', label: 'Gestione social media' },
+      { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
+    ],
+  },
+  {
+    slug: 'gelaterie',
+    nome: 'Gelaterie',
+    sommario: 'Menu QR, gusti del giorno, vaschette su WhatsApp e contenuti stagionali.',
+    titoloSeo: 'Menu QR e ordini WhatsApp per gelaterie | SWA',
+    descrizioneSeo:
+      'Gelaterie: menu digitale con gusti, allergeni e disponibilità, ordini vaschette e torte gelato su WhatsApp, sito e contenuti stagionali.',
+    eyebrow: 'Gelaterie',
+    h1: 'Il gusto del giorno deve cambiare anche online.',
+    lead:
+      `In gelateria il prodotto cambia in fretta: un gusto finisce, una vaschetta si prepara per il ritiro, una torta va prenotata. Si può partire da un sito di visibilità a ${CANONE.web} e costruire, quando serve, un sistema più completo con menu QR, ordini WhatsApp, contenuti e automazioni.`,
+    servizio: 'Menu QR e ordini digitali per gelaterie',
+    tipoServizio: 'Menu digitale, ordini WhatsApp, sito e contenuti per gelaterie artigianali',
+    promessa:
+      'Parti dalla presenza online essenziale oppure costruisci il flusso completo: sito, menu QR, ordini, contenuti e fidelizzazione lavorano insieme. Ogni livello viene scelto e quotato in modo trasparente.',
+    notaPrezzi: `Il sistema Menu QR ha lo stesso criterio del servizio ristoranti ed è su preventivo: dipende da catalogo, punti vendita e flusso degli ordini. Il sito di visibilità parte da ${CANONE.web}; siti strutturati, social, contenuti e automazioni vengono configurati e quotati in base agli obiettivi. Prezzi IVA esclusa.`,
+    prezzoPrincipale: { label: 'Sistema Menu QR' },
+    offertaIngresso: {
+      label: 'Il primo passo',
+      prezzo: CANONE.web.replace(' € al mese', ''),
+      cadenza: '/mese',
+      testo: 'Sito di visibilità mobile-first. Da qui puoi aggiungere pagine, ordini, contenuti, campagne e automazioni in un progetto più strutturato.',
+      href: '/servizi/siti-e-commerce',
+      cta: 'Scopri cosa comprende',
+    },
+    segnali: ['Gusti del giorno aggiornabili', 'Ordini vaschette e torte su WhatsApp', 'Allergeni visibili dal QR'],
+    risultati: [
+      { title: 'Meno domande ripetute al banco', text: 'Il cliente vede gusti disponibili, allergeni e formati prima di arrivare alla cassa. Chi deve scegliere per una famiglia non chiede tutto a voce mentre la fila aspetta.' },
+      { title: 'Ordini ritiro già scritti', text: 'Vaschette, torte gelato e catering arrivano su WhatsApp con nome, formato, gusti e orario richiesto. Il messaggio parte dal cliente, ma non parte vuoto.' },
+      { title: 'Promo che non restano solo in vetrina', text: 'Granite, brioche, monoporzioni e gusti stagionali entrano nel calendario social e rimandano a una pagina che si apre veloce dal telefono.' },
+    ],
+    cosaTitolo: 'Che cosa mettiamo fra vetrina, telefono e banco.',
+    cosaIntro:
+      `Non vendiamo una landing come soluzione a tutto. Il sito da ${CANONE.web} è l’ingresso per essere presenti online; menu QR, ordini, contenuti, campagne e fidelizzazione compongono il progetto completo quando la gelateria vuole crescere.`,
+    cosaFacciamo: [
+      { title: 'Menu QR dei gusti', text: 'Ogni QR apre il menu aggiornato con categorie, prezzi, disponibilità e allergeni. Il codice resta lo stesso anche quando cambiano i gusti.' },
+      { title: 'Gusti del giorno', text: 'Dal pannello si segnano disponibili, esauriti o in evidenza: pistacchio, sorbetti, vegani, granite e speciali restano allineati con la vetrina.' },
+      { title: 'Ordini su WhatsApp', text: 'Il pulsante prepara il messaggio per vaschette, torte e ritiro: il cliente completa e invia, il banco riceve una richiesta leggibile.' },
+      { title: 'Allergeni e intolleranze', text: 'Latte, frutta a guscio, glutine e altri allergeni principali stanno vicino al gusto, non in un PDF dimenticato o in una risposta data di fretta.' },
+      { title: 'Pagina della gelateria', text: `Orari, posizione, menu, WhatsApp e prodotti speciali su una pagina veloce da telefono, ${PREZZI.web}.` },
+      { title: 'Contenuti stagionali', text: `Gusti nuovi, laboratorio, carapine, granite e torte diventano 16 uscite al mese per canale con Presenza (${PREZZI.presenza}) o 24 con Crescita (${PREZZI.crescita}).` },
+      { title: 'Riprese prodotto', text: `Foto e video dei gusti si producono in blocchi, ${PREZZI.video}, così il calendario non vive di immagini improvvisate.` },
+      { title: 'Fidelity e ricorrenze', text: 'Tessera digitale, compleanni e richiami stagionali si aggiungono quando il negozio vuole trasformare i clienti occasionali in ritorni misurabili.' },
+    ],
+    ciclo: [
+      { number: '01', title: 'Catalogo iniziale', text: 'Raccogliamo gusti, categorie, prezzi, allergeni, formati e regole di ritiro. Da lì nasce il primo menu QR, già scritto con il lessico della gelateria.' },
+      { number: '02', title: 'Configurazione', text: 'Carichiamo il menu, il numero WhatsApp, le promo e i pulsanti per vaschette, torte e catering. Il cliente apre tutto dal browser, senza app da scaricare.' },
+      { number: '03', title: 'Prova al banco', text: 'Si prova con il personale: segnare un gusto esaurito, cambiare una promo, ricevere un ordine e rispondere. Il sistema deve stare nei tempi reali della fila.' },
+      { number: '04', title: 'Calendario stagionale', text: 'Quando il menu gira, si agganciano contenuti e campagne: nuovi gusti, estate, Natale, San Valentino, torte compleanno e carretto eventi.' },
+    ],
+    faq: [
+      { q: 'Il cliente deve scaricare un’app?', a: `No. Il QR apre una pagina web dal browser del telefono: gusti, allergeni, formati e pulsante WhatsApp sono lì. Non serve account e non c’è niente da installare.` },
+      { q: 'Posso cambiare i gusti ogni giorno?', a: 'Sì. La pagina è pensata proprio per questo: un gusto si mette disponibile, esaurito o in evidenza dal pannello. Il QR resta identico, quindi non si ristampa quando cambia la vetrina.' },
+      { q: 'Come arrivano gli ordini?', a: 'Gli ordini arrivano su WhatsApp con un testo già impostato: vaschetta o torta, gusti richiesti, orario e nome del cliente. Non sostituisce la conferma del negozio, ma evita messaggi incompleti tipo “vorrei ordinare”.' },
+      { q: 'Gestisce anche torte gelato e catering?', a: 'Sì, si possono creare pulsanti e sezioni dedicate a torte, monoporzioni, carretto gelato ed eventi. Le richieste più delicate restano da confermare a mano, perché tempi e disponibilità dipendono dal laboratorio.' },
+      { q: 'Quanto costa il sistema per una gelateria?', a: `Il sistema Menu QR segue lo stesso criterio previsto per i ristoranti ed è su preventivo, perché cambia in base a punti vendita, catalogo e flusso degli ordini. Il sito di visibilità parte da ${CANONE.web}; siti più strutturati, social, contenuti e automazioni vengono proposti separatamente e approvati prima dell’attivazione.` },
+      { q: 'Gli allergeni sono responsabilità di SWA?', a: 'No. SWA prepara il sistema per mostrarli, ma le informazioni su ricette, contaminazioni e ingredienti devono essere fornite e aggiornate dalla gelateria. Il pannello serve a renderle visibili, non a certificarle.' },
+      { q: 'Si può usare solo come menu QR senza ordini?', a: 'Sì. Molte gelaterie possono partire dal menu digitale e aggiungere WhatsApp, fidelity o torte quando il banco ha preso confidenza. La struttura resta la stessa.' },
+      { q: 'Serve anche se ho già Instagram?', a: 'Instagram fa vedere il gusto, ma non è il posto più comodo per sapere cosa è disponibile adesso o ordinare una vaschetta. Il menu QR è il punto operativo; Instagram porta attenzione, la pagina raccoglie la richiesta.' },
+    ],
+    correlati: [
+      { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
+      { href: '/servizi/gestione-social-media', label: 'Gestione social media' },
+      { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
+      { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
       { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
     ],
   },

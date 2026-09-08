@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import '@/styles/globals.css'
 import JsonLd from '@/components/JsonLd'
 import CookieBanner from '@/components/CookieBanner'
+import Odino from '@/components/Odino'
 import MetaPixel from '@/components/MetaPixel'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
 
@@ -85,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd />
         <MetaPixel />
         {children}
+        <Odino />
         <CookieBanner />
       </body>
     </html>
