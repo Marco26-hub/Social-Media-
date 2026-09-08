@@ -46,14 +46,15 @@ export const metadata: Metadata = {
     languages: { 'it-IT': SITE_URL, en: `${SITE_URL}/en`, 'x-default': SITE_URL },
   },
   openGraph: {
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
+    title: 'Soluzioni digitali per PMI: siti, social e automazioni | SWA',
+    description: 'SWA coordina siti web, gestione social, SEO e GEO, assistente telefonico AI, agenda clienti e automazioni per PMI e professionisti.',
     url: SITE_URL,
   images: anteprimaOg('/'),
    type: 'website',},
   twitter: {
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
+    title: 'Soluzioni digitali per PMI: siti, social e automazioni | SWA',
+    description: 'SWA coordina siti web, gestione social, SEO e GEO, assistente telefonico AI, agenda clienti e automazioni per PMI e professionisti.',
+    images: anteprimaOg('/'),
   },
 }
 

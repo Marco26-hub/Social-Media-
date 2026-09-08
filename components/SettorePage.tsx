@@ -90,7 +90,10 @@ export default function SettorePage({ settore, locale = 'it' }: { settore: Setto
     process: settore.ciclo,
     faq: settore.faq,
     related: settore.correlati,
-    visualTheme: settore.slug === 'gelaterie' ? 'gelateria' : undefined,
+    // Ogni verticale ha una scena reale del mestiere. Le stesse immagini
+    // servono anche alle pagine inglesi: cambia il testo, non il lavoro.
+    visualTheme: 'settore',
+    heroImage: `/images/settori/${settore.slug}-cinematica.webp`,
     demo: settore.slug === 'ristoranti-e-bar' ? 'sala' : undefined,
   }
 

@@ -56,7 +56,7 @@ export default function FloatingNavigation() {
           aria-label={t.indietro}
           data-tooltip={t.indietro}
         >
-          <ArrowLeft size={19} aria-hidden="true" />
+          <ArrowLeft size={16} strokeWidth={2.2} aria-hidden="true" />
         </button>
       )}
       <button
@@ -67,7 +67,7 @@ export default function FloatingNavigation() {
         data-tooltip={t.su}
         tabIndex={showTop ? 0 : -1}
       >
-        <ArrowUp size={19} aria-hidden="true" />
+        <ArrowUp size={16} strokeWidth={2.2} aria-hidden="true" />
       </button>
     </nav>
   )

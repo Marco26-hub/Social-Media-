@@ -232,6 +232,15 @@ export default function Odino() {
             </span>
           </span>
         </span>
+        {/* Il saluto nasce dalla mano: tre bolle salgono mentre il braccio si
+            alza e si uniscono nella nuvoletta. E' testo vero, non impresso in
+            un'immagine, quindi resta nitido su ogni schermo. */}
+        <span className={styles.saluto} aria-hidden="true">
+          <i className={styles.bollaUno} />
+          <i className={styles.bollaDue} />
+          <i className={styles.bollaTre} />
+          <strong>Ciao</strong>
+        </span>
         <span className={styles.stato} aria-hidden="true" />
       </button>
     )

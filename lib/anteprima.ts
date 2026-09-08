@@ -32,9 +32,9 @@ export type Anteprima = {
 
 const IT: Record<string, Anteprima> = {
   '/': {
-    occhiello: 'Social Web Automation',
-    titolo: 'Social, SEO, siti e clienti B2B per le PMI.',
-    sottotitolo: `Un solo interlocutore per presenza, visibilità e chiamate. Piani social da ${PREZZI.presenza}.`,
+    occhiello: 'Soluzioni digitali per PMI',
+    titolo: 'Sito, visibilità e clienti in un unico sistema.',
+    sottotitolo: 'Social, SEO e GEO, assistente telefonico, agenda e automazioni coordinate da un solo interlocutore.',
     tinta: 'verde',
   },
   '/servizi': {

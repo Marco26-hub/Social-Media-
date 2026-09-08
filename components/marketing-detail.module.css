@@ -298,8 +298,8 @@ h1 .eyebrow, .hero h1 .eyebrow {
   .tabella thead th { font-size: 12.5px; }
 }
 
-/* Variante verticale: gelaterie.
-   Il layout resta quello delle pagine settore, ma il tono visivo cambia:
+/* Variante editoriale per tutte le pagine settore.
+   Il layout resta quello delle pagine servizio, ma il tono visivo cambia:
    piu' luce, piu' materia di prodotto, meno pannello software. */
 .pageGelateria {
   --ink: #15231f;

@@ -73,7 +73,9 @@ export type MarketingDetailConfig = {
   faq: FaqBlock[]
   related: { href: string; label: string }[]
   portfolio?: PortfolioBlock[]
-  visualTheme?: 'gelateria'
+  visualTheme?: 'settore'
+  /** Scena editoriale del mestiere mostrata nel pannello di apertura. */
+  heroImage?: string
   /** Un blocco dimostrativo fra i risultati e le lavorazioni. Per ora solo la sala. */
   demo?: 'sala'
 }
@@ -219,7 +221,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
     ],
   }
 
-  const pageClassName = config.visualTheme === 'gelateria'
+  const pageClassName = config.visualTheme === 'settore'
     ? `${styles.page} ${styles.pageGelateria}`
     : styles.page
 
@@ -264,10 +266,10 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           </div>
         </div>
         <aside className={styles.signalPanel} aria-label={`Sintesi ${config.serviceName}`}>
-          {config.visualTheme === 'gelateria' && (
+          {config.heroImage && (
             <div className={styles.gelatoPreview} aria-hidden="true">
               <Image
-                src="/images/settori/gelateria-cinematica.webp"
+                src={config.heroImage}
                 alt=""
                 fill
                 priority

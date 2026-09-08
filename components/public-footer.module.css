@@ -158,7 +158,7 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     justify-items: start;
-    gap: 18px 10px;
+    gap: 11px 9px;
   }
   .footerBottom nav .withdrawalLink { grid-column: 1 / -1; justify-self: stretch; justify-content: center; margin-top: 6px; }
   /* A fine pagina il pannello fisso — mascotte piu' pulsanti «su» e «indietro» —

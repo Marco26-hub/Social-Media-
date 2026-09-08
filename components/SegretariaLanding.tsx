@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
+import FloatingNavigation from '@/components/FloatingNavigation'
 import { SEGRETARIA_AVVIO, SEGRETARIA_NOTA, type FamigliaSegretaria } from '@/lib/segretaria-listino'
 import { SITE_URL } from '@/lib/site-config'
 import styles from './segretaria-landing.module.css'
@@ -391,6 +392,7 @@ export default function SegretariaLanding({ c, locale = 'it' }: { c: ContenutoLa
       </main>
 
       <PublicFooter />
+      <FloatingNavigation />
     </div>
   )
 }
