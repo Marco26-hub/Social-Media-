@@ -45,7 +45,7 @@ const TASK_RECOMMENDED: Record<Task, string> = {
 }
 
 const TASK_WHY: Record<Task, string> = {
-  'contenuti-social': 'Modello testo OpenRouter. Il free tier (Llama 3.3 70B) è gratis; per la vision (leggere le foto) scegli un modello vision con credito.',
+  'contenuti-social': 'Modello testo OpenRouter. Gemma 4 31B è il default gratuito; per leggere le foto scegli esplicitamente un modello Vision con credito.',
   'piano-editoriale': 'Serve output ampio: un modello con contesto/output grande evita il troncamento del JSON del piano.',
   'seo-audit':        'Analisi lunghe: preferisci un modello con buon contesto. Il free tier basta per la maggior parte dei casi.',
   'blog-articolo':    'Articoli long-form: modello con output ampio. Free per iniziare, a pagamento per qualità superiore.',

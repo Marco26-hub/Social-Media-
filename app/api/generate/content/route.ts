@@ -24,6 +24,7 @@ import { adaptRowForPlatform } from '@/lib/social-adapt'
 import { buildBusinessCategoryContext, resolveBusinessCategory, type BusinessCategory } from '@/lib/business-categories'
 import { buildContentSeriesContext } from '@/lib/content-series'
 import { buildCreativeModeContext, normalizeCreativeMode } from '@/lib/creative-mode'
+import { isVisionModel } from '@/lib/ai-model'
 
 type PromptSpec = {
   persona: string
@@ -517,6 +518,7 @@ export async function POST(request: Request) {
     await requireClienteAccess(effectiveClienteId)
     const requestedQuality = quality ?? quality_level ?? post_quality ?? qualita
     const creativeMode = normalizeCreativeMode(creative_mode)
+    const selectedModel = typeof model === 'string' && model.trim() ? model.trim() : 'google/gemma-4-31b-it:free'
     if (isDemo() || !dbReady()) {
       const demoQuality = resolveContentQuality({ requestedQuality })
       const demoCategory = resolveBusinessCategory(business_category)
@@ -529,6 +531,8 @@ export async function POST(request: Request) {
         quality_level: demoQuality,
         business_category: demoCategory.id,
         creative_mode: creativeMode,
+        selected_model: selectedModel,
+        model_used: selectedModel,
         quality_downgraded: isQualityDowngraded(requestedQuality, demoQuality),
         warning: 'Fallback demo: DATABASE_URL non configurato, contenuto non persistito su Neon.',
       })
@@ -593,6 +597,11 @@ export async function POST(request: Request) {
     const userAssets = normalizeAssets(uploaded_assets, media_urls)
     const mediaUrls = userAssets.map(asset => asset.url)
     const visionUrls = userAssets.filter(asset => !isVideoAsset(asset)).map(asset => asset.url)
+    if (visionUrls.length && !isVisionModel(selectedModel)) {
+      return NextResponse.json({
+        error: `Il modello selezionato (${selectedModel}) non legge immagini. Scegli un modello con badge Vision: nessun fallback a pagamento e stato eseguito.`,
+      }, { status: 400 })
+    }
     const assetContext = buildAssetContext(userAssets)
     const creativeModeContext = buildCreativeModeContext({
       mode: creativeMode,
@@ -620,8 +629,9 @@ export async function POST(request: Request) {
     // Prepend brand context for richer generation
     const userPrompt = `${businessCategoryContext}\n---\n${creativeModeContext ? `${creativeModeContext}\n---\n` : ''}${series ? `${series.prompt}\n---\n` : ''}${brandContext ? `${brandContext}\n---\n` : ''}${basePrompt}`
 
+    let modelUsed = selectedModel
     const aiRes = await callAI({
-      model: model || 'google/gemma-4-31b-it:free',
+      model: selectedModel,
       systemPrompt: buildSystemPrompt(brand, contentQuality, activeBusinessCategory.label),
       userPrompt,
       openrouterKey: openrouter_key,
@@ -630,6 +640,7 @@ export async function POST(request: Request) {
       // e scrive su quello (non sul blazer del catalogo). Serve un modello vision
       // (Gemini 2.5 Flash, GPT-4o mini). I modelli text-only le ignorano.
       images: visionUrls,
+      onModelUsed: usedModel => { modelUsed = usedModel },
     })
 
     let parsed = extractJSON(aiRes) as Record<string, unknown>
@@ -647,22 +658,28 @@ export async function POST(request: Request) {
       if (n < 3 || n > 5) {
         warnings.push(`Carosello con ${n} slide fuori range 3-5: rigenerato.`)
         try {
+          let retryModelUsed = selectedModel
           const retryRes = await callAI({
-            model: model || 'google/gemma-4-31b-it:free',
+            model: selectedModel,
             systemPrompt: buildSystemPrompt(brand, contentQuality, activeBusinessCategory.label),
             userPrompt: `${userPrompt}\n\nVINCOLO ASSOLUTO: il carosello deve avere ESATTAMENTE da 3 a 5 slide nel campo "slides" (mai meno di 3, mai più di 5). La generazione precedente ne aveva ${n}. Rigenera rispettando il vincolo.`,
             openrouterKey: openrouter_key,
             maxTokens: getQualityTokenBudget(contentQuality),
             images: visionUrls,
+            onModelUsed: usedModel => { retryModelUsed = usedModel },
           })
           const retryParsed = extractJSON(retryRes) as Record<string, unknown>
           const rn = countSlides(retryParsed)
-          if (rn >= 3 && rn <= 5) { parsed = retryParsed; n = rn }
+          if (rn >= 3 && rn <= 5) { parsed = retryParsed; n = rn; modelUsed = retryModelUsed }
           else warnings.push(`Anche il retry ha prodotto ${rn} slide: salvato comunque, verifica manuale consigliata.`)
         } catch (e) {
           warnings.push(`Retry carosello fallito: ${(e as Error).message.slice(0, 100)}. Salvato il primo tentativo.`)
         }
       }
+    }
+
+    if (modelUsed !== selectedModel) {
+      warnings.push(`Modello selezionato non disponibile: contenuto generato con fallback ${modelUsed}.`)
     }
 
     const id_contenuto = `C${Date.now().toString(36).toUpperCase()}`
@@ -758,7 +775,7 @@ export async function POST(request: Request) {
       jsonbParam(pickJson(parsed, ['cta_variants', 'cta_alternative'])),
       pickText(parsed, ['creative_brief', 'brief_creativo']) || null,
       pickText(parsed, ['template_id', 'template', 'template_operativo']) || null,
-      pickText(parsed, ['template_style', 'stile_template', 'visual_style']) || null,
+      pickText(parsed, ['template_style', 'stile_template', 'visual_style']) || (creativeMode === 'ugc' ? 'ugc' : null),
       jsonbParam(pickJson(parsed, ['layout_spec', 'layout_spec_json', 'layout'])),
       jsonbParam(pickJson(parsed, ['asset_requirements', 'asset_requirements_json', 'asset_richiesti'])),
       pickText(parsed, ['production_notes', 'note_produzione']) || null,
@@ -832,6 +849,8 @@ export async function POST(request: Request) {
       quality_level: generatedQuality,
       business_category: activeBusinessCategory.id,
       creative_mode: creativeMode,
+      selected_model: selectedModel,
+      model_used: modelUsed,
       ...(series ? { series_id: series.id, series_position: series.position, series_total: series.total, series_theme: series.theme } : {}),
       quality_downgraded: isQualityDowngraded(requestedQuality, generatedQuality),
       ...(crossPosted.length ? { cross_posted: crossPosted } : {}),

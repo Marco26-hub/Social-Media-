@@ -1,4 +1,5 @@
 import { logTokenUsage, tokenMetaStore, type TokenMeta } from '@/lib/token-usage'
+import { isFreeOpenRouterModel, isVisionModel } from '@/lib/ai-model'
 
 // ─────────────────────────────────────────────────────────────────────────
 // Bridge AI — SOLO OpenRouter. L'admin usa i modelli tramite la SUA OpenRouter
@@ -30,11 +31,6 @@ const OPENROUTER_VISION_FALLBACKS = [
   'google/gemini-2.5-flash',
   'openai/gpt-4o-mini',
 ]
-
-// Riconosce un modello capace di vision (per non mandargli immagini a vuoto).
-function isVisionModel(model: string): boolean {
-  return /gemini|gpt-4o|gpt-4-vision|claude-3|claude-sonnet|claude-opus|-vl\b|llava|vision|pixtral|llama-3\.2-\d+b-vision/i.test(model)
-}
 
 type AIAttempt = {
   provider: 'openrouter'
@@ -154,6 +150,7 @@ async function callAIImpl(params: {
   // abortito ("Richiesta troppo lunga") mentre il server continuava a lavorare.
   deadlineAt?: number
   meta?: TokenMeta
+  onModelUsed?: (model: string) => void
 }): Promise<string> {
   const { model, systemPrompt, userPrompt, maxTokens = 4000, silentFallback = true, images = [], timeoutMs = 30000, deadlineAt } = params
   const remainingMs = () => (deadlineAt ? deadlineAt - Date.now() : Number.POSITIVE_INFINITY)
@@ -176,12 +173,21 @@ async function callAIImpl(params: {
   }
 
   const needsVision = images.length > 0
+  if (needsVision && !isVisionModel(model)) {
+    throw new Error(
+      `Il modello selezionato (${model}) non legge immagini. Scegli esplicitamente un modello Vision: ` +
+      'SWA non passa automaticamente a un modello a pagamento.',
+    )
+  }
+
   let orModels: string[] = [model]
   if (silentFallback) {
     const pool = needsVision ? OPENROUTER_VISION_FALLBACKS : FALLBACK_MODELS
     let n = 0
     for (const fb of pool) {
       if (fb === model) continue
+      // Un modello gratuito non deve mai ripiegare silenziosamente su uno a pagamento.
+      if (isFreeOpenRouterModel(model) && !isFreeOpenRouterModel(fb)) continue
       if (n >= MAX_OPENROUTER_FALLBACKS) break
       n++
       orModels.push(fb)
@@ -210,7 +216,10 @@ async function callAIImpl(params: {
       break
     }
     const res = await tryOpenRouterModel(m, systemPrompt, userPrompt, orKey, maxTokens, attempts, images, Math.min(timeoutMs, budget - 1000))
-    if (res) return res
+    if (res) {
+      params.onModelUsed?.(m)
+      return res
+    }
   }
 
   // Ondata 2: se TUTTO è rate-limited, attende il Retry-After e ritenta una volta
@@ -223,7 +232,10 @@ async function callAIImpl(params: {
       console.warn('[AI bridge]', `modelli rate-limited, attendo ${Math.round(waitMs / 1000)}s e ritento`)
       await sleep(waitMs)
       const res = await tryOpenRouterModel(orModels[0], systemPrompt, userPrompt, orKey, maxTokens, attempts, images, Math.min(timeoutMs, Math.max(MIN_ATTEMPT_MS, remainingMs() - 1000)))
-      if (res) return res
+      if (res) {
+        params.onModelUsed?.(orModels[0])
+        return res
+      }
     }
   }
 

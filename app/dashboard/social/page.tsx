@@ -21,6 +21,7 @@ import { BUSINESS_CATEGORY_OPTIONS, resolveBusinessCategory, type BusinessCatego
 import type { CreativeMode } from '@/lib/creative-mode'
 import { calendarContentHref } from '@/lib/calendar-content-link'
 import { useRouter } from 'next/navigation'
+import { isVisionModel } from '@/lib/ai-model'
 
 // Cap asset per singolo post/carosello = max carosello Instagram (10).
 // Altre piattaforme limitano di più in publish (X 4) — vedi warning nel form.
@@ -273,7 +274,27 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   }
 
   function chiediGenera(f: FormatoConfig, creativeMode: CreativeMode = 'standard') {
-    setAiModel(readAISettings().model)
+    const selectedModel = readAISettings().model
+    setAiModel(selectedModel)
+    setErrors(previous => {
+      const next = { ...previous }
+      delete next[f.id]
+      return next
+    })
+    const hasImageAssets = assets.some(asset => (
+      asset.kind !== 'video'
+      && !asset.mime?.startsWith('video/')
+      && !isVideoUrl(asset.url)
+    ))
+    if (hasImageAssets && !isVisionModel(selectedModel)) {
+      setErrors(previous => ({
+        ...previous,
+        [f.id]: `Il modello ${selectedModel} non legge immagini. Scegli un modello con badge Vision: SWA non usera di nascosto un modello a pagamento.`,
+      }))
+      setStates(previous => ({ ...previous, [f.id]: 'error' }))
+      setTimeout(() => setStates(previous => ({ ...previous, [f.id]: 'idle' })), 4000)
+      return
+    }
     setPending({ format: f, creativeMode })
   }
 

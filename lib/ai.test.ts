@@ -66,3 +66,62 @@ test('without a deadline the single-attempt timeout still applies', async () => 
     assert.equal(calls, 1, 'senza fallback deve restare un solo tentativo')
   })
 })
+
+test('a free text model never falls back silently to a paid vision model', async () => {
+  let calls = 0
+  const previousKey = process.env.OPENROUTER_API_KEY
+  const previousFetch = globalThis.fetch
+  process.env.OPENROUTER_API_KEY = 'sk-or-v1-test000000000000000000000'
+  globalThis.fetch = (() => {
+    calls += 1
+    throw new Error('fetch should not be called')
+  }) as unknown as typeof fetch
+
+  try {
+    await assert.rejects(
+      callAI({
+        model: 'google/gemma-4-31b-it:free',
+        userPrompt: 'Genera un UGC',
+        images: ['https://example.com/product.jpg'],
+      }),
+      /non legge immagini.*non passa automaticamente/,
+    )
+    assert.equal(calls, 0)
+  } finally {
+    globalThis.fetch = previousFetch
+    if (previousKey === undefined) delete process.env.OPENROUTER_API_KEY
+    else process.env.OPENROUTER_API_KEY = previousKey
+  }
+})
+
+test('reports which fallback model actually generated the content', async () => {
+  const previousKey = process.env.OPENROUTER_API_KEY
+  const previousFetch = globalThis.fetch
+  process.env.OPENROUTER_API_KEY = 'sk-or-v1-test000000000000000000000'
+  let calls = 0
+  let modelUsed = ''
+  globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+    calls += 1
+    if (calls === 1) return new Response('{"error":{"message":"temporarily unavailable"}}', { status: 503 })
+    const request = JSON.parse(String(init?.body || '{}')) as { model?: string }
+    return new Response(JSON.stringify({ choices: [{ message: { content: '{"ok":true}' } }] }), {
+      status: request.model === 'nvidia/nemotron-3-super-120b-a12b:free' ? 200 : 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }) as typeof fetch
+
+  try {
+    const result = await callAI({
+      model: 'google/gemma-4-31b-it:free',
+      userPrompt: 'Genera un UGC',
+      onModelUsed: model => { modelUsed = model },
+    })
+    assert.equal(result, '{"ok":true}')
+    assert.equal(modelUsed, 'nvidia/nemotron-3-super-120b-a12b:free')
+    assert.equal(calls, 2)
+  } finally {
+    globalThis.fetch = previousFetch
+    if (previousKey === undefined) delete process.env.OPENROUTER_API_KEY
+    else process.env.OPENROUTER_API_KEY = previousKey
+  }
+})

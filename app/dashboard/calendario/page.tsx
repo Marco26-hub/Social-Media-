@@ -1933,6 +1933,9 @@ function CalendarioInner() {
                     {c.quality_level && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700 uppercase">{c.quality_level}</span>
                     )}
+                    {c.template_style === 'ugc' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase font-semibold">UGC</span>
+                    )}
                     {c.content_series_id && c.content_series_position && c.content_series_total && (
                       <span
                         title={c.content_series_theme || `Serie ${c.content_series_id}`}
@@ -2137,6 +2140,11 @@ function CalendarioInner() {
                 {selected.quality_level && (
                   <span className="inline-flex mt-2 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-violet-100 text-violet-700">
                     Qualità {selected.quality_level}
+                  </span>
+                )}
+                {selected.template_style === 'ugc' && (
+                  <span className="ml-2 inline-flex mt-2 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                    UGC
                   </span>
                 )}
                 {selected.content_series_id && selected.content_series_position && selected.content_series_total && (
