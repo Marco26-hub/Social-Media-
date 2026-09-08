@@ -18,10 +18,39 @@
 .lancio:focus-visible { outline: 3px solid #c9a227; outline-offset: 3px; }
 
 .faccia {
-  width: 42px; height: 42px; flex: none;
-  border-radius: 50%; object-fit: cover;
+  width: 40px; height: 50px; flex: none;
+  border-radius: 50%; object-fit: cover; object-position: 50% 22%;
   background: radial-gradient(circle at 50% 38%, #1d4a3a 0%, #0d2620 72%);
   animation: galleggia 4.5s ease-in-out infinite;
+}
+/* La mascotte e' disegnata, non fotografata: ogni parte ha il suo gruppo e puo'
+   muoversi da sola. Le palpebre si chiudono ogni tanto e il braccio saluta —
+   due gesti brevi e distanti, non un movimento continuo: un pupazzo che si
+   agita ai bordi dello schermo diventa un banner da chiudere. */
+.faccia { border-radius: 0; background: none; overflow: visible }
+.faccia :global(.odino-occhi) { animation: odinoBatti 7s infinite }
+.faccia :global(.odino-braccio) { animation: odinoSaluta 6s ease-in-out infinite }
+.faccia :global(.odino-antenna) { animation: odinoAntenna 4.5s ease-in-out infinite }
+.faccia :global(.odino-onde) { animation: odinoOnde 3s ease-in-out infinite }
+
+@keyframes odinoBatti {
+  0%, 90%, 100% { transform: scaleY(1) }
+  93%, 96% { transform: scaleY(.08) }
+}
+@keyframes odinoSaluta {
+  0%, 55%, 100% { transform: rotate(0deg) }
+  62% { transform: rotate(-22deg) }
+  70% { transform: rotate(6deg) }
+  78% { transform: rotate(-16deg) }
+  86% { transform: rotate(0deg) }
+}
+@keyframes odinoAntenna {
+  0%, 100% { transform: rotate(0deg); transform-origin: 60px 20px }
+  50% { transform: rotate(5deg); transform-origin: 60px 20px }
+}
+@keyframes odinoOnde {
+  0%, 100% { opacity: .55 }
+  50% { opacity: 1 }
 }
 @keyframes galleggia {
   0%, 100% { transform: translateY(0) }
@@ -53,7 +82,7 @@
   display: flex; align-items: center; gap: 11px;
   padding: 14px 14px 13px; background: #0d2620; color: #fffdf7;
 }
-.testa img, .testa > span:first-child { width: 38px; height: 38px; flex: none; border-radius: 50% }
+.testa > svg { width: 36px; height: 30px; flex: none }
 .testa strong { display: block; font: 800 14px Arial, sans-serif; letter-spacing: .02em }
 .testa small { display: block; margin-top: 2px; color: #b9cdc3; font-size: 11.5px; line-height: 1.35 }
 .chiudi {
@@ -112,7 +141,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .faccia, .occhio, .pannello { animation: none !important }
+  .faccia, .pannello, .faccia :global(.odino-occhi), .faccia :global(.odino-braccio),
+  .faccia :global(.odino-antenna), .faccia :global(.odino-onde) { animation: none !important }
 }
 
 /* Risposte prese dalle domande gia' scritte sul sito. Ognuna dichiara da quale

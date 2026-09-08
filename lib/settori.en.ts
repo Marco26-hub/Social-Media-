@@ -1,3 +1,4 @@
+import { CANONE } from '@/lib/prezzi-ingresso'
 import { PREZZI, SETTORI, type Settore } from '@/lib/settori'
 
 /**
@@ -622,6 +623,70 @@ const ELENCO: Settore[] = [
     correlati: [
       { href: '/en/services', label: 'Websites and automation' },
       { href: '/en/services', label: 'AI phone assistant' },
+      { href: '/en/pricing', label: 'Pricing' },
+    ],
+  },
+  {
+    slug: 'gelaterie',
+    nome: 'Ice cream parlours',
+    sommario: 'A QR menu, today’s flavours, tubs ordered on WhatsApp and seasonal content.',
+    titoloSeo: 'QR menu and WhatsApp orders for ice cream parlours | SWA',
+    descrizioneSeo:
+      'Ice cream parlours: a digital menu with flavours, allergens and availability, tub and cake orders on WhatsApp, a website and seasonal content.',
+    eyebrow: 'Ice cream parlours',
+    h1: 'Today’s flavour has to change online too.',
+    lead: `In an ice cream parlour the product changes fast: a flavour runs out, a tub is prepared for collection, a cake has to be ordered ahead. You can start from a visibility website at ${EN_PRICES.web} and build, when it is needed, a fuller system with a QR menu, WhatsApp orders, content and automation.`,
+    servizio: 'QR menu and digital orders for ice cream parlours',
+    tipoServizio: 'Digital menu, WhatsApp orders, website and content for artisan ice cream parlours',
+    promessa:
+      'Start from an essential online presence or build the whole flow: website, QR menu, orders, content and loyalty working together. Every level is chosen and quoted transparently.',
+    notaPrezzi: `The QR menu system follows the same criterion as the restaurant service and is quoted on request: it depends on the catalogue, the number of shops and the order flow. The visibility website starts at ${EN_PRICES.web}; larger sites, social, content and automation are configured and quoted against your objectives. Prices exclude VAT.`,
+    prezzoPrincipale: { label: 'QR menu system' },
+    offertaIngresso: {
+      label: 'The first step',
+      prezzo: CANONE.web.replace(' € al mese', ''),
+      cadenza: '/month',
+      testo: 'A mobile-first visibility website. From here you can add pages, orders, content, campaigns and automation in a larger project.',
+      href: '/en/services',
+      cta: 'See what it covers',
+    },
+    segnali: ['Today’s flavours, updated from a panel', 'Tub and cake orders on WhatsApp', 'Allergens visible from the QR code'],
+    risultati: [
+      { title: 'Fewer repeated questions at the counter', text: 'The customer sees the available flavours, the allergens and the sizes before reaching the till. Somebody choosing for a family does not have to ask everything out loud while the queue waits.' },
+      { title: 'Collection orders that arrive written', text: 'Tubs, ice cream cakes and catering come in on WhatsApp with the name, the size, the flavours and the time requested. The message is sent by the customer, but it does not arrive empty.' },
+      { title: 'Offers that do not stay in the window', text: 'Granita, brioche, single portions and seasonal flavours go into the social calendar and point to a page that opens fast on a phone.' },
+    ],
+    cosaTitolo: 'What we put between the window, the phone and the counter.',
+    cosaIntro: `We do not sell a landing page as the answer to everything. The website at ${EN_PRICES.web} is the way in to being present online; the QR menu, orders, content, campaigns and loyalty make up the full project when the parlour wants to grow.`,
+    cosaFacciamo: [
+      { title: 'A QR menu of the flavours', text: 'Every QR code opens the current menu with categories, prices, availability and allergens. The code stays the same even when the flavours change.' },
+      { title: 'Today’s flavours', text: 'From the panel you mark them available, sold out or featured: pistachio, sorbets, vegan options, granita and specials stay aligned with the window.' },
+      { title: 'Orders on WhatsApp', text: 'The button prepares the message for tubs, cakes and collection: the customer completes and sends it, and the counter receives a request it can read.' },
+      { title: 'Allergens and intolerances', text: 'Milk, nuts, gluten and the other main allergens sit next to the flavour, not in a forgotten PDF or in an answer given in a hurry.' },
+      { title: 'The parlour’s page', text: `Opening hours, location, menu, WhatsApp and special products on a page that is quick to open on a phone, ${EN_PRICES.web}.` },
+      { title: 'Seasonal content', text: `New flavours, the workshop, the tubs, granita and cakes become 16 posts a month per channel with Presence (${EN_PRICES.presenza}) or 24 with Growth (${EN_PRICES.crescita}).` },
+      { title: 'Product filming', text: `Photos and video of the flavours are produced in blocks, ${EN_PRICES.video}, so the calendar does not live on improvised images.` },
+      { title: 'Loyalty and recurring dates', text: 'A digital card, birthdays and seasonal recalls are added when the shop wants to turn occasional customers into measurable returns.' },
+    ],
+    ciclo: [
+      { number: '01', title: 'The initial catalogue', text: 'We collect the flavours, the categories, the prices, the allergens, the sizes and the collection rules. From there comes the first QR menu, already written in the parlour’s own vocabulary.' },
+      { number: '02', title: 'Configuration', text: 'We load the menu, the WhatsApp number, the offers and the buttons for tubs, cakes and catering. The customer opens all of it from the browser, with no app to download.' },
+      { number: '03', title: 'A trial at the counter', text: 'It is tested with the staff: marking a flavour sold out, changing an offer, receiving an order and replying. The system has to fit the real pace of the queue.' },
+      { number: '04', title: 'The seasonal calendar', text: 'Once the menu is running, content and campaigns are attached: new flavours, summer, Christmas, Valentine’s Day, birthday cakes and the events cart.' },
+    ],
+    faq: [
+      { q: 'Does the customer have to download an app?', a: 'No. The QR code opens a web page in the phone’s browser: flavours, allergens, sizes and the WhatsApp button are all there. No account is needed and there is nothing to install.' },
+      { q: 'Can I change the flavours every day?', a: 'Yes. The page is built for exactly that: a flavour is set available, sold out or featured from the panel. The QR code stays identical, so it does not have to be reprinted when the window changes.' },
+      { q: 'Does it handle ice cream cakes and catering too?', a: 'Yes, buttons and dedicated sections can be created for cakes, single portions, the ice cream cart and events. The more delicate requests stay to be confirmed by hand, because timing and availability depend on the workshop.' },
+      { q: 'What does the system cost for an ice cream parlour?', a: `The QR menu system follows the same criterion set out for restaurants and is quoted on request, because it changes with the number of shops, the catalogue and the order flow. The visibility website starts at ${EN_PRICES.web}; larger sites, social, content and automation are proposed separately and approved before activation.` },
+      { q: 'Are the allergens SWA’s responsibility?', a: 'No. SWA prepares the system to display them, but the information on recipes, cross-contamination and ingredients has to be provided and kept current by the parlour. The panel exists to make it visible, not to certify it.' },
+      { q: 'Can it be used only as a QR menu, without orders?', a: 'Yes. Many parlours can start from the digital menu and add WhatsApp, loyalty or cakes once the counter is comfortable with it. The structure stays the same.' },
+      { q: 'Is it useful if I already have Instagram?', a: 'Instagram shows the flavour, but it is not the most convenient place to find out what is available right now or to order a tub. The QR menu is the operational point; Instagram brings attention, the page collects the request.' },
+      { q: 'Does it work with more than one shop?', a: 'Yes. Each shop can have its own menu, its own availability and its own WhatsApp number, while the structure and the wording stay shared. How many shops there are is one of the things that changes the quote.' },
+    ],
+    correlati: [
+      { href: '/en/services', label: 'Websites and landing pages' },
+      { href: '/en/services', label: 'Managed social media' },
       { href: '/en/pricing', label: 'Pricing' },
     ],
   },

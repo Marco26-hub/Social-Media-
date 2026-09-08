@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { liberaAngolo, occupaAngolo } from '@/lib/riquadri'
 import Link from 'next/link'
 import { ArrowRight, PhoneCall, X } from 'lucide-react'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
@@ -37,6 +38,7 @@ export default function SegretariaPopup() {
 
   const chiudi = useCallback(() => {
     setUscita(true)
+    liberaAngolo('segretaria')
     try {
       window.localStorage.setItem(CHIAVE, String(Date.now() + GIORNI_SILENZIO * 86400_000))
     } catch { /* senza storage il popup ricomparira: accettabile, non bloccante */ }
@@ -49,7 +51,7 @@ export default function SegretariaPopup() {
     // banner cookie abbia avuto la sua risposta prima di chiedere altro.
     const avvia = () => {
       if (!leggiConsenso(document.cookie)) return false
-      window.setTimeout(() => setVisibile(true), RITARDO_MS)
+      window.setTimeout(() => { setVisibile(true); occupaAngolo('segretaria') }, RITARDO_MS)
       return true
     }
     if (avvia()) return

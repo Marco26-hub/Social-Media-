@@ -7,6 +7,8 @@ import { NODI, NODO_INIZIALE, cerca, nodo, settoreCitato, type Nodo } from '@/li
 import { cercaDomande, type Domanda } from '@/lib/odino/domande'
 import { ODINO_NOME, ODINO_PRESENTAZIONE } from '@/lib/odino/identita'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
+import { EVENTO_RIQUADRO, angoloLibero } from '@/lib/riquadri'
+import OdinoFaccia from './OdinoFaccia'
 import styles from './odino.module.css'
 
 // ODINO, l'assistente del sito.
@@ -20,22 +22,6 @@ import styles from './odino.module.css'
 // Chi scrive a mano libera viene indirizzato per parole chiave. Se nessuna
 // corrisponde, ODINO lo dice e offre le domande che sa trattare, invece di
 // rispondere a caso.
-
-/** La faccia disegnata: serve finche' non c'e' il file della mascotte. */
-function Faccia({ className }: { className?: string }) {
-  return (
-    <span className={className} aria-hidden="true">
-      <svg viewBox="0 0 48 48" role="presentation">
-        <rect x="4" y="8" width="40" height="32" rx="12" fill="#0d2620" stroke="#c9a227" strokeWidth="1.5" />
-        <g fill="#f2d98b" className={styles.occhio} style={{ transformOrigin: '18px 22px' }}>
-          <path d="M13 24a5 5 0 0 1 10 0" fill="none" stroke="#f2d98b" strokeWidth="2.4" strokeLinecap="round" />
-        </g>
-        <path d="M25 24a5 5 0 0 1 10 0" fill="none" stroke="#f2d98b" strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M19 31c1.8 2 7.2 2 9 0" fill="none" stroke="#f2d98b" strokeWidth="2.4" strokeLinecap="round" />
-      </svg>
-    </span>
-  )
-}
 
 export default function Odino() {
   const [aperto, setAperto] = useState(false)
@@ -56,12 +42,21 @@ export default function Odino() {
   // sovrapporgli un assistente significa mettere una richiesta commerciale
   // davanti a una scelta che la legge vuole libera.
   const [consensoDato, setConsensoDato] = useState(false)
+  // L'angolo in basso a destra ha un padrone alla volta: se c'e' gia il popup
+  // della segretaria, ODINO aspetta che chiuda invece di sovrapporsi.
+  const [angoloDisponibile, setAngoloDisponibile] = useState(true)
 
   useEffect(() => {
     const leggi = () => setConsensoDato(leggiConsenso(document.cookie) !== null)
+    const guarda = () => setAngoloDisponibile(angoloLibero())
     leggi()
+    guarda()
     window.addEventListener(EVENTO_CONSENSO, leggi)
-    return () => window.removeEventListener(EVENTO_CONSENSO, leggi)
+    window.addEventListener(EVENTO_RIQUADRO, guarda)
+    return () => {
+      window.removeEventListener(EVENTO_CONSENSO, leggi)
+      window.removeEventListener(EVENTO_RIQUADRO, guarda)
+    }
   }, [])
 
   // Chiusura da tastiera: un pannello che si apre sopra la pagina deve potersi
@@ -112,12 +107,13 @@ export default function Odino() {
     setApprofondimenti([])
   }
 
-  if (!consensoDato) return null
+  // Aperto resta aperto: se una persona ha gia' cliccato, il popup non lo scaccia.
+  if (!consensoDato || (!angoloDisponibile && !aperto)) return null
 
   if (!aperto) {
     return (
       <button type="button" className={styles.lancio} onClick={() => setAperto(true)}>
-        <Faccia className={styles.faccia} />
+        <OdinoFaccia className={styles.faccia} intero />
         <span>Chiedi a {ODINO_NOME}</span>
       </button>
     )
@@ -126,7 +122,7 @@ export default function Odino() {
   return (
     <aside className={styles.pannello} role="dialog" aria-modal="false" aria-label={`${ODINO_NOME}, assistente di Social Web Automation`}>
       <header className={styles.testa}>
-        <Faccia className={styles.faccia} />
+        <OdinoFaccia className={styles.faccia} />
         <div>
           <strong>{ODINO_NOME}</strong>
           <small>{ODINO_PRESENTAZIONE.replace('Sono ODINO, l’', 'L’')}</small>
