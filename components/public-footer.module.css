@@ -161,10 +161,14 @@
     gap: 18px 10px;
   }
   .footerBottom nav .withdrawalLink { grid-column: 1 / -1; justify-self: stretch; justify-content: center; margin-top: 6px; }
-  /* Solo le due righe che finiscono nell'angolo stanno larghe dalla mascotte,
-     invece di stringere tutta la colonna dei link. */
-  .footerBottom nav .withdrawalLink,
-  .footerBottom > p { padding-right: 92px; }
+  /* A fine pagina il pannello fisso — mascotte piu' pulsanti «su» e «indietro» —
+     occupa i 236px in basso a destra dello schermo, e con quattro colonne
+     l'ultima arriva fin li' sotto: «Sicurezza» finiva sotto i pulsanti. Stringere
+     la griglia non regge, quattro parole come «Accessibilita'» in 250px non ci
+     stanno. Il footer lascia invece aria in fondo: cosi' quando lo scorrimento
+     finisce l'intero contenuto sta sopra il pannello. E' lo spazio dove sul
+     telefono sta il pollice, non e' sprecato. */
+  .footerBottom { padding-bottom: calc(34px + 236px + env(safe-area-inset-bottom)); }
   .footerBottom p { text-align: left; }
 }
 @media (max-width: 620px) {
