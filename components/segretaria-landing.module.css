@@ -575,3 +575,13 @@
   .pagina :global(.phone-top span),
   .gemellaOcchiello { font-size: 12.5px; }
 }
+
+/* Salto al contenuto: fuori campo finche' non riceve il focus da tastiera. */
+.skipLink {
+  position: fixed; top: 8px; left: 8px; z-index: 100;
+  padding: 10px 14px; border-radius: 6px;
+  background: #10120e; color: #fffaf0;
+  font-size: 13px; font-weight: 700; text-decoration: none;
+  transform: translateY(-180%);
+}
+.skipLink:focus { transform: translateY(0); }

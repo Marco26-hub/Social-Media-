@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Check, Download, FileText, Loader2, Printer, ShieldCheck } from 'lucide-react'
 import TurnstileWidget from '@/components/TurnstileWidget'
-import styles from '@/app/recesso/recesso.module.css'
+import styles from '@/styles/recesso.module.css'
 
 type CustomerType = 'consumatore' | 'impresa_professionista'
 type FormStep = 'form' | 'confirm' | 'success'
