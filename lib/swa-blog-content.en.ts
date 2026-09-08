@@ -23,7 +23,7 @@ export const SWA_BLOG_ARTICLES_EN: BlogArticleEn[] = [
   {
     slug: 'social-media-management-small-business-costs',
     slugIt: 'gestione-social-media-pmi-cosa-include-costi',
-    meta_title: 'Social media management for small businesses: what it covers and what it costs | SWA',
+    meta_title: 'Social media management for small business: cost and scope | SWA',
     meta_description:
       'What managed social media actually covers for a small business, what it costs per month and how content is counted per channel, with no promises of results.',
     h1: 'Social media management for small businesses: what it covers and what it costs',
@@ -101,7 +101,7 @@ export const SWA_BLOG_ARTICLES_EN: BlogArticleEn[] = [
   {
     slug: 'seo-vs-geo-ai-search-visibility',
     slugIt: 'seo-geo-differenze-visibilita-motori-ai',
-    meta_title: 'SEO and GEO: the differences, and a strategy for small businesses | SWA',
+    meta_title: 'SEO vs GEO: the differences, and what to do | SWA',
     meta_description:
       'SEO and GEO are not the same thing: one works on being found in a list, the other on being understood and quoted by AI answer systems.',
     h1: 'SEO and GEO: the differences, and how to be found by AI search too',
@@ -198,7 +198,7 @@ export const SWA_BLOG_ARTICLES_EN: BlogArticleEn[] = [
   {
     slug: 'social-media-editorial-plan-small-business',
     slugIt: 'piano-editoriale-social-esempio-pmi',
-    meta_title: 'Social media editorial plan for small businesses: method and example | SWA',
+    meta_title: 'Social editorial plan: method and example | SWA',
     meta_description:
       'How to build an editorial plan that holds for a whole month: recurring themes, formats, how much material to gather and who approves before anything is published.',
     h1: 'Social media editorial plan for small businesses: method, structure and a worked example',
@@ -273,7 +273,7 @@ export const SWA_BLOG_ARTICLES_EN: BlogArticleEn[] = [
   {
     slug: 'missed-calls-empty-diary-what-to-do',
     slugIt: 'chiamate-perse-agenda-vuota-cosa-fare',
-    meta_title: 'Missed calls and an empty diary: what actually helps | SWA',
+    meta_title: 'Missed calls and an empty diary: what helps | SWA',
     meta_description:
       'Why a missed call is almost always a missed appointment, how to bring back clients who stop coming, and what to check before automating the phone.',
     h1: 'Missed calls and an empty diary: two different problems, two different fixes',
@@ -379,7 +379,7 @@ export const SWA_BLOG_ARTICLES_EN: BlogArticleEn[] = [
   {
     slug: 'ai-act-obligations-small-business',
     slugIt: 'ai-act-obblighi-pmi-cosa-fare',
-    meta_title: 'AI Act: which obligations actually apply to a small business | SWA',
+    meta_title: 'AI Act: what applies to a small business | SWA',
     meta_description:
       'Which AI Act obligations apply to a small business, the difference between developing and using AI, the deadlines, and the staff training already in force.',
     h1: 'The AI Act: what it actually means for a small business',
@@ -481,7 +481,7 @@ export const SWA_BLOG_ARTICLES_EN: BlogArticleEn[] = [
   {
     slug: 'business-social-video-how-to-do-it-well',
     slugIt: 'video-social-aziendali-come-farli-bene',
-    meta_title: 'Video for business social channels: what actually makes the difference | SWA',
+    meta_title: 'Business social video: what makes the difference | SWA',
     meta_description:
       'Where the quality of a business video is really lost: light, audio and stability matter more than the camera. Why it pays to shoot in blocks, not one at a time.',
     h1: 'Video for social: what changes with professional equipment',
@@ -567,7 +567,7 @@ export const SWA_BLOG_ARTICLES_EN: BlogArticleEn[] = [
   {
     slug: 'b2b-prospect-list-how-to-build-it',
     slugIt: 'ricerca-clienti-b2b-come-costruire-lista',
-    meta_title: 'B2B prospecting: building a list that actually works | SWA',
+    meta_title: 'B2B prospecting: build a list that works | SWA',
     meta_description:
       'Why bought databases do not work, how to define your ideal client, which public signals to verify, and what the GDPR says about B2B contact.',
     h1: 'B2B prospecting: how to build a list that actually works',

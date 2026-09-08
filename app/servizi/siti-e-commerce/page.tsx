@@ -23,6 +23,7 @@ const config = {
   serviceType: 'Progettazione e sviluppo di landing page, siti aziendali ed e-commerce su preventivo',
   promise: 'Un punto di arrivo credibile per trasformare attenzione e traffico in opportunità.',
   startingPrice: '19.90',
+  priceCadence: '/mese',
   offerHighlight: 'Dopo 12 mesi di canone, il sito è tuo.',
   priceNote: 'Il canone a partire da 19,90 €/mese riguarda una landing page semplice o un sito web base. Siti multi-pagina, e-commerce, contenuti, dominio, integrazioni e funzioni avanzate vengono quotati prima dell’avvio.',
   primaryCtaLabel: 'Attiva Sito Web',

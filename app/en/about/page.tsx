@@ -32,7 +32,12 @@ export default function EnglishAboutPage() {
   }
 
   return (
-    <main className={styles.main}>
+    <main id="main-content" className={styles.main}>
+      {/* Sette pagine inglesi non avevano ne il link di salto ne un
+          bersaglio su <main>: chi naviga da tastiera doveva attraversare
+          tutto il menu a ogni pagina. La classe esisteva gia, mancava
+          solo di essere usata. */}
+      <a className={styles.skipLink} href="#main-content">Skip to content</a>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}>
         <div><p className={styles.eyebrow}>About SWA</p><h1>One accountable provider for work that usually needs several suppliers.</h1><p className={styles.heroLead}>Social Web Automation is based in {EN_COMPANY.location}. We coordinate content, websites, search and AI discoverability, B2B research and operational workflows so decisions stay connected.</p><div className={styles.actions}><Link className={styles.primary} href="/en/services">Explore services <ArrowRight size={16} aria-hidden="true" /></Link><a className={styles.secondary} href={`mailto:${EN_COMPANY.email}`}>Email us</a></div></div>

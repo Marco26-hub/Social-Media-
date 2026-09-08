@@ -102,6 +102,14 @@ export async function generateMetadata(): Promise<Metadata> {
     description: META_DESCRIPTION,
     alternates: {
       canonical: `${context.base}/blog`,
+      // La gemella inglese dichiarava il ritorno verso l'italiano ma non il
+      // contrario: un hreflang non reciproco viene scartato da Google, quindi
+      // le due versioni restavano estranee.
+      languages: {
+        'it-IT': `${SITE_URL}/blog`,
+        en: `${SITE_URL}/en/blog`,
+        'x-default': `${SITE_URL}/blog`,
+      },
       types: {
         'application/rss+xml': `${context.base}/blog/feed.xml`,
       },

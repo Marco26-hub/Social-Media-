@@ -80,7 +80,14 @@ export function safeImageUrl(url: unknown): string | null {
 }
 
 // JSON-LD: Article + FAQPage. Le AI (ChatGPT/Perplexity) e Google lo usano per citare.
-export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
+/**
+ * `lingua` serve al Journal inglese: gli articoli tradotti dichiaravano
+ * inLanguage «it-IT» e isPartOf il blog italiano, cioe' il dato strutturato
+ * smentiva sia il contenuto sia l'hreflang della stessa pagina.
+ */
+export function buildJsonLd(a: BlogArticleData, siteUrl?: string, lingua: 'it' | 'en' = 'it'): object[] {
+  const radice = siteUrl?.replace(/\/$/, '') || ''
+  const percorsoBlog = lingua === 'en' ? '/en/blog' : '/blog'
   const url = a.url_pubblicato || (siteUrl ? `${siteUrl.replace(/\/$/, '')}/blog/${a.slug}` : `/blog/${a.slug}`)
   const image = a.immagine_cover && siteUrl && a.immagine_cover.startsWith('/')
     ? `${siteUrl.replace(/\/$/, '')}${a.immagine_cover}`
@@ -98,14 +105,14 @@ export function buildJsonLd(a: BlogArticleData, siteUrl?: string): object[] {
     author: { '@id': `${SITE_URL}/#marco-dibenedetto` },
     publisher: { '@id': `${SITE_URL}/#organization` },
     keywords: a.keywords_target.join(', '),
-    inLanguage: 'it-IT',
+    inLanguage: lingua === 'en' ? 'en' : 'it-IT',
     ...(image ? { image } : {}),
     ...(a.data_pubblicazione ? { datePublished: a.data_pubblicazione } : {}),
     // dateModified era una copia di datePublished: al motore l'articolo
     // risultava mai aggiornato. Se il record porta una data di modifica si usa
     // quella, altrimenti resta la pubblicazione.
     ...(a.updated_at || a.data_pubblicazione ? { dateModified: a.updated_at || a.data_pubblicazione } : {}),
-    isPartOf: { '@type': 'Blog', '@id': `${siteUrl?.replace(/\/$/, '') || ''}/blog#blog` },
+    isPartOf: { '@type': 'Blog', '@id': `${radice}${percorsoBlog}#blog` },
     isAccessibleForFree: true,
     ...(a.tempo_lettura_min ? { timeRequired: `PT${a.tempo_lettura_min}M` } : {}),
     // Indica al motore quali blocchi sono adatti a essere letti ad alta voce.

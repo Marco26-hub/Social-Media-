@@ -9,6 +9,7 @@ import { normalizeArticle, buildJsonLd, type BlogArticleData } from '@/lib/blog-
 import { resolveBlogClienteId } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
 import { getSwaBlogArticle } from '@/lib/swa-blog-content'
+import { SWA_BLOG_ARTICLES_EN } from '@/lib/swa-blog-content.en'
 import { BLOG_COVER_DESCRIPTIONS } from '@/lib/blog-covers'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import { BlogFooter, BlogHeader } from '../BlogChrome'
@@ -56,6 +57,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const context = await requestContext()
   const article = await loadArticle(slug, context.swa)
   if (!article) return { title: 'Articolo non trovato', robots: { index: false, follow: true } }
+  const gemellaEn = SWA_BLOG_ARTICLES_EN.find(a => a.slugIt === slug)
 
   const url = `${context.base}/blog/${article.slug}`
   return {
@@ -63,7 +65,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description: article.meta_description || undefined,
     keywords: article.keywords_target,
     authors: [{ name: article.autore }],
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      // Solo per gli articoli che una traduzione ce l'hanno davvero: gli altri
+      // non devono dichiarare una gemella inesistente.
+      ...(gemellaEn ? {
+        languages: {
+          'it-IT': url,
+          en: `${SITE_URL}/en/blog/${gemellaEn.slug}`,
+          'x-default': url,
+        },
+      } : {}),
+    },
     openGraph: {
       title: article.meta_title,
       description: article.meta_description || undefined,

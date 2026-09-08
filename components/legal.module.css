@@ -1,3 +1,9 @@
+/* Oro dei link e degli occhielli: #c39528 su champagne #fffaf0 dava 2,64:1,
+   sotto il minimo di 4,5 delle WCAG per il testo normale. Colpiva soprattutto i
+   link dentro i documenti — «Privacy Policy», l'indirizzo email — cioe' proprio
+   le parole che si devono poter cliccare. #8f6812 sta a 4,88:1 e resta oro.
+   Tutte e quattro le occorrenze stanno su champagne, nessuna su banda scura:
+   scurirlo non puo' rovesciare il problema altrove. */
 .page {
   min-height: 100vh;
   background: #fffaf0;
@@ -27,7 +33,7 @@
   color: #223f2c;
   text-decoration: none;
 }
-.back:hover { color: #c39528; }
+.back:hover { color: #8f6812; }
 .headerBrand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; color: #10120e; }
 .headerMark {
   width: 80px; height: 36px; border-radius: 4px; display: grid; place-items: center;
@@ -43,7 +49,7 @@
 .eyebrow {
   display: inline-flex; align-items: center; gap: 7px;
   font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
-  color: #c39528;
+  color: #8f6812;
   margin-bottom: 14px;
 }
 .title {
@@ -70,7 +76,7 @@
 .body p { font-size: 15.5px; line-height: 1.68; margin: 0 0 14px; color: rgba(16, 18, 14, 0.86); }
 .body ul, .body ol { margin: 0 0 16px; padding-left: 22px; }
 .body li { font-size: 15.5px; line-height: 1.6; margin-bottom: 8px; color: rgba(16, 18, 14, 0.86); }
-.body a { color: #c39528; font-weight: 600; text-decoration: underline; }
+.body a { color: #8f6812; font-weight: 600; text-decoration: underline; }
 .body strong { color: #10120e; }
 .body code {
   background: rgba(16, 18, 14, 0.06); padding: 1px 6px; border-radius: 5px;
@@ -89,7 +95,7 @@
 .tableWrap { overflow-x: auto; }
 
 .footerNote { margin-top: 46px; padding-top: 20px; border-top: 1px solid rgba(16, 18, 14, 0.1); font-size: 13px; color: rgba(16, 18, 14, 0.55); }
-.footerNote a { color: #c39528; }
+.footerNote a { color: #8f6812; }
 .relatedLinks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .relatedLinks a {
   font-size: 13px; font-weight: 700; text-decoration: none;
@@ -117,3 +123,13 @@
   background: rgba(34, 63, 44, 0.1);
   font-size: 13px;
 }
+
+/* Salto al contenuto: fuori campo finche' non riceve il focus da tastiera. */
+.skipLink {
+  position: fixed; top: 8px; left: 8px; z-index: 100;
+  padding: 10px 14px; border-radius: 6px;
+  background: #10120e; color: #fffaf0;
+  font-size: 13px; font-weight: 700; text-decoration: none;
+  transform: translateY(-180%);
+}
+.skipLink:focus { transform: translateY(0); }

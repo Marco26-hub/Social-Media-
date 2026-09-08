@@ -45,6 +45,13 @@
 .videoScala a:hover { background:var(--mint); color:var(--ink); }
 .videoScala b { color:var(--ink); }
 .leadCard { grid-column:1 / -1; border-color:#9ba9d5; }
+/* La scheda lead occupa sempre la riga intera, quindi non partecipa alle due
+   colonne: sono le schede PRIMA di lei a doversi chiudere in coppia. Con un
+   numero dispari l'ultima resta sola e accanto si apre una cella vuota — che
+   con i bordi si legge come una scheda mancante, non come spazio. Se la
+   penultima e' in posizione dispari (colonna sinistra) prende tutta la riga.
+   Strutturale: regge anche quando si aggiunge o si toglie un servizio. */
+.grid > *:nth-last-child(2):nth-child(odd) { grid-column:1 / -1; }
 .leadCard ul { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .leadCard > a { background:#314a8a; border-color:#314a8a; color:white; }
 .note { margin:10px 0 0; color:#5C6B63; font-size:10px; text-align:center; }

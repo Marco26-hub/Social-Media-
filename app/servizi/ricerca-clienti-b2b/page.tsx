@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import { Target } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { SITE_URL } from '@/lib/site-config'
+import { STANDALONE_SERVICES } from '@/lib/standalone-services'
+
+const LEAD_PILOT = STANDALONE_SERVICES.find(s => s.slug === 'lead-pilot')!
 
 const path = '/servizi/ricerca-clienti-b2b'
 const title = 'Ricerca Clienti B2B e qualificazione aziende | SWA'
@@ -23,7 +26,9 @@ const config = {
   serviceName: 'Ricerca Clienti B2B',
   serviceType: 'Ricerca e qualificazione di aziende B2B',
   promise: 'Una base commerciale più ordinata per decidere chi approfondire, senza invii automatici e senza promesse di clienti garantiti.',
-  startingPrice: '149',
+  startingPrice: LEAD_PILOT.displayPrice.replace('€', ''),
+  priceCadence: ` ${LEAD_PILOT.cadenceLabel}`,
+  priceLabel: 'Prezzo',
   priceNote: 'Pilot una tantum, IVA esclusa. Il motore di ricerca proprietario opera su un’infrastruttura separata; SWA gestisce criteri di ricerca, verifica e consegna.',
   offerHighlight: 'Fino a 30 aziende analizzate',
   primaryCtaLabel: 'Attiva il Pilot B2B',

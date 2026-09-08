@@ -6,7 +6,6 @@ import { ArrowLeft, ArrowRight, Clock3 } from 'lucide-react'
 import { buildJsonLd } from '@/lib/blog-render'
 import { SITE_URL } from '@/lib/site-config'
 import { SWA_BLOG_ARTICLES_EN, getSwaBlogArticleEn } from '@/lib/swa-blog-content.en'
-import { BLOG_COVER_DESCRIPTIONS } from '@/lib/blog-covers'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import styles from '../../../blog/blog.module.css'
 
@@ -65,7 +64,7 @@ export default async function EnglishArticlePage({ params }: { params: Promise<{
   const articleUrl = `${SITE_URL}/en/blog/${article.slug}`
   // url_pubblicato dell'articolo inglese punta gia' a /en/blog/<slug>, quindi
   // buildJsonLd usa quello e non ricostruisce il percorso italiano.
-  const articleJsonLd = buildJsonLd(article, SITE_URL)
+  const articleJsonLd = buildJsonLd(article, SITE_URL, 'en')
   const breadcrumbJsonLd = {
     '@type': 'BreadcrumbList',
     itemListElement: [
@@ -92,7 +91,10 @@ export default async function EnglishArticlePage({ params }: { params: Promise<{
           <h1>{article.h1}</h1>
           {article.intro && <p className={styles.articleLead}>{article.intro}</p>}
           <div className={styles.articleMeta}>
-            <span>{article.autore}</span>
+            {/* La firma linkata come nella versione italiana: senza, la
+                pagina autore inglese restava orfana e la persona non era
+                collegata agli articoli che firma. */}
+            <span><Link href="/en/author/marco-dibenedetto" rel="author">{article.autore}</Link></span>
             {article.data_pubblicazione && formatDate(article.data_pubblicazione) && (
               <time dateTime={article.data_pubblicazione}>{formatDate(article.data_pubblicazione)}</time>
             )}
@@ -104,13 +106,15 @@ export default async function EnglishArticlePage({ params }: { params: Promise<{
           <figure className={styles.articleCover}>
             <Image
               src={article.immagine_cover}
-              alt={BLOG_COVER_DESCRIPTIONS[article.immagine_cover] || article.h1}
+              // Le descrizioni delle copertine sono in italiano: su una pagina
+              // inglese l'alternativa testuale deve essere il titolo inglese.
+              alt={article.h1}
               width={1200}
               height={675}
               sizes="(max-width: 1060px) 100vw, 1012px"
               priority
             />
-            {BLOG_COVER_DESCRIPTIONS[article.immagine_cover] && <figcaption>Illustrative image generated with AI.</figcaption>}
+            <figcaption>Illustrative image generated with AI.</figcaption>
           </figure>
         )}
 

@@ -47,6 +47,8 @@ export type MarketingDetailConfig = {
   /** Cadenza mostrata accanto al prezzo. Predefinita mensile; i servizi una
    *  tantum devono dichiararlo, altrimenti il riquadro promette un canone. */
   priceCadence?: string
+  /** Etichetta sopra la cifra. Serve ai prezzi chiusi, che non «partono da». */
+  priceLabel?: string
   /** Posizione nel percorso in quattro passi — sito, social, telefono,
    *  agenda. Serve a far vedere al cliente che i servizi non sono un
    *  catalogo ma una sequenza, e dove si trova adesso. */
@@ -81,20 +83,37 @@ function minuscolo(nome: string): string {
   return nome.charAt(0).toLowerCase() + nome.slice(1)
 }
 
+/**
+ * Toglie i decimali quando sono zero: «149.00» diventa «149», mentre «19.90»
+ * resta intero. Il listino tiene due decimali perche' servono a Stripe, ma un
+ * prezzo tondo scritto «149,00 €» in pagina sembra il totale di una fattura,
+ * non un canone.
+ */
+function cifra(valore: string): string {
+  return valore.replace(/[.,]00$/, '')
+}
+
 export default function MarketingDetailPage({ config }: { config: MarketingDetailConfig }) {
   const Icon = config.icon
   const isEnglish = config.locale === 'en'
-  const parent = config.breadcrumbParent ?? { label: 'Servizi', href: '/servizi' }
+  // Il ripiego era sempre italiano: dalle pagine settore inglesi la seconda
+  // briciola portava a /servizi invece che a /en/settori.
+  const parent = config.breadcrumbParent
+    ?? (isEnglish ? { label: 'Sectors', href: '/en/settori' } : { label: 'Servizi', href: '/servizi' })
   // I settori che dichiarano questo servizio, e l’articolo che lo approfondisce:
   // senza, le verticali e il Journal restano raggiungibili solo dal menu.
   const settori = settoriPerServizio(config.path)
   const articolo = articoloPerServizio(config.path)
   const pageUrl = `${SITE_URL}${config.path}`
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(isEnglish ? `Hello, I would like to discuss ${config.serviceName} by Social Web Automation.` : `Ciao! Vorrei approfondire il servizio ${config.serviceName} di Social Web Automation.`)}`
-  // Non tutti i servizi sono a canone: le riprese video si pagano una volta,
-  // e scrivere «/mese» accanto a 590 € raccontava una cosa falsa.
+  // La cadenza NON ha un valore di ripiego. Prima ripiegava su «/mese», e una
+  // pagina che dimenticava di dichiararla raccontava una cosa falsa: il Pilot
+  // B2B, che e' un pagamento unico, mostrava «A partire da 149 € /mese».
+  // Indovinare un periodo di fatturazione e' peggio che non scriverlo.
   const priceCadence = config.priceCadence
-    ?? (isEnglish ? '/month' : '/mese')
+  // «A partire da» vale per i canoni che sono una soglia. Un prezzo chiuso, come
+  // il pilot, non parte da niente: parte e finisce li'.
+  const priceLabel = config.priceLabel ?? (isEnglish ? 'Starting from' : 'A partire da')
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -180,7 +199,10 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       <section className={styles.hero} aria-labelledby="detail-title">
         <div className={styles.heroCopy}>
           <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
-            <Link href="/">Home</Link><span>/</span><Link href={parent.href}>{parent.label}</Link><span>/</span><span>{config.serviceName}</span>
+            {/* La briciola "Home" portava alla home italiana anche dalle undici
+                pagine settore inglesi, contraddicendo il JSON-LD della stessa
+                pagina che dichiara /en. */}
+            <Link href={isEnglish ? '/en' : '/'}>Home</Link><span>/</span><Link href={parent.href}>{parent.label}</Link><span>/</span><span>{config.serviceName}</span>
           </nav>
           {/* L'occhiello sta dentro l'H1, non sopra.
               Il titolo di queste pagine e' una frase d'effetto che spesso non
@@ -214,12 +236,12 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
             <div><small>{isEnglish ? 'Managed service' : 'Servizio gestito'}</small><strong>{config.serviceName}</strong></div>
           </div>
           <div className={styles.startingPrice}>
-            <span>{config.startingPrice ? (isEnglish ? 'Starting from' : 'A partire da') : (isEnglish ? 'Price' : 'Prezzo')}</span>
+            <span>{config.startingPrice ? priceLabel : (isEnglish ? 'Price' : 'Prezzo')}</span>
             <strong>
               {config.startingPrice
                 ? (isEnglish
-                    ? `\u20ac${config.startingPrice}`
-                    : `${config.startingPrice.replace('.', ',')} \u20ac`)
+                    ? `\u20ac${cifra(config.startingPrice)}`
+                    : `${cifra(config.startingPrice).replace('.', ',')} \u20ac`)
                 : (isEnglish ? 'On request' : 'Su preventivo')}
               {config.startingPrice && <small>{priceCadence}</small>}
             </strong>

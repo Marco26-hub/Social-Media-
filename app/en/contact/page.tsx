@@ -35,7 +35,12 @@ export default function EnglishContactPage() {
   ]
 
   return (
-    <main className={styles.main}>
+    <main id="main-content" className={styles.main}>
+      {/* Sette pagine inglesi non avevano ne il link di salto ne un
+          bersaglio su <main>: chi naviga da tastiera doveva attraversare
+          tutto il menu a ogni pagina. La classe esisteva gia, mancava
+          solo di essere usata. */}
+      <a className={styles.skipLink} href="#main-content">Skip to content</a>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}><div><p className={styles.eyebrow}>Contact</p><h1>A person answers, not a call centre.</h1><p className={styles.heroLead}>{EN_COMPANY.name} is based in {EN_COMPANY.location}. The fastest way to begin is to describe how work happens today; we will identify which area is worth touching first.</p><div className={styles.actions}><a className={styles.primary} href={EN_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Write on WhatsApp <ArrowRight size={16} aria-hidden="true" /></a><a className={styles.secondary} href={`mailto:${EN_COMPANY.email}`}>Send an email</a></div></div><aside className={styles.heroPanel}><strong>Company details.</strong><ol><li>{EN_COMPANY.name}</li><li>{EN_COMPANY.address}</li><li>{EN_COMPANY.vat}</li><li>Formal notices: {EN_COMPANY.pec}</li></ol></aside></section>
       <section className={styles.section}><div className={styles.sectionHeading}><p className={styles.eyebrow}>How to reach us</p><h2>Four channels, no mandatory form.</h2><p>Choose the channel that fits the request. Use PEC for formal communications.</p></div><div className={styles.grid}>{contactCards.map(card => { const Icon = card.icon; return <article className={styles.service} key={card.label}><Icon size={24} aria-hidden="true" /><h3><a href={card.href} target={card.external ? '_blank' : undefined} rel={card.external ? 'noopener noreferrer' : undefined}>{card.title}</a></h3><p><strong>{card.label}</strong></p><p>{card.text}</p></article> })}</div></section>

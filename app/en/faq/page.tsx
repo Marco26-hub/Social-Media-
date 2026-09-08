@@ -30,7 +30,12 @@ export default function EnglishFaqPage() {
   }
 
   return (
-    <main className={styles.main}>
+    <main id="main-content" className={styles.main}>
+      {/* Sette pagine inglesi non avevano ne il link di salto ne un
+          bersaglio su <main>: chi naviga da tastiera doveva attraversare
+          tutto il menu a ogni pagina. La classe esisteva gia, mancava
+          solo di essere usata. */}
+      <a className={styles.skipLink} href="#main-content">Skip to content</a>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}><div><p className={styles.eyebrow}>Clear information</p><h1>Frequent questions, direct answers.</h1><p className={styles.heroLead}>Costs, included work, approvals, SEO, GEO, technology and legal consulting: practical answers before choosing a service.</p></div><aside className={styles.heroPanel}><strong>Before you start.</strong><ol><li>Check what is included.</li><li>Confirm what remains separate.</li><li>Understand approval points.</li><li>Ask about your specific case.</li></ol></aside></section>
       {EN_FAQ_GROUPS.map((group, index) => <section id={`faq-${index}`} className={`${styles.section} ${styles.faqLayout}`} key={group.title}><div className={styles.sectionHeading}><p className={styles.eyebrow}>FAQ {String(index + 1).padStart(2, '0')}</p><h2>{group.title}</h2></div><div className={styles.faqList}>{group.items.map(item => <details key={item.q}><summary>{item.q}<span>+</span></summary><p>{item.a}</p></details>)}</div></section>)}

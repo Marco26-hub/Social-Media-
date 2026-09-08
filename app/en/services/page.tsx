@@ -59,7 +59,12 @@ export default function EnglishServicesPage() {
   }
 
   return (
-    <main className={styles.main}>
+    <main id="main-content" className={styles.main}>
+      {/* Sette pagine inglesi non avevano ne il link di salto ne un
+          bersaglio su <main>: chi naviga da tastiera doveva attraversare
+          tutto il menu a ogni pagina. La classe esisteva gia, mancava
+          solo di essere usata. */}
+      <a className={styles.skipLink} href="#main-content">Skip to content</a>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}>
         <div><p className={styles.eyebrow}>Eleven distinct capabilities</p><h1>One service map, with clear boundaries.</h1><p className={styles.heroLead}>Use social and Blog to build awareness, SEO + GEO to improve discovery, Web to convert, B2B research to find opportunities and compliance to operate responsibly.</p><div className={styles.actions}><Link className={styles.primary} href="/en/pricing">Compare offers <ArrowRight size={16} aria-hidden="true" /></Link><Link className={styles.secondary} href="/servizi">Italian details</Link></div></div>

@@ -30,6 +30,10 @@ export default function LegalShell({
 
   return (
     <div className={styles.page}>
+      {/* Landmark e salto al contenuto: mancavano su tutte e sette le pagine
+          legali, e /accessibilita e' la pagina che dichiara di averli. Il
+          documento e' il contenuto principale, quindi <main> sta sul .doc. */}
+      <a className={styles.skipLink} href="#main-content">Vai al contenuto</a>
       <header className={styles.header}>
         <Link href="/" className={styles.back}><ArrowLeft size={16} /> Torna al sito</Link>
         <Link href="/" className={styles.headerBrand} aria-label={`${TITOLARE.brand}, home`}>
@@ -40,7 +44,7 @@ export default function LegalShell({
         </Link>
       </header>
 
-      <div className={styles.doc}>
+      <main id="main-content" className={styles.doc}>
         <p className={styles.eyebrow}>{eyebrow}</p>
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.updated}>Ultimo aggiornamento: {TITOLARE.ultimoAggiornamento}</p>
@@ -55,7 +59,7 @@ export default function LegalShell({
             {related.map(r => <Link key={r.href} href={r.href}>{r.label}</Link>)}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

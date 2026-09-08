@@ -25,7 +25,14 @@ const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao Marco! Ho
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: `${SITE_URL}/autore/marco-dibenedetto` },
+  alternates: {
+    canonical: `${SITE_URL}/autore/marco-dibenedetto`,
+    languages: {
+      'it-IT': `${SITE_URL}/autore/marco-dibenedetto`,
+      en: `${SITE_URL}/en/author/marco-dibenedetto`,
+      'x-default': `${SITE_URL}/autore/marco-dibenedetto`,
+    },
+  },
   openGraph: { title, description, url: `${SITE_URL}/autore/marco-dibenedetto`, type: 'profile' },
   twitter: { card: 'summary_large_image', title, description },
 }

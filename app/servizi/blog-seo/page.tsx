@@ -25,6 +25,7 @@ const config = {
   serviceType: 'Produzione e pubblicazione di articoli blog SEO e GEO',
   promise: 'Un blog costante, utile e collegato alle domande che i clienti cercano davvero.',
   startingPrice: BLOG_SERVICE.price,
+  priceCadence: '/mese',
   priceNote: `IVA esclusa. ${BLOG_SERVICE.trialDays} giorni per valutare il servizio.`,
   offerHighlight: `${BLOG_SERVICE.articlesPerMonth} articoli al mese`,
   primaryCtaLabel: 'Attiva Blog SEO + GEO',

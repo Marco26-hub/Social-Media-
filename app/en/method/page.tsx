@@ -33,7 +33,12 @@ export default function EnglishMethodPage() {
   const icons = [Search, Workflow, ClipboardCheck, Gauge]
 
   return (
-    <main className={styles.main}>
+    <main id="main-content" className={styles.main}>
+      {/* Sette pagine inglesi non avevano ne il link di salto ne un
+          bersaglio su <main>: chi naviga da tastiera doveva attraversare
+          tutto il menu a ogni pagina. La classe esisteva gia, mancava
+          solo di essere usata. */}
+      <a className={styles.skipLink} href="#main-content">Skip to content</a>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}>
         <div>
