@@ -4,7 +4,13 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import { EVENTO_CONSENSO, marketingConcesso } from '@/lib/cookie-consent'
 
-const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID
+// Il pixel nel browser e' una scelta a parte dalla misurazione lato server, e
+// va acceso apposta. Senza questo flag bastava valorizzare l'id del pixel per
+// ritrovarsi uno script di Facebook nelle pagine — che oggi la CSP blocca,
+// quindi fallirebbe in silenzio a ogni caricamento senza che nessuno se ne
+// accorga. La Conversions API funziona senza niente di tutto questo.
+const BROWSER_ATTIVO = process.env.NEXT_PUBLIC_META_PIXEL_BROWSER === 'true'
+const PIXEL_ID = BROWSER_ATTIVO ? process.env.NEXT_PUBLIC_META_PIXEL_ID : undefined
 
 declare global {
   interface Window {

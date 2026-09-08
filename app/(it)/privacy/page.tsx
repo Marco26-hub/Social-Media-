@@ -71,6 +71,7 @@ export default function PrivacyPage() {
             <tr><td>Invio email transazionali (attivazione, notifiche)</td><td>Esecuzione del contratto — lett. b)</td></tr>
             <tr><td>Gestione e prova delle dichiarazioni di recesso o disdetta</td><td>Obbligo legale — lett. c) ed esecuzione del contratto — lett. b)</td></tr>
             <tr><td>Marketing e newsletter (se attivati)</td><td>Consenso — lett. a)</td></tr>
+            <tr><td>Misurazione delle campagne pubblicitarie (eventi inviati a Meta dal nostro server)</td><td>Consenso — lett. a)</td></tr>
           </tbody>
         </table>
       </div>
@@ -82,6 +83,19 @@ export default function PrivacyPage() {
         questi fornitori esclusivamente per generare i contenuti richiesti. <strong>Non usiamo i tuoi dati per addestrare modelli AI</strong> e
         selezioniamo fornitori che offrono garanzie contrattuali in tal senso. Vedi anche la <a href="/trasparenza-ai">nota di trasparenza AI</a> (art. 50 Regolamento UE 2024/1689).
       </p>
+
+      <h2>4-bis. Misurazione delle campagne pubblicitarie</h2>
+      <p>Quando è attiva una campagna e <strong>solo dopo il tuo consenso esplicito al marketing</strong>, il
+        nostro server comunica a Meta due eventi: la richiesta di una consulenza e l’avvio di un acquisto.
+        Serve a sapere quale annuncio ha portato un contatto reale; senza, la spesa pubblicitaria è cieca.</p>
+      <p>Che cosa viene trasmesso: indirizzo email e numero di telefono <strong>cifrati con SHA-256</strong>,
+        quindi non leggibili da Meta in chiaro, insieme all’indirizzo IP, al tipo di browser e all’importo
+        dell’operazione. Non trasmettiamo il contenuto dei tuoi messaggi, i materiali caricati o i dati
+        dell’account.</p>
+      <p>La comunicazione parte dal nostro server: <strong>sul sito non viene caricato alcuno script di Meta</strong>
+        e non vengono impostati cookie pubblicitari. Senza consenso non parte nulla, e la verifica è dentro il
+        codice che invia l’evento, non affidata a una configurazione esterna. Revocando il consenso dal banner
+        gli invii si interrompono.</p>
 
       <h2>5. Destinatari e responsabili esterni</h2>
       <p>I dati possono essere trattati, per nostro conto, dai seguenti fornitori nominati Responsabili del trattamento (art. 28 GDPR):</p>

@@ -29,7 +29,13 @@ export default function CookieBanner() {
   return (
     <div role="dialog" aria-label={isEnglish ? 'Cookie preferences' : 'Preferenze cookie'} className={styles.banner}>
       <p>
-        {isEnglish ? 'Essential cookies are always active. With your consent, we also use Meta marketing cookies.' : 'I cookie essenziali sono sempre attivi. Con il tuo consenso usiamo anche cookie di marketing per Meta.'}{' '}
+        {/* Il consenso non governa piu' dei cookie: la misurazione delle campagne
+            avviene lato server, senza script di Meta nella pagina e senza cookie
+            _fbp/_fbc. Dire «cookie di marketing» sarebbe scorretto — si chiede il
+            si' a una cosa e se ne fa un'altra. */}
+        {isEnglish
+          ? 'Essential cookies are always active. With your consent we measure which campaigns bring a contact — from our server, without loading any Meta script or cookie.'
+          : 'I cookie essenziali sono sempre attivi. Con il tuo consenso misuriamo quali campagne portano un contatto: lo facciamo dal nostro server, senza caricare script né cookie di Meta.'}{' '}
         <Link href="/cookie-policy">{isEnglish ? 'Cookie policy (Italian)' : 'Informativa cookie'}</Link>.
       </p>
       <div className={styles.actions}>

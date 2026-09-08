@@ -37,8 +37,6 @@ export default function CookiePolicyPage() {
             <tr><td>next-auth.csrf-token</td><td>Tecnico</td><td>Protezione anti-CSRF</td><td>Sessione</td><td>Non richiesto</td></tr>
             <tr><td>active_cliente_id</td><td>Tecnico</td><td>Cliente/workspace attivo (multi-tenant)</td><td>Sessione</td><td>Non richiesto</td></tr>
             <tr><td>cookie_consent</td><td>Tecnico</td><td>Memorizza la tua scelta sui cookie</td><td>6 mesi</td><td>Non richiesto</td></tr>
-            <tr><td>_fbp</td><td>Marketing</td><td>Misurazione delle campagne Meta e attribuzione degli eventi del sito</td><td>Fino a 3 mesi</td><td>Richiesto</td></tr>
-            <tr><td>_fbc</td><td>Marketing</td><td>Attribuzione delle visite provenienti da inserzioni Meta</td><td>Fino a 3 mesi</td><td>Richiesto</td></tr>
           </tbody>
         </table>
       </div>
@@ -47,19 +45,23 @@ export default function CookiePolicyPage() {
         consenso esplicito tramite banner, e servono a Meta Pixel e Conversions API.
       </p>
       <p className={styles.nota}>
-        <strong>Stato attuale: il Meta Pixel è predisposto ma non attivo.</strong> La Content-Security-Policy del sito non
-        ammette lo script di Meta, quindi oggi i cookie <code>_fbp</code> e <code>_fbc</code> <strong>non vengono impostati
-        nemmeno se dai il consenso</strong>. Li elenchiamo lo stesso perché la predisposizione esiste: quando verrà attivata,
-        questa riga sparirà e la tabella sopra descriverà il comportamento reale. Preferiamo dichiarare più di quanto facciamo,
-        mai il contrario.
+        <strong>Sul sito non è attivo alcun cookie di marketing.</strong> Non carichiamo il pixel di Meta né
+        alcun altro script pubblicitario, quindi i cookie <code>_fbp</code> e <code>_fbc</code> non vengono
+        mai impostati. Il consenso che ti chiediamo nel banner non riguarda dei cookie: riguarda la
+        <strong> misurazione delle campagne</strong>, descritta al punto 3.
       </p>
 
-      <h2>3. Cookie di terze parti</h2>
-      <p>Alla data di aggiornamento di questa pagina il sito <strong>non carica alcuno script di terze parti</strong>: nessun
-        strumento di analisi, nessun pixel pubblicitario attivo, nessun contenuto incorporato. La predisposizione per Meta Pixel
-        — misurazione di visite, lead e avvii di checkout collegati alle campagne — è descritta al punto precedente e resta
-        subordinata sia al tuo consenso sia all’attivazione tecnica.</p>
-      <p>Ogni ulteriore strumento verrà indicato nella tabella <strong>prima</strong> dell’attivazione, non dopo.</p>
+      <h2>3. Terze parti e misurazione delle campagne</h2>
+      <p>Il sito <strong>non carica alcuno script di terze parti</strong>: nessuno strumento di analisi, nessun
+        pixel pubblicitario, nessun contenuto incorporato. È una scelta, non una mancanza: uno script esterno
+        vede tutto quello che fai sulla pagina, e per misurare una campagna non serve.</p>
+      <p>Quando è attiva una campagna pubblicitaria e <strong>solo se hai dato il consenso al marketing</strong>,
+        il nostro server comunica a Meta due eventi: la richiesta di una consulenza e l’avvio di un acquisto.
+        La comunicazione parte dal server, non dal tuo browser. Vengono trasmessi l’indirizzo email e il numero
+        di telefono <strong>cifrati con SHA-256</strong> — Meta non riceve i valori in chiaro — insieme
+        all’indirizzo IP, al tipo di browser e all’importo dell’operazione.</p>
+      <p>Senza il tuo consenso non parte nulla: il controllo è nel codice, non solo nell’intenzione. Se revochi
+        il consenso, gli invii si fermano. Il dettaglio del trattamento è nella <a href="/privacy">Privacy Policy</a>.</p>
 
       <h2>4. Gestione del consenso</h2>
       <p>Puoi modificare o revocare le tue preferenze in qualsiasi momento tramite il banner cookie (che ricompare alla revoca)

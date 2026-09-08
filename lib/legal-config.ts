@@ -44,5 +44,9 @@ export const SUB_RESPONSABILI = [
   { nome: 'Stripe', ruolo: 'Pagamenti e fatturazione abbonamenti', extraUe: 'Possibile (USA) — SCC/DPF, PCI-DSS' },
   { nome: 'Cloudflare R2 / Backblaze B2', ruolo: 'Archiviazione immagini', extraUe: 'Possibile — SCC' },
   { nome: 'Meta (Instagram/Facebook Graph API)', ruolo: 'Statistiche e pubblicazione (se collegato)', extraUe: 'Sì (USA) — SCC/DPF' },
+  // Misurazione campagne: riga separata dalla precedente perche' e' un altro
+  // trattamento, con un'altra base giuridica e un'altra condizione — parte solo
+  // col consenso al marketing, e solo dal nostro server.
+  { nome: 'Meta (Conversions API)', ruolo: 'Misurazione delle campagne: solo con consenso, inviata dal nostro server', extraUe: 'Sì (USA) — SCC/DPF' },
   { nome: 'Resend', ruolo: 'Invio email transazionali (se attivo)', extraUe: 'Possibile (USA) — SCC' },
 ]
