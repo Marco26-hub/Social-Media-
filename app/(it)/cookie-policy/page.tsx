@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function CookiePolicyPage() {
   return (
-    <LegalShell eyebrow="Cookie Policy" title="Informativa Cookie" currentPath="/cookie-policy">
+    <LegalShell eyebrow="Cookie Policy" title="Informativa Cookie" currentPath="/cookie-policy" altraLinguaHref="/en/cookie-policy">
       <p>
         Questa pagina descrive l’uso dei cookie e delle tecnologie simili sul sito di {TITOLARE.brand}, in conformità
         alle <strong>Linee Guida del Garante Privacy sui cookie del 10 giugno 2021</strong> e alla Direttiva ePrivacy.

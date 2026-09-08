@@ -31,7 +31,7 @@ function val(v: string) {
 
 export default function TerminiPage() {
   return (
-    <LegalShell eyebrow="Termini e Condizioni" title="Termini e Condizioni d’uso" currentPath="/termini">
+    <LegalShell eyebrow="Termini e Condizioni" title="Termini e Condizioni d’uso" currentPath="/termini" altraLinguaHref="/en/terms">
       <p>
         Le presenti Condizioni Generali regolano l’utilizzo dei servizi di {TITOLARE.brand}, forniti da {val(TITOLARE.ragioneSociale)},
         con sede in {val(TITOLARE.sedeLegale)}, P.IVA {val(TITOLARE.partitaIva)}, C.F. {val(TITOLARE.codiceFiscale)} e

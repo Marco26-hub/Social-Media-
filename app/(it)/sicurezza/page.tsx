@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 
 export default function SicurezzaPage() {
   return (
-    <LegalShell eyebrow="Sicurezza" title="Sicurezza e trattamento dei dati" currentPath="/sicurezza">
+    <LegalShell eyebrow="Sicurezza" title="Sicurezza e trattamento dei dati" currentPath="/sicurezza" altraLinguaHref="/en/security">
       <p>
         Questa pagina raccoglie le misure tecniche e organizzative con cui {TITOLARE.brand} protegge i dati dei clienti.
         È scritta per chi deve valutare un fornitore prima di firmare: dice che cosa facciamo e, dove non facciamo qualcosa,

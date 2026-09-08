@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 
 export default function AccessibilitaPage() {
   return (
-    <LegalShell eyebrow="Accessibilità" title="Dichiarazione di accessibilità" currentPath="/accessibilita">
+    <LegalShell eyebrow="Accessibilità" title="Dichiarazione di accessibilità" currentPath="/accessibilita" altraLinguaHref="/en/accessibility">
       <p>
         {TITOLARE.brand} si impegna a rendere il proprio sito utilizzabile da chiunque, comprese le persone che navigano
         con uno screen reader, solo da tastiera, con ingrandimento del testo o con un contrasto elevato. Questa pagina

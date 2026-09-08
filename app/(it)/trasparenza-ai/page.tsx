@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function TrasparenzaAiPage() {
   return (
-    <LegalShell eyebrow="Trasparenza AI · Regolamento UE 2024/1689" title="Nota di Trasparenza sull’AI" currentPath="/trasparenza-ai">
+    <LegalShell eyebrow="Trasparenza AI · Regolamento UE 2024/1689" title="Nota di Trasparenza sull’AI" currentPath="/trasparenza-ai" altraLinguaHref="/en/ai-transparency">
       <p>
         {TITOLARE.brand} utilizza sistemi di intelligenza artificiale per erogare i propri servizi. In conformità al principio
         di trasparenza del <strong>Regolamento UE 2024/1689 (AI Act)</strong> — in particolare l’<strong>art. 50</strong> sugli obblighi di

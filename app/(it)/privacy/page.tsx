@@ -31,7 +31,7 @@ function val(v: string) {
 
 export default function PrivacyPage() {
   return (
-    <LegalShell eyebrow="Informativa Privacy · GDPR" title="Privacy Policy" currentPath="/privacy">
+    <LegalShell eyebrow="Informativa Privacy · GDPR" title="Privacy Policy" currentPath="/privacy" altraLinguaHref="/en/privacy">
       <p>
         La presente informativa descrive le modalità di trattamento dei dati personali degli utenti che
         consultano il sito e utilizzano i servizi di {TITOLARE.brand}, ai sensi dell’art. 13 del
