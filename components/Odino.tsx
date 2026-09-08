@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { X } from 'lucide-react'
 import { NODI, NODO_INIZIALE, cerca, nodo, settoreCitato, type Nodo } from '@/lib/odino/percorsi'
+import { cercaDomande, type Domanda } from '@/lib/odino/domande'
 import { ODINO_NOME, ODINO_PRESENTAZIONE } from '@/lib/odino/identita'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
 import styles from './odino.module.css'
@@ -42,6 +43,12 @@ export default function Odino() {
   const [scritto, setScritto] = useState('')
   const [nonCapito, setNonCapito] = useState<string | null>(null)
   const [settore, setSettore] = useState<{ slug: string; nome: string } | null>(null)
+  // Il secondo livello: le duecento domande gia' scritte sul sito. Il percorso
+  // curato risponde per primo perche' e' scritto per essere la prima cosa che
+  // si legge; queste servono ad approfondire, e mostrano da quale pagina
+  // vengono cosi' chi vuole il contesto sa dove andare.
+  const [approfondimenti, setApprofondimenti] = useState<Domanda[]>([])
+  const [aperta, setAperta] = useState<string | null>(null)
   const corpoRef = useRef<HTMLDivElement>(null)
   const chiudiRef = useRef<HTMLButtonElement>(null)
   // ODINO aspetta che il banner cookie abbia avuto risposta. Sono due pannelli
@@ -74,9 +81,11 @@ export default function Odino() {
     [corrente],
   )
 
-  function vai(n: Nodo) {
+  function vai(n: Nodo, dalSito: Domanda[] = []) {
     setCorrente(n)
     setNonCapito(null)
+    setApprofondimenti(dalSito)
+    setAperta(null)
   }
 
   function invia(e: React.FormEvent) {
@@ -86,10 +95,21 @@ export default function Odino() {
     setScritto('')
     const mestiere = settoreCitato(testo)
     if (mestiere) setSettore(mestiere)
+    const dalSito = cercaDomande(testo, 3)
     const trovati = cerca(testo)
-    if (trovati.length) { vai(trovati[0]); return }
+    if (trovati.length) { vai(trovati[0], dalSito); return }
+    if (dalSito.length) {
+      // Nessun percorso curato, ma il sito una risposta ce l'ha: si mostra
+      // quella, con la pagina da cui viene.
+      setCorrente(nodo('da-dove-parto')!)
+      setNonCapito(null)
+      setApprofondimenti(dalSito)
+      setAperta(dalSito[0].q)
+      return
+    }
     if (mestiere) { vai(nodo('da-dove-parto')!); return }
     setNonCapito(testo)
+    setApprofondimenti([])
   }
 
   if (!consensoDato) return null
@@ -159,6 +179,21 @@ export default function Odino() {
                 ))}
               </p>
             )}
+          </>
+        )}
+
+        {approfondimenti.length > 0 && (
+          <>
+            <p className={styles.etichetta}>Risposte dal sito</p>
+            <div className={styles.dalSito}>
+              {approfondimenti.map(d => (
+                <details key={d.q} open={aperta === d.q}>
+                  <summary onClick={() => setAperta(aperta === d.q ? null : d.q)}>{d.q}</summary>
+                  <p>{d.a}</p>
+                  <Link href={d.fonte.href}>{d.fonte.label}</Link>
+                </details>
+              ))}
+            </div>
           </>
         )}
 

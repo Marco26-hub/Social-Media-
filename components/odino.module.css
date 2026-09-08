@@ -114,3 +114,17 @@
 @media (prefers-reduced-motion: reduce) {
   .faccia, .occhio, .pannello { animation: none !important }
 }
+
+/* Risposte prese dalle domande gia' scritte sul sito. Ognuna dichiara da quale
+   pagina viene: chi vuole il contesto completo deve poterci arrivare. */
+.dalSito { display: grid; gap: 1px; margin: 0 0 16px; border: 1px solid var(--line, #dbe3de); background: var(--line, #dbe3de) }
+.dalSito details { background: var(--surface, #fffdf7) }
+.dalSito summary {
+  padding: 11px 13px; cursor: pointer; list-style: none;
+  font: 600 12.5px Arial, sans-serif; line-height: 1.45; color: var(--ink, #10120e);
+}
+.dalSito summary::-webkit-details-marker { display: none }
+.dalSito summary::after { content: '+'; float: right; color: var(--muted, #56655d) }
+.dalSito details[open] summary::after { content: '−' }
+.dalSito p { margin: 0 13px 8px; color: var(--muted, #56655d); font-size: 12.5px; line-height: 1.6 }
+.dalSito a { display: inline-block; margin: 0 13px 12px; color: #0f6b4f; font-size: 11.5px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px }

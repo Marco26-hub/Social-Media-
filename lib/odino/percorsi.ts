@@ -3,6 +3,9 @@ import { PREZZI } from '@/lib/prezzi-ingresso'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { SETTORI } from '@/lib/settori'
 import { VIDEO_PACCHETTI } from '@/lib/video-listino'
+import { BLOG_SERVICE } from '@/lib/blog-service'
+import { STANDALONE_SERVICES } from '@/lib/standalone-services'
+import { termini } from '@/lib/odino/domande'
 
 // I percorsi di ODINO: che cosa può chiedere e che cosa risponde.
 //
@@ -38,12 +41,14 @@ export type Nodo = {
 const voce = (id: string) => SEGRETARIA_LISTINO.find(f => f.id === id)!
 const pianoVoce = voce('voce').piani
 const pianoAgenda = voce('agenda').piani
+const impresa = STANDALONE_SERVICES.find(x => x.slug === 'web-impresa')!
+const CANONE_IMPRESA = `${impresa.pricePrefix ? `${impresa.pricePrefix} ` : ''}${impresa.displayPrice.replace('€', '')} € ${impresa.cadenceLabel}`
 
 export const NODI: Nodo[] = [
   {
     id: 'da-dove-parto',
     domanda: 'Da dove conviene partire?',
-    chiavi: ['iniziare', 'partire', 'primo passo', 'cominciare', 'consiglio'],
+    chiavi: ['iniziare', 'inizio', 'partire', 'primo passo', 'cominciare', 'consiglio', 'da dove'],
     risposta: {
       titolo: 'Dal buco più evidente, non dal pacchetto più grande.',
       testo:
@@ -122,6 +127,52 @@ export const NODI: Nodo[] = [
     },
   },
   {
+    id: 'blog',
+    domanda: 'Che cos’è il servizio Blog?',
+    chiavi: ['blog', 'articoli', 'scrivere', 'contenuti scritti'],
+    risposta: {
+      titolo: `${BLOG_SERVICE.articlesPerMonth} articoli al mese, scritti e revisionati.`,
+      testo:
+        'Ogni articolo arriva completo di title, meta description, FAQ visibili e dati strutturati: è pronto da pubblicare, non una bozza da sistemare. Il piano editoriale nasce dagli intenti di ricerca reali, non da un elenco di parole chiave.',
+      cifre: [
+        { voce: 'Blog SEO + GEO', valore: PREZZI.blog, nota: `${BLOG_SERVICE.articlesPerMonth} articoli al mese, ${BLOG_SERVICE.trialDays} giorni per valutare` },
+      ],
+      link: [{ href: '/servizi/blog-seo', label: 'Come funziona il servizio Blog' }],
+      poi: ['farsi-trovare', 'quanto-costa-social', 'garantite-risultati'],
+    },
+  },
+  {
+    id: 'sito',
+    domanda: 'Quanto costa il sito?',
+    chiavi: ['sito', 'landing', 'pagina', 'web', 'ecommerce', 'e-commerce', 'negozio online'],
+    risposta: {
+      titolo: 'Due gradini, e dopo 12 mesi il progetto è tuo.',
+      testo:
+        'Il canone comprende hosting, manutenzione, design responsive e SEO tecnica di base. Il gradino basso è una landing o un sito essenziale; sopra c’è il sito aziendale costruito sugli intenti di ricerca del tuo settore. E-commerce, multilingua e funzioni particolari si quotano a parte, approvate prima di ogni costo.',
+      cifre: [
+        { voce: 'Sito Web Base', valore: PREZZI.web, nota: 'Landing o sito essenziale, mobile-first' },
+        { voce: 'Sito impresa', valore: `${CANONE_IMPRESA}`, nota: 'Più pagine, struttura sugli intenti del settore' },
+      ],
+      link: [{ href: '/servizi/siti-e-commerce', label: 'Che cosa comprende il sito' }],
+      poi: ['farsi-trovare', 'da-dove-parto', 'cosa-resta-fuori'],
+    },
+  },
+  {
+    id: 'farsi-trovare',
+    domanda: 'Come mi fate trovare su Google e sulle AI?',
+    chiavi: ['google', 'seo', 'geo', 'trovare', 'posizionamento', 'ricerca', 'chatgpt', 'motori'],
+    risposta: {
+      titolo: 'Struttura, intenti e leggibilità. Non posizioni promesse.',
+      testo:
+        'Il lavoro è su tre fronti: come sono costruite le pagine, quali domande fa davvero chi cerca il tuo servizio, e quanto il testo è citabile da un sistema di risposta AI. Nessuno controlla l’algoritmo di Google né quello di ChatGPT: si lavora su ciò che si può governare, e la posizione la decidono altri.',
+      link: [
+        { href: '/servizi/seo-geo', label: 'SEO e GEO: che cosa cambia' },
+        { href: '/blog/seo-geo-differenze-visibilita-motori-ai', label: 'Le differenze, spiegate' },
+      ],
+      poi: ['blog', 'garantite-risultati', 'sito'],
+    },
+  },
+  {
     id: 'garantite-risultati',
     domanda: 'Garantite dei risultati?',
     chiavi: ['garantite', 'garanzia', 'risultati', 'vendite', 'funziona davvero', 'promettete'],
@@ -136,7 +187,7 @@ export const NODI: Nodo[] = [
   {
     id: 'chi-approva',
     domanda: 'Chi decide che cosa viene pubblicato?',
-    chiavi: ['approva', 'approvazione', 'controllo', 'pubblicate', 'chi decide'],
+    chiavi: ['approva', 'approvo', 'approvazione', 'controllo', 'pubblicate', 'chi decide', 'prima di pubblicare'],
     risposta: {
       titolo: 'Tu. Sempre, e prima che esca.',
       testo:
@@ -175,7 +226,7 @@ export const NODI: Nodo[] = [
   {
     id: 'disdetta',
     domanda: 'Come si disdice?',
-    chiavi: ['disdetta', 'recesso', 'annullare', 'cancellare', 'vincolo', 'durata'],
+    chiavi: ['disdetta', 'disdire', 'recesso', 'recedere', 'annullare', 'cancellare', 'vincolo', 'durata', 'quando voglio'],
     risposta: {
       titolo: 'Con il preavviso scritto nel contratto, e c’è una procedura online.',
       testo:
@@ -264,29 +315,64 @@ export function nodo(id: string): Nodo | undefined {
  * farlo — se nessun nodo raggiunge una soglia minima, ODINO lo dice e passa a
  * una persona invece di rispondere a caso.
  */
+/** I termini di ogni percorso, calcolati una volta sola. */
+const TERMINI_NODO = new Map<string, Set<string>>(
+  NODI.map(n => [n.id, new Set([
+    ...n.chiavi.flatMap(k => termini(k)),
+    ...termini(n.domanda),
+    ...termini(n.risposta.titolo),
+  ])]),
+)
+
+/**
+ * Peso di un termine fra i percorsi: «costa» compare in quasi tutti e non
+ * sceglie niente, «disdetta» compare in uno e sceglie da solo. Senza questo,
+ * «quanto costa il blog» finiva sul percorso social perche' arrivava prima
+ * nell'elenco: un pareggio risolto dall'ordine di scrittura, non dal senso.
+ */
+const PESO_NODO = (() => {
+  const n = new Map<string, number>()
+  for (const s of TERMINI_NODO.values()) for (const t of s) n.set(t, (n.get(t) ?? 0) + 1)
+  const peso = new Map<string, number>()
+  for (const [t, c] of n) peso.set(t, Math.log(NODI.length / c) + 0.3)
+  return peso
+})()
+
+/**
+ * Cerca fra i percorsi curati. Sono risposte scritte per essere la PRIMA cosa
+ * che una persona legge: hanno le cifre in evidenza e i passi successivi.
+ * Vengono prima dell'indice completo del sito, che serve ad approfondire.
+ */
 export function cerca(testo: string): Nodo[] {
-  const t = testo.toLowerCase()
-  const punteggi = NODI.map(n => ({
-    n,
-    p: n.chiavi.filter(k => t.includes(k)).length + (t.includes(n.domanda.toLowerCase().slice(0, 12)) ? 2 : 0),
-  }))
-  return punteggi.filter(x => x.p > 0).sort((a, b) => b.p - a.p).map(x => x.n)
+  const cercati = [...new Set(termini(testo))]
+  if (!cercati.length) return []
+  const punteggi = NODI.map(n => {
+    const suoi = TERMINI_NODO.get(n.id)!
+    let p = 0
+    for (const t of cercati) {
+      const w = PESO_NODO.get(t) ?? 1.2
+      if (suoi.has(t)) p += w * 3
+      else if (t.length > 4 && [...suoi].some(x => x.startsWith(t.slice(0, 4)))) p += w * 2
+    }
+    return { n, p }
+  })
+  return punteggi.filter(x => x.p >= 2.4).sort((a, b) => b.p - a.p).map(x => x.n)
 }
 
 /**
  * Il mestiere nominato nella frase, se c'e'. «Ho una gelateria» non contiene
- * nessuna parola del listino, ma dice la cosa piu' utile di tutte: chi sei.
- * I nomi non sono scritti a mano, vengono dai settori — un settore nuovo entra
- * qui da se'.
+ * nessuna parola del listino, ma dice la cosa piu' utile di tutte: chi sei. I
+ * nomi non sono scritti a mano, vengono dai settori — quindi un settore nuovo
+ * viene riconosciuto senza toccare ODINO.
  */
 export function settoreCitato(testo: string): { slug: string; nome: string } | undefined {
-  const t = testo.toLowerCase()
+  const cercati = termini(testo)
+  if (!cercati.length) return undefined
   for (const s of SETTORI) {
-    const parole = [s.nome, ...s.slug.split('-')]
-      .flatMap(p => p.toLowerCase().split(/[\s,]+/))
-      .filter(p => p.length > 4 && !['sono', 'della', 'delle', 'servizi', 'locali'].includes(p))
+    const suoi = [...termini(s.nome), ...termini(s.slug.replace(/-/g, ' '))]
+      .filter(p => p.length > 4 && !['servizi', 'locali'].includes(p))
     // «gelaterie» deve riconoscere anche «gelateria»: si confronta la radice.
-    if (parole.some(p => t.includes(p.slice(0, Math.max(5, p.length - 2))))) {
+    if (suoi.some(p => cercati.some(c => c.slice(0, 5) === p.slice(0, 5)))) {
       return { slug: s.slug, nome: s.nome }
     }
   }
