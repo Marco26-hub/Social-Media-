@@ -4,25 +4,34 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { altraLingua } from '@/lib/lingue'
+import { SERVIZI_EN } from '@/lib/servizi.en'
 import { ArrowRight, LogIn } from 'lucide-react'
 import DesktopMenu from './DesktopMenu'
 import MobileMenu from './MobileMenu'
 import ThemeToggle from './ThemeToggle'
 import styles from './public-header.module.css'
 
+// Il cambio lingua non sta in questo elenco: e' gia' nella testata, che resta
+// visibile mentre il pannello e' aperto. Ripeterlo in fondo a ventun righe
+// allungava il menu per dire una cosa che si vedeva due centimetri sopra.
 const MOBILE_LINKS = [
   { href: '/', label: 'Home' },
-  { href: '/servizi', label: 'Tutti i servizi' },
-  { href: '/servizi/gestione-social-media', label: 'Gestione social' },
-  { href: '/servizi/seo-geo', label: 'SEO + GEO' },
-  { href: '/servizi/blog-seo', label: 'Blog SEO + GEO' },
-  { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
-  { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B' },
-  { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
-  { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
-  { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
-  { href: '/servizi/gestione-lavorazioni', label: 'Sito e gestione lavorazioni' },
-  { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
+  {
+    href: '/servizi',
+    label: 'Tutti i servizi',
+    sotto: [
+      { href: '/servizi/gestione-social-media', label: 'Gestione social' },
+      { href: '/servizi/seo-geo', label: 'SEO + GEO' },
+      { href: '/servizi/blog-seo', label: 'Blog SEO + GEO' },
+      { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
+      { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B' },
+      { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
+      { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
+      { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
+      { href: '/servizi/gestione-lavorazioni', label: 'Sito e gestione lavorazioni' },
+      { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
+    ],
+  },
   { href: '/settori', label: 'Settori' },
   { href: '/metodo', label: 'Metodo' },
   { href: '/pacchetti', label: 'Pacchetti' },
@@ -31,12 +40,15 @@ const MOBILE_LINKS = [
   { href: '/chi-siamo', label: 'Azienda' },
   { href: '/faq', label: 'FAQ' },
   { href: '/contatti', label: 'Contatti' },
-  { href: '/en', label: 'English' },
 ]
 
 const MOBILE_LINKS_EN = [
   { href: '/en', label: 'Home' },
-  { href: '/en/services', label: 'All services' },
+  {
+    href: '/en/services',
+    label: 'All services',
+    sotto: SERVIZI_EN.map(s => ({ href: `/en/services/${s.slug}`, label: s.config.serviceName })),
+  },
   { href: '/en/method', label: 'Method' },
   { href: '/en/settori', label: 'Sectors' },
   { href: '/en/pricing', label: 'Packages' },
@@ -44,7 +56,6 @@ const MOBILE_LINKS_EN = [
   { href: '/en/about', label: 'About' },
   { href: '/en/faq', label: 'FAQ' },
   { href: '/en/contact', label: 'Contact' },
-  { href: '/', label: 'Italiano' },
 ]
 
 export default function PublicHeader({ ctaHref, ctaLabel, locale = 'it' }: { ctaHref: string; ctaLabel: string; locale?: 'it' | 'en' }) {

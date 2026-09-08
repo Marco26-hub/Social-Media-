@@ -178,3 +178,35 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Il gruppo dei servizi: chiuso occupa una riga, aperto le mostra tutte.
+   I dieci servizi da soli erano meta' menu, e per arrivare a «Contatti»
+   bisognava scorrere oltre uno schermo intero.
+   La riga di intestazione copia esattamente quella di un collegamento: un
+   gruppo che si vede che e' un gruppo solo perche' la freccia gira. */
+.gruppo > summary {
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 11px;
+  padding: 7px 0;
+  border-bottom: 1px solid #e5eae7;
+  color: #25352f;
+  font-size: 15px;
+  font-weight: 750;
+  cursor: pointer;
+  list-style: none;
+}
+.gruppo > summary::-webkit-details-marker { display: none }
+.gruppo > summary > svg:last-child { color: #8d9994; transition: transform .18s ease }
+.gruppo[open] > summary > svg:last-child { transform: rotate(90deg) }
+.gruppo > summary:hover { color: #0f6b4f }
+/* Le voci del gruppo rientrano, cosi' si vede a colpo d'occhio dove finisce. */
+.gruppo > a { padding-left: 26px }
+.gruppo > a:last-child { border-bottom: none }
+
+:global(html[data-theme='dark']) .gruppo > summary {
+  border-bottom-color: rgba(255, 255, 255, .09);
+  color: #e8efe9;
+}

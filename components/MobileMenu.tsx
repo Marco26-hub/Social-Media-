@@ -21,6 +21,8 @@ import styles from './mobile-menu.module.css'
 type MobileMenuLink = {
   href: string
   label: string
+  /** Le voci di un gruppo stanno chiuse finche' non le apri. */
+  sotto?: MobileMenuLink[]
 }
 
 type MobileMenuProps = {
@@ -133,6 +135,36 @@ export default function MobileMenu({ links, ctaHref, ctaLabel, locale = 'it' }: 
               {links.map(link => {
                 const url = new URL(link.href, 'https://socialautomation.app')
                 const Icon = MENU_ICONS[url.hash || url.pathname] || LayoutGrid
+                // I dieci servizi occupavano meta' menu. Chiusi in un gruppo il
+                // menu si legge in una schermata, e chi cerca un servizio lo
+                // apre con un tocco invece di scorrere fino in fondo.
+                if (link.sotto?.length) {
+                  return (
+                    <details key={link.href} className={styles.gruppo}>
+                      <summary>
+                        <span className={styles.linkIcon}><Icon size={17} strokeWidth={1.9} aria-hidden="true" /></span>
+                        <span>{link.label}</span>
+                        <ChevronRight size={17} aria-hidden="true" />
+                      </summary>
+                      <a href={link.href} onClick={() => setOpen(false)}>
+                        <span className={styles.linkIcon}><LayoutGrid size={17} strokeWidth={1.9} aria-hidden="true" /></span>
+                        <span>{isEnglish ? 'Overview' : 'Panoramica'}</span>
+                        <ChevronRight size={17} aria-hidden="true" />
+                      </a>
+                      {link.sotto.map(s => {
+                        const u = new URL(s.href, 'https://socialautomation.app')
+                        const I = MENU_ICONS[u.hash || u.pathname] || LayoutGrid
+                        return (
+                          <a key={s.href} href={s.href} onClick={() => setOpen(false)}>
+                            <span className={styles.linkIcon}><I size={17} strokeWidth={1.9} aria-hidden="true" /></span>
+                            <span>{s.label}</span>
+                            <ChevronRight size={17} aria-hidden="true" />
+                          </a>
+                        )
+                      })}
+                    </details>
+                  )
+                }
                 return (
                   <a key={link.href} href={link.href} onClick={() => setOpen(false)}>
                     <span className={styles.linkIcon}><Icon size={17} strokeWidth={1.9} aria-hidden="true" /></span>
