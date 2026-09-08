@@ -72,7 +72,7 @@ export const NODI_EN: Nodo[] = [
   {
     id: 'quanto-costa-social',
     domanda: 'What does managed social media cost?',
-    chiavi: ['social', 'instagram', 'facebook', 'post', 'posts', 'content', 'how much'],
+    chiavi: ['social', 'instagram', 'facebook', 'post', 'posts', 'content', 'social media'],
     risposta: {
       titolo: 'Two plans, published prices, VAT excluded.',
       testo:
@@ -340,7 +340,7 @@ export const NODI_EN: Nodo[] = [
   {
     id: 'listino-completo',
     domanda: 'What does everything cost together?',
-    chiavi: ['price list', 'pricing', 'how much in total', 'total cost', 'all the prices', 'full quote'],
+    chiavi: ['price list', 'pricing', 'cost', 'costs', 'price', 'prices', 'how much in total', 'total cost', 'all the prices', 'full quote'],
     risposta: {
       titolo: 'There is no single price, and there is no surprise quote either.',
       testo:
