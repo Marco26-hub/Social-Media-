@@ -25,11 +25,11 @@ export const metadata: Metadata = {
 
 const config: MarketingDetailConfig = {
   path: '/servizi/gestione-lavorazioni',
-  eyebrow: 'Sito e gestione lavorazioni',
+  eyebrow: 'Rapportini di intervento',
   title: 'Le richieste arrivano dal sito, il lavoro si chiude sul posto.',
   lead:
     'Chi lavora fuori compila il rapporto sul telefono, con la checklist del servizio, le ore, le foto e la firma del cliente, e chi sta in ufficio lo vede arrivare, lo approva oppure lo contesta con un motivo scritto. Il sito che raccoglie le richieste fa parte dello stesso progetto, così sito, applicazione e pannello li segue un fornitore solo, con un referente solo.',
-  serviceName: 'Sito e gestione lavorazioni, segnalazioni e rapportini',
+  serviceName: 'Rapportini di intervento',
   serviceType: 'Sito web e applicazione di campo per rapporti di intervento',
   promise:
     'Le richieste arrivano dal modulo del sito alla casella che indichi tu, il rapporto si chiude sul posto con ore, foto e firma, e l’ufficio approva o contesta con un motivo scritto. Non promettiamo risultati commerciali: mettiamo per iscritto che cosa fa il sistema e che cosa non fa.',

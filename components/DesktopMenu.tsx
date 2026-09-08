@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
+import { SETTORI } from '@/lib/settori'
+import { SETTORI_EN } from '@/lib/settori.en'
 import { usePathname } from 'next/navigation'
 import {
   Building2,
@@ -84,7 +86,7 @@ const SOLUTIONS: SolutionLink[] = [
   },
   {
     href: '/servizi/gestione-lavorazioni',
-    label: 'Sito e gestione lavorazioni',
+    label: 'Rapportini di intervento',
     description: 'Rapportini firmati sul posto, ufficio che approva.',
     icon: ClipboardCheck,
   },
@@ -106,14 +108,20 @@ export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' })
   const pathname = usePathname()
   const isEnglish = locale === 'en'
   const menuRef = useRef<HTMLDivElement>(null)
+  const settoriRef = useRef<HTMLDivElement>(null)
   const [solutionsOpen, setSolutionsOpen] = useState(false)
+  // I dodici settori erano raggiungibili solo passando dall'indice: un
+  // pannello come quello delle soluzioni li mette a un clic, e chi cerca il
+  // proprio mestiere lo vede scritto invece di doverlo cercare.
+  const [settoriOpen, setSettoriOpen] = useState(false)
 
   useEffect(() => {
     const closeMenu = (event: PointerEvent) => {
       if (!menuRef.current?.contains(event.target as Node)) setSolutionsOpen(false)
+      if (!settoriRef.current?.contains(event.target as Node)) setSettoriOpen(false)
     }
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setSolutionsOpen(false)
+      if (event.key === 'Escape') { setSolutionsOpen(false); setSettoriOpen(false) }
     }
 
     document.addEventListener('pointerdown', closeMenu)
@@ -127,19 +135,20 @@ export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' })
   const solutionIsActive = isEnglish ? pathname === '/en/services' : pathname === '/servizi' || SOLUTIONS.some(link => pathname === link.href)
 
   const englishSolutions: SolutionLink[] = [
-    { href: '/en/services#social', label: 'Managed social media', description: 'Strategy, content and publishing.', icon: Megaphone },
-    { href: '/en/services#seo', label: 'SEO + GEO', description: 'Visibility across search and AI systems.', icon: ScanSearch },
-    { href: '/en/services#blog', label: 'SEO + GEO Blog', description: 'Reviewed content ready for your website.', icon: BookOpenText },
-    { href: '/en/services#web', label: 'Websites and e-commerce', description: 'Digital experiences built to convert.', icon: Globe2 },
-    { href: '/en/services#video', label: 'Video shot on site', description: 'A half day of filming, weeks of content.', icon: Clapperboard },
-    { href: '/en/services#leads', label: 'B2B lead research', description: 'Verified and prioritised target companies.', icon: Target },
-    { href: '/en/services#phone', label: 'AI phone assistant', description: 'Answers while you are working.', icon: PhoneCall },
-    { href: '/en/services#agenda', label: 'Diary and client recall', description: 'Dormant clients come back into view.', icon: CalendarClock },
-    { href: '/en/services#jobs', label: 'Job reports and site', description: 'Signed on site, with photos and PDF.', icon: ClipboardCheck },
-    { href: '/en/services#systems', label: 'Systems automation', description: 'The tools you already use, connected.', icon: Workflow },
+    { href: '/en/services/social-media-management', label: 'Managed social media', description: 'Strategy, content and publishing.', icon: Megaphone },
+    { href: '/en/services/seo-geo', label: 'SEO + GEO', description: 'Visibility across search and AI systems.', icon: ScanSearch },
+    { href: '/en/services/blog-seo-geo', label: 'SEO + GEO Blog', description: 'Reviewed content ready for your website.', icon: BookOpenText },
+    { href: '/en/services/websites-ecommerce', label: 'Websites and e-commerce', description: 'Digital experiences built to convert.', icon: Globe2 },
+    { href: '/en/services/video-production', label: 'Video shot on site', description: 'A half day of filming, weeks of content.', icon: Clapperboard },
+    { href: '/en/services/b2b-lead-research', label: 'B2B lead research', description: 'Verified and prioritised target companies.', icon: Target },
+    { href: '/en/services/ai-phone-assistant', label: 'AI phone assistant', description: 'Answers while you are working.', icon: PhoneCall },
+    { href: '/en/services/client-diary-whatsapp', label: 'Diary and client recall', description: 'Dormant clients come back into view.', icon: CalendarClock },
+    { href: '/en/services/job-reporting', label: 'Job reports', description: 'Signed on site, with photos and PDF.', icon: ClipboardCheck },
+    { href: '/en/services/systems-automation', label: 'Systems automation', description: 'The tools you already use, connected.', icon: Workflow },
     { href: '/en/services#compliance', label: 'AI and data compliance', description: 'Privacy, AI Act and transparency.', icon: Scale },
   ]
   const solutions = isEnglish ? englishSolutions : SOLUTIONS
+  const settori = isEnglish ? SETTORI_EN : SETTORI
 
   return (
     <nav className={styles.desktopMenu} aria-label={isEnglish ? 'Main navigation' : 'Navigazione principale'}>
@@ -186,9 +195,45 @@ export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' })
         )}
       </div>
 
-      <Link className={`${styles.menuLink} ${pathname.startsWith(isEnglish ? '/en/settori' : '/settori') ? styles.active : ''}`} href={isEnglish ? '/en/settori' : '/settori'}>
-        <Store size={15} strokeWidth={1.9} aria-hidden="true" /> {isEnglish ? 'Sectors' : 'Settori'}
-      </Link>
+      <div className={styles.solutionRoot} ref={settoriRef}>
+        <button
+          type="button"
+          className={`${styles.menuLink} ${styles.menuTrigger} ${pathname.startsWith(isEnglish ? '/en/settori' : '/settori') ? styles.active : ''}`}
+          aria-expanded={settoriOpen}
+          aria-controls="desktop-sectors-menu"
+          onClick={() => setSettoriOpen(open => !open)}
+        >
+          <Store size={15} strokeWidth={1.9} aria-hidden="true" />
+          {isEnglish ? 'Sectors' : 'Settori'}
+          <ChevronDown className={settoriOpen ? styles.chevronOpen : ''} size={14} aria-hidden="true" />
+        </button>
+
+        {settoriOpen && (
+          <div id="desktop-sectors-menu" className={styles.flyout}>
+            <div className={styles.flyoutHeading}>
+              <div>
+                <span>{isEnglish ? 'By trade' : 'Per mestiere'}</span>
+                <strong>{isEnglish ? 'What your category actually needs.' : 'Quello che serve alla tua categoria.'}</strong>
+              </div>
+              <Link href={isEnglish ? '/en/settori' : '/settori'} onClick={() => setSettoriOpen(false)}>
+                {isEnglish ? 'See them all' : 'Vedile tutte'} <ChevronRight size={14} aria-hidden="true" />
+              </Link>
+            </div>
+            <div className={styles.solutionGrid}>
+              {settori.map(x => (
+                <Link key={x.slug} href={`${isEnglish ? '/en/settori' : '/settori'}/${x.slug}`} onClick={() => setSettoriOpen(false)}>
+                  <span className={styles.solutionIcon}><Store size={18} aria-hidden="true" /></span>
+                  <span>
+                    <strong>{x.nome}</strong>
+                    <small>{x.sommario}</small>
+                  </span>
+                  <ChevronRight size={15} aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
       <Link className={`${styles.menuLink} ${pathname === (isEnglish ? '/en/method' : '/metodo') ? styles.active : ''}`} href={isEnglish ? '/en/method' : '/metodo'}>
         <Workflow size={15} strokeWidth={1.9} aria-hidden="true" /> {isEnglish ? 'Method' : 'Metodo'}
       </Link>

@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { altraLingua } from '@/lib/lingue'
 import { SERVIZI_EN } from '@/lib/servizi.en'
+import { SETTORI } from '@/lib/settori'
+import { SETTORI_EN } from '@/lib/settori.en'
 import { ArrowRight, LogIn } from 'lucide-react'
 import DesktopMenu from './DesktopMenu'
 import MobileMenu from './MobileMenu'
@@ -28,11 +30,15 @@ const MOBILE_LINKS = [
       { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
       { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
       { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
-      { href: '/servizi/gestione-lavorazioni', label: 'Sito e gestione lavorazioni' },
+      { href: '/servizi/gestione-lavorazioni', label: 'Rapportini di intervento' },
       { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },
     ],
   },
-  { href: '/settori', label: 'Settori' },
+  {
+    href: '/settori',
+    label: 'Settori',
+    sotto: SETTORI.map(x => ({ href: `/settori/${x.slug}`, label: x.nome })),
+  },
   { href: '/metodo', label: 'Metodo' },
   { href: '/pacchetti', label: 'Pacchetti' },
   { href: '/consulenza', label: 'Consulenza legale AI' },
@@ -54,7 +60,11 @@ const MOBILE_LINKS_EN = [
     ],
   },
   { href: '/en/method', label: 'Method' },
-  { href: '/en/settori', label: 'Sectors' },
+  {
+    href: '/en/settori',
+    label: 'Sectors',
+    sotto: SETTORI_EN.map(x => ({ href: `/en/settori/${x.slug}`, label: x.nome })),
+  },
   { href: '/en/pricing', label: 'Packages' },
   { href: '/en/blog', label: 'SWA Journal' },
   { href: '/en/about', label: 'About' },

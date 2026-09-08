@@ -42,7 +42,7 @@ const SERVIZI: Array<[string, string, string]> = [
   ['Blog SEO + GEO', '/servizi/blog-seo', `12 articoli al mese con piano editoriale e controllo umano, ${PREZZI.blog}.`],
   ['SEO e GEO', '/servizi/seo-geo', 'Struttura delle pagine, intenti di ricerca e leggibilità per i sistemi di risposta AI. Su preventivo, dopo audit.'],
   ['Ricerca clienti B2B', '/servizi/ricerca-clienti-b2b', `Fino a 30 aziende analizzate su fonti pubbliche verificate, ${PREZZI.b2b}. Nessun invio automatico.`],
-  ['Sito e gestione lavorazioni', '/servizi/gestione-lavorazioni', 'Sito, applicazione di campo e pannello ufficio per rapporti di intervento con foto, ore e firma del cliente. Su preventivo.'],
+  ['Rapportini di intervento', '/servizi/gestione-lavorazioni', 'Sito, applicazione di campo e pannello ufficio per rapporti di intervento con foto, ore e firma del cliente. Su preventivo.'],
   ['Automazione e gestionali', '/servizi/automazione-gestionali', 'Collegamento fra gestionale, CRM, moduli e archivi, e automazione dei passaggi manuali ricorrenti. Su preventivo.'],
   ['Consulenza AI Act e GDPR', '/consulenza', `Consulenza legale con ${TITOLARE.partnerLegale}. ${PREZZO_INGRESSO.legale}.`],
 ]

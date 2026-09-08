@@ -34,7 +34,7 @@ const AREE = [
   'Visibilità su motori di ricerca e sistemi AI',
   'Ricerca clienti B2B verificata',
   'Segretaria telefonica AI e agenda',
-  'Sito e gestione lavorazioni con rapportini',
+  'Rapportini di intervento e sito collegato',
   'Automazione e collegamento dei gestionali',
   'Consulenza legale su AI Act e GDPR',
 ]

@@ -147,8 +147,8 @@ export default function MobileMenu({ links, ctaHref, ctaLabel, locale = 'it' }: 
                         <ChevronRight size={17} aria-hidden="true" />
                       </summary>
                       <a href={link.href} onClick={() => setOpen(false)}>
-                        <span className={styles.linkIcon}><LayoutGrid size={17} strokeWidth={1.9} aria-hidden="true" /></span>
-                        <span>{isEnglish ? 'Overview' : 'Panoramica'}</span>
+                        <span className={styles.linkIcon}><Icon size={17} strokeWidth={1.9} aria-hidden="true" /></span>
+                        <span>{isEnglish ? 'See them all' : 'Vedile tutte'}</span>
                         <ChevronRight size={17} aria-hidden="true" />
                       </a>
                       {link.sotto.map(s => {

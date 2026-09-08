@@ -131,7 +131,7 @@ export const METODO_SERVIZI: readonly MetodoServizio[] = [
   {
     slug: 'gestione-lavorazioni',
     href: '/servizi/gestione-lavorazioni',
-    label: 'Sito e gestione lavorazioni',
+    label: 'Rapportini di intervento',
     icon: ClipboardCheck,
     consegna: 'Rapportini firmati sul posto, con foto, ore e PDF al cliente',
     fasi: [
