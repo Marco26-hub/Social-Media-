@@ -195,9 +195,15 @@ export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' })
       <Link className={`${styles.menuLink} ${pathname === (isEnglish ? '/en/pricing' : '/pacchetti') ? styles.active : ''}`} href={isEnglish ? '/en/pricing' : '/pacchetti'}>
         <PackageCheck size={15} strokeWidth={1.9} aria-hidden="true" /> {isEnglish ? 'Packages' : 'Pacchetti'}
       </Link>
-      {!isEnglish && <Link className={`${styles.menuLink} ${pathname.startsWith('/blog') ? styles.active : ''}`} href="/blog">
+      {/* Il Journal era nascosto in inglese perche' il blog inglese non esisteva.
+          Ora esiste, con i sette articoli tradotti: il menu inglese aveva una
+          voce in meno di quello italiano senza piu' una ragione. */}
+      <Link
+        className={`${styles.menuLink} ${pathname.startsWith(isEnglish ? '/en/blog' : '/blog') ? styles.active : ''}`}
+        href={isEnglish ? '/en/blog' : '/blog'}
+      >
         <Newspaper size={15} strokeWidth={1.9} aria-hidden="true" /> Journal
-      </Link>}
+      </Link>
       <Link className={`${styles.menuLink} ${pathname === (isEnglish ? '/en/about' : '/chi-siamo') ? styles.active : ''}`} href={isEnglish ? '/en/about' : '/chi-siamo'}>
         <Building2 size={15} strokeWidth={1.9} aria-hidden="true" /> {isEnglish ? 'About' : 'Azienda'}
       </Link>

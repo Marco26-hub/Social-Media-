@@ -40,6 +40,7 @@ const MOBILE_LINKS_EN = [
   { href: '/en/method', label: 'Method' },
   { href: '/en/settori', label: 'Sectors' },
   { href: '/en/pricing', label: 'Packages' },
+  { href: '/en/blog', label: 'SWA Journal' },
   { href: '/en/about', label: 'About' },
   { href: '/en/faq', label: 'FAQ' },
   { href: '/en/contact', label: 'Contact' },
