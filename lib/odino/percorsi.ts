@@ -190,7 +190,7 @@ export const NODI: Nodo[] = [
   {
     id: 'chi-approva',
     domanda: 'Chi decide che cosa viene pubblicato?',
-    chiavi: ['approva', 'approvo', 'approvazione', 'controllo', 'pubblicate', 'chi decide', 'prima di pubblicare'],
+    chiavi: ['approva', 'approvo', 'approvazione', 'controllo', 'pubblicate', 'chi decide', 'chi approva', 'prima di pubblicare'],
     risposta: {
       titolo: 'Tu. Sempre, e prima che esca.',
       testo:
@@ -246,7 +246,7 @@ export const NODI: Nodo[] = [
   {
     id: 'disdetta',
     domanda: 'Come si disdice?',
-    chiavi: ['disdetta', 'disdire', 'recesso', 'recedere', 'annullare', 'cancellare', 'vincolo', 'durata', 'quando voglio'],
+    chiavi: ['disdetta', 'disdire', 'recesso', 'recedere', 'annullare', 'cancellare', 'vincolo', 'durata', 'contratto'],
     risposta: {
       titolo: 'Con il preavviso scritto nel contratto, e c’è una procedura online.',
       testo:
@@ -310,6 +310,65 @@ export const NODI: Nodo[] = [
     },
   },
   {
+    id: 'metodo',
+    domanda: 'Come lavorate, mese per mese?',
+    chiavi: ['metodo', 'fasi', 'processo', 'come lavorate', 'organizzazione', 'report'],
+    risposta: {
+      titolo: 'Quattro fasi, ogni mese, sempre le stesse.',
+      testo:
+        'Analisi, direzione, produzione, miglioramento. Ogni fase ha un risultato atteso e prepara la successiva, così strategia e produzione non vanno su binari separati. Le decisioni restano tue: noi proponiamo, tu approvi, e a fine mese c’è un report di quello che è stato fatto.',
+      link: [{ href: '/metodo', label: 'Il metodo, fase per fase' }],
+      poi: ['chi-approva', 'da-dove-parto', 'garantite-risultati'],
+    },
+  },
+  {
+    id: 'ai-trasparenza',
+    domanda: 'Usate l’AI per scrivere i contenuti?',
+    chiavi: ['AI', 'intelligenza artificiale', 'chi scrive', 'generato', 'automatico', 'robot', 'chatgpt'],
+    risposta: {
+      titolo: 'Sì, e c’è scritto dove.',
+      testo:
+        'Usiamo strumenti di AI nella produzione, e lo dichiariamo: l’art. 50 dell’AI Act chiede trasparenza e la pagina dedicata dice che cosa è generato, che cosa è verificato e chi approva. Niente esce senza che una persona lo abbia letto, e niente viene pubblicato senza la tua approvazione.',
+      link: [
+        { href: '/trasparenza-ai', label: 'Dove usiamo l’AI, e dove decide una persona' },
+        { href: '/consulenza', label: 'Consulenza legale su AI Act e GDPR' },
+      ],
+      poi: ['chi-approva', 'dati-clienti', 'garantite-risultati'],
+    },
+  },
+  {
+    id: 'listino-completo',
+    domanda: 'Quanto costa tutto insieme?',
+    chiavi: ['listino', 'quanto costa in tutto', 'costo totale', 'tutti i prezzi', 'quanto costa tutto', 'preventivo totale'],
+    risposta: {
+      titolo: 'Non c’è un prezzo unico, e non c’è nemmeno un preventivo a sorpresa.',
+      testo:
+        'Ogni servizio ha il suo canone e si compra da solo: nessuno deve prendere tutto per prendere una cosa. Il listino completo è pubblico, con quello che è compreso e quello che resta fuori. Il totale dipende da che cosa serve a te, e lo si scrive prima di iniziare.',
+      cifre: [
+        { voce: 'Gestione social', valore: PREZZI.presenza, nota: 'Presenza, due canali' },
+        { voce: 'Blog SEO + GEO', valore: PREZZI.blog, nota: 'Dodici articoli al mese' },
+        { voce: 'Sito', valore: PREZZI.web, nota: 'Landing o sito essenziale' },
+      ],
+      link: [{ href: '/pacchetti', label: 'Il listino completo' }],
+      poi: ['cosa-resta-fuori', 'quanto-costa-avvio', 'da-dove-parto'],
+    },
+  },
+  {
+    id: 'pagamenti',
+    domanda: 'Come si paga?',
+    chiavi: ['pagamento', 'pagare', 'pago', 'fattura', 'bonifico', 'carta', 'annuale', 'mensile', 'rinnovo', 'addebito'],
+    risposta: {
+      titolo: 'Canone mensile, fattura, e nessun addebito a sorpresa.',
+      testo:
+        'I canoni sono mensili e si rinnovano finché il servizio è attivo; ogni pagamento ha la sua fattura. Il pagamento con carta passa da un circuito esterno: i dati della carta non transitano dai nostri sistemi. I prezzi di listino sono IVA esclusa, e qualunque costo che non sia il canone viene scritto e approvato prima, non addebitato dopo.',
+      link: [
+        { href: '/pacchetti', label: 'Listino e condizioni' },
+        { href: '/termini', label: 'Termini e condizioni' },
+      ],
+      poi: ['quanto-costa-avvio', 'cosa-resta-fuori', 'disdetta'],
+    },
+  },
+  {
     id: 'parlare-con-persona',
     domanda: 'Voglio parlare con una persona.',
     chiavi: ['persona', 'umano', 'chiamare', 'contatto', 'parlare', 'preventivo'],
@@ -336,12 +395,43 @@ export function nodo(id: string): Nodo | undefined {
  * una persona invece di rispondere a caso.
  */
 /** I termini di ogni percorso, calcolati una volta sola. */
+// Le chiavi e la prosa non valgono uguale, ed e' la correzione piu' importante
+// fatta a questa ricerca.
+//
+// Le chiavi sono scritte a mano: dicono di che cosa parla il percorso. Le
+// parole della domanda e del titolo ci finiscono dentro per caso — «fate»,
+// «tutto», «mesi», «funziona». Mettendole nello stesso insieme, e pesandole con
+// l'IDF su diciannove nodi, una parola qualunque che capita in un titolo solo
+// sembrava distintiva quanto «disdetta»: «fate sconti» finiva su «farsi
+// trovare» per la parola «fate», «chi approva i post» sul prezzo dei social per
+// la parola «post», «come funziona il metodo» sulla segretaria telefonica per
+// la parola «funziona». Rispondere alla domanda sbagliata con sicurezza e'
+// peggio che dire «questa non la so».
+//
+// Ora la prosa puo' solo rafforzare un percorso che le chiavi hanno gia'
+// scelto. Da sola non ne apre nessuno.
+// Una chiave di due parole vale come frase, non come due parole sciolte.
+// «quanto costa» spezzato dava a «quanto» il potere di aprire da solo il
+// percorso dei social, e «quanto dura il contratto» finiva sul prezzo di
+// Instagram. Una chiave composta si accende quando ci sono tutte le sue parole.
+const CHIAVI_NODO = new Map<string, Set<string>>(
+  NODI.map(n => [n.id, new Set(n.chiavi.filter(k => termini(k).length === 1).flatMap(k => termini(k)))]),
+)
+
+const FRASI_NODO = new Map<string, string[][]>(
+  NODI.map(n => [n.id, n.chiavi.map(k => termini(k)).filter(parti => parti.length > 1)]),
+)
+
+const PROSA_NODO = new Map<string, Set<string>>(
+  NODI.map(n => {
+    const chiavi = CHIAVI_NODO.get(n.id)!
+    const dalleFrasi = new Set(FRASI_NODO.get(n.id)!.flat())
+    return [n.id, new Set([...termini(n.domanda), ...termini(n.risposta.titolo)].filter(t => !chiavi.has(t) && !dalleFrasi.has(t)))]
+  }),
+)
+
 const TERMINI_NODO = new Map<string, Set<string>>(
-  NODI.map(n => [n.id, new Set([
-    ...n.chiavi.flatMap(k => termini(k)),
-    ...termini(n.domanda),
-    ...termini(n.risposta.titolo),
-  ])]),
+  NODI.map(n => [n.id, new Set([...CHIAVI_NODO.get(n.id)!, ...FRASI_NODO.get(n.id)!.flat(), ...PROSA_NODO.get(n.id)!])]),
 )
 
 /**
@@ -359,6 +449,42 @@ const PESO_NODO = (() => {
 })()
 
 /**
+ * Quanto due parole si somigliano, fermandosi appena diventa inutile saperlo.
+ *
+ * Serve per i refusi: chi scrive «segretria» o «ristorane» cerca la segretaria
+ * e il ristorante. Prima ci arrivava un confronto sui primi caratteri, che pero'
+ * faceva combaciare anche «contratto» con «controllo» — cinque lettere in comune
+ * e due significati che non si toccano — e «quanto dura il contratto» rispondeva
+ * col prezzo dei social.
+ */
+function vicine(a: string, b: string, massimo: number): boolean {
+  if (Math.abs(a.length - b.length) > massimo) return false
+  let riga = Array.from({ length: b.length + 1 }, (_, i) => i)
+  for (let i = 1; i <= a.length; i++) {
+    const nuova = [i]
+    let minimo = i
+    for (let j = 1; j <= b.length; j++) {
+      const costo = a[i - 1] === b[j - 1] ? 0 : 1
+      nuova[j] = Math.min(riga[j] + 1, nuova[j - 1] + 1, riga[j - 1] + costo)
+      minimo = Math.min(minimo, nuova[j])
+    }
+    if (minimo > massimo) return false
+    riga = nuova
+  }
+  return riga[b.length] <= massimo
+}
+
+/** Un refuso, o una parola troncata: «gestion» per «gestionale». */
+function somigliano(cercata: string, chiave: string): boolean {
+  if (chiave.startsWith(cercata) && cercata.length >= 4 && chiave.length - cercata.length <= 4) return true
+  // Il plurale italiano cambia l'ultima lettera: «siti» e «sito», «post» e
+  // «posti». Quattro lettere uguali e l'ultima diversa bastano.
+  if (cercata.length >= 4 && cercata.length === chiave.length && cercata.slice(0, -1) === chiave.slice(0, -1)) return true
+  if (cercata.length < 6) return false
+  return vicine(cercata, chiave, cercata.length >= 8 ? 2 : 1)
+}
+
+/**
  * Cerca fra i percorsi curati. Sono risposte scritte per essere la PRIMA cosa
  * che una persona legge: hanno le cifre in evidenza e i passi successivi.
  * Vengono prima dell'indice completo del sito, che serve ad approfondire.
@@ -366,15 +492,33 @@ const PESO_NODO = (() => {
 export function cerca(testo: string): Nodo[] {
   const cercati = [...new Set(termini(testo))]
   if (!cercati.length) return []
+  // La prima parola piena di una domanda italiana e' quasi sempre l'intento:
+  // in «chi approva i post» il verbo dice che si chiede dell'approvazione, e
+  // «post» e' solo l'oggetto. Senza questo peso i due percorsi pareggiavano e
+  // vinceva quello scritto prima nel file.
+  const primaParola = cercati[0]
   const punteggi = NODI.map(n => {
-    const suoi = TERMINI_NODO.get(n.id)!
+    const chiavi = CHIAVI_NODO.get(n.id)!
+    const prosa = PROSA_NODO.get(n.id)!
     let p = 0
+    // Un percorso si apre solo se almeno una parola cade sulle sue chiavi.
+    // Senza questa condizione bastava una parola qualunque del titolo.
+    let ancorato = false
+    // Le chiavi composte per prime: valgono piu' di una parola sola, perche'
+    // «quanto costa» detto per intero dice molto piu' di «quanto».
+    for (const parti of FRASI_NODO.get(n.id)!) {
+      if (parti.every(parte => cercati.includes(parte))) {
+        p += parti.reduce((somma, parte) => somma + (PESO_NODO.get(parte) ?? 1.2), 0) * 2.5
+        ancorato = true
+      }
+    }
     for (const t of cercati) {
       const w = PESO_NODO.get(t) ?? 1.2
-      if (suoi.has(t)) p += w * 3
-      else if (t.length > 4 && [...suoi].some(x => x.startsWith(t.slice(0, 4)))) p += w * 2
+      if (chiavi.has(t)) { p += w * 3 * (t === primaParola ? 1.35 : 1); ancorato = true }
+      else if ([...chiavi].some(x => somigliano(t, x))) { p += w * 2; ancorato = true }
+      else if (prosa.has(t)) p += w
     }
-    return { n, p }
+    return { n, p: ancorato ? p : 0 }
   })
   return punteggi.filter(x => x.p >= 2.4).sort((a, b) => b.p - a.p).map(x => x.n)
 }

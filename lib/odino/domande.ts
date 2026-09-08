@@ -46,10 +46,28 @@ const VUOTE = new Set([
   'mio', 'mia', 'miei', 'tuo', 'tua', 'vostro', 'nostra', 'questo', 'questa', 'anche', 'piu',
 ])
 
+/**
+ * Le sigle corte, che il filtro sulla lunghezza buttava via.
+ *
+ * «QR» sono due lettere e spariva: la chiave «qr» del percorso ristoranti non
+ * si e' mai accesa, e «menu qr» funzionava solo per la parola «menu». «AI» e'
+ * peggio, perche' in italiano «ai» e' anche una preposizione ed e' in mezzo
+ * alle parole vuote: si distingue solo dalle maiuscole, che una preposizione
+ * non ha mai, o dal nome per esteso. Le sigle diventano un termine lungo, cosi'
+ * attraversano il filtro e si incontrano fra domanda e chiave.
+ */
+const SIGLE: [RegExp, string][] = [
+  [/\bA\.?\s?I\.?\b/, 'siglaai'],
+  [/\bintelligenza\s+artificiale\b/i, 'siglaai'],
+  [/\bQ\.?\s?R\.?\b/i, 'siglaqr'],
+]
+
 export function termini(testo: string): string[] {
-  return normalizza(testo)
-    .split(' ')
-    .filter(p => p.length > 2 && !VUOTE.has(p))
+  const sigle = SIGLE.filter(([re]) => re.test(testo)).map(([, token]) => token)
+  return [
+    ...sigle,
+    ...normalizza(testo).split(' ').filter(p => p.length > 2 && !VUOTE.has(p)),
+  ]
 }
 
 function costruisci(): Domanda[] {
