@@ -128,6 +128,10 @@ export async function GET(request: NextRequest) {
     stripeWebhook: hasEnv('STRIPE_WEBHOOK_SECRET'),
     metaGraph: hasEnv('META_APP_ID') && hasEnv('META_APP_SECRET'),
     emailResend: hasEnv('RESEND_API_KEY') && hasEnv('EMAIL_FROM'),
+    // Chi riceve le notifiche interne, e se la misurazione Meta lato server
+    // puo' partire. Erano assenti in produzione e nessuno se n'era accorto.
+    agencyNotify: hasEnv('AGENCY_NOTIFY_EMAIL'),
+    metaCapi: hasEnv('META_CAPI_ACCESS_TOKEN') && (hasEnv('NEXT_PUBLIC_META_PIXEL_ID') || hasEnv('META_PIXEL_ID')),
     publishEnabled: process.env.PUBLISH_ENABLED === 'true',
     r2Storage: isR2Configured(),
   }

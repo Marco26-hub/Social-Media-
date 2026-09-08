@@ -5,7 +5,7 @@ import { standaloneServiceBySlug } from '@/lib/standalone-services'
 import { ensureStandaloneServiceOrdersSchema } from '@/lib/standalone-service-schema'
 import { ensureRuntimeMigrations } from '@/lib/runtime-migrations'
 import { createStandaloneServiceCheckoutSession, stripeConfigured } from '@/lib/stripe'
-import { sendMetaConversionEvent } from '@/lib/meta-conversions-api'
+import { metaSessionMetadata, metaUserContextFromRequest, sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 import { verifyTurnstile } from '@/lib/turnstile'
 import { checkBotId } from 'botid/server'
 
@@ -141,6 +141,10 @@ export async function POST(request: Request) {
         customerEmail: email,
         successUrl: `${baseUrl}/acquista/successo?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${baseUrl}/acquista?servizio=${encodeURIComponent(service.slug)}&annullato=1`,
+        // Il Purchase lo manda il webhook, che non ha i cookie del cliente: il
+        // consenso e gli identificatori si catturano adesso e viaggiano con la
+        // sessione. Senza consenso viaggia solo «0».
+        extraMetadata: metaSessionMetadata(metaUserContextFromRequest(request)),
       })
       if (!session.url) throw new Error('Stripe non ha restituito il link di pagamento')
       await q(

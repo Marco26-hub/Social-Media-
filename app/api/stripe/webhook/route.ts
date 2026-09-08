@@ -4,6 +4,7 @@ import { stripeSecretLivemode, verifyStripeWebhookSignature } from '@/lib/stripe
 import { activateRegistration, PACCHETTO_FALLBACK, PACCHETTO_PIANO } from '@/lib/provisioning'
 import { notifyStandaloneOrderPaid, sendAccountActivated, sendStandaloneOrderConfirmed } from '@/lib/email'
 import { getPackage } from '@/lib/packages'
+import { metaContextFromSessionMetadata, sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 
 export const dynamic = 'force-dynamic'
 
@@ -168,6 +169,24 @@ async function handleConsulenzaPaid(obj: StripeObject) {
     [consulenzaId, paid ? 'paid' : 'pending', paymentIntent || null],
   )
   if (!rows.length) throw new Error(`Consulenza ${consulenzaId} non trovata`)
+
+  // L'evento su cui Meta ottimizza e' l'incasso, non l'avvio del checkout.
+  // Parte solo se al checkout il cliente aveva dato il consenso marketing: il
+  // flag viaggia nei metadata della sessione, perche' qui i suoi cookie non
+  // ci sono. Fallire in silenzio e' voluto: un evento pubblicitario non deve
+  // mai far fallire la registrazione di un pagamento.
+  if (paid) {
+    const details = obj.customer_details as StripeObject | undefined
+    void sendMetaConversionEvent({
+      eventName: 'Purchase',
+      context: metaContextFromSessionMetadata(meta),
+      eventId: `consulenza-purchase-${consulenzaId}`,
+      email: str(details?.email) || undefined,
+      value: typeof obj.amount_total === 'number' ? obj.amount_total / 100 : undefined,
+      currency: 'EUR',
+      customData: { content_name: 'Consulenza legale AI & GDPR', content_category: 'consulenza' },
+    }).catch(() => {})
+  }
 }
 
 async function handleStandaloneCheckoutCompleted(obj: StripeObject) {
@@ -194,7 +213,18 @@ async function handleStandaloneCheckoutCompleted(obj: StripeObject) {
   if (!order) throw new Error(`Ordine servizio ${orderId} non trovato`)
 
   if (paid) {
+    const meta = metadata(obj)
     await Promise.allSettled([
+      // Vedi handleConsulenzaPaid: il Purchase con il consenso catturato al checkout.
+      sendMetaConversionEvent({
+        eventName: 'Purchase',
+        context: metaContextFromSessionMetadata(meta),
+        eventId: `service-purchase-${orderId}`,
+        email: String(order.email),
+        value: int(order.amount_cents) / 100,
+        currency: 'EUR',
+        customData: { content_name: String(order.service_name), content_category: 'standalone_service', content_ids: [str(meta.service_slug)].filter(Boolean) },
+      }),
       sendStandaloneOrderConfirmed(String(order.email), String(order.nome), String(order.service_name)),
       notifyStandaloneOrderPaid({
         orderId: String(order.id),

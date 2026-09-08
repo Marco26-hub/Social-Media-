@@ -3,7 +3,7 @@ import { apiError } from '@/lib/api-error'
 import { dbReady, q1 } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 import { sendEmail } from '@/lib/email'
-import { sendMetaConversionEvent } from '@/lib/meta-conversions-api'
+import { metaSessionMetadata, metaUserContextFromRequest, sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 import { stripeConfigured, createOneOffCheckoutSession } from '@/lib/stripe'
 import { checkBotId } from 'botid/server'
 import { CONSULENZA_LEGALE } from '@/lib/consulenza-listino'
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       amountCents: IMPORTO_CENTS,
       successUrl: `${baseUrl()}${pagina}?esito=ok`,
       cancelUrl: `${baseUrl()}${pagina}?esito=annullato`,
-      extraMetadata: { consulenza_id: consulenzaId },
+      extraMetadata: { consulenza_id: consulenzaId, ...metaSessionMetadata(metaUserContextFromRequest(request)) },
     })
 
     // Salva il session id per riconciliazione.

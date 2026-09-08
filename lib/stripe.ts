@@ -180,6 +180,8 @@ export async function createStripeCheckoutSession(args: {
 }
 
 export async function createStandaloneServiceCheckoutSession(args: {
+  /** Metadata aggiuntivi sulla sessione: il contesto Meta ci passa da qui. */
+  extraMetadata?: Record<string, string | undefined>
   orderId: string
   serviceSlug: string
   serviceName: string
@@ -202,6 +204,7 @@ export async function createStandaloneServiceCheckoutSession(args: {
   appendForm(params, 'metadata[tipo]', 'standalone_service_order')
   appendForm(params, 'metadata[service_order_id]', args.orderId)
   appendForm(params, 'metadata[service_slug]', args.serviceSlug)
+  for (const [k, v] of Object.entries(args.extraMetadata || {})) appendForm(params, `metadata[${k}]`, v)
   appendForm(params, 'line_items[0][quantity]', 1)
   appendForm(params, 'line_items[0][price_data][currency]', 'eur')
   appendForm(params, 'line_items[0][price_data][unit_amount]', args.amountCents)
