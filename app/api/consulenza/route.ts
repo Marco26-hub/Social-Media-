@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q1 } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
+import { sendEmail } from '@/lib/email'
 import { sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 import { stripeConfigured, createOneOffCheckoutSession } from '@/lib/stripe'
 import { checkBotId } from 'botid/server'
@@ -52,6 +53,25 @@ export async function POST(request: Request) {
       [nome, email, telefono || null, messaggio || null, IMPORTO_CENTS],
     )
     const consulenzaId = String((row as { id: string }).id)
+
+    // Una richiesta di consulenza legale che resta solo in tabella e' una
+    // richiesta che nessuno vede finche' non passa da Stripe — e se il
+    // pagamento non parte, non la vede mai nessuno.
+    const destinatario = process.env.AGENCY_NOTIFY_EMAIL?.trim()
+    if (destinatario) {
+      void sendEmail({
+        to: destinatario,
+        subject: `Richiesta consulenza legale — ${nome}`,
+        text: [
+          `Nome: ${nome}`,
+          `Email: ${email}`,
+          telefono ? `Telefono: ${telefono}` : null,
+          messaggio ? `Argomento: ${messaggio}` : null,
+          `Pagina: ${pagina}`,
+          `Riferimento: ${consulenzaId}`,
+        ].filter(Boolean).join('\n'),
+      }).catch(() => {})
+    }
     const eventSourceUrl = `${baseUrl()}${pagina}`
 
     // Se Stripe non è configurato: registra comunque la richiesta e rimanda a WhatsApp.

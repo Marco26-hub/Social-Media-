@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { dbReady, q1 } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
+import { sendEmail } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +41,31 @@ export async function POST(request: Request) {
        RETURNING id`,
       [nome, email, azienda || null, ruolo || null, note || null, 'sito/consulenza'],
     )
+
+    // La riga nel database non avvisa nessuno: finora una preiscrizione restava
+    // li' finche' qualcuno non andava a guardare la tabella. Ora parte una
+    // notifica a noi e una conferma a chi si e' iscritto. Se l'invio fallisce
+    // l'iscrizione resta valida: e' registrata, ed e' quello che conta.
+    const destinatario = process.env.AGENCY_NOTIFY_EMAIL?.trim()
+    if (destinatario) {
+      void sendEmail({
+        to: destinatario,
+        subject: `Preiscrizione video corsi AI Act — ${nome}`,
+        text: [
+          `Nome: ${nome}`,
+          `Email: ${email}`,
+          azienda ? `Azienda: ${azienda}` : null,
+          ruolo ? `Ruolo: ${ruolo}` : null,
+          note ? `Note: ${note}` : null,
+          'Origine: /consulenza (o /en/legal-advice)',
+        ].filter(Boolean).join('\n'),
+      }).catch(() => {})
+    }
+    void sendEmail({
+      to: email,
+      subject: 'Sei in lista per i video corsi AI Act',
+      text: `Ciao ${nome},\n\nabbiamo registrato la tua preiscrizione ai video corsi sull'AI Act. Nessun pagamento e nessun impegno: ti scriviamo appena il primo modulo e' online.\n\nSe non sei stato tu, ignora questa email.\n\nSocial Web Automation`,
+    }).catch(() => {})
 
     return NextResponse.json({
       ok: true,

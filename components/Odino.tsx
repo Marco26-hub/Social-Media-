@@ -218,7 +218,7 @@ export default function Odino() {
         <span className={styles.mascotte} aria-hidden="true">
           <span className={styles.robotLayer}>
             <span className={styles.corpoBox}>
-              <span className={`${styles.strato} ${styles.corpo}`}>
+              <span className={`${styles.strato} ${styles.tronco}`}>
                 <Image src="/images/odino-mascotte.webp" alt="" fill sizes="112px" priority />
               </span>
               <span className={`${styles.strato} ${styles.gambe}`}>

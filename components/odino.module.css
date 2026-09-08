@@ -62,9 +62,14 @@
 }
 .strato { position: absolute; inset: 0; display: block }
 .strato img { object-fit: contain; object-position: center bottom }
-/* Il corpo: tutto tranne il braccio che saluta (x 0-41%, y 37-56%) e le
-   gambe (sotto il 68%). Quei pezzi vivono nelle altre due copie. */
-.corpo { clip-path: polygon(0 0, 100% 0, 100% 68%, 0 68%, 0 56%, 41% 56%, 41% 37%, 0 37%) }
+/* Il tronco: tutto tranne il braccio che saluta (x 0-41%, y 37-56%) e le
+   gambe (sotto il 68%). Quei pezzi vivono nelle altre due copie.
+   Si chiama «tronco» e non «corpo» perche' .corpo era gia' il corpo del
+   pannello, quello che scorre sotto l'intestazione: chiamando allo stesso modo
+   un livello della mascotte, il suo clip-path finiva sul testo delle risposte e
+   ne ritagliava via una fetta larga il 41% fra il 37% e il 56% dell'altezza.
+   Sono due file diversi nello stesso modulo CSS, e il modulo non se ne accorge. */
+.tronco { clip-path: polygon(0 0, 100% 0, 100% 68%, 0 68%, 0 56%, 41% 56%, 41% 37%, 0 37%) }
 /* Il braccio: ruota sulla spalla, che sta al bordo del ritaglio. Il saluto e'
    breve e ogni sei secondi, come prima: un braccio che si agita di continuo
    e' un banner. */
