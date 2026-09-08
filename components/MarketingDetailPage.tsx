@@ -13,6 +13,7 @@ import { SITE_URL } from '@/lib/site-config'
 import FloatingNavigation from './FloatingNavigation'
 import PublicFooter from './PublicFooter'
 import PublicHeader from './PublicHeader'
+import TelefonoSala from './TelefonoSala'
 import styles from './marketing-detail.module.css'
 
 type TextBlock = { title: string; text: string }
@@ -73,6 +74,8 @@ export type MarketingDetailConfig = {
   related: { href: string; label: string }[]
   portfolio?: PortfolioBlock[]
   visualTheme?: 'gelateria'
+  /** Un blocco dimostrativo fra i risultati e le lavorazioni. Per ora solo la sala. */
+  demo?: 'sala'
 }
 
 const WHATSAPP_NUMBER = '393477196603'
@@ -279,6 +282,24 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       <section className={styles.outcomeBand} aria-label="Risultati del servizio">
         {config.outcomes.map(outcome => <article key={outcome.title}><strong>{outcome.title}</strong><span>{outcome.text}</span></article>)}
       </section>
+
+      {config.demo === 'sala' && (
+        // Il gesto vale piu' di un elenco: si vede il menu, la quantita' che
+        // sale e il conto che si chiude. Il telefono e' disegnato in palette,
+        // non uno screenshot arancione del prodotto.
+        <section className={styles.demo} aria-labelledby="demo-title">
+          <div className={styles.demoTesto}>
+            <p className={styles.eyebrow}>{isEnglish ? 'What the customer sees' : 'Quello che vede il cliente'}</p>
+            <h2 id="demo-title">{isEnglish ? 'Scan, order, pay. Nobody waits for the card machine.' : 'Inquadra, ordina, paga. Nessuno aspetta il POS.'}</h2>
+            <p>
+              {isEnglish
+                ? 'The QR opens a web page in the phone browser: nothing to install, no account to create in order to eat. Dishes, allergens, split bill and receipt live on the same screen — with your name on it, never ours.'
+                : 'Il QR apre una pagina web nel browser del telefono: niente da installare e nessun account da creare per mangiare. Piatti, allergeni, conto alla romana e ricevuta stanno sulla stessa schermata — con il tuo marchio, mai il nostro.'}
+            </p>
+          </div>
+          <TelefonoSala inglese={isEnglish} />
+        </section>
+      )}
 
       <section className={styles.deliverables} aria-labelledby="deliverables-title">
         <div className={styles.sectionHeading}>

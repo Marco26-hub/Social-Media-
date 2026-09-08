@@ -1,0 +1,167 @@
+/* Il telefono col menu al tavolo, nella palette SWA.
+   Il prodotto vero e' arancione e viola: qui vive dentro una pagina verde e
+   crema, e un blocco fuori palette in mezzo alla pagina si legge come un
+   ritaglio incollato. Stessa scena, stessi colori del resto del sito. */
+
+.scena {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+
+.telefono {
+  width: 288px;
+  padding: 10px;
+  border: 1px solid rgba(21, 35, 31, .16);
+  border-radius: 34px;
+  background: linear-gradient(160deg, #16302a 0%, #0c211c 100%);
+  box-shadow: 0 26px 60px rgba(10, 26, 21, .34);
+}
+
+.schermo {
+  display: grid;
+  gap: 11px;
+  padding: 12px 12px 14px;
+  border-radius: 26px;
+  background: #0a1c17;
+  color: #f4efe2;
+  font-size: 12px;
+}
+
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(244, 239, 226, .74);
+  font-size: 10.5px;
+}
+
+.isola {
+  width: 58px;
+  height: 15px;
+  border-radius: 999px;
+  background: #04100d;
+}
+
+.segnale { letter-spacing: 1px; font-size: 9px }
+
+.testa { display: grid; gap: 3px }
+.testa small {
+  color: #d8aa35;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+}
+.testa strong { font-size: 16px; font-weight: 600 }
+
+.gruppi {
+  display: flex;
+  gap: 6px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(244, 239, 226, .12);
+}
+.gruppi span {
+  padding: 4px 9px;
+  border: 1px solid rgba(244, 239, 226, .16);
+  border-radius: 999px;
+  color: rgba(244, 239, 226, .72);
+  font-size: 10px;
+}
+.gruppoAttivo {
+  border-color: transparent !important;
+  background: #1f8a67;
+  color: #04100d !important;
+  font-weight: 700;
+}
+
+.piatti { display: grid; gap: 0; margin: 0; padding: 0; list-style: none }
+.piatti li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(244, 239, 226, .09);
+}
+.piatti li:last-child { border-bottom: none }
+
+/* Nessuna fotografia: quattro piatti finti in tre colori sono un dettaglio, un
+   piatto stock e' una promessa su un locale che non esiste. */
+.foto {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 9px;
+  background:
+    radial-gradient(circle at 34% 34%, rgba(216, 170, 53, .62) 0 32%, rgba(0, 0, 0, 0) 33%),
+    linear-gradient(140deg, #2b4a3f 0%, #17332b 100%);
+}
+
+.dettaglio { display: grid; gap: 2px; flex: 1 1 auto; min-width: 0 }
+.dettaglio strong { font-size: 11.5px; font-weight: 600 }
+.dettaglio em {
+  justify-self: start;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(216, 170, 53, .16);
+  color: #e6bd54;
+  font-size: 8.5px;
+  font-style: normal;
+  font-weight: 700;
+}
+.prezzo { color: rgba(244, 239, 226, .62); font-size: 10.5px }
+
+.contatore {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #1f8a67;
+  color: #04100d;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.aggiungi {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(31, 138, 103, .8);
+  border-radius: 50%;
+  color: #5cc79c;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.conto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: #1f8a67;
+  color: #04100d;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.conto strong { margin-left: auto; font-size: 12px }
+.badge {
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: rgba(4, 16, 13, .22);
+  font-size: 10px;
+}
+
+.piede {
+  margin: 0;
+  color: rgba(244, 239, 226, .5);
+  font-size: 9px;
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .telefono { width: 100%; max-width: 288px }
+}

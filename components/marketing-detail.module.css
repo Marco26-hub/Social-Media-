@@ -764,3 +764,39 @@ h1 .eyebrow, .hero h1 .eyebrow {
     margin-bottom: 20px;
   }
 }
+
+/* Blocco dimostrativo: il testo a sinistra, il telefono a destra.
+   Sotto i 900px il telefono scende, perche' affiancato a meta' larghezza
+   diventa un francobollo. */
+.demo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 48px;
+  align-items: center;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 72px 26px 12px;
+}
+
+.demoTesto h2 {
+  margin: 6px 0 14px;
+  font-size: clamp(26px, 3.4vw, 38px);
+  font-weight: 400;
+  line-height: 1.16;
+  letter-spacing: -.4px;
+}
+
+.demoTesto p:last-child {
+  max-width: 52ch;
+  color: var(--muted, #56655d);
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .demo {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 30px;
+    padding: 52px 20px 8px;
+  }
+}

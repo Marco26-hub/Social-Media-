@@ -91,6 +91,7 @@ export default function SettorePage({ settore, locale = 'it' }: { settore: Setto
     faq: settore.faq,
     related: settore.correlati,
     visualTheme: settore.slug === 'gelaterie' ? 'gelateria' : undefined,
+    demo: settore.slug === 'ristoranti-e-bar' ? 'sala' : undefined,
   }
 
   return <MarketingDetailPage config={config} />

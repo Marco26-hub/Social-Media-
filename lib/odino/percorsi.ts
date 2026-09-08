@@ -1,3 +1,5 @@
+import { euro } from '@/lib/euro'
+import { GIORNI_PROVA, PIANI_SALA, SALA_ATTIVAZIONE_MAX, SALA_ATTIVAZIONE_MIN } from '@/lib/ristoranti-listino'
 import { CANONE_A_CARICO_CLIENTE } from '@/lib/canone-incluso'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { PREZZI } from '@/lib/prezzi-ingresso'
@@ -198,6 +200,23 @@ export const NODI: Nodo[] = [
         { href: '/metodo', label: 'Il ciclo di lavoro' },
       ],
       poi: ['garantite-risultati', 'dati-clienti'],
+    },
+  },
+  {
+    id: 'sala-ristorante',
+    domanda: 'Quanto costa il sistema per il ristorante?',
+    chiavi: ['ristorante', 'ristoranti', 'bar', 'pizzeria', 'trattoria', 'tavolo', 'qr', 'menu', 'coperti', 'cameriere', 'pos', 'conto', 'prenotazioni', 'sala'],
+    risposta: {
+      titolo: 'Due moduli, e sull’incassato non tratteniamo niente.',
+      testo:
+        `Il cliente inquadra il QR al tavolo, ordina e paga dal telefono; le prenotazioni entrano nello stesso pannello. I due moduli si comprano anche separati. Il denaro arriva sul conto del locale e noi non tratteniamo nessuna percentuale: le commissioni sono quelle del tuo circuito di pagamento. Attivazione una tantum da ${SALA_ATTIVAZIONE_MIN} a ${SALA_ATTIVAZIONE_MAX}, ${GIORNI_PROVA} giorni di prova senza carta.`,
+      cifre: PIANI_SALA.map(piano => ({
+        voce: piano.nome,
+        valore: `${euro(piano.canoneCents / 100)} al mese`,
+        nota: piano.descrizione,
+      })),
+      link: [{ href: '/settori/ristoranti-e-bar', label: 'Il sistema di sala per ristoranti' }],
+      poi: ['cosa-resta-fuori', 'da-dove-parto', 'disdetta'],
     },
   },
   {
