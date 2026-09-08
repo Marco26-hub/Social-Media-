@@ -133,3 +133,12 @@
   transform: translateY(-180%);
 }
 .skipLink:focus { transform: translateY(0); }
+
+/* Ritorno al sito inglese dalle pagine legali, che una gemella tradotta non
+   ce l'hanno: senza, chi arriva dall'inglese resta chiuso in italiano. */
+.altraLingua {
+  margin-left: 14px; padding: 5px 11px;
+  border: 1px solid rgba(16, 18, 14, .18); border-radius: 999px;
+  color: #10120e; font-size: 12px; font-weight: 700; text-decoration: none;
+}
+.altraLingua:hover { border-color: #8f6812; color: #8f6812 }

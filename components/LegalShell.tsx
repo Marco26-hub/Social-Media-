@@ -28,6 +28,9 @@ export default function LegalShell({
     { href: '/accessibilita', label: 'Accessibilità' },
   ].filter(r => r.href !== currentPath)
 
+  // Chi arriva qui dal sito inglese resta senza via d'uscita: queste pagine non
+  // hanno una gemella tradotta — sono atti che vincolano e vanno riviste da chi
+  // ne risponde — ma il ritorno all'inglese deve esistere lo stesso.
   return (
     <div className={styles.page}>
       {/* Landmark e salto al contenuto: mancavano su tutte e sette le pagine
@@ -36,6 +39,7 @@ export default function LegalShell({
       <a className={styles.skipLink} href="#main-content">Vai al contenuto</a>
       <header className={styles.header}>
         <Link href="/" className={styles.back}><ArrowLeft size={16} /> Torna al sito</Link>
+        <Link href="/en" className={styles.altraLingua} hrefLang="en" lang="en">English</Link>
         <Link href="/" className={styles.headerBrand} aria-label={`${TITOLARE.brand}, home`}>
           <span className={styles.headerMark}>
             <Image src="/brand/swa-logo-official.png" alt="SWA" width={68} height={30} priority />
