@@ -66,6 +66,7 @@ const MOBILE_LINKS_EN = [
     sotto: SETTORI_EN.map(x => ({ href: `/en/settori/${x.slug}`, label: x.nome })),
   },
   { href: '/en/pricing', label: 'Packages' },
+  { href: '/en/legal-advice', label: 'AI legal advice' },
   { href: '/en/blog', label: 'SWA Journal' },
   { href: '/en/about', label: 'About' },
   { href: '/en/faq', label: 'FAQ' },

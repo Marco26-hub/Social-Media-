@@ -53,7 +53,7 @@ export const COPPIE_LINGUA: Record<string, string> = {
       .filter(p => !SERVIZI_EN.some(s => s.slugIt === p) && !(p in ALTRE_LANDING))
       .map(percorso => [percorso, '/en/services']),
   ),
-  '/consulenza': '/en/services',
+  '/consulenza': '/en/legal-advice',
   // Il Journal e i suoi articoli: lo slug inglese e' diverso da quello italiano
   // (/en/blog/ai-act-obligations-small-business, non il titolo in italiano),
   // quindi il legame lo tiene `slugIt` invece della coincidenza del percorso.

@@ -145,7 +145,7 @@ export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' })
     { href: '/en/services/client-diary-whatsapp', label: 'Diary and client recall', description: 'Dormant clients come back into view.', icon: CalendarClock },
     { href: '/en/services/job-reporting', label: 'Job reports', description: 'Signed on site, with photos and PDF.', icon: ClipboardCheck },
     { href: '/en/services/systems-automation', label: 'Systems automation', description: 'The tools you already use, connected.', icon: Workflow },
-    { href: '/en/services#compliance', label: 'AI and data compliance', description: 'Privacy, AI Act and transparency.', icon: Scale },
+    { href: '/en/legal-advice', label: 'AI and data compliance', description: 'Privacy, AI Act and transparency.', icon: Scale },
   ]
   const solutions = isEnglish ? englishSolutions : SOLUTIONS
   const settori = isEnglish ? SETTORI_EN : SETTORI

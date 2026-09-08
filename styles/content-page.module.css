@@ -69,6 +69,31 @@
    sbagliato. L'ultimo elemento in posizione dispari occupa tutta la riga. */
 .stepGrid > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
 
+/* Mappa del metodo per servizio. Dieci schede: due colonne chiudono cinque
+   righe piene, nessuna cella vuota in fondo. Le schede riportano i titoli
+   delle fasi e non il testo completo: quello resta sulla pagina del servizio,
+   dove e' gia' visibile, e duplicarlo qui creerebbe due URL con lo stesso
+   corpo che competono per la stessa ricerca. */
+.methodMap { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1px; margin-top:45px; border:1px solid var(--line); background:var(--line); }
+.methodMap article { display:flex; flex-direction:column; padding:27px; background:var(--surface); }
+.methodMap article > span { display:inline-flex; align-items:center; gap:8px; color:var(--coral-testo,#b3452a); font-size:11px; font-weight:850; text-transform:uppercase; letter-spacing:.03em; }
+.methodMap h3 { margin:15px 0 7px; font:500 23px Georgia,'Times New Roman',serif; }
+.methodMap article > p { margin:0 0 18px; color:var(--muted); font-size:12.5px; line-height:1.55; }
+.methodMap article > p strong { color:var(--ink); font-weight:800; }
+.methodMap ol { display:grid; gap:9px; margin:0 0 22px; padding:0; list-style:none; }
+.methodMap li { display:flex; gap:10px; align-items:baseline; font-size:13px; line-height:1.42; }
+.methodMap li b { flex:none; width:19px; color:var(--green); font-size:11px; font-weight:850; font-variant-numeric:tabular-nums; }
+.methodMap li span { color:var(--ink); }
+.methodMap a { margin-top:auto; display:inline-flex; align-items:center; gap:7px; color:var(--green); font-size:12px; font-weight:800; text-decoration:none; }
+.methodMap a:hover { text-decoration:underline; }
+.methodMap > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+/* La fascia delle ancore e' passata da quattro voci a cinque: sotto i 700px
+   diventa una griglia a due colonne e la quinta lasciava mezza riga vuota,
+   che con i filetti si legge come una casella rotta. */
+.anchorBand > *:last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media(max-width:700px){.methodMap{grid-template-columns:1fr}.methodMap article{padding:23px}}
+
 /* Colori espliciti: il token del testo si inverte in tema notte e il salto al
    contenuto diventava bianco su chiaro proprio quando serve. */
 .skipLink { background: #0D2620; color: #FFFDF7; }

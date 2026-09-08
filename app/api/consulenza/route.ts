@@ -32,6 +32,10 @@ export async function POST(request: Request) {
     const email = String(body.email || '').trim().toLowerCase()
     const telefono = String(body.telefono || '').trim()
     const messaggio = String(body.messaggio || '').trim().slice(0, 1000)
+    // Da dove e' partita la prenotazione. Stripe rimanda qui dopo il pagamento:
+    // chi ha comprato dalla pagina inglese deve tornare sulla pagina inglese,
+    // non su quella italiana con «Pagamento ricevuto» che non sa leggere.
+    const pagina = body.lingua === 'en' ? '/en/legal-advice' : '/consulenza'
 
     if (!nome) return NextResponse.json({ error: 'Nome richiesto' }, { status: 400 })
     if (!EMAIL_RE.test(email)) return NextResponse.json({ error: 'Email non valida' }, { status: 400 })
@@ -48,7 +52,7 @@ export async function POST(request: Request) {
       [nome, email, telefono || null, messaggio || null, IMPORTO_CENTS],
     )
     const consulenzaId = String((row as { id: string }).id)
-    const eventSourceUrl = `${baseUrl()}/consulenza`
+    const eventSourceUrl = `${baseUrl()}${pagina}`
 
     // Se Stripe non è configurato: registra comunque la richiesta e rimanda a WhatsApp.
     if (!stripeConfigured()) {
@@ -77,8 +81,8 @@ export async function POST(request: Request) {
       descrizione: 'Consulenza legale AI & GDPR (30 min) — Studio Legale BCS',
       clienteEmail: email,
       amountCents: IMPORTO_CENTS,
-      successUrl: `${baseUrl()}/consulenza?esito=ok`,
-      cancelUrl: `${baseUrl()}/consulenza?esito=annullato`,
+      successUrl: `${baseUrl()}${pagina}?esito=ok`,
+      cancelUrl: `${baseUrl()}${pagina}?esito=annullato`,
       extraMetadata: { consulenza_id: consulenzaId },
     })
 

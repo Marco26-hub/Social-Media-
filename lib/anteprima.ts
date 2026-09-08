@@ -256,6 +256,12 @@ const EN: Record<string, Anteprima> = {
     sottotitolo: 'Articles on social, SEO, GEO, AI and selling, written for decision makers.',
     tinta: 'terra',
   },
+  '/en/legal-advice': {
+    occhiello: 'AI legal advice',
+    titolo: 'AI Act and GDPR, explained by a lawyer.',
+    sottotitolo: 'Thirty minutes with Studio Legale BCS on obligations, risks and the documents to have.',
+    tinta: 'notte',
+  },
   '/en/author/marco-dibenedetto': {
     occhiello: 'Author',
     titolo: 'Marco Dibenedetto',

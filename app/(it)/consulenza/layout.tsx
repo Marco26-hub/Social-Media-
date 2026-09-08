@@ -8,7 +8,14 @@ const description = 'Prenota una consulenza individuale su AI Act, GDPR, privacy
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: `${SITE_URL}/consulenza` },
+  alternates: {
+    canonical: `${SITE_URL}/consulenza`,
+    languages: {
+      'it-IT': `${SITE_URL}/consulenza`,
+      en: `${SITE_URL}/en/legal-advice`,
+      'x-default': `${SITE_URL}/consulenza`,
+    },
+  },
   openGraph: { title, description, url: `${SITE_URL}/consulenza` , images: anteprimaOg('/consulenza'), type: 'website',},
   twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/consulenza') },
 }

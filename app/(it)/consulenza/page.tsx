@@ -10,7 +10,7 @@ import FloatingNavigation from '@/components/FloatingNavigation'
 import CorsoAiActForm from '@/components/CorsoAiActForm'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
-import styles from './consulenza.module.css'
+import styles from '@/styles/consulenza.module.css'
 import { CONSULENZA_PREZZO } from '@/lib/consulenza-listino'
 
 const WHATSAPP_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei informazioni sulla consulenza legale AI e GDPR con Studio BCS.')}`

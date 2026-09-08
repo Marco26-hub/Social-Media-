@@ -114,6 +114,11 @@
 .checkList { display: grid; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
 .checkList li { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .checkList li svg { flex: none; color: var(--green); }
+/* Numero del passo davanti alla voce: nella mappa del metodo l'elenco e' una
+   sequenza, non un elenco di caratteristiche, e senza numeri si legge come le
+   spunte della scheda accanto. */
+.checkList li b { flex: none; width: 19px; color: var(--green); font-size: 11px; font-weight: 850; font-variant-numeric: tabular-nums; }
+.checkList li strong { color: var(--ink); font-weight: 800; }
 
 /* Fascia scura: stesso valore di .darkSection italiano. */
 .band { max-width: none; padding: 86px max(24px, calc((100vw - 1120px) / 2)); background: #0d1814; color: #fff; }

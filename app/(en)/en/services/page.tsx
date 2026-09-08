@@ -30,7 +30,7 @@ const services: { id: string; href?: string; icon: LucideIcon; title: string; te
   { id: 'agenda', href: '/en/services/client-diary-whatsapp', icon: CalendarClock, title: 'Diary and client recall', text: 'Each day the system reads the diary and the history, finds who has not come back and drafts the message. Nothing leaves without your yes. From €390 per month, 1000 messages included. No guarantee on how many people return.' },
   { id: 'jobs', href: '/en/services/job-reporting', icon: ClipboardCheck, title: 'Job reports and field work', text: 'For work done away from the office: checklists built on your real services, photos, hours, the client signature on the phone and a PDF before the team leaves. Paired with a website that turns requests into jobs. Quoted after review.' },
   { id: 'systems', href: '/en/services/systems-automation', icon: Workflow, title: 'Systems automation', text: 'The management system, CRM, forms and archive stop asking for the same data three times. We connect what already works through the available interfaces and build from scratch only where no standard exists. Quoted after mapping the flows.' },
-  { id: 'compliance', icon: Scale, title: 'AI Act, GDPR and compliance', text: 'Operational assessment, policies and documented responsibilities for companies using AI and personal data. Legal representation and certifications are not included unless agreed separately.' },
+  { id: 'compliance', href: '/en/legal-advice', icon: Scale, title: 'AI Act, GDPR and compliance', text: 'Operational assessment, policies and documented responsibilities for companies using AI and personal data. Legal representation and certifications are not included unless agreed separately.' },
 ]
 
 export default function EnglishServicesPage() {

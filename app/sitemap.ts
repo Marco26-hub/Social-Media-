@@ -128,6 +128,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.75,
       alternates: languageAlternates(it),
     })),
+    {
+      url: `${SITE_URL}/en/legal-advice`,
+      lastModified: englishUpdated,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+      alternates: languageAlternates('/consulenza'),
+    },
     ...SERVIZI_EN.map(servizio => ({
       url: `${SITE_URL}/en/services/${servizio.slug}`,
       lastModified: englishUpdated,
@@ -168,6 +175,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: marketingUpdated,
       changeFrequency: 'monthly',
       priority: 0.8,
+      alternates: languageAlternates('/consulenza'),
     },
     { url: `${SITE_URL}/privacy`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3, alternates: languageAlternates('/privacy') },
     { url: `${SITE_URL}/cookie-policy`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3, alternates: languageAlternates('/cookie-policy') },
