@@ -15,7 +15,16 @@ const META_DESCRIPTION = 'Come esercitare il recesso dai servizi Social Web Auto
 export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/recesso` },
+  alternates: {
+    canonical: `${SITE_URL}/recesso`,
+    // La traduzione di cortesia esiste: la coppia va dichiarata da tutte e
+    // due le parti, altrimenti un motore la scarta.
+    languages: {
+      'it-IT': `${SITE_URL}/recesso`,
+      en: `${SITE_URL}/en/withdrawal`,
+      'x-default': `${SITE_URL}/recesso`,
+    },
+  },
   openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/recesso` , images: anteprimaOg('/recesso'), type: 'website',},
   robots: { index: true, follow: true },
 }

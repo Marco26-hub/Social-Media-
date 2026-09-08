@@ -19,7 +19,16 @@ const META_DESCRIPTION =
 export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/accessibilita` },
+  alternates: {
+    canonical: `${SITE_URL}/accessibilita`,
+    // La traduzione di cortesia esiste: la coppia va dichiarata da tutte e
+    // due le parti, altrimenti un motore la scarta.
+    languages: {
+      'it-IT': `${SITE_URL}/accessibilita`,
+      en: `${SITE_URL}/en/accessibility`,
+      'x-default': `${SITE_URL}/accessibilita`,
+    },
+  },
   openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/accessibilita` , images: anteprimaOg('/accessibilita'), type: 'website',},
   robots: { index: true, follow: true },
 }

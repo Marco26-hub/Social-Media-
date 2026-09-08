@@ -11,7 +11,16 @@ const META_DESCRIPTION = 'Informativa privacy di Social Web Automation: quali da
 export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/privacy` },
+  alternates: {
+    canonical: `${SITE_URL}/privacy`,
+    // La traduzione di cortesia esiste: la coppia va dichiarata da tutte e
+    // due le parti, altrimenti un motore la scarta.
+    languages: {
+      'it-IT': `${SITE_URL}/privacy`,
+      en: `${SITE_URL}/en/privacy`,
+      'x-default': `${SITE_URL}/privacy`,
+    },
+  },
   openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/privacy` , images: anteprimaOg('/privacy'), type: 'website',},
   robots: { index: true, follow: true },
 }

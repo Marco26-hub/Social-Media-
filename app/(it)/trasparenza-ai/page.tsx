@@ -11,7 +11,16 @@ const META_DESCRIPTION =
 export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/trasparenza-ai` },
+  alternates: {
+    canonical: `${SITE_URL}/trasparenza-ai`,
+    // La traduzione di cortesia esiste: la coppia va dichiarata da tutte e
+    // due le parti, altrimenti un motore la scarta.
+    languages: {
+      'it-IT': `${SITE_URL}/trasparenza-ai`,
+      en: `${SITE_URL}/en/ai-transparency`,
+      'x-default': `${SITE_URL}/trasparenza-ai`,
+    },
+  },
   openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/trasparenza-ai` , images: anteprimaOg('/trasparenza-ai'), type: 'website',},
   robots: { index: true, follow: true },
 }

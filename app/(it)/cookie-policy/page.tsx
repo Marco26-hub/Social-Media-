@@ -11,7 +11,16 @@ const META_DESCRIPTION = 'Cookie policy di Social Web Automation: quali cookie u
 export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/cookie-policy` },
+  alternates: {
+    canonical: `${SITE_URL}/cookie-policy`,
+    // La traduzione di cortesia esiste: la coppia va dichiarata da tutte e
+    // due le parti, altrimenti un motore la scarta.
+    languages: {
+      'it-IT': `${SITE_URL}/cookie-policy`,
+      en: `${SITE_URL}/en/cookie-policy`,
+      'x-default': `${SITE_URL}/cookie-policy`,
+    },
+  },
   openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/cookie-policy` , images: anteprimaOg('/cookie-policy'), type: 'website',},
   robots: { index: true, follow: true },
 }

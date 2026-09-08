@@ -11,7 +11,16 @@ const META_DESCRIPTION = 'Termini e condizioni dei servizi Social Web Automation
 export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/termini` },
+  alternates: {
+    canonical: `${SITE_URL}/termini`,
+    // La traduzione di cortesia esiste: la coppia va dichiarata da tutte e
+    // due le parti, altrimenti un motore la scarta.
+    languages: {
+      'it-IT': `${SITE_URL}/termini`,
+      en: `${SITE_URL}/en/terms`,
+      'x-default': `${SITE_URL}/termini`,
+    },
+  },
   openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/termini` , images: anteprimaOg('/termini'), type: 'website',},
   robots: { index: true, follow: true },
 }
