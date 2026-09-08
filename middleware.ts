@@ -193,5 +193,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  // I file .html serviti da public/ sono verifiche di proprieta' del dominio
+  // (Google Search Console, Bing): devono uscire tali e quali, senza passare da
+  // header, redirect o rewrite. Una verifica che non risponde esattamente non
+  // vale.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|html)$).*)'],
 }
