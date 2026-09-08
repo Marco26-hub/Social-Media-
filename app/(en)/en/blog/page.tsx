@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -40,8 +41,8 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/blog`,
     languages: { 'it-IT': `${SITE_URL}/blog`, en: `${SITE_URL}/en/blog`, 'x-default': `${SITE_URL}/blog` },
   },
-  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/en/blog`, type: 'website', locale: 'en_US', images: [`${SITE_URL}/og.png`] },
-  twitter: { card: 'summary_large_image', title: META_TITLE, description: META_DESCRIPTION, images: [`${SITE_URL}/og.png`] },
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/en/blog`, type: 'website', locale: 'en_US', images: anteprimaOg('/en/blog') },
+  twitter: { card: 'summary_large_image', title: META_TITLE, description: META_DESCRIPTION, images: anteprimaOg('/en/blog') },
 }
 
 export default function EnglishBlogIndex() {

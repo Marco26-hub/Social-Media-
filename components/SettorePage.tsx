@@ -1,5 +1,6 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
-import { Building2, Car, Droplets, HeartPulse, Plug, Scissors, Smile, Sparkles, Stethoscope, UtensilsCrossed, Wrench, type LucideIcon } from 'lucide-react'
+import { Building2, Car, Droplets, HeartPulse, IceCreamBowl, Plug, Scissors, Smile, Sparkles, Stethoscope, UtensilsCrossed, Wrench, type LucideIcon } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { prezzoMinimoSettore, type Settore } from '@/lib/settori'
 import { SETTORI_EN } from '@/lib/settori.en'
@@ -21,6 +22,7 @@ const ICONE: Record<string, LucideIcon> = {
   'fisioterapia-osteopatia': HeartPulse,
   'officine-e-servizi-locali': Wrench,
   'ristoranti-e-bar': UtensilsCrossed,
+  gelaterie: IceCreamBowl,
   'elettricisti-e-idraulici': Plug,
 }
 
@@ -50,8 +52,8 @@ export function metadataSettore(settore: Settore, locale: SettoreLocale = 'it'):
         ? { 'it-IT': `${SITE_URL}${italiano}`, en: `${SITE_URL}${inglese}`, 'x-default': `${SITE_URL}${italiano}` }
         : undefined,
     },
-    openGraph: { title: settore.titoloSeo, description: settore.descrizioneSeo, url, type: 'website', locale: locale === 'en' ? 'en_US' : 'it_IT' , images: ['/og.png']},
-    twitter: { card: 'summary_large_image', title: settore.titoloSeo, description: settore.descrizioneSeo },
+    openGraph: { title: settore.titoloSeo, description: settore.descrizioneSeo, url, type: 'website', locale: locale === 'en' ? 'en_US' : 'it_IT' , images: anteprimaOg(path)},
+    twitter: { card: 'summary_large_image', title: settore.titoloSeo, description: settore.descrizioneSeo, images: anteprimaOg(path) },
   }
 }
 
@@ -69,7 +71,10 @@ export default function SettorePage({ settore, locale = 'it' }: { settore: Setto
     serviceType: settore.tipoServizio,
     promise: settore.promessa,
     priceNote: settore.notaPrezzi,
-    startingPrice: prezzoMinimoSettore(settore),
+    startingPrice: settore.prezzoPrincipale ? settore.prezzoPrincipale.valore : prezzoMinimoSettore(settore),
+    priceLabel: settore.prezzoPrincipale?.label,
+    priceCadence: settore.prezzoPrincipale?.cadenza,
+    entryOffer: settore.offertaIngresso,
     primaryCtaLabel: isEnglish ? 'Book a call' : 'Richiedi una call',
     // /consulenza e' la consulenza legale a pagamento su AI Act e GDPR: chi
     // arriva da una pagina di settore cerca il proprio mestiere, non un
@@ -85,6 +90,7 @@ export default function SettorePage({ settore, locale = 'it' }: { settore: Setto
     process: settore.ciclo,
     faq: settore.faq,
     related: settore.correlati,
+    visualTheme: settore.slug === 'gelaterie' ? 'gelateria' : undefined,
   }
 
   return <MarketingDetailPage config={config} />

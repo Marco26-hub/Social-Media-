@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import { ScanSearch } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
@@ -11,8 +12,8 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: `${SITE_URL}/servizi/seo-geo` },
-  openGraph: { title, description, url: `${SITE_URL}/servizi/seo-geo` , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}/servizi/seo-geo` , images: anteprimaOg('/servizi/seo-geo'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/servizi/seo-geo') },
 }
 
 const config = {

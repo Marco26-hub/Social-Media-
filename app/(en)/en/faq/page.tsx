@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import { ArrowRight } from 'lucide-react'
 import { EN_FAQ_GROUPS, EN_WHATSAPP_URL } from '@/lib/english-content'
@@ -14,8 +15,8 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/faq`,
     languages: { 'it-IT': `${SITE_URL}/faq`, en: `${SITE_URL}/en/faq`, 'x-default': `${SITE_URL}/faq` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/faq`, locale: 'en_US' , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}/en/faq`, locale: 'en_US' , images: anteprimaOg('/en/faq'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/en/faq') },
 }
 
 export default function EnglishFaqPage() {

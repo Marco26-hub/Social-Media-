@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import { Clapperboard } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   description,
   keywords: ['riprese video aziendali', 'video per social', 'fotografo aziendale', 'reel professionali', 'volto per i video', 'produzione video PMI'],
   alternates: { canonical: `${SITE_URL}${path}` },
-  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' , images: ['/og.png']},
+  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' , images: anteprimaOg('/servizi/video-produzione')},
   twitter: { card: 'summary_large_image', title, description },
 }
 

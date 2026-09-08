@@ -36,12 +36,20 @@ export default function SegretariaPopup() {
   const [uscita, setUscita] = useState(false)
   const chiudiRef = useRef<HTMLButtonElement>(null)
 
-  const chiudi = useCallback(() => {
-    setUscita(true)
-    liberaAngolo('segretaria')
+  // Il silenzio si segna quando il popup si mostra, non quando viene chiuso.
+  // Prima bastava non chiuderlo — cambiare pagina, tornare il giorno dopo — per
+  // rivederlo a ogni visita: un invito che ricompare di continuo e' un banner.
+  // Una volta al mese vuol dire una volta al mese.
+  function segnaMostrato(): void {
     try {
       window.localStorage.setItem(CHIAVE, String(Date.now() + GIORNI_SILENZIO * 86400_000))
     } catch { /* senza storage il popup ricomparira: accettabile, non bloccante */ }
+  }
+
+  const chiudi = useCallback(() => {
+    setUscita(true)
+    liberaAngolo('segretaria')
+    segnaMostrato()
     window.setTimeout(() => setVisibile(false), 260)
   }, [])
 
@@ -51,7 +59,7 @@ export default function SegretariaPopup() {
     // banner cookie abbia avuto la sua risposta prima di chiedere altro.
     const avvia = () => {
       if (!leggiConsenso(document.cookie)) return false
-      window.setTimeout(() => { setVisibile(true); occupaAngolo('segretaria') }, RITARDO_MS)
+      window.setTimeout(() => { setVisibile(true); occupaAngolo('segretaria'); segnaMostrato() }, RITARDO_MS)
       return true
     }
     if (avvia()) return

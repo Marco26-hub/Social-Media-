@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -16,8 +17,8 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/about`,
     languages: { 'it-IT': `${SITE_URL}/chi-siamo`, en: `${SITE_URL}/en/about`, 'x-default': `${SITE_URL}/chi-siamo` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/about`, locale: 'en_US' , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}/en/about`, locale: 'en_US' , images: anteprimaOg('/en/about'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/en/about') },
 }
 
 export default function EnglishAboutPage() {

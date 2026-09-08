@@ -1,3 +1,5 @@
+import { anteprimaOg } from '@/lib/anteprima'
+import { CANONE_A_CARICO_CLIENTE } from '@/lib/canone-incluso'
 import type { Metadata } from 'next'
 import { Globe2 } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
@@ -10,8 +12,8 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: `${SITE_URL}/servizi/siti-e-commerce` },
-  openGraph: { title, description, url: `${SITE_URL}/servizi/siti-e-commerce` , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}/servizi/siti-e-commerce` , images: anteprimaOg('/servizi/siti-e-commerce'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/servizi/siti-e-commerce') },
 }
 
 const config = {
@@ -78,7 +80,7 @@ const config = {
     },
   ],
   faq: [
-    { q: 'Cosa comprende il canone a partire da 19,90 € al mese?', a: 'È il canone tecnologico di partenza per una landing page semplice o un sito web base, IVA esclusa, e comprende hosting, manutenzione del progetto base, design responsive e SEO tecnica essenziale. Siti multi-pagina, e-commerce, contenuti, cataloghi, dominio e funzioni avanzate vengono definiti e quotati prima dell’avvio, mai addebitati dopo.' },
+    { q: 'Cosa comprende il canone a partire da 19,90 € al mese?', a: `È il canone tecnologico di partenza per una landing page semplice o un sito web base, IVA esclusa, e comprende hosting, manutenzione del progetto base, design responsive e SEO tecnica essenziale. ${CANONE_A_CARICO_CLIENTE} Siti multi-pagina, e-commerce, contenuti, cataloghi e funzioni avanzate vengono definiti e quotati prima dell’avvio, mai addebitati dopo.` },
     { q: '19,90 € al mese comprende anche un e-commerce?', a: 'No, e vale la pena dirlo chiaramente: quella cifra riguarda il solo sito web e corrisponde a una landing semplice. Un negozio online ha catalogo, pagamenti, gestione degli ordini e resi, quindi è un progetto a sé che quotiamo dopo aver visto quanti prodotti hai e come vuoi gestirli.' },
     { q: 'Dopo 12 mesi il sito diventa davvero mio?', a: 'Sì. Dopo 12 mesi di canone la proprietà del sito passa a te: è scritto nell’offerta, non è una formula pubblicitaria. Restano separati i costi ricorrenti che non dipendono da noi — dominio, licenze, servizi esterni — che sono indicati prima dell’avvio e continuano a esistere qualunque fornitore tu scelga dopo.' },
     { q: 'Il sito sarà veloce e leggibile da telefono?', a: 'Sì, e la progettazione parte proprio dallo schermo piccolo, perché è da lì che arriva il traffico di social e campagne. Verifichiamo leggibilità, dimensione dei tocchi, moduli, pulsanti e peso delle immagini sul telefono prima che sul desktop: una pagina che si apre lenta al semaforo non converte, per quanto sia bella.' },

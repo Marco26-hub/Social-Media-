@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check, ClipboardCheck, Gauge, Search, Workflow } from 'lucide-react'
@@ -16,8 +17,8 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/method`,
     languages: { 'it-IT': `${SITE_URL}/metodo`, en: `${SITE_URL}/en/method`, 'x-default': `${SITE_URL}/metodo` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/method`, locale: 'en_US' , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}/en/method`, locale: 'en_US' , images: anteprimaOg('/en/method'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/en/method') },
 }
 
 export default function EnglishMethodPage() {

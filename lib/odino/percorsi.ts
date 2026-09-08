@@ -1,3 +1,4 @@
+import { CANONE_A_CARICO_CLIENTE } from '@/lib/canone-incluso'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { PREZZI } from '@/lib/prezzi-ingresso'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
@@ -144,11 +145,11 @@ export const NODI: Nodo[] = [
   {
     id: 'sito',
     domanda: 'Quanto costa il sito?',
-    chiavi: ['sito', 'landing', 'pagina', 'web', 'ecommerce', 'e-commerce', 'negozio online'],
+    chiavi: ['sito', 'landing', 'pagina', 'web', 'ecommerce', 'e-commerce', 'negozio online', 'hosting', 'dominio', 'mail', 'posta', 'casella', 'spese'],
     risposta: {
       titolo: 'Due gradini, e dopo 12 mesi il progetto è tuo.',
       testo:
-        'Il canone comprende hosting, manutenzione, design responsive e SEO tecnica di base. Il gradino basso è una landing o un sito essenziale; sopra c’è il sito aziendale costruito sugli intenti di ricerca del tuo settore. E-commerce, multilingua e funzioni particolari si quotano a parte, approvate prima di ogni costo.',
+        `Il canone comprende hosting, manutenzione, design responsive e SEO tecnica di base. ${CANONE_A_CARICO_CLIENTE} Il gradino basso è una landing o un sito essenziale; sopra c’è il sito aziendale costruito sugli intenti di ricerca del tuo settore. E-commerce, multilingua e funzioni particolari si quotano a parte, approvate prima di ogni costo.`,
       cifre: [
         { voce: 'Sito Web Base', valore: PREZZI.web, nota: 'Landing o sito essenziale, mobile-first' },
         { voce: 'Sito impresa', valore: `${CANONE_IMPRESA}`, nota: 'Più pagine, struttura sugli intenti del settore' },
@@ -202,11 +203,11 @@ export const NODI: Nodo[] = [
   {
     id: 'cosa-resta-fuori',
     domanda: 'Che cosa non è compreso nel canone?',
-    chiavi: ['compreso', 'incluso', 'escluso', 'fuori', 'extra', 'costi aggiuntivi'],
+    chiavi: ['compreso', 'incluso', 'escluso', 'fuori', 'extra', 'costi aggiuntivi', 'dominio', 'mail', 'posta', 'casella', 'hosting', 'spese di gestione'],
     risposta: {
-      titolo: 'Tre voci, dette prima e non dopo.',
+      titolo: 'Quello che non incassiamo noi.',
       testo:
-        'Restano sempre fuori dal canone: il budget versato alle piattaforme pubblicitarie, il numero telefonico e il traffico dell’operatore, e i costi applicati dalle piattaforme di messaggistica. Non li incassiamo noi, quindi non li mettiamo dentro il prezzo. I servizi vocali e di agenda hanno un costo di avvio una tantum, indicato prima dell’attivazione.',
+        'L’hosting è compreso nel canone: il progetto gira sulla nostra infrastruttura e non ha senso fatturarlo a parte. Restano invece fuori le spese intestate a te: il dominio e le caselle di posta, che paghi al tuo fornitore e restano tue anche se cambi agenzia. Fuori anche il budget versato alle piattaforme pubblicitarie, il numero telefonico e il traffico dell’operatore, e i costi applicati dalle piattaforme di messaggistica. Non li incassiamo noi, quindi non li mettiamo dentro il prezzo, né li rivendiamo con un ricarico. I servizi vocali e di agenda hanno un costo di avvio una tantum, indicato prima dell’attivazione.',
       link: [{ href: '/pacchetti', label: 'Listino con le esclusioni' }],
       poi: ['quanto-costa-avvio', 'disdetta'],
     },

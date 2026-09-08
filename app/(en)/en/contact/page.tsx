@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import { ArrowRight, Mail, MapPin, MessageCircle, Phone } from 'lucide-react'
 import { EN_COMPANY, EN_WHATSAPP_URL } from '@/lib/english-content'
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/contact`,
     languages: { 'it-IT': `${SITE_URL}/contatti`, en: `${SITE_URL}/en/contact`, 'x-default': `${SITE_URL}/contatti` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/contact`, type: 'website', locale: 'en_US' , images: ['/og.png']},
+  openGraph: { title, description, url: `${SITE_URL}/en/contact`, type: 'website', locale: 'en_US' , images: anteprimaOg('/en/contact')},
   twitter: { card: 'summary_large_image', title, description },
 }
 

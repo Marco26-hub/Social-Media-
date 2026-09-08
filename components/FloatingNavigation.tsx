@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { ArrowLeft, ArrowUp } from 'lucide-react'
+import { EVENTO_RIQUADRO, chiOccupa, mascotteVisibile } from '@/lib/riquadri'
 import styles from './floating-navigation.module.css'
 
 export default function FloatingNavigation() {
@@ -16,6 +17,13 @@ export default function FloatingNavigation() {
     ? { nav: 'Quick navigation', indietro: 'Go back', su: 'Back to top' }
     : { nav: 'Navigazione rapida', indietro: 'Torna indietro', su: 'Torna su' }
 
+  // I due pulsanti stanno nello stesso angolo di ODINO e del popup. Prima ci
+  // finivano sotto: il pannello aperto li copriva del tutto e la mascotte
+  // chiusa li nascondeva a meta'. Ora seguono chi c'e': con un pannello aperto
+  // spariscono — l'angolo e' suo e sarebbero comunque irraggiungibili — e con
+  // la sola mascotte salgono sopra di lei.
+  const [angolo, setAngolo] = useState<{ pannello: boolean; mascotte: boolean }>({ pannello: false, mascotte: false })
+
   useEffect(() => {
     const update = () => setShowTop(window.scrollY > 520)
     update()
@@ -23,8 +31,20 @@ export default function FloatingNavigation() {
     return () => window.removeEventListener('scroll', update)
   }, [])
 
+  useEffect(() => {
+    const leggi = () => setAngolo({ pannello: chiOccupa() !== null, mascotte: mascotteVisibile() })
+    leggi()
+    window.addEventListener(EVENTO_RIQUADRO, leggi)
+    return () => window.removeEventListener(EVENTO_RIQUADRO, leggi)
+  }, [])
+
+  if (angolo.pannello) return null
+
   return (
-    <nav className={styles.controls} aria-label={t.nav}>
+    <nav
+      className={`${styles.controls} ${angolo.mascotte ? styles.sopraMascotte : ''}`}
+      aria-label={t.nav}
+    >
       {pathname !== '/' && pathname !== '/en' && (
         <button
           type="button"

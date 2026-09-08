@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import { Newspaper } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
@@ -12,8 +13,8 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: `${SITE_URL}${BLOG_SERVICE.path}` },
-  openGraph: { title, description, url: `${SITE_URL}${BLOG_SERVICE.path}` , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}${BLOG_SERVICE.path}` , images: anteprimaOg('/servizi/blog-seo'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/servizi/blog-seo') },
 }
 
 const config = {

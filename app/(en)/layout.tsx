@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata, Viewport } from 'next'
 import '@/styles/globals.css'
 import JsonLd from '@/components/JsonLd'
@@ -43,9 +44,9 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Social Web Automation',
     locale: 'en_US',
-    images: ['/og.png'],
+    images: anteprimaOg('/en'),
   },
-  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION, images: ['/og.png'] },
+  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION, images: anteprimaOg('/en') },
   robots: {
     index: true,
     follow: true,

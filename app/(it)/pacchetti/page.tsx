@@ -1,3 +1,5 @@
+import { anteprimaOg } from '@/lib/anteprima'
+import { CANONE_A_CARICO_CLIENTE } from '@/lib/canone-incluso'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, CalendarClock, CircleCheck, Clapperboard, Globe2, MapPin, Newspaper, PhoneCall, Target } from 'lucide-react'
@@ -26,12 +28,13 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/pacchetti`,
     languages: { 'it-IT': `${SITE_URL}/pacchetti`, en: `${SITE_URL}/en/pricing`, 'x-default': `${SITE_URL}/pacchetti` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/pacchetti` , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}/pacchetti` , images: anteprimaOg('/pacchetti'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/pacchetti') },
 }
 
 const faq = [
   { q: 'I prezzi includono l’IVA?', a: 'No. I prezzi indicati sono mensili e IVA esclusa.' },
+  { q: 'L’hosting è compreso? E il dominio?', a: CANONE_A_CARICO_CLIENTE },
   { q: 'Il setup iniziale ha un costo?', a: 'Nei pacchetti social Presenza e Crescita il setup è incluso. Per Blog e Web eventuali integrazioni esterne vengono definite prima dell’avvio.' },
   { q: 'Il piano Crescita comprende le campagne a pagamento?', a: 'No. Presenza e Crescita sono piani di sola crescita organica. Le campagne ADS rientrano nella configurazione personalizzata: la gestione viene concordata e il budget versato alla piattaforma resta separato e sotto il controllo del cliente.' },
   { q: 'Blog SEO + GEO è incluso nei pacchetti social?', a: 'Crescita include un articolo al mese. Il servizio Blog autonomo comprende invece 12 articoli mensili e può essere combinato con qualsiasi piano.' },
@@ -162,7 +165,7 @@ export default function PacchettiPage() {
             <p className={styles.listLabel}>Nel progetto trovi</p>
             <ul>{['Architettura, UX e design responsive', 'Landing page o sito web base', 'SEO tecnica, sitemap e dati strutturati', 'Moduli, analytics e integrazioni essenziali', 'Collegamento a social e campagne', 'E-commerce su preventivo separato'].map(feature => <li key={feature}><CircleCheck size={15} aria-hidden="true" />{feature}</li>)}</ul>
             <Link href="/acquista?servizio=web-commerce"><Globe2 size={16} aria-hidden="true" /> Attiva Sito Web <ArrowRight size={16} aria-hidden="true" /></Link>
-            <p className={styles.note}>IVA esclusa · dominio, e-commerce e servizi esterni separati</p>
+            <p className={styles.note}>IVA esclusa · hosting compreso · dominio e caselle di posta a carico tuo · e-commerce separato</p>
           </article>
 
           {/* Sopra il sito base e sotto il progetto su misura: 19,90 e' la

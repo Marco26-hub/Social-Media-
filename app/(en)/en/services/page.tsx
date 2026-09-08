@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, CalendarClock, Clapperboard, ClipboardCheck, FileSearch, Globe2, Newspaper, PhoneCall, Scale, Share2, Target, Workflow } from 'lucide-react'
@@ -14,8 +15,8 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/services`,
     languages: { 'it-IT': `${SITE_URL}/servizi`, en: `${SITE_URL}/en/services`, 'x-default': `${SITE_URL}/servizi` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/services`, locale: 'en_US' , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}/en/services`, locale: 'en_US' , images: anteprimaOg('/en/services'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/en/services') },
 }
 
 const services = [

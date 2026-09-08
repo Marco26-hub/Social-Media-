@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/settori`,
     languages: { 'it-IT': `${SITE_URL}/settori`, en: `${SITE_URL}/en/settori`, 'x-default': `${SITE_URL}/settori` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/settori`, type: 'website', locale: 'en_US' , images: ['/og.png']},
+  openGraph: { title, description, url: `${SITE_URL}/en/settori`, type: 'website', locale: 'en_US' , images: anteprimaOg('/en/settori')},
   twitter: { card: 'summary_large_image', title, description },
 }
 

@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import Image from 'next/image'
 import Link from 'next/link'
 import { headers } from 'next/headers'
@@ -86,13 +87,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       locale: 'it_IT',
       publishedTime: article.data_pubblicazione || undefined,
       authors: [article.autore],
-      ...(article.immagine_cover ? { images: [{ url: article.immagine_cover, alt: article.h1 }] } : {}),
+      images: article.immagine_cover ? [{ url: article.immagine_cover, alt: article.h1 }] : anteprimaOg('/blog'),
     },
     twitter: {
       card: 'summary_large_image',
       title: article.meta_title,
       description: article.meta_description || undefined,
-      ...(article.immagine_cover ? { images: [article.immagine_cover] } : {}),
+      images: article.immagine_cover ? [article.immagine_cover] : anteprimaOg('/blog'),
     },
     robots: { index: true, follow: true },
   }

@@ -7,7 +7,7 @@ import { cerca, nodo, settoreCitato, type Nodo } from '@/lib/odino/percorsi'
 import { cercaDomande, type Domanda } from '@/lib/odino/domande'
 import { ODINO_NOME, ODINO_PRESENTAZIONE } from '@/lib/odino/identita'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
-import { EVENTO_RIQUADRO, angoloLibero } from '@/lib/riquadri'
+import { EVENTO_RIQUADRO, chiOccupa, liberaAngolo, mostraMascotte, occupaAngolo } from '@/lib/riquadri'
 import OdinoFaccia from './OdinoFaccia'
 import styles from './odino.module.css'
 
@@ -51,7 +51,9 @@ export default function Odino() {
 
   useEffect(() => {
     const leggi = () => setConsensoDato(leggiConsenso(document.cookie) !== null)
-    const guarda = () => setAngoloDisponibile(angoloLibero())
+    // «Libero» per ODINO vuol dire anche «occupato da ODINO»: altrimenti, nel
+    // momento in cui dichiara di occupare l'angolo, si nasconderebbe da solo.
+    const guarda = () => { const chi = chiOccupa(); setAngoloDisponibile(chi === null || chi === 'odino') }
     leggi()
     guarda()
     window.addEventListener(EVENTO_CONSENSO, leggi)
@@ -73,6 +75,18 @@ export default function Odino() {
   }, [aperto])
 
   useEffect(() => { corpoRef.current?.scrollTo({ top: 0, behavior: 'smooth' }) }, [corrente])
+
+  // Il pannello aperto copre l'angolo: chi ci sta sotto — i pulsanti «torna su»
+  // e «indietro» — deve poterlo sapere invece di finire dietro un riquadro alto
+  // mezzo schermo. Chiuso, ODINO resta comunque una mascotte alta 116 pixel:
+  // l'angolo non e' occupato, ma non e' nemmeno vuoto.
+  const visibile = consensoDato && (angoloDisponibile || aperto)
+  useEffect(() => {
+    if (!visibile) { mostraMascotte(false); return }
+    if (aperto) { occupaAngolo('odino'); mostraMascotte(false) }
+    else { liberaAngolo('odino'); mostraMascotte(true) }
+  }, [visibile, aperto])
+  useEffect(() => () => { liberaAngolo('odino'); mostraMascotte(false) }, [])
 
   const seguenti = useMemo(
     () => (corrente?.risposta.poi ?? []).map(id => nodo(id)).filter((n): n is Nodo => Boolean(n)),
@@ -136,7 +150,7 @@ export default function Odino() {
   }
 
   // Aperto resta aperto: se una persona ha gia' cliccato, il popup non lo scaccia.
-  if (!consensoDato || (!angoloDisponibile && !aperto)) return null
+  if (!visibile) return null
 
   if (!aperto) {
     return (

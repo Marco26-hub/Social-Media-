@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CheckCircle2, Clock3, FileCheck2, Scale, ShieldCheck } from 'lucide-react'
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
   alternates: { canonical: `${SITE_URL}/recesso` },
-  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/recesso` , images: ['/og.png'], type: 'website',},
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/recesso` , images: anteprimaOg('/recesso'), type: 'website',},
   robots: { index: true, follow: true },
 }
 

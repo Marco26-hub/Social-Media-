@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import PublicHeader from '@/components/PublicHeader'
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Social Web Automation',
     locale: 'en_US',
-  images: ['/og.png'],
+  images: anteprimaOg('/en'),
   },
   twitter: {
     card: 'summary_large_image',

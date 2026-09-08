@@ -59,6 +59,7 @@ export type MarketingDetailConfig = {
   tabella?: { occhiello: string; h2: string; intro?: string; caption: string; colonne: string[]; righe: string[][] }
   priceNote?: string
   offerHighlight?: string
+  entryOffer?: { label: string; prezzo: string; cadenza: string; testo: string; href: string; cta: string }
   primaryCtaLabel?: string
   primaryCtaHref?: string
   icon: LucideIcon
@@ -71,6 +72,7 @@ export type MarketingDetailConfig = {
   faq: FaqBlock[]
   related: { href: string; label: string }[]
   portfolio?: PortfolioBlock[]
+  visualTheme?: 'gelateria'
 }
 
 const WHATSAPP_NUMBER = '393477196603'
@@ -113,7 +115,8 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
   const priceCadence = config.priceCadence
   // «A partire da» vale per i canoni che sono una soglia. Un prezzo chiuso, come
   // il pilot, non parte da niente: parte e finisce li'.
-  const priceLabel = config.priceLabel ?? (isEnglish ? 'Starting from' : 'A partire da')
+  const priceLabel = config.priceLabel
+    ?? (config.startingPrice ? (isEnglish ? 'Starting from' : 'A partire da') : (isEnglish ? 'Price' : 'Prezzo'))
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -190,8 +193,12 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
     ],
   }
 
+  const pageClassName = config.visualTheme === 'gelateria'
+    ? `${styles.page} ${styles.pageGelateria}`
+    : styles.page
+
   return (
-    <main id="main-content" className={styles.page}>
+    <main id="main-content" className={pageClassName}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <a className={styles.skipLink} href="#main-content">{isEnglish ? 'Skip to content' : 'Vai al contenuto'}</a>
       {!isEnglish && <PublicHeader ctaHref={whatsappUrl} ctaLabel="Parliamo del progetto" />}
@@ -231,12 +238,20 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           </div>
         </div>
         <aside className={styles.signalPanel} aria-label={`Sintesi ${config.serviceName}`}>
+          {config.visualTheme === 'gelateria' && (
+            <div className={styles.gelatoPreview} aria-hidden="true">
+              <span className={styles.gelatoScoopA} />
+              <span className={styles.gelatoScoopB} />
+              <span className={styles.gelatoScoopC} />
+              <span className={styles.gelatoCone} />
+            </div>
+          )}
           <div className={styles.signalHeading}>
             <span><Icon size={24} aria-hidden="true" /></span>
             <div><small>{isEnglish ? 'Managed service' : 'Servizio gestito'}</small><strong>{config.serviceName}</strong></div>
           </div>
           <div className={styles.startingPrice}>
-            <span>{config.startingPrice ? priceLabel : (isEnglish ? 'Price' : 'Prezzo')}</span>
+            <span>{priceLabel}</span>
             <strong>
               {config.startingPrice
                 ? (isEnglish
@@ -248,6 +263,14 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
             {config.offerHighlight && <b>{config.offerHighlight}</b>}
             {config.priceNote && <p>{config.priceNote}</p>}
           </div>
+          {config.entryOffer && (
+            <div className={styles.entryOffer}>
+              <span>{config.entryOffer.label}</span>
+              <strong>{config.entryOffer.prezzo} € <small>{config.entryOffer.cadenza}</small></strong>
+              <p>{config.entryOffer.testo}</p>
+              <Link href={config.entryOffer.href}>{config.entryOffer.cta} <ArrowRight size={15} aria-hidden="true" /></Link>
+            </div>
+          )}
           <p>{config.promise}</p>
           <ul>{config.signals.map(signal => <li key={signal}><CircleCheck size={16} aria-hidden="true" /> {signal}</li>)}</ul>
         </aside>
@@ -441,7 +464,10 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       </section>
 
       {!isEnglish && <PublicFooter />}
-      {!isEnglish && <FloatingNavigation />}
+      {/* I pulsanti «torna su» e «indietro» erano solo in italiano. Le etichette
+          sono tradotte da tempo dentro il componente: restava fuori la meta'
+          inglese del sito, senza motivo. */}
+      <FloatingNavigation />
     </main>
   )
 }

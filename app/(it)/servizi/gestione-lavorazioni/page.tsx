@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import { ClipboardCheck } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: `${SITE_URL}/servizi/gestione-lavorazioni` },
-  openGraph: { title, description, url: `${SITE_URL}/servizi/gestione-lavorazioni`, type: 'website' , images: ['/og.png']},
+  openGraph: { title, description, url: `${SITE_URL}/servizi/gestione-lavorazioni`, type: 'website' , images: anteprimaOg('/servizi/gestione-lavorazioni')},
   twitter: { card: 'summary_large_image', title, description },
 }
 

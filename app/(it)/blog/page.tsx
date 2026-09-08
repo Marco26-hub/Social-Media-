@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import Image from 'next/image'
 import Link from 'next/link'
 import { headers } from 'next/headers'
@@ -119,13 +120,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description: META_DESCRIPTION,
       url: `${context.base}/blog`,
       type: 'website',
-      images: [`${context.base}/og.png`],
+      images: anteprimaOg('/blog'),
     },
     twitter: {
       card: 'summary_large_image',
       title: META_TITLE,
       description: META_DESCRIPTION,
-      images: [`${context.base}/og.png`],
+      images: anteprimaOg('/blog'),
     },
     robots: hasPublishedArticles
       ? { index: true, follow: true }

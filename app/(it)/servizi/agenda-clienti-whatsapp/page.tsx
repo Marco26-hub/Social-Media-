@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import SegretariaLanding, { type ContenutoLanding } from '@/components/SegretariaLanding'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   description,
   keywords: ['recuperare clienti', 'riempire agenda', 'messaggi WhatsApp clienti', 'clienti che non tornano', 'richiami appuntamenti'],
   alternates: { canonical: `${SITE_URL}${path}` },
-  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' , images: ['/og.png']},
+  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' , images: anteprimaOg('/servizi/agenda-clienti-whatsapp')},
   twitter: { card: 'summary_large_image', title, description },
 }
 

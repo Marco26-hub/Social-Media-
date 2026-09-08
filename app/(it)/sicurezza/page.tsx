@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import LegalShell from '@/components/LegalShell'
 import { TITOLARE } from '@/lib/legal-config'
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
   alternates: { canonical: `${SITE_URL}/sicurezza` },
-  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/sicurezza` , images: ['/og.png'], type: 'website',},
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/sicurezza` , images: anteprimaOg('/sicurezza'), type: 'website',},
   robots: { index: true, follow: true },
 }
 

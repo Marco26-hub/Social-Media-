@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
     title: META_TITLE,
     description: META_DESCRIPTION,
     url: `${SITE_URL}/servizi`,
-  images: ['/og.png'],
+  images: anteprimaOg('/servizi'),
    type: 'website',},
   twitter: {
     title: META_TITLE,

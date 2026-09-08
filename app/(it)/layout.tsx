@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata, Viewport } from 'next'
 import '@/styles/globals.css'
 import JsonLd from '@/components/JsonLd'
@@ -51,13 +52,13 @@ export const metadata: Metadata = {
     // sostituisce l'intero oggetto: cinquantaquattro pagine uscivano senza
     // immagine, e trentasette di quelle chiedevano la card grande a Twitter
     // senza fornirla. Una card grande vuota e' peggio di una card piccola.
-    images: ['/og.png'],
+    images: anteprimaOg('/'),
   },
   twitter: {
     card: 'summary_large_image',
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: ['/og.png'],
+    images: anteprimaOg('/'),
   },
   robots: {
     index: true,

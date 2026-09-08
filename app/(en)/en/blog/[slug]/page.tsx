@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -49,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       url,
       type: 'article',
       locale: 'en_US',
-      images: [article.immagine_cover ? `${SITE_URL}${article.immagine_cover}` : `${SITE_URL}/og.png`],
+      images: article.immagine_cover ? [`${SITE_URL}${article.immagine_cover}`] : anteprimaOg('/en/blog'),
       ...(article.data_pubblicazione ? { publishedTime: article.data_pubblicazione } : {}),
     },
     twitter: { card: 'summary_large_image', title, description },

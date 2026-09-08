@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Mail, MessageCircle } from 'lucide-react'
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
       'x-default': `${SITE_URL}/autore/marco-dibenedetto`,
     },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/author/marco-dibenedetto`, type: 'profile', locale: 'en_US' , images: ['/og.png']},
+  openGraph: { title, description, url: `${SITE_URL}/en/author/marco-dibenedetto`, type: 'profile', locale: 'en_US' , images: anteprimaOg('/en/author/marco-dibenedetto')},
   twitter: { card: 'summary_large_image', title, description },
 }
 

@@ -1,3 +1,5 @@
+import { anteprimaOg } from '@/lib/anteprima'
+import { CANONE_A_CARICO_CLIENTE_EN, CANONE_BREVE_EN } from '@/lib/canone-incluso'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
@@ -17,8 +19,8 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/pricing`,
     languages: { 'it-IT': `${SITE_URL}/pacchetti`, en: `${SITE_URL}/en/pricing`, 'x-default': `${SITE_URL}/pacchetti` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/pricing`, locale: 'en_US' , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}/en/pricing`, locale: 'en_US' , images: anteprimaOg('/en/pricing'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/en/pricing') },
 }
 
 // Il prezzo numerico serve ai dati strutturati: l'etichetta e' testo per il
@@ -27,7 +29,7 @@ const offers = [
   { name: 'Presence', audience: 'Professionals and small businesses', valore: '490', ricorrente: true, setup: 'Setup included', price: EN_PRICE_LABELS.presence, result: 'Consistent presence across 2 social channels.', features: ['16 monthly content pieces per channel · 32 published posts', '4 Reels, Stories or Shorts per channel', 'Strategy, review and publishing'], href: '/register?piano=presenza', cta: 'Start Presence' },
   { name: 'Growth', audience: 'SMEs focused on results', badge: 'Most chosen', evidenza: true, valore: '990', ricorrente: true, setup: 'Setup included', price: EN_PRICE_LABELS.growth, result: 'A wider system across 2 social channels.', features: ['24 monthly content pieces per channel · 48 published posts', '6 Reels, Stories or Shorts per channel', '1 SEO + GEO article and competitor analysis', 'Organic growth only; paid campaigns sit in the custom plan'], href: '/register?piano=crescita', cta: 'Start Growth' },
   { name: 'Blog SEO + GEO', audience: 'Organic content', accento: 'blog', valore: BLOG_SERVICE.price, ricorrente: true, setup: '14 days to evaluate the service', price: EN_PRICE_LABELS.blog, result: 'Continuous organic editorial production.', features: ['12 articles per month', 'Metadata, FAQs and structured content', 'Human review', 'Connected-blog publishing or CMS-ready delivery'], href: '/acquista?servizio=blog-seo', cta: 'Activate Blog' },
-  { name: 'Basic Website', audience: 'Your own presence', accento: 'web', valore: '19.90', ricorrente: true, setup: 'Yours after 12 months of subscription', price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request website details' },
+  { name: 'Basic Website', audience: 'Your own presence', accento: 'web', valore: '19.90', ricorrente: true, setup: 'Yours after 12 months of subscription', price: EN_PRICE_LABELS.web, result: 'A landing page or essential website that supports conversion.', features: ['Simple landing page or basic corporate site', 'E-commerce quoted separately', 'Responsive UX and SEO foundations', CANONE_BREVE_EN, 'The website becomes yours after 12 months'], href: '/acquista?servizio=web-commerce', cta: 'Request website details' },
   { name: 'Video shot on site', audience: 'Businesses that publish weekly', accento: 'video', valore: String(VIDEO_PACCHETTI[0].prezzo), ricorrente: true, setup: 'Travel inside the agreed area included', price: EN_PRICE_LABELS.video, result: 'Filmed where you work, spread across the month.', features: [
     `${VIDEO_PACCHETTI[0].video} vertical videos a month in ${VIDEO_PACCHETTI[0].sessioni} filming session`,
     'Concept, script, shooting, editing, subtitles and graphics',
@@ -128,7 +130,7 @@ export default function EnglishPricingPage() {
               <p className={styles.setup}>{offer.setup}</p>
               <ul>{offer.features.map(feature => <li key={feature}><Check size={15} aria-hidden="true" /> {feature}</li>)}</ul>
               <Link className={styles.primary} href={offer.href}>{offer.cta} <ArrowRight size={15} aria-hidden="true" /></Link>
-              <p className={styles.note}>VAT excluded. Scope and eligibility confirmed before delivery.</p>
+              <p className={styles.note}>VAT excluded. Scope and eligibility confirmed before delivery. {CANONE_A_CARICO_CLIENTE_EN}</p>
             </article>
           ))}
         </div>

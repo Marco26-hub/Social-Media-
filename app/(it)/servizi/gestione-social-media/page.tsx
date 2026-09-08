@@ -1,3 +1,4 @@
+import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import { Megaphone } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
@@ -12,8 +13,8 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: `${SITE_URL}/servizi/gestione-social-media` },
-  openGraph: { title, description, url: `${SITE_URL}/servizi/gestione-social-media` , images: ['/og.png'], type: 'website',},
-  twitter: { title, description },
+  openGraph: { title, description, url: `${SITE_URL}/servizi/gestione-social-media` , images: anteprimaOg('/servizi/gestione-social-media'), type: 'website',},
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/servizi/gestione-social-media') },
 }
 
 const config = {
