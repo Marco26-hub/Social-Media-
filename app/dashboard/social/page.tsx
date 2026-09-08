@@ -151,6 +151,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
   const [assetUrl, setAssetUrl] = useState('')
   const [uploading, setUploading] = useState(false)
   const [prodottoNome, setProdottoNome] = useState('')
+  const [selectedProductId, setSelectedProductId] = useState('')
   const [prodotti, setProdotti] = useState<Array<{ id: string; product_id: string; nome_prodotto: string; link_img_1: string | null; link_img_2: string | null; link_img_3: string | null }>>([])
   const demo = useRuntimeDemo()
   const { clienteId, loading: loadingCliente } = useActiveClienteId()
@@ -185,6 +186,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     setCrossCanali(new Set())
     setQuality('auto')
     setProdottoNome('')
+    setSelectedProductId('')
     setAssetUrl('')
     setAssets(previous => {
       previous.forEach(asset => {
@@ -266,6 +268,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
     }
     setErrors(prev => { const n = { ...prev }; delete n.prodotto; return n })
     setProdottoNome(p.nome_prodotto)
+    setSelectedProductId(p.product_id)
     setAssets(prev => {
       const existing = new Set(prev.map(a => a.url))
       const nuovi: UploadedAsset[] = imgs.filter(u => !existing.has(u)).map(u => ({ name: p.nome_prodotto, url: u, source: 'url' as const }))
@@ -403,6 +406,7 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
           formato: f.formato,
           tema: prodottoNome.trim() || undefined,
           nome_prodotto: prodottoNome.trim() || undefined,
+          product_id: selectedProductId || undefined,
           quality,
           business_category: businessCategory,
           creative_mode: creativeMode,
@@ -666,7 +670,10 @@ function PlatformContent({ config }: { config: typeof PLATFORMS[PlatformKey] }) 
           </label>
           <input
             value={prodottoNome}
-            onChange={event => setProdottoNome(event.target.value)}
+            onChange={event => {
+              setProdottoNome(event.target.value)
+              setSelectedProductId('')
+            }}
             className="input text-xs mt-1"
             placeholder="Es: Camicia Riva azzurra in lino, Cappellino Darsena"
           />

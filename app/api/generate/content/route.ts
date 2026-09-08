@@ -25,6 +25,7 @@ import { buildBusinessCategoryContext, resolveBusinessCategory, type BusinessCat
 import { buildContentSeriesContext } from '@/lib/content-series'
 import { buildCreativeModeContext, normalizeCreativeMode } from '@/lib/creative-mode'
 import { isVisionModel } from '@/lib/ai-model'
+import { resolveGenerationProduct } from '@/lib/product-selection'
 
 type PromptSpec = {
   persona: string
@@ -587,10 +588,14 @@ export async function POST(request: Request) {
       warnings.push(`Profilo Brand assente o incompleto: usata la categoria ${activeBusinessCategory.label} con dati generici; completa il Profilo Brand prima dell'approvazione.`)
     }
     const contentQuality = resolveContentQuality({ requestedQuality, piano: client?.piano })
-    const matchedProduct = (products as Array<Record<string, unknown>>).find(p => p.product_id === product_id)
-    // product_id fornito ma inesistente → ripieghiamo sul primo prodotto, MA lo diciamo.
-    if (product_id && !matchedProduct) warnings.push(`product_id "${product_id}" non trovato: usato il primo prodotto del catalogo.`)
-    const product = matchedProduct || products[0] || {}
+    const productRows = products as Array<Record<string, unknown>>
+    const productSelection = resolveGenerationProduct(productRows, product_id, nome_prodotto)
+    if (productSelection.missingRequestedId) {
+      warnings.push(`product_id "${product_id}" non trovato: nessun prodotto sostitutivo e stato associato.`)
+    }
+    // Un nome scritto a mano non autorizza a prendere il primo prodotto del
+    // catalogo: si rischierebbe di salvare link, prezzo o dati di un altro capo.
+    const product = productSelection.product
 
     const brandContext = buildBrandContext(brand)
     const qualityContext = buildQualityContext({ quality: contentQuality, canale, formato, obiettivo })
