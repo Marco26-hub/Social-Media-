@@ -11,6 +11,7 @@ import CorsoAiActForm from '@/components/CorsoAiActForm'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
 import styles from './consulenza.module.css'
+import { CONSULENZA_PREZZO } from '@/lib/consulenza-listino'
 
 const WHATSAPP_URL = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei informazioni sulla consulenza legale AI e GDPR con Studio BCS.')}`
 
@@ -75,7 +76,7 @@ function ConsulenzaForm() {
         <label>Email<input type="email" value={email} onChange={event => setEmail(event.target.value)} required autoComplete="email" placeholder="mario@azienda.it" /></label>
         <label>Telefono <span>(opzionale)</span><input value={telefono} onChange={event => setTelefono(event.target.value)} autoComplete="tel" placeholder="+39 ..." /></label>
         <label>Argomento <span>(opzionale)</span><textarea value={messaggio} onChange={event => setMessaggio(event.target.value)} placeholder="Es. AI Act, privacy, contratti, copyright..." /></label>
-        <button type="submit" disabled={loading}>{loading ? 'Attendi…' : <>Paga 150 € e prenota <ArrowRight size={17} aria-hidden="true" /></>}</button>
+        <button type="submit" disabled={loading}>{loading ? 'Attendi…' : <>Paga {CONSULENZA_PREZZO} e prenota <ArrowRight size={17} aria-hidden="true" /></>}</button>
       </form>
       <p className={styles.secure}><ShieldCheck size={14} aria-hidden="true" /> Pagamento gestito da Stripe. Consulenza erogata dallo Studio Legale BCS.</p>
     </div>

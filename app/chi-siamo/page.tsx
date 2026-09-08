@@ -77,7 +77,8 @@ export const metadata: Metadata = {
     title: META_TITLE,
     description: META_DESCRIPTION,
     url: `${SITE_URL}/chi-siamo`,
-  },
+  images: ['/og.png'],
+   type: 'website',},
   twitter: {
     title: META_TITLE,
     description: META_DESCRIPTION,

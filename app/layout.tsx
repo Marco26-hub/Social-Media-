@@ -46,11 +46,17 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Social Web Automation',
     locale: 'it_IT',
+    // Mancava, e in Next.js una pagina che dichiara il proprio openGraph
+    // sostituisce l'intero oggetto: cinquantaquattro pagine uscivano senza
+    // immagine, e trentasette di quelle chiedevano la card grande a Twitter
+    // senza fornirla. Una card grande vuota e' peggio di una card piccola.
+    images: ['/og.png'],
   },
   twitter: {
     card: 'summary_large_image',
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
+    images: ['/og.png'],
   },
   robots: {
     index: true,

@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: `${SITE_URL}/servizi/gestione-lavorazioni` },
-  openGraph: { title, description, url: `${SITE_URL}/servizi/gestione-lavorazioni`, type: 'website' },
+  openGraph: { title, description, url: `${SITE_URL}/servizi/gestione-lavorazioni`, type: 'website' , images: ['/og.png']},
   twitter: { card: 'summary_large_image', title, description },
 }
 

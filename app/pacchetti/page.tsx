@@ -12,6 +12,7 @@ import { STANDALONE_SERVICES } from '@/lib/standalone-services'
 import { SITE_URL } from '@/lib/site-config'
 import base from '../content-page.module.css'
 import styles from './pacchetti.module.css'
+import { CONSULENZA_LEGALE, CONSULENZA_PREZZO, CORSO_AI_ACT, CORSO_PREZZO } from '@/lib/consulenza-listino'
 import { PREZZI } from '@/lib/prezzi-ingresso'
 
 const title = 'Pacchetti Social, Blog, Siti Web e Lead B2B | SWA'
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/pacchetti`,
     languages: { 'it-IT': `${SITE_URL}/pacchetti`, en: `${SITE_URL}/en/pricing`, 'x-default': `${SITE_URL}/pacchetti` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/pacchetti` },
+  openGraph: { title, description, url: `${SITE_URL}/pacchetti` , images: ['/og.png'], type: 'website',},
   twitter: { title, description },
 }
 
@@ -347,13 +348,13 @@ export default function PacchettiPage() {
           <article>
             <span>Consulenza individuale</span>
             <h3>AI Act e GDPR, sul tuo caso</h3>
-            <p><strong>150 €</strong> per 30 minuti, IVA esclusa</p>
+            <p><strong>{CONSULENZA_PREZZO}</strong> per {CONSULENZA_LEGALE.durataMinuti} minuti, IVA esclusa</p>
             <Link href="/consulenza">Prenota la consulenza <ArrowRight size={15} aria-hidden="true" /></Link>
           </article>
           <article>
-            <span>In arrivo</span>
+            <span>{CORSO_AI_ACT.stato}</span>
             <h3>Video corsi AI Act per PMI</h3>
-            <p><strong>2.000 €</strong> a persona, IVA esclusa</p>
+            <p><strong>{CORSO_PREZZO}</strong> {CORSO_AI_ACT.perChi}, IVA esclusa</p>
             <Link href="/consulenza#corso-ai-act">Prenota il posto <ArrowRight size={15} aria-hidden="true" /></Link>
           </article>
         </div>

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/method`,
     languages: { 'it-IT': `${SITE_URL}/metodo`, en: `${SITE_URL}/en/method`, 'x-default': `${SITE_URL}/metodo` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/method`, locale: 'en_US' },
+  openGraph: { title, description, url: `${SITE_URL}/en/method`, locale: 'en_US' , images: ['/og.png'], type: 'website',},
   twitter: { title, description },
 }
 

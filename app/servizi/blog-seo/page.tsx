@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: `${SITE_URL}${BLOG_SERVICE.path}` },
-  openGraph: { title, description, url: `${SITE_URL}${BLOG_SERVICE.path}` },
+  openGraph: { title, description, url: `${SITE_URL}${BLOG_SERVICE.path}` , images: ['/og.png'], type: 'website',},
   twitter: { title, description },
 }
 

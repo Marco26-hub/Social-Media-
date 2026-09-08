@@ -59,7 +59,8 @@ export const metadata: Metadata = {
     title: META_TITLE,
     description: META_DESCRIPTION,
     url: `${SITE_URL}/servizi`,
-  },
+  images: ['/og.png'],
+   type: 'website',},
   twitter: {
     title: META_TITLE,
     description: META_DESCRIPTION,
@@ -687,6 +688,11 @@ export default function ServiziPage() {
           <Link href="/blog">Journal</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/termini">Termini</Link>
+          <Link href="/cookie-policy">Cookie</Link>
+          <Link href="/recesso">Recesso</Link>
+          <Link href="/accessibilita">Accessibilità</Link>
+          <Link href="/sicurezza">Sicurezza</Link>
+          <Link href="/en" hrefLang="en">English</Link>
           <Link href="/login">Accesso</Link>
         </div>
         <p>

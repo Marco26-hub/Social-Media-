@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/about`,
     languages: { 'it-IT': `${SITE_URL}/chi-siamo`, en: `${SITE_URL}/en/about`, 'x-default': `${SITE_URL}/chi-siamo` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/about`, locale: 'en_US' },
+  openGraph: { title, description, url: `${SITE_URL}/en/about`, locale: 'en_US' , images: ['/og.png'], type: 'website',},
   twitter: { title, description },
 }
 

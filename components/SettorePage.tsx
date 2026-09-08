@@ -50,7 +50,7 @@ export function metadataSettore(settore: Settore, locale: SettoreLocale = 'it'):
         ? { 'it-IT': `${SITE_URL}${italiano}`, en: `${SITE_URL}${inglese}`, 'x-default': `${SITE_URL}${italiano}` }
         : undefined,
     },
-    openGraph: { title: settore.titoloSeo, description: settore.descrizioneSeo, url, type: 'website', locale: locale === 'en' ? 'en_US' : 'it_IT' },
+    openGraph: { title: settore.titoloSeo, description: settore.descrizioneSeo, url, type: 'website', locale: locale === 'en' ? 'en_US' : 'it_IT' , images: ['/og.png']},
     twitter: { card: 'summary_large_image', title: settore.titoloSeo, description: settore.descrizioneSeo },
   }
 }

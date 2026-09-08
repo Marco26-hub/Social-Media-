@@ -1,3 +1,4 @@
+import { numeroItaliano } from '@/lib/euro'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { VIDEO_COMPRESO, VIDEO_PACCHETTI } from '@/lib/video-listino'
 
@@ -205,7 +206,7 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
     name: `Riprese video — ${v.nome}`,
     shortName: `Video ${v.nome}`,
     amountCents: v.prezzo * 100,
-    displayPrice: `€${v.prezzo.toLocaleString('it-IT')}`,
+    displayPrice: `€${numeroItaliano(v.prezzo)}`,
     billingMode: 'subscription' as const,
     cadenceLabel: 'al mese',
     description: `${v.video} video verticali al mese girati in azienda, in ${v.sessioni} ${v.sessioni === 1 ? 'sessione di ripresa' : 'sessioni di ripresa'}.`,

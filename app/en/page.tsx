@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en`,
     languages: { 'it-IT': SITE_URL, en: `${SITE_URL}/en`, 'x-default': SITE_URL },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en`, locale: 'en' },
+  openGraph: { title, description, url: `${SITE_URL}/en`, locale: 'en' , images: ['/og.png'], type: 'website',},
   twitter: { title, description },
 }
 

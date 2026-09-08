@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description,
   keywords: ['recuperare clienti', 'riempire agenda', 'messaggi WhatsApp clienti', 'clienti che non tornano', 'richiami appuntamenti'],
   alternates: { canonical: `${SITE_URL}${path}` },
-  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' },
+  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' , images: ['/og.png']},
   twitter: { card: 'summary_large_image', title, description },
 }
 

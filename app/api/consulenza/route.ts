@@ -5,11 +5,14 @@ import { isDemo } from '@/lib/demo'
 import { sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 import { stripeConfigured, createOneOffCheckoutSession } from '@/lib/stripe'
 import { checkBotId } from 'botid/server'
+import { CONSULENZA_LEGALE } from '@/lib/consulenza-listino'
 
 export const dynamic = 'force-dynamic'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const IMPORTO_CENTS = 15000 // €150
+// Dalla sorgente, non a mano: il prezzo mostrato e l'importo addebitato
+// devono nascere dallo stesso numero.
+const IMPORTO_CENTS = CONSULENZA_LEGALE.importoCents
 
 function baseUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'https://www.socialautomation.app').replace(/\/$/, '')

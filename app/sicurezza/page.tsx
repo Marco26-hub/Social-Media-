@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
   alternates: { canonical: `${SITE_URL}/sicurezza` },
-  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/sicurezza` },
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/sicurezza` , images: ['/og.png'], type: 'website',},
   robots: { index: true, follow: true },
 }
 

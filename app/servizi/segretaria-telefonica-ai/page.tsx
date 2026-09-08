@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description,
   keywords: ['segretaria telefonica AI', 'centralino AI', 'risponditore automatico appuntamenti', 'assistente vocale AI', 'chiamate perse'],
   alternates: { canonical: `${SITE_URL}${path}` },
-  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' },
+  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' , images: ['/og.png']},
   twitter: { card: 'summary_large_image', title, description },
 }
 

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: META_TITLE,
   description: META_DESCRIPTION,
   alternates: { canonical: `${SITE_URL}/termini` },
-  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/termini` },
+  openGraph: { title: META_TITLE, description: META_DESCRIPTION, url: `${SITE_URL}/termini` , images: ['/og.png'], type: 'website',},
   robots: { index: true, follow: true },
 }
 

@@ -32,7 +32,7 @@ export const metadata: Metadata = {
       'x-default': `${SITE_URL}/autore/marco-dibenedetto`,
     },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/author/marco-dibenedetto`, type: 'profile', locale: 'en_US' },
+  openGraph: { title, description, url: `${SITE_URL}/en/author/marco-dibenedetto`, type: 'profile', locale: 'en_US' , images: ['/og.png']},
   twitter: { card: 'summary_large_image', title, description },
 }
 

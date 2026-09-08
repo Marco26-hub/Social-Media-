@@ -20,6 +20,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Social Web Automation',
     locale: 'en_US',
+  images: ['/og.png'],
   },
   twitter: {
     card: 'summary_large_image',
@@ -49,7 +50,17 @@ export default function EnglishLayout({ children }: Readonly<{ children: React.R
           <Link href="/en/contact">Contact</Link>
           <a href="https://www.instagram.com/socialwebautomation/" target="_blank" rel="noopener noreferrer">Instagram</a>
           <a href="https://www.facebook.com/profile.php?id=61592835840985" target="_blank" rel="noopener noreferrer">Facebook</a>
-          <Link href="/privacy">Privacy</Link>
+          {/* I documenti legali sono in italiano — sono atti che vincolano e non
+              vanno tradotti senza revisione — ma devono essere raggiungibili
+              anche da qui: prima dall'inglese si arrivava solo alla privacy. */}
+          <Link href="/privacy" hrefLang="it" lang="it">Privacy</Link>
+          <Link href="/termini" hrefLang="it" lang="it">Terms</Link>
+          <Link href="/cookie-policy" hrefLang="it" lang="it">Cookie</Link>
+          <Link href="/recesso" hrefLang="it" lang="it">Withdrawal</Link>
+          <Link href="/accessibilita" hrefLang="it" lang="it">Accessibility</Link>
+          <Link href="/sicurezza" hrefLang="it" lang="it">Security</Link>
+          <Link href="/en/author/marco-dibenedetto">Author</Link>
+          <Link href="/en/blog">Journal</Link>
           <Link href="/" lang="it">Italiano</Link>
         </div>
         <p className={styles.legal}>Social Web Automation di Marco Dibenedetto · VAT IT03786790133 · Cermenate (CO), Italy</p>

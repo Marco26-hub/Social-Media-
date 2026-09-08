@@ -3,6 +3,7 @@ import { Clapperboard } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { VIDEO_CONSEGNA, VIDEO_ESCLUSO, VIDEO_PACCHETTI, euroVideo } from '@/lib/video-listino'
 import { SITE_URL } from '@/lib/site-config'
+import { euro } from '@/lib/euro'
 
 // Riprese in azienda: l’anello che mancava. Fino a ieri montavamo il materiale
 // che il cliente girava da solo, con i limiti che aveva. Qui la materia prima
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
   description,
   keywords: ['riprese video aziendali', 'video per social', 'fotografo aziendale', 'reel professionali', 'volto per i video', 'produzione video PMI'],
   alternates: { canonical: `${SITE_URL}${path}` },
-  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' },
+  openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' , images: ['/og.png']},
   twitter: { card: 'summary_large_image', title, description },
 }
 
@@ -64,7 +65,7 @@ const config = {
     { q: 'Il montaggio è compreso nel prezzo delle riprese?', a: 'Montaggio, sottotitoli e pubblicazione fanno parte del piano social attivo, non delle riprese. Le riprese producono la materia prima; il piano la trasforma in uscite programmate. Si sommano, non si sostituiscono: senza un piano attivo il girato resta materiale che qualcuno deve montare.' },
     { q: 'Che attrezzatura portate?', a: 'Fotografo, luci, microfoni dedicati, stabilizzazione e ottiche. La differenza in un video aziendale non la fa la risoluzione della fotocamera: la fanno luce controllata, audio pulito e inquadrature stabili, che sono esattamente le tre cose che mancano quando si gira in fretta con quello che c’è.' },
     { q: 'Escono anche le foto o solo i video?', a: 'Dalla stessa sessione escono anche gli scatti fotografici, ed è uno dei motivi per cui conviene: le immagini servono ai post, alle copertine e al sito, e organizzare un secondo giorno con un fotografo costa più della mezza giornata in cui si fa tutto insieme.' },
-    { q: 'Quanto costano le riprese?', a: `Ci sono quattro pacchetti, e il canone scende in proporzione man mano che i video aumentano: ${VIDEO_PACCHETTI.map(v => `${v.nome} ${v.video} video a ${v.prezzo.toLocaleString('it-IT')} €`).join(', ')}. Sono canoni mensili e si disdicono con il preavviso scritto nel contratto. Un singolo video promozionale su misura parte da 800 € sul mercato italiano: qui si gira a lotto, cinque video per sessione invece di uno alla volta, ed è questa la ragione della differenza. Prezzi IVA esclusa, spostamento nell’area concordata compreso. Allestimenti particolari, più location o un volto professionista si quotano dopo il sopralluogo.` },
+    { q: 'Quanto costano le riprese?', a: `Ci sono quattro pacchetti, e il canone scende in proporzione man mano che i video aumentano: ${VIDEO_PACCHETTI.map(v => `${v.nome} ${v.video} video a ${euro(v.prezzo)}`).join(', ')}. Sono canoni mensili e si disdicono con il preavviso scritto nel contratto. Un singolo video promozionale su misura parte da 800 € sul mercato italiano: qui si gira a lotto, cinque video per sessione invece di uno alla volta, ed è questa la ragione della differenza. Prezzi IVA esclusa, spostamento nell’area concordata compreso. Allestimenti particolari, più location o un volto professionista si quotano dopo il sopralluogo.` },
     { q: 'I video restano miei?', a: 'Sì, il girato e le foto prodotte sono tuoi. Li usi dove vuoi — social, sito, annunci, presentazioni — anche se un domani cambi fornitore. Quello che paghi è materiale che resta, non un accesso che scade con l’abbonamento.' },
   ],
   related: [

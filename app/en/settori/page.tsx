@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/en/settori`,
     languages: { 'it-IT': `${SITE_URL}/settori`, en: `${SITE_URL}/en/settori`, 'x-default': `${SITE_URL}/settori` },
   },
-  openGraph: { title, description, url: `${SITE_URL}/en/settori`, type: 'website', locale: 'en_US' },
+  openGraph: { title, description, url: `${SITE_URL}/en/settori`, type: 'website', locale: 'en_US' , images: ['/og.png']},
   twitter: { card: 'summary_large_image', title, description },
 }
 

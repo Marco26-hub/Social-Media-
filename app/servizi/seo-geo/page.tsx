@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: `${SITE_URL}/servizi/seo-geo` },
-  openGraph: { title, description, url: `${SITE_URL}/servizi/seo-geo` },
+  openGraph: { title, description, url: `${SITE_URL}/servizi/seo-geo` , images: ['/og.png'], type: 'website',},
   twitter: { title, description },
 }
 

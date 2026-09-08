@@ -48,7 +48,8 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-  },
+  images: ['/og.png'],
+   type: 'website',},
   twitter: {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
@@ -682,6 +683,15 @@ export default function LandingPage() {
           <Link href="/blog">Journal</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/termini">Termini</Link>
+          {/* Cookie policy, recesso, accessibilita e sicurezza erano raggiungibili
+              solo dalle altre pagine legali: da nessuna pagina commerciale e da
+              nessuna pagina inglese. Un documento che esiste ma non si raggiunge
+              vale come se non ci fosse. */}
+          <Link href="/cookie-policy">Cookie</Link>
+          <Link href="/recesso">Recesso</Link>
+          <Link href="/accessibilita">Accessibilità</Link>
+          <Link href="/sicurezza">Sicurezza</Link>
+          <Link href="/en" hrefLang="en">English</Link>
           <Link href="/login">Accesso</Link>
         </div>
         <p>

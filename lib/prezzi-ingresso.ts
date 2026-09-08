@@ -1,4 +1,5 @@
 import { BLOG_SERVICE } from '@/lib/blog-service'
+import { CONSULENZA_LEGALE, CONSULENZA_PREZZO } from '@/lib/consulenza-listino'
 import { PACCHETTI } from '@/lib/pacchetti'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { STANDALONE_SERVICES } from '@/lib/standalone-services'
@@ -82,7 +83,7 @@ export const PREZZO_INGRESSO: Record<string, string> = {
   'video-produzione': VIDEO_DA,
   'gestione-lavorazioni': 'Su preventivo',
   automazione: 'Su preventivo',
-  legale: '150 € / 30 minuti',
+  legale: `${CONSULENZA_PREZZO} / ${CONSULENZA_LEGALE.durataMinuti} minuti`,
 }
 
 export function prezzoIngresso(id: string): string {

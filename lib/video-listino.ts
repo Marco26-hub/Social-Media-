@@ -1,3 +1,4 @@
+import { euro } from '@/lib/euro'
 // Pacchetti di produzione video verticale.
 //
 // Sono a lotto: una sessione produce cinque video, non uno. E' la ragione per
@@ -61,5 +62,5 @@ export const VIDEO_ESCLUSO =
 export const VIDEO_DA = `da ${VIDEO_PACCHETTI[0].prezzo} € al mese`
 
 export function euroVideo(p: PacchettoVideo): string {
-  return `${p.prezzo.toLocaleString('it-IT')} €`
+  return euro(p.prezzo)
 }
