@@ -28,10 +28,14 @@ function canoneStandalone(slug: string): string {
   return convenzioneItaliana(`${servizio.displayPrice} ${servizio.cadenceLabel}`)
 }
 
-function canoneMinimo(id: 'agenda' | 'voce'): string {
+function canoneNudoMinimo(id: 'agenda' | 'voce'): string {
   const famiglia = SEGRETARIA_LISTINO.find(f => f.id === id)
   if (!famiglia) throw new Error(`Famiglia sconosciuta: ${id}`)
-  return `da ${Math.min(...famiglia.piani.map(p => p.canone))} € al mese`
+  return `${Math.min(...famiglia.piani.map(p => p.canone))} € al mese`
+}
+
+function canoneMinimo(id: 'agenda' | 'voce'): string {
+  return `da ${canoneNudoMinimo(id)}`
 }
 
 /** Usato nei testi discorsivi delle pagine di settore. */
@@ -47,6 +51,19 @@ export const PREZZI = {
   agenda: canoneMinimo('agenda'),
   // I pacchetti video hanno un prezzo pubblico dal settembre 2026.
   video: VIDEO_DA,
+} as const
+
+/**
+ * Gli stessi canoni senza il prefisso «da» / «a partire da», per le frasi che
+ * il prefisso ce l'hanno gia: «il sito parte da ${CANONE.web}». Usando PREZZI
+ * in quelle posizioni usciva «parte da a partire da 19,90 € al mese», ed e'
+ * esattamente il difetto che si leggeva su nove pagine di settore.
+ */
+export const CANONE = {
+  web: canoneStandalone('web-commerce'),
+  voce: canoneNudoMinimo('voce'),
+  agenda: canoneNudoMinimo('agenda'),
+  video: convenzioneItaliana(VIDEO_DA.replace('da ', '')),
 } as const
 
 /**

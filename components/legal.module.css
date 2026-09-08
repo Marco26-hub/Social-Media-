@@ -97,3 +97,23 @@
   border: 1px solid rgba(34, 63, 44, 0.22); color: #223f2c;
 }
 .relatedLinks a:hover { background: rgba(34, 63, 44, 0.06); }
+
+/* Riquadro di stato dentro un documento legale: serve a dichiarare che cosa e
+   attivo davvero, quando la tabella sopra descrive anche una predisposizione.
+   Deve leggersi come una nota del Titolare, non come un avviso di errore. */
+.nota {
+  margin: 18px 0 0;
+  padding: 16px 18px;
+  border-left: 3px solid rgba(34, 63, 44, 0.35);
+  border-radius: 0 7px 7px 0;
+  background: rgba(34, 63, 44, 0.05);
+  color: #223f2c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.nota code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(34, 63, 44, 0.1);
+  font-size: 13px;
+}

@@ -35,6 +35,7 @@ import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicHeader from '@/components/PublicHeader'
 import SegretariaPopup from '@/components/SegretariaPopup'
 import styles from './landing.module.css'
+import { PREZZI } from '@/lib/prezzi-ingresso'
 
 export const metadata: Metadata = {
   title: SITE_TITLE,
@@ -165,7 +166,7 @@ const SERVICES = [
     title: 'Il telefono che squilla mentre lavori',
     ancora: 'l’assistente telefonico',
     text: 'Risponde al posto tuo con il tuo listino, informa, fissa l’appuntamento e ti lascia la trascrizione.',
-    items: ['Da 199 € al mese, 300 minuti inclusi', 'Dice solo cose che hai approvato', 'Passa a una persona quando serve', 'Registro delle chiamate con esito'],
+    items: ['Da 199 € al mese, 600 minuti inclusi', 'Dice solo cose che hai approvato', 'Passa a una persona quando serve', 'Registro delle chiamate con esito'],
   },
   {
     icon: CalendarClock,
@@ -248,7 +249,7 @@ const PROCESS = [
 const FAQ = [
   { q: 'Che cosa fate, in concreto?', a: 'Ci occupiamo del lavoro digitale che un’azienda non ha tempo di fare: i contenuti social e i video, il sito, la visibilità sui motori di ricerca, la ricerca di clienti B2B, il telefono che risponde quando sei occupato e i sistemi che tolgono passaggi manuali. Sono dieci aree: si attivano una alla volta oppure insieme, e ognuna ha il suo prezzo pubblico.' },
   { q: 'Chi ci lavora davvero?', a: 'Social Web Automation è la ditta individuale di Marco Dibenedetto, con sede a Cermenate in provincia di Como. Il lavoro è coordinato da una persona sola, con specialisti selezionati area per area: quando chiami risponde sempre la stessa persona, e quella persona conosce anche il tuo sito. Non è un centralino e non è un software da imparare.' },
-  { q: 'Da quanto si parte?', a: 'Il gradino più basso è il sito, a partire da 19,90 € al mese per una landing semplice. Il blog costa 29,90 € al mese per dodici articoli, la ricerca clienti B2B 149 € una tantum, l’assistente telefonico da 199 € al mese e la gestione social 490 € al mese. Tutti i prezzi sono pubblici sulla pagina dei pacchetti, IVA esclusa.' },
+  { q: 'Da quanto si parte?', a: `Il gradino più basso è il sito, ${PREZZI.web} per una landing semplice. Il blog costa ${PREZZI.blog} per dodici articoli, la ricerca clienti B2B ${PREZZI.b2b}, l’assistente telefonico ${PREZZI.voce} e la gestione social ${PREZZI.presenza}. Tutti i prezzi sono pubblici sulla pagina dei pacchetti, IVA esclusa.` },
   { q: 'In quanto tempo si vedono le prime cose?', a: 'I primi contenuti arrivano entro il primo mese di lavoro, e li vedi prima che escano. Quello che non si può promettere è quando arrivano i risultati commerciali: dipendono dal mercato, dai concorrenti e da quanto è già solida la tua presenza. Per questo garantiamo il processo e non il posizionamento.' },
   { q: 'E se non mi trovo bene?', a: 'Il rinnovo è mensile e non ci sono vincoli di durata nascosti: si disdice per il periodo successivo. I contenuti prodotti restano tuoi, gli account social sono sempre stati tuoi, e dopo dodici mesi di canone il sito diventa di tua proprietà. Perimetro, costi esclusi e modalità di uscita sono scritti prima della firma.' },
   { q: 'Posso vedere come lavorate prima di pagare?', a: 'Sì. Richiedi un contenuto di prova gratuito: lo produciamo sul tuo caso reale, così valuti tono, qualità e metodo su qualcosa che riguarda la tua attività invece che su un portfolio di altri. Da lì si decide se ha senso andare avanti.' },

@@ -11,6 +11,9 @@
 .summary > p:not(.eyebrow):not(.renewal) { color: #52655e; line-height: 1.6; }
 .price { display: flex; align-items: baseline; gap: 10px; margin: 28px 0; padding: 20px 0; border-block: 1px solid #d8e1dc; }
 .price strong { font-size: 36px; }.price span { color: #5d6e68; }
+/* «a partire da» sta accanto alla cifra, non dentro: e una qualifica del
+   prezzo, non parte del numero, e in corpo 36 la leggerebbe come tale. */
+.price em { color: #5d6e68; font-size: 14px; font-style: normal; }
 .summary ul { padding: 0; margin: 0; list-style: none; display: grid; gap: 12px; }
 .summary li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; line-height: 1.45; }.summary li svg { color: #168553; margin-top: 2px; }
 .onboarding { margin-top: 28px; padding: 18px; border-left: 3px solid #168553; background: #e9f3ee; }.onboarding p { margin: 5px 0 0; line-height: 1.5; }
@@ -39,3 +42,15 @@
 .totaleRiga { margin-top: 6px; padding-top: 11px !important; border-top: 1px solid #d8e1dc; font-size: 15px !important; color: #15231f !important; }
 .totaleRiga b { font-size: 19px; }
 .totale > p { margin: 10px 0 0; color: #5C6B63; font-size: 12px; line-height: 1.5; }
+
+/* Nota di pagamento sicuro, sotto il pulsante. Dice dove finisce la carta:
+   e' l'ultima domanda che una persona si fa prima di cliccare. */
+.pagamentoSicuro {
+  display: flex; align-items: flex-start; gap: 9px;
+  margin: 16px 0 0; padding: 13px 15px;
+  border: 1px solid #d8e1dc; border-radius: 8px;
+  background: #f6f9f7; color: #46584f;
+  font-size: 12.5px; line-height: 1.55;
+}
+.pagamentoSicuro svg { flex: none; margin-top: 2px; color: #0f6b4f; }
+.pagamentoSicuro a { color: #0f6b4f; text-decoration: underline; text-underline-offset: 3px; }

@@ -43,14 +43,23 @@ export default function CookiePolicyPage() {
         </table>
       </div>
       <p>
-        I cookie tecnici sono sempre attivi perché necessari. I cookie marketing vengono caricati solo dopo consenso esplicito
-        tramite banner e sono usati per Meta Pixel e Conversions API.
+        I cookie tecnici sono sempre attivi perché necessari. I cookie marketing vengono caricati <strong>solo</strong> dopo
+        consenso esplicito tramite banner, e servono a Meta Pixel e Conversions API.
+      </p>
+      <p className={styles.nota}>
+        <strong>Stato attuale: il Meta Pixel è predisposto ma non attivo.</strong> La Content-Security-Policy del sito non
+        ammette lo script di Meta, quindi oggi i cookie <code>_fbp</code> e <code>_fbc</code> <strong>non vengono impostati
+        nemmeno se dai il consenso</strong>. Li elenchiamo lo stesso perché la predisposizione esiste: quando verrà attivata,
+        questa riga sparirà e la tabella sopra descriverà il comportamento reale. Preferiamo dichiarare più di quanto facciamo,
+        mai il contrario.
       </p>
 
       <h2>3. Cookie di terze parti</h2>
-      <p>Il sito può utilizzare Meta Pixel per misurare visite, lead e avvii di checkout collegati alle campagne pubblicitarie.
-        Le informazioni sono trattate secondo le impostazioni e le informative di Meta. Eventuali ulteriori strumenti di analisi,
-        pixel pubblicitari o contenuti incorporati verranno indicati in questa tabella prima dell’attivazione.</p>
+      <p>Alla data di aggiornamento di questa pagina il sito <strong>non carica alcuno script di terze parti</strong>: nessun
+        strumento di analisi, nessun pixel pubblicitario attivo, nessun contenuto incorporato. La predisposizione per Meta Pixel
+        — misurazione di visite, lead e avvii di checkout collegati alle campagne — è descritta al punto precedente e resta
+        subordinata sia al tuo consenso sia all’attivazione tecnica.</p>
+      <p>Ogni ulteriore strumento verrà indicato nella tabella <strong>prima</strong> dell’attivazione, non dopo.</p>
 
       <h2>4. Gestione del consenso</h2>
       <p>Puoi modificare o revocare le tue preferenze in qualsiasi momento tramite il banner cookie (che ricompare alla revoca)

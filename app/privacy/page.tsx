@@ -105,21 +105,46 @@ export default function PrivacyPage() {
         <li><strong>Dati account</strong>: per tutta la durata del rapporto e fino a 24 mesi dopo la cessazione.</li>
         <li><strong>Dati di fatturazione</strong>: 10 anni (obbligo civilistico/fiscale).</li>
         <li><strong>Dichiarazioni di recesso e disdetta</strong>: fino a 10 anni per documentare la richiesta e gestire eventuali contestazioni, salvo diverso obbligo di legge.</li>
+        <li><strong>Contenuti caricati</strong> (immagini, testi, dati di brand e prodotti): per tutta la durata del rapporto e fino a 24 mesi dopo la cessazione, insieme ai dati account. La cancellazione anticipata si può chiedere in qualsiasi momento.</li>
         <li><strong>Log tecnici</strong>: massimo 12 mesi.</li>
         <li><strong>Dati marketing</strong>: fino a revoca del consenso.</li>
       </ul>
 
       <h2>7. I tuoi diritti</h2>
       <p>Ai sensi degli artt. 15-22 GDPR hai diritto di: accesso, rettifica, cancellazione («diritto all’oblio»), limitazione,
-        portabilità, opposizione, e di revocare il consenso in qualsiasi momento. Per esercitarli scrivi a <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>.
+        portabilità, opposizione, e di revocare il consenso in qualsiasi momento. Per esercitarli scrivi a <a href={`mailto:${TITOLARE.email}`}>{TITOLARE.email}</a>. Rispondiamo entro 30 giorni, prorogabili di
+        altri 60 nei casi previsti dall’art. 12.3 GDPR, dandotene comunicazione.</p>
+      <p>Per il <strong>diritto alla portabilità</strong> (art. 20) consegniamo i dati che ci hai fornito in un archivio
+        <strong>JSON</strong>, formato strutturato e leggibile da dispositivo automatico: dati account, contenuti caricati,
+        storico delle pubblicazioni e registro delle richieste. Le immagini e i file vengono consegnati nel formato originale.
         Hai inoltre diritto di proporre reclamo al <strong>Garante per la Protezione dei Dati Personali</strong> (<a href="https://www.garanteprivacy.it" target="_blank" rel="noopener noreferrer">garanteprivacy.it</a>).</p>
 
       <h2>8. Sicurezza</h2>
-      <p>Adottiamo misure tecniche e organizzative adeguate: password cifrate (bcrypt), connessioni HTTPS, controllo accessi
-        multi-tenant, rate limiting, isolamento dei dati per cliente. Nessun sistema è sicuro al 100%, ma ci impegniamo a
-        proteggere i tuoi dati e a notificarti eventuali violazioni ai sensi dell’art. 33-34 GDPR.</p>
+      <p>Adottiamo misure tecniche e organizzative adeguate: password cifrate (bcrypt), connessioni HTTPS con HSTS,
+        Content-Security-Policy restrittiva, controllo accessi multi-tenant, rate limiting e isolamento dei dati per cliente.
+        Nessun sistema è sicuro al 100%: per questo la procedura in caso di violazione è scritta prima che serva, qui sotto.</p>
 
-      <h2>9. Modifiche</h2>
+      <h2>9. Che cosa succede in caso di violazione dei dati</h2>
+      <p>Una violazione è qualsiasi evento che comporti distruzione, perdita, modifica, divulgazione o accesso non autorizzato
+        ai dati personali. La procedura è questa, nell’ordine:</p>
+      <ul>
+        <li><strong>Rilevazione e contenimento</strong>: chiusura dell’accesso, revoca delle credenziali coinvolte e
+          conservazione dei log utili a ricostruire l’accaduto.</li>
+        <li><strong>Valutazione del rischio</strong>: entro poche ore, a cura del Titolare, per stabilire natura, categorie e
+          numero approssimativo di interessati e di dati coinvolti.</li>
+        <li><strong>Notifica al Garante entro 72 ore</strong> dal momento in cui il Titolare ne viene a conoscenza, ai sensi
+          dell’<strong>art. 33 GDPR</strong>, salvo che la violazione sia improbabile che presenti un rischio per i diritti e
+          le libertà delle persone. Se le 72 ore non bastano, la notifica indica il motivo del ritardo.</li>
+        <li><strong>Comunicazione agli interessati senza ingiustificato ritardo</strong>, ai sensi dell’<strong>art. 34
+          GDPR</strong>, quando la violazione presenta un rischio elevato: che cosa è successo, quali dati, quali conseguenze
+          probabili, che cosa abbiamo fatto e che cosa conviene fare a te.</li>
+        <li><strong>Registro delle violazioni</strong>: ogni evento viene annotato con effetti e misure adottate, ai sensi
+          dell’art. 33.5 GDPR, anche quando la notifica non è dovuta.</li>
+      </ul>
+      <p>Se la violazione riguarda un fornitore che tratta dati per nostro conto, il contratto ex art. 28 GDPR gli impone di
+        avvisarci senza ingiustificato ritardo, così che i termini di cui sopra decorrano correttamente.</p>
+
+      <h2>10. Modifiche</h2>
       <p>Ci riserviamo di aggiornare questa informativa. Le modifiche sostanziali saranno comunicate via email o tramite avviso sul sito.</p>
     </LegalShell>
   )

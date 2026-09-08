@@ -67,11 +67,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    // lang="it" e' il valore di partenza perche' il layout radice e' unico e
+    // statico: leggere il percorso con headers() renderebbe dinamiche tutte e
+    // 142 le pagine. Lo script bloccante nel <head> qui sotto lo corregge a 'en'
+    // sotto /en prima del primo paint, quindi la tecnologia assistiva, che legge
+    // il DOM e non l'HTML grezzo, trova la lingua giusta. Il middleware invia
+    // anche Content-Language: en, e app/en/layout.tsx marca il contenitore.
     <html lang="it" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('swa-theme');var t=s==='dark'||s==='light'?s:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(e){}})()`,
+            __html: `(function(){try{var s=localStorage.getItem('swa-theme');var t=s==='dark'||s==='light'?s:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(e){}try{if(location.pathname==='/en'||location.pathname.indexOf('/en/')===0){document.documentElement.lang='en'}}catch(e){}})()`,
           }}
         />
       </head>

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Megaphone } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
+import { PACCHETTI } from '@/lib/pacchetti'
+import { PREZZI } from '@/lib/prezzi-ingresso'
 import { SITE_URL } from '@/lib/site-config'
 
 const title = 'Gestione Social Media per PMI su 2 Canali | SWA'
@@ -18,11 +20,15 @@ const config = {
   path: '/servizi/gestione-social-media',
   eyebrow: 'Gestione social per PMI e professionisti',
   title: 'Chi pensa, scrive e pubblica i social al posto tuo.',
-  lead: 'La gestione social parte da €490 al mese e copre 2 profili, dal piano di quello che esce fino alla pubblicazione programmata. Tu leggi e dai il sì, il lavoro di produzione resta a noi.',
+  lead: `La gestione social parte da ${PREZZI.presenza} e copre 2 profili, dal piano di quello che esce fino alla pubblicazione programmata. Tu leggi e dai il sì, il lavoro di produzione resta a noi.`,
   serviceName: 'Gestione social media',
   serviceType: 'Social media management per PMI e professionisti',
   promise: 'Un profilo che pubblica ogni settimana, senza assumere nessuno e senza toglierti ore di lavoro.',
   icon: Megaphone,
+  // Il prezzo del pannello viene dal listino, non riscritto a mano: 490 e 990
+  // sono gia' cambiati una volta e le copie a mano erano rimaste indietro.
+  startingPrice: PACCHETTI[0].prezzo.replace(/[^\d.,]/g, ''),
+  priceCadence: '/mese',
   signals: ['Setup compreso nel canone', '2 profili, un calendario solo', 'Report e call ogni mese'],
   outcomes: [
     { title: 'Cosa esce ogni settimana', text: 'Le uscite del piano Presenza sono 4 volte a settimana per profilo, in media: post, caroselli e Reel già scritti, montati e messi in calendario. Con Crescita diventano 6, e ogni mese arriva anche un articolo scritto per chi cerca su Google.' },
@@ -32,11 +38,11 @@ const config = {
   deliverablesTitle: 'Dal primo audit all’ultimo post del mese.',
   deliverablesIntro: 'Il canone copre chi pensa, scrive, disegna e manda in uscita i contenuti. Restano fuori la pubblicità a pagamento, le risposte a commenti e messaggi e le riprese in sede: hanno un listino loro.',
   deliverables: [
-    { title: 'Cosa guardiamo prima di partire', text: 'L’audit di avvio è la lettura di offerta, pubblico e profili già attivi, ed è compreso nel canone da €490 al mese: sistemiamo immagini, descrizioni e contatti dei 2 canali. Con Crescita si guarda anche che cosa pubblicano i concorrenti.' },
+    { title: 'Cosa guardiamo prima di partire', text: `L’audit di avvio è la lettura di offerta, pubblico e profili già attivi, ed è compreso nel canone da ${PREZZI.presenza}: sistemiamo immagini, descrizioni e contatti dei 2 canali. Con Crescita si guarda anche che cosa pubblicano i concorrenti.` },
     { title: 'Come nasce il calendario', text: 'Il piano editoriale è l’elenco di che cosa esce e quando, chiuso prima che il mese inizi: rubriche fisse, argomenti di stagione e date già assegnate sui 30 giorni successivi. Lo vedi tutto in anticipo, non la sera prima dell’uscita.' },
-    { title: 'Chi scrive e chi disegna', text: 'La produzione è scrittura e grafica insieme: 12 post o caroselli e 4 Reel per profilo ogni mese con Presenza, che salgono a 18 e 6 con Crescita, il piano da €990 al mese. Il montaggio dei video brevi è già compreso.' },
+    { title: 'Chi scrive e chi disegna', text: `La produzione è scrittura e grafica insieme: 12 post o caroselli e 4 Reel per profilo ogni mese con Presenza, che salgono a 18 e 6 con Crescita, il piano da ${PREZZI.crescita}. Il montaggio dei video brevi è già compreso.` },
     { title: 'Come si adatta a ogni canale', text: 'L’adattamento è il passaggio in cui lo stesso contenuto cambia misura, taglio e testo per il canale su cui esce, perché sui 2 profili un carosello e un Reel non si guardano allo stesso modo. Lo stesso identico file non viene pubblicato 2 volte.' },
-    { title: 'Quando si spinge un’offerta', text: 'La campagna organica è 1 blocco al mese in cui più contenuti portano avanti la stessa offerta o lo stesso servizio, su tutti e 2 i profili. Il budget verso le piattaforme è €0: si lavora solo con la pubblicazione normale.' },
+    { title: 'Quando si spinge un’offerta', text: 'La campagna organica è 1 blocco al mese in cui più contenuti portano avanti la stessa offerta o lo stesso servizio, su tutti e 2 i profili. Il budget verso le piattaforme è 0 €: si lavora solo con la pubblicazione normale.' },
     { title: 'Cosa dice il report', text: 'Il report è il riepilogo di fine mese di che cosa è uscito e come è andato, letto insieme in una call di 30 minuti con Presenza e di 45 con Crescita. Da lì si decide che cosa tenere e che cosa cambiare il mese dopo.' },
   ],
   process: [

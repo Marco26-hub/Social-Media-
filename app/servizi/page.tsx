@@ -35,6 +35,7 @@ import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicHeader from '@/components/PublicHeader'
 import site from '../landing.module.css'
 import styles from './servizi-v2.module.css'
+import { PREZZI } from '@/lib/prezzi-ingresso'
 
 const META_TITLE = 'Servizi Digitali per PMI: Social, SEO, Web e Lead | SWA'
 const META_DESCRIPTION =
@@ -68,7 +69,7 @@ export const metadata: Metadata = {
 const FAQ = [
   { q: 'Da quale area conviene partire?', a: 'Dipende da dove perdi di più oggi. Se il telefono squilla a vuoto si parte da lì, perché una chiamata persa è lavoro perso subito. Se il problema è che nessuno ti trova, si parte da sito e visibilità. Se hai già clienti ma non tornano, dal recupero contatti. Durante la call guardiamo insieme quale buco costa di più e si comincia da quello.' },
   { q: 'Posso attivare un servizio solo?', a: 'Sì, ogni area funziona da sola e ha il suo prezzo d’ingresso. Metterle insieme conviene quando si alimentano a vicenda — le riprese danno materiale al piano social, il blog nutre la visibilità — ma nessuna richiede le altre per funzionare. Quando ne aggiungi una l’analisi non si rifà da capo: si estende quella già fatta.' },
-  { q: 'Che differenza c’è fra SEO + GEO e il servizio Blog?', a: 'SEO + GEO è il lavoro di analisi e struttura: audit, mappa degli intenti di ricerca, dati strutturati e priorità. Dice che cosa cambiare e in quale ordine. Il servizio Blog è la produzione continuativa: dodici articoli al mese a 29,90 €, scritti e revisionati. Il primo decide la rotta, il secondo cammina.' },
+  { q: 'Che differenza c’è fra SEO + GEO e il servizio Blog?', a: `SEO + GEO è il lavoro di analisi e struttura: audit, mappa degli intenti di ricerca, dati strutturati e priorità. Dice che cosa cambiare e in quale ordine. Il servizio Blog è la produzione continuativa: dodici articoli al mese a ${PREZZI.blog}, scritti e revisionati. Il primo decide la rotta, il secondo cammina.` },
   { q: 'Che differenza c’è fra segretaria telefonica e agenda WhatsApp?', a: 'Coprono due buchi diversi. La segretaria telefonica risponde a chi ti chiama e non trova nessuno, da 199 € al mese. Agenda e WhatsApp si occupa di chi non ti chiama più: legge lo storico, segnala chi ricontattare e prepara i messaggi, da 390 € al mese. Chi confonde i due problemi compra il servizio sbagliato.' },
   { q: 'Posso cambiare piano dopo?', a: 'Sì, e senza rifare la configurazione. Sui piani vocali si sale di scaglione quando i minuti non bastano più; sui piani social si passa da Presenza a Crescita mantenendo profilo, tono e materiali già impostati. Il cambio vale dal periodo di fatturazione successivo.' },
   { q: 'Quali aree non hanno un prezzo pubblico, e perché?', a: 'SEO + GEO, gestione lavorazioni e automazione dei gestionali sono su preventivo, perché il costo dipende da cose che cambiano molto: quanti sistemi vanno collegati, quanti operatori usano l’applicazione, quanto è grande il sito da rivedere. Le riprese video hanno invece quattro pacchetti a prezzo pubblico, da 590 a 1.790 €. Il preventivo arriva sempre prima di iniziare e nessuna lavorazione fuori piano genera un costo senza il tuo via libera.' },
@@ -155,7 +156,7 @@ const SERVICES = [
       'Analisi della citabilità nei sistemi AI',
       'Monitoraggio e priorità di miglioramento',
     ],
-    strumento: { nome: 'Punteggio di citabilità', beneficio: 'Ogni blocco viene misurato su cinque criteri e torna con le correzioni gia scritte, invece di un elenco di buoni consigli.' },
+    strumento: { nome: 'Punteggio di citabilità', beneficio: 'Ogni blocco viene misurato su cinque criteri e torna con le correzioni già scritte, invece di un elenco di buoni consigli.' },
     outcome: 'Una base organica più solida, utile nel tempo e misurabile senza promesse di ranking.',
   },
   {
@@ -195,7 +196,7 @@ const SERVICES = [
       'Analytics, eventi e tracciamento',
       'Integrazione con social, ADS e CRM',
     ],
-    strumento: { nome: 'Il sito diventa tuo', beneficio: 'Dopo dodici mesi di canone la proprieta passa a te, con moduli e statistiche di percorso gia collegati.' },
+    strumento: { nome: 'Il sito diventa tuo', beneficio: 'Dopo dodici mesi di canone la proprieta passa a te, con moduli e statistiche di percorso già collegati.' },
     outcome: 'Un punto di arrivo credibile per trasformare attenzione, traffico e campagne in richieste.',
   },
   {
@@ -240,7 +241,7 @@ const SERVICES = [
   },
   {
     id: 'segretaria-ai',
-    consegna: '300 minuti al mese di risposta al telefono, circa 5 ore',
+    consegna: '600 minuti al mese di risposta al telefono, circa 10 ore',
     href: '/servizi/segretaria-telefonica-ai',
     icon: PhoneCall,
     label: 'Segretaria telefonica AI',
@@ -275,7 +276,7 @@ const SERVICES = [
       'Risposte e appuntamenti recuperati tracciati',
       '1000 invii inclusi al mese',
     ],
-    strumento: { nome: 'Messaggi pronti in bozza', beneficio: 'Ogni giorno trovi chi ricontattare con il motivo, e il messaggio gia scritto: resta solo da approvare.' },
+    strumento: { nome: 'Messaggi pronti in bozza', beneficio: 'Ogni giorno trovi chi ricontattare con il motivo, e il messaggio già scritto: resta solo da approvare.' },
     outcome: 'Il valore che hai già in archivio torna a produrre appuntamenti, senza che nulla parta alle tue spalle.',
   },
   {
@@ -288,7 +289,7 @@ const SERVICES = [
     description:
       'Per chi lavora fuori sede: il sito che porta le richieste, l’applicazione con cui la squadra chiude l’intervento sul telefono e il pannello da cui l’ufficio approva o contesta.',
     included: [
-      'Checklist gia pronta per tipo di intervento',
+      'Checklist già pronta per tipo di intervento',
       'Foto e note sulle anomalie dal telefono',
       'Ore calcolate da entrata, uscita e pausa',
       'Firma dell’operatore e del cliente',

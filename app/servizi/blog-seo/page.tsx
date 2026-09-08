@@ -3,6 +3,7 @@ import { Newspaper } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { SITE_URL } from '@/lib/site-config'
+import { PREZZI } from '@/lib/prezzi-ingresso'
 
 const title = 'Blog SEO e GEO: 12 articoli al mese | SWA'
 const description = 'Servizio Blog SEO + GEO: 12 articoli mensili pianificati, revisionati e pubblicati sul blog collegato, con FAQ, metadati e dati strutturati.'
@@ -52,7 +53,7 @@ const config = {
     { number: '04', title: 'Controllo', text: 'Revisione, approvazione e pubblicazione sul canale concordato.' },
   ],
   faq: [
-    { q: 'Quanti articoli sono compresi ogni mese?', a: 'Il piano comprende 12 articoli al mese a 29,90 € mensili, IVA esclusa, distribuiti su un calendario editoriale costruito sugli intenti di ricerca reali. Ogni articolo arriva completo di title, meta description, slug, FAQ visibili e dati strutturati: è pronto da pubblicare, non una bozza da sistemare.' },
+    { q: 'Quanti articoli sono compresi ogni mese?', a: `Il piano comprende ${BLOG_SERVICE.articlesPerMonth} articoli al mese a ${PREZZI.blog}, IVA esclusa, distribuiti su un calendario editoriale costruito sugli intenti di ricerca reali. Ogni articolo arriva completo di title, meta description, slug, FAQ visibili e dati strutturati: è pronto da pubblicare, non una bozza da sistemare.` },
     { q: 'Che differenza c’è rispetto alla consulenza SEO + GEO?', a: 'Sono due lavori diversi: SEO + GEO definisce audit, struttura, intenti e priorità, mentre Blog SEO + GEO produce con continuità i contenuti. La consulenza decide dove andare, il blog cammina. Si possono attivare separatamente, ma un piano editoriale costruito su una mappa degli intenti rende molto più della somma delle due cose.' },
     { q: 'Gli articoli vengono pubblicati sul mio sito?', a: 'Sì sul blog collegato alla nostra piattaforma, dove la pubblicazione è automatica dopo la tua approvazione. Per WordPress, Shopify o altri CMS verifichiamo prima l’integrazione: se non è affidabile consegniamo HTML e metadati pronti da incollare, invece di promettere un collegamento che poi si rompe a ogni aggiornamento.' },
     { q: 'Chi decide gli argomenti?', a: 'Li proponiamo noi partendo dalle domande che le persone fanno davvero nel tuo settore, e li approvi tu prima della scrittura. Nessun articolo parte da un titolo inventato a tavolino: la lista arriva ordinata per intento di ricerca, così vedi subito quali pezzi rispondono a chi sta comprando e quali a chi si sta informando.' },

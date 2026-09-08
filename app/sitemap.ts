@@ -7,6 +7,7 @@ import { SETTORI_EN } from '@/lib/settori.en'
 // Stessa mappa usata dal cambio lingua in testata: una copia sola.
 import { COPPIE_LINGUA as ENGLISH_PAIRS } from '@/lib/lingue'
 import { SWA_BLOG_ARTICLES } from '@/lib/swa-blog-content'
+import { SWA_BLOG_ARTICLES_EN } from '@/lib/swa-blog-content.en'
 
 type PublishedArticle = { slug: string; updated_at: string | Date | null }
 
@@ -104,6 +105,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: marketingUpdated,
       changeFrequency: 'monthly',
       priority: 0.6,
+      alternates: languageAlternates('/autore/marco-dibenedetto'),
+    },
+    {
+      url: `${SITE_URL}/en/author/marco-dibenedetto`,
+      lastModified: englishUpdated,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+      alternates: languageAlternates('/autore/marco-dibenedetto'),
     },
     {
       url: `${SITE_URL}/chi-siamo`,
@@ -123,17 +132,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/termini`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_URL}/recesso`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_URL}/trasparenza-ai`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.4 },
+    { url: `${SITE_URL}/accessibilita`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.4 },
+    { url: `${SITE_URL}/sicurezza`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.5 },
     {
       url: `${SITE_URL}/blog`,
       lastModified: new Date(SWA_BLOG_ARTICLES[0].data_pubblicazione || marketingUpdated),
       changeFrequency: 'weekly',
       priority: 0.8,
+      alternates: languageAlternates('/blog'),
     },
     ...SWA_BLOG_ARTICLES.map(article => ({
       url: `${SITE_URL}/blog/${article.slug}`,
       lastModified: new Date(article.data_pubblicazione || marketingUpdated),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
+      alternates: languageAlternates(`/blog/${article.slug}`),
+    })),
+    {
+      url: `${SITE_URL}/en/blog`,
+      lastModified: new Date(SWA_BLOG_ARTICLES_EN[0].data_pubblicazione || marketingUpdated),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+      alternates: languageAlternates('/blog'),
+    },
+    ...SWA_BLOG_ARTICLES_EN.map(article => ({
+      url: `${SITE_URL}/en/blog/${article.slug}`,
+      lastModified: new Date(article.data_pubblicazione || marketingUpdated),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+      alternates: languageAlternates(`/blog/${article.slugIt}`),
     })),
   ]
 

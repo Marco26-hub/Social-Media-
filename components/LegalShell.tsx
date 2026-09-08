@@ -4,7 +4,8 @@ import { ArrowLeft } from 'lucide-react'
 import styles from './legal.module.css'
 import { TITOLARE } from '@/lib/legal-config'
 
-// Layout condiviso per le pagine legali (Privacy, Cookie, Termini, Trasparenza AI).
+// Layout condiviso per le pagine legali (Privacy, Cookie, Termini, Trasparenza AI,
+// Recesso, Sicurezza, Accessibilita).
 // Header sticky con navigazione, titolo, data di aggiornamento e documenti correlati.
 export default function LegalShell({
   eyebrow,
@@ -23,6 +24,8 @@ export default function LegalShell({
     { href: '/termini', label: 'Termini e Condizioni' },
     { href: '/trasparenza-ai', label: 'Trasparenza AI' },
     { href: '/recesso', label: 'Recesso e disdetta' },
+    { href: '/sicurezza', label: 'Sicurezza' },
+    { href: '/accessibilita', label: 'Accessibilità' },
   ].filter(r => r.href !== currentPath)
 
   return (

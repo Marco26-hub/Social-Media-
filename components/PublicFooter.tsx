@@ -88,6 +88,11 @@ export default function PublicFooter() {
           <Link href="/en" hrefLang="en">English</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/termini">Termini</Link>
+          {/* Accessibilita e sicurezza vanno raggiunte dal footer di ogni pagina:
+              chi cerca la dichiarazione di accessibilita la cerca li, e chi valuta
+              il fornitore cerca la pagina sicurezza prima di scrivere una email. */}
+          <Link href="/accessibilita">Accessibilità</Link>
+          <Link href="/sicurezza">Sicurezza</Link>
           <Link href="/recesso" className={styles.withdrawalLink}><Undo2 size={14} aria-hidden="true" /> Recedere dal contratto qui</Link>
         </nav>
         <p>{TITOLARE.ragioneSociale}<br />P.IVA {TITOLARE.partitaIva} · Cermenate (CO)</p>
