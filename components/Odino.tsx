@@ -175,6 +175,20 @@ export default function Odino() {
     setApprofondimenti([])
   }
 
+  function inclinaMascotte(e: React.PointerEvent<HTMLButtonElement>) {
+    if (e.pointerType === 'touch') return
+    const box = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - box.left) / box.width - .5
+    const y = (e.clientY - box.top) / box.height - .5
+    e.currentTarget.style.setProperty('--odino-rotate-x', `${(-y * 12).toFixed(2)}deg`)
+    e.currentTarget.style.setProperty('--odino-rotate-y', `${(x * 16).toFixed(2)}deg`)
+  }
+
+  function raddrizzaMascotte(e: React.PointerEvent<HTMLButtonElement>) {
+    e.currentTarget.style.setProperty('--odino-rotate-x', '0deg')
+    e.currentTarget.style.setProperty('--odino-rotate-y', '0deg')
+  }
+
   // Aperto resta aperto: se una persona ha gia' cliccato, il popup non lo scaccia.
   if (!visibile) return null
 
@@ -187,11 +201,15 @@ export default function Odino() {
         type="button"
         className={styles.lancio}
         onClick={() => setAperto(true)}
+        onPointerMove={inclinaMascotte}
+        onPointerLeave={raddrizzaMascotte}
         aria-label={t.apri}
         title={t.apriBreve}
       >
         <span className={styles.mascotte} aria-hidden="true">
-          <Image src="/images/odino-mascotte.png" alt="" fill sizes="112px" priority />
+          <span className={styles.robotLayer}>
+            <Image src="/images/odino-mascotte.webp" alt="" fill sizes="112px" priority />
+          </span>
         </span>
         <span className={styles.stato} aria-hidden="true" />
       </button>
@@ -202,7 +220,7 @@ export default function Odino() {
     <aside className={styles.pannello} role="dialog" aria-modal="false" aria-label={t.pannello} lang={inglese ? 'en' : 'it'}>
       <header className={styles.testa}>
         <span className={styles.avatar} aria-hidden="true">
-          <Image src="/images/odino-mascotte.png" alt="" fill sizes="52px" />
+          <Image src="/images/odino-mascotte.webp" alt="" fill sizes="52px" />
         </span>
         <div>
           <strong>{ODINO_NOME}</strong>

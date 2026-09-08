@@ -243,10 +243,13 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
         <aside className={styles.signalPanel} aria-label={`Sintesi ${config.serviceName}`}>
           {config.visualTheme === 'gelateria' && (
             <div className={styles.gelatoPreview} aria-hidden="true">
-              <span className={styles.gelatoScoopA} />
-              <span className={styles.gelatoScoopB} />
-              <span className={styles.gelatoScoopC} />
-              <span className={styles.gelatoCone} />
+              <Image
+                src="/images/settori/gelateria-cinematica.webp"
+                alt=""
+                fill
+                priority
+                sizes="(max-width: 900px) 100vw, 42vw"
+              />
             </div>
           )}
           <div className={styles.signalHeading}>

@@ -302,61 +302,34 @@ h1 .eyebrow, .hero h1 .eyebrow {
    Il layout resta quello delle pagine settore, ma il tono visivo cambia:
    piu' luce, piu' materia di prodotto, meno pannello software. */
 .pageGelateria {
-  --ink: #21312d;
-  --muted: #66736e;
-  --green: #21735f;
-  --green-dark: #145746;
-  --mint: #dff2e9;
-  --coral: #d9566f;
-  --coral-testo: #b93e58;
-  --gold: #d6a84b;
-  --line: #e0ded3;
-  --paper: #fbf4e8;
-  --surface: #fffdf7;
-  background:
-    linear-gradient(180deg, #fffdf7 0, #fff8ec 620px, #fffdf7 1080px),
-    #fffdf7;
+  --ink: #15231f;
+  --muted: #596762;
+  --green: #0f6b4f;
+  --green-dark: #094c39;
+  --mint: #dceee7;
+  --coral: #e96f51;
+  --coral-testo: #b3452a;
+  --gold: #d8aa35;
+  --line: #dbe2de;
+  --paper: #f5f7f4;
+  --surface: #fff;
+  background: #f8faf7;
 }
 
 :global(html[data-theme='dark']) .pageGelateria {
-  --ink: #21312d;
-  --muted: #66736e;
-  --green: #21735f;
-  --green-dark: #145746;
-  --mint: #dff2e9;
-  --coral: #d9566f;
-  --coral-testo: #b93e58;
-  --gold: #d6a84b;
-  --line: #e0ded3;
-  --paper: #fbf4e8;
-  --surface: #fffdf7;
-  background:
-    linear-gradient(180deg, #fffdf7 0, #fff8ec 620px, #fffdf7 1080px),
-    #fffdf7;
-  color: #21312d;
-}
-
-:global(html[data-theme='dark']) .pageGelateria .hero h1,
-:global(html[data-theme='dark']) .pageGelateria .sectionHeading h2,
-:global(html[data-theme='dark']) .pageGelateria .faq summary,
-:global(html[data-theme='dark']) .pageGelateria .related a {
-  color: #21312d;
-}
-
-:global(html[data-theme='dark']) .pageGelateria .lead,
-:global(html[data-theme='dark']) .pageGelateria .sectionHeading > p:last-child,
-:global(html[data-theme='dark']) .pageGelateria .breadcrumbs {
-  color: #5d6a65;
-}
-
-:global(html[data-theme='dark']) .pageGelateria .secondary {
-  border-color: rgba(33, 49, 45, .2);
-  color: #21312d;
-}
-
-:global(html[data-theme='dark']) .pageGelateria .deliverableGrid article,
-:global(html[data-theme='dark']) .pageGelateria .portfolioCard {
-  background: #fffdf7;
+  --ink: #edf4f1;
+  --muted: #aab8b2;
+  --green: #49d6a0;
+  --green-dark: #25b67f;
+  --mint: #17372d;
+  --coral: #ff9b82;
+  --coral-testo: #ff9b82;
+  --gold: #e8be56;
+  --line: #293b35;
+  --paper: #0d110f;
+  --surface: #080b09;
+  background: #080b09;
+  color: #edf4f1;
 }
 
 .pageGelateria .hero {
@@ -376,28 +349,15 @@ h1 .eyebrow, .hero h1 .eyebrow {
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(rgba(33, 49, 45, .045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(33, 49, 45, .045) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--ink) 4%, transparent) 1px, transparent 1px);
   background-size: 46px 46px;
   mask-image: linear-gradient(90deg, #000 0 62%, transparent 92%);
   content: '';
 }
 
 .pageGelateria .hero::after {
-  position: absolute;
-  right: max(0px, calc((100vw - 1180px) / 2 - 42px));
-  bottom: 26px;
-  width: min(46vw, 560px);
-  height: min(46vw, 560px);
-  border-radius: 50%;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 36% 33%, rgba(217, 86, 111, .2), transparent 30%),
-    radial-gradient(circle at 63% 28%, rgba(130, 194, 155, .26), transparent 31%),
-    radial-gradient(circle at 50% 65%, rgba(214, 168, 75, .18), transparent 36%);
-  filter: blur(6px);
-  opacity: .9;
-  content: '';
+  display: none;
 }
 
 .pageGelateria .heroCopy,
@@ -407,12 +367,12 @@ h1 .eyebrow, .hero h1 .eyebrow {
 }
 
 .pageGelateria .breadcrumbs {
-  color: #7c8177;
+  color: var(--muted);
 }
 
 .pageGelateria .hero h1 {
   max-width: 850px;
-  color: #192b27;
+  color: var(--ink);
   font-size: clamp(48px, 6.7vw, 86px);
   line-height: .96;
 }
@@ -420,37 +380,37 @@ h1 .eyebrow, .hero h1 .eyebrow {
 .pageGelateria .hero h1::after {
   width: 112px;
   height: 4px;
-  background: linear-gradient(90deg, #21735f, #d9566f 55%, #d6a84b);
+  background: linear-gradient(90deg, var(--green) 0 72%, var(--gold) 72%);
 }
 
 .pageGelateria h1 .eyebrow,
 .pageGelateria .hero h1 .eyebrow {
-  color: #b93e58;
+  color: var(--coral-testo);
 }
 
 .pageGelateria .lead {
   max-width: 720px;
-  color: #4f5d57;
+  color: var(--muted);
   font-size: 20px;
   line-height: 1.58;
 }
 
 .pageGelateria .primary {
   border-radius: 8px;
-  background: #21312d;
-  color: #fffdf7;
-  box-shadow: 0 15px 35px rgba(33, 49, 45, .16);
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 15px 35px rgba(9, 76, 57, .16);
 }
 
 .pageGelateria .primary:hover {
-  background: #145746;
+  background: var(--green-dark);
 }
 
 .pageGelateria .secondary {
   border-radius: 8px;
-  border-color: rgba(33, 49, 45, .2);
-  background: rgba(255, 253, 247, .72);
-  color: #21312d;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .pageGelateria .signalPanel {
@@ -460,11 +420,11 @@ h1 .eyebrow, .hero h1 .eyebrow {
   justify-content: flex-end;
   padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(33, 49, 45, .14);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fffdf7;
-  color: #21312d;
-  box-shadow: 0 28px 70px rgba(33, 49, 45, .16);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 28px 70px rgba(21, 35, 31, .14);
 }
 
 .pageGelateria .signalPanel::before {
@@ -473,73 +433,23 @@ h1 .eyebrow, .hero h1 .eyebrow {
 
 .gelatoPreview {
   position: relative;
-  min-height: 245px;
+  min-height: 300px;
   overflow: hidden;
-  background:
-    linear-gradient(140deg, rgba(217, 86, 111, .12), transparent 42%),
-    linear-gradient(30deg, #e9f5ec, #fff2d2);
+  background: #17352e;
+}
+
+.gelatoPreview img {
+  object-fit: cover;
+  object-position: 58% 50%;
+  filter: saturate(.9) contrast(1.04);
 }
 
 .gelatoPreview::after {
   position: absolute;
-  inset: auto 28px 22px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(33, 49, 45, .12);
-  filter: blur(7px);
+  inset: 0;
+  background: linear-gradient(180deg, transparent 58%, rgba(12, 31, 27, .18));
   content: '';
-}
-
-.gelatoScoopA,
-.gelatoScoopB,
-.gelatoScoopC,
-.gelatoCone {
-  position: absolute;
-  display: block;
-}
-
-.gelatoScoopA,
-.gelatoScoopB,
-.gelatoScoopC {
-  border-radius: 50%;
-  box-shadow: 0 18px 34px rgba(33, 49, 45, .13);
-}
-
-.gelatoScoopA {
-  left: 86px;
-  bottom: 82px;
-  width: 132px;
-  height: 132px;
-  background: #f3c45f;
-}
-
-.gelatoScoopB {
-  left: 174px;
-  bottom: 72px;
-  width: 150px;
-  height: 150px;
-  background: #9fd2a9;
-}
-
-.gelatoScoopC {
-  left: 134px;
-  bottom: 132px;
-  width: 118px;
-  height: 118px;
-  background: #e7798e;
-}
-
-.gelatoCone {
-  left: 148px;
-  bottom: 6px;
-  width: 126px;
-  height: 118px;
-  background:
-    linear-gradient(125deg, transparent 48%, rgba(127, 83, 36, .22) 49% 51%, transparent 52%),
-    linear-gradient(55deg, transparent 48%, rgba(127, 83, 36, .18) 49% 51%, transparent 52%),
-    linear-gradient(135deg, #e3a851, #f4d28c);
-  background-size: 26px 26px, 26px 26px, auto;
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  pointer-events: none;
 }
 
 .pageGelateria .signalHeading,
@@ -552,49 +462,49 @@ h1 .eyebrow, .hero h1 .eyebrow {
 
 .pageGelateria .signalHeading {
   margin-top: 28px;
-  border-bottom-color: rgba(33, 49, 45, .12);
+  border-bottom-color: var(--line);
 }
 
 .pageGelateria .signalHeading > span {
   border-radius: 8px;
-  background: #21735f;
+  background: var(--green);
 }
 
 .pageGelateria .signalHeading small,
 .pageGelateria .startingPrice > span,
 .pageGelateria .startingPrice > p {
-  color: #7b867f;
+  color: var(--muted);
 }
 
 .pageGelateria .signalHeading strong,
 .pageGelateria .startingPrice > strong,
 .pageGelateria .signalPanel > p {
-  color: #21312d;
+  color: var(--ink);
 }
 
 .pageGelateria .startingPrice {
-  border-top-color: rgba(33, 49, 45, .12);
+  border-top-color: var(--line);
 }
 
 .pageGelateria .startingPrice > b {
-  border-color: rgba(217, 86, 111, .24);
-  background: rgba(217, 86, 111, .08);
-  color: #b93e58;
+  border-color: color-mix(in srgb, var(--coral) 35%, transparent);
+  background: color-mix(in srgb, var(--coral) 9%, transparent);
+  color: var(--coral-testo);
 }
 
 .pageGelateria .entryOffer {
   margin: 18px 28px 0;
   padding: 18px;
-  border: 1px solid rgba(217, 86, 111, .22);
-  border-left: 4px solid #d9566f;
+  border: 1px solid color-mix(in srgb, var(--gold) 42%, var(--line));
+  border-left: 4px solid var(--gold);
   border-radius: 8px;
-  background: #fff8ee;
-  color: #21312d;
+  background: color-mix(in srgb, var(--gold) 9%, var(--surface));
+  color: var(--ink);
 }
 
 .pageGelateria .entryOffer > span {
   display: block;
-  color: #b93e58;
+  color: var(--coral-testo);
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
@@ -607,13 +517,13 @@ h1 .eyebrow, .hero h1 .eyebrow {
 }
 
 .pageGelateria .entryOffer > strong small {
-  color: #6f7c76;
+  color: var(--muted);
   font: 700 12px Arial, sans-serif;
 }
 
 .pageGelateria .entryOffer > p {
   margin: 8px 0 0;
-  color: #4f625c;
+  color: var(--muted);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -623,59 +533,58 @@ h1 .eyebrow, .hero h1 .eyebrow {
   align-items: center;
   gap: 6px;
   margin-top: 12px;
-  color: #21735f;
+  color: var(--green);
   font-size: 12px;
   font-weight: 800;
   text-decoration: none;
 }
 
 .pageGelateria .entryOffer > a:hover {
-  color: #165444;
+  color: var(--green-dark);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .pageGelateria .signalPanel > p {
-  color: #38504a;
+  color: var(--muted);
 }
 
 .pageGelateria .signalPanel ul {
   margin-bottom: 28px;
-  background: #e6e2d6;
+  background: var(--line);
 }
 
 .pageGelateria .signalPanel li {
-  background: #fffaf0;
-  color: #394a45;
+  background: var(--paper);
+  color: var(--ink);
 }
 
 .pageGelateria .signalPanel li svg {
-  color: #21735f;
+  color: var(--green);
 }
 
 .pageGelateria .outcomeBand {
   border: 0;
   border-radius: 8px;
-  background: #fffdf7;
-  box-shadow: inset 0 0 0 1px rgba(33, 49, 45, .1);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .pageGelateria .outcomeBand article {
   min-height: 150px;
-  border-color: rgba(33, 49, 45, .1);
-  background:
-    linear-gradient(180deg, rgba(255, 250, 240, .92), rgba(255, 253, 247, .96));
+  border-color: var(--line);
+  background: var(--surface);
 }
 
 .pageGelateria .outcomeBand strong {
-  color: #21312d;
+  color: var(--ink);
   font-size: 22px;
 }
 
 .pageGelateria .outcomeBand span,
 .pageGelateria .deliverableGrid p,
 .pageGelateria .faq details p {
-  color: #5d6a65;
+  color: var(--muted);
 }
 
 .pageGelateria .deliverables {
@@ -691,10 +600,10 @@ h1 .eyebrow, .hero h1 .eyebrow {
 .pageGelateria .deliverableGrid article {
   min-height: 178px;
   grid-template-columns: 42px minmax(0, 1fr) 24px;
-  border: 1px solid rgba(33, 49, 45, .11);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fffdf7;
-  box-shadow: 0 14px 34px rgba(33, 49, 45, .06);
+  background: var(--surface);
+  box-shadow: 0 14px 34px rgba(21, 35, 31, .06);
 }
 
 .pageGelateria .deliverableGrid article > span {
@@ -702,9 +611,9 @@ h1 .eyebrow, .hero h1 .eyebrow {
   height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: #fbf4e8;
-  color: #b93e58;
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--coral-testo);
 }
 
 .pageGelateria .process {
@@ -718,8 +627,47 @@ h1 .eyebrow, .hero h1 .eyebrow {
 }
 
 .pageGelateria .finalCta {
-  background:
-    linear-gradient(135deg, #193b33, #21735f 58%, #b93e58);
+  background: linear-gradient(110deg, #0b4938, #0f6b4f);
+}
+
+:global(html[data-theme='dark']) .pageGelateria .hero h1,
+:global(html[data-theme='dark']) .pageGelateria .sectionHeading h2,
+:global(html[data-theme='dark']) .pageGelateria .faq summary,
+:global(html[data-theme='dark']) .pageGelateria .related a,
+:global(html[data-theme='dark']) .pageGelateria .signalHeading strong,
+:global(html[data-theme='dark']) .pageGelateria .startingPrice > strong,
+:global(html[data-theme='dark']) .pageGelateria .entryOffer > strong,
+:global(html[data-theme='dark']) .pageGelateria .outcomeBand strong {
+  color: var(--ink);
+}
+
+:global(html[data-theme='dark']) .pageGelateria .secondary {
+  border-color: #42554e;
+  background: #111713;
+  color: var(--ink);
+}
+
+:global(html[data-theme='dark']) .pageGelateria .signalPanel,
+:global(html[data-theme='dark']) .pageGelateria .outcomeBand,
+:global(html[data-theme='dark']) .pageGelateria .outcomeBand article,
+:global(html[data-theme='dark']) .pageGelateria .deliverableGrid article {
+  background: #111713;
+}
+
+:global(html[data-theme='dark']) .pageGelateria .signalPanel {
+  box-shadow: 16px 18px 0 #102c24, 0 28px 70px rgba(0, 0, 0, .28);
+}
+
+:global(html[data-theme='dark']) .pageGelateria .entryOffer {
+  background: #18221d;
+}
+
+:global(html[data-theme='dark']) .pageGelateria .signalPanel li {
+  background: #16231e;
+}
+
+:global(html[data-theme='dark']) .pageGelateria .deliverableGrid article {
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .16);
 }
 
 @media (max-width: 900px) {

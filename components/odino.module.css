@@ -5,21 +5,76 @@
    schermo e' un problema reale per chi soffre di vertigini. */
 
 .lancio {
+  --odino-rotate-x: 0deg;
+  --odino-rotate-y: 0deg;
   position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 60;
   width: 88px; height: 110px; padding: 0;
   border: 0; background: transparent; cursor: pointer;
   filter: drop-shadow(0 18px 24px rgba(8, 20, 15, .34));
   transition: transform .2s ease, filter .2s ease;
+  perspective: 720px;
+  touch-action: manipulation;
 }
 .lancio:hover { transform: translateY(-5px); filter: drop-shadow(0 22px 28px rgba(8, 20, 15, .42)) }
 .lancio:focus-visible { outline: 3px solid #d8aa35; outline-offset: 4px; border-radius: 12px }
 
-.mascotte { position: absolute; inset: 0; overflow: hidden }
-.mascotte img { object-fit: contain; object-position: center bottom }
+.lancio::before {
+  position: absolute;
+  right: 13%;
+  bottom: 2px;
+  left: 13%;
+  height: 13px;
+  border-radius: 50%;
+  background: rgba(8, 20, 15, .25);
+  filter: blur(6px);
+  content: '';
+  transform: translateZ(-24px) scale(.82);
+  animation: odinoOmbra 4.2s ease-in-out infinite;
+}
+.mascotte {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  animation: odinoGalleggia3d 4.2s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+.robotLayer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform: rotateX(var(--odino-rotate-x)) rotateY(var(--odino-rotate-y)) translateZ(18px);
+  transform-style: preserve-3d;
+  transform-origin: 50% 68%;
+  transition: transform .16s ease-out;
+}
+.robotLayer img { object-fit: contain; object-position: center bottom }
+.lancio:not(:hover) .robotLayer { animation: odinoGuarda 5.4s ease-in-out infinite }
 .stato {
   position: absolute; right: 8px; bottom: 18px; width: 13px; height: 13px;
   border: 3px solid #fffdf7; border-radius: 50%; background: #27a875;
   box-shadow: 0 2px 8px rgba(8, 20, 15, .24);
+  transform: translateZ(34px);
+  animation: odinoStato 2.4s ease-in-out infinite;
+}
+
+@keyframes odinoGalleggia3d {
+  0%, 100% { transform: translateY(0) }
+  50% { transform: translateY(-7px) }
+}
+
+@keyframes odinoGuarda {
+  0%, 100% { transform: rotateX(1deg) rotateY(-4deg) translateZ(18px) }
+  50% { transform: rotateX(-2deg) rotateY(5deg) translateZ(24px) }
+}
+
+@keyframes odinoOmbra {
+  0%, 100% { opacity: .7; transform: translateZ(-24px) scale(.82) }
+  50% { opacity: .4; transform: translateZ(-24px) scale(.68) }
+}
+
+@keyframes odinoStato {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(39, 168, 117, .35) }
+  50% { box-shadow: 0 0 0 6px rgba(39, 168, 117, 0) }
 }
 
 .avatar {
@@ -134,7 +189,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pannello { animation: none !important }
+  .pannello,
+  .mascotte,
+  .robotLayer,
+  .lancio::before,
+  .stato { animation: none !important; transition: none !important }
 }
 
 /* Risposte prese dalle domande gia' scritte sul sito. Ognuna dichiara da quale
