@@ -106,6 +106,9 @@ export default function SegretariaLanding({ c }: { c: ContenutoLanding }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <PublicHeader ctaHref={wa} ctaLabel="Richiedi una call" />
 
+      {/* Il bersaglio c'era, il link no: chi naviga da tastiera doveva
+          attraversare tutto il menu su due pagine servizio. */}
+      <a className={styles.skipLink} href="#main-content">Vai al contenuto</a>
       <main id="main-content">
         <div className="home-hero">
           <div className="cinematic-media" aria-hidden="true">
