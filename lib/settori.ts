@@ -521,7 +521,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'officine-e-servizi-locali',
     nome: 'Officine e servizi locali',
-    sinonimi: ['officina', 'meccanico', 'carrozzeria', 'gommista', 'elettrauto', 'centro revisioni', 'artigiano'],
+    sinonimi: ['officina', 'meccanico', 'carrozzeria', 'gommista', 'elettrauto', 'centro revisioni'],
     sommario: 'Orari, preventivi e scadenze chiesti al telefono mentre lavori sul mezzo.',
     titoloSeo: 'Officine e servizi locali: telefono e scadenze | SWA',
     descrizioneSeo:
@@ -579,7 +579,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'ristoranti-e-bar',
     nome: 'Ristoranti, pizzerie e bar',
-    sinonimi: ['ristorante', 'pizzeria', 'bar', 'paninoteca', 'hamburgeria', 'hamburgheria', 'pub', 'piadineria', 'gastronomia', 'tavola calda', 'bistrot', 'osteria', 'trattoria', 'locale', 'fast food', 'food truck'],
+    sinonimi: ['ristorante', 'pizzeria', 'bar', 'paninoteca', 'hamburgeria', 'hamburgheria', 'pub', 'piadineria', 'gastronomia', 'tavola calda', 'bistrot', 'osteria', 'trattoria', 'fast food', 'food truck'],
     sommario: 'Ordine e pagamento al tavolo dal QR, prenotazioni, pizza al taglio col numero di ritiro e sala che gira senza attese.',
     titoloSeo: 'Ordine e pagamento al tavolo con QR per ristoranti e pizzerie | SWA',
     descrizioneSeo:

@@ -193,7 +193,7 @@ export function riconosciSettore(
   if (!cercati.length) return undefined
   for (const s of settori) {
     const suoi = [...termini(s.nome), ...termini(s.slug.replace(/-/g, ' ')), ...termini((s.sinonimi ?? []).join(' '))]
-      .filter(p => p.length > 4 && !['servizi', 'locali', 'services'].includes(p))
+      .filter(p => p.length > 2 && !['servizi', 'locali', 'services'].includes(p))
     // «gelaterie» deve riconoscere anche «gelateria»: si confronta la radice.
     if (suoi.some(p => cercati.some(c => c.slice(0, 5) === p.slice(0, 5)))) {
       return { slug: s.slug, nome: s.nome }
