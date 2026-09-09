@@ -162,13 +162,11 @@
   }
   .footerBottom nav .withdrawalLink { grid-column: 1 / -1; justify-self: stretch; justify-content: center; margin-top: 6px; }
   /* A fine pagina il pannello fisso — mascotte piu' pulsanti «su» e «indietro» —
-     occupa i 236px in basso a destra dello schermo, e con quattro colonne
-     l'ultima arriva fin li' sotto: «Sicurezza» finiva sotto i pulsanti. Stringere
-     la griglia non regge, quattro parole come «Accessibilita'» in 250px non ci
-     stanno. Il footer lascia invece aria in fondo: cosi' quando lo scorrimento
-     finisce l'intero contenuto sta sopra il pannello. E' lo spazio dove sul
-     telefono sta il pollice, non e' sprecato. */
-  .footerBottom { padding-bottom: calc(34px + 236px + env(safe-area-inset-bottom)); }
+     sta in basso a destra. Lasciare aria in fondo quanto il pannello occupa
+     risolveva la sovrapposizione ma apriva un vuoto di due dita sotto il
+     footer, che si vedeva piu' del problema che curava. Meglio la
+     sovrapposizione di pochi pixel nell'angolo. */
+  .footerBottom { padding-bottom: calc(34px + env(safe-area-inset-bottom)); }
   .footerBottom p { text-align: left; }
 }
 @media (max-width: 620px) {

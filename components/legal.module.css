@@ -154,10 +154,3 @@
 /* Il collegamento alla versione italiana dentro la nota: 4,46:1. */
 .nota a { color: #6f5108; }
 
-
-/* A 360px l'ultima riga dei documenti correlati finisce sotto la mascotte, che
-   sta in basso a destra: il documento lascia aria in fondo quanto il gruppo
-   fisso occupa. */
-@media (max-width: 900px) {
-  .doc { padding-bottom: calc(40px + 236px + env(safe-area-inset-bottom)); }
-}

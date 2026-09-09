@@ -748,12 +748,6 @@
 :global(html[data-theme='dark']) .serviceIdentity > span { color: #8fa39b; }
 
 
-/* Stessa sovrapposizione della home: il gruppo fisso in basso a destra cadeva
-   sulla riga del copyright, e il bottone di invito gli passava sotto. */
-@media (max-width: 900px) {
-  .footer { padding-bottom: calc(35px + 236px + env(safe-area-inset-bottom)); }
-}
-
 
 /* Etichetta dentro la mappa dei servizi: 4,1:1 su bianco. */
 .mapCore small { color: #5c6b63; }

@@ -1415,16 +1415,7 @@
 :global(html[data-theme='dark']) .pricingSection .customPlan .planAudience { color: #3d2c04; }
 
 
-/* Le due sovrapposizioni misurate sul telefono.
-
-   In fondo alla pagina il gruppo fisso in basso a destra — mascotte piu'
-   pulsanti «su» e «indietro» — cade sulla riga del copyright, e il bottone
-   fisso di invito corre da bordo a bordo passandogli sotto. Il footer lascia
-   quindi aria in fondo quanto serve al gruppo, e il bottone si ferma prima
-   della mascotte invece di sparirci dietro. */
-@media (max-width: 900px) {
-  .footer { padding-bottom: calc(35px + 236px + env(safe-area-inset-bottom)); }
-  /* La mascotte e' larga 88 e sta a 12 dal bordo: il suo fianco sinistro cade a
-     112 dal bordo destro. Il bottone si ferma prima. */
-  .mobileCta { right: 112px; }
-}
+/* Il bottone fisso di invito torna a tutta larghezza, come prima: fermarlo a
+   112px dal bordo per non passare sotto la mascotte lo rimpiccioliva, e il
+   bottone e' la cosa piu' importante della pagina sul telefono. La mascotte gli
+   sta sopra per pochi pixel nell'angolo, e va bene cosi'. */
