@@ -71,6 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/servizi/video-produzione',
       '/servizi/automazione-gestionali',
       '/servizi/gestione-lavorazioni',
+      '/servizi/gestionale-ristoranti',
       '/metodo',
       '/pacchetti',
       '/faq',
@@ -121,6 +122,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...[
       ['/en/services/ai-phone-assistant', '/servizi/segretaria-telefonica-ai'],
       ['/en/services/client-diary-whatsapp', '/servizi/agenda-clienti-whatsapp'],
+      ['/en/services/restaurant-management-system', '/servizi/gestionale-ristoranti'],
     ].map(([en, it]) => ({
       url: `${SITE_URL}${en}`,
       lastModified: englishUpdated,

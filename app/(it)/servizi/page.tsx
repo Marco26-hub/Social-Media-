@@ -116,6 +116,22 @@ const servicesPageJsonLd = {
 
 const SERVICES = [
   {
+    ...metodoServizio('gestionale-ristoranti'),
+    id: 'gestionale-ristoranti',
+    title: 'Ordine e pagamento passano dal telefono del cliente.',
+    description: 'Menu QR, ordini e pagamenti al tavolo, prenotazioni, conto alla romana e pannello di sala. Il denaro arriva al locale e SWA non trattiene percentuali sull’incassato.',
+    included: [
+      'Menu QR senza applicazione da scaricare',
+      'Ordini e varianti scritti dal cliente',
+      'Pagamento al tavolo e conto alla romana',
+      'Prenotazioni con promemoria e disdetta',
+      'Pannello live per sala, cucina e incassi',
+      'Marchio del locale su tutte le pagine',
+    ],
+    strumento: { nome: 'Una prova su un tavolo vero', beneficio: 'Carichi il tuo menu, stampi il QR e verifichi il giro completo prima di estenderlo alla sala.' },
+    outcome: 'Meno attese per ordine e conto, con incassi e rapporto col cliente che restano al locale.',
+  },
+  {
     ...metodoServizio('gestione-social-media'),
     id: 'social',
     title: 'Una presenza costante, coordinata e sotto controllo.',

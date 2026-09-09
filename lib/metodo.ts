@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { CalendarClock, Clapperboard, ClipboardCheck, Globe2, Megaphone, Newspaper, PhoneCall, ScanSearch, Target, Workflow } from 'lucide-react'
+import { CalendarClock, Clapperboard, ClipboardCheck, Globe2, Megaphone, Newspaper, PhoneCall, ScanSearch, Target, UtensilsCrossed, Workflow } from 'lucide-react'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 
 // Sorgente unica del metodo, servizio per servizio.
@@ -152,6 +152,19 @@ export const METODO_SERVIZI: readonly MetodoServizio[] = [
       { number: '02', title: 'Priorità', text: 'Cosa automatizzare per primo, con costi e responsabilità definiti prima di partire.' },
       { number: '03', title: 'Realizzazione', text: 'Integrazione o sviluppo, con verifica su casi reali prima dell’attivazione.' },
       { number: '04', title: 'Esercizio', text: 'Monitoraggio, correzioni e nuovi flussi solo dopo aver verificato i precedenti.' },
+    ],
+  },
+  {
+    slug: 'gestionale-ristoranti',
+    href: '/servizi/gestionale-ristoranti',
+    label: 'Tavolo per ristoranti',
+    icon: UtensilsCrossed,
+    consegna: 'Menu QR, ordini, pagamenti e prenotazioni in un solo pannello',
+    fasi: [
+      { number: '01', title: 'Sopralluogo', text: 'Guardiamo sala, tavoli, menu e come incassate oggi prima di configurare il sistema.' },
+      { number: '02', title: 'Configurazione', text: 'Carichiamo il menu, generiamo i QR e colleghiamo il conto di incasso e il marchio del locale.' },
+      { number: '03', title: 'Prova in sala', text: 'Si parte da pochi tavoli con il personale presente, finché ordine, cucina e pagamento filano.' },
+      { number: '04', title: 'A regime', text: 'Il pannello mostra ordini, prenotazioni e incassi; menu e disponibilità restano aggiornabili dal locale.' },
     ],
   },
 ] as const

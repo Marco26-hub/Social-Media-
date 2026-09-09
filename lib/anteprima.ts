@@ -43,6 +43,12 @@ const IT: Record<string, Anteprima> = {
     sottotitolo: 'Social, SEO e GEO, blog, siti, video, lead B2B, voce, agenda, gestionali.',
     tinta: 'verde',
   },
+  '/servizi/gestionale-ristoranti': {
+    occhiello: 'Tavolo · Gestionale ristoranti',
+    titolo: 'Ordina e paga dal QR. La sala vede tutto.',
+    sottotitolo: 'Menu, ordini, pagamenti e prenotazioni senza percentuali trattenute sull’incassato.',
+    tinta: 'terra',
+  },
   '/servizi/gestione-social-media': {
     occhiello: 'Gestione social',
     titolo: 'Due canali presidiati, ogni mese.',
@@ -202,6 +208,12 @@ const IT: Record<string, Anteprima> = {
 }
 
 const EN: Record<string, Anteprima> = {
+  '/en/services/restaurant-management-system': {
+    occhiello: 'Tavolo · Restaurant system',
+    titolo: 'Scan, order and pay. The room sees everything.',
+    sottotitolo: 'QR menu, ordering, payments and bookings with no percentage retained from sales.',
+    tinta: 'terra',
+  },
   '/en': {
     occhiello: 'Social Web Automation',
     titolo: 'Social, SEO, websites and B2B leads for SMEs.',

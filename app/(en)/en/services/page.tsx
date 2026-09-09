@@ -1,7 +1,7 @@
 import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, CalendarClock, Clapperboard, ClipboardCheck, FileSearch, Globe2, Newspaper, PhoneCall, Scale, Share2, Target, Workflow, type LucideIcon } from 'lucide-react'
+import { ArrowRight, CalendarClock, Clapperboard, ClipboardCheck, FileSearch, Globe2, Newspaper, PhoneCall, Scale, Share2, Target, UtensilsCrossed, Workflow, type LucideIcon } from 'lucide-react'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '@/styles/english.module.css'
 
@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 }
 
 const services: { id: string; href?: string; icon: LucideIcon; title: string; text: string }[] = [
+  { id: 'restaurant', href: '/en/services/restaurant-management-system', icon: UtensilsCrossed, title: 'Restaurant management system', text: 'QR menu, table ordering and payment, bookings, split bills and live room operations. Payments go to the venue and SWA retains no percentage of sales.' },
   { id: 'social', href: '/en/services/social-media-management', icon: Share2, title: 'Managed social media', text: 'Monthly strategy, channel-specific content, media planning, approval and publishing. Presence covers 2 channels and 16 pieces; Growth covers 2 channels and 24 pieces.' },
   { id: 'seo', href: '/en/services/seo-geo', icon: FileSearch, title: 'SEO + GEO strategy', text: 'Audit, intent mapping, information architecture, technical priorities, entities and structured data. This defines what to improve; it is not the monthly article-production plan.' },
   { id: 'blog', href: '/en/services/blog-seo-geo', icon: Newspaper, title: 'Blog SEO + GEO', text: 'The ongoing execution layer: 12 articles each month, editorial planning, on-page metadata, FAQs, human review and publishing or CMS-ready delivery.' },

@@ -20,6 +20,7 @@ const SERVIZI_IT = [
   '/servizi/ricerca-clienti-b2b',
   '/servizi/gestione-lavorazioni',
   '/servizi/automazione-gestionali',
+  '/servizi/gestionale-ristoranti',
 ] as const
 
 // Le due pagine con impianto proprio: non passano da SERVIZI_EN perche' usano
@@ -29,6 +30,7 @@ const SERVIZI_IT = [
 const ALTRE_LANDING: Record<string, string> = {
   '/servizi/segretaria-telefonica-ai': '/en/services/ai-phone-assistant',
   '/servizi/agenda-clienti-whatsapp': '/en/services/client-diary-whatsapp',
+  '/servizi/gestionale-ristoranti': '/en/services/restaurant-management-system',
 }
 
 export const COPPIE_LINGUA: Record<string, string> = {

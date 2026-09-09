@@ -83,6 +83,7 @@ export const PREZZO_INGRESSO: Record<string, string> = {
   'video-produzione': VIDEO_DA,
   'gestione-lavorazioni': 'Su preventivo',
   automazione: 'Su preventivo',
+  'gestionale-ristoranti': 'da 39 € al mese',
   legale: `${CONSULENZA_PREZZO} / ${CONSULENZA_LEGALE.durataMinuti} minuti`,
 }
 
