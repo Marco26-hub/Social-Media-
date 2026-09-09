@@ -21,6 +21,8 @@ export type Settore = {
   slug: string
   /** Nome della categoria, usato nei menu e nell’elenco. */
   nome: string
+  /** Modi comuni in cui un cliente descrive la stessa attività a Odino. */
+  sinonimi?: string[]
   /** Una riga per l’elenco dei settori. */
   sommario: string
   titoloSeo: string
@@ -52,6 +54,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'autosaloni',
     nome: 'Autosaloni e concessionarie',
+    sinonimi: ['autosalone', 'concessionaria', 'rivendita auto', 'salone auto', 'compro auto'],
     sommario: 'Ogni veicolo è un contenuto e ogni annuncio genera una chiamata da prendere.',
     titoloSeo: 'Marketing per autosaloni e concessionarie | SWA',
     descrizioneSeo:
@@ -110,6 +113,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'parrucchieri',
     nome: 'Parrucchieri e barberie',
+    sinonimi: ['parrucchiere', 'parrucchiera', 'barbiere', 'barberia', 'salone capelli', 'hair stylist'],
     sommario: 'Il telefono squilla con le mani nei capelli e chi non trova risposta non richiama.',
     titoloSeo: 'Parrucchieri e barberie: telefono, agenda e social | SWA',
     descrizioneSeo:
@@ -166,6 +170,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'agenzie-immobiliari',
     nome: 'Agenzie immobiliari',
+    sinonimi: ['agenzia immobiliare', 'agente immobiliare', 'immobiliare', 'studio immobiliare'],
     sommario: 'Ogni immobile è un lancio da preparare e una visita da mettere in agenda.',
     titoloSeo: 'Agenzie immobiliari: contenuti, sito e chiamate | SWA',
     descrizioneSeo:
@@ -224,6 +229,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'imprese-di-pulizia',
     nome: 'Imprese di pulizia',
+    sinonimi: ['impresa di pulizie', 'ditta di pulizie', 'pulizie professionali', 'housekeeping'],
     sommario: 'Si vince su preventivi e referenze, mentre le squadre sono già in cantiere.',
     titoloSeo: 'Imprese di pulizia: clienti B2B e rapportini | SWA',
     descrizioneSeo:
@@ -287,6 +293,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'centri-estetici',
     nome: 'Centri estetici',
+    sinonimi: ['centro estetico', 'estetista', 'salone di bellezza', 'beauty center', 'nail center'],
     sommario: 'Il pacchetto lasciato a metà vale più di una cliente nuova da trovare.',
     titoloSeo: 'Centri estetici: percorsi ripresi e telefono coperto | SWA',
     descrizioneSeo:
@@ -343,6 +350,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'cliniche-estetiche',
     nome: 'Cliniche estetiche',
+    sinonimi: ['clinica estetica', 'medicina estetica', 'medico estetico', 'chirurgia estetica'],
     sommario: 'Prime informazioni e prenotazioni al telefono, le domande cliniche al personale.',
     titoloSeo: 'Cliniche estetiche: reception e prenotazioni | SWA',
     descrizioneSeo:
@@ -399,6 +407,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'studi-dentistici',
     nome: 'Studi dentistici',
+    sinonimi: ['studio dentistico', 'dentista', 'odontoiatra', 'clinica dentale', 'studio odontoiatrico'],
     sommario: 'Igieni da richiamare, preventivi mai iniziati e poltrone liberate all’ultimo.',
     titoloSeo: 'Studi dentistici: richiami di igiene e agenda piena | SWA',
     descrizioneSeo:
@@ -455,6 +464,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'fisioterapia-osteopatia',
     nome: 'Fisioterapia e osteopatia',
+    sinonimi: ['fisioterapista', 'studio fisioterapico', 'osteopata', 'studio osteopatico', 'riabilitazione'],
     sommario: 'Chi sta meglio dopo tre sedute su sei sparisce e nessuno lo richiama.',
     titoloSeo: 'Fisioterapia: cicli ripresi e sedute fissate | SWA',
     descrizioneSeo:
@@ -511,6 +521,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'officine-e-servizi-locali',
     nome: 'Officine e servizi locali',
+    sinonimi: ['officina', 'meccanico', 'carrozzeria', 'gommista', 'elettrauto', 'centro revisioni', 'artigiano'],
     sommario: 'Orari, preventivi e scadenze chiesti al telefono mentre lavori sul mezzo.',
     titoloSeo: 'Officine e servizi locali: telefono e scadenze | SWA',
     descrizioneSeo:
@@ -568,6 +579,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'ristoranti-e-bar',
     nome: 'Ristoranti, pizzerie e bar',
+    sinonimi: ['ristorante', 'pizzeria', 'bar', 'paninoteca', 'hamburgeria', 'hamburgheria', 'pub', 'piadineria', 'gastronomia', 'tavola calda', 'bistrot', 'osteria', 'trattoria', 'locale', 'fast food', 'food truck'],
     sommario: 'Ordine e pagamento al tavolo dal QR, prenotazioni, pizza al taglio col numero di ritiro e sala che gira senza attese.',
     titoloSeo: 'Ordine e pagamento al tavolo con QR per ristoranti e pizzerie | SWA',
     descrizioneSeo:
@@ -638,6 +650,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'gelaterie',
     nome: 'Gelaterie',
+    sinonimi: ['gelateria', 'gelataio', 'yogurteria', 'creperia', 'laboratorio gelato'],
     sommario: 'Sito da 19,90 € al mese, menu QR aggiornabile e ordini su WhatsApp.',
     titoloSeo: 'Siti e menu QR per gelaterie da 19,90 €/mese | SWA',
     descrizioneSeo:
@@ -710,6 +723,7 @@ export const SETTORI: Settore[] = [
   {
     slug: 'elettricisti-e-idraulici',
     nome: 'Elettricisti e idraulici',
+    sinonimi: ['elettricista', 'idraulico', 'termotecnico', 'caldaista', 'impiantista', 'pronto intervento'],
     sommario: 'Il rapporto di intervento firmato sul posto, invece del blocchetto in furgone.',
     titoloSeo: 'Rapportini e sito per elettricisti e idraulici | SWA',
     descrizioneSeo:

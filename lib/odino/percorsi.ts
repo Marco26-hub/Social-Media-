@@ -28,7 +28,7 @@ const pianoAgenda = voce('agenda').piani
 const impresa = STANDALONE_SERVICES.find(x => x.slug === 'web-impresa')!
 const CANONE_IMPRESA = `${impresa.pricePrefix ? `${impresa.pricePrefix} ` : ''}${impresa.displayPrice.replace('€', '')} € ${impresa.cadenceLabel}`
 
-export const NODI: Nodo[] = [
+const NODI_BASE: Nodo[] = [
   {
     id: 'da-dove-parto',
     domanda: 'Da dove conviene partire?',
@@ -362,6 +362,25 @@ export const NODI: Nodo[] = [
     },
   },
 ]
+
+const NODI_SETTORI: Nodo[] = SETTORI.map(s => ({
+  id: `settore-${s.slug}`,
+  domanda: `Che cosa potete fare per ${s.nome.toLowerCase()}?`,
+  chiavi: [s.nome, s.slug.replace(/-/g, ' '), ...(s.sinonimi ?? [])],
+  risposta: {
+    titolo: `Sì, abbiamo un percorso per ${s.nome.toLowerCase()}.`,
+    testo: `${s.sommario} ${s.risultati[0]?.text ?? s.lead}`,
+    link: [
+      { href: `/settori/${s.slug}`, label: `Soluzioni per ${s.nome.toLowerCase()}` },
+      ...s.correlati.slice(0, 2),
+    ],
+    poi: s.slug === 'ristoranti-e-bar'
+      ? ['sala-ristorante', 'quanto-costa-social', 'sito']
+      : ['da-dove-parto', 'quanto-costa-social', 'telefono-come-funziona'],
+  },
+}))
+
+export const NODI: Nodo[] = [...NODI_BASE, ...NODI_SETTORI]
 
 export const NODO_INIZIALE = 'da-dove-parto'
 

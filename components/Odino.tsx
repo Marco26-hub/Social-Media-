@@ -9,7 +9,7 @@ import { MOTORE } from '@/lib/odino/percorsi'
 import { MOTORE_EN, settoreCitatoEn } from '@/lib/odino/percorsi.en'
 import { settoreCitato } from '@/lib/odino/percorsi'
 import { type Nodo } from '@/lib/odino/ricerca'
-import { cercaDomande, type Domanda } from '@/lib/odino/domande'
+import { cercaDomande, domandeDelSettore, type Domanda } from '@/lib/odino/domande'
 import { ODINO_NOME } from '@/lib/odino/identita'
 import { TESTI, WHATSAPP_ODINO } from '@/lib/odino/testi'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
@@ -173,8 +173,15 @@ export default function Odino() {
     // Il contesto: che cosa si stava dicendo un attimo fa. «E quanto costa?»
     // dopo la segretaria telefonica parla della segretaria, non del sito — e'
     // la cosa che chiunque da' per scontata parlando, e che ODINO perdeva.
-    const trovati = motore.cerca(testo, { nodoCorrente: corrente?.id, settore: settore?.slug })
-    if (trovati.length) { registra(testo, true, trovati[0].id); vai(trovati[0], dalSito); return }
+    const trovati = motore.cerca(testo, { nodoCorrente: corrente?.id, settore: (mestiere ?? settore)?.slug })
+    if (trovati.length) {
+      const risposteSettore = mestiere && trovati[0].id.startsWith('settore-')
+        ? domandeDelSettore(mestiere.slug, 4, lingua)
+        : dalSito
+      registra(testo, true, trovati[0].id)
+      vai(trovati[0], risposteSettore)
+      return
+    }
     if (dalSito.length) {
       // Nessun percorso curato, ma il sito una risposta ce l'ha: si mostra
       // quella, con la pagina da cui viene.
@@ -185,7 +192,12 @@ export default function Odino() {
       registra(testo, true, undefined, dalSito[0].fonte.href)
       return
     }
-    if (mestiere) { registra(testo, true, 'settore:' + mestiere.slug); vai(motore.nodo('da-dove-parto')!); return }
+    if (mestiere) {
+      const nodoSettore = motore.nodo(`settore-${mestiere.slug}`) ?? motore.nodo('settore')!
+      registra(testo, true, 'settore:' + mestiere.slug)
+      vai(nodoSettore, domandeDelSettore(mestiere.slug, 4, lingua))
+      return
+    }
     registra(testo, false)
     setNonCapito(testo)
     setApprofondimenti([])
@@ -337,6 +349,22 @@ export default function Odino() {
               </p>
             )}
           </>
+        )}
+
+        {approfondimenti.length > 0 && (
+          <div className={styles.dalSito}>
+            {approfondimenti.map(d => (
+              <details
+                key={d.fonte.href + d.q}
+                open={aperta === d.q}
+                onToggle={e => setAperta(e.currentTarget.open ? d.q : null)}
+              >
+                <summary>{d.q}</summary>
+                <p>{d.a}</p>
+                <Link href={d.fonte.href}>{inglese ? 'Read more' : 'Approfondisci'}: {d.fonte.label}</Link>
+              </details>
+            ))}
+          </div>
         )}
 
         <p className={styles.etichetta}>{nonCapito || !corrente ? t.frequenti : t.daQui}</p>

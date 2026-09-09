@@ -187,12 +187,12 @@ export function motore(NODI: Nodo[]): Motore {
  */
 export function riconosciSettore(
   testo: string,
-  settori: { slug: string; nome: string }[],
+  settori: { slug: string; nome: string; sinonimi?: string[] }[],
 ): { slug: string; nome: string } | undefined {
   const cercati = termini(testo)
   if (!cercati.length) return undefined
   for (const s of settori) {
-    const suoi = [...termini(s.nome), ...termini(s.slug.replace(/-/g, ' '))]
+    const suoi = [...termini(s.nome), ...termini(s.slug.replace(/-/g, ' ')), ...termini((s.sinonimi ?? []).join(' '))]
       .filter(p => p.length > 4 && !['servizi', 'locali', 'services'].includes(p))
     // «gelaterie» deve riconoscere anche «gelateria»: si confronta la radice.
     if (suoi.some(p => cercati.some(c => c.slice(0, 5) === p.slice(0, 5)))) {

@@ -318,3 +318,9 @@ export function cercaDomande(testo: string, quante = 4, lingua: Lingua = 'it'): 
     .slice(0, quante)
     .map(x => x.d)
 }
+
+/** Le risposte curate della pagina del mestiere appena dichiarato. */
+export function domandeDelSettore(slug: string, quante = 4, lingua: Lingua = 'it'): Domanda[] {
+  const base = lingua === 'en' ? `/en/settori/${slug}` : `/settori/${slug}`
+  return CORPUS[lingua].filter(d => d.fonte.href === base).slice(0, quante)
+}
