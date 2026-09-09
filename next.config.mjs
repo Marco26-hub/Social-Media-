@@ -15,7 +15,11 @@ import { withBotId } from 'botid/next/config'
 const isDev = process.env.NODE_ENV !== 'production'
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  // widget.trustpilot.com: bootstrap del TrustBox. Senza questo host lo script
+  // viene rifiutato dalla CSP e il widget resta un contenitore vuoto, senza
+  // errore visibile in pagina — lo stesso modo silenzioso in cui falliva il
+  // pixel di Facebook.
+  `script-src 'self' 'unsafe-inline' https://widget.trustpilot.com${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://drive.google.com https://lh3.googleusercontent.com https://images.unsplash.com https://*.supabase.co",
   "media-src 'self' blob: https://*.supabase.co",
@@ -30,6 +34,10 @@ const csp = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  // Il TrustBox si disegna dentro un iframe servito da Trustpilot. Senza una
+  // frame-src esplicita si ricadeva su default-src 'self' e l'iframe veniva
+  // bloccato anche con lo script gia' autorizzato.
+  "frame-src 'self' https://widget.trustpilot.com",
   "frame-ancestors 'none'",
 ].join('; ')
 
