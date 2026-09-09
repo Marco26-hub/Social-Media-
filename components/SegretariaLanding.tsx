@@ -153,7 +153,7 @@ export default function SegretariaLanding({ c, locale = 'it' }: { c: ContenutoLa
   return (
     <div className={styles.pagina}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <PublicHeader ctaHref={wa} ctaLabel="Richiedi una call" />
+      {!inglese && <PublicHeader ctaHref={wa} ctaLabel="Richiedi una call" />}
 
       {/* Il bersaglio c'era, il link no: chi naviga da tastiera doveva
           attraversare tutto il menu su due pagine servizio. */}
@@ -391,8 +391,8 @@ export default function SegretariaLanding({ c, locale = 'it' }: { c: ContenutoLa
         </section>
       </main>
 
-      <PublicFooter />
-      <FloatingNavigation />
+      {!inglese && <PublicFooter />}
+      {!inglese && <FloatingNavigation />}
     </div>
   )
 }

@@ -2,7 +2,6 @@ import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Mail, MessageCircle } from 'lucide-react'
-import FloatingNavigation from '@/components/FloatingNavigation'
 import { SWA_BLOG_ARTICLES_EN } from '@/lib/swa-blog-content.en'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
@@ -203,7 +202,6 @@ export default function EnglishAuthorPage() {
         </a>
       </section>
 
-      <FloatingNavigation />
     </main>
   )
 }

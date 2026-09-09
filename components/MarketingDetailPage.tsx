@@ -516,7 +516,7 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
       {/* I pulsanti «torna su» e «indietro» erano solo in italiano. Le etichette
           sono tradotte da tempo dentro il componente: restava fuori la meta'
           inglese del sito, senza motivo. */}
-      <FloatingNavigation />
+      {!isEnglish && <FloatingNavigation />}
     </main>
   )
 }

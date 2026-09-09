@@ -838,12 +838,6 @@
 .finalCta > p:not(.eyebrow) { max-width: 630px; margin: 18px auto 0; color: #d5eee5; font-size: 17px; line-height: 1.6; }
 .lightButton { margin-top: 28px; background: white; color: var(--sa-green-dark); }
 .lightButton:hover { background: var(--sa-ink); color: white; }
-.footer { min-height: 110px; display: flex; align-items: center; gap: 30px; padding: 24px max(24px, calc((100vw - 1180px) / 2)); background: var(--sa-ink); color: #aebcb7; }
-.footer div { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-left: auto; }
-.footer div a { color: #d4ded9; font-size: 13px; text-decoration: none; }
-.footer p { margin: 0; font-size: 12px; }
-.footer .brand { color: white; }
-.mobileCta { display: none; }
 
 @keyframes heroEnter {
   from { opacity: 0; transform: translateY(18px); }
@@ -902,13 +896,6 @@
   border-bottom: 1px solid rgba(73, 214, 160, .16);
 }
 :global(html[data-theme='dark']) .signalBand span { color: #d7e5df; }
-
-:global(html[data-theme='dark']) .skipLink,
-:global(html[data-theme='dark']) .compliance,
-:global(html[data-theme='dark']) .legalPartner,
-:global(html[data-theme='dark']) .footer {
-  background: #0d1814;
-}
 
 :global(html[data-theme='dark']) .navbar {
   border-color: rgba(238, 244, 241, .12);
@@ -1178,37 +1165,6 @@
   /* Ragione sociale e partita IVA chiudono la pagina proprio dove, nell'angolo,
      sta la mascotte: il testo va a capo prima invece di passarle sotto. */
   .footer p { padding-right: 96px; }
-  .mobileCta {
-    position: fixed;
-    right: 12px;
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    left: 12px;
-    z-index: 50;
-    min-height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: var(--sa-coral);
-    border-radius: 6px;
-    color: white;
-    font-size: 14px;
-    font-weight: 800;
-    text-decoration: none;
-    box-shadow: 0 10px 28px rgba(21, 35, 31, .24);
-    animation: mobileCtaEnter .5s .7s both, mobileCtaPulse 3.2s 1.5s ease-in-out infinite;
-  }
-}
-
-@keyframes mobileCtaEnter {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes mobileCtaPulse {
-  0%, 70%, 100% { transform: translateY(0); }
-  78% { transform: translateY(-4px); }
-  86% { transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1395,13 +1351,6 @@
 /* Etichetta del piano: #4a3705 e' un marrone scelto per il fondo chiaro, e in
    scuro finiva su una scheda scura — 1,55:1. */
 :global(html[data-theme='dark']) .planAudience { color: #e8c25a; }
-
-/* Il bottone fisso sul telefono: bianco su corallo #e96f51 fa 3,06:1, sotto la
-   soglia del testo piccolo. Il corallo si scurisce quanto basta per arrivare a
-   4,6:1 restando lo stesso colore del marchio. */
-@media (max-width: 900px) {
-  .mobileCta { background: #c2452a; }
-}
 
 /* Il bottone del riquadro web in tema scuro diventa oro con testo bianco:
    1,69:1. Solo quello — gli altri due hanno fondo verde e blu, dove il bianco

@@ -7,7 +7,6 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowRight, CheckCircle2, Clock, FileCheck2, LockKeyhole, Scale, ShieldCheck, Sparkles } from 'lucide-react'
 import CorsoAiActForm from '@/components/CorsoAiActForm'
-import FloatingNavigation from '@/components/FloatingNavigation'
 import styles from '@/styles/consulenza.module.css'
 
 // La gemella inglese di /consulenza. Stessa pagina, stesso modulo, stessa
@@ -138,7 +137,6 @@ export default function LegalAdvicePage() {
           <CorsoAiActForm locale="en" />
         </div>
       </section>
-      <FloatingNavigation />
     </main>
   )
 }

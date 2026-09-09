@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft } from 'lucide-react'
+import FloatingNavigation from './FloatingNavigation'
+import PublicFooter from './PublicFooter'
 import styles from './legal.module.css'
 import { TITOLARE } from '@/lib/legal-config'
 
@@ -100,6 +102,12 @@ export default function LegalShell({
           </div>
         </div>
       </main>
+      {/* Privacy, cookie, termini, trasparenza AI, sicurezza e accessibilita
+          finivano senza footer: si entrava dal footer di un'altra pagina e da
+          li' non si tornava piu' indietro. Le gemelle inglesi lo ricevono gia'
+          dal layout di /en, quindi qui va aggiunto solo per l'italiano. */}
+      {!inglese && <PublicFooter />}
+      {!inglese && <FloatingNavigation />}
     </div>
   )
 }

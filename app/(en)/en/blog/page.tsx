@@ -5,7 +5,6 @@ import type { Metadata } from 'next'
 import { ArrowRight, BookOpen, Clock3, Search, Sparkles } from 'lucide-react'
 import { SITE_URL } from '@/lib/site-config'
 import { SWA_BLOG_ARTICLES_EN } from '@/lib/swa-blog-content.en'
-import FloatingNavigation from '@/components/FloatingNavigation'
 import styles from '@/styles/blog.module.css'
 
 // Indice inglese del Journal.
@@ -161,7 +160,6 @@ export default function EnglishBlogIndex() {
         </Link>
       </section>
 
-      <FloatingNavigation />
     </main>
   )
 }

@@ -7,7 +7,6 @@ import { ArrowLeft, ArrowRight, Clock3 } from 'lucide-react'
 import { buildJsonLd } from '@/lib/blog-render'
 import { SITE_URL } from '@/lib/site-config'
 import { SWA_BLOG_ARTICLES_EN, getSwaBlogArticleEn } from '@/lib/swa-blog-content.en'
-import FloatingNavigation from '@/components/FloatingNavigation'
 import styles from '@/styles/blog.module.css'
 
 // Articolo inglese: solo contenuto statico, nessun accesso al database. La
@@ -200,7 +199,6 @@ export default async function EnglishArticlePage({ params }: { params: Promise<{
         </div>
       </article>
 
-      <FloatingNavigation />
     </main>
   )
 }

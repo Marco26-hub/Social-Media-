@@ -10,6 +10,14 @@
   color: #10120e;
   padding: 0 20px 80px;
 }
+
+/* Il footer condiviso deve arrivare ai bordi dello schermo anche nelle pagine
+   legali, il cui contenuto mantiene invece il margine di lettura di 20px. */
+.page > :global(footer) {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-bottom: -80px;
+}
 .header {
   position: sticky;
   top: 0;
@@ -153,4 +161,3 @@
 .updated, .footerNote p { color: rgba(16, 18, 14, .72); }
 /* Il collegamento alla versione italiana dentro la nota: 4,46:1. */
 .nota a { color: #6f5108; }
-

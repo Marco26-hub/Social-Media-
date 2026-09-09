@@ -1,6 +1,5 @@
 import { anteprimaOg } from '@/lib/anteprima'
 import Link from 'next/link'
-import Image from 'next/image'
 import type { Metadata } from 'next'
 import {
   Workflow,
@@ -32,6 +31,7 @@ import { PREZZO_INGRESSO } from '@/lib/prezzi-ingresso'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { TITOLARE } from '@/lib/legal-config'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
+import PublicFooter from '@/components/PublicFooter'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicHeader from '@/components/PublicHeader'
 import SegretariaPopup from '@/components/SegretariaPopup'
@@ -725,38 +725,10 @@ export default function LandingPage() {
         </a>
       </section>
 
-      <footer className={styles.footer}>
-        <Link href="/" className={styles.brand}>
-          <Image className={styles.brandLogo} src="/brand/swa-logo-official.png" alt="SWA" width={82} height={38} />
-          <span>Social Web Automation</span>
-        </Link>
-        <div>
-          <Link href="/servizi">Servizi</Link>
-          <Link href="/chi-siamo">Chi siamo</Link>
-          <Link href="/blog">Journal</Link>
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/termini">Termini</Link>
-          {/* Cookie policy, recesso, accessibilita e sicurezza erano raggiungibili
-              solo dalle altre pagine legali: da nessuna pagina commerciale e da
-              nessuna pagina inglese. Un documento che esiste ma non si raggiunge
-              vale come se non ci fosse. */}
-          <Link href="/cookie-policy">Cookie</Link>
-          <Link href="/recesso">Recesso</Link>
-          <Link href="/accessibilita">Accessibilità</Link>
-          <Link href="/sicurezza">Sicurezza</Link>
-          <Link href="/en" hrefLang="en">English</Link>
-          <Link href="/login">Accesso</Link>
-        </div>
-        <p>
-          © 2026 {TITOLARE.brand}<br />
-          {TITOLARE.ragioneSociale} · P.IVA {TITOLARE.partitaIva}<br />
-          Sede a Cermenate (CO) · Servizi in Italia e nel mondo
-        </p>
-      </footer>
+      {/* Il footer e' lo stesso di tutto il sito: chi arriva qui dalla
+          home trova gli stessi collegamenti che trova su una pagina di settore. */}
+      <PublicFooter />
 
-      <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.mobileCta}>
-        Richiedi una prova <ArrowRight size={17} aria-hidden="true" />
-      </a>
       <FloatingNavigation />
       <SegretariaPopup />
     </main>
