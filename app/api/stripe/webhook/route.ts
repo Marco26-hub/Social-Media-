@@ -177,7 +177,7 @@ async function handleConsulenzaPaid(obj: StripeObject) {
   // mai far fallire la registrazione di un pagamento.
   if (paid) {
     const details = obj.customer_details as StripeObject | undefined
-    void sendMetaConversionEvent({
+    await sendMetaConversionEvent({
       eventName: 'Purchase',
       context: metaContextFromSessionMetadata(meta),
       eventId: `consulenza-purchase-${consulenzaId}`,

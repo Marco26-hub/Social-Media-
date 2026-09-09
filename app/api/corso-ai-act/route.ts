@@ -47,8 +47,9 @@ export async function POST(request: Request) {
     // notifica a noi e una conferma a chi si e' iscritto. Se l'invio fallisce
     // l'iscrizione resta valida: e' registrata, ed e' quello che conta.
     const destinatario = process.env.AGENCY_NOTIFY_EMAIL?.trim()
+    const invii: Promise<unknown>[] = []
     if (destinatario) {
-      void sendEmail({
+      invii.push(sendEmail({
         to: destinatario,
         subject: `Preiscrizione video corsi AI Act — ${nome}`,
         text: [
@@ -59,13 +60,18 @@ export async function POST(request: Request) {
           note ? `Note: ${note}` : null,
           'Origine: /consulenza (o /en/legal-advice)',
         ].filter(Boolean).join('\n'),
-      }).catch(() => {})
+      }))
     }
-    void sendEmail({
+    invii.push(sendEmail({
       to: email,
       subject: 'Sei in lista per i video corsi AI Act',
       text: `Ciao ${nome},\n\nabbiamo registrato la tua preiscrizione ai video corsi sull'AI Act. Nessun pagamento e nessun impegno: ti scriviamo appena il primo modulo e' online.\n\nSe non sei stato tu, ignora questa email.\n\nSocial Web Automation`,
-    }).catch(() => {})
+    }))
+    // Attesi, non lasciati partire e basta: su una funzione serverless
+    // l'istanza puo' essere congelata appena la risposta esce, e una promessa
+    // non attesa non e' garantito che arrivi in fondo. allSettled tiene il
+    // comportamento di prima — se l'invio fallisce l'iscrizione resta valida.
+    await Promise.allSettled(invii)
 
     return NextResponse.json({
       ok: true,

@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     // pagamento non parte, non la vede mai nessuno.
     const destinatario = process.env.AGENCY_NOTIFY_EMAIL?.trim()
     if (destinatario) {
-      void sendEmail({
+      await sendEmail({
         to: destinatario,
         subject: `Richiesta consulenza legale — ${nome}`,
         text: [
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
           `Pagina: ${pagina}`,
           `Riferimento: ${consulenzaId}`,
         ].filter(Boolean).join('\n'),
-      }).catch(() => {})
+      }).catch(() => {})   // l'esito non deve bloccare la richiesta
     }
     const eventSourceUrl = `${baseUrl()}${pagina}`
 
