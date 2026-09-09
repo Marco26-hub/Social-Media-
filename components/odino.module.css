@@ -14,6 +14,7 @@
   transition: transform .2s ease, filter .2s ease;
   perspective: 720px;
   touch-action: manipulation;
+  animation: odinoArriva .9s cubic-bezier(.18, .88, .24, 1.18) backwards;
 }
 .lancio:hover { transform: translateY(-5px); filter: drop-shadow(0 22px 28px rgba(8, 20, 15, .42)) }
 .lancio:focus-visible { outline: 3px solid #d8aa35; outline-offset: 4px; border-radius: 12px }
@@ -38,6 +39,18 @@
   animation: odinoGalleggia3d 4.2s ease-in-out infinite;
   transform-style: preserve-3d;
 }
+.mascotte::before {
+  position: absolute;
+  inset: 24% -8% 3%;
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(216, 170, 53, .34), rgba(15, 107, 79, .13) 48%, transparent 72%);
+  content: '';
+  opacity: 0;
+  filter: blur(7px);
+  transform: scale(.7);
+}
+.salutoAttivo .mascotte::before { animation: odinoAura 6.4s .5s ease-in-out both }
 .robotLayer {
   position: absolute;
   inset: 0;
@@ -46,9 +59,11 @@
   transform-style: preserve-3d;
   transform-origin: 50% 68%;
   transition: transform .16s ease-out;
+  z-index: 1;
 }
 .robotLayer img { object-fit: contain; object-position: center bottom }
 .lancio:not(:hover) .robotLayer { animation: odinoGuarda 5.4s ease-in-out infinite }
+.lancio.salutoAttivo .robotLayer { animation: odinoAccoglie 5.8s .7s ease-in-out both }
 
 /* La scatola dei livelli: proporzione 2:3 come l'immagine, centrata nel
    bottone. Ogni livello e' una copia intera dell'immagine con un ritaglio
@@ -116,100 +131,169 @@
 .palpebraSinistra { left: 37%; top: 23.4%; width: 13% }
 .palpebraDestra { left: 60.5%; top: 25%; width: 12% }
 
-/* Sequenza unica: bolle lente, presentazione, domanda e invito.
-   La sagoma era una nuvola fatta di cinque gradienti sovrapposti: a schermo
-   piccolo si leggeva come una macchia sfrangiata sopra il testo. Un ovale
-   pieno, piu' piccolo, dice la stessa cosa e non compete con la pagina. */
+/* Sequenza unica: le bolle seguono la mano e si fondono in una sola nuvola.
+   La sagoma e' un SVG minuscolo: curve pulite anche su Retina, nessuna immagine
+   da scaricare e nessun bordo sfrangiato sui telefoni. La nuvola resta formata
+   mentre le tre frasi si dissolvono una nell'altra. */
 .saluto {
   position: absolute;
-  right: 58px;
-  top: -34px;
-  width: 150px;
-  height: 62px;
+  right: 56px;
+  top: -52px;
+  width: 202px;
+  height: 110px;
   z-index: 4;
   pointer-events: none;
 }
-.saluto strong {
+.nuvola {
   position: absolute;
   right: 0;
   top: 0;
-  width: 138px;
-  height: 46px;
+  width: 196px;
+  height: 104px;
+  display: block;
+  opacity: 0;
+  transform: translate(16px, 15px) scale(.58) rotate(3deg);
+  transform-origin: 91% 88%;
+  animation: odinoFormaNuvola 16.6s 4.2s cubic-bezier(.2, .78, .24, 1) both;
+}
+.nuvola svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter:
+    drop-shadow(0 12px 18px rgba(8, 20, 15, .2))
+    drop-shadow(0 2px 3px rgba(8, 20, 15, .12));
+}
+.nuvolaSagoma {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: odinoNuvolaRespira 4.8s 5s ease-in-out infinite;
+}
+.nuvolaRiflesso {
+  fill: none;
+  stroke: rgba(255, 255, 255, .92);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: .8;
+}
+.nuvola strong {
+  position: absolute;
+  inset: 21px 25px 19px 25px;
   display: grid;
   place-items: center;
-  isolation: isolate;
   color: #0f6b4f;
-  font: 800 12px/1.12 Arial, sans-serif;
-  letter-spacing: -.02em;
+  font: 800 13px/1.2 Arial, sans-serif;
+  letter-spacing: -.015em;
   text-align: center;
+  text-wrap: balance;
   opacity: 0;
-  transform: translate(10px, 12px) scale(.78);
-  transform-origin: 100% 100%;
+  transform: translateY(6px) scale(.97);
 }
-.saluto strong::before {
+.scintille {
   position: absolute;
-  inset: -6px -10px;
-  z-index: -1;
-  border: 1px solid rgba(216, 170, 53, .55);
-  border-radius: 50%;
-  background: #fffdf7;
-  box-shadow: 0 8px 16px rgba(8, 20, 15, .2);
-  content: '';
+  inset: 0;
+  display: block;
 }
-.saluto strong::after {
+.scintille::before {
   position: absolute;
-  left: 17px;
-  top: -7px;
-  z-index: 2;
+  left: 24px;
+  top: 18px;
   color: #d8aa35;
-  content: '';
-  font: 900 11px/1 Georgia, serif;
+  content: '✦';
+  font: 900 10px/1 Georgia, serif;
+  text-shadow:
+    143px 9px 0 #ef785f,
+    18px 65px 0 rgba(216, 170, 53, .8);
   transform-origin: 50% 50%;
-  animation: odinoScintille 2.2s ease-in-out infinite;
+  animation: odinoScintille 2.7s 4.7s ease-in-out infinite;
 }
-.saluto strong span {
-  position: relative;
-  z-index: 1;
-  max-width: 116px;
+.scintille::after {
+  position: absolute;
+  left: 37px;
+  top: 24px;
+  width: 38px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 255, 255, .95), transparent 68%);
+  content: '';
+  opacity: .7;
+  filter: blur(2px);
+  transform: rotate(-20deg);
 }
-.saluto strong.presentazione {
-  animation: odinoNuvoletta 4.6s 4.8s ease-in-out both;
-}
-.saluto strong.aiuto {
-  animation: odinoNuvoletta 5.8s 8.9s ease-in-out both;
-}
-.saluto strong.invito {
-  width: 176px;
-  animation: odinoNuvoletta 6.8s 13.9s ease-in-out both;
-}
-.saluto strong.invito span { max-width: 142px }
-.saluto i {
+.presentazione { animation: odinoTestoNuvola 5.4s 4.5s ease-in-out both }
+.aiuto { animation: odinoTestoNuvola 5.8s 8.5s ease-in-out both }
+.invito { animation: odinoTestoNuvola 7.2s 12.9s ease-in-out both }
+.saluto > i {
   position: absolute;
   display: block;
-  border: 2px solid #d8aa35;
+  z-index: 5;
+  border: 1.5px solid rgba(216, 170, 53, .9);
   border-radius: 50%;
-  background: #fffdf7;
+  background: radial-gradient(circle at 32% 28%, #fff 0 18%, #fffdf7 52%, #f2e5c4 100%);
+  box-shadow: 0 5px 10px rgba(8, 20, 15, .16), inset 0 0 0 1px rgba(255, 255, 255, .7);
   opacity: 0;
-  animation: odinoBolla 3.4s 3s cubic-bezier(.2, .72, .25, 1) both;
+  animation: odinoBolla 3.5s 1.9s cubic-bezier(.2, .75, .2, 1) both;
 }
-.bollaUno { right: 1px; bottom: 1px; width: 8px; height: 8px; --bolla-x: -9px; --bolla-y: -12px; }
-.bollaDue { right: 10px; bottom: 11px; width: 11px; height: 11px; --bolla-x: -17px; --bolla-y: -24px; animation-delay: 3.55s !important; }
-.bollaTre { right: 23px; bottom: 25px; width: 15px; height: 15px; --bolla-x: -27px; --bolla-y: -38px; animation-delay: 4.1s !important; }
+.bollaUno {
+  right: 0;
+  bottom: 2px;
+  width: 8px;
+  height: 8px;
+  --bolla-mx: -5px;
+  --bolla-my: -8px;
+  --bolla-x: -11px;
+  --bolla-y: -17px;
+}
+.bollaDue {
+  right: 9px;
+  bottom: 13px;
+  width: 12px;
+  height: 12px;
+  --bolla-mx: -10px;
+  --bolla-my: -16px;
+  --bolla-x: -23px;
+  --bolla-y: -31px;
+  animation-delay: 2.45s !important;
+}
+.bollaTre {
+  right: 24px;
+  bottom: 29px;
+  width: 17px;
+  height: 17px;
+  --bolla-mx: -17px;
+  --bolla-my: -24px;
+  --bolla-x: -38px;
+  --bolla-y: -45px;
+  animation-delay: 3.05s !important;
+}
 
 @keyframes odinoBolla {
-  0% { opacity: 0; transform: translate(0, 0) scale(.35) }
-  30% { opacity: 1; transform: translate(-5px, -7px) scale(1) }
-  70% { opacity: .95; transform: translate(var(--bolla-x), var(--bolla-y)) scale(.8) }
-  100% { opacity: 0; transform: translate(var(--bolla-x), var(--bolla-y)) scale(.35) }
+  0% { opacity: 0; transform: translate(7px, 8px) scale(.2) }
+  24% { opacity: 1; transform: translate(var(--bolla-mx), var(--bolla-my)) scale(1) }
+  68% { opacity: .95; transform: translate(var(--bolla-x), var(--bolla-y)) scale(.86) }
+  100% { opacity: 0; transform: translate(calc(var(--bolla-x) - 5px), calc(var(--bolla-y) - 6px)) scale(.38) }
 }
-@keyframes odinoNuvoletta {
-  0%, 100% { opacity: 0; transform: translate(10px, 12px) scale(.78) }
-  15%, 85% { opacity: 1; transform: translate(0, 0) scale(1) }
+@keyframes odinoFormaNuvola {
+  0% { opacity: 0; transform: translate(16px, 15px) scale(.58) rotate(3deg); filter: blur(3px) }
+  6% { opacity: 1; transform: translate(-2px, -1px) scale(1.025) rotate(-.6deg); filter: blur(0) }
+  10%, 91% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0); filter: blur(0) }
+  96% { opacity: .7; transform: translate(-3px, -2px) scale(.985); filter: blur(0) }
+  100% { opacity: 0; transform: translate(-8px, -5px) scale(.94); filter: blur(2px) }
+}
+@keyframes odinoTestoNuvola {
+  0%, 100% { opacity: 0; transform: translateY(6px) scale(.97) }
+  10%, 86% { opacity: 1; transform: translateY(0) scale(1) }
+}
+@keyframes odinoNuvolaRespira {
+  0%, 100% { transform: translateY(0) scale(1) }
+  50% { transform: translateY(-1.5px) scale(1.006) }
 }
 @keyframes odinoScintille {
-  0%, 100% { opacity: .25; transform: scale(.72) rotate(-8deg) }
-  45% { opacity: 1; transform: scale(1.15) rotate(4deg) }
-  70% { opacity: .55; transform: scale(.9) rotate(0) }
+  0%, 100% { opacity: .18; transform: scale(.7) rotate(-9deg) }
+  42% { opacity: 1; transform: scale(1.12) rotate(4deg) }
+  68% { opacity: .45; transform: scale(.88) rotate(0) }
 }
 
 /* Saluto doppio, ampio: ventiquattro gradi all'andata, sei di rimbalzo,
@@ -257,6 +341,25 @@
 @keyframes odinoGalleggia3d {
   0%, 100% { transform: translateY(0) }
   50% { transform: translateY(-7px) }
+}
+
+@keyframes odinoArriva {
+  from { opacity: 0; transform: translateY(24px) scale(.82) }
+  70% { opacity: 1 }
+  to { opacity: 1; transform: translateY(0) scale(1) }
+}
+
+@keyframes odinoAura {
+  0%, 100% { opacity: 0; transform: scale(.7) }
+  22% { opacity: .7; transform: scale(1.02) }
+  68% { opacity: .42; transform: scale(.92) }
+}
+
+@keyframes odinoAccoglie {
+  0%, 100% { transform: rotateX(1deg) rotateY(-4deg) translateZ(18px) }
+  28% { transform: rotateX(-3deg) rotateY(7deg) translateZ(27px) }
+  58% { transform: rotateX(0) rotateY(3deg) translateZ(23px) }
+  82% { transform: rotateX(1deg) rotateY(-2deg) translateZ(20px) }
 }
 
 @keyframes odinoGuarda {
@@ -369,6 +472,20 @@
     width: 108px;
     height: 132px;
   }
+  .saluto {
+    right: 72px;
+    top: -64px;
+    width: 230px;
+    height: 122px;
+  }
+  .nuvola {
+    width: 222px;
+    height: 111px;
+  }
+  .nuvola strong {
+    inset: 23px 29px 21px;
+    font-size: 14px;
+  }
 
   .pannello {
     right: 20px;
@@ -386,15 +503,19 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .lancio,
   .pannello,
   .mascotte,
+  .mascotte::before,
   .robotLayer,
   .lancio::before,
   .strato,
   .palpebra,
-  .saluto strong,
-  .saluto strong::after,
-  .saluto i,
+  .nuvola,
+  .nuvolaSagoma,
+  .nuvola strong,
+  .scintille::before,
+  .saluto > i,
   .stato { animation: none !important; transition: none !important }
 }
 

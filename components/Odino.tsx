@@ -39,6 +39,28 @@ export default function Odino() {
   const motore = inglese ? MOTORE_EN : MOTORE
   const lingua = inglese ? 'en' as const : 'it' as const
   const riconosci = inglese ? settoreCitatoEn : settoreCitato
+  // L'ultima frase accompagna quello che la persona sta guardando. In questo
+  // modo il saluto non e' una decorazione uguale ovunque, ma l'inizio utile
+  // della conversazione che quella pagina suggerisce.
+  const invitoSaluto = inglese
+    ? percorso.startsWith('/en/settori')
+      ? 'What is your business sector?'
+      : percorso.startsWith('/en/pricing')
+        ? 'Looking for the right package?'
+        : percorso.startsWith('/en/services')
+          ? 'What result do you want?'
+          : percorso.startsWith('/en/blog')
+            ? 'What would you like to explore?'
+            : 'Tell me about your business'
+    : percorso.startsWith('/settori')
+      ? 'Qual è il tuo settore?'
+      : percorso.startsWith('/pacchetti')
+        ? 'Cerchi il pacchetto giusto?'
+        : percorso.startsWith('/servizi')
+          ? 'Quale risultato vuoi ottenere?'
+          : percorso.startsWith('/blog')
+            ? 'Cosa vuoi approfondire?'
+            : 'Raccontami la tua attività'
 
   const [aperto, setAperto] = useState(false)
   const [mostraSaluto, setMostraSaluto] = useState(false)
@@ -260,21 +282,46 @@ export default function Odino() {
             </span>
           </span>
         </span>
-        {/* Il saluto nasce dalla mano: tre bolle salgono e diventano una vera
-            nuvola. Le frasi sono testo, quindi restano nitide e traducibili. */}
+        {/* Il saluto nasce dalla mano: tre bolle salgono e diventano una sola
+            nuvola vettoriale, che resta formata mentre cambiano le frasi. */}
         {mostraSaluto && <span className={styles.saluto} aria-hidden="true">
           <i className={styles.bollaUno} />
           <i className={styles.bollaDue} />
           <i className={styles.bollaTre} />
-          <strong className={styles.presentazione}>
-            <span>{inglese ? "Hi, I'm Odino!" : 'Ciao, sono Odino!'}</span>
-          </strong>
-          <strong className={styles.aiuto}>
-            <span>{inglese ? 'Can I help you?' : 'Posso aiutarti?'}</span>
-          </strong>
-          <strong className={styles.invito} onAnimationEnd={() => setMostraSaluto(false)}>
-            <span>{inglese ? 'Tell me about your business' : 'Dimmi che attività hai'}</span>
-          </strong>
+          <span
+            className={styles.nuvola}
+            onAnimationEnd={(evento) => {
+              if (evento.currentTarget === evento.target) setMostraSaluto(false)
+            }}
+          >
+            <svg viewBox="0 0 220 110" role="presentation" focusable="false">
+              <defs>
+                <linearGradient id="odino-nuvola-fondo" x1="30" y1="12" x2="184" y2="101" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stopColor="#ffffff" />
+                  <stop offset="0.58" stopColor="#fffdf7" />
+                  <stop offset="1" stopColor="#f8f1df" />
+                </linearGradient>
+                <linearGradient id="odino-nuvola-bordo" x1="28" y1="12" x2="192" y2="101" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stopColor="#f1d77d" />
+                  <stop offset="0.5" stopColor="#d8aa35" />
+                  <stop offset="1" stopColor="#ed785d" />
+                </linearGradient>
+              </defs>
+              <path
+                className={styles.nuvolaSagoma}
+                d="M42 95C23 95 10 84 10 68c0-15 11-26 27-28 1-16 14-28 30-26C78 3 98 1 112 11c17-8 36 0 43 15 20-4 38 10 38 27 15 4 23 16 19 29-4 13-17 19-32 18-17 4-33 4-47 0-14 6-31 6-45 1-16 5-35 3-46-6Z"
+                fill="url(#odino-nuvola-fondo)"
+                stroke="url(#odino-nuvola-bordo)"
+                strokeWidth="2"
+                vectorEffect="non-scaling-stroke"
+              />
+              <path className={styles.nuvolaRiflesso} d="M39 42c5-13 17-21 31-20 11-9 28-10 40-3" />
+            </svg>
+            <span className={styles.scintille} />
+            <strong className={styles.presentazione}>{inglese ? "Hi, I'm Odino!" : 'Ciao, sono Odino!'}</strong>
+            <strong className={styles.aiuto}>{inglese ? 'Can I help you?' : 'Posso aiutarti?'}</strong>
+            <strong className={styles.invito}>{invitoSaluto}</strong>
+          </span>
         </span>}
         <span className={styles.stato} aria-hidden="true" />
       </button>
