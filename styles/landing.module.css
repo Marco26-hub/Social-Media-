@@ -1175,6 +1175,9 @@
   .lightButton { width: 100%; }
   .footer { align-items: flex-start; flex-direction: column; padding: 35px 18px 100px; }
   .footer div { margin-left: 0; }
+  /* Ragione sociale e partita IVA chiudono la pagina proprio dove, nell'angolo,
+     sta la mascotte: il testo va a capo prima invece di passarle sotto. */
+  .footer p { padding-right: 96px; }
   .mobileCta {
     position: fixed;
     right: 12px;

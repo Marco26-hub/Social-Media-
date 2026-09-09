@@ -149,6 +149,10 @@
 @media (max-width: 820px) {
   .socialSection { padding: 40px 18px; }
   .footerBottom { grid-template-columns: 1fr; align-items: start; padding: 34px 18px; }
+  /* La ragione sociale e la partita IVA sono l'ultima riga della pagina, dove
+     nell'angolo sta la mascotte: il testo va a capo prima invece di passarle
+     sotto. E' una rientranza su un paragrafo, non spazio vuoto in fondo. */
+  .footerBottom > p { padding-right: 96px; }
   /* Dodici collegamenti, quattro per riga: tre righe esatte, colonne allineate
      una sotto l'altra e la stessa distanza fra tutti. In fila andavano a capo
      da soli, quattro e cinque e tre a seconda della lunghezza delle parole.
