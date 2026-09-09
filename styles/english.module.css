@@ -275,6 +275,7 @@
 :global(html[data-theme='dark']) .priceCard .primary { color: var(--green); }
 :global(html[data-theme='dark']) .priceCard .primary:hover,
 :global(html[data-theme='dark']) .featured .primary,
+:global(html[data-theme='dark']) .videoCard .primary,
 :global(html[data-theme='dark']) .blogCard .primary,
 :global(html[data-theme='dark']) .webCard .primary { color: #08281d; }
 :global(html[data-theme='dark']) .leadCard .primary { color: #fff; }
@@ -333,3 +334,9 @@
   .setup,
   .note { font-size: 12.5px; }
 }
+
+
+/* La scheda video e' stata aggiunta dopo, e nell'elenco dei bottoni che in
+   tema scuro devono avere il testo scuro sul verde pieno non c'era: prendeva
+   il verde anche come colore del testo — verde su verde, 1:1, un bottone
+   invisibile. */

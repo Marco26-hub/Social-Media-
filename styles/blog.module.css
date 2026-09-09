@@ -384,3 +384,13 @@
   .breadcrumbs,
   .articleTable thead th { font-size: 12.5px; }
 }
+
+
+/* Le etichette degli argomenti erano #45534e fisso: in tema scuro finivano su
+   fondo quasi nero, 2,45:1. Il token segue il tema. */
+.topicRail span { color: var(--muted); }
+
+
+/* Briciole e data articolo erano #73807b: 3,8:1 su fondo chiaro, 4,3 su scuro.
+   Il token le tiene leggibili in tutti e due i temi. */
+.breadcrumbs span, .articleMeta span, .articleMeta time { color: var(--muted); }

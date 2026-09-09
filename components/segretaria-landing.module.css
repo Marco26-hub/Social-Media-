@@ -585,3 +585,22 @@
   transform: translateY(-180%);
 }
 .skipLink:focus { transform: translateY(0); }
+
+
+/* L'occhiello e' oro scuro #8a6a12, giusto sui fondi chiari della pagina. Le
+   fasce scure — il pannello di esempio, la dichiarazione — lo ricevevano
+   uguale: 2,44:1 su verde profondo. Li' serve l'oro chiaro. */
+.pagina :global(.admin-copy > span),
+.pagina :global(.statement-band span),
+.pagina :global(.plain-band span),
+.pagina :global(.geo-section .section-title > span),
+.pagina :global(.full-workflow .section-title > span) { color: #e8c25a; }
+
+
+/* In tema scuro l'intera pagina va su fondo quasi nero: l'oro scuro degli
+   occhielli, giusto sui fondi chiari, li' scende a 3,9:1. */
+:global(html[data-theme='dark']) .pagina :global(.eyebrow),
+:global(html[data-theme='dark']) .pagina :global(.section-title > span),
+:global(html[data-theme='dark']) .pagina :global(.page-intro > span),
+:global(html[data-theme='dark']) .pagina :global(.faq-section > span),
+:global(html[data-theme='dark']) .pagina :global(.pricing-teaser > div > span) { color: #e8c25a; }

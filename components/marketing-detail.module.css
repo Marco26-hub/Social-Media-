@@ -748,3 +748,20 @@ h1 .eyebrow, .hero h1 .eyebrow {
     padding: 52px 20px 8px;
   }
 }
+
+
+/* Variante gelateria: il pannello dei segnali diventa chiaro, ma le etichette
+   del prezzo tenevano i grigi scelti per il pannello scuro — «/mese» faceva
+   1,77:1 su bianco. Qui tornano scure quanto il fondo chiede. */
+.pageGelateria .startingPrice > span,
+.pageGelateria .startingPrice > strong small,
+.pageGelateria .startingPrice > p { color: #5c6b63; }
+.pageGelateria .startingPrice > b { border-color: rgba(122, 90, 6, .45); background: rgba(122, 90, 6, .08); color: #7a5a06; }
+
+
+/* In tema scuro il pannello passa a #111713 e i grigi tarati su #0d1814
+   scendono a 3,2:1 — su ventisei pagine di settore e servizio. */
+:global(html[data-theme='dark']) .startingPrice > span,
+:global(html[data-theme='dark']) .startingPrice > p,
+:global(html[data-theme='dark']) .startingPrice > strong small,
+:global(html[data-theme='dark']) .signalHeading small { color: #b6c6bf; }

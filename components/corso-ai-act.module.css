@@ -69,3 +69,7 @@
 @media (prefers-reduced-motion: reduce) {
   .gira { animation: none; }
 }
+
+
+/* La nota sotto il modulo era al 55% sul verde della fascia: 4,4:1. */
+.nota { color: rgba(255, 253, 247, .78); }

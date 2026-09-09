@@ -67,3 +67,23 @@
   .secure,
   .corsoEyebrow { font-size: 12.5px; }
 }
+
+
+/* Il grigio #5c6b63 !important era una correzione per il fondo chiaro, e con
+   !important finiva anche dove il fondo e' scuro: dentro la fascia dei video
+   corsi (2,19:1) e sulla scheda del modulo in tema scuro (3,23:1). */
+.corso .disclaimer { color: rgba(255, 253, 247, .72) !important; }
+:global(html[data-theme='dark']) .secure,
+:global(html[data-theme='dark']) .disclaimer { color: #9fb0a8 !important; }
+/* «(facoltativo)» accanto alle etichette: 3,17:1 su bianco. */
+.formCard label > span { color: #5c6b63; }
+
+
+/* Le briciole erano #5C6B63 fisso: in tema scuro finiscono su fondo quasi
+   nero, 3,5:1. */
+:global(html[data-theme='dark']) .breadcrumbs { color: #9fb0a8; }
+
+
+/* «(facoltativo)»: #5c6b63 e' giusto sul bianco, ma in tema scuro la scheda
+   passa a #111713 e scende a 3,2:1. */
+:global(html[data-theme='dark']) .formCard label > span { color: #9fb0a8; }

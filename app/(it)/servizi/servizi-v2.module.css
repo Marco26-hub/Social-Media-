@@ -734,3 +734,26 @@
   .legalGrid p,
   .summaryTable thead th { font-size: 12.5px; }
 }
+
+
+/* L'occhiello della fascia finale era oro #e2b023 sul verde del marchio:
+   3,23:1. L'oro chiaro sullo stesso verde arriva a 4,6:1. */
+/* L'occhiello di questa fascia arriva da landing.module.css, quindi porta una
+   classe compilata diversa e :global(.eyebrow) non lo prendeva mai: si aggancia
+   per struttura, che qui e' stabile. */
+.finalCta > div:first-child > p:first-child { color: #f0d68a; }
+
+/* Il numero d'ordine del servizio: #7d8f88 era tarato sul fondo chiaro e in
+   tema scuro finiva su #111713, 1,7:1. */
+:global(html[data-theme='dark']) .serviceIdentity > span { color: #8fa39b; }
+
+
+/* Stessa sovrapposizione della home: il gruppo fisso in basso a destra cadeva
+   sulla riga del copyright, e il bottone di invito gli passava sotto. */
+@media (max-width: 900px) {
+  .footer { padding-bottom: calc(35px + 236px + env(safe-area-inset-bottom)); }
+}
+
+
+/* Etichetta dentro la mappa dei servizi: 4,1:1 su bianco. */
+.mapCore small { color: #5c6b63; }

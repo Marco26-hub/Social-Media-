@@ -445,3 +445,10 @@
 }
 .suggerimenti button:hover,
 .suggerimenti button:focus-visible { background: #0f6b4f; color: #fffdf7 }
+
+
+/* La nuvoletta del saluto usa il verde del marchio, che sul fondo scuro della
+   nuvola fa 2,86:1. Il verde chiaro e' lo stesso colore, letto. */
+.saluto strong span, .saluto strong { color: #0f6b4f; }
+:global(html[data-theme='dark']) .saluto strong span,
+:global(html[data-theme='dark']) .saluto strong { color: #49d6a0; }

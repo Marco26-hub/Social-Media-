@@ -1260,7 +1260,12 @@
 
 /* Oro su verde profondo a 12px: 3,23:1, sotto la soglia del testo piccolo.
    L'oro piu' chiaro sullo stesso verde arriva a 4,6:1. */
-.legalBand .eyebrow, .legalSection .eyebrow, .legalPartner .eyebrow { color: #f0d68a; }
+/* .legalSection non e' verde profondo: e' crema (#fff4ef). L'oro chiaro pensato
+   per il fondo scuro li' faceva 1,32:1 — praticamente invisibile. */
+.legalBand .eyebrow, .legalPartner .eyebrow { color: #f0d68a; }
+.legalSection .eyebrow { color: #7a5a06; }
+/* In tema scuro la stessa sezione ha fondo quasi nero: li' torna l'oro chiaro. */
+:global(html[data-theme='dark']) .legalSection .eyebrow { color: #f0d68a; }
 /* Etichette a 11-12px su fondi chiari, fra 3,8 e 4,2:1. */
 .visualLabel { color: #5c6b63; }
 .planAudience { color: #4a3705; }
@@ -1364,4 +1369,62 @@
   .standaloneAction span, .standaloneAction small,
   .standaloneAction a,
   .percorsoNumero { font-size: 12.5px; }
+}
+
+
+/* Contrasto nel tema scuro.
+   Queste regole nascono da una misura, non a occhio: una sonda ha letto il
+   colore del testo e il fondo davvero dipinto — componendo l'alfa, risalendo
+   gli antenati — su tutte le pagine, ai due temi, a 390px.
+
+   Il difetto era sempre lo stesso: un fondo chiaro scritto a mano, che non
+   cambia col tema, sotto un testo che invece il tema lo segue. In chiaro
+   funzionava; in scuro il testo diventava chiaro e restava chiaro su chiaro. */
+
+/* Le tre schede dei numeri — 24 contenuti, 3 progetti, 30 aziende — avevano
+   fondo #f4fbf8 fisso e testo `inherit`: in scuro, 1,06:1. Il titolo era
+   illeggibile e la cifra quasi. */
+:global(html[data-theme='dark']) .caseCard {
+  border-color: rgba(73, 214, 160, .22);
+  background: #12211b;
+}
+
+/* Etichetta del piano: #4a3705 e' un marrone scelto per il fondo chiaro, e in
+   scuro finiva su una scheda scura — 1,55:1. */
+:global(html[data-theme='dark']) .planAudience { color: #e8c25a; }
+
+/* Il bottone fisso sul telefono: bianco su corallo #e96f51 fa 3,06:1, sotto la
+   soglia del testo piccolo. Il corallo si scurisce quanto basta per arrivare a
+   4,6:1 restando lo stesso colore del marchio. */
+@media (max-width: 900px) {
+  .mobileCta { background: #c2452a; }
+}
+
+/* Il bottone del riquadro web in tema scuro diventa oro con testo bianco:
+   1,69:1. Solo quello — gli altri due hanno fondo verde e blu, dove il bianco
+   sta bene, e una regola su tutti li aveva rotti. */
+:global(html[data-theme='dark']) .webOffer .standaloneAction a { color: #1a160b; }
+
+
+/* Etichette sotto i numeri del riquadro prodotto: 4,13:1 su bianco. */
+.visualStats span, .visualStats small { color: #5c6b63; }
+/* Sul riquadro oro del piano su misura l'etichetta e' marrone su oro: 4,12:1.
+   Il riquadro resta oro anche in tema scuro, quindi la regola vale per
+   entrambi e deve battere l'override scuro generico dell'etichetta. */
+.pricingSection .customPlan .planAudience,
+:global(html[data-theme='dark']) .pricingSection .customPlan .planAudience { color: #3d2c04; }
+
+
+/* Le due sovrapposizioni misurate sul telefono.
+
+   In fondo alla pagina il gruppo fisso in basso a destra — mascotte piu'
+   pulsanti «su» e «indietro» — cade sulla riga del copyright, e il bottone
+   fisso di invito corre da bordo a bordo passandogli sotto. Il footer lascia
+   quindi aria in fondo quanto serve al gruppo, e il bottone si ferma prima
+   della mascotte invece di sparirci dietro. */
+@media (max-width: 900px) {
+  .footer { padding-bottom: calc(35px + 236px + env(safe-area-inset-bottom)); }
+  /* La mascotte e' larga 88 e sta a 12 dal bordo: il suo fianco sinistro cade a
+     112 dal bordo destro. Il bottone si ferma prima. */
+  .mobileCta { right: 112px; }
 }
