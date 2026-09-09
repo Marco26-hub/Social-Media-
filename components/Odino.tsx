@@ -227,7 +227,7 @@ export default function Odino() {
       // resta come etichetta accessibile, che e' dove serve davvero.
       <button
         type="button"
-        className={styles.lancio}
+        className={`${styles.lancio} ${mostraSaluto ? styles.salutoAttivo : ''}`}
         onClick={() => setAperto(true)}
         onPointerMove={inclinaMascotte}
         onPointerLeave={raddrizzaMascotte}
@@ -260,16 +260,20 @@ export default function Odino() {
             </span>
           </span>
         </span>
-        {/* Il saluto nasce dalla mano: tre bolle salgono mentre il braccio si
-            alza e si uniscono nella nuvoletta. E' testo vero, non impresso in
-            un'immagine, quindi resta nitido su ogni schermo. */}
+        {/* Il saluto nasce dalla mano: tre bolle salgono e diventano una vera
+            nuvola. Le frasi sono testo, quindi restano nitide e traducibili. */}
         {mostraSaluto && <span className={styles.saluto} aria-hidden="true">
           <i className={styles.bollaUno} />
           <i className={styles.bollaDue} />
           <i className={styles.bollaTre} />
-          <strong>{inglese ? 'Hi' : 'Ciao'}</strong>
-          <strong className={styles.aiuto} onAnimationEnd={() => setMostraSaluto(false)}>
-            {inglese ? 'Can I help you?' : 'Posso aiutarti?'}
+          <strong className={styles.presentazione}>
+            <span>{inglese ? "Hi, I'm Odino!" : 'Ciao, sono Odino!'}</span>
+          </strong>
+          <strong className={styles.aiuto}>
+            <span>{inglese ? 'Can I help you?' : 'Posso aiutarti?'}</span>
+          </strong>
+          <strong className={styles.invito} onAnimationEnd={() => setMostraSaluto(false)}>
+            <span>{inglese ? 'Tell me about your business' : 'Dimmi che attività hai'}</span>
           </strong>
         </span>}
         <span className={styles.stato} aria-hidden="true" />
