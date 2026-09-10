@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { SETTORI } from '@/lib/settori'
+import { SETTORI_NAV } from '@/lib/settori-nav'
 import { SETTORI_EN } from '@/lib/settori.en'
 import { usePathname } from 'next/navigation'
 import {
@@ -148,7 +148,7 @@ export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' })
     { href: '/en/legal-advice', label: 'AI and data compliance', description: 'Privacy, AI Act and transparency.', icon: Scale },
   ]
   const solutions = isEnglish ? englishSolutions : SOLUTIONS
-  const settori = isEnglish ? SETTORI_EN : SETTORI
+  const settori = isEnglish ? SETTORI_EN : SETTORI_NAV
 
   return (
     <nav className={styles.desktopMenu} aria-label={isEnglish ? 'Main navigation' : 'Navigazione principale'}>
@@ -221,7 +221,7 @@ export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' })
             </div>
             <div className={styles.solutionGrid}>
               {settori.map(x => (
-                <Link key={x.slug} href={`${isEnglish ? '/en/settori' : '/settori'}/${x.slug}`} onClick={() => setSettoriOpen(false)}>
+                <Link key={`${x.slug}-${x.nome}`} href={`${isEnglish ? '/en/settori' : '/settori'}/${x.slug}`} onClick={() => setSettoriOpen(false)}>
                   <span className={styles.solutionIcon}><Store size={18} aria-hidden="true" /></span>
                   <span>
                     <strong>{x.nome}</strong>

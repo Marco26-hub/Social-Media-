@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
-import { SETTORI } from '@/lib/settori'
+import { SETTORI_NAV } from '@/lib/settori-nav'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '@/styles/content-page.module.css'
 
@@ -40,7 +40,7 @@ export default function SettoriPage() {
       {
         '@type': 'ItemList',
         name: 'Settori seguiti da Social Web Automation',
-        itemListElement: SETTORI.map((s, i) => ({
+        itemListElement: SETTORI_NAV.map((s, i) => ({
           '@type': 'ListItem',
           position: i + 1,
           name: s.nome,
@@ -76,8 +76,8 @@ export default function SettoriPage() {
           <p>Ogni pagina dice quali servizi servono davvero in quel settore, e quali no.</p>
         </div>
         <div className={styles.stepGrid}>
-          {SETTORI.map((settore, i) => (
-            <article key={settore.slug}>
+          {SETTORI_NAV.map((settore, i) => (
+            <article key={`${settore.slug}-${settore.nome}`}>
               <span>{String(i + 1).padStart(2, '0')}</span>
               <h3>{settore.nome}</h3>
               <p>{settore.sommario}</p>

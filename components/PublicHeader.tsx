@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { altraLingua } from '@/lib/lingue'
 import { SERVIZI_EN } from '@/lib/servizi.en'
-import { SETTORI } from '@/lib/settori'
+import { SETTORI_NAV } from '@/lib/settori-nav'
 import { SETTORI_EN } from '@/lib/settori.en'
 import { ArrowRight, LogIn } from 'lucide-react'
 import DesktopMenu from './DesktopMenu'
@@ -37,7 +37,7 @@ const MOBILE_LINKS = [
   {
     href: '/settori',
     label: 'Settori',
-    sotto: SETTORI.map(x => ({ href: `/settori/${x.slug}`, label: x.nome })),
+    sotto: SETTORI_NAV.map(x => ({ href: `/settori/${x.slug}`, label: x.nome })),
   },
   { href: '/metodo', label: 'Metodo' },
   { href: '/pacchetti', label: 'Pacchetti' },

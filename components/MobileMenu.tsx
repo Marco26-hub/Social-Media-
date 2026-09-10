@@ -155,7 +155,7 @@ export default function MobileMenu({ links, ctaHref, ctaLabel, locale = 'it' }: 
                         const u = new URL(s.href, 'https://socialautomation.app')
                         const I = MENU_ICONS[u.hash || u.pathname] || LayoutGrid
                         return (
-                          <a key={s.href} href={s.href} onClick={() => setOpen(false)}>
+                          <a key={`${s.href}-${s.label}`} href={s.href} onClick={() => setOpen(false)}>
                             <span className={styles.linkIcon}><I size={17} strokeWidth={1.9} aria-hidden="true" /></span>
                             <span>{s.label}</span>
                             <ChevronRight size={17} aria-hidden="true" />
