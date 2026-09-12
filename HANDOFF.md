@@ -1,6 +1,142 @@
 # HANDOFF — Social Web Automation
 
-Stato al 2026-09-07. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+Stato al 2026-09-12. Piattaforma SaaS di social media automation con AI (Next.js 15, App Router).
+
+## Sessione 2026-09-12: sezione Corsi — branch `corsi-online`, NON in produzione
+
+Sei commit su `corsi-online`, da `a6cf201` a `c9a8579`. **Mai pushati, mai
+deployati, migrazione mai applicata.** Il live non e cambiato di una riga.
+
+### Dove vive questo lavoro
+
+Tutto qui, in `/Users/md/SWA/Social-Media-`, scritto nativamente per lo stack di
+SWA (Next 15, CSS Modules, `q()`/`q1()`, NextAuth v4).
+
+`/Users/md/piattaforma_corsi` e un progetto **separato**: il prototipo «Formia»
+su Next 16 + Prisma + Auth.js v5 + Tailwind v4, gia su GitHub
+(`Marco26-hub/piattaforma_corsi_online`) e mai deployato. Stack incompatibile:
+non si importa nulla da li. Serve solo come **specifica gia collaudata** —
+schema dati, flussi, testi. Quando la sezione corsi sara in produzione si puo
+archiviare.
+
+### Modello commerciale scelto
+
+Tutti i corsi sono in **prevendita**: si comprano ora, le lezioni arrivano dopo.
+In pratica `corsi.disponibile_dal` con una data futura. Conseguenza legale che
+ha guidato il codice: per il consumatore il recesso decorre dalla **consegna**,
+quindi in prevendita i quattordici giorni **restano** e la rinuncia non si
+chiede e non si registra (`app/api/checkout/corso/route.ts`, i due campi vanno a
+`false` quando `in_prevendita`). Fuori prevendita torna il modello degli ordini
+servizi: accesso subito, rinuncia esplicita.
+
+Il prezzo sta **solo** nella riga del corso a database. La richiesta di checkout
+non puo influenzarlo. Non esiste piu alcun «prezzo pieno» barrato: era stato
+aggiunto e poi tolto su richiesta.
+
+I corsi si scelgono per **domanda di ricerca** (SEO + GEO), non per fascia d'eta.
+
+### Schema — `db/migrations/052_corsi.sql`
+
+Cinque tabelle: `corsi`, `corso_moduli`, `corso_lezioni`, `corso_acquisti`,
+`corso_progressi`. L'utente e `profiles`, la stessa del portale: **un solo
+login**.
+
+Tre scelte da non ribaltare per distrazione:
+
+- indice unico **parziale** `(user_id, corso_id) where status = 'paid'`: un
+  checkout abbandonato non deve impedire di ricomprare
+- `corso_acquisti.corso_id ... on delete restrict`: cancellare un corso venduto
+  deve fallire. Nell'amministrazione «elimina» sara «archivia»
+- `unique (stripe_session_id)` parziale, per l'idempotenza del webhook
+
+Da non confondere con `corso_iscrizioni` (migrazione 050): quella e la lista
+d'attesa AI Act, un imbuto diverso, senza pagamento. Non e stata toccata.
+
+### Il punto di sicurezza che conta
+
+Formia mandava alla pagina pubblica tutte le lezioni con gli URL video dentro, e
+li nascondeva nel componente. Qui il filtro e **in SQL**, in `lib/corsi-db.ts`:
+
+    case when l.anteprima_gratuita or <ha pagato> then l.video_url end as video_url
+
+Se la condizione e falsa il valore non esce dal database. Chi legge il sorgente
+della pagina non trova niente da copiare. **Se si aggiunge una query, si tiene
+questa forma.**
+
+Il video vero non e mai un file pubblico: `video_storage_key` punta allo storage
+privato e passa da `app/api/corsi/video/[lezioneId]/route.ts`, che risponde
+**403 identico** per lezione inesistente, non pagata o utente non entrato (un
+404 distinto direbbe a chi prova quali lezioni esistono), con
+`Cache-Control: private, no-store` e supporto `Range`. `video_url` resta per gli
+embed esterni: comodo ma pubblico, solo per materiale promozionale.
+
+`components/portale/VideoLezione.tsx` mette una filigrana con nome, azienda e
+email dello studente che cambia posizione ogni venti secondi, e mette in pausa
+quando la finestra perde il fuoco. Blocca download, picture-in-picture, velocita
+e menu contestuale. **Non impedisce la registrazione dello schermo e nessun
+browser lo consente**: solo il DRM hardware ci prova, non funziona su Chrome e
+non serve a niente contro un telefono puntato al monitor. La filigrana rende il
+materiale tracciabile, non incopiabile. Se qualcuno promette il contrario, sta
+sbagliando.
+
+### Pagamento
+
+`app/api/checkout/corso/route.ts` riusa `createOneOffCheckoutSession()` con
+`tipo: 'corso'`: **zero codice Stripe nuovo**. Nel webhook
+(`app/api/stripe/webhook/route.ts`) c'e un solo ramo nuovo accanto a
+`consulenza` e `standalone_service_order`; nessun percorso esistente e cambiato.
+Il ramo segna l'acquisto pagato, porta il profilo a `status = 'active'`
+(l'`UPDATE` e condizionato a `status is distinct from 'active'`, quindi non
+tocca chi lo e gia), poi manda le due mail e l'evento Meta dentro
+`Promise.allSettled`: **un errore di invio non deve mai togliere l'accesso a un
+corso pagato**.
+
+Lo stato dell'ordine si legge da `GET /api/checkout/corso?session_id=`, che
+interroga `corso_acquisti`. Non si chiede a Stripe: `stripeRequest` qui fa solo
+POST e la fonte di verita e il webhook.
+
+### Cosa manca per vendere
+
+1. **Registrazione che porta dritta al pagamento** (deciso, non ancora scritto).
+   Oggi il checkout richiede di essere gia entrati, ma `register` crea i profili
+   `status = 'pending'` e `lib/auth.ts` blocca il login dei pending: un nuovo
+   cliente resterebbe fuori. Va ricalcato il percorso dei pacchetti — dati,
+   Stripe, e il pagamento attiva l'account.
+2. **`/portale/corsi` e il player**: le pagine studente non esistono ancora, ma
+   `/corsi/[slug]` ci rimanda gia quando il corso e posseduto.
+3. **`/dashboard/corsi`**: l'amministrazione non c'e. Fino ad allora i corsi si
+   inseriscono in SQL. Accettabile per uno o due corsi, non per dieci.
+4. **`/consulenza` da rivedere**: va ampliata la parte di consulenza e tolta la
+   sezione corso, che ora ha pagina propria. Nota di merito a parte: il testo
+   attuale sull'art. 4 AI Act e **superato** dal Digital Omnibus
+   (Reg. UE 2026/1744, in vigore dal 27 luglio 2026).
+
+### Tre trappole gia individuate, non ancora risolte
+
+- **`/portale` lancia per uno studente senza `user_client_access`**:
+  `requireClienteId()` tira «Nessun cliente selezionato». Chi compra solo un
+  corso e esattamente quell'utente e vedrebbe «Spazio non disponibile» dopo aver
+  pagato. La pagina deve degradare, non rompersi. **E il punto con piu rischio di
+  regressione sui clienti paganti attivi: da rilasciare da solo e provare con un
+  cliente vero.**
+- **CSP**: `media-src` consente gia Supabase, quindi i video privati non
+  richiedono modifiche. Se si sceglie un embed esterno servono `frame-src`,
+  `img-src` e `connect-src`, e la CSP **fallisce in silenzio**: si verifica a
+  mano con la console aperta.
+- **Footer**: `lib/footer-voci.test.ts` impone dodici voci per lingua. Nessuna
+  voce «Corsi» nel footer, basta il menu principale.
+
+### Cicatrici di questa sessione
+
+- Le schede corso erano **invisibili** nel tema scuro: avevo inventato variabili
+  CSS (`--sa-surface`, `--sa-green`) che non esistono. TypeScript pulito, lint
+  pulito, pagina bianca su bianco. Si usano i token veri: `--surface`, `--line`,
+  `--muted`, `--green`, `--mint`, `--green-dark`. **Guardare lo schermo, non solo
+  i controlli.**
+- Una cartella `__prova-video` non veniva servita: Next esclude dal routing le
+  cartelle che iniziano con `_`.
+- `metaUserContextFromRequest` prende **un** argomento e `sendMetaConversionEvent`
+  vuole `request`/`email`/`value`. Leggere la firma prima di chiamare.
 
 ## Sessione 2026-09-07 (2): passata «impeccabile» — editoriale, contrasto, tema scuro inglese
 
