@@ -35,6 +35,15 @@ aggiunto e poi tolto su richiesta.
 
 I corsi si scelgono per **domanda di ricerca** (SEO + GEO), non per fascia d'eta.
 
+**Due paletti sul listino, dati a voce e da non riaprire:**
+
+- **niente corso NIS2.** Era una mia proposta di catalogo, mai entrata nel
+  codice. Resta fuori.
+- **niente prezzi da 19,90 €.** I corsi si producono con professionisti esterni
+  (Avv. Vincenzo Sapone, Studio BCS): a quella cifra il compenso del
+  professionista non sta in piedi. I 19,90 € del sito sono il canone del sito
+  web base e non c'entrano nulla con i corsi.
+
 ### Schema — `db/migrations/052_corsi.sql`
 
 Cinque tabelle: `corsi`, `corso_moduli`, `corso_lezioni`, `corso_acquisti`,
