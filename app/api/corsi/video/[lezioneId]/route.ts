@@ -52,15 +52,19 @@ export async function GET(
   const { lezioneId } = await params
   if (!/^[0-9a-fA-F-]{36}$/.test(lezioneId)) return nega()
 
-  if (!isStorageConfigured()) {
-    return new NextResponse('Archivio non configurato', { status: 503 })
-  }
-
   const session = await getSession()
   const userId = session?.user?.id ? String(session.user.id) : null
 
   const video = await getChiaveVideoAutorizzata(lezioneId, userId)
   if (!video) return nega()
+
+  // Lo stato dell'archivio si verifica DOPO aver stabilito che chi chiede ha
+  // diritto di vedere: un 503 restituito prima direbbe a chiunque sondi
+  // l'endpoint com'e configurato il server. A chi ha pagato invece serve
+  // saperlo, perche e un guasto nostro e non un suo errore.
+  if (!isStorageConfigured()) {
+    return new NextResponse('Archivio non configurato', { status: 503 })
+  }
 
   // Range: serve al player per scorrere avanti e indietro senza riscaricare
   // tutto, ed e quello che il browser chiede da solo sui file video.

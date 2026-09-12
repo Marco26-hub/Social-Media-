@@ -83,13 +83,16 @@ export async function POST(request: Request) {
       }
     }
 
+    // Prima si stabilisce chi sta chiedendo, poi se il servizio e disponibile:
+    // al contrario, un anonimo che sonda la route saprebbe se Stripe e
+    // configurato senza avere alcun titolo per chiederlo.
+    const utente = await requireAuth()
+    const sessione = await getSession()
+
     if (!dbReady()) return NextResponse.json({ error: 'Servizio non disponibile' }, { status: 503 })
     if (!stripeConfigured()) {
       return NextResponse.json({ error: 'Pagamenti non disponibili al momento.' }, { status: 503 })
     }
-
-    const utente = await requireAuth()
-    const sessione = await getSession()
 
     const body = await request.json() as Record<string, unknown>
     const slug = clean(body.corso_slug, 120)

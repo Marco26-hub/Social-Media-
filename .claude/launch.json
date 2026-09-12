@@ -2,25 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "social-admin",
+      "name": "swa-locale",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000,
-      "autoPort": true,
-      "env": {
-        "NEXT_PUBLIC_SUPABASE_URL": "https://placeholder.supabase.co",
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "placeholder",
-        "NEXT_PUBLIC_DEMO_MODE": "true"
-      }
-    },
-    {
-      "name": "landing-3100",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "-p", "3100"],
-      "port": 3100,
-      "env": {
-        "NEXT_PUBLIC_DEMO_MODE": "true"
-      }
+      "port": 3000
     }
   ]
 }
