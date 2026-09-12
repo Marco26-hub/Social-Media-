@@ -172,6 +172,29 @@ Non e gestito `charge.dispute.created` (contestazione della carta): una
 contestazione non e definitiva e chiudere l'accesso prima dell'esito sarebbe
 sbagliato. Arriva l'avviso di Stripe e si decide a mano dal tab Vendite.
 
+### I termini ora descrivono i corsi, in tutte e due le lingue
+
+Il checkout fa accettare `/termini`, che parlava di servizi social, siti e
+consulenze: si pagavano duemila euro accettando un documento in cui il prodotto
+comprato non compariva. Aggiunto il **punto 4 «Corsi online»** e, al punto 9, i
+tre casi di recesso che il codice gia distingue (accesso immediato con rinuncia
+raccolta, prevendita con diritto integro, aula in diretta come prestazione di
+servizi), piu l'effetto del rimborso integrale.
+
+La numerazione e stata rifatta in entrambe le lingue insieme: IT ed EN sono lo
+stesso contratto, e se una versione ha undici punti e l'altra dieci, «punto 8»
+indica due clausole diverse. **Se tocchi una delle due pagine, tocca anche
+l'altra nello stesso commit.**
+
+`lib/termini-versione.ts` e ora l'unica fonte della versione: viene scritta su
+ogni ordine (`terms_version`) e mostrata in cima alle due pagine. **Se cambi cio
+a cui il cliente si obbliga, aggiorna quella costante nello stesso commit**:
+senza, gli ordini nuovi dichiarano di aver accettato un testo che non esiste
+piu, e non se ne accorge nessuno.
+
+I testi sono scritti perche il documento dica cio che il codice fa davvero.
+**Restano da far validare prima del push.**
+
 ### Cosa manca per vendere
 
 1. **Registrazione che porta dritta al pagamento** (deciso, non ancora scritto).
