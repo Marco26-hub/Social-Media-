@@ -149,6 +149,29 @@ avvisate quando il corso esce. **Sono il primo elenco a cui scrivere quando
 l'aula live apre le iscrizioni**, e nessuno se ne accorgera da solo: non c'e una
 pagina che le mostri.
 
+### Rimborsi: cosa succede e cosa deve essere configurato
+
+Il webhook gestiva `checkout.session.completed`, gli abbonamenti e le fatture.
+**Nessun rimborso, per nessun prodotto**: chi si faceva restituire i soldi
+restava `paid` e guardava le lezioni per sempre. Ora `charge.refunded` chiude
+l'accesso quando il rimborso e totale.
+
+- **totale** -> `status = 'refunded'`, accesso chiuso da solo
+- **parziale** -> non tocca niente, manda una notifica interna, e lo decide una
+  persona dal tab Vendite («Chiudi accesso» / «Riapri accesso»)
+
+La riga non viene cancellata: l'indice unico parziale vale solo su `paid`,
+quindi chi ha avuto il rimborso puo ricomprare il corso, e resta la prova di
+cosa e successo.
+
+> **Da fare su Stripe prima del push:** aggiungere `charge.refunded` agli eventi
+> inviati all'endpoint del webhook. Senza, il codice non viene mai chiamato e il
+> problema resta identico a prima, ma con l'aria di essere risolto.
+
+Non e gestito `charge.dispute.created` (contestazione della carta): una
+contestazione non e definitiva e chiudere l'accesso prima dell'esito sarebbe
+sbagliato. Arriva l'avviso di Stripe e si decide a mano dal tab Vendite.
+
 ### Cosa manca per vendere
 
 1. **Registrazione che porta dritta al pagamento** (deciso, non ancora scritto).
