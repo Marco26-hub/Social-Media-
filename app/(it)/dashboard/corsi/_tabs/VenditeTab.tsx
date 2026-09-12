@@ -39,24 +39,54 @@ export default function VenditeTab() {
   const [vendite, setVendite] = useState<Vendita[]>([])
   const [caricamento, setCaricamento] = useState(true)
   const [errore, setErrore] = useState('')
+  const [inCorso, setInCorso] = useState<string | null>(null)
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const risposta = await fetch('/api/data/corsi/vendite')
-        if (!risposta.ok) {
-          const dati = await risposta.json().catch(() => ({}))
-          setErrore(dati.error || 'Impossibile caricare le vendite.')
-        } else {
-          setVendite(await risposta.json())
-        }
-      } catch {
-        setErrore('Errore di rete.')
-      } finally {
-        setCaricamento(false)
+  async function carica() {
+    try {
+      const risposta = await fetch('/api/data/corsi/vendite')
+      if (!risposta.ok) {
+        const dati = await risposta.json().catch(() => ({}))
+        setErrore(dati.error || 'Impossibile caricare le vendite.')
+      } else {
+        setVendite(await risposta.json())
+        setErrore('')
       }
-    })()
-  }, [])
+    } catch {
+      setErrore('Errore di rete.')
+    } finally {
+      setCaricamento(false)
+    }
+  }
+
+  useEffect(() => { carica() }, [])
+
+  // Chiudere un accesso toglie a una persona qualcosa che ha pagato: si chiede
+  // conferma, e la conferma dice cosa succede invece di chiedere «sei sicuro?».
+  async function cambiaAccesso(vendita: Vendita, azione: 'chiudi' | 'riapri') {
+    const messaggio = azione === 'chiudi'
+      ? `Chiudere l’accesso di ${vendita.studente_email} a «${vendita.corso_titolo}»? Da quel momento non vedrà più le lezioni.`
+      : `Riaprire l’accesso di ${vendita.studente_email} a «${vendita.corso_titolo}»?`
+    if (!confirm(messaggio)) return
+
+    setInCorso(vendita.id)
+    try {
+      const risposta = await fetch('/api/data/corsi/vendite', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: vendita.id, azione }),
+      })
+      if (!risposta.ok) {
+        const dati = await risposta.json().catch(() => ({}))
+        setErrore(dati.error || 'Operazione non riuscita.')
+        return
+      }
+      await carica()
+    } catch {
+      setErrore('Errore di rete.')
+    } finally {
+      setInCorso(null)
+    }
+  }
 
   const pagate = vendite.filter(v => v.status === 'paid')
   const incasso = pagate.reduce((somma, v) => somma + v.amount_cents, 0)
@@ -72,6 +102,7 @@ export default function VenditeTab() {
       <p className="text-sm text-gray-500 mb-6">
         {pagate.length} {pagate.length === 1 ? 'acquisto pagato' : 'acquisti pagati'} · {euro(incasso)} incassati.
         Sono compresi i tentativi non andati a buon fine, che restano visibili per capire dove si perdono gli acquisti.
+        Un rimborso totale chiude l’accesso da solo; uno parziale no, e va deciso qui.
       </p>
 
       {errore && <div className="card p-4 mb-4 text-sm text-red-700 bg-red-50 border-red-200">{errore}</div>}
@@ -94,6 +125,7 @@ export default function VenditeTab() {
                 <th className="px-4 py-3 text-right">Importo</th>
                 <th className="px-4 py-3">Stato</th>
                 <th className="px-4 py-3">Quando</th>
+                <th className="px-4 py-3">Accesso</th>
               </tr>
             </thead>
             <tbody>
@@ -116,6 +148,26 @@ export default function VenditeTab() {
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${stato.classe}`}>{stato.testo}</span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{quando(vendita.paid_at || vendita.created_at)}</td>
+                    <td className="px-4 py-3">
+                      {vendita.status === 'paid' && (
+                        <button
+                          className="text-xs font-semibold text-gray-500 hover:text-red-600 disabled:opacity-50"
+                          onClick={() => cambiaAccesso(vendita, 'chiudi')}
+                          disabled={inCorso === vendita.id}
+                        >
+                          Chiudi accesso
+                        </button>
+                      )}
+                      {vendita.status === 'refunded' && (
+                        <button
+                          className="text-xs font-semibold text-gray-500 hover:text-brand-600 disabled:opacity-50"
+                          onClick={() => cambiaAccesso(vendita, 'riapri')}
+                          disabled={inCorso === vendita.id}
+                        >
+                          Riapri accesso
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 )
               })}

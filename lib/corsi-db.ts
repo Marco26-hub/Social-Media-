@@ -1,4 +1,5 @@
 import { dbReady, q, q1 } from '@/lib/db'
+import { rimborsoChiudeAccesso } from '@/lib/corsi-rimborso'
 
 // Accesso ai dati dei corsi online. Niente SQL nelle pagine: qui dentro e basta,
 // come per il resto del progetto.
@@ -880,4 +881,114 @@ export async function listVenditeCorsi(limite = 200): Promise<VenditaCorso[]> {
     paid_at: row.paid_at ? new Date(String(row.paid_at)).toISOString() : null,
     created_at: new Date(String(row.created_at)).toISOString(),
   }))
+}
+
+// ── Rimborsi ────────────────────────────────────────────────────────────────
+
+export type EsitoRimborso = {
+  acquistoId: string
+  userId: string
+  corsoId: string
+  titolo: string
+  slug: string
+  /** Nome ed email di chi aveva comprato, per la notifica interna. */
+  studenteNome: string | null
+  studenteEmail: string
+  amountCents: number
+  rimborsatoCents: number
+  /** True se il rimborso copre l'intero importo: solo allora l'accesso si chiude. */
+  totale: boolean
+}
+
+/**
+ * Registra un rimborso arrivato da Stripe e, se e totale, chiude l'accesso.
+ *
+ * La revoca non cancella la riga: diventa `status = 'refunded'`. Serve a tre
+ * cose. `haAccessoAlCorso` filtra su 'paid', quindi l'accesso si chiude senza
+ * altro codice; l'indice unico parziale vale solo sugli acquisti pagati, quindi
+ * la stessa persona puo ricomprare il corso piu avanti; e resta la prova che
+ * quel pagamento c'e stato e com'e finito, che e esattamente cio che serve se
+ * qualcuno contesta.
+ *
+ * Un rimborso PARZIALE non chiude niente. Puo essere uno sconto concesso dopo,
+ * o la restituzione di una parte concordata: togliere l'accesso a chi ha pagato
+ * quasi tutto sarebbe una punizione per un gesto commerciale. Viene registrato
+ * nei metadata e notificato, e se va chiuso lo si fa a mano.
+ */
+export async function registraRimborsoCorso(
+  paymentIntentId: string,
+  importi: { rimborsatoCents: number },
+): Promise<EsitoRimborso | null> {
+  if (!dbReady() || !paymentIntentId) return null
+
+  const riga = await q1(
+    `SELECT a.id, a.user_id, a.corso_id, a.amount_cents, a.status,
+            c.titolo, c.slug, p.nome AS studente_nome, p.email AS studente_email
+       FROM corso_acquisti a
+       JOIN corsi c    ON c.id = a.corso_id
+       JOIN profiles p ON p.id = a.user_id
+      WHERE a.stripe_payment_intent_id = $1
+      LIMIT 1`,
+    [paymentIntentId],
+  )
+  if (!riga) return null
+
+  const amountCents = Number(riga.amount_cents ?? 0)
+  const totale = rimborsoChiudeAccesso(importi.rimborsatoCents, amountCents)
+
+  // Idempotenza: Stripe puo consegnare lo stesso evento piu volte. Il secondo
+  // passaggio riscrive gli stessi valori e non cambia nulla.
+  await q(
+    `UPDATE corso_acquisti
+        SET status = CASE WHEN $3 THEN 'refunded' ELSE status END,
+            metadata = metadata || jsonb_build_object(
+              'rimborsato_cents', $2::int,
+              'rimborsato_il', now()::text,
+              'rimborso_totale', $3::boolean
+            ),
+            updated_at = now()
+      WHERE id = $1`,
+    [riga.id, importi.rimborsatoCents, totale],
+  )
+
+  return {
+    acquistoId: String(riga.id),
+    userId: String(riga.user_id),
+    corsoId: String(riga.corso_id),
+    titolo: String(riga.titolo),
+    slug: String(riga.slug),
+    studenteNome: riga.studente_nome ? String(riga.studente_nome) : null,
+    studenteEmail: String(riga.studente_email ?? ''),
+    amountCents,
+    rimborsatoCents: importi.rimborsatoCents,
+    totale,
+  }
+}
+
+/**
+ * Chiude o riapre l'accesso a un corso a mano, dall'amministrazione.
+ *
+ * Serve per i casi che il webhook non decide da solo: un rimborso parziale che
+ * era in realta un recesso, una contestazione della carta, un acquisto fatto
+ * per errore. E anche il modo per rimediare a una chiusura sbagliata.
+ *
+ * Gli unici due stati raggiungibili da qui sono 'paid' e 'refunded': un ordine
+ * non torna a 'checkout_pending' e non si inventa uno stato nuovo da un menu.
+ */
+export async function impostaAccessoAcquisto(
+  acquistoId: string,
+  stato: 'paid' | 'refunded',
+): Promise<boolean> {
+  if (!dbReady()) return false
+  const row = await q1(
+    `UPDATE corso_acquisti
+        SET status = $2,
+            paid_at = CASE WHEN $2 = 'paid' THEN COALESCE(paid_at, now()) ELSE paid_at END,
+            metadata = metadata || jsonb_build_object('stato_forzato_il', now()::text),
+            updated_at = now()
+      WHERE id = $1 AND status IN ('paid', 'refunded')
+      RETURNING id`,
+    [acquistoId, stato],
+  )
+  return Boolean(row)
 }

@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { dbReady, q, q1 } from '@/lib/db'
 import { stripeSecretLivemode, verifyStripeWebhookSignature } from '@/lib/stripe'
 import { activateRegistration, PACCHETTO_FALLBACK, PACCHETTO_PIANO } from '@/lib/provisioning'
-import { notifyCorsoAcquistato, notifyStandaloneOrderPaid, sendAccountActivated, sendCorsoAcquistato, sendStandaloneOrderConfirmed } from '@/lib/email'
-import { segnaAcquistoPagato } from '@/lib/corsi-db'
+import { notifyCorsoAcquistato, notifyCorsoRimborsato, notifyStandaloneOrderPaid, sendAccountActivated, sendCorsoAcquistato, sendStandaloneOrderConfirmed } from '@/lib/email'
+import { registraRimborsoCorso, segnaAcquistoPagato } from '@/lib/corsi-db'
 import { SITE_URL } from '@/lib/site-config'
 import { getPackage } from '@/lib/packages'
 import { metaContextFromSessionMetadata, sendMetaConversionEvent } from '@/lib/meta-conversions-api'
@@ -361,6 +361,48 @@ async function handleCorsoPaid(obj: StripeObject) {
   ])
 }
 
+// Rimborso. Serve perche in prevendita il consumatore MANTIENE i quattordici
+// giorni di recesso — e la ragione per cui al momento dell'acquisto non gli
+// viene chiesta nessuna rinuncia — quindi i rimborsi non sono un'eccezione ma
+// un percorso previsto. Senza questo, chi si faceva rimborsare continuava a
+// guardare le lezioni per sempre.
+//
+// L'evento arriva come `charge.refunded` e porta un Charge, non una Session:
+// l'acquisto si ritrova dal payment_intent, che viene salvato quando il
+// pagamento riesce.
+//
+// Il video non ha bisogno di altro: /api/corsi/video verifica l'acquisto a ogni
+// richiesta e risponde con Cache-Control: private, no-store. Una copia in cache
+// sopravvivrebbe alla revoca, ed e per questo che quell'intestazione c'e.
+async function handleChargeRefunded(obj: StripeObject) {
+  const paymentIntent = typeof obj.payment_intent === 'string'
+    ? obj.payment_intent
+    : str((obj.payment_intent as StripeObject | undefined)?.id)
+  if (!paymentIntent) return
+
+  const rimborsato = typeof obj.amount_refunded === 'number' ? obj.amount_refunded : 0
+  const esito = await registraRimborsoCorso(paymentIntent, { rimborsatoCents: rimborsato })
+  // Nessun corso con quel pagamento: e il rimborso di un altro prodotto e non
+  // ci riguarda. Non e un errore e non deve far fallire il webhook.
+  if (!esito) return
+
+  console.log('[stripe] rimborso corso', {
+    acquisto: esito.acquistoId,
+    totale: esito.totale,
+    rimborsato,
+  })
+
+  await notifyCorsoRimborsato({
+    acquistoId: esito.acquistoId,
+    titolo: esito.titolo,
+    nome: esito.studenteNome || esito.studenteEmail,
+    email: esito.studenteEmail,
+    amountCents: esito.amountCents,
+    rimborsatoCents: esito.rimborsatoCents,
+    totale: esito.totale,
+  }).catch(() => {})
+}
+
 async function handleCheckoutCompleted(obj: StripeObject) {
   const meta = metadata(obj)
 
@@ -614,6 +656,7 @@ export async function POST(request: Request) {
 
     if (event.type === 'checkout.session.completed') await handleCheckoutCompleted(obj)
     else if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') await handleSubscription(obj)
+    else if (event.type === 'charge.refunded') await handleChargeRefunded(obj)
     else if (event.type === 'invoice.payment_succeeded' || event.type === 'invoice.payment_failed' || event.type === 'invoice.finalized' || event.type === 'invoice.paid') await handleInvoice(obj)
     else {
       await markWebhookEventProcessed(eventId)

@@ -211,3 +211,32 @@ function escapeHtml(s: string): string {
 }
 
 export { emailConfigured }
+
+export async function notifyCorsoRimborsato(p: {
+  acquistoId: string
+  titolo: string
+  nome: string
+  email: string
+  amountCents: number
+  rimborsatoCents: number
+  totale: boolean
+}): Promise<EmailResult> {
+  const to = process.env.AGENCY_NOTIFY_EMAIL?.trim()
+  if (!to) return { sent: false, skipped: true }
+  return sendEmail({
+    to,
+    subject: p.totale
+      ? `Rimborso totale, accesso chiuso: ${p.titolo}`
+      : `Rimborso parziale (accesso ATTIVO): ${p.titolo}`,
+    text: [
+      `Acquisto: ${p.acquistoId}`,
+      `Corso: ${p.titolo}`,
+      `Cliente: ${p.nome} <${p.email}>`,
+      `Pagato: EUR ${(p.amountCents / 100).toFixed(2)}`,
+      `Rimborsato: EUR ${(p.rimborsatoCents / 100).toFixed(2)}`,
+      p.totale
+        ? 'Accesso alle lezioni chiuso in automatico.'
+        : 'Rimborso parziale: l’accesso resta ATTIVO. Se va chiuso, va fatto a mano dall’amministrazione.',
+    ].join('\n'),
+  })
+}
