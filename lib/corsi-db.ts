@@ -1,5 +1,6 @@
 import { dbReady, q, q1 } from '@/lib/db'
 import { rimborsoChiudeAccesso } from '@/lib/corsi-rimborso'
+import { TERMINI_VERSIONE } from '@/lib/termini-versione'
 
 // Accesso ai dati dei corsi online. Niente SQL nelle pagine: qui dentro e basta,
 // come per il resto del progetto.
@@ -559,7 +560,7 @@ export async function creaAcquistoPending(
        user_id, corso_id, amount_cents, currency, status,
        customer_type, terms_accepted_at, terms_version,
        early_performance_requested, withdrawal_loss_acknowledged
-     ) VALUES ($1, $2, $3, $4, 'checkout_pending', $5, now(), COALESCE($6, '2026-08-11'), $7, $8)
+     ) VALUES ($1, $2, $3, $4, 'checkout_pending', $5, now(), COALESCE($6, $9), $7, $8)
      RETURNING id`,
     [
       userId,
@@ -570,6 +571,7 @@ export async function creaAcquistoPending(
       consensi.termsVersion ?? null,
       consensi.customerType === 'consumatore' && consensi.earlyPerformanceRequested,
       consensi.customerType === 'consumatore' && consensi.withdrawalLossAcknowledged,
+      TERMINI_VERSIONE,
     ],
   )
   if (!row) throw new Error('Creazione ordine corso non riuscita')

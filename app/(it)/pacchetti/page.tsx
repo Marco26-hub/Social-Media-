@@ -14,7 +14,7 @@ import { STANDALONE_SERVICES } from '@/lib/standalone-services'
 import { SITE_URL } from '@/lib/site-config'
 import base from '@/styles/content-page.module.css'
 import styles from './pacchetti.module.css'
-import { CONSULENZA_LEGALE, CONSULENZA_PREZZO, CORSO_AI_ACT, CORSO_PREZZO } from '@/lib/consulenza-listino'
+import { CONSULENZA_LEGALE, CONSULENZA_PREZZO } from '@/lib/consulenza-listino'
 import { PREZZI } from '@/lib/prezzi-ingresso'
 
 const title = 'Pacchetti Social, Blog, Siti Web e Lead B2B | SWA'
@@ -354,11 +354,15 @@ export default function PacchettiPage() {
             <p><strong>{CONSULENZA_PREZZO}</strong> per {CONSULENZA_LEGALE.durataMinuti} minuti, IVA esclusa</p>
             <Link href="/consulenza">Prenota la consulenza <ArrowRight size={15} aria-hidden="true" /></Link>
           </article>
+          {/* Niente prezzo scritto qui: i corsi hanno prezzi diversi e vivono a
+              database, dove l'amministrazione li cambia senza un rilascio. Una
+              cifra fissa in questa pagina sarebbe la seconda fonte di verita che
+              lib/consulenza-listino.ts esiste per evitare. */}
           <article>
-            <span>{CORSO_AI_ACT.stato}</span>
-            <h3>Video corsi AI Act per PMI</h3>
-            <p><strong>{CORSO_PREZZO}</strong> {CORSO_AI_ACT.perChi}, IVA esclusa</p>
-            <Link href="/consulenza#corso-ai-act">Prenota il posto <ArrowRight size={15} aria-hidden="true" /></Link>
+            <span>Formazione</span>
+            <h3>Corsi online per imprese e professionisti</h3>
+            <p>Aule in diretta e videocorsi, con il programma completo prima dell’acquisto</p>
+            <Link href="/corsi">Vedi i corsi <ArrowRight size={15} aria-hidden="true" /></Link>
           </article>
         </div>
       </section>

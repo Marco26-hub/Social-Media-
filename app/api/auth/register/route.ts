@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { apiError } from '@/lib/api-error'
+import { TERMINI_VERSIONE } from '@/lib/termini-versione'
 import { dbReady, q, q1 } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 import { PACCHETTO_SLUGS, pacchettoBySlug } from '@/lib/pacchetti'
@@ -177,12 +178,12 @@ export async function POST(request: Request) {
       // che ha scelto alla prima registrazione (o usa il recupero password).
       await q(
         `UPDATE profiles SET nome = $2, azienda = $3, telefono = $4, pacchetto = $5,
-          customer_type = $6, terms_accepted_at = now(), terms_version = '2026-08-11',
+          customer_type = $6, terms_accepted_at = now(), terms_version = $10,
           early_performance_requested = $7, withdrawal_loss_acknowledged = $8, updated_at = now()
          WHERE id = $1`,
         [existing.id, nome, azienda || null, telefono || null, pacchetto || null,
           customerType, customerType === 'consumatore' && earlyPerformanceRequested,
-          customerType === 'consumatore' && withdrawalLossAcknowledged],
+          customerType === 'consumatore' && withdrawalLossAcknowledged, TERMINI_VERSIONE],
       )
       profileId = String(existing.id)
     } else {
@@ -192,11 +193,11 @@ export async function POST(request: Request) {
            email, nome, password_hash, ruolo_globale, status, azienda, telefono, pacchetto,
            customer_type, terms_accepted_at, terms_version,
            early_performance_requested, withdrawal_loss_acknowledged
-         ) VALUES ($1, $2, $3, 'user', 'pending', $4, $5, $6, $7, now(), '2026-08-11', $8, $9)
+         ) VALUES ($1, $2, $3, 'user', 'pending', $4, $5, $6, $7, now(), $10, $8, $9)
          RETURNING id`,
         [email, nome, passwordHash, azienda || null, telefono || null, pacchetto || null, customerType,
           customerType === 'consumatore' && earlyPerformanceRequested,
-          customerType === 'consumatore' && withdrawalLossAcknowledged],
+          customerType === 'consumatore' && withdrawalLossAcknowledged, TERMINI_VERSIONE],
       )
       profileId = String((inserted as { id: string }).id)
     }

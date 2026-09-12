@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { TERMINI_DATA } from '@/lib/termini-versione'
 import { dbReady, q } from '@/lib/db'
 import { resolveBlogClienteIdForHost } from '@/lib/blog-tenant'
 import { SITE_URL } from '@/lib/site-config'
@@ -37,6 +38,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const settoriUpdated = new Date('2026-09-07T09:00:00.000Z')
   const englishUpdated = new Date('2026-09-07T15:00:00.000Z')
   const legalUpdated = new Date('2026-08-11T00:00:00.000Z')
+  // I termini sono cambiati da soli (punto 4 sui corsi): le altre pagine legali
+  // no, e datarle tutte come aggiornate sarebbe un segnale falso.
+  const terminiUpdated = TERMINI_DATA
 
   const pages: MetadataRoute.Sitemap = [
     {
@@ -182,7 +186,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     { url: `${SITE_URL}/privacy`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3, alternates: languageAlternates('/privacy') },
     { url: `${SITE_URL}/cookie-policy`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3, alternates: languageAlternates('/cookie-policy') },
-    { url: `${SITE_URL}/termini`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3, alternates: languageAlternates('/termini') },
+    { url: `${SITE_URL}/termini`, lastModified: terminiUpdated, changeFrequency: 'yearly', priority: 0.3, alternates: languageAlternates('/termini') },
     { url: `${SITE_URL}/recesso`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.3, alternates: languageAlternates('/recesso') },
     { url: `${SITE_URL}/trasparenza-ai`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.4, alternates: languageAlternates('/trasparenza-ai') },
     { url: `${SITE_URL}/accessibilita`, lastModified: legalUpdated, changeFrequency: 'yearly', priority: 0.4, alternates: languageAlternates('/accessibilita') },

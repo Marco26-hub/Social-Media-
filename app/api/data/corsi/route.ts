@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { apiError } from '@/lib/api-error'
 import { requireAdmin } from '@/lib/auth-utils'
 import { creaCorso, listCorsiAdmin } from '@/lib/corsi-db'
@@ -23,6 +24,10 @@ export async function POST(request: Request) {
     await requireAdmin()
     const corpo = await request.json() as Record<string, unknown>
     const id = await creaCorso(corpo)
+    // Il catalogo pubblico e rigenerato ogni cinque minuti (revalidate = 300).
+    // Senza questa riga chi pubblica un corso non lo vede comparire e pensa di
+    // aver sbagliato qualcosa.
+    revalidatePath('/corsi')
     return NextResponse.json({ id }, { status: 201 })
   } catch (e) {
     // Slug gia in uso: e l'errore che si fa davvero, e merita un messaggio suo

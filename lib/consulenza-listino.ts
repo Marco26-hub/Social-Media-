@@ -1,5 +1,11 @@
 import { euro } from '@/lib/euro'
-// Listino della parte legale: consulenza individuale e video corsi AI Act.
+// Listino della parte legale: la consulenza individuale.
+//
+// Il prezzo dei corsi NON sta piu qui. I corsi sono righe della tabella `corsi`,
+// con prezzi diversi fra loro, modificabili dall'amministrazione senza un
+// rilascio: una costante in questo file sarebbe una seconda cifra destinata a
+// divergere da quella che Stripe addebita davvero — cioe esattamente il
+// problema che questo file e nato per chiudere.
 //
 // Erano due cifre scritte a mano. La consulenza viveva come 15000 centesimi
 // nella route di pagamento e come «150 €» in due pagine; il corso come «2.000 €»
@@ -16,16 +22,9 @@ export const CONSULENZA_LEGALE = {
   durataMinuti: 30,
 } as const
 
-export const CORSO_AI_ACT = {
-  importoCents: 200000,
-  perChi: 'a persona',
-  stato: 'In arrivo',
-} as const
-
-/** «150 €», «2.000 €»: dal formattatore condiviso, non dal locale del runtime. */
+/** «150 €»: dal formattatore condiviso, non dal locale del runtime. */
 export function euroPubblico(cents: number): string {
   return euro(cents / 100)
 }
 
 export const CONSULENZA_PREZZO = euroPubblico(CONSULENZA_LEGALE.importoCents)
-export const CORSO_PREZZO = euroPubblico(CORSO_AI_ACT.importoCents)
