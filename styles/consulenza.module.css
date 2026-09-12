@@ -87,3 +87,296 @@
 /* «(facoltativo)»: #5c6b63 e' giusto sul bianco, ma in tema scuro la scheda
    passa a #111713 e scende a 3,2:1. */
 :global(html[data-theme='dark']) .formCard label > span { color: #9fb0a8; }
+
+/* ── Contenuti della consulenza ────────────────────────────────────────────
+   Aggiunti quando la sezione del corso e uscita da questa pagina: i corsi hanno
+   /corsi, e qui restava un hero e poco altro. Stesse variabili del .page, cosi
+   il tema scuro continua a funzionare senza regole in piu. */
+
+.sezione {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 76px 24px;
+  border-top: 1px solid var(--line);
+}
+
+.intestazione {
+  max-width: 760px;
+}
+
+.intestazione h2 {
+  margin: 0;
+  font: 500 40px/1.08 Georgia, 'Times New Roman', serif;
+  text-wrap: balance;
+}
+
+.intestazione > p {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.casi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1px;
+  margin: 40px 0 0;
+  padding: 0;
+  background: var(--line);
+  list-style: none;
+}
+
+.casi li {
+  display: grid;
+  gap: 9px;
+  padding: 24px;
+  background: var(--surface);
+}
+
+/* La frase fra virgolette e il modo in cui il problema viene detto davvero al
+   telefono: chi la riconosce capisce di essere nel posto giusto. */
+.casoVoce {
+  margin: 0;
+  font: italic 500 17px/1.4 Georgia, 'Times New Roman', serif;
+}
+
+.casoRisposta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.casoNorma {
+  align-self: start;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #dceee7;
+  color: var(--green-dark);
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.passi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 26px;
+  margin: 40px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: passo;
+}
+
+.passi li {
+  display: grid;
+  gap: 9px;
+  padding-top: 18px;
+  border-top: 3px solid var(--green);
+}
+
+.passi li::before {
+  counter-increment: passo;
+  content: counter(passo);
+  font: 500 26px Georgia, 'Times New Roman', serif;
+  color: var(--green);
+}
+
+.passi h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.passi p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.scadenze {
+  display: grid;
+  gap: 1px;
+  margin: 40px 0 0;
+  padding: 0;
+  background: var(--line);
+  list-style: none;
+}
+
+.scadenze li {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 18px;
+  padding: 19px 22px;
+  background: var(--surface);
+}
+
+.scadenzaQuando {
+  margin: 0;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.scadenzaCosa {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.scadenzaCosa strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.domande {
+  display: grid;
+  gap: 1px;
+  margin: 40px 0 0;
+  background: var(--line);
+}
+
+.domande details {
+  padding: 18px 22px;
+  background: var(--surface);
+}
+
+.domande summary {
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.domande p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+/* Rimando ai corsi: una riga, non una seconda offerta. La pagina vende un
+   parere sul caso concreto, e chi cerca formazione deve poter uscire di qui
+   senza che questa pagina si metta a fare due mestieri. */
+.rimando {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 40px 0 0;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+}
+
+.rimando p {
+  flex: 1 1 300px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.rimando strong {
+  color: var(--ink);
+}
+
+.rimando a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 19px;
+  border: 1px solid var(--green);
+  border-radius: 4px;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.rimando a:hover {
+  background: var(--green);
+  color: var(--surface);
+}
+
+.chiusura {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 76px 24px 96px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+
+.chiusura h2 {
+  margin: 0 auto;
+  max-width: 720px;
+  font: 500 38px/1.1 Georgia, 'Times New Roman', serif;
+  text-wrap: balance;
+}
+
+.chiusura p {
+  max-width: 620px;
+  margin: 18px auto 0;
+  color: var(--muted);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+.chiusuraAzioni {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.chiusuraAzioni a {
+  min-height: 49px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 21px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.chiusuraPrimaria {
+  background: var(--green);
+  color: #fff;
+}
+
+.chiusuraPrimaria:hover {
+  background: var(--green-dark);
+}
+
+.chiusuraSecondaria {
+  border: 1px solid #b6c2bd;
+  color: var(--ink);
+}
+
+:global(html[data-theme='dark']) .casoNorma {
+  background: #102c24;
+  color: #6fe3b3;
+}
+
+@media (max-width: 700px) {
+  .sezione,
+  .chiusura {
+    padding: 52px 18px;
+  }
+  .intestazione h2 {
+    font-size: 31px;
+  }
+  .chiusura h2 {
+    font-size: 29px;
+  }
+  .scadenze li {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

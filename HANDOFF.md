@@ -104,6 +104,51 @@ Lo stato dell'ordine si legge da `GET /api/checkout/corso?session_id=`, che
 interroga `corso_acquisti`. Non si chiede a Stripe: `stripeRequest` qui fa solo
 POST e la fonte di verita e il webhook.
 
+### /consulenza e /en/legal-advice: il corso e uscito, la consulenza si e allargata
+
+La sezione «Video corsi AI Act» viveva in fondo alla pagina di consulenza, in
+entrambe le lingue, con il suo prezzo e un modulo di lista d'attesa. Ora i corsi
+hanno `/corsi` e tenerne una copia li significava due schede prodotto per lo
+stesso corso, con due prezzi che prima o poi divergono — e un motore di ricerca
+che non ha modo di sapere quale valga. Tolta anche dal JSON-LD, dove c'era un
+`Course` con `availability: PreOrder`.
+
+Al suo posto le pagine hanno i contenuti che mancavano: le sei domande con cui
+chiamano davvero, i tre passi della prenotazione, le tre date gia in vigore e le
+domande frequenti (marcate come `FAQPage`).
+
+**Cosa e stato corretto scrivendole**, e vale come regola:
+
+- il prezzo grande era scritto a mano (`€150`) mentre tutto il resto usava
+  `CONSULENZA_PREZZO`. E esattamente la deriva che `lib/consulenza-listino.ts`
+  esiste per impedire, e che aveva gia prodotto un addebito diverso dal prezzo
+  mostrato. Ora prezzo e durata vengono dalla stessa sorgente in tutte e due le
+  lingue.
+- la prima stesura diceva «un'ora di consulenza» in tre punti. **La consulenza
+  dura trenta minuti**: `CONSULENZA_LEGALE.durataMinuti`. Un testo che promette
+  il doppio di quello che si vende non e una sbavatura di stile.
+- un passo diceva di mandare i documenti prima dell'incontro. Nel modulo non
+  esiste nessun caricamento di file: c'e un campo «argomento». Il passo ora
+  descrive quello che succede davvero.
+
+**Le date nella sezione «Le date che sono gia passate» sono verificate su fonti
+pubbliche a settembre 2026** (L. 132/2025 in vigore il 10 ottobre 2025; Digital
+Omnibus, Reg. UE 2026/1744, in vigore il 27 luglio 2026, che rende l'art. 4 un
+obbligo di mezzi; obblighi AI Act applicabili dal 2 agosto 2026). **Vanno fatte
+validare dall'Avv. Sapone prima del push**: e la sua materia e la sua firma.
+
+### La lista d'attesa AI Act non e stata toccata
+
+`corso_iscrizioni` (migrazione 050), `app/api/corso-ai-act/route.ts` e
+`components/CorsoAiActForm.tsx` restano dove sono. Il componente pero **non e
+piu montato da nessuna pagina**: da oggi non si raccolgono nuove preiscrizioni,
+e non e un effetto collaterale ma il punto — il corso ora si compra.
+
+Le righe gia in tabella sono persone che hanno lasciato l'indirizzo per essere
+avvisate quando il corso esce. **Sono il primo elenco a cui scrivere quando
+l'aula live apre le iscrizioni**, e nessuno se ne accorgera da solo: non c'e una
+pagina che le mostri.
+
 ### Cosa manca per vendere
 
 1. **Registrazione che porta dritta al pagamento** (deciso, non ancora scritto).
