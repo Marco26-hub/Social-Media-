@@ -10,6 +10,7 @@ import {
   LayoutDashboard, Calendar, Settings,
   LogOut, Zap, Menu, X, Target,
   Users, Sparkles, TrendingUp, Globe, CreditCard, BookOpen, MessageCircleQuestion,
+  GraduationCap,
 } from 'lucide-react'
 
 type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string; external?: boolean; adminOnly?: boolean }
@@ -39,6 +40,7 @@ const SECTIONS: NavSection[] = [
     title: 'STRUMENTI',
     items: [
       { href: '/dashboard/piano',     label: 'Piano editoriale',      icon: Target, adminOnly: true },
+      { href: '/dashboard/corsi',     label: 'Corsi',                 icon: GraduationCap, adminOnly: true },
       { href: '/dashboard/marketing', label: 'Marketing e risultati', icon: TrendingUp },
     ],
   },

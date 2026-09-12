@@ -630,3 +630,248 @@ export async function getStatoAcquistoBySession(sessionId: string): Promise<{ st
   if (!row) return null
   return { status: String(row.status), slug: String(row.slug), titolo: String(row.titolo) }
 }
+
+// ── Amministrazione ─────────────────────────────────────────────────────────
+//
+// Tutto quello che sta sotto scrive, e viene chiamato solo da route che hanno
+// gia passato requireAdmin(). Le colonne scrivibili sono elencate una per una:
+// un `UPDATE` costruito dalle chiavi del body lascerebbe modificare campi che
+// non devono essere toccati dall'esterno (per esempio lo stato di un acquisto).
+
+const COLONNE_CORSO = new Set([
+  'slug', 'titolo', 'sottotitolo', 'descrizione', 'immagine_url', 'prezzo_cents',
+  'currency', 'livello', 'categoria', 'pubblicato', 'disponibile_dal',
+  'in_evidenza', 'ordine', 'seo_title', 'seo_description',
+  'modalita', 'posti_totali', 'link_accesso',
+])
+
+export type CorsoAdmin = CorsoCatalogo & {
+  pubblicato: boolean
+  in_evidenza: boolean
+  ordine: number
+  seo_title: string | null
+  seo_description: string | null
+  link_accesso: string | null
+  moduli_totali: number
+  incontri_totali: number
+  venduti: number
+  incasso_cents: number
+}
+
+/** Elenco completo per l'amministrazione: pubblicati e non, con le vendite. */
+export async function listCorsiAdmin(): Promise<CorsoAdmin[]> {
+  if (!dbReady()) return []
+  const rows = await q(
+    `SELECT ${CAMPI_CATALOGO}, c.pubblicato, c.in_evidenza, c.ordine,
+            c.seo_title, c.seo_description, c.link_accesso,
+            (SELECT COUNT(*)::int FROM corso_moduli m WHERE m.corso_id = c.id) AS moduli_totali,
+            (SELECT COUNT(*)::int FROM corso_incontri i WHERE i.corso_id = c.id) AS incontri_totali,
+            (SELECT COUNT(*)::int FROM corso_lezioni l
+               JOIN corso_moduli m2 ON m2.id = l.modulo_id
+              WHERE m2.corso_id = c.id) AS lezioni_totali,
+            (SELECT COALESCE(SUM(l.durata_min), 0)::int FROM corso_lezioni l
+               JOIN corso_moduli m3 ON m3.id = l.modulo_id
+              WHERE m3.corso_id = c.id) AS durata_totale_min,
+            (SELECT COUNT(*)::int FROM corso_acquisti a
+              WHERE a.corso_id = c.id AND a.status = 'paid') AS venduti,
+            (SELECT COALESCE(SUM(a.amount_cents), 0)::int FROM corso_acquisti a
+              WHERE a.corso_id = c.id AND a.status = 'paid') AS incasso_cents
+       FROM corsi c
+      ORDER BY c.in_evidenza DESC, c.ordine, c.created_at DESC`,
+  )
+  return rows.map(row => ({
+    ...rigaCatalogo(row),
+    pubblicato: Boolean(row.pubblicato),
+    in_evidenza: Boolean(row.in_evidenza),
+    ordine: Number(row.ordine ?? 0),
+    seo_title: row.seo_title ? String(row.seo_title) : null,
+    seo_description: row.seo_description ? String(row.seo_description) : null,
+    link_accesso: row.link_accesso ? String(row.link_accesso) : null,
+    moduli_totali: Number(row.moduli_totali ?? 0),
+    incontri_totali: Number(row.incontri_totali ?? 0),
+    venduti: Number(row.venduti ?? 0),
+    incasso_cents: Number(row.incasso_cents ?? 0),
+  }))
+}
+
+/** Un corso con tutto dentro, per la pagina di modifica. */
+export async function getCorsoAdmin(id: string): Promise<(CorsoAdmin & { moduli: Modulo[]; incontri: Incontro[] }) | null> {
+  if (!dbReady()) return null
+  const tutti = await listCorsiAdmin()
+  const corso = tutti.find(c => c.id === id)
+  if (!corso) return null
+  return {
+    ...corso,
+    // sbloccato: in amministrazione si deve vedere anche il contenuto, altrimenti
+    // non lo si puo correggere.
+    moduli: await caricaProgramma(id, true),
+    incontri: await caricaIncontri(id),
+  }
+}
+
+function valoriScrivibili(dati: Record<string, unknown>, colonne: Set<string>): [string[], unknown[]] {
+  const campi: string[] = []
+  const valori: unknown[] = []
+  for (const [chiave, valore] of Object.entries(dati)) {
+    if (!colonne.has(chiave)) continue
+    campi.push(chiave)
+    valori.push(valore === '' ? null : valore)
+  }
+  return [campi, valori]
+}
+
+export async function creaCorso(dati: Record<string, unknown>): Promise<string> {
+  const [campi, valori] = valoriScrivibili(dati, COLONNE_CORSO)
+  if (!campi.includes('slug') || !campi.includes('titolo') || !campi.includes('prezzo_cents')) {
+    throw new Error('Servono slug, titolo e prezzo')
+  }
+  const segnaposto = campi.map((_, i) => `$${i + 1}`).join(', ')
+  const row = await q1(
+    `INSERT INTO corsi (${campi.join(', ')}) VALUES (${segnaposto}) RETURNING id`,
+    valori,
+  )
+  return String((row as { id: string }).id)
+}
+
+export async function aggiornaCorso(id: string, dati: Record<string, unknown>): Promise<boolean> {
+  const [campi, valori] = valoriScrivibili(dati, COLONNE_CORSO)
+  if (!campi.length) return false
+  const set = campi.map((campo, i) => `${campo} = $${i + 2}`).join(', ')
+  await q(`UPDATE corsi SET ${set}, updated_at = now() WHERE id = $1`, [id, ...valori])
+  return true
+}
+
+/**
+ * Elimina un corso. Fallisce di proposito se e stato venduto: il vincolo
+ * `on delete restrict` su corso_acquisti tiene in piedi la prova che qualcuno lo
+ * ha pagato. Un corso venduto si toglie dal catalogo con pubblicato = false.
+ */
+export async function eliminaCorso(id: string): Promise<{ eliminato: boolean; motivo?: string }> {
+  const venduto = await q1(
+    `SELECT 1 AS ok FROM corso_acquisti WHERE corso_id = $1 AND status = 'paid' LIMIT 1`,
+    [id],
+  )
+  if (venduto) {
+    return { eliminato: false, motivo: 'Questo corso e stato venduto: si puo togliere dal catalogo, non eliminare.' }
+  }
+  await q('DELETE FROM corsi WHERE id = $1', [id])
+  return { eliminato: true }
+}
+
+const COLONNE_MODULO = new Set(['titolo', 'ordine'])
+const COLONNE_LEZIONE = new Set([
+  'titolo', 'ordine', 'tipo', 'video_storage_key', 'video_url', 'contenuto',
+  'durata_min', 'anteprima_gratuita',
+])
+const COLONNE_INCONTRO = new Set(['titolo', 'ordine', 'inizio_il', 'durata_min', 'video_storage_key', 'note'])
+
+export async function creaModulo(corsoId: string, dati: Record<string, unknown>): Promise<string> {
+  const [campi, valori] = valoriScrivibili(dati, COLONNE_MODULO)
+  const row = await q1(
+    `INSERT INTO corso_moduli (corso_id${campi.length ? ', ' + campi.join(', ') : ''})
+     VALUES ($1${campi.map((_, i) => `, $${i + 2}`).join('')}) RETURNING id`,
+    [corsoId, ...valori],
+  )
+  return String((row as { id: string }).id)
+}
+
+export async function aggiornaModulo(id: string, dati: Record<string, unknown>): Promise<boolean> {
+  const [campi, valori] = valoriScrivibili(dati, COLONNE_MODULO)
+  if (!campi.length) return false
+  const set = campi.map((campo, i) => `${campo} = $${i + 2}`).join(', ')
+  await q(`UPDATE corso_moduli SET ${set} WHERE id = $1`, [id, ...valori])
+  return true
+}
+
+export async function eliminaModulo(id: string): Promise<void> {
+  await q('DELETE FROM corso_moduli WHERE id = $1', [id])
+}
+
+export async function creaLezione(moduloId: string, dati: Record<string, unknown>): Promise<string> {
+  const [campi, valori] = valoriScrivibili(dati, COLONNE_LEZIONE)
+  const row = await q1(
+    `INSERT INTO corso_lezioni (modulo_id${campi.length ? ', ' + campi.join(', ') : ''})
+     VALUES ($1${campi.map((_, i) => `, $${i + 2}`).join('')}) RETURNING id`,
+    [moduloId, ...valori],
+  )
+  return String((row as { id: string }).id)
+}
+
+export async function aggiornaLezione(id: string, dati: Record<string, unknown>): Promise<boolean> {
+  const [campi, valori] = valoriScrivibili(dati, COLONNE_LEZIONE)
+  if (!campi.length) return false
+  const set = campi.map((campo, i) => `${campo} = $${i + 2}`).join(', ')
+  await q(`UPDATE corso_lezioni SET ${set} WHERE id = $1`, [id, ...valori])
+  return true
+}
+
+export async function eliminaLezione(id: string): Promise<void> {
+  await q('DELETE FROM corso_lezioni WHERE id = $1', [id])
+}
+
+export async function creaIncontro(corsoId: string, dati: Record<string, unknown>): Promise<string> {
+  const [campi, valori] = valoriScrivibili(dati, COLONNE_INCONTRO)
+  if (!campi.includes('inizio_il')) throw new Error('Serve la data dell\'incontro')
+  const row = await q1(
+    `INSERT INTO corso_incontri (corso_id, ${campi.join(', ')})
+     VALUES ($1${campi.map((_, i) => `, $${i + 2}`).join('')}) RETURNING id`,
+    [corsoId, ...valori],
+  )
+  return String((row as { id: string }).id)
+}
+
+export async function aggiornaIncontro(id: string, dati: Record<string, unknown>): Promise<boolean> {
+  const [campi, valori] = valoriScrivibili(dati, COLONNE_INCONTRO)
+  if (!campi.length) return false
+  const set = campi.map((campo, i) => `${campo} = $${i + 2}`).join(', ')
+  await q(`UPDATE corso_incontri SET ${set} WHERE id = $1`, [id, ...valori])
+  return true
+}
+
+export async function eliminaIncontro(id: string): Promise<void> {
+  await q('DELETE FROM corso_incontri WHERE id = $1', [id])
+}
+
+export type VenditaCorso = {
+  id: string
+  corso_titolo: string
+  corso_slug: string
+  studente_nome: string | null
+  studente_email: string
+  amount_cents: number
+  currency: string
+  status: string
+  customer_type: string
+  paid_at: string | null
+  created_at: string
+}
+
+/** Vendite dei corsi, le piu recenti per prime. */
+export async function listVenditeCorsi(limite = 200): Promise<VenditaCorso[]> {
+  if (!dbReady()) return []
+  const rows = await q(
+    `SELECT a.id, a.amount_cents, a.currency, a.status, a.customer_type,
+            a.paid_at, a.created_at,
+            c.titolo AS corso_titolo, c.slug AS corso_slug,
+            p.nome AS studente_nome, p.email AS studente_email
+       FROM corso_acquisti a
+       JOIN corsi c    ON c.id = a.corso_id
+       JOIN profiles p ON p.id = a.user_id
+      ORDER BY a.created_at DESC
+      LIMIT $1`,
+    [limite],
+  )
+  return rows.map(row => ({
+    id: String(row.id),
+    corso_titolo: String(row.corso_titolo),
+    corso_slug: String(row.corso_slug),
+    studente_nome: row.studente_nome ? String(row.studente_nome) : null,
+    studente_email: String(row.studente_email ?? ''),
+    amount_cents: Number(row.amount_cents ?? 0),
+    currency: String(row.currency ?? 'eur'),
+    status: String(row.status ?? ''),
+    customer_type: String(row.customer_type ?? ''),
+    paid_at: row.paid_at ? new Date(String(row.paid_at)).toISOString() : null,
+    created_at: new Date(String(row.created_at)).toISOString(),
+  }))
+}
