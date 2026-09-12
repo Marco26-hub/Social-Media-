@@ -172,13 +172,26 @@ impostata e gli si passa quell'indirizzo.
   `.env.local`, non un difetto del codice: `rm -rf .next` e ripartiva. Prima di
   inseguire un bug, leggere il log del server.
 
-### Un difetto che non e dei corsi ma si vede da qui
+### Due difetti di contrasto della dashboard, trovati da qui e sistemati
 
-Nel tema scuro i titoli delle pagine della dashboard sono illeggibili: sono
-`text-gray-900` su fondo scuro. Vale per `/dashboard/corsi` come per
-`/dashboard/clienti?tab=registrazioni`, quindi **non arriva da questo lavoro** —
-si nota solo adesso perche si sono guardate quelle pagine a schermo. Va sistemato
-in una passata sua, su tutta la dashboard.
+Nessuno dei due veniva dai corsi: si sono visti guardando a schermo le pagine
+nuove e riguardano tutta l'area operativa. Entrambi corretti in
+`styles/globals.css`, vincolati a `[data-area='operativa']` (il contenitore in
+`app/(it)/dashboard/layout.tsx`) per non toccare il sito pubblico.
+
+- **Tema scuro.** La dashboard usa le utility Tailwind a colore fisso
+  (`text-gray-900`, `bg-white`, `border-gray-200`) circa 1.400 volte, ma il tema
+  scuro cambiava solo fondo e colore del `<body>`: i titoli erano grigio scuro su
+  quasi nero. Le utility di grigio sono rimappate in un punto solo. **Se ne
+  aggiungi una non elencata, aggiungila anche li**: e il prezzo di avere i colori
+  nelle classi invece che in variabili.
+- **Tema chiaro con sistema operativo scuro**, piu vecchio e piu grave. Campi,
+  menu a tendina e calendari li disegna il browser, che segue il tema di sistema
+  se non gli si dice altro: i campi venivano scuri con dentro il testo quasi nero
+  di Tailwind, illeggibili in ogni modulo della dashboard. Risolto dichiarando
+  `color-scheme` sull'area operativa.
+
+Ne TypeScript ne il linter potevano vederli.
 
 ## Sessione 2026-09-07 (2): passata «impeccabile» — editoriale, contrasto, tema scuro inglese
 
