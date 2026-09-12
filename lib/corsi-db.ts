@@ -12,6 +12,23 @@ import { dbReady, q, q1 } from '@/lib/db'
 
 export type Livello = 'base' | 'intermedio' | 'avanzato'
 export type TipoLezione = 'video' | 'testo'
+export type Modalita = 'registrato' | 'live'
+
+/**
+ * Un incontro di un corso live. Le date sono pubbliche, e devono esserlo: chi
+ * compra un corso live compra quelle date. Il link alla stanza virtuale invece
+ * non e qui — vive solo nel corso dello studente che ha pagato.
+ */
+export type Incontro = {
+  id: string
+  titolo: string
+  ordine: number
+  inizio_il: string
+  durata_min: number
+  /** La registrazione dell'incontro esiste ed e guardabile (solo per iscritti). */
+  registrazione_disponibile: boolean
+  note: string | null
+}
 
 export type CorsoCatalogo = {
   id: string
@@ -30,6 +47,10 @@ export type CorsoCatalogo = {
   categoria: string | null
   lezioni_totali: number
   durata_totale_min: number
+  /** 'live' = incontri in diretta a numero chiuso; 'registrato' = on demand. */
+  modalita: Modalita
+  /** Numero chiuso dei corsi live. Null per i corsi registrati. */
+  posti_totali: number | null
 }
 
 export type Lezione = {
@@ -64,12 +85,21 @@ export type CorsoConProgramma = CorsoCatalogo & {
   seo_title: string | null
   seo_description: string | null
   moduli: Modulo[]
+  /** Vuoto per i corsi registrati. */
+  incontri: Incontro[]
+  /** Posti ancora acquistabili; null quando non c'e numero chiuso. */
+  posti_liberi: number | null
+  /**
+   * Link alla stanza virtuale. Valorizzato SOLO da getCorsoPerStudente, cioe
+   * dopo aver verificato il pagamento: sulla pagina pubblica resta null.
+   */
+  link_accesso: string | null
 }
 
 const CAMPI_CATALOGO = `
   c.id, c.slug, c.titolo, c.sottotitolo, c.descrizione, c.immagine_url,
   c.prezzo_cents, c.currency, c.livello, c.categoria,
-  c.disponibile_dal
+  c.disponibile_dal, c.modalita, c.posti_totali
 `
 
 const CONTEGGI_CATALOGO = `
@@ -98,7 +128,65 @@ function rigaCatalogo(row: Record<string, unknown>): CorsoCatalogo {
     categoria: row.categoria ? String(row.categoria) : null,
     lezioni_totali: Number(row.lezioni_totali ?? 0),
     durata_totale_min: Number(row.durata_totale_min ?? 0),
+    modalita: String(row.modalita ?? 'registrato') as Modalita,
+    posti_totali: row.posti_totali === null || row.posti_totali === undefined ? null : Number(row.posti_totali),
   }
+}
+
+/**
+ * Incontri di un corso live, in ordine di data. Torna un elenco vuoto per i
+ * corsi registrati, cosi chi chiama non deve chiedersi che modalita sia.
+ */
+async function caricaIncontri(corsoId: string): Promise<Incontro[]> {
+  const rows = await q(
+    `SELECT id, titolo, ordine, inizio_il, durata_min, note,
+            (video_storage_key IS NOT NULL) AS registrazione_disponibile
+       FROM corso_incontri
+      WHERE corso_id = $1
+      ORDER BY inizio_il, ordine`,
+    [corsoId],
+  )
+  return rows.map(row => ({
+    id: String(row.id),
+    titolo: String(row.titolo),
+    ordine: Number(row.ordine ?? 0),
+    inizio_il: new Date(String(row.inizio_il)).toISOString(),
+    durata_min: Number(row.durata_min ?? 0),
+    registrazione_disponibile: Boolean(row.registrazione_disponibile),
+    note: row.note ? String(row.note) : null,
+  }))
+}
+
+/**
+ * Posti ancora liberi in un corso a numero chiuso. Null quando non c'e limite.
+ *
+ * Occupano un posto gli acquisti pagati e i checkout aperti da meno di mezz'ora.
+ * I secondi perche fra l'apertura di Stripe e il pagamento passano minuti in cui
+ * il posto e di fatto impegnato; la mezz'ora perche un checkout abbandonato non
+ * deve tenerlo occupato per sempre.
+ *
+ * Non e un lucchetto: due persone che pagano nello stesso istante possono
+ * ancora prendere l'ultimo posto in due. Con dodici posti e un prodotto di
+ * questo prezzo e un caso raro e si gestisce a mano, mentre un lock vero
+ * costerebbe una tabella di prenotazioni e una scadenza da spazzare.
+ */
+export async function postiLiberi(corsoId: string, postiTotali: number | null): Promise<number | null> {
+  if (postiTotali === null || !dbReady()) return null
+  const row = await q1(
+    `SELECT COUNT(*)::int AS occupati
+       FROM corso_acquisti
+      WHERE corso_id = $1
+        AND (status = 'paid'
+             OR (status = 'checkout_open' AND created_at > now() - interval '30 minutes'))`,
+    [corsoId],
+  )
+  return Math.max(0, postiTotali - Number(row?.occupati ?? 0))
+}
+
+/** True se il corso ha un numero chiuso e non ci sono piu posti. */
+export async function postiEsauriti(corso: { id: string; posti_totali: number | null }): Promise<boolean> {
+  const liberi = await postiLiberi(corso.id, corso.posti_totali)
+  return liberi !== null && liberi <= 0
 }
 
 /** Catalogo pubblico. Senza database (build in CI, modalita demo) torna vuoto. */
@@ -227,12 +315,17 @@ export async function getCorsoPubblicoBySlug(slug: string): Promise<CorsoConProg
   )
   if (!row) return null
 
+  const base = rigaCatalogo(row)
   return {
-    ...rigaCatalogo(row),
+    ...base,
     pubblicato: Boolean(row.pubblicato),
     seo_title: row.seo_title ? String(row.seo_title) : null,
     seo_description: row.seo_description ? String(row.seo_description) : null,
-    moduli: await caricaProgramma(String(row.id), false),
+    moduli: await caricaProgramma(base.id, false),
+    incontri: await caricaIncontri(base.id),
+    posti_liberi: await postiLiberi(base.id, base.posti_totali),
+    // Mai sulla pagina pubblica: il link alla stanza e il prodotto.
+    link_accesso: null,
   }
 }
 
@@ -289,7 +382,8 @@ export async function getCorsoPerStudente(userId: string, slug: string): Promise
   if (!dbReady()) return null
 
   const row = await q1(
-    `SELECT ${CAMPI_CATALOGO}, c.pubblicato, c.seo_title, c.seo_description, ${CONTEGGI_CATALOGO}
+    `SELECT ${CAMPI_CATALOGO}, c.pubblicato, c.seo_title, c.seo_description,
+            c.link_accesso, ${CONTEGGI_CATALOGO}
        FROM corsi c
        ${JOIN_LEZIONI}
       WHERE c.slug = $1
@@ -308,6 +402,10 @@ export async function getCorsoPerStudente(userId: string, slug: string): Promise
     seo_title: row.seo_title ? String(row.seo_title) : null,
     seo_description: row.seo_description ? String(row.seo_description) : null,
     moduli: await caricaProgramma(corsoId, true, userId),
+    incontri: await caricaIncontri(corsoId),
+    posti_liberi: null,
+    // Qui si: l'acquisto e gia stato verificato due righe sopra.
+    link_accesso: row.link_accesso ? String(row.link_accesso) : null,
   }
 }
 
@@ -379,6 +477,8 @@ export type CorsoPerAcquisto = {
   currency: string
   pubblicato: boolean
   in_prevendita: boolean
+  modalita: Modalita
+  posti_totali: number | null
 }
 
 /**
@@ -389,7 +489,8 @@ export type CorsoPerAcquisto = {
 export async function getCorsoPerAcquisto(slug: string): Promise<CorsoPerAcquisto | null> {
   if (!dbReady()) return null
   const row = await q1(
-    `SELECT id, slug, titolo, prezzo_cents, currency, pubblicato, disponibile_dal
+    `SELECT id, slug, titolo, prezzo_cents, currency, pubblicato, disponibile_dal,
+            modalita, posti_totali
        FROM corsi WHERE slug = $1 LIMIT 1`,
     [slug],
   )
@@ -402,6 +503,8 @@ export async function getCorsoPerAcquisto(slug: string): Promise<CorsoPerAcquist
     currency: String(row.currency ?? 'eur'),
     pubblicato: Boolean(row.pubblicato),
     in_prevendita: Boolean(row.disponibile_dal) && new Date(String(row.disponibile_dal)) > new Date(),
+    modalita: String(row.modalita ?? 'registrato') as Modalita,
+    posti_totali: row.posti_totali === null || row.posti_totali === undefined ? null : Number(row.posti_totali),
   }
 }
 

@@ -25,6 +25,21 @@ create table if not exists corsi (
     check (livello in ('base', 'intermedio', 'avanzato')),
   categoria       text,
   pubblicato      boolean not null default false,
+  -- Due modi di erogare, non due tabelle:
+  --   'registrato' -> videolezioni, si guardano quando si vuole
+  --   'live'       -> incontri in diretta su piattaforma esterna (Zoom), a
+  --                   numero chiuso, con date fissate. Le lezioni registrate
+  --                   possono comunque esistere: la registrazione dell'incontro
+  --                   viene caricata dopo e resta agli iscritti.
+  modalita        text not null default 'registrato'
+    check (modalita in ('registrato', 'live')),
+  -- Solo per i corsi live. Il numero chiuso e parte del prodotto (in dodici si
+  -- fanno domande, in duecento si ascolta e basta), quindi va dichiarato nella
+  -- pagina pubblica e fatto rispettare all'acquisto.
+  posti_totali    integer check (posti_totali is null or posti_totali > 0),
+  -- Link alla stanza virtuale. NON esce mai verso una pagina pubblica: lo
+  -- vedono solo gli iscritti dentro l'area riservata, come il video protetto.
+  link_accesso    text,
   -- Prevendita: il corso si compra prima che le lezioni esistano.
   --   null o data passata -> disponibile subito
   --   data futura          -> prevendita, e la pagina lo dichiara
@@ -131,3 +146,27 @@ create table if not exists corso_progressi (
   completed_at timestamptz not null default now(),
   primary key (user_id, lezione_id)
 );
+
+-- Incontri di un corso live. Un corso registrato non ne ha nessuno.
+--
+-- Sono separati dai moduli perche rispondono a domande diverse: il modulo dice
+-- come e organizzato il contenuto, l'incontro dice quando ci si vede. Le date
+-- servono anche alla pagina pubblica, che deve dichiararle prima dell'acquisto:
+-- chi compra un corso live compra quelle date, e cambiarle dopo e un problema
+-- verso il cliente, non un dettaglio organizzativo.
+create table if not exists corso_incontri (
+  id           uuid primary key default gen_random_uuid(),
+  corso_id     uuid not null references corsi(id) on delete cascade,
+  titolo       text not null,
+  ordine       integer not null default 0,
+  inizio_il    timestamptz not null,
+  durata_min   integer not null default 120 check (durata_min > 0),
+  -- Registrazione dell'incontro, caricata dopo. Stessa protezione dei video
+  -- delle lezioni: chiave dello storage privato, mai un indirizzo pubblico.
+  video_storage_key text,
+  note         text,
+  created_at   timestamptz not null default now()
+);
+
+create index if not exists corso_incontri_corso_idx
+  on corso_incontri (corso_id, inizio_il);

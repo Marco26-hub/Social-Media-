@@ -13,6 +13,7 @@ import {
   creaAcquistoPending,
   getCorsoPerAcquisto,
   haAccessoAlCorso,
+  postiEsauriti,
   segnaCheckoutFallito,
   type CorsoPerAcquisto,
 } from '@/lib/corsi-db'
@@ -136,6 +137,14 @@ export async function POST(request: Request) {
       }
       if (!stripeConfigured()) {
         return NextResponse.json({ error: 'Pagamenti non disponibili al momento. Riprova più tardi.' }, { status: 503 })
+      }
+      // Numero chiuso dei corsi live: verificato prima di creare il profilo, cosi
+      // chi non puo entrare non si ritrova comunque un account a meta strada.
+      if (await postiEsauriti(corso)) {
+        return NextResponse.json(
+          { error: 'I posti per questa edizione sono esauriti. Scrivici per la prossima data.', esaurito: true },
+          { status: 409 },
+        )
       }
       if (customerType === 'consumatore' && !corso.in_prevendita && (!earlyPerformanceRequested || !withdrawalLossAcknowledged)) {
         return NextResponse.json(

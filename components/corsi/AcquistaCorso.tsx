@@ -22,15 +22,33 @@ type Props = {
   autenticato: boolean
   /** Il corso si compra ora ma le lezioni arrivano piu avanti. */
   inPrevendita?: boolean
+  /** Corso live a numero chiuso senza piu posti. */
+  esaurito?: boolean
 }
 
-export default function AcquistaCorso({ slug, titolo, autenticato, inPrevendita = false }: Props) {
+export default function AcquistaCorso({ slug, titolo, autenticato, inPrevendita = false, esaurito = false }: Props) {
   const [tipo, setTipo] = useState<'impresa_professionista' | 'consumatore'>('impresa_professionista')
   const [termini, setTermini] = useState(false)
   const [esecuzioneImmediata, setEsecuzioneImmediata] = useState(false)
   const [perditaRecesso, setPerditaRecesso] = useState(false)
   const [invio, setInvio] = useState(false)
   const [errore, setErrore] = useState('')
+
+  // Posti finiti: niente modulo d'acquisto. Lasciare il pulsante e far scoprire
+  // il problema dopo il pagamento sarebbe peggio che dirlo subito.
+  if (esaurito) {
+    return (
+      <div className={styles.riquadro}>
+        <p className={styles.avviso}>
+          <strong>Posti esauriti per questa edizione.</strong> Il gruppo è a numero chiuso
+          e non lo allarghiamo: è la ragione per cui funziona.
+        </p>
+        <Link className={styles.secondario} href="/contatti">
+          Avvisami per la prossima data
+        </Link>
+      </div>
+    )
+  }
 
   if (!autenticato) {
     return (

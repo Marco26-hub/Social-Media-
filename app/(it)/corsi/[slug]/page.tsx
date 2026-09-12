@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Clock, FileText, Lock, MonitorPlay, PlayCircle } from 'lucide-react'
+import { CalendarDays, Clock, FileText, Lock, MonitorPlay, PlayCircle, Users } from 'lucide-react'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
@@ -20,6 +20,14 @@ export const dynamic = 'force-dynamic'
 
 function dataItaliana(iso: string): string {
   return new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso))
+}
+
+/** Data e ora di un incontro live: «giovedì 8 ottobre, 18:00». */
+function dataOraItaliana(iso: string): string {
+  const data = new Date(iso)
+  const giorno = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }).format(data)
+  const ora = new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit' }).format(data)
+  return `${giorno}, ${ora}`
 }
 
 const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei informazioni su un corso online di Social Web Automation.')}`
@@ -69,11 +77,23 @@ export default async function CorsoPage({ params }: { params: Promise<{ slug: st
           url: `${SITE_URL}/corsi/${corso.slug}`,
           availability: corso.in_prevendita ? 'https://schema.org/PreOrder' : 'https://schema.org/InStock',
         },
-        hasCourseInstance: {
-          '@type': 'CourseInstance',
-          courseMode: 'online',
-          courseWorkload: corso.durata_totale_min > 0 ? `PT${corso.durata_totale_min}M` : undefined,
-        },
+        hasCourseInstance: corso.modalita === 'live' && corso.incontri.length > 0
+          ? {
+              '@type': 'CourseInstance',
+              courseMode: 'online',
+              courseSchedule: {
+                '@type': 'Schedule',
+                startDate: corso.incontri[0].inizio_il,
+                endDate: corso.incontri[corso.incontri.length - 1].inizio_il,
+                repeatCount: corso.incontri.length,
+              },
+              maximumAttendeeCapacity: corso.posti_totali ?? undefined,
+            }
+          : {
+              '@type': 'CourseInstance',
+              courseMode: 'online',
+              courseWorkload: corso.durata_totale_min > 0 ? `PT${corso.durata_totale_min}M` : undefined,
+            },
       },
       {
         '@type': 'BreadcrumbList',
@@ -123,9 +143,42 @@ export default async function CorsoPage({ params }: { params: Promise<{ slug: st
             </div>
             <p className={styles.descrizione}>{corso.descrizione}</p>
 
+            {corso.modalita === 'live' && corso.incontri.length > 0 && (
+              <>
+                <div className={base.sectionHeading}>
+                  <h2>Le date degli incontri</h2>
+                  <p>
+                    Sono le date che acquisti: gli incontri si tengono in diretta e non
+                    vengono spostati. La registrazione di ogni incontro resta poi nella tua
+                    area riservata.
+                  </p>
+                </div>
+                <ol className={styles.incontri}>
+                  {corso.incontri.map((incontro, indice) => (
+                    <li key={incontro.id}>
+                      <span className={styles.incontroNumero}>{indice + 1}</span>
+                      <span className={styles.incontroCorpo}>
+                        <strong>{incontro.titolo}</strong>
+                        <small>
+                          <CalendarDays size={14} aria-hidden="true" />
+                          <time dateTime={incontro.inizio_il}>{dataOraItaliana(incontro.inizio_il)}</time>
+                          {' · '}{Math.round(incontro.durata_min / 60 * 10) / 10} ore
+                        </small>
+                        {incontro.note && <small>{incontro.note}</small>}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+
             <div className={base.sectionHeading}>
-              <h2>Programma</h2>
-              <p>Le lezioni segnate come anteprima si guardano subito, senza acquistare.</p>
+              <h2>{corso.modalita === 'live' ? 'Materiali e registrazioni' : 'Programma'}</h2>
+              <p>
+                {corso.modalita === 'live'
+                  ? 'Quello che resta nella tua area riservata dopo gli incontri.'
+                  : 'Le lezioni segnate come anteprima si guardano subito, senza acquistare.'}
+              </p>
             </div>
 
             {corso.moduli.length === 0 ? (
@@ -168,6 +221,16 @@ export default async function CorsoPage({ params }: { params: Promise<{ slug: st
               {euro(corso.prezzo_cents / 100)}
               <small>IVA esclusa</small>
             </p>
+            {corso.modalita === 'live' && (
+              <p className={styles.meta}>
+                <Users size={15} aria-hidden="true" />
+                {corso.posti_liberi === null
+                  ? 'Incontri in diretta'
+                  : corso.posti_liberi > 0
+                    ? `${corso.posti_liberi} ${corso.posti_liberi === 1 ? 'posto disponibile' : 'posti disponibili'} su ${corso.posti_totali}`
+                    : 'Posti esauriti per questa edizione'}
+              </p>
+            )}
             {corso.in_prevendita && corso.disponibile_dal && (
               <p className={styles.prevendita}>
                 <strong>Prevendita.</strong> Le lezioni saranno disponibili nella tua area
@@ -193,18 +256,34 @@ export default async function CorsoPage({ params }: { params: Promise<{ slug: st
                 titolo={corso.titolo}
                 autenticato={Boolean(userId)}
                 inPrevendita={corso.in_prevendita}
+                esaurito={corso.posti_liberi !== null && corso.posti_liberi <= 0}
               />
             )}
 
             <ul className={styles.inclusi}>
-              <li>
-                {corso.in_prevendita && corso.disponibile_dal
-                  ? `Accesso dal ${dataItaliana(corso.disponibile_dal)}`
-                  : 'Accesso immediato dopo il pagamento'}
-              </li>
-              <li>Nessuna scadenza: le lezioni restano tue</li>
-              <li>Si guarda da computer, tablet e telefono</li>
-              <li>Fattura intestata alla tua azienda</li>
+              {corso.modalita === 'live' ? (
+                <>
+                  <li>
+                    {corso.incontri.length > 0
+                      ? `${corso.incontri.length} incontri in diretta, il primo il ${dataItaliana(corso.incontri[0].inizio_il)}`
+                      : 'Incontri in diretta con il docente'}
+                  </li>
+                  <li>Gruppo a numero chiuso: si fanno domande davvero</li>
+                  <li>Le registrazioni restano nella tua area riservata</li>
+                  <li>Fattura intestata alla tua azienda</li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    {corso.in_prevendita && corso.disponibile_dal
+                      ? `Accesso dal ${dataItaliana(corso.disponibile_dal)}`
+                      : 'Accesso immediato dopo il pagamento'}
+                  </li>
+                  <li>Nessuna scadenza: le lezioni restano tue</li>
+                  <li>Si guarda da computer, tablet e telefono</li>
+                  <li>Fattura intestata alla tua azienda</li>
+                </>
+              )}
             </ul>
           </aside>
         </div>

@@ -288,3 +288,60 @@
     position: static;
   }
 }
+
+/* ── incontri di un corso live ───────────────────────────────────────────── */
+
+.incontri {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 34px;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.incontri li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.incontroNumero {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--green-dark);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.incontroCorpo {
+  display: grid;
+  gap: 4px;
+}
+
+.incontroCorpo strong {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.incontroCorpo small {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.incontroCorpo small svg {
+  flex: none;
+  color: var(--green);
+}

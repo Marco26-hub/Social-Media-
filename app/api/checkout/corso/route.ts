@@ -9,6 +9,7 @@ import {
   getCorsoPerAcquisto,
   getStatoAcquistoBySession,
   haAccessoAlCorso,
+  postiEsauriti,
   segnaCheckoutFallito,
 } from '@/lib/corsi-db'
 import { createOneOffCheckoutSession, stripeConfigured } from '@/lib/stripe'
@@ -121,6 +122,15 @@ export async function POST(request: Request) {
 
     if (await haAccessoAlCorso(utente.id, corso.id)) {
       return NextResponse.json({ error: 'Hai già questo corso.', gia_acquistato: true }, { status: 409 })
+    }
+
+    // Numero chiuso: si controlla prima di mandare a Stripe, non dopo. Incassare
+    // per un posto che non esiste e il modo piu rapido di dover restituire soldi.
+    if (await postiEsauriti(corso)) {
+      return NextResponse.json(
+        { error: 'I posti per questa edizione sono esauriti. Scrivici per la prossima data.', esaurito: true },
+        { status: 409 },
+      )
     }
 
     const acquistoId = await creaAcquistoPending(utente.id, corso, {
