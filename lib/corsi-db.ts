@@ -329,6 +329,22 @@ export async function getCorsoPubblicoBySlug(slug: string): Promise<CorsoConProg
   }
 }
 
+/**
+ * Chi sta guardando, per la filigrana del player. Non e un dettaglio estetico:
+ * e il dato che rende tracciabile una copia uscita dalla piattaforma, quindi
+ * deve venire dal database e non da qualcosa che il browser puo cambiare.
+ */
+export async function getSpettatore(userId: string): Promise<{ nome: string | null; email: string; azienda: string | null } | null> {
+  if (!dbReady()) return null
+  const row = await q1('SELECT nome, email, azienda FROM profiles WHERE id = $1 LIMIT 1', [userId])
+  if (!row) return null
+  return {
+    nome: row.nome ? String(row.nome) : null,
+    email: String(row.email ?? ''),
+    azienda: row.azienda ? String(row.azienda) : null,
+  }
+}
+
 /** True se l'utente ha un acquisto pagato per quel corso. */
 export async function haAccessoAlCorso(userId: string, corsoId: string): Promise<boolean> {
   if (!dbReady()) return false
@@ -371,6 +387,16 @@ export async function listCorsiUtente(userId: string): Promise<CorsoAcquistato[]
     lezioni_completate: Number(row.lezioni_completate ?? 0),
     acquistato_il: String(row.acquistato_il),
   }))
+}
+
+/** Quanti corsi ha comprato: serve alla navigazione dell'area cliente. */
+export async function contaCorsiUtente(userId: string): Promise<number> {
+  if (!dbReady()) return 0
+  const row = await q1(
+    `SELECT COUNT(*)::int AS n FROM corso_acquisti WHERE user_id = $1 AND status = 'paid'`,
+    [userId],
+  )
+  return Number(row?.n ?? 0)
 }
 
 /**

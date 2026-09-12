@@ -1,0 +1,320 @@
+/* Elenco e lettore dei corsi dentro l'area cliente. I colori vengono dal tema
+   del portale (crema, foresta, oro) definito in portale.module.css: qui niente
+   colori inventati, solo le forme che mancano. */
+
+.griglia {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+  margin: clamp(24px, 3vw, 36px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scheda {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  padding: 22px;
+  border: 1px solid rgba(16, 18, 14, 0.1);
+  border-radius: 16px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.scheda:hover,
+.scheda:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(16, 18, 14, 0.28);
+}
+
+.scheda h2 {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.25;
+}
+
+.tipo {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  align-self: flex-start;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--forest);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.sottotitolo {
+  margin: 0;
+  color: rgba(16, 18, 14, 0.62);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.attesa {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin: auto 0 0;
+  padding-top: 12px;
+  color: rgba(16, 18, 14, 0.6);
+  font-size: 13px;
+}
+
+.barra {
+  margin: auto 0 0;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(16, 18, 14, 0.08);
+  overflow: hidden;
+}
+
+.barraPiena {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold), var(--moss));
+}
+
+.avanzamento {
+  margin: 0;
+  color: rgba(16, 18, 14, 0.6);
+  font-size: 12.5px;
+}
+
+.vuoto {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  margin: clamp(24px, 3vw, 36px) 0 0;
+  padding: 30px;
+  border: 1px dashed rgba(16, 18, 14, 0.2);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.vuoto p {
+  margin: 0;
+  color: rgba(16, 18, 14, 0.66);
+  font-size: 14px;
+}
+
+.vuoto svg {
+  color: var(--moss);
+}
+
+.azione {
+  margin-top: 6px;
+  padding: 11px 18px;
+  border-radius: 8px;
+  background: var(--forest);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* ── lettore ─────────────────────────────────────────────────────────────── */
+
+.torna {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 14px;
+  color: rgba(16, 18, 14, 0.6);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.torna:hover {
+  color: var(--forest);
+}
+
+.lettore {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+  margin-top: clamp(20px, 3vw, 32px);
+}
+
+.palco {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid rgba(16, 18, 14, 0.1);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.palco h2 {
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.25;
+}
+
+.testoLezione {
+  margin: 0;
+  color: rgba(16, 18, 14, 0.78);
+  font-size: 15px;
+  line-height: 1.72;
+  white-space: pre-line;
+}
+
+.segna {
+  justify-self: start;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 11px 17px;
+  border: 1px solid rgba(16, 18, 14, 0.16);
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.segnaFatta {
+  border-color: transparent;
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--forest);
+}
+
+.segna:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.indice {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(16, 18, 14, 0.1);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.indice h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(16, 18, 14, 0.5);
+}
+
+.indice ol {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voce {
+  width: 100%;
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+
+.voce:hover {
+  background: rgba(16, 18, 14, 0.05);
+}
+
+.voceAttiva {
+  background: rgba(214, 168, 57, 0.16);
+  font-weight: 700;
+}
+
+.voce svg {
+  flex: none;
+  margin-top: 2px;
+  color: rgba(16, 18, 14, 0.35);
+}
+
+.voceFatta svg {
+  color: var(--forest);
+}
+
+.voce small {
+  margin-left: auto;
+  padding-left: 8px;
+  color: rgba(16, 18, 14, 0.45);
+  font-size: 11.5px;
+}
+
+.incontri {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.incontro {
+  display: grid;
+  gap: 3px;
+  padding: 13px 15px;
+  border: 1px solid rgba(16, 18, 14, 0.1);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.incontro strong {
+  font-size: 14.5px;
+}
+
+.incontro small {
+  color: rgba(16, 18, 14, 0.6);
+  font-size: 12.5px;
+}
+
+.stanza {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-self: start;
+  padding: 12px 19px;
+  border-radius: 8px;
+  background: var(--forest);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.avviso {
+  margin: 0;
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: rgba(214, 168, 57, 0.14);
+  color: #7a5c18;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .lettore {
+    grid-template-columns: 1fr;
+  }
+}

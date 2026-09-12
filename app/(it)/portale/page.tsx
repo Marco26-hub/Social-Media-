@@ -12,6 +12,7 @@ import {
   PackageCheck,
   RefreshCw,
 } from 'lucide-react'
+import Link from 'next/link'
 import { readApiError } from '@/lib/ai-client'
 import styles from './portale.module.css'
 
@@ -31,6 +32,8 @@ type PlanData = {
     ultimo_pagamento?: { amount_paid: number; currency: string; paid_at: string | null; hosted_invoice_url?: string | null; invoice_pdf?: string | null } | null
   }
 }
+
+type CorsoBreve = { slug: string; titolo: string }
 
 type ReportData = {
   stats?: { totale?: number; daApprovare?: number; approvati?: number; pubblicati?: number; perCanale?: Record<string, number>; perFormato?: Record<string, number> }
@@ -84,6 +87,7 @@ function VizList({ title, items }: { title: string; items: { label: string; valu
 export default function PortaleClientePage() {
   const [plan, setPlan] = useState<PlanData | null>(null)
   const [report, setReport] = useState<ReportData | null>(null)
+  const [corsi, setCorsi] = useState<CorsoBreve[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
@@ -92,6 +96,14 @@ export default function PortaleClientePage() {
   const load = useCallback(async () => {
     setError(null)
     try {
+      // I corsi si chiedono sempre e a parte: chi ha comprato solo un corso non
+      // ha un piano, e il suo /api/data/il-mio-piano fallisce per progetto. Senza
+      // questa chiamata vedrebbe «Spazio non disponibile» dopo aver pagato.
+      fetch('/api/data/corsi/miei')
+        .then(r => (r.ok ? r.json() : { corsi: [] }))
+        .then(d => setCorsi(Array.isArray(d.corsi) ? d.corsi as CorsoBreve[] : []))
+        .catch(() => setCorsi([]))
+
       const [planRes, reportRes] = await Promise.all([fetch('/api/data/il-mio-piano'), fetch('/api/data/report')])
       if (!planRes.ok) throw new Error(await readApiError(planRes, 'Impossibile caricare il tuo piano'))
       const planJson = await planRes.json() as PlanData
@@ -124,6 +136,36 @@ export default function PortaleClientePage() {
   if (loading) {
     return <div className={styles.loading}><Loader2 className="h-7 w-7 animate-spin" style={{ color: 'rgba(16,18,14,0.35)' }} /></div>
   }
+  // Nessun piano ma dei corsi: e uno studente, non un cliente dei servizi. Non e
+  // un errore e non va presentato come tale.
+  if ((error || !plan) && corsi.length > 0) {
+    return (
+      <div>
+        <h1 className={`${styles.display} ${styles.hello}`}>La tua area</h1>
+        <p className={styles.helloSub}>
+          Qui trovi i corsi che hai acquistato. Restano disponibili senza scadenza.
+        </p>
+        <div className={styles.grid2}>
+          <section className={styles.card}>
+            <span className={styles.cardLabel}><PackageCheck size={18} /> I tuoi corsi</span>
+            <ul style={{ margin: '16px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 10 }}>
+              {corsi.map(corso => (
+                <li key={corso.slug}>
+                  <Link href={`/portale/corsi/${corso.slug}`} style={{ color: 'inherit', fontWeight: 700 }}>
+                    {corso.titolo}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className={styles.subNote}>
+              <Link href="/portale/corsi">Vai ai tuoi corsi</Link>
+            </p>
+          </section>
+        </div>
+      </div>
+    )
+  }
+
   if (error || !plan) {
     return (
       <div className={styles.err}>
