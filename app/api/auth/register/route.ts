@@ -7,7 +7,15 @@ import { PACCHETTO_SLUGS, pacchettoBySlug } from '@/lib/pacchetti'
 import { notifyNewRegistration, sendRegistrationReceived } from '@/lib/email'
 import { verifyTurnstile } from '@/lib/turnstile'
 import { passwordProblem } from '@/lib/password-policy'
-import { stripeConfigured, createStripeCheckoutSession, euroStringToCents } from '@/lib/stripe'
+import { stripeConfigured, createStripeCheckoutSession, createOneOffCheckoutSession, euroStringToCents } from '@/lib/stripe'
+import {
+  collegaSessioneStripe,
+  creaAcquistoPending,
+  getCorsoPerAcquisto,
+  haAccessoAlCorso,
+  segnaCheckoutFallito,
+  type CorsoPerAcquisto,
+} from '@/lib/corsi-db'
 import { checkBotId } from 'botid/server'
 
 function baseUrl(): string {
@@ -51,7 +59,14 @@ export async function POST(request: Request) {
     const email = String(body.email || '').trim().toLowerCase()
     const telefono = String(body.telefono || '').trim()
     const password = String(body.password || '')
-    const pacchetto = String(body.pacchetto || '').trim().toLowerCase()
+    const corsoRichiesto = String(body.corso_slug || '').trim().toLowerCase()
+    // Un corso non e un pacchetto: chi compra un corso non ha un piano social,
+    // e la colonna deve restare vuota invece di mostrare un abbonamento finto.
+    const pacchetto = corsoRichiesto ? '' : String(body.pacchetto || '').trim().toLowerCase()
+    // Percorso corso: la registrazione porta dritta al pagamento del corso
+    // indicato, senza passare dal pannello pacchetti e senza attesa di
+    // approvazione. Se e presente, il pacchetto viene ignorato.
+    const corsoSlug = corsoRichiesto
     const customerType = String(body.customer_type || '').trim()
     const termsAccepted = body.terms_accepted === true
     const earlyPerformanceRequested = body.early_performance_requested === true
@@ -82,7 +97,10 @@ export async function POST(request: Request) {
     }
     if (customerType === 'impresa_professionista' && !azienda) return NextResponse.json({ error: 'Azienda richiesta' }, { status: 400 })
     if (!termsAccepted) return NextResponse.json({ error: 'Devi accettare Termini e Condizioni' }, { status: 400 })
-    if (customerType === 'consumatore' && (!earlyPerformanceRequested || !withdrawalLossAcknowledged)) {
+    // Per un corso la regola non e la stessa: in prevendita il recesso NON
+    // decade (l'esecuzione non e iniziata), quindi la rinuncia non si chiede.
+    // La decisione si puo prendere solo dopo aver letto il corso a database.
+    if (!corsoSlug && customerType === 'consumatore' && (!earlyPerformanceRequested || !withdrawalLossAcknowledged)) {
       return NextResponse.json({ error: 'Per iniziare subito conferma la richiesta di esecuzione anticipata e la relativa informativa sul recesso' }, { status: 400 })
     }
     if (!EMAIL_RE.test(email)) return NextResponse.json({ error: 'Email non valida' }, { status: 400 })
@@ -105,6 +123,26 @@ export async function POST(request: Request) {
         { ok: false, error: 'Servizio temporaneamente non disponibile. Riprova tra poco o contattaci.' },
         { status: 503 },
       )
+    }
+
+    // Corso: deve esistere, essere pubblicato e avere Stripe configurato. Un
+    // corso senza pagamento non si consegna, quindi qui non si degrada a
+    // 'pending' come fanno i pacchetti: o si paga, o non si registra nulla.
+    let corso: CorsoPerAcquisto | null = null
+    if (corsoSlug) {
+      corso = await getCorsoPerAcquisto(corsoSlug)
+      if (!corso || !corso.pubblicato) {
+        return NextResponse.json({ error: 'Questo corso non è acquistabile.' }, { status: 404 })
+      }
+      if (!stripeConfigured()) {
+        return NextResponse.json({ error: 'Pagamenti non disponibili al momento. Riprova più tardi.' }, { status: 503 })
+      }
+      if (customerType === 'consumatore' && !corso.in_prevendita && (!earlyPerformanceRequested || !withdrawalLossAcknowledged)) {
+        return NextResponse.json(
+          { error: 'Per avere accesso subito devi confermare le due dichiarazioni sul recesso.' },
+          { status: 400 },
+        )
+      }
     }
 
     // Email già usata? Se il profilo è già ATTIVO/rifiutato → 409. Se è PENDING
@@ -152,6 +190,47 @@ export async function POST(request: Request) {
           customerType === 'consumatore' && withdrawalLossAcknowledged],
       )
       profileId = String((inserted as { id: string }).id)
+    }
+
+    // Corso: crea l'acquisto in attesa e manda a Stripe. Il webhook segnera il
+    // pagamento, portera il profilo ad 'active' e mandera le mail: e lo stesso
+    // ramo usato da chi compra gia essendo entrato.
+    if (corso) {
+      if (await haAccessoAlCorso(profileId, corso.id)) {
+        return NextResponse.json({ error: 'Hai già questo corso. Accedi per guardarlo.' }, { status: 409 })
+      }
+
+      const acquistoId = await creaAcquistoPending(profileId, corso, {
+        customerType: customerType as 'consumatore' | 'impresa_professionista',
+        earlyPerformanceRequested: corso.in_prevendita ? false : earlyPerformanceRequested,
+        withdrawalLossAcknowledged: corso.in_prevendita ? false : withdrawalLossAcknowledged,
+      })
+
+      try {
+        const checkout = await createOneOffCheckoutSession({
+          refId: acquistoId,
+          tipo: 'corso',
+          descrizione: `Social Web Automation — ${corso.titolo}`,
+          clienteEmail: email,
+          amountCents: corso.prezzo_cents,
+          successUrl: `${baseUrl()}/corsi/${corso.slug}/grazie?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${baseUrl()}/corsi/${corso.slug}?annullato=1`,
+          extraMetadata: { corso_id: corso.id, corso_slug: corso.slug, user_id: profileId },
+        })
+        if (checkout.url) {
+          await collegaSessioneStripe(acquistoId, checkout.id)
+          return NextResponse.json({ ok: true, status: 'checkout', checkout_url: checkout.url })
+        }
+        await segnaCheckoutFallito(acquistoId, 'sessione senza url')
+      } catch (e) {
+        await segnaCheckoutFallito(acquistoId, e instanceof Error ? e.message : 'errore sconosciuto')
+        console.error('[register] checkout corso non riuscito:', e instanceof Error ? e.message : e)
+      }
+
+      return NextResponse.json(
+        { error: 'Non riusciamo ad avviare il pagamento. Riprova fra qualche minuto: non ti è stato addebitato nulla.' },
+        { status: 502 },
+      )
     }
 
     // FLOW A — paga-prima: se Stripe è configurato e il pacchetto ha un prezzo

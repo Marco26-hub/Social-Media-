@@ -141,7 +141,7 @@ export async function POST(request: Request) {
         descrizione: `Social Web Automation — ${corso.titolo}`,
         clienteEmail: emailAcquirente,
         amountCents: corso.prezzo_cents,
-        successUrl: `${base}/portale/corsi?acquisto=ok&session_id={CHECKOUT_SESSION_ID}`,
+        successUrl: `${base}/corsi/${corso.slug}/grazie?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${base}/corsi/${corso.slug}?annullato=1`,
         extraMetadata: {
           corso_id: corso.id,

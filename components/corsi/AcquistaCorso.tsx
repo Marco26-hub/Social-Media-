@@ -37,12 +37,13 @@ export default function AcquistaCorso({ slug, titolo, autenticato, inPrevendita 
       <div className={styles.riquadro}>
         <p className={styles.avviso}>
           Per acquistare serve un account: è dove troverai le lezioni dopo il pagamento.
+          Lo crei durante l’acquisto, non c’è nessuna attesa di approvazione.
         </p>
-        <Link className={styles.principale} href={`/login?callbackUrl=${encodeURIComponent(`/corsi/${slug}`)}`}>
-          Accedi e acquista
+        <Link className={styles.principale} href={`/corsi/${slug}/acquista`}>
+          {inPrevendita ? 'Acquista in prevendita' : 'Acquista il corso'}
         </Link>
-        <Link className={styles.secondario} href={`/register?callbackUrl=${encodeURIComponent(`/corsi/${slug}`)}`}>
-          Non ho un account
+        <Link className={styles.secondario} href={`/login?callbackUrl=${encodeURIComponent(`/corsi/${slug}`)}`}>
+          Ho già un account
         </Link>
       </div>
     )
