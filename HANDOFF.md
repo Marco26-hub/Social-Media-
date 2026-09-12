@@ -135,6 +135,23 @@ POST e la fonte di verita e il webhook.
 - **Footer**: `lib/footer-voci.test.ts` impone dodici voci per lingua. Nessuna
   voce «Corsi» nel footer, basta il menu principale.
 
+### Come rivedere le pagine senza toccare la produzione
+
+Serve un database: senza, le pagine dei corsi ci sono ma sono vuote per
+costruzione. Un Postgres locale basta.
+
+    createdb swa_corsi_demo
+    DATABASE_URL='postgres://<utente>@localhost:5432/swa_corsi_demo?sslmode=disable' npm run migrate
+    # .env.local con quella DATABASE_URL, NEXTAUTH_URL e NEXTAUTH_SECRET
+    npm run dev -- --port 3200
+
+`sslmode=disable` non e un dettaglio: senza, `pg` pretende TLS e un Postgres
+locale risponde «The server does not support SSL connections».
+
+Poi `scripts/test-corsi-fallback.sh http://localhost:3200` verifica i fallback.
+Per la parte senza database si avvia un secondo server con `DATABASE_URL` non
+impostata e gli si passa quell'indirizzo.
+
 ### Cicatrici di questa sessione
 
 - Le schede corso erano **invisibili** nel tema scuro: avevo inventato variabili
@@ -146,6 +163,22 @@ POST e la fonte di verita e il webhook.
   cartelle che iniziano con `_`.
 - `metaUserContextFromRequest` prende **un** argomento e `sendMetaConversionEvent`
   vuole `request`/`email`/`value`. Leggere la firma prima di chiamare.
+- Il catalogo mostrava «0 lezioni» per l'aula live, che di lezioni non ne ha:
+  un'aula si misura in incontri e posti. Visto a schermo, non dai tipi.
+- Sovrascritto `.claude/launch.json`, che esisteva gia con due configurazioni
+  del progetto. Ripristinato. Prima di scrivere un file di configurazione,
+  guardare se c'e.
+- Un 500 sul video in sviluppo era un chunk webpack stantio dopo uno scambio di
+  `.env.local`, non un difetto del codice: `rm -rf .next` e ripartiva. Prima di
+  inseguire un bug, leggere il log del server.
+
+### Un difetto che non e dei corsi ma si vede da qui
+
+Nel tema scuro i titoli delle pagine della dashboard sono illeggibili: sono
+`text-gray-900` su fondo scuro. Vale per `/dashboard/corsi` come per
+`/dashboard/clienti?tab=registrazioni`, quindi **non arriva da questo lavoro** —
+si nota solo adesso perche si sono guardate quelle pagine a schermo. Va sistemato
+in una passata sua, su tutta la dashboard.
 
 ## Sessione 2026-09-07 (2): passata «impeccabile» — editoriale, contrasto, tema scuro inglese
 

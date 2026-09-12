@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, BadgeCheck, Clock, MonitorPlay, ShieldCheck } from 'lucide-react'
+import { ArrowRight, BadgeCheck, Clock, MonitorPlay, Radio, ShieldCheck, Users } from 'lucide-react'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicFooter from '@/components/PublicFooter'
 import PublicHeader from '@/components/PublicHeader'
@@ -155,16 +155,31 @@ export default async function CorsiPage() {
                   </span>
                   <h3>{corso.titolo}</h3>
                   {corso.sottotitolo && <p className={styles.sottotitolo}>{corso.sottotitolo}</p>}
-                  <p className={styles.meta}>
-                    <MonitorPlay size={15} aria-hidden="true" />
-                    {corso.lezioni_totali} {corso.lezioni_totali === 1 ? 'lezione' : 'lezioni'}
-                    {corso.durata_totale_min > 0 && (
-                      <>
-                        <Clock size={15} aria-hidden="true" />
-                        {corso.durata_totale_min} min
-                      </>
-                    )}
-                  </p>
+                  {/* Un'aula in diretta non si misura in lezioni: chi la compra
+                      guarda le date e quanti posti restano. */}
+                  {corso.modalita === 'live' ? (
+                    <p className={styles.meta}>
+                      <Radio size={15} aria-hidden="true" />
+                      {corso.incontri_totali} {corso.incontri_totali === 1 ? 'incontro' : 'incontri'} in diretta
+                      {corso.posti_totali && (
+                        <>
+                          <Users size={15} aria-hidden="true" />
+                          {corso.posti_totali} posti
+                        </>
+                      )}
+                    </p>
+                  ) : (
+                    <p className={styles.meta}>
+                      <MonitorPlay size={15} aria-hidden="true" />
+                      {corso.lezioni_totali} {corso.lezioni_totali === 1 ? 'lezione' : 'lezioni'}
+                      {corso.durata_totale_min > 0 && (
+                        <>
+                          <Clock size={15} aria-hidden="true" />
+                          {corso.durata_totale_min} min
+                        </>
+                      )}
+                    </p>
+                  )}
                   <span className={styles.prezzo}>
                     {euro(corso.prezzo_cents / 100)}
                     <small>IVA esclusa</small>

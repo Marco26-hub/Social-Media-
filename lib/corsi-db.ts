@@ -51,6 +51,8 @@ export type CorsoCatalogo = {
   modalita: Modalita
   /** Numero chiuso dei corsi live. Null per i corsi registrati. */
   posti_totali: number | null
+  /** Incontri in diretta. Zero per i corsi registrati. */
+  incontri_totali: number
 }
 
 export type Lezione = {
@@ -104,7 +106,10 @@ const CAMPI_CATALOGO = `
 
 const CONTEGGI_CATALOGO = `
   COALESCE(COUNT(l.id), 0)::int              AS lezioni_totali,
-  COALESCE(SUM(l.durata_min), 0)::int        AS durata_totale_min
+  COALESCE(SUM(l.durata_min), 0)::int        AS durata_totale_min,
+  -- Sottoquery e non un altro LEFT JOIN: unire anche gli incontri moltiplicherebbe
+  -- le righe delle lezioni per il numero di incontri e gonfierebbe i conteggi.
+  (SELECT COUNT(*)::int FROM corso_incontri ci WHERE ci.corso_id = c.id) AS incontri_totali
 `
 
 const JOIN_LEZIONI = `
@@ -130,6 +135,7 @@ function rigaCatalogo(row: Record<string, unknown>): CorsoCatalogo {
     durata_totale_min: Number(row.durata_totale_min ?? 0),
     modalita: String(row.modalita ?? 'registrato') as Modalita,
     posti_totali: row.posti_totali === null || row.posti_totali === undefined ? null : Number(row.posti_totali),
+    incontri_totali: Number(row.incontri_totali ?? 0),
   }
 }
 

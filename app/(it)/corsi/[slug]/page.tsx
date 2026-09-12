@@ -123,16 +123,29 @@ export default async function CorsoPage({ params }: { params: Promise<{ slug: st
         </p>
         <h1>{corso.titolo}</h1>
         {corso.sottotitolo && <p className={base.lead}>{corso.sottotitolo}</p>}
-        <p className={styles.meta}>
-          <MonitorPlay size={15} aria-hidden="true" />
-          {corso.lezioni_totali} {corso.lezioni_totali === 1 ? 'lezione' : 'lezioni'}
-          {corso.durata_totale_min > 0 && (
-            <>
-              <Clock size={15} aria-hidden="true" />
-              {corso.durata_totale_min} minuti di video
-            </>
-          )}
-        </p>
+        {corso.modalita === 'live' ? (
+          <p className={styles.meta}>
+            <Users size={15} aria-hidden="true" />
+            {corso.incontri_totali} {corso.incontri_totali === 1 ? 'incontro' : 'incontri'} in diretta
+            {corso.incontri.length > 0 && (
+              <>
+                <Clock size={15} aria-hidden="true" />
+                {Math.round(corso.incontri.reduce((somma, i) => somma + i.durata_min, 0) / 60)} ore complessive
+              </>
+            )}
+          </p>
+        ) : (
+          <p className={styles.meta}>
+            <MonitorPlay size={15} aria-hidden="true" />
+            {corso.lezioni_totali} {corso.lezioni_totali === 1 ? 'lezione' : 'lezioni'}
+            {corso.durata_totale_min > 0 && (
+              <>
+                <Clock size={15} aria-hidden="true" />
+                {corso.durata_totale_min} minuti di video
+              </>
+            )}
+          </p>
+        )}
       </section>
 
       <section className={base.section}>
