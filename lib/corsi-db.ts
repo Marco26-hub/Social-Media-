@@ -98,6 +98,11 @@ export type CorsoConProgramma = CorsoCatalogo & {
    * dopo aver verificato il pagamento: sulla pagina pubblica resta null.
    */
   link_accesso: string | null
+  /**
+   * True quando mancano le dichiarazioni sul recesso di un consumatore che ha
+   * comprato in prevendita. Finche e true il contenuto non viene caricato.
+   */
+  consenso_richiesto?: boolean
 }
 
 const CAMPI_CATALOGO = `
@@ -353,6 +358,59 @@ export async function getSpettatore(userId: string): Promise<{ nome: string | nu
   }
 }
 
+/**
+ * Se a questa persona vanno ancora chieste le dichiarazioni sul recesso.
+ *
+ * Il caso e la prevendita comprata da un consumatore. Al momento dell'acquisto
+ * non gli si chiede nessuna rinuncia, ed e giusto: l'esecuzione non e iniziata
+ * e una rinuncia firmata prima sarebbe una clausola nulla. Ma il giorno in cui
+ * il corso diventa disponibile quella persona conserva i quattordici giorni, e
+ * senza raccogliere le dichiarazioni in quel momento potrebbe guardare tutto e
+ * poi recedere.
+ *
+ * Quindi: alla prima apertura di un corso comprato in prevendita, il
+ * consumatore le conferma. Prima di allora il contenuto non esce dal database.
+ *
+ * Non riguarda imprese e professionisti: il Codice del consumo non si applica
+ * a loro e non hanno mai avuto quel diritto da perdere.
+ */
+export async function consensoConsegnaDaRaccogliere(userId: string, corsoId: string): Promise<boolean> {
+  if (!dbReady()) return false
+  const row = await q1(
+    `SELECT 1 AS ok
+       FROM corso_acquisti a
+       JOIN corsi c ON c.id = a.corso_id
+      WHERE a.user_id = $1
+        AND a.corso_id = $2
+        AND a.status = 'paid'
+        AND a.customer_type = 'consumatore'
+        AND NOT (a.early_performance_requested AND a.withdrawal_loss_acknowledged)
+        -- Solo quando c'e davvero qualcosa da consegnare: finche il corso non e
+        -- disponibile non c'e nessuna esecuzione da far iniziare.
+        AND (c.disponibile_dal IS NULL OR c.disponibile_dal <= now())
+      LIMIT 1`,
+    [userId, corsoId],
+  )
+  return Boolean(row)
+}
+
+/** Registra le due dichiarazioni. Da qui l'esecuzione e iniziata. */
+export async function registraConsensoConsegna(userId: string, corsoId: string): Promise<boolean> {
+  if (!dbReady()) return false
+  const row = await q1(
+    `UPDATE corso_acquisti
+        SET early_performance_requested = true,
+            withdrawal_loss_acknowledged = true,
+            metadata = metadata || jsonb_build_object('consenso_consegna_il', now()::text),
+            updated_at = now()
+      WHERE user_id = $1 AND corso_id = $2 AND status = 'paid'
+        AND customer_type = 'consumatore'
+      RETURNING id`,
+    [userId, corsoId],
+  )
+  return Boolean(row)
+}
+
 /** True se l'utente ha un acquisto pagato per quel corso. */
 export async function haAccessoAlCorso(userId: string, corsoId: string): Promise<boolean> {
   if (!dbReady()) return false
@@ -430,16 +488,21 @@ export async function getCorsoPerStudente(userId: string, slug: string): Promise
   const corsoId = String(row.id)
   if (!(await haAccessoAlCorso(userId, corsoId))) return null
 
+  // Finche le dichiarazioni mancano il contenuto non esce dal database: la
+  // pagina mostra il riquadro del consenso e non le lezioni. Nasconderlo solo
+  // nel componente lascerebbe i video dentro il sorgente della pagina.
+  const consensoRichiesto = await consensoConsegnaDaRaccogliere(userId, corsoId)
+
   return {
     ...rigaCatalogo(row),
     pubblicato: Boolean(row.pubblicato),
     seo_title: row.seo_title ? String(row.seo_title) : null,
     seo_description: row.seo_description ? String(row.seo_description) : null,
-    moduli: await caricaProgramma(corsoId, true, userId),
+    moduli: await caricaProgramma(corsoId, !consensoRichiesto, userId),
     incontri: await caricaIncontri(corsoId),
     posti_liberi: null,
-    // Qui si: l'acquisto e gia stato verificato due righe sopra.
-    link_accesso: row.link_accesso ? String(row.link_accesso) : null,
+    link_accesso: consensoRichiesto ? null : (row.link_accesso ? String(row.link_accesso) : null),
+    consenso_richiesto: consensoRichiesto,
   }
 }
 
@@ -469,7 +532,15 @@ export async function getChiaveVideoAutorizzata(
   if (Boolean(row.anteprima_gratuita)) return risultato
   if (!userId) return null
 
-  return (await haAccessoAlCorso(userId, String(row.corso_id))) ? risultato : null
+  const corsoId = String(row.corso_id)
+  if (!(await haAccessoAlCorso(userId, corsoId))) return null
+  // Senza le dichiarazioni il video non parte nemmeno chiamando l'indirizzo a
+  // mano: altrimenti la schermata di consenso si salterebbe con un copia e
+  // incolla, e il diritto di recesso resterebbe intatto mentre il corso e gia
+  // stato visto per intero.
+  if (await consensoConsegnaDaRaccogliere(userId, corsoId)) return null
+
+  return risultato
 }
 
 /** Segna o annulla il completamento di una lezione, solo se il corso e acquistato. */

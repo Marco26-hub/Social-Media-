@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft, CalendarDays, Video } from 'lucide-react'
+import ConsensoConsegna from '@/components/portale/ConsensoConsegna'
 import CorsoStudente from '@/components/portale/CorsoStudente'
 import { getSession } from '@/lib/auth-utils'
 import { getCorsoPerStudente, getSpettatore } from '@/lib/corsi-db'
@@ -46,6 +47,10 @@ export default async function CorsoStudentePage({ params }: { params: Promise<{ 
       <h1 className={`${styles.display} ${styles.hello}`}>{corso.titolo}</h1>
       {corso.sottotitolo && <p className={styles.helloSub}>{corso.sottotitolo}</p>}
 
+      {corso.consenso_richiesto ? (
+        <ConsensoConsegna slug={corso.slug} titolo={corso.titolo} live={corso.modalita === 'live'} />
+      ) : (
+        <>
       {corso.modalita === 'live' && (
         <section style={{ display: 'grid', gap: 14, marginTop: 26 }}>
           {corso.link_accesso ? (
@@ -99,6 +104,8 @@ export default async function CorsoStudentePage({ params }: { params: Promise<{ 
               ? 'I materiali e le registrazioni degli incontri compariranno qui.'
               : 'Le lezioni di questo corso stanno arrivando. Ti avvisiamo per email appena sono online.'}
         </p>
+      )}
+        </>
       )}
     </div>
   )

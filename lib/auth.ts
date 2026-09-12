@@ -65,7 +65,11 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  pages: { signIn: '/login' },
+  // signOut ed error mancavano: NextAuth serviva le proprie pagine di serie,
+  // bianche e con i link blu, su /api/auth/signout e /api/auth/error. Si
+  // raggiungono di rado ma sono indirizzi pubblici del sito, e chi ci capita
+  // vede una pagina che non sembra questo sito.
+  pages: { signIn: '/login', signOut: '/logout', error: '/login' },
   session: { strategy: 'jwt' },
   secret: AUTH_SECRET,
 }
