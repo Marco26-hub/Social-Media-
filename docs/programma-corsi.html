@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Programma corsi online — bozza per revisione legale</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 10.5pt/1.55 "Helvetica Neue", Arial, sans-serif;
+    color: #15231f;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  h1, h2, h3, h4 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; text-wrap: balance; }
+  h1 { margin: 0 0 6px; font-size: 23pt; line-height: 1.1; }
+  h2 { margin: 0 0 14px; padding-bottom: 7px; border-bottom: 2px solid #0f6b4f; font-size: 15pt; color: #0f6b4f; }
+  h3 { margin: 0 0 4px; font-size: 12.5pt; }
+  h4 { margin: 0 0 6px; font-size: 11pt; }
+  p { margin: 0 0 9px; }
+  a { color: #0f6b4f; }
+
+  .copertina { padding-top: 0; }
+  .marchio { font-size: 8.5pt; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #0f6b4f; }
+  .sottotitolo { margin: 10px 0 0; font-size: 12.5pt; color: #596762; }
+  .riga { width: 64px; height: 4px; margin: 16px 0 22px; border-radius: 2px; background: #e96f51; }
+
+  .avviso {
+    margin: 0 0 20px; padding: 13px 15px;
+    border: 1px solid #e0c9a6; border-left: 4px solid #c8912f;
+    border-radius: 4px; background: #fdf7ec; font-size: 9.5pt; line-height: 1.5;
+  }
+  .avviso strong { color: #8a5f12; }
+
+  .scheda { margin: 0 0 18px; padding: 14px 16px; border: 1px solid #d8e0dc; border-radius: 6px; background: #f7faf8; }
+  .scheda p:last-child { margin-bottom: 0; }
+
+  tr { page-break-inside: avoid; break-inside: avoid; }
+  .scheda { page-break-inside: avoid; break-inside: avoid; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: 9.5pt; }
+  th, td { padding: 7px 9px; border-bottom: 1px solid #d8e0dc; text-align: left; vertical-align: top; }
+  th { background: #dceee7; color: #094c39; font-size: 8.5pt; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+  td.num { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+  tfoot td { font-weight: 800; border-top: 2px solid #0f6b4f; border-bottom: 0; }
+
+  .modulo { margin: 0 0 16px; page-break-inside: avoid; break-inside: avoid; }
+  .moduloTesta { display: flex; justify-content: space-between; gap: 14px; align-items: baseline;
+    padding: 8px 11px; border-radius: 5px 5px 0 0; background: #0f6b4f; color: #fff; }
+  .moduloTesta h3 { margin: 0; font-size: 11.5pt; color: #fff; }
+  .moduloTesta span { font-size: 9pt; font-weight: 700; white-space: nowrap; }
+  .lezioni { margin: 0; padding: 0; border: 1px solid #d8e0dc; border-top: 0; border-radius: 0 0 5px 5px; list-style: none; }
+  .lezioni li { display: flex; gap: 10px; padding: 7px 11px; border-bottom: 1px solid #eef2f0; font-size: 9.5pt; }
+  .lezioni li:last-child { border-bottom: 0; }
+  .lezioni b { flex: none; width: 26px; color: #0f6b4f; font-variant-numeric: tabular-nums; }
+  .lezioni span { flex: 1; }
+  .lezioni em { flex: none; font-style: normal; color: #596762; font-variant-numeric: tabular-nums; }
+  .tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 99px;
+    background: #dceee7; color: #094c39; font-size: 7.5pt; font-weight: 800; text-transform: uppercase; }
+  .tag.coral { background: #fbe3dc; color: #a8412a; }
+
+  .domande { margin: 0; padding: 0 0 0 26px; }
+  .domande li { margin: 0 0 7px; }
+
+  .pagina { page-break-before: always; break-before: page; }
+  .nota { color: #596762; font-size: 9pt; }
+  footer { margin-top: 26px; padding-top: 10px; border-top: 1px solid #d8e0dc; color: #596762; font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<section class="copertina">
+  <p class="marchio">Social Web Automation</p>
+  <h1>Programma dei corsi online</h1>
+  <p class="sottotitolo">Bozza di struttura sottoposta a revisione legale</p>
+  <div class="riga"></div>
+
+  <div class="avviso">
+    <p><strong>A cosa serve questo documento.</strong> È una proposta di struttura
+    didattica — argomenti, ordine, minutaggio — preparata dalla redazione di Social Web
+    Automation. <strong>I contenuti giuridici non sono stati validati</strong> e vanno
+    considerati un'ipotesi di lavoro.</p>
+    <p>Cosa chiediamo di verificare: che gli argomenti indicati siano corretti e
+    aggiornati; che nulla di obbligatorio manchi; che nulla di superato vada tolto; che il
+    minutaggio proposto sia sufficiente per trattare ciascun punto senza semplificarlo in
+    modo fuorviante. Il professionista è libero di riscrivere, unire, spostare o eliminare
+    qualsiasi voce.</p>
+    <p class="nota">I riferimenti normativi citati (Reg. UE 2024/1689 «AI Act», il
+    pacchetto Digital Omnibus e la L. 132/2025) sono indicati come perimetro di
+    discussione, non come affermazioni verificate.</p>
+  </div>
+
+  <h2>Il quadro d'insieme</h2>
+  <p>Quattro prodotti, non quattro corsi uguali. Il primo è un'aula dal vivo con il
+  professionista; gli altri tre sono videocorsi registrati che si guardano quando si
+  vuole. Sono legati fra loro: <strong>le registrazioni dell'aula live diventano la
+  materia prima del corso registrato numero 2</strong>, così il lavoro fatto in aula viene
+  usato due volte invece di essere girato daccapo.</p>
+  <table>
+    <thead>
+      <tr><th>Prodotto</th><th>Formato</th><th>Destinatari</th><th class="num">Durata</th><th>Autore</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Aula live sugli obblighi IA</strong><br><span class="nota">in diretta con il professionista</span></td>
+        <td><strong>Zoom dal vivo</strong><br><span class="nota">4 incontri · max 12 partecipanti</span></td>
+        <td>Professionisti e responsabili d'azienda</td>
+        <td class="num">8 h</td>
+        <td>Professionista esterno</td>
+      </tr>
+      <tr>
+        <td><strong>2. Obblighi e responsabilità nell'uso dell'IA</strong><br><span class="nota">versione registrata dell'aula</span></td>
+        <td>Videocorso on demand</td>
+        <td>Avvocati, commercialisti, consulenti, studi tecnici e sanitari, PMI</td>
+        <td class="num">4 h 30'<br><span class="nota">30 lezioni</span></td>
+        <td>Professionista esterno</td>
+      </tr>
+      <tr>
+        <td><strong>3. IA operativa per la piccola impresa</strong><br><span class="nota">corso d'ingresso</span></td>
+        <td>Videocorso on demand</td>
+        <td>Titolari e collaboratori di micro e piccole imprese</td>
+        <td class="num">1 h 20'<br><span class="nota">12 lezioni</span></td>
+        <td>Redazione SWA</td>
+      </tr>
+      <tr>
+        <td><strong>4. Corso verticale di settore</strong><br><span class="nota">settore scelto sulla domanda di ricerca</span></td>
+        <td>Videocorso on demand</td>
+        <td>Un singolo settore professionale</td>
+        <td class="num">2 h 30'<br><span class="nota">20 lezioni</span></td>
+        <td>Redazione SWA + revisione</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr><td>Totale</td><td>1 aula live + 3 videocorsi</td><td></td><td class="num">16 h 20'</td><td></td></tr>
+    </tfoot>
+  </table>
+
+  <div class="scheda">
+    <h4>Perché queste durate</h4>
+    <p><strong>Lezione di 6–12 minuti.</strong> Sotto i sei minuti la lezione sembra un
+    frammento; oltre i dodici il completamento crolla, e queste lezioni verranno guardate
+    in buona parte da telefono.</p>
+    <p><strong>Modulo di 50–60 minuti</strong>, cioè una sera di studio. È l'unità con cui
+    lo studente organizza il proprio tempo.</p>
+    <p><strong>Aula live di 8 ore spezzate in quattro incontri da due</strong>, uno a
+    settimana. Non due giornate intere: chi partecipa è un professionista in attività, e
+    due ore a fine giornata si trovano mentre una giornata intera no. Quattro settimane
+    danno anche il tempo di applicare fra un incontro e l'altro e di portare in aula
+    domande vere.</p>
+    <p><strong>Corso registrato di 4 ore e mezza, non dodici.</strong> Quattro ore portate
+    a termine valgono più di dodici abbandonate al venti per cento. C'è anche una ragione
+    contrattuale: i corsi sono venduti in prevendita, con una data di consegna dichiarata
+    all'acquirente, e quella data è un impegno. Promettere dodici ore significa doverle
+    produrre entro quel termine.</p>
+  </div>
+</section>
+
+<section class="pagina">
+  <h2>Prodotto 1 — Aula live sugli obblighi IA</h2>
+  <p><strong>Formato:</strong> quattro incontri da due ore su Zoom, uno a settimana ·
+  <strong>8 ore in diretta</strong> · massimo 12 partecipanti · registrazione disponibile
+  ai soli iscritti nella loro area riservata.</p>
+  <p>È il prodotto di punta e non è un videocorso: il valore è il professionista in
+  diretta, che risponde ai casi che i partecipanti portano. Per questo l'aula è piccola —
+  oltre i dodici partecipanti le domande non stanno dentro le due ore e l'incontro
+  diventa una conferenza.</p>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Incontro 1 · Dove ti trovi e cosa ti riguarda</h3><span>2 h</span></div>
+    <ul class="lezioni">
+      <li><b>1</b><span>Il quadro normativo in vigore e le date che contano</span><em>45'</em></li>
+      <li><b>2</b><span>Fornitore, utilizzatore, professionista: inquadrare la propria posizione</span><em>35'</em></li>
+      <li><b>3</b><span>Sanzioni, autorità e cosa succede in un controllo</span><em>20'</em></li>
+      <li><b>4</b><span>Domande dei partecipanti</span><em>20'</em></li>
+    </ul>
+  </div>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Incontro 2 · Informare il cliente e proteggere i dati</h3><span>2 h</span></div>
+    <ul class="lezioni">
+      <li><b>1</b><span>L'obbligo di informativa: chi, quando, in che forma</span><em>40'</em></li>
+      <li><b>2</b><span>Dati personali e segreto professionale negli strumenti di IA</span><em>40'</em></li>
+      <li><b>3</b><span>Revisione dal vivo dell'informativa portata dai partecipanti</span><em>25'</em></li>
+      <li><b>4</b><span>Domande dei partecipanti</span><em>15'</em></li>
+    </ul>
+  </div>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Incontro 3 · Responsabilità, contratti, output</h3><span>2 h</span></div>
+    <ul class="lezioni">
+      <li><b>1</b><span>Chi risponde di un errore prodotto dallo strumento</span><em>40'</em></li>
+      <li><b>2</b><span>Diritto d'autore e proprietà di ciò che lo strumento produce</span><em>30'</em></li>
+      <li><b>3</b><span>Clausole verso il cliente e verso il fornitore, commentate</span><em>35'</em></li>
+      <li><b>4</b><span>Domande dei partecipanti</span><em>15'</em></li>
+    </ul>
+  </div>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Incontro 4 · Mettere in regola lo studio o l'azienda</h3><span>2 h</span></div>
+    <ul class="lezioni">
+      <li><b>1</b><span>Policy interna, registro degli strumenti, formazione del personale</span><em>40'</em></li>
+      <li><b>2</b><span>Piano dei trenta giorni: cosa fare, in che ordine</span><em>30'</em></li>
+      <li><b>3</b><span>Esame dei casi reali portati dai partecipanti</span><em>35'</em></li>
+      <li><b>4</b><span>Chiusura e materiali</span><em>15'</em></li>
+    </ul>
+  </div>
+
+  <div class="scheda">
+    <h4>Cosa serve decidere con il professionista</h4>
+    <p>Se i quattro incontri si tengono in orario serale o pomeridiano; se la
+    registrazione può restare disponibile agli iscritti senza limiti di tempo o solo per
+    alcuni mesi; se accetta che il montato diventi il videocorso registrato (prodotto 2) e
+    a quali condizioni; se rilascia un attestato di partecipazione e con quale
+    intestazione.</p>
+    <p class="nota">L'ultima domanda non è un dettaglio: se il montato dell'aula diventa
+    il corso registrato, il professionista gira otto ore una volta sola e da quelle
+    nascono due prodotti. Se invece non lo accetta, il corso registrato va girato a parte
+    e il calendario si allunga di tre settimane.</p>
+  </div>
+</section>
+
+<section class="pagina">
+  <h2>Prodotto 2 — Obblighi e responsabilità nell'uso dell'IA</h2>
+  <p><strong>Durata:</strong> 4 h 30' · <strong>5 moduli · 30 lezioni</strong> ·
+  <strong>4 documenti operativi allegati</strong></p>
+  <p>Il corso risponde a una domanda pratica: <em>cosa devo fare, da quando, e cosa
+  rischio se non lo faccio.</em> Non è un corso sull'intelligenza artificiale, è un corso
+  su come usarla restando in regola. Il taglio è quello di chi deve applicare la norma
+  lunedì mattina, non di chi la commenta.</p>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Modulo 1 · Il quadro normativo in vigore</h3><span>55 min</span></div>
+    <ul class="lezioni">
+      <li><b>1.1</b><span>Che cosa è obbligatorio oggi, e da quando<span class="tag">anteprima gratuita</span></span><em>10'</em></li>
+      <li><b>1.2</b><span>AI Act: come è costruito, chi è fornitore e chi è utilizzatore</span><em>12'</em></li>
+      <li><b>1.3</b><span>Che cosa ha cambiato il pacchetto Digital Omnibus</span><em>9'</em></li>
+      <li><b>1.4</b><span>La legge italiana 132/2025 e il suo rapporto con il regolamento europeo</span><em>10'</em></li>
+      <li><b>1.5</b><span>Sanzioni, autorità competenti e tempi di applicazione</span><em>8'</em></li>
+      <li><b>1.6</b><span>Tre domande per capire in quale posizione ti trovi</span><em>6'</em></li>
+    </ul>
+  </div>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Modulo 2 · L'obbligo di informare il cliente</h3><span>57 min</span></div>
+    <ul class="lezioni">
+      <li><b>2.1</b><span>Chi è tenuto a informare, e chi va informato</span><em>10'</em></li>
+      <li><b>2.2</b><span>Quando l'uso dell'IA va dichiarato e quando non serve</span><em>12'</em></li>
+      <li><b>2.3</b><span>Forma, momento e prova della comunicazione</span><em>10'</em></li>
+      <li><b>2.4</b><span>Quattro casi concreti: studio legale, commercialista, consulente, studio sanitario</span><em>12'</em></li>
+      <li><b>2.5</b><span>Gli errori che rendono l'informativa inutile</span><em>7'</em></li>
+      <li><b>2.6</b><span>Come si compila il modello allegato<span class="tag coral">documento</span></span><em>6'</em></li>
+    </ul>
+  </div>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Modulo 3 · Dati personali e segreto professionale</h3><span>55 min</span></div>
+    <ul class="lezioni">
+      <li><b>3.1</b><span>Quando scrivere un prompt è un trattamento di dati personali</span><em>10'</em></li>
+      <li><b>3.2</b><span>Base giuridica e informativa privacy da aggiornare</span><em>11'</em></li>
+      <li><b>3.3</b><span>Strumenti extra-UE: trasferimenti e garanzie</span><em>10'</em></li>
+      <li><b>3.4</b><span>Segreto professionale e riservatezza verso il cliente</span><em>10'</em></li>
+      <li><b>3.5</b><span>Valutazione d'impatto: quando serve davvero</span><em>8'</em></li>
+      <li><b>3.6</b><span>Checklist di conformità in dodici punti<span class="tag coral">documento</span></span><em>6'</em></li>
+    </ul>
+  </div>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Modulo 4 · Responsabilità, contratti e proprietà dell'output</h3><span>51 min</span></div>
+    <ul class="lezioni">
+      <li><b>4.1</b><span>Chi risponde di un errore prodotto da uno strumento di IA</span><em>11'</em></li>
+      <li><b>4.2</b><span>Diritto d'autore: che cosa si può rivendicare su ciò che lo strumento produce</span><em>10'</em></li>
+      <li><b>4.3</b><span>Le clausole da mettere nel contratto con il cliente</span><em>10'</em></li>
+      <li><b>4.4</b><span>Le clausole da cercare nel contratto con il fornitore dello strumento</span><em>9'</em></li>
+      <li><b>4.5</b><span>Polizza professionale: cosa copre e cosa no</span><em>6'</em></li>
+      <li><b>4.6</b><span>Modelli di clausola commentati<span class="tag coral">documento</span></span><em>5'</em></li>
+    </ul>
+  </div>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Modulo 5 · Mettere in regola lo studio o l'azienda</h3><span>52 min</span></div>
+    <ul class="lezioni">
+      <li><b>5.1</b><span>Scrivere la policy interna sull'uso dell'IA</span><em>11'</em></li>
+      <li><b>5.2</b><span>Tenere il registro degli strumenti in uso</span><em>9'</em></li>
+      <li><b>5.3</b><span>Formazione del personale: che cosa va documentato</span><em>9'</em></li>
+      <li><b>5.4</b><span>Contenuti pubblicati, marketing e comunicazione al pubblico</span><em>10'</em></li>
+      <li><b>5.5</b><span>Piano operativo: mettersi in regola in trenta giorni</span><em>7'</em></li>
+      <li><b>5.6</b><span>I documenti finali e come tenerli aggiornati<span class="tag coral">documento</span></span><em>6'</em></li>
+    </ul>
+  </div>
+
+  <div class="scheda">
+    <h4>I quattro documenti allegati</h4>
+    <p>Modello di informativa al cliente · Checklist di conformità in dodici punti ·
+    Clausole contrattuali commentate · Modello di policy interna e registro degli
+    strumenti.</p>
+    <p class="nota">I documenti sono scaricabili e destinati a essere compilati dallo
+    studente: sono lo strumento di lavoro del corso. I video invece restano dentro la
+    piattaforma e non sono scaricabili.</p>
+  </div>
+</section>
+
+<section class="pagina">
+  <h2>Prodotto 3 — IA operativa per la piccola impresa</h2>
+  <p><strong>Durata:</strong> 1 h 20' · <strong>3 moduli · 12 lezioni</strong> · autore: redazione SWA</p>
+  <p>Corso breve e a prezzo contenuto. Serve a far entrare le persone nel catalogo e a
+  portarle verso il corso 1: la parte normativa qui è volutamente essenziale e rimanda a quelli. <span class="nota">Al professionista chiediamo solo di confermare che
+  le lezioni 3.3 e 3.4 non dicano cose sbagliate.</span></p>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Modulo 1 · Che cosa fa davvero uno strumento di IA</h3><span>26 min</span></div>
+    <ul class="lezioni">
+      <li><b>1.1</b><span>Che cosa sa fare e che cosa non sa fare<span class="tag">anteprima gratuita</span></span><em>7'</em></li>
+      <li><b>1.2</b><span>Perché sbaglia con sicurezza, e come accorgersene</span><em>7'</em></li>
+      <li><b>1.3</b><span>Gli strumenti che servono a una piccola impresa</span><em>6'</em></li>
+      <li><b>1.4</b><span>Quanto costa e quando conviene</span><em>6'</em></li>
+    </ul>
+  </div>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Modulo 2 · Usarla nel lavoro di ogni giorno</h3><span>28 min</span></div>
+    <ul class="lezioni">
+      <li><b>2.1</b><span>Scrivere richieste che danno risultati utilizzabili</span><em>8'</em></li>
+      <li><b>2.2</b><span>Email, preventivi e risposte ai clienti</span><em>7'</em></li>
+      <li><b>2.3</b><span>Contenuti per i social senza sembrare una macchina</span><em>7'</em></li>
+      <li><b>2.4</b><span>Rileggere e correggere prima di mandare</span><em>6'</em></li>
+    </ul>
+  </div>
+
+  <div class="modulo">
+    <div class="moduloTesta"><h3>Modulo 3 · Non farsi male</h3><span>26 min</span></div>
+    <ul class="lezioni">
+      <li><b>3.1</b><span>Che cosa non va mai incollato in uno strumento di IA</span><em>7'</em></li>
+      <li><b>3.2</b><span>Verificare un dato prima di usarlo con un cliente</span><em>6'</em></li>
+      <li><b>3.3</b><span>Gli obblighi in due parole, e dove approfondirli</span><em>7'</em></li>
+      <li><b>3.4</b><span>Cinque errori che costano cari</span><em>6'</em></li>
+    </ul>
+  </div>
+</section>
+
+<section class="pagina">
+  <h2>Prodotto 4 — Verticale di settore</h2>
+  <p><strong>Durata:</strong> 2 h 30' · <strong>4 moduli · 20 lezioni da 7–8 minuti</strong></p>
+  <p>Stessa struttura applicata a un singolo settore. Il settore non è ancora deciso: verrà
+  scelto in base al volume di ricerca reale, non a impressioni. Candidati: studi legali,
+  studi dentistici, ristorazione, studi tecnici.</p>
+  <table>
+    <thead><tr><th>Modulo</th><th>Contenuto</th><th class="num">Durata</th><th class="num">Lezioni</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Come lavora oggi quel settore e dove si perde tempo</td><td class="num">37'</td><td class="num">5</td></tr>
+      <tr><td>2</td><td>I processi che si possono automatizzare, uno per uno</td><td class="num">38'</td><td class="num">5</td></tr>
+      <tr><td>3</td><td>Farsi trovare: presenza online e contenuti di settore</td><td class="num">38'</td><td class="num">5</td></tr>
+      <tr><td>4</td><td>Regole, vincoli deontologici e limiti pubblicitari del settore</td><td class="num">37'</td><td class="num">5</td></tr>
+    </tbody>
+    <tfoot><tr><td>Totale</td><td></td><td class="num">2 h 30'</td><td class="num">20</td></tr></tfoot>
+  </table>
+  <p class="nota">Il modulo 4 è quello che richiede una revisione professionale: i vincoli
+  deontologici e pubblicitari cambiano da un ordine professionale all'altro.</p>
+</section>
+
+<section class="pagina">
+  <h2>Tempi di produzione</h2>
+  <p>Le settimane decorrono dal via libera sui contenuti, non dalla firma. L'aula live è
+  il primo prodotto a partire perché è anche il più veloce: non c'è montaggio da
+  aspettare, si tiene e basta. Il videocorso registrato nasce dopo, dal montato
+  dell'aula.</p>
+
+  <table>
+    <thead><tr><th>Fase</th><th>Chi</th><th class="num">1 · Aula live</th><th class="num">2 · Registrato</th><th class="num">3 · Ingresso</th><th class="num">4 · Settore</th></tr></thead>
+    <tbody>
+      <tr><td>Revisione di questo programma</td><td>Professionista</td><td class="num">1 sett.</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+      <tr><td>Preparazione slide e materiali d'aula</td><td>Professionista</td><td class="num">3 sett.</td><td class="num">—</td><td class="num">1 sett.</td><td class="num">2 sett.</td></tr>
+      <tr><td>Prova tecnica Zoom e collaudo registrazione</td><td>Insieme</td><td class="num">2 giorni</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+      <tr><td>Svolgimento degli incontri</td><td>Professionista</td><td class="num">4 sett.</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+      <tr><td>Riprese in studio</td><td>Insieme</td><td class="num">—</td><td class="num">1 giorno<br><span class="nota">integrazioni</span></td><td class="num">1 giorno</td><td class="num">1 giorno</td></tr>
+      <tr><td>Montaggio, grafiche, sottotitoli</td><td>SWA</td><td class="num">—</td><td class="num">3 sett.</td><td class="num">1 sett.</td><td class="num">1 sett.</td></tr>
+      <tr><td>Documenti allegati</td><td>Professionista</td><td class="num">incluso</td><td class="num">1 sett.</td><td class="num">—</td><td class="num">1 sett.</td></tr>
+      <tr><td>Controllo finale sul montato</td><td>Professionista</td><td class="num">—</td><td class="num">1 sett.</td><td class="num">—</td><td class="num">3 giorni</td></tr>
+      <tr><td>Caricamento e collaudo in piattaforma</td><td>SWA</td><td class="num">2 giorni</td><td class="num">3 giorni</td><td class="num">2 giorni</td><td class="num">2 giorni</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td>Dal via libera alla partenza</td><td></td><td class="num">5 sett.<br><span class="nota">+4 di aula</span></td><td class="num">+5 sett.<br><span class="nota">dopo l'aula</span></td><td class="num">4 sett.</td><td class="num">6 sett.</td></tr>
+    </tfoot>
+  </table>
+
+  <div class="scheda">
+    <h4>Impegno richiesto al professionista</h4>
+    <p><strong>Aula live.</strong> Preparazione di slide e materiali per otto ore di
+    lezione: <strong>20–26 ore</strong>. Svolgimento: <strong>8 ore in diretta</strong>,
+    più circa <strong>4 ore</strong> fra preparazione delle risposte fra un incontro e
+    l'altro e materiali consegnati ai partecipanti. <strong>Totale 32–38 ore</strong>,
+    distribuite su sette settimane.</p>
+    <p><strong>Videocorso registrato.</strong> Se nasce dal montato dell'aula:
+    <strong>8–12 ore</strong> fra riprese integrative, documenti allegati e controllo
+    finale. Se invece va girato da zero: <strong>30–36 ore</strong>, cioè quasi quanto
+    l'aula. È la differenza che rende importante la domanda sull'uso delle
+    registrazioni.</p>
+  </div>
+
+  <div class="scheda">
+    <h4>Ordine di uscita</h4>
+    <p>Va in vendita per prima <strong>l'aula live</strong>, con le date dei quattro
+    incontri dichiarate fin dalla pagina di acquisto: è quello che i partecipanti
+    comprano, insieme al numero chiuso. Dodici posti sono pochi e vanno detti, perché sono
+    parte del prodotto e non un limite tecnico.</p>
+    <p>Il <strong>videocorso registrato</strong> si apre in prevendita solo quando l'aula
+    è finita e il montato esiste. I due corsi minori seguono. Aprire tutto insieme
+    significa avere quattro date di consegna vincolanti nello stesso trimestre.</p>
+  </div>
+
+  <h2 style="margin-top:22px">Cosa chiediamo di rimandare indietro</h2>
+  <ol class="domande">
+    <li>Gli argomenti sono corretti e aggiornati alla data della revisione?</li>
+    <li>Manca qualcosa che un professionista <em>deve</em> sapere per essere in regola?</li>
+    <li>C'è qualcosa di superato o non più applicabile da togliere?</li>
+    <li>Il minutaggio di ogni lezione è sufficiente, o alcuni punti vanno allungati?</li>
+    <li>Ci sono affermazioni che non si possono fare in un corso venduto al pubblico?</li>
+    <li>I titoli proposti sono appropriati, o ne suggerisce di diversi?</li>
+    <li>Come vuole essere indicato come autore e docente nelle pagine pubbliche?</li>
+    <li>Accetta che la registrazione dell'aula live diventi il videocorso registrato, e a
+    quali condizioni?</li>
+    <li>Dodici partecipanti per aula sono il numero giusto, o ne preferisce meno?</li>
+    <li>Rilascia un attestato di partecipazione? Con quale intestazione?</li>
+  </ol>
+
+  <footer>
+    Social Web Automation · socialautomation.app · documento di lavoro, non destinato alla
+    diffusione. Nessun contenuto giuridico di questa bozza è stato validato.
+  </footer>
+</section>
+
+</body>
+</html>
