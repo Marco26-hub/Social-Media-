@@ -108,3 +108,123 @@ a, button, summary, [role='button'], input[type='checkbox'], input[type='radio']
   touch-action: manipulation;
   -webkit-tap-highlight-color: rgba(15, 107, 79, .16);
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Tema scuro dell'area operativa.
+
+   La dashboard e scritta con le utility Tailwind a colore fisso — text-gray-900,
+   bg-white, border-gray-200 e compagnia, circa millequattrocento volte. Il tema
+   scuro pero cambiava solo il fondo e il colore del <body>: il risultato era un
+   titolo grigio scuro su fondo quasi nero, cioe invisibile. Non lo prendeva ne
+   TypeScript ne il linter, perche dal loro punto di vista era tutto corretto.
+
+   Si correggono qui, in un punto solo, invece che in centosessanta file: ogni
+   utility di grigio viene rimappata sulla scala scura. Sono vincolate a
+   [data-area='operativa'] (il contenitore di app/(it)/dashboard/layout.tsx) per
+   non arrivare mai al sito pubblico, che ha gia una sua tavolozza per entrambi
+   i temi e non deve essere ridipinta da qui.
+
+   Se aggiungi una utility di grigio non elencata, aggiungila anche qui. E il
+   prezzo di avere i colori scritti nelle classi invece che in variabili: per
+   togliercelo del tutto servirebbe passare la dashboard ai token, che e una
+   passata a se. */
+
+/* Il browser disegna da se i campi, i menu a tendina e i calendari, e segue il
+   tema del SISTEMA se non gli si dice altro. Risultato: con macOS in modalita
+   scura e il sito in tema chiaro, i campi venivano scuri con dentro il testo
+   quasi nero di Tailwind — illeggibili in tutta la dashboard, non solo qui.
+   L'area operativa dichiara il proprio tema e i widget lo seguono. */
+[data-area='operativa'] { color-scheme: light; }
+html[data-theme='dark'] [data-area='operativa'] { color-scheme: dark; }
+
+html[data-theme='dark'] [data-area='operativa'] {
+  --op-testo: #edf4f1;
+  --op-testo-attenuato: #c2d2cc;
+  --op-testo-debole: #93a49e;
+  --op-testo-fioco: #7d8e88;
+  --op-superficie: #111815;
+  --op-superficie-alta: #18211d;
+  --op-fondo: #0b110f;
+  --op-linea: rgba(237, 244, 241, 0.12);
+  --op-linea-forte: rgba(237, 244, 241, 0.2);
+}
+
+html[data-theme='dark'] [data-area='operativa'] .text-gray-950,
+html[data-theme='dark'] [data-area='operativa'] .text-gray-900,
+html[data-theme='dark'] [data-area='operativa'] .text-gray-800 { color: var(--op-testo); }
+html[data-theme='dark'] [data-area='operativa'] .text-gray-700 { color: var(--op-testo-attenuato); }
+html[data-theme='dark'] [data-area='operativa'] .text-gray-600 { color: var(--op-testo-attenuato); }
+html[data-theme='dark'] [data-area='operativa'] .text-gray-500 { color: var(--op-testo-debole); }
+html[data-theme='dark'] [data-area='operativa'] .text-gray-400 { color: var(--op-testo-fioco); }
+html[data-theme='dark'] [data-area='operativa'] .text-gray-300,
+html[data-theme='dark'] [data-area='operativa'] .text-gray-200 { color: var(--op-testo-debole); }
+
+html[data-theme='dark'] [data-area='operativa'] .bg-white { background-color: var(--op-superficie); }
+html[data-theme='dark'] [data-area='operativa'] .bg-gray-50 { background-color: var(--op-fondo); }
+html[data-theme='dark'] [data-area='operativa'] .bg-gray-100 { background-color: var(--op-superficie-alta); }
+html[data-theme='dark'] [data-area='operativa'] .bg-gray-200 { background-color: var(--op-superficie-alta); }
+
+html[data-theme='dark'] [data-area='operativa'] .border-gray-50,
+html[data-theme='dark'] [data-area='operativa'] .border-gray-100,
+html[data-theme='dark'] [data-area='operativa'] .border-gray-150,
+html[data-theme='dark'] [data-area='operativa'] .border-gray-200 { border-color: var(--op-linea); }
+html[data-theme='dark'] [data-area='operativa'] .border-gray-300,
+html[data-theme='dark'] [data-area='operativa'] .border-gray-400 { border-color: var(--op-linea-forte); }
+html[data-theme='dark'] [data-area='operativa'] .divide-gray-50 > :not([hidden]) ~ :not([hidden]),
+html[data-theme='dark'] [data-area='operativa'] .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+html[data-theme='dark'] [data-area='operativa'] .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--op-linea); }
+
+/* Gli stati al passaggio del mouse sono classi diverse (.hover\:bg-gray-50:hover)
+   e non vengono coperti dalle regole qui sopra: senza queste, passare sopra una
+   riga la faceva tornare bianca. */
+html[data-theme='dark'] [data-area='operativa'] .hover\:bg-gray-50:hover,
+html[data-theme='dark'] [data-area='operativa'] .hover\:bg-gray-100:hover { background-color: var(--op-superficie-alta); }
+html[data-theme='dark'] [data-area='operativa'] .hover\:bg-white:hover { background-color: var(--op-superficie); }
+html[data-theme='dark'] [data-area='operativa'] .hover\:text-gray-900:hover,
+html[data-theme='dark'] [data-area='operativa'] .hover\:text-gray-700:hover { color: var(--op-testo); }
+html[data-theme='dark'] [data-area='operativa'] .hover\:border-gray-300:hover { border-color: var(--op-linea-forte); }
+
+/* I campi di un modulo hanno un fondo proprio deciso dal browser: senza questo
+   restano bianchi dentro una scheda scura, e il testo digitato sparisce. */
+html[data-theme='dark'] [data-area='operativa'] .input,
+html[data-theme='dark'] [data-area='operativa'] input:not([type='checkbox']):not([type='radio']),
+html[data-theme='dark'] [data-area='operativa'] select,
+html[data-theme='dark'] [data-area='operativa'] textarea {
+  background-color: var(--op-fondo);
+  border-color: var(--op-linea);
+  color: var(--op-testo);
+}
+html[data-theme='dark'] [data-area='operativa'] ::placeholder { color: var(--op-testo-fioco); }
+
+/* .btn-secondary e bianco con bordo chiaro: nel tema scuro diventa una scheda. */
+html[data-theme='dark'] [data-area='operativa'] .btn-secondary {
+  background-color: var(--op-superficie-alta);
+  border-color: var(--op-linea);
+  color: var(--op-testo-attenuato);
+}
+html[data-theme='dark'] [data-area='operativa'] .btn-secondary:hover {
+  background-color: var(--op-superficie);
+  color: var(--op-testo);
+}
+
+/* I riquadri di stato (verde, rosso, ambra, blu) sono fondi chiari con testo
+   scuro: al buio vanno invertiti, altrimenti sono macchie luminose illeggibili. */
+html[data-theme='dark'] [data-area='operativa'] .bg-green-50 { background-color: rgba(22, 163, 74, 0.14); }
+html[data-theme='dark'] [data-area='operativa'] .bg-red-50 { background-color: rgba(220, 38, 38, 0.14); }
+html[data-theme='dark'] [data-area='operativa'] .bg-amber-50,
+html[data-theme='dark'] [data-area='operativa'] .bg-yellow-50 { background-color: rgba(217, 160, 32, 0.14); }
+html[data-theme='dark'] [data-area='operativa'] .bg-blue-50 { background-color: rgba(37, 99, 235, 0.14); }
+html[data-theme='dark'] [data-area='operativa'] .bg-brand-50 { background-color: rgba(22, 163, 74, 0.16); }
+html[data-theme='dark'] [data-area='operativa'] .text-green-800,
+html[data-theme='dark'] [data-area='operativa'] .text-green-700 { color: #6ee7a8; }
+html[data-theme='dark'] [data-area='operativa'] .text-red-800,
+html[data-theme='dark'] [data-area='operativa'] .text-red-700 { color: #ff9c92; }
+html[data-theme='dark'] [data-area='operativa'] .text-amber-800,
+html[data-theme='dark'] [data-area='operativa'] .text-amber-700 { color: #f0c34e; }
+html[data-theme='dark'] [data-area='operativa'] .text-blue-800,
+html[data-theme='dark'] [data-area='operativa'] .text-blue-700 { color: #93b8ff; }
+html[data-theme='dark'] [data-area='operativa'] .border-green-200 { border-color: rgba(22, 163, 74, 0.3); }
+html[data-theme='dark'] [data-area='operativa'] .border-red-200 { border-color: rgba(220, 38, 38, 0.3); }
+html[data-theme='dark'] [data-area='operativa'] .border-amber-200,
+html[data-theme='dark'] [data-area='operativa'] .border-yellow-200 { border-color: rgba(217, 160, 32, 0.3); }
+html[data-theme='dark'] [data-area='operativa'] .border-blue-200 { border-color: rgba(37, 99, 235, 0.3); }

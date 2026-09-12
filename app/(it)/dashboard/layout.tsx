@@ -16,7 +16,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <AuthProvider>
       <GenerationProvider>
-        <div className="md:flex min-h-screen w-full max-w-full overflow-x-hidden">
+        {/* data-area marca l'area operativa: le correzioni del tema scuro in
+            globals.css sono limitate a questo sottoalbero, cosi non possono
+            toccare il sito pubblico, che ha gia i suoi colori. */}
+        <div data-area="operativa" className="md:flex min-h-screen w-full max-w-full overflow-x-hidden">
           <Suspense fallback={<aside className="hidden md:block md:sticky top-0 h-screen w-60 flex-shrink-0 bg-sidebar" />}>
             <Sidebar />
           </Suspense>
