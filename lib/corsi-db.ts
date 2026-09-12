@@ -35,8 +35,14 @@ export type Lezione = {
   tipo: TipoLezione
   durata_min: number | null
   anteprima_gratuita: boolean
-  /** Presente solo per le anteprime o per chi ha acquistato il corso. */
+  /** Embed esterno. Presente solo per le anteprime o per chi ha acquistato. */
   video_url: string | null
+  /**
+   * True se la lezione ha un video protetto sullo storage privato. La chiave del
+   * file non viene mai mandata al browser: il player chiama
+   * /api/corsi/video/<lezione> e l'accesso viene verificato li.
+   */
+  video_protetto: boolean
   /** Presente solo per le anteprime o per chi ha acquistato il corso. */
   contenuto: string | null
   completata?: boolean
@@ -153,6 +159,10 @@ async function caricaProgramma(corsoId: string, sbloccato: boolean, userId?: str
             l.id, l.titolo, l.ordine, l.tipo, l.durata_min, l.anteprima_gratuita,
             CASE WHEN l.anteprima_gratuita OR ${sbloccato ? 'true' : 'false'}
                  THEN l.video_url END AS video_url,
+            -- Solo un booleano: la chiave del file sullo storage non lascia mai
+            -- il server, altrimenti basterebbe leggere il sorgente della pagina.
+            (l.video_storage_key IS NOT NULL
+             AND (l.anteprima_gratuita OR ${sbloccato ? 'true' : 'false'})) AS video_protetto,
             CASE WHEN l.anteprima_gratuita OR ${sbloccato ? 'true' : 'false'}
                  THEN l.contenuto END AS contenuto,
             ${campoProgresso}
@@ -187,6 +197,7 @@ async function caricaProgramma(corsoId: string, sbloccato: boolean, userId?: str
       durata_min: row.durata_min === null || row.durata_min === undefined ? null : Number(row.durata_min),
       anteprima_gratuita: Boolean(row.anteprima_gratuita),
       video_url: row.video_url ? String(row.video_url) : null,
+      video_protetto: Boolean(row.video_protetto),
       contenuto: row.contenuto ? String(row.contenuto) : null,
       completata: Boolean(row.completata),
     })
@@ -291,6 +302,35 @@ export async function getCorsoPerStudente(userId: string, slug: string): Promise
     seo_description: row.seo_description ? String(row.seo_description) : null,
     moduli: await caricaProgramma(corsoId, true, userId),
   }
+}
+
+/**
+ * Chiave del file video di una lezione, restituita SOLO se chi chiede ha diritto
+ * di vederlo: lezione in anteprima gratuita, oppure corso acquistato e pagato.
+ * Null in ogni altro caso, senza distinguere fra "non esiste" e "non puoi":
+ * chi sonda l'endpoint non deve capire quali lezioni esistono.
+ */
+export async function getChiaveVideoAutorizzata(
+  lezioneId: string,
+  userId: string | null,
+): Promise<{ key: string; titolo: string } | null> {
+  if (!dbReady()) return null
+
+  const row = await q1(
+    `SELECT l.video_storage_key, l.titolo, l.anteprima_gratuita, m.corso_id
+       FROM corso_lezioni l
+       JOIN corso_moduli m ON m.id = l.modulo_id
+      WHERE l.id = $1
+      LIMIT 1`,
+    [lezioneId],
+  )
+  if (!row || !row.video_storage_key) return null
+
+  const risultato = { key: String(row.video_storage_key), titolo: String(row.titolo) }
+  if (Boolean(row.anteprima_gratuita)) return risultato
+  if (!userId) return null
+
+  return (await haAccessoAlCorso(userId, String(row.corso_id))) ? risultato : null
 }
 
 /** Segna o annulla il completamento di una lezione, solo se il corso e acquistato. */

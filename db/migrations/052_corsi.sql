@@ -53,6 +53,13 @@ create table if not exists corso_lezioni (
   titolo             text not null,
   ordine             integer not null default 0,
   tipo               text not null default 'video' check (tipo in ('video', 'testo')),
+  -- Due sorgenti video, con due livelli di protezione diversi:
+  --   video_storage_key -> file privato sullo storage, servito solo da
+  --     /api/corsi/video dopo aver verificato l'acquisto. E la modalita da usare
+  --     per i corsi a pagamento: il file non ha un indirizzo pubblico.
+  --   video_url -> embed esterno (YouTube, Vimeo). Comodo, ma chiunque riceva
+  --     il link guarda il video: usarlo solo per contenuti promozionali.
+  video_storage_key  text,
   video_url          text,
   contenuto          text,
   durata_min         integer,
