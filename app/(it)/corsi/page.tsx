@@ -149,7 +149,10 @@ export default async function CorsiPage() {
             {corsi.map(corso => (
               <li key={corso.id} className={styles.scheda}>
                 <Link href={`/corsi/${corso.slug}`} className={styles.schedaLink}>
-                  <span className={styles.livello}>{corso.livello}</span>
+                  <span className={styles.badge}>
+                    <span className={styles.livello}>{corso.livello}</span>
+                    {corso.in_prevendita && <span className={styles.prevenditaTag}>prevendita</span>}
+                  </span>
                   <h3>{corso.titolo}</h3>
                   {corso.sottotitolo && <p className={styles.sottotitolo}>{corso.sottotitolo}</p>}
                   <p className={styles.meta}>

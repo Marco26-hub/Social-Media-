@@ -22,6 +22,10 @@ export type CorsoCatalogo = {
   immagine_url: string | null
   prezzo_cents: number
   currency: string
+  /** Data da cui le lezioni saranno disponibili; null = gia disponibile. */
+  disponibile_dal: string | null
+  /** Vero se il corso si compra ora ma le lezioni arrivano piu avanti. */
+  in_prevendita: boolean
   livello: Livello
   categoria: string | null
   lezioni_totali: number
@@ -64,7 +68,8 @@ export type CorsoConProgramma = CorsoCatalogo & {
 
 const CAMPI_CATALOGO = `
   c.id, c.slug, c.titolo, c.sottotitolo, c.descrizione, c.immagine_url,
-  c.prezzo_cents, c.currency, c.livello, c.categoria
+  c.prezzo_cents, c.currency, c.livello, c.categoria,
+  c.disponibile_dal
 `
 
 const CONTEGGI_CATALOGO = `
@@ -87,6 +92,8 @@ function rigaCatalogo(row: Record<string, unknown>): CorsoCatalogo {
     immagine_url: row.immagine_url ? String(row.immagine_url) : null,
     prezzo_cents: Number(row.prezzo_cents),
     currency: String(row.currency ?? 'eur'),
+    disponibile_dal: row.disponibile_dal ? new Date(String(row.disponibile_dal)).toISOString() : null,
+    in_prevendita: Boolean(row.disponibile_dal) && new Date(String(row.disponibile_dal)) > new Date(),
     livello: String(row.livello ?? 'base') as Livello,
     categoria: row.categoria ? String(row.categoria) : null,
     lezioni_totali: Number(row.lezioni_totali ?? 0),

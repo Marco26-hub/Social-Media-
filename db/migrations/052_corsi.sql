@@ -25,6 +25,14 @@ create table if not exists corsi (
     check (livello in ('base', 'intermedio', 'avanzato')),
   categoria       text,
   pubblicato      boolean not null default false,
+  -- Prevendita: il corso si compra prima che le lezioni esistano.
+  --   null o data passata -> disponibile subito
+  --   data futura          -> prevendita, e la pagina lo dichiara
+  -- La data e obbligatoria in prevendita perche il codice del consumo impone di
+  -- indicare entro quando si consegna, e perche il recesso del consumatore NON
+  -- decade finche l'accesso non viene dato: chi compra in prevendita mantiene i
+  -- quattordici giorni, e i consensi raccolti cambiano di conseguenza.
+  disponibile_dal timestamptz,
   in_evidenza     boolean not null default false,
   ordine          integer not null default 0,
   seo_title       text,
