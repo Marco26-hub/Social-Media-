@@ -1,0 +1,118 @@
+/* Solo la griglia dei corsi: tipografia, colori e tema (chiaro e scuro)
+   arrivano da content-page.module.css e dalle variabili del sito.
+   Usare i token veri (--surface, --line, --muted, --green) e non colori fissi
+   e cio che tiene la sezione leggibile anche col tema scuro attivo. */
+
+.griglia {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin: 42px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scheda {
+  display: flex;
+}
+
+.schedaLink {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 25px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.schedaLink:hover,
+.schedaLink:focus-visible {
+  border-color: var(--green);
+  transform: translateY(-2px);
+}
+
+.schedaLink h3 {
+  margin: 0;
+  font: 500 21px Georgia, 'Times New Roman', serif;
+  line-height: 1.3;
+}
+
+.livello {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--green-dark);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sottotitolo {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.62;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.meta svg {
+  flex: none;
+  color: var(--green);
+}
+
+/* Il prezzo spinge in basso il resto: le schede restano allineate anche con
+   titoli di lunghezza diversa. */
+.prezzo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 27px;
+  font-weight: 800;
+}
+
+.prezzo small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.vai {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.vuoto {
+  margin: 42px 0 0;
+  padding: 30px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .griglia {
+    grid-template-columns: 1fr;
+  }
+}

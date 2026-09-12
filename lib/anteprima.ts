@@ -145,6 +145,12 @@ const IT: Record<string, Anteprima> = {
     sottotitolo: 'Scrivi su WhatsApp o via email: si parte dal problema, non dal pacchetto.',
     tinta: 'verde',
   },
+  '/corsi': {
+    occhiello: 'Corsi online',
+    titolo: 'Impara a farlo da chi lo fa ogni giorno.',
+    sottotitolo: 'Videolezioni per imprese e professionisti, accesso immediato e area riservata.',
+    tinta: 'oro',
+  },
   '/faq': {
     occhiello: 'Domande frequenti',
     titolo: 'Le risposte che servono prima di scegliere.',

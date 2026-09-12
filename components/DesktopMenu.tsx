@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Globe2,
   BookOpenText,
+  GraduationCap,
   Layers3,
   Megaphone,
   Newspaper,
@@ -240,6 +241,13 @@ export default function DesktopMenu({ locale = 'it' }: { locale?: 'it' | 'en' })
       <Link className={`${styles.menuLink} ${pathname === (isEnglish ? '/en/pricing' : '/pacchetti') ? styles.active : ''}`} href={isEnglish ? '/en/pricing' : '/pacchetti'}>
         <PackageCheck size={15} strokeWidth={1.9} aria-hidden="true" /> {isEnglish ? 'Packages' : 'Pacchetti'}
       </Link>
+      {/* I corsi esistono solo in italiano: il menu inglese non la mostra
+          finche' non ci sono lezioni in inglese da vendere. */}
+      {!isEnglish && (
+        <Link className={`${styles.menuLink} ${pathname.startsWith('/corsi') ? styles.active : ''}`} href="/corsi">
+          <GraduationCap size={15} strokeWidth={1.9} aria-hidden="true" /> Corsi
+        </Link>
+      )}
       {/* Il Journal era nascosto in inglese perche' il blog inglese non esisteva.
           Ora esiste, con i sette articoli tradotti: il menu inglese aveva una
           voce in meno di quello italiano senza piu' una ragione. */}

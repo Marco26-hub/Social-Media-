@@ -74,6 +74,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/servizi/gestionale-ristoranti',
       '/metodo',
       '/pacchetti',
+      '/corsi',
       '/faq',
       '/contatti',
     ].map(path => ({
@@ -217,6 +218,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   if (!dbReady()) return pages
+
+  // Corsi pubblicati: le pagine sono generate dal database come gli articoli,
+  // quindi senza questo blocco resterebbero fuori dall'indice.
+  try {
+    const corsi = await q(
+      `SELECT slug, updated_at FROM corsi WHERE pubblicato = true ORDER BY updated_at DESC LIMIT 500`,
+    ) as { slug: string; updated_at: string | Date | null }[]
+    pages.push(...corsi.map(corso => ({
+      url: `${SITE_URL}/corsi/${corso.slug}`,
+      lastModified: corso.updated_at ? new Date(corso.updated_at) : serviziUpdated,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    })))
+  } catch {
+    // Tabella non ancora migrata: la sitemap resta valida senza i corsi.
+  }
 
   try {
     const clienteId = await resolveBlogClienteIdForHost(new URL(SITE_URL).hostname)

@@ -41,6 +41,7 @@ const MOBILE_LINKS = [
   },
   { href: '/metodo', label: 'Metodo' },
   { href: '/pacchetti', label: 'Pacchetti' },
+  { href: '/corsi', label: 'Corsi' },
   { href: '/consulenza', label: 'Consulenza legale AI' },
   { href: '/blog', label: 'SWA Journal' },
   { href: '/chi-siamo', label: 'Azienda' },
