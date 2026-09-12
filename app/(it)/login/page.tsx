@@ -10,6 +10,20 @@ import { ArrowLeft, Eye, EyeOff, LockKeyhole, LogIn, ShieldCheck } from 'lucide-
 import ThemeToggle from '@/components/ThemeToggle'
 import styles from './login.module.css'
 
+/**
+ * Dove mandare la persona dopo l'accesso. Si accettano solo percorsi interni
+ * che iniziano con una sola barra: un indirizzo assoluto qui diventerebbe un
+ * open redirect, cioe un modo per usare il nostro dominio come trampolino
+ * verso un sito che imita il nostro.
+ */
+function destinazioneSicura(ripiego: string): string {
+  if (typeof window === 'undefined') return ripiego
+  const valore = new URLSearchParams(window.location.search).get('callbackUrl')
+  if (!valore) return ripiego
+  if (!valore.startsWith('/') || valore.startsWith('//')) return ripiego
+  return valore
+}
+
 type AccessHint = {
   enabled: boolean
   mode: 'demo' | 'production-hint'
@@ -51,7 +65,7 @@ export default function LoginPage() {
             redirect: false,
           })
           if (result?.ok) {
-            router.push('/dashboard/clienti')
+            router.push(destinazioneSicura('/dashboard/clienti'))
           } else {
             setLoading(false)
           }
@@ -90,7 +104,9 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard/clienti')
+    // Chi arriva da un corso deve tornare al corso, non finire in un'area che
+    // non stava cercando. Il ripiego resta il pannello, come prima.
+    router.push(destinazioneSicura('/dashboard/clienti'))
   }
 
   if (isDemo && loading) {

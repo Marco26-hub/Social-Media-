@@ -91,6 +91,45 @@ export async function sendStandaloneOrderConfirmed(
   })
 }
 
+export async function sendCorsoAcquistato(p: {
+  to: string
+  nome: string
+  titolo: string
+  url: string
+  disponibileDal?: string | null
+}): Promise<EmailResult> {
+  // Due messaggi diversi: chi compra un corso gia pronto entra subito, chi
+  // compra in prevendita deve sapere quando. Senza la data la mail sembra una
+  // conferma d'acquisto a cui non segue niente.
+  const quando = p.disponibileDal
+    ? `<p>Le lezioni saranno disponibili nella tua area riservata dal <strong>${escapeHtml(p.disponibileDal)}</strong>: ti riscriviamo appena sono online.</p>`
+    : `<p>Puoi gia guardare le lezioni dalla tua area riservata.</p>`
+
+  return sendEmail({
+    to: p.to,
+    subject: `Acquisto confermato - ${p.titolo}`,
+    html: `<p>Ciao ${escapeHtml(p.nome)},</p><p>l'acquisto del corso <strong>${escapeHtml(p.titolo)}</strong> e confermato.</p>${quando}<p><a href="${escapeHtml(p.url)}">${escapeHtml(p.url)}</a></p><p>Social Web Automation</p>`,
+    text: `Ciao ${p.nome},\n\nl'acquisto del corso ${p.titolo} e confermato.\n${p.disponibileDal ? `Le lezioni saranno disponibili dal ${p.disponibileDal}.` : 'Puoi gia guardare le lezioni dalla tua area riservata.'}\n${p.url}\n\nSocial Web Automation`,
+  })
+}
+
+export async function notifyCorsoAcquistato(p: {
+  acquistoId: string
+  titolo: string
+  nome: string
+  email: string
+  amountCents: number
+  inPrevendita: boolean
+}): Promise<EmailResult> {
+  const to = process.env.AGENCY_NOTIFY_EMAIL?.trim()
+  if (!to) return { sent: false, skipped: true }
+  return sendEmail({
+    to,
+    subject: `Nuova iscrizione al corso: ${p.titolo}`,
+    text: `Acquisto: ${p.acquistoId}\nCorso: ${p.titolo}${p.inPrevendita ? ' (PREVENDITA)' : ''}\nCliente: ${p.nome}\nEmail: ${p.email}\nImporto: EUR ${(p.amountCents / 100).toFixed(2)}`,
+  })
+}
+
 export async function notifyStandaloneOrderPaid(p: {
   orderId: string
   serviceName: string

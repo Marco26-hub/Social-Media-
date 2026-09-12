@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import { dbReady, q, q1 } from '@/lib/db'
 import { stripeSecretLivemode, verifyStripeWebhookSignature } from '@/lib/stripe'
 import { activateRegistration, PACCHETTO_FALLBACK, PACCHETTO_PIANO } from '@/lib/provisioning'
-import { notifyStandaloneOrderPaid, sendAccountActivated, sendStandaloneOrderConfirmed } from '@/lib/email'
+import { notifyCorsoAcquistato, notifyStandaloneOrderPaid, sendAccountActivated, sendCorsoAcquistato, sendStandaloneOrderConfirmed } from '@/lib/email'
+import { segnaAcquistoPagato } from '@/lib/corsi-db'
+import { SITE_URL } from '@/lib/site-config'
 import { getPackage } from '@/lib/packages'
 import { metaContextFromSessionMetadata, sendMetaConversionEvent } from '@/lib/meta-conversions-api'
 
@@ -286,12 +288,90 @@ async function handleStandaloneInvoice(obj: StripeObject, order: Record<string, 
   )
 }
 
+
+// Corso pagato. Tre cose, in quest'ordine di importanza:
+//   1. l'acquisto diventa 'paid' -> e cio che apre l'accesso alle lezioni
+//   2. l'account passa ad 'active' -> senza, chi ha pagato non riesce nemmeno a
+//      entrare: la registrazione crea i profili in 'pending' e il login li
+//      rifiuta finche un admin non approva. Per chi compra un corso quel vaglio
+//      non ha senso e bloccherebbe un cliente che ha gia pagato.
+//   3. le email (allo studente e all'agenzia) e l'evento pubblicitario, che
+//      sono accessori: se falliscono non devono toccare i primi due.
+async function handleCorsoPaid(obj: StripeObject) {
+  const meta = metadata(obj)
+  const acquistoId = str(meta.ref_id)
+  if (!acquistoId) throw new Error('checkout corso senza ref_id')
+
+  if (!['paid', 'no_payment_required'].includes(str(obj.payment_status))) return
+
+  const paymentIntent = typeof obj.payment_intent === 'string'
+    ? obj.payment_intent
+    : str((obj.payment_intent as StripeObject | undefined)?.id)
+
+  const esito = await segnaAcquistoPagato(acquistoId, {
+    sessionId: str(obj.id) || undefined,
+    paymentIntentId: paymentIntent || undefined,
+    amountCents: typeof obj.amount_total === 'number' ? obj.amount_total : undefined,
+  })
+  if (!esito) throw new Error(`Acquisto corso ${acquistoId} non trovato`)
+
+  const profilo = await q1(
+    `UPDATE profiles SET status = 'active', updated_at = now()
+      WHERE id = $1 AND status IS DISTINCT FROM 'active'
+      RETURNING email, nome`,
+    [esito.userId],
+  ) || await q1('SELECT email, nome FROM profiles WHERE id = $1', [esito.userId])
+
+  const corso = await q1(
+    'SELECT titolo, slug, disponibile_dal FROM corsi WHERE id = $1',
+    [esito.corsoId],
+  )
+  const disponibileDal = corso?.disponibile_dal ? new Date(String(corso.disponibile_dal)) : null
+  const inPrevendita = Boolean(disponibileDal && disponibileDal > new Date())
+
+  await Promise.allSettled([
+    profilo?.email
+      ? sendCorsoAcquistato({
+          to: String(profilo.email),
+          nome: String(profilo.nome || 'ciao'),
+          titolo: esito.titolo,
+          url: `${SITE_URL}/portale/corsi`,
+          disponibileDal: inPrevendita && disponibileDal
+            ? new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }).format(disponibileDal)
+            : null,
+        })
+      : Promise.resolve(),
+    notifyCorsoAcquistato({
+      acquistoId,
+      titolo: esito.titolo,
+      nome: String(profilo?.nome || '-'),
+      email: String(profilo?.email || '-'),
+      amountCents: typeof obj.amount_total === 'number' ? obj.amount_total : 0,
+      inPrevendita,
+    }),
+    sendMetaConversionEvent({
+      eventName: 'Purchase',
+      context: metaContextFromSessionMetadata(meta),
+      eventId: `corso-purchase-${acquistoId}`,
+      email: profilo?.email ? String(profilo.email) : undefined,
+      value: typeof obj.amount_total === 'number' ? obj.amount_total / 100 : undefined,
+      currency: 'EUR',
+      customData: { content_name: esito.titolo, content_type: 'course' },
+    }),
+  ])
+}
+
 async function handleCheckoutCompleted(obj: StripeObject) {
   const meta = metadata(obj)
 
   // One-off consulenza: pagamento singolo, nessun workspace da attivare.
   if (str(meta.tipo) === 'consulenza') {
     await handleConsulenzaPaid(obj)
+    return
+  }
+
+  if (str(meta.tipo) === 'corso') {
+    await handleCorsoPaid(obj)
     return
   }
 

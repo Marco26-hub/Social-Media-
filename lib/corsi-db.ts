@@ -371,6 +371,40 @@ export async function setProgresso(userId: string, lezioneId: string, completata
 
 // ── Acquisti ────────────────────────────────────────────────────────────────
 
+export type CorsoPerAcquisto = {
+  id: string
+  slug: string
+  titolo: string
+  prezzo_cents: number
+  currency: string
+  pubblicato: boolean
+  in_prevendita: boolean
+}
+
+/**
+ * Dati minimi per avviare un pagamento. Prezzo e titolo si leggono SEMPRE da
+ * qui e mai dalla richiesta del browser: e l'unico punto in cui si decide
+ * quanto viene addebitato.
+ */
+export async function getCorsoPerAcquisto(slug: string): Promise<CorsoPerAcquisto | null> {
+  if (!dbReady()) return null
+  const row = await q1(
+    `SELECT id, slug, titolo, prezzo_cents, currency, pubblicato, disponibile_dal
+       FROM corsi WHERE slug = $1 LIMIT 1`,
+    [slug],
+  )
+  if (!row) return null
+  return {
+    id: String(row.id),
+    slug: String(row.slug),
+    titolo: String(row.titolo),
+    prezzo_cents: Number(row.prezzo_cents),
+    currency: String(row.currency ?? 'eur'),
+    pubblicato: Boolean(row.pubblicato),
+    in_prevendita: Boolean(row.disponibile_dal) && new Date(String(row.disponibile_dal)) > new Date(),
+  }
+}
+
 export type ConsensiAcquisto = {
   customerType: 'consumatore' | 'impresa_professionista'
   earlyPerformanceRequested: boolean
