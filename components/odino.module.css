@@ -5,18 +5,16 @@
    schermo e' un problema reale per chi soffre di vertigini. */
 
 .lancio {
-  --odino-rotate-x: 0deg;
-  --odino-rotate-y: 0deg;
-  position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 60;
-  width: 88px; height: 110px; padding: 0;
+  position: fixed; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 60;
+  width: 62px; height: 78px; padding: 0;
   border: 0; background: transparent; cursor: pointer;
-  filter: drop-shadow(0 18px 24px rgba(8, 20, 15, .34));
+  filter: drop-shadow(0 12px 18px rgba(8, 20, 15, .3));
   transition: transform .2s ease, filter .2s ease;
   perspective: 720px;
   touch-action: manipulation;
   animation: odinoArriva .9s cubic-bezier(.18, .88, .24, 1.18) backwards;
 }
-.lancio:hover { transform: translateY(-5px); filter: drop-shadow(0 22px 28px rgba(8, 20, 15, .42)) }
+.lancio:hover { filter: drop-shadow(0 18px 24px rgba(8, 20, 15, .4)) }
 .lancio:focus-visible { outline: 3px solid #d8aa35; outline-offset: 4px; border-radius: 12px }
 
 .lancio::before {
@@ -30,14 +28,25 @@
   filter: blur(6px);
   content: '';
   transform: translateZ(-24px) scale(.82);
-  animation: odinoOmbra 4.2s ease-in-out infinite;
+  animation: none;
 }
 .mascotte {
   position: absolute;
   inset: 0;
   overflow: visible;
-  animation: odinoGalleggia3d 4.2s ease-in-out infinite;
   transform-style: preserve-3d;
+  animation: none;
+}
+.mascotte::after {
+  position: absolute;
+  inset: 17% -4% 1%;
+  z-index: 0;
+  border: 1px solid rgba(216, 170, 53, .34);
+  border-radius: 50%;
+  content: '';
+  opacity: .28;
+  transform: rotateX(68deg) scale(.8);
+  animation: odinoAnello 5.6s ease-in-out infinite;
 }
 .mascotte::before {
   position: absolute;
@@ -50,24 +59,54 @@
   filter: blur(7px);
   transform: scale(.7);
 }
-.salutoAttivo .mascotte::before { animation: odinoAura 6.4s .5s ease-in-out both }
+.salutoAttivo .mascotte::before { animation: odinoAura 3.8s .2s ease-in-out both }
+/* Il render originale resta intatto e mantiene il dettaglio scelto per il
+   brand. Il livello completo non cambia mai prospettiva: il movimento nasce
+   dai giunti e dall'inerzia dell'intera figura, senza effetto flip-book. */
 .robotLayer {
   position: absolute;
   inset: 0;
-  display: block;
-  transform: rotateX(var(--odino-rotate-x)) rotateY(var(--odino-rotate-y)) translateZ(18px);
-  transform-style: preserve-3d;
-  transform-origin: 50% 68%;
-  transition: transform .16s ease-out;
   z-index: 1;
+  display: block;
+  transform: translateZ(20px);
+  transform-style: preserve-3d;
+  transform-origin: 50% 72%;
+  transition: filter .35s ease;
 }
-.robotLayer img { object-fit: contain; object-position: center bottom }
-.lancio:not(:hover) .robotLayer { animation: odinoGuarda 5.4s ease-in-out infinite }
-.lancio.salutoAttivo .robotLayer { animation: odinoAccoglie 5.8s .7s ease-in-out both }
+.lancio:hover .robotLayer { filter: brightness(1.035) saturate(1.04) }
+.salutoAttivo .robotLayer { animation: none }
+.salutoAttivo .mascotte,
+.salutoAttivo .tronco,
+.salutoAttivo .gambe { animation: none }
 
-/* La scatola dei livelli: proporzione 2:3 come l'immagine, centrata nel
-   bottone. Ogni livello e' una copia intera dell'immagine con un ritaglio
-   (clip-path): le percentuali sono quelle dell'immagine, non del bottone. */
+/* Una piccola orbita fa leggere ODINO come presenza digitale, non come sticker.
+   Si accende solo quando saluta o quando qualcuno lo esplora col puntatore. */
+.orbita {
+  position: absolute;
+  inset: 19% -10% 1%;
+  z-index: 0;
+  border: 1px solid rgba(216, 170, 53, .44);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transform: rotateX(68deg) scale(.72);
+  transition: opacity .2s ease-out;
+}
+.lancio:hover .orbita,
+.salutoAttivo .orbita { opacity: 1; animation: odinoOrbita 3.8s linear infinite }
+.orbita i {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f2d779;
+  box-shadow: 0 0 10px rgba(242, 215, 121, .9);
+}
+.orbita i:nth-child(1) { left: 8%; top: 56% }
+.orbita i:nth-child(2) { right: 17%; top: 7%; width: 3px; height: 3px; background: #ef785f }
+.orbita i:nth-child(3) { right: 4%; bottom: 20%; width: 4px; height: 4px; background: #49d6a0 }
+
+/* La scatola mantiene sempre la proporzione 2:3 dell'immagine completa. */
 .corpoBox {
   position: absolute;
   top: 0; bottom: 0; left: 50%;
@@ -75,47 +114,98 @@
   transform: translateX(-50%);
   transform-style: preserve-3d;
 }
-.strato { position: absolute; inset: 0; display: block }
-.strato img { object-fit: contain; object-position: center bottom }
-/* Il tronco: tutto tranne il braccio che saluta (x 0-41%, y 37-56%) e le
-   gambe (sotto il 68%). Quei pezzi vivono nelle altre due copie.
-   Si chiama «tronco» e non «corpo» perche' .corpo era gia' il corpo del
-   pannello, quello che scorre sotto l'intestazione: chiamando allo stesso modo
-   un livello della mascotte, il suo clip-path finiva sul testo delle risposte e
-   ne ritagliava via una fetta larga il 41% fra il 37% e il 56% dell'altezza.
-   Sono due file diversi nello stesso modulo CSS, e il modulo non se ne accorge. */
-.tronco {
-  clip-path: polygon(0 0, 100% 0, 100% 68%, 0 68%, 0 56%, 41% 56%, 41% 37%, 0 37%);
-  /* Un accenno di slancio del busto insieme al saluto, sulle anche: due gradi
-     e mezzo, non di piu'. E' quello che fa leggere il gesto come un saluto
-     invece che come un braccio che si muove da solo. Il perno sta a due punti
-     dalla cucitura con le gambe, quindi li' lo scarto e' sotto il pixel. */
-  transform-origin: 50% 66%;
-  animation: odinoRespira 5.8s ease-in-out infinite;
+.corpoBox > img {
+  object-fit: contain;
+  object-position: center bottom;
+  transform: scale(1.18);
+  transform-origin: 50% 90%;
 }
-/* Il braccio: ruota sulla spalla, che sta al bordo del ritaglio. Il saluto e'
-   breve e ogni sei secondi, come prima: un braccio che si agita di continuo
-   e' un banner. */
-.braccio {
-  /* Il ritaglio e' il rettangolo del braccio (x 0-41%, y 37-56%) piu' una
-     linguetta di 2% x 6% centrata sul perno (x 41-43%, y 43-49%). A riposo
-     sono gli stessi pixel del tronco, quindi non si vede; quando il braccio
-     ruota la linguetta sta sul perno, si sposta quasi zero e copre il cuneo che
-     una rotazione ampia aprirebbe alla spalla. Una striscia alta quanto tutto
-     il braccio prendeva anche il bordo del petto, che ruotava col braccio e
-     lasciava una scheggia chiara. */
-  clip-path: polygon(0 37%, 41% 37%, 41% 43%, 43% 43%, 43% 49%, 41% 49%, 41% 56%, 0 56%);
-  transform-origin: 41% 46%;
-  animation: none;
+.posaAttiva .corpoBox { opacity: 0 }
+.gestoAttivo { animation: none }
+
+/* Frame normalizzati: canvas, centro, scala del visore e linea dei piedi sono
+   identici. Entra un solo livello per volta; la scritta ODINO appartiene al
+   render originale nascosto e quindi non puo' sovrapporsi alle pose. */
+.posaOdino {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: block;
+  pointer-events: none;
+  transform-origin: 50% 88%;
+  will-change: opacity, transform, filter;
 }
-.salutoAttivo .tronco { animation: odinoSlancio 5.4s 1.5s ease-in-out both }
-.salutoAttivo .braccio { animation: odinoSaluto 5.4s 1.5s ease-in-out both }
-/* Le gambe: un'oscillazione di poco piu' di un grado sulle anche, in
-   controfase col galleggiamento, cosi' sembra che si sposti il peso. */
-.gambe {
-  clip-path: inset(68% 0 0 0);
-  transform-origin: 50% 66%;
-  animation: odinoPasso 4.2s ease-in-out infinite;
+.posaOdino img {
+  object-fit: contain;
+  object-position: center bottom;
+  transform: scale(1.18);
+  transform-origin: 50% 90%;
+  filter: drop-shadow(0 7px 8px rgba(5, 23, 16, .16));
+}
+.posaEntrata { animation: odinoPosaEntra .76s cubic-bezier(.18, .78, .24, 1) both }
+.posaEntrata.posaSaluto { animation: none; opacity: 1; filter: none; transform: none }
+.salutoFluido {
+  position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;
+  transform: scale(1.18); transform-origin: 50% 90%;
+  filter: drop-shadow(0 7px 8px rgba(5, 23, 16, .16));
+}
+.posaEntrata[data-posa='2'] { animation-name: odinoPosaRespira }
+.posaEntrata[data-posa='3'] { animation-name: odinoPosaEspira }
+.posaEntrata[data-posa='7'] { animation-name: odinoPosaAscolta }
+.posaEntrata[data-posa='8'] { animation-name: odinoPosaPensa }
+.posaEntrata[data-posa='9'],
+.posaEntrata[data-posa='10'],
+.posaEntrata[data-posa='11'],
+.posaEntrata[data-posa='12'] { animation-name: odinoPosaSpiega }
+.posaEntrata[data-posa='13'] { animation: odinoPosaCarica 1.6s cubic-bezier(.36, 0, .2, 1) both }
+.posaEntrata[data-posa='14'] { animation: odinoPosaSalta 1s cubic-bezier(.16, .72, .22, 1) both }
+.posaEntrata[data-posa='15'] { animation: odinoPosaAtterra .72s cubic-bezier(.2, .75, .24, 1) both }
+
+@keyframes odinoPosaEntra {
+  from { opacity: .18; transform: translateY(3px); filter: blur(2.4px) }
+  62% { opacity: .92; transform: translateY(-.6px); filter: blur(.15px) }
+  to { opacity: 1; transform: translateY(0); filter: blur(0) }
+}
+@keyframes odinoPosaRespira {
+  from { opacity: .24; transform: translateY(2px); filter: blur(2px) }
+  72% { opacity: 1; transform: translateY(-1px); filter: blur(0) }
+  to { opacity: 1; transform: translateY(0); filter: blur(0) }
+}
+@keyframes odinoPosaEspira {
+  from { opacity: .24; transform: translateY(-1px); filter: blur(2px) }
+  to { opacity: 1; transform: translateY(0); filter: blur(0) }
+}
+@keyframes odinoPosaAscolta {
+  from { opacity: .2; transform: rotate(1.5deg) translateX(2px); filter: blur(2px) }
+  to { opacity: 1; transform: rotate(0) translateX(0); filter: blur(0) }
+}
+@keyframes odinoPosaPensa {
+  from { opacity: .2; transform: rotate(-1.2deg) translateY(1px); filter: blur(2px) }
+  to { opacity: 1; transform: rotate(0) translateY(0); filter: blur(0) }
+}
+@keyframes odinoPosaSpiega {
+  from { opacity: .2; transform: translateX(-2px); filter: blur(2px) }
+  72% { opacity: 1; transform: translateX(.7px); filter: blur(0) }
+  to { opacity: 1; transform: translateX(0); filter: blur(0) }
+}
+@keyframes odinoPosaCarica {
+  0% { opacity: .25; transform: translateY(1px); filter: blur(1.8px) }
+  17% { opacity: 1; transform: translateY(-2px); filter: blur(0) }
+  30% { transform: translateY(.5px) }
+  47% { transform: translateY(-3px) }
+  61% { transform: translateY(.6px) }
+  79% { transform: translateY(1.5px) }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0) }
+}
+@keyframes odinoPosaSalta {
+  from { opacity: .35; transform: translateY(5px); filter: blur(1.4px) }
+  68% { opacity: 1; transform: translateY(-3px); filter: blur(0) }
+  to { opacity: 1; transform: translateY(0); filter: blur(0) }
+}
+@keyframes odinoPosaAtterra {
+  from { opacity: .35; transform: translateY(-4px); filter: blur(1.2px) }
+  72% { opacity: 1; transform: translateY(1.5px); filter: blur(0) }
+  to { opacity: 1; transform: translateY(0); filter: blur(0) }
 }
 /* Le palpebre: il colore del visore, scendono e risalgono in due decimi di
    secondo. Sinistra e destra battono insieme. */
@@ -128,33 +218,96 @@
   transform-origin: 50% 0;
   animation: odinoBatte 5.6s infinite;
 }
-.palpebraSinistra { left: 37%; top: 23.4%; width: 13% }
-.palpebraDestra { left: 60.5%; top: 25%; width: 12% }
+.palpebraSinistra { left: 34.5%; top: 37.2%; width: 13% }
+.palpebraDestra { left: 58.5%; top: 37.8%; width: 12% }
+.occhiLuce {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.occhiLuce::before,
+.occhiLuce::after {
+  position: absolute;
+  top: 39.2%;
+  width: 3.8%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff3b5;
+  box-shadow: 0 0 5px rgba(255, 232, 139, .9);
+  content: '';
+  opacity: 0;
+  animation: odinoOcchiVivi 7.8s ease-in-out infinite;
+}
+.occhiLuce::before { left: 41.2% }
+.occhiLuce::after { left: 62.2%; animation-delay: .11s }
+.salutoAttivo .palpebraSinistra { animation: odinoOcchiolino 3.4s .05s ease-in-out both }
+.lancio:not(.salutoAttivo) .palpebraDestra { animation: odinoOcchioSalutoAlternato 10.8s 2.2s ease-in-out infinite }
+.salutoAttivo .occhiLuce::before,
+.salutoAttivo .occhiLuce::after { animation: odinoOcchiSaluto 3.4s .05s ease-in-out both }
+
+.bocca {
+  position: absolute;
+  left: 45%;
+  top: 43.5%;
+  z-index: 5;
+  width: 10.5%;
+  height: 3.8%;
+  border: 1px solid rgba(255, 238, 169, .94);
+  border-top: 0;
+  border-radius: 12% 12% 55% 55%;
+  background: #0a1e18;
+  box-shadow: 0 1px 3px rgba(255, 232, 139, .55);
+  opacity: 0;
+  pointer-events: none;
+  transform: scaleY(.2);
+  transform-origin: 50% 0;
+}
+.salutoAttivo .bocca { animation: odinoParla 3.4s .05s ease-in-out both }
+
+.medagliaNome {
+  position: absolute;
+  left: 40%;
+  top: 56.5%;
+  z-index: 6;
+  display: grid;
+  width: 25%;
+  height: 7.6%;
+  place-items: center;
+  color: #ffe8a0;
+  font: 900 clamp(3.6px, .5vw, 5.2px)/1 Arial, sans-serif;
+  letter-spacing: -.035em;
+  text-shadow: 0 1px 2px rgba(3, 18, 13, .8), 0 0 4px rgba(255, 220, 105, .5);
+  transform: translateZ(2px);
+  animation: odinoMedaglia 7.8s ease-in-out infinite;
+}
+.salutoAttivo .medagliaNome { animation: odinoMedagliaSaluto 3.4s .05s ease-in-out both }
 
 /* Sequenza unica: le bolle seguono la mano e si fondono in una sola nuvola.
    La sagoma e' un SVG minuscolo: curve pulite anche su Retina, nessuna immagine
    da scaricare e nessun bordo sfrangiato sui telefoni. La nuvola resta formata
-   mentre le tre frasi si dissolvono una nell'altra. */
+   per tutta la durata della singola frase. */
 .saluto {
   position: absolute;
-  right: 56px;
-  top: -52px;
-  width: 202px;
-  height: 110px;
+  right: -4px;
+  top: -58px;
+  width: 118px;
+  height: 112px;
   z-index: 4;
   pointer-events: none;
 }
 .nuvola {
   position: absolute;
   right: 0;
-  top: 0;
-  width: 196px;
-  height: 104px;
+  top: -10px;
+  width: 114px;
+  height: 64px;
   display: block;
   opacity: 0;
   transform: translate(16px, 15px) scale(.58) rotate(3deg);
   transform-origin: 91% 88%;
-  animation: odinoFormaNuvola 16.6s 4.2s cubic-bezier(.2, .78, .24, 1) both;
+  will-change: transform, opacity;
+  animation: vignettaLeggibile 12s ease-in-out both;
 }
 .nuvola svg {
   position: absolute;
@@ -163,33 +316,41 @@
   height: 100%;
   overflow: visible;
   filter:
-    drop-shadow(0 12px 18px rgba(8, 20, 15, .2))
-    drop-shadow(0 2px 3px rgba(8, 20, 15, .12));
+    drop-shadow(0 8px 12px rgba(8, 20, 15, .14))
+    drop-shadow(0 2px 2px rgba(8, 20, 15, .1));
 }
 .nuvolaSagoma {
   transform-box: fill-box;
   transform-origin: center;
-  animation: odinoNuvolaRespira 4.8s 5s ease-in-out infinite;
+  animation: none;
 }
 .nuvolaRiflesso {
   fill: none;
   stroke: rgba(255, 255, 255, .92);
   stroke-width: 2.4;
   stroke-linecap: round;
-  opacity: .8;
+  opacity: .62;
 }
 .nuvola strong {
   position: absolute;
-  inset: 21px 25px 19px 25px;
+  inset: 13px 14px 10px;
   display: grid;
   place-items: center;
-  color: #0f6b4f;
-  font: 800 13px/1.2 Arial, sans-serif;
-  letter-spacing: -.015em;
+  color: #123f31;
+  -webkit-text-fill-color: #123f31;
+  font: 800 11px/1.25 'Arial Rounded MT Bold', 'Trebuchet MS', Arial, sans-serif;
+  letter-spacing: 0;
   text-align: center;
   text-wrap: balance;
-  opacity: 0;
-  transform: translateY(6px) scale(.97);
+  opacity: 1;
+  transform: none;
+  text-shadow: none;
+}
+.fraseVignetta { isolation: isolate; z-index: 1 }
+@keyframes vignettaLeggibile {
+  0% { opacity: 0; transform: translateY(4px) }
+  4%, 96% { opacity: 1; transform: none }
+  100% { opacity: 0; transform: translateY(-2px) }
 }
 .scintille {
   position: absolute;
@@ -203,11 +364,9 @@
   color: #d8aa35;
   content: '✦';
   font: 900 10px/1 Georgia, serif;
-  text-shadow:
-    143px 9px 0 #ef785f,
-    18px 65px 0 rgba(216, 170, 53, .8);
+  text-shadow: 67px 5px 0 #0f6b4f;
   transform-origin: 50% 50%;
-  animation: odinoScintille 2.7s 4.7s ease-in-out infinite;
+  animation: odinoScintille 2.7s .8s ease-in-out infinite;
 }
 .scintille::after {
   position: absolute;
@@ -218,69 +377,77 @@
   border-radius: 50%;
   background: radial-gradient(ellipse, rgba(255, 255, 255, .95), transparent 68%);
   content: '';
-  opacity: .7;
+  opacity: .38;
   filter: blur(2px);
   transform: rotate(-20deg);
 }
-.presentazione { animation: odinoTestoNuvola 5.4s 4.5s ease-in-out both }
-.aiuto { animation: odinoTestoNuvola 5.8s 8.5s ease-in-out both }
-.invito { animation: odinoTestoNuvola 7.2s 12.9s ease-in-out both }
+.presentazione { animation: odinoTestoNuvola 2.6s .7s ease-in-out both }
+.aiuto { animation: odinoTestoNuvola 2.7s 2.8s ease-in-out both }
+.invito { animation: odinoTestoNuvola 3.15s 5s ease-in-out both }
 .saluto > i {
   position: absolute;
   display: block;
   z-index: 5;
-  border: 1.5px solid rgba(216, 170, 53, .9);
+  border: 2px solid rgba(216, 170, 53, .96);
   border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, #fff 0 18%, #fffdf7 52%, #f2e5c4 100%);
-  box-shadow: 0 5px 10px rgba(8, 20, 15, .16), inset 0 0 0 1px rgba(255, 255, 255, .7);
+  background: radial-gradient(circle at 31% 25%, #fff 0 19%, #fffdf7 48%, #f0dfb5 100%);
+  box-shadow:
+    0 3px 7px rgba(8, 20, 15, .16),
+    inset 0 0 0 1px rgba(255, 255, 255, .86),
+    0 0 0 1px rgba(15, 107, 79, .12);
   opacity: 0;
-  animation: odinoBolla 3.5s 1.9s cubic-bezier(.2, .75, .2, 1) both;
+  animation: vignettaLeggibile 12s ease-in-out both;
+}
+.saluto > i::after {
+  position: absolute;
+  top: 15%;
+  left: 18%;
+  width: 31%;
+  height: 24%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .98);
+  content: '';
+  transform: rotate(-24deg);
 }
 .bollaUno {
-  right: 0;
-  bottom: 2px;
-  width: 8px;
-  height: 8px;
-  --bolla-mx: -5px;
-  --bolla-my: -8px;
-  --bolla-x: -11px;
-  --bolla-y: -17px;
+  right: 57px;
+  bottom: 21px;
+  width: 3px;
+  height: 3px;
 }
 .bollaDue {
-  right: 9px;
-  bottom: 13px;
-  width: 12px;
-  height: 12px;
-  --bolla-mx: -10px;
-  --bolla-my: -16px;
-  --bolla-x: -23px;
-  --bolla-y: -31px;
-  animation-delay: 2.45s !important;
+  right: 64px;
+  bottom: 34px;
+  width: 6px;
+  height: 6px;
+  animation-delay: 0s;
 }
 .bollaTre {
-  right: 24px;
-  bottom: 29px;
-  width: 17px;
-  height: 17px;
-  --bolla-mx: -17px;
-  --bolla-my: -24px;
-  --bolla-x: -38px;
-  --bolla-y: -45px;
-  animation-delay: 3.05s !important;
+  right: 70px;
+  bottom: 47px;
+  width: 10px;
+  height: 10px;
+  animation-delay: 0s;
 }
 
 @keyframes odinoBolla {
-  0% { opacity: 0; transform: translate(7px, 8px) scale(.2) }
-  24% { opacity: 1; transform: translate(var(--bolla-mx), var(--bolla-my)) scale(1) }
-  68% { opacity: .95; transform: translate(var(--bolla-x), var(--bolla-y)) scale(.86) }
-  100% { opacity: 0; transform: translate(calc(var(--bolla-x) - 5px), calc(var(--bolla-y) - 6px)) scale(.38) }
+  0% { opacity: 0; transform: translate(7px, 8px) scale(.15) rotate(12deg) }
+  6% { opacity: 1; transform: translate(-1px, -1px) scale(1.18) rotate(-5deg) }
+  11% { opacity: .98; transform: translate(0, 0) scale(.96) rotate(2deg) }
+  16% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0) }
+  48% { opacity: .96; transform: translate(-1px, -1px) scale(1.045) rotate(-2deg) }
+  91% { opacity: .98; transform: translate(0, 0) scale(1) rotate(0) }
+  96% { opacity: .75; transform: translate(-2px, -2px) scale(.9) rotate(-4deg) }
+  100% { opacity: 0; transform: translate(-5px, -4px) scale(.55) rotate(-7deg) }
 }
 @keyframes odinoFormaNuvola {
-  0% { opacity: 0; transform: translate(16px, 15px) scale(.58) rotate(3deg); filter: blur(3px) }
-  6% { opacity: 1; transform: translate(-2px, -1px) scale(1.025) rotate(-.6deg); filter: blur(0) }
-  10%, 91% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0); filter: blur(0) }
-  96% { opacity: .7; transform: translate(-3px, -2px) scale(.985); filter: blur(0) }
-  100% { opacity: 0; transform: translate(-8px, -5px) scale(.94); filter: blur(2px) }
+  0% { opacity: 0; transform: translate3d(11px, 10px, 0) scale(.72) rotate(2deg); filter: blur(2px) }
+  7% { opacity: .68; transform: translate3d(4px, 4px, 0) scale(.93) rotate(.5deg); filter: blur(.7px) }
+  13% { opacity: 1; transform: translate3d(-1px, -1px, 0) scale(1.018) rotate(-.35deg); filter: blur(0) }
+  19% { opacity: 1; transform: translate3d(0, 0, 0) scale(.996) rotate(0); filter: blur(0) }
+  25%, 88% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0); filter: blur(0) }
+  94% { opacity: .82; transform: translate3d(-2px, -1px, 0) scale(.988); filter: blur(0) }
+  100% { opacity: 0; transform: translate3d(-6px, -4px, 0) scale(.95); filter: blur(1.5px) }
 }
 @keyframes odinoTestoNuvola {
   0%, 100% { opacity: 0; transform: translateY(6px) scale(.97) }
@@ -303,44 +470,126 @@
    con il perno a destra e' quella che porta la mano in alto. Con il segno
    negativo il braccio scendeva, e un saluto verso il basso non e' un saluto. */
 @keyframes odinoSaluto {
-  0%, 14%, 100% { transform: rotate(0deg) }
-  30% { transform: rotate(24deg) }
-  43% { transform: rotate(-5deg) }
-  56% { transform: rotate(20deg) }
-  69% { transform: rotate(-3deg) }
-  84% { transform: rotate(0deg) }
+  0% { transform: rotate(0deg) translateY(0) }
+  12% { transform: rotate(-19deg) translateY(1px) }
+  29% { transform: rotate(24deg) translateY(-1px) }
+  39% { transform: rotate(7deg) translateY(-.5px) }
+  49% { transform: rotate(27deg) translateY(-1px) }
+  59% { transform: rotate(5deg) translateY(-.4px) }
+  69% { transform: rotate(23deg) translateY(-.8px) }
+  79% { transform: rotate(7deg) translateY(-.35px) }
+  88% { transform: rotate(17deg) translateY(-.55px) }
+  96%, 100% { transform: rotate(0deg) translateY(0) }
 }
 @keyframes odinoSlancio {
-  0%, 14%, 100% { transform: rotate(0deg) }
-  34% { transform: rotate(-2.5deg) }
-  68% { transform: rotate(-1.5deg) }
-  84% { transform: rotate(0deg) }
+  0%, 100% { transform: rotate(0deg) translateY(0) }
+  24% { transform: rotate(-1.8deg) translateY(-1px) }
+  68% { transform: rotate(-1deg) translateY(-.5px) }
 }
 @keyframes odinoRespira {
   0%, 100% { transform: rotate(0deg) translateY(0) }
   50% { transform: rotate(-.45deg) translateY(-1px) }
 }
 @keyframes odinoPasso {
+  0%, 55%, 86%, 100% { transform: rotate(0deg) translateY(0) }
+  61% { transform: rotate(.45deg) translateY(.25px) }
+  67% { transform: rotate(-.5deg) translateY(0) }
+  73% { transform: rotate(.55deg) translateY(.3px) }
+  80% { transform: rotate(-.25deg) translateY(.1px) }
+}
+@keyframes odinoManoIdle {
+  0%, 17%, 42%, 100% { transform: rotate(0deg) }
+  21% { transform: rotate(3.5deg) }
+  26% { transform: rotate(-1deg) }
+  31% { transform: rotate(2.6deg) }
+  36% { transform: rotate(0deg) }
+}
+@keyframes odinoAltraManoIdle {
+  0%, 27%, 51%, 100% { transform: rotate(0deg) translateY(0) }
+  32% { transform: rotate(-1.8deg) translateY(-.2px) }
+  37% { transform: rotate(.7deg) translateY(0) }
+  42% { transform: rotate(-2.2deg) translateY(-.25px) }
+  47% { transform: rotate(0deg) translateY(0) }
+}
+@keyframes odinoSalutoAlternato {
+  0%, 30%, 72%, 100% { transform: rotate(0deg) translateY(0) }
+  36% { transform: rotate(-18deg) translateY(-.5px) }
+  43% { transform: rotate(-36deg) translateY(-1px) }
+  49% { transform: rotate(-19deg) translateY(-.5px) }
+  55% { transform: rotate(-34deg) translateY(-.9px) }
+  61% { transform: rotate(-17deg) translateY(-.4px) }
+  66% { transform: rotate(-28deg) translateY(-.65px) }
+}
+@keyframes odinoAltraManoSaluta {
   0%, 100% { transform: rotate(0deg) translateY(0) }
-  25% { transform: rotate(1.3deg) translateY(.5px) }
-  50% { transform: rotate(0deg) translateY(0) }
-  75% { transform: rotate(-1.3deg) translateY(.5px) }
+  22% { transform: rotate(-6deg) translateY(-1px) }
+  46% { transform: rotate(-3deg) translateY(-.5px) }
+  72% { transform: rotate(-5deg) translateY(-.8px) }
+  90% { transform: rotate(0deg) translateY(0) }
+}
+@keyframes odinoOcchioSalutoAlternato {
+  0%, 41%, 48%, 100% { transform: scaleY(0) }
+  43%, 46% { transform: scaleY(1) }
 }
 @keyframes odinoBatte {
   0%, 91%, 100% { transform: scaleY(0) }
   93%, 95% { transform: scaleY(1) }
 }
+@keyframes odinoOcchiVivi {
+  0%, 8%, 42%, 100% { opacity: 0; transform: scale(.45) }
+  12% { opacity: .75; transform: scale(1) }
+  17% { opacity: .2; transform: scale(.72) }
+  35% { opacity: 0; transform: scale(.45) }
+}
+@keyframes odinoOcchiolino {
+  0%, 20%, 38%, 100% { transform: scaleY(0) }
+  25%, 32% { transform: scaleY(1) }
+}
+@keyframes odinoOcchiSaluto {
+  0%, 14%, 48%, 100% { opacity: 0; transform: scale(.5) }
+  20% { opacity: .95; transform: scale(1.18) }
+  30% { opacity: .35; transform: scale(.82) }
+}
+@keyframes odinoParla {
+  0%, 17%, 100% { opacity: 0; transform: scaleY(.2) scaleX(.92) }
+  23% { opacity: .9; transform: scaleY(.85) scaleX(.88) }
+  31% { opacity: .82; transform: scaleY(.35) scaleX(1) }
+  41% { opacity: .9; transform: scaleY(1) scaleX(.86) }
+  51% { opacity: .78; transform: scaleY(.28) scaleX(1.04) }
+  62% { opacity: .88; transform: scaleY(.78) scaleX(.92) }
+  73% { opacity: .72; transform: scaleY(.3) scaleX(1) }
+  84% { opacity: .84; transform: scaleY(.62) scaleX(.95) }
+  94% { opacity: 0; transform: scaleY(.2) scaleX(1) }
+}
+@keyframes odinoMedaglia {
+  0%, 72%, 100% { filter: brightness(1); transform: translateZ(2px) scale(1) }
+  79% { filter: brightness(1.35); transform: translateZ(2px) scale(1.06) }
+  86% { filter: brightness(1.05); transform: translateZ(2px) scale(1) }
+}
+@keyframes odinoMedagliaSaluto {
+  0%, 100% { filter: brightness(1); transform: translateZ(2px) scale(1) }
+  28% { filter: brightness(1.45); transform: translateZ(2px) scale(1.09) }
+  52% { filter: brightness(1.1); transform: translateZ(2px) scale(1.02) }
+}
 .stato {
-  position: absolute; right: 8px; bottom: 18px; width: 13px; height: 13px;
-  border: 3px solid #fffdf7; border-radius: 50%; background: #27a875;
+  position: absolute; right: 5px; bottom: 13px; width: 10px; height: 10px;
+  border: 2px solid #fffdf7; border-radius: 50%; background: #27a875;
   box-shadow: 0 2px 8px rgba(8, 20, 15, .24);
   transform: translateZ(34px);
   animation: odinoStato 2.4s ease-in-out infinite;
 }
 
-@keyframes odinoGalleggia3d {
-  0%, 100% { transform: translateY(0) }
-  50% { transform: translateY(-7px) }
+@keyframes odinoVita {
+  0%, 54%, 86%, 100% { transform: translateY(0) }
+  58% { transform: translateY(.8px) }
+  61% { transform: translateY(-2px) }
+  64% { transform: translateY(.35px) }
+  67% { transform: translateY(-3px) }
+  70% { transform: translateY(.8px) }
+  73% { transform: translateY(1.7px) }
+  77% { transform: translateY(-7px) }
+  81% { transform: translateY(-7.5px) }
+  84% { transform: translateY(1px) }
 }
 
 @keyframes odinoArriva {
@@ -368,8 +617,22 @@
 }
 
 @keyframes odinoOmbra {
-  0%, 100% { opacity: .7; transform: translateZ(-24px) scale(.82) }
-  50% { opacity: .4; transform: translateZ(-24px) scale(.68) }
+  0%, 54%, 86%, 100% { opacity: .68; transform: translateZ(-24px) scale(.82) }
+  58%, 64%, 70% { opacity: .72; transform: translateZ(-24px) scale(.86) }
+  61% { opacity: .56; transform: translateZ(-24px) scale(.75) }
+  67% { opacity: .51; transform: translateZ(-24px) scale(.72) }
+  73% { opacity: .76; transform: translateZ(-24px) scale(.9) }
+  79% { opacity: .28; transform: translateZ(-24px) scale(.61) }
+  84% { opacity: .76; transform: translateZ(-24px) scale(.9) }
+}
+
+@keyframes odinoAnello {
+  0%, 100% { opacity: .14; transform: rotateX(68deg) scale(.72) }
+  50% { opacity: .4; transform: rotateX(68deg) scale(.9) }
+}
+
+@keyframes odinoOrbita {
+  to { transform: rotateX(68deg) rotateZ(360deg) scale(.78) }
 }
 
 @keyframes odinoStato {
@@ -377,12 +640,33 @@
   50% { box-shadow: 0 0 0 6px rgba(39, 168, 117, 0) }
 }
 
-.avatar {
-  position: relative; width: 48px; height: 48px; flex: none; overflow: hidden;
-  border: 1px solid rgba(216, 170, 53, .6); border-radius: 8px;
-  background: #173c30;
+@keyframes odinoPresenta {
+  0% { transform: translateZ(20px) translateY(0) scale(1) }
+  52% { transform: translateZ(26px) translateY(-2px) scale(1.022) }
+  100% { transform: translateZ(20px) translateY(0) scale(1) }
 }
-.avatar img { object-fit: cover; object-position: 50% 22% }
+
+.avatar {
+  position: relative; width: 52px; height: 52px; flex: none; overflow: hidden;
+  border: 1px solid rgba(216, 170, 53, .78); border-radius: 15px;
+  background: radial-gradient(circle at 50% 35%, #edf2e7, #cfdccf 72%);
+  box-shadow: 0 0 0 3px rgba(216, 170, 53, .1), 0 8px 18px rgba(3, 17, 12, .22);
+}
+.avatar::after {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(255, 255, 255, .72);
+  border-radius: 11px;
+  content: '';
+  pointer-events: none;
+}
+.avatar img { object-fit: contain }
+.avatarAttivo { animation: odinoAvatarRisponde .72s cubic-bezier(.2, .8, .2, 1) }
+@keyframes odinoAvatarRisponde {
+  0% { transform: scale(.9) rotate(-3deg); filter: brightness(1.08) }
+  55% { transform: scale(1.05) rotate(1.5deg) }
+  100% { transform: scale(1) rotate(0); filter: none }
+}
 @keyframes galleggia {
   0%, 100% { transform: translateY(0) }
   50% { transform: translateY(-4px) }
@@ -473,19 +757,25 @@
     height: 132px;
   }
   .saluto {
-    right: 72px;
-    top: -64px;
-    width: 230px;
-    height: 122px;
+    right: -6px;
+    top: -70px;
+    width: 156px;
+    height: 134px;
   }
   .nuvola {
-    width: 222px;
-    height: 111px;
+    right: 0;
+    width: 150px;
+    height: 82px;
   }
   .nuvola strong {
-    inset: 23px 29px 21px;
-    font-size: 14px;
+    inset: 17px 19px 13px;
+    font-size: 13px;
   }
+  .bollaUno { right: 88px; bottom: 20px; width: 4px; height: 4px }
+  .bollaDue { right: 97px; bottom: 33px; width: 7px; height: 7px }
+  .bollaTre { right: 105px; bottom: 46px; width: 11px; height: 11px }
+
+  .stato { right: 8px; bottom: 18px; width: 13px; height: 13px; border-width: 3px }
 
   .pannello {
     right: 20px;
@@ -507,16 +797,24 @@
   .pannello,
   .mascotte,
   .mascotte::before,
+  .mascotte::after,
   .robotLayer,
+  .orbita,
   .lancio::before,
-  .strato,
+  .posaOdino,
   .palpebra,
+  .occhiLuce::before,
+  .occhiLuce::after,
+  .bocca,
+  .medagliaNome,
   .nuvola,
   .nuvolaSagoma,
   .nuvola strong,
   .scintille::before,
   .saluto > i,
   .stato { animation: none !important; transition: none !important }
+  .nuvola, .nuvola strong, .saluto > i { opacity: 1; transform: none }
+  .nuvola .aiuto, .nuvola .invito { display: none }
 }
 
 /* Risposte prese dalle domande gia' scritte sul sito. Ognuna dichiara da quale
@@ -561,8 +859,5 @@
 .suggerimenti button:focus-visible { background: #0f6b4f; color: #fffdf7 }
 
 
-/* La nuvoletta del saluto usa il verde del marchio, che sul fondo scuro della
-   nuvola fa 2,86:1. Il verde chiaro e' lo stesso colore, letto. */
-.saluto strong span, .saluto strong { color: #0f6b4f; }
-:global(html[data-theme='dark']) .saluto strong span,
-:global(html[data-theme='dark']) .saluto strong { color: #49d6a0; }
+/* Il fondo della vignetta resta avorio in entrambi i temi: anche il testo
+   mantiene lo stesso verde scuro, senza ereditare il colore del tema notte. */

@@ -370,6 +370,25 @@ export const NODI_EN: Nodo[] = [
     },
   },
   {
+    id: 'stampa-materiali-fisici',
+    domanda: 'Do you make business cards, printed T-shirts or other printed products?',
+    chiavi: [
+      'business cards', 'business card', 'printed cards', 't-shirts', 't-shirt', 'tshirt',
+      'printing', 'print', 'printer', 'merchandise', 'merch', 'gadgets', 'brochures',
+      'leaflets', 'flyers', 'signage', 'packaging',
+    ],
+    risposta: {
+      titolo: 'Physical printing is not part of SWA’s public price list.',
+      testo:
+        'Business cards, T-shirts, merchandise and other printed products are not listed as services that can be purchased from the digital catalogue, so I will not promise supply or invent a price. A person can still assess the graphic design, print-ready artwork or coordination with a printing supplier: it depends on the product, quantities and materials.',
+      link: [
+        { href: '/en/contact', label: 'Have the request assessed' },
+        { href: '/en/services', label: 'See the available services' },
+      ],
+      poi: ['parlare-con-persona', 'quanto-costa-social', 'cosa-resta-fuori'],
+    },
+  },
+  {
     id: 'parlare-con-persona',
     domanda: 'I want to talk to a person.',
     chiavi: ['person', 'human', 'call', 'contact', 'talk', 'speak', 'quote'],

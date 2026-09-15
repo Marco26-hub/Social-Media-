@@ -14,8 +14,8 @@ export type Occupante = 'segretaria' | 'odino' | null
 
 let occupante: Occupante = null
 // La mascotte di ODINO chiusa non e' un pannello: non blocca l'angolo, ma
-// occupa comunque i suoi 116 pixel. Chi sta li' sotto deve saperlo per salire
-// sopra invece di finirci dietro.
+// occupa comunque 78px su mobile e 132px su desktop. Chi sta li' sotto deve
+// saperlo per salire sopra invece di finirci dietro.
 let mascotte = false
 
 function annuncia(): void {

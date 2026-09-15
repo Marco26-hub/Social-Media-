@@ -15,7 +15,8 @@ import styles from './segretaria-popup.module.css'
 // AgendaPiena; cambiano solo i colori, che qui sono quelli del brand SWA.
 const CHIAVE = 'swa_popup_segretaria'
 const GIORNI_SILENZIO = 30
-const RITARDO_MS = 7000
+// Lascia leggere per intero la vignetta iniziale di Odino (12 secondi).
+const RITARDO_MS = 18000
 
 function giaVisto(): boolean {
   try {

@@ -350,6 +350,25 @@ const NODI_BASE: Nodo[] = [
     },
   },
   {
+    id: 'stampa-materiali-fisici',
+    domanda: 'Fate biglietti da visita, magliette o altri prodotti stampati?',
+    chiavi: [
+      'biglietti', 'biglietto da visita', 'business card', 'magliette', 'maglietta',
+      't-shirt', 'tshirt', 'stampa', 'stampare', 'stampate', 'tipografia', 'merchandising',
+      'gadget', 'brochure', 'volantini', 'volantino', 'flyer', 'insegne', 'packaging',
+    ],
+    risposta: {
+      titolo: 'La stampa fisica non è nel listino pubblico di SWA.',
+      testo:
+        'Biglietti da visita, magliette, gadget e altri prodotti stampati non sono presentati come servizi acquistabili nel catalogo digitale, quindi non ti prometto una fornitura né invento un prezzo. Possiamo però far valutare a una persona la parte grafica, il file esecutivo o il coordinamento con un fornitore di stampa: dipende dal prodotto, dalle quantità e dai materiali.',
+      link: [
+        { href: '/contatti', label: 'Fai valutare la richiesta' },
+        { href: '/servizi', label: 'Vedi i servizi disponibili' },
+      ],
+      poi: ['parlare-con-persona', 'quanto-costa-social', 'cosa-resta-fuori'],
+    },
+  },
+  {
     id: 'parlare-con-persona',
     domanda: 'Voglio parlare con una persona.',
     chiavi: ['persona', 'umano', 'chiamare', 'contatto', 'parlare', 'preventivo'],
