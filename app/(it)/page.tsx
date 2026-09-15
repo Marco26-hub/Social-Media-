@@ -5,8 +5,6 @@ import type { Metadata } from 'next'
 import {
   Workflow,
   ClipboardCheck,
-  CalendarClock,
-  PhoneCall,
   Clapperboard,
   ArrowRight,
   BarChart3,
@@ -14,23 +12,15 @@ import {
   Check,
   ChevronRight,
   CircleCheck,
-  FileCheck2,
   FileSearch,
-  Globe2,
   Layers3,
-  LockKeyhole,
-  Megaphone,
   Newspaper,
   ScanSearch,
-  Scale,
-  ShieldCheck,
   Sparkles,
   Target,
 } from 'lucide-react'
-import { PACCHETTI } from '@/lib/pacchetti'
 import { PREZZO_INGRESSO } from '@/lib/prezzi-ingresso'
 import { BLOG_SERVICE } from '@/lib/blog-service'
-import { TITOLARE } from '@/lib/legal-config'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
 import PublicFooter from '@/components/PublicFooter'
 import FloatingNavigation from '@/components/FloatingNavigation'
@@ -130,95 +120,54 @@ const PERCORSO = [
 
 const SERVICES = [
   {
-    icon: Megaphone,
-    href: '/servizi/gestione-social-media',
-    title: 'Gestione social multicanale',
-    text: 'Piano editoriale, contenuti, adattamento ai formati, approvazione e pubblicazione in un unico flusso.',
-    items: ['Strategia e calendario mensile', 'Copy, grafiche, Reel e Short', 'Adattamento per ogni canale', 'Approvazione, pubblicazione e report'],
-  },
-  {
     icon: ScanSearch,
     href: '/servizi/seo-geo',
+    prezzo: PREZZO_INGRESSO['seo-geo'],
     title: 'Visibilità SEO + GEO',
     text: 'Audit, strategia, struttura e priorità per rendere sito e offerta comprensibili ai motori di ricerca e ai sistemi AI.',
-    items: ['Controllo del sito e dei testi già online', 'Che cosa cercano davvero i tuoi clienti', 'Chi sei, scritto in modo che Google e le AI lo capiscano', 'Che cosa è cambiato, mese per mese'],
   },
   {
     icon: Newspaper,
     href: BLOG_SERVICE.path,
+    prezzo: PREZZO_INGRESSO['blog-seo'],
     title: BLOG_SERVICE.name,
     text: `${BLOG_SERVICE.articlesPerMonth} articoli al mese, pianificati e revisionati per costruire copertura organica con continuità.`,
-    items: ['Piano editoriale mensile', 'SEO on-page, FAQ e dati strutturati', 'Controllo umano prima della pubblicazione', 'Pubblicazione collegata o consegna per CMS'],
-  },
-  {
-    icon: Globe2,
-    href: '/servizi/siti-e-commerce',
-    title: 'Siti web e landing',
-    text: 'Landing page semplici a partire da 19,90 € al mese. Siti più articolati ed e-commerce vengono quotati in base al progetto.',
-    items: ['Architettura e messaggi di conversione', 'Sviluppo responsive e mobile-first', 'Moduli, analytics e tracciamento', 'Integrazione con social, ADS e contenuti'],
   },
   {
     icon: Clapperboard,
     href: '/servizi/video-produzione',
+    prezzo: PREZZO_INGRESSO['video-produzione'],
     title: 'Riprese video in azienda',
     text: 'Veniamo a girare dove lavori, con fotografo, luci e ottiche. Dalla stessa sessione escono video e foto.',
-    items: ['Sopralluogo su spazi, luce e orari', 'Mezza giornata, materiale per settimane', 'Un volto davanti alla camera se serve', 'Scatti fotografici dalla stessa sessione'],
-  },
-  {
-    icon: PhoneCall,
-    href: '/servizi/segretaria-telefonica-ai',
-    title: 'Il telefono che squilla mentre lavori',
-    ancora: 'l’assistente telefonico',
-    text: 'Risponde al posto tuo con il tuo listino, informa, fissa l’appuntamento e ti lascia la trascrizione.',
-    items: ['Da 199 € al mese, 600 minuti inclusi', 'Dice solo cose che hai approvato', 'Passa a una persona quando serve', 'Registro delle chiamate con esito'],
-  },
-  {
-    icon: CalendarClock,
-    href: '/servizi/agenda-clienti-whatsapp',
-    title: 'I clienti spariti da mesi',
-    ancora: 'l’agenda e il recupero clienti',
-    text: 'Ogni giorno trovi chi ricontattare, con il motivo e il messaggio già scritto. Parte solo se ci metti il sì.',
-    items: ['Da 390 € al mese, 1000 invii inclusi', 'Legge agenda e storico ogni giorno', 'Messaggi pronti, mai inviati da soli', 'Spazi liberi proposti a chi è già cliente'],
   },
   {
     icon: ClipboardCheck,
     href: '/servizi/gestione-lavorazioni',
+    prezzo: PREZZO_INGRESSO['gestione-lavorazioni'],
     title: 'Il lavoro che si chiude sul posto',
     ancora: 'i rapportini di lavoro',
     text: 'Per chi lavora fuori sede: checklist, foto e firma del cliente dal telefono, PDF prima di ripartire.',
-    items: ['Checklist già pronta per tipo di lavoro', 'Firma dell’operatore e del cliente', 'Ore calcolate da entrata e uscita', 'Pannello con storico e approvazioni'],
   },
   {
     icon: Workflow,
     href: '/servizi/automazione-gestionali',
+    prezzo: PREZZO_INGRESSO['automazione'],
     title: 'Sistemi che si parlano',
     ancora: 'l’automazione dei gestionali',
     text: 'Gestionale, CRM, moduli e archivio smettono di richiedere lo stesso dato tre volte.',
-    items: ['Analisi dei flussi prima del codice', 'Integrazioni sui sistemi esistenti', 'Registro delle esecuzioni e degli errori', 'Sviluppo su misura solo dove serve'],
   },
   {
     icon: Target,
     href: '/servizi/ricerca-clienti-b2b',
+    prezzo: PREZZO_INGRESSO['lead-b2b'],
     title: 'Ricerca Clienti B2B',
     text: 'Un Pilot per definire il cliente ideale, analizzare fino a 30 aziende e ricevere una lista verificata e prioritaria.',
-    items: ['Profilo ideale e criteri concordati', 'Fonti pubbliche tracciabili', 'Priorità motivata per ogni azienda', 'Nessun invio o cliente garantito'],
   },
 ]
 
-const JOURNEY = [
-  { number: '01', title: 'Farsi conoscere', text: 'Social e Blog costruiscono presenza, continuità e autorevolezza.', href: '/servizi/gestione-social-media' },
-  { number: '02', title: 'Essere trovati', text: 'SEO + GEO organizza struttura, intenti, entità e priorità del sito.', href: '/servizi/seo-geo' },
-  { number: '03', title: 'Convertire', text: 'Landing e siti web trasformano attenzione e traffico in azioni misurabili.', href: '/servizi/siti-e-commerce' },
-  { number: '04', title: 'Trovare opportunità', text: 'Il Pilot B2B ricerca aziende in target, fonti e priorità commerciali.', href: '/servizi/ricerca-clienti-b2b' },
-  { number: '05', title: 'Operare correttamente', text: 'AI Act, GDPR e controllo umano proteggono processo e responsabilità.', href: '/consulenza' },
-  { number: '06', title: 'Misurare e migliorare', text: 'Report e risultati indicano cosa funziona e guidano le priorità del ciclo successivo.', href: '/metodo' },
-]
-
 const EVIDENCE = [
-  { title: 'Processo social visibile', text: 'Piano, produzione, approvazione e pubblicazione sono descritti passaggio per passaggio.', href: '/metodo', label: 'Verifica il metodo' },
+  { title: 'Processo social visibile', text: 'Piano, produzione, approvazione e pubblicazione sono descritti passaggio per passaggio: analisi, produzione, tua approvazione, pubblicazione e misura.', href: '/metodo', label: 'Vedi il metodo completo' },
   { title: 'Journal pubblico', text: 'Articoli, struttura editoriale, FAQ e collegamenti mostrano concretamente l’approccio SEO + GEO.', href: '/blog', label: 'Apri il Journal' },
-  { title: 'Portfolio Web reale', text: 'SILKinCOM, Studio Legale BCS e Borsieri Car Service sono progetti pubblici consultabili.', href: '/servizi/siti-e-commerce', label: 'Guarda i progetti' },
-  { title: 'Pilot B2B delimitato', text: 'Che cosa ricevi, che cosa resta fuori e quanto costa: scritto prima di pagare, non dopo.', href: '/servizi/ricerca-clienti-b2b', label: 'Esamina il Pilot' },
 ]
 
 const CASES = [
@@ -243,35 +192,6 @@ const CASES = [
     text: 'Analisi fino a 30 aziende con criteri concordati, fonti pubbliche e priorità motivata per ogni prospect.',
     href: '/servizi/ricerca-clienti-b2b',
   },
-]
-
-const LEGAL_SERVICES = [
-  {
-    icon: Scale,
-    title: 'Valutazione AI Act',
-    text: 'Analisi del ruolo dell’azienda, delle finalità d’uso e del livello di rischio dei sistemi AI per individuare gli obblighi applicabili.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Privacy e GDPR',
-    text: 'Verifica dei flussi di dati, delle basi giuridiche, delle informative, dei fornitori e delle misure organizzative collegate all’AI.',
-  },
-  {
-    icon: FileCheck2,
-    title: 'Trasparenza dei contenuti',
-    text: 'Criteri di revisione, responsabilità editoriale ed eventuale identificazione dei contenuti generati o manipolati artificialmente.',
-  },
-  {
-    icon: LockKeyhole,
-    title: 'Copyright e contratti',
-    text: 'Valutazione di licenze, diritti di utilizzo, responsabilità e clausole contrattuali relative a modelli, piattaforme e contenuti.',
-  },
-]
-
-const PROCESS = [
-  ['01', 'Analizziamo', 'Definiamo brand, pubblico, obiettivi e canali prioritari.'],
-  ['02', 'Produciamo', 'Prepariamo il piano e realizziamo contenuti coerenti per ogni piattaforma.'],
-  ['03', 'Ottimizziamo', 'Dopo la tua approvazione pubblichiamo, misuriamo e miglioriamo.'],
 ]
 
 const FAQ = [
@@ -382,24 +302,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className={styles.journeySection} aria-labelledby="journey-title">
-        <div className={styles.sectionHeading}>
-          <p className={styles.eyebrow}>Dal primo contatto alla vendita</p>
-          <h2 id="journey-title">Come una richiesta diventa un cliente</h2>
-          <p>Ogni servizio ha un compito preciso. Puoi attivarlo da solo oppure inserirlo in un sistema coordinato.</p>
-        </div>
-        <ol className={styles.journeyGrid}>
-          {JOURNEY.map(item => (
-            <li key={item.number}>
-              <span>{item.number}</span>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-              <Link href={item.href} aria-label={`Approfondisci: ${item.title}`}><ChevronRight size={17} aria-hidden="true" /></Link>
-            </li>
-          ))}
-        </ol>
-      </section>
-
       <section className={styles.signalBand} aria-label="Posizionamento del servizio">
         <p>Un partner operativo per PMI, attività locali e professionisti.</p>
         <div>
@@ -454,40 +356,20 @@ export default function LandingPage() {
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Che cosa facciamo</p>
           <h2 id="services-title">Tutto quello che possiamo aggiungere dopo</h2>
-          <p>Riduciamo frammentazione, passaggi tra fornitori e attività operative interne.</p>
+          <p>Sei aree che si innestano sui quattro passi, una alla volta, con il prezzo d’ingresso di ognuna.</p>
         </div>
         <div className={styles.serviceGrid}>
-          {SERVICES.map(({ icon: Icon, href, title, text, items, ancora }) => (
+          {SERVICES.map(({ icon: Icon, href, title, text, prezzo, ancora }) => (
             <article key={title} className={styles.service}>
               <span><Icon size={22} aria-hidden="true" /></span>
               <h3>{title}</h3>
               <p>{text}</p>
-              <ul className={styles.serviceList}>
-                {items.map(item => <li key={item}><Check size={15} aria-hidden="true" /> {item}</li>)}
-              </ul>
+              <p className={styles.servicePrice}>{prezzo}</p>
               <Link href={href}>Come funziona: {ancora ?? title} <ChevronRight size={16} aria-hidden="true" /></Link>
             </article>
           ))}
         </div>
-      </section>
-
-      <section id="metodo" className={styles.section} aria-labelledby="process-title">
-        <div className={styles.processLayout}>
-          <div className={styles.sectionHeading}>
-            <p className={styles.eyebrow}>Come lavoriamo</p>
-            <h2 id="process-title">Come lavoriamo, passo per passo</h2>
-            <p>Un ciclo mensile trasparente mantiene il lavoro ordinato e rende ogni decisione verificabile.</p>
-          </div>
-          <ol className={styles.processList}>
-            {PROCESS.map(([number, title, text]) => (
-              <li key={number}>
-                <span>{number}</span>
-                <div><h3>{title}</h3><p>{text}</p></div>
-              </li>
-            ))}
-          </ol>
-          <Link href="/metodo" className={styles.outlineButton}>Scopri il metodo completo <ArrowRight size={16} aria-hidden="true" /></Link>
-        </div>
+        <Link href="/servizi" className={styles.outlineButton}>Tutti i servizi, con i prezzi <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
 
       <section className={`${styles.section} ${styles.evidenceSection}`} aria-labelledby="evidence-title">
@@ -515,24 +397,6 @@ export default function LandingPage() {
             </article>
           ))}
         </div>
-        <aside className={styles.companyProof} aria-label="Dati aziendali verificabili">
-          <div>
-            <span>Impresa identificata</span>
-            <strong>{TITOLARE.ragioneSociale}</strong>
-          </div>
-          <div>
-            <span>P.IVA</span>
-            <strong>{TITOLARE.partitaIva}</strong>
-          </div>
-          <div>
-            <span>Codice fiscale</span>
-            <strong>{TITOLARE.codiceFiscale}</strong>
-          </div>
-          <div>
-            <span>Sede</span>
-            <strong>{TITOLARE.sedeLegale}</strong>
-          </div>
-        </aside>
       </section>
 
       <section id="compliance" className={styles.compliance} aria-labelledby="compliance-title">
@@ -551,6 +415,7 @@ export default function LandingPage() {
           <article><BarChart3 size={21} aria-hidden="true" /><div><h3>Monitoraggio</h3><p>Analisi periodica di copertura, contenuti, query e opportunità per definire le priorità successive.</p></div></article>
         </div>
         <p className={styles.complianceNote}><FileSearch size={15} aria-hidden="true" /> SEO e GEO migliorano comprensione e reperibilità, senza garantire ranking o citazioni.</p>
+        <Link href="/servizi/seo-geo" className={styles.lightButton}>Come lavoriamo su SEO e GEO <ArrowRight size={16} aria-hidden="true" /></Link>
       </section>
 
       <section id="legale" className={styles.legalSection} aria-labelledby="legal-title">
@@ -566,15 +431,6 @@ export default function LandingPage() {
               con professionisti abilitati e definite in base al caso concreto.
             </p>
           </div>
-        </div>
-        <div className={styles.legalGrid}>
-          {LEGAL_SERVICES.map(({ icon: Icon, title, text }) => (
-            <article key={title}>
-              <Icon size={22} aria-hidden="true" />
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </article>
-          ))}
         </div>
         <div className={styles.legalPartner}>
           <div className={styles.legalPartnerMark}>
@@ -606,91 +462,16 @@ export default function LandingPage() {
         <div className={styles.sectionHeading}>
           <p className={styles.eyebrow}>Soluzioni</p>
           <h2 id="pricing-title">Quanto costa iniziare</h2>
-          <p>Due pacchetti social e tre servizi autonomi: Blog SEO + GEO, Sito Web Base e Ricerca Clienti B2B.</p>
-        </div>
-        <div className={styles.pricingGrid}>
-          {PACCHETTI.map(plan => (
-            <article key={plan.slug} className={`${styles.priceCard} ${plan.consigliato ? styles.featuredPlan : ''}`}>
-              <div className={styles.priceTop}>
-                <div>
-                  <span className={styles.planAudience}>{plan.eyebrow}</span>
-                  <h3>{plan.nome}</h3>
-                </div>
-                {plan.consigliato && <span className={styles.planBadge}>Più scelto</span>}
-              </div>
-              <p className={styles.planResult}>{plan.risultato}</p>
-              <p className={styles.price}><strong>{plan.prezzo}</strong><span>/mese</span></p>
-              <p className={styles.setup}>{plan.setup === 'Setup incluso' ? plan.setup : `${plan.setup} una tantum`}</p>
-              <p className={styles.listLabel}>In sintesi</p>
-              <ul>
-                {plan.sintesi.map(voce => <li key={voce}><Check size={16} aria-hidden="true" /> {voce}</li>)}
-              </ul>
-              <Link href={`/register?piano=${plan.slug}`} className={plan.consigliato ? styles.primaryButton : styles.outlineButton}>
-                {plan.cta} <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-              <p className={styles.planDetailLink}>
-                <Link href="/pacchetti">Voce per voce, che cosa comprende</Link>
-              </p>
-              <small className={styles.ctaNote}>Setup incluso · IVA esclusa · rinnovo mensile</small>
-            </article>
-          ))}
-        </div>
-        <div className={styles.standaloneGrid} aria-label="Servizi autonomi">
-          <article className={styles.standaloneOffer}>
-            <div className={styles.standaloneIcon}><Newspaper size={22} aria-hidden="true" /></div>
-            <div className={styles.standaloneCopy}>
-              <span>Contenuti organici</span>
-              <h3>{BLOG_SERVICE.name}</h3>
-              <p>{BLOG_SERVICE.articlesPerMonth} articoli al mese con piano editoriale, SEO, GEO, FAQ e controllo umano.</p>
-              <ul>
-                <li><Check size={15} aria-hidden="true" /> {BLOG_SERVICE.trialDays} giorni per valutare il servizio</li>
-                <li><Check size={15} aria-hidden="true" /> Pubblicazione sul blog collegato o consegna per CMS</li>
-              </ul>
-            </div>
-            <div className={styles.standaloneAction}>
-              <p><strong>{BLOG_SERVICE.displayPrice}</strong><span>/mese</span></p>
-              <Link href={BLOG_SERVICE.path}>Scopri Blog <ArrowRight size={16} aria-hidden="true" /></Link>
-            </div>
-          </article>
-          <article className={`${styles.standaloneOffer} ${styles.webOffer}`}>
-            <div className={styles.standaloneIcon}><Globe2 size={22} aria-hidden="true" /></div>
-            <div className={styles.standaloneCopy}>
-              <span>Presenza proprietaria</span>
-              <h3>Sito Web Base</h3>
-              <p>Landing page o sito aziendale mobile-first collegato a contenuti, campagne e analytics. E-commerce su preventivo.</p>
-              <ul>
-                <li><Check size={15} aria-hidden="true" /> Architettura, design responsive e SEO tecnica</li>
-                <li><Check size={15} aria-hidden="true" /> Dopo 12 mesi di canone, il sito è tuo</li>
-                <li><Check size={15} aria-hidden="true" /> Il prezzo base riguarda una landing semplice</li>
-              </ul>
-            </div>
-            <div className={styles.standaloneAction}>
-              <p><small>a partire da</small><strong>€19,90</strong><span>/mese</span></p>
-              <Link href="/servizi/siti-e-commerce">Scopri Web <ArrowRight size={16} aria-hidden="true" /></Link>
-            </div>
-          </article>
-          <article className={`${styles.standaloneOffer} ${styles.leadOffer}`}>
-            <div className={styles.standaloneIcon}><Target size={22} aria-hidden="true" /></div>
-            <div className={styles.standaloneCopy}>
-              <span>Ricerca commerciale assistita</span>
-              <h3>Ricerca Clienti B2B</h3>
-              <p>Un Pilot per definire il cliente ideale, analizzare fino a 30 aziende e ricevere una lista verificata e prioritaria.</p>
-              <ul>
-                <li><Check size={15} aria-hidden="true" /> Fonti pubbliche tracciabili e criteri concordati</li>
-                <li><Check size={15} aria-hidden="true" /> Nessun invio automatico o risultato commerciale garantito</li>
-              </ul>
-            </div>
-            <div className={styles.standaloneAction}>
-              <p><strong>€149</strong><span>una tantum</span></p>
-              <Link href="/servizi/ricerca-clienti-b2b">Scopri il Pilot <ArrowRight size={16} aria-hidden="true" /></Link>
-            </div>
-          </article>
+          <p>
+            Ogni area ha il suo prezzo d’ingresso, scritto sulla scheda del servizio.
+            I due pacchetti social, voce per voce, stanno sulla pagina dedicata.
+          </p>
+          <Link href="/pacchetti" className={styles.outlineButton}>Vedi i pacchetti social <ArrowRight size={16} aria-hidden="true" /></Link>
         </div>
         <div className={styles.pricingAssurance}>
           <div><CircleCheck size={18} aria-hidden="true" /><span><strong>Prima vuoi verificare la qualità?</strong> Richiedi un contenuto di prova gratuito.</span></div>
           <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer">Richiedi la prova <ArrowRight size={16} aria-hidden="true" /></a>
         </div>
-        <Link href="/pacchetti" className={styles.outlineButton}>Confronto completo dei pacchetti <ArrowRight size={16} aria-hidden="true" /></Link>
         <div className={styles.customPlan}>
           <div>
             <span className={styles.planAudience}>E-commerce, agenzie e organizzazioni</span>
