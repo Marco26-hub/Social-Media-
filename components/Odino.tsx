@@ -15,8 +15,74 @@ import { TESTI, WHATSAPP_ODINO } from '@/lib/odino/testi'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
 import { EVENTO_RIQUADRO, chiOccupa, liberaAngolo, mostraMascotte, occupaAngolo } from '@/lib/riquadri'
 import styles from './odino.module.css'
+import OdinoSaluto, { OdinoGambe } from './OdinoSaluto'
+import { useOdinoVignette } from './useOdinoVignette'
 
-let salutoMostrato = false
+const POSE_ODINO = [
+  '/images/odino/motion-uniform/odino-01-idle.png',
+  '/images/odino/motion-uniform/odino-02-breathe-in.png',
+  '/images/odino/motion-uniform/odino-03-breathe-out.png',
+  '/images/odino/motion-uniform/odino-04-wave-anticipation.png',
+  '/images/odino/motion-uniform/odino-05-wave-high.png',
+  '/images/odino/motion-uniform/odino-06-wave-settle.png',
+  '/images/odino/motion-uniform/odino-07-listening.png',
+  '/images/odino/motion-uniform/odino-08-thinking.png',
+  '/images/odino/motion-uniform/odino-09-explaining.png',
+  '/images/odino/motion-uniform/odino-10-point-up.png',
+  '/images/odino/motion-uniform/odino-11-point-forward-v2.png',
+  '/images/odino/motion-uniform/odino-12-invitation.png',
+  '/images/odino/motion-uniform/odino-13-celebration-crouch.png',
+  '/images/odino/motion-uniform/odino-14-celebration-jump.png',
+  '/images/odino/motion-uniform/odino-15-celebration-land.png',
+] as const
+
+type NumeroPosa = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
+type PassoPosa = { posa: NumeroPosa | null; durata: number }
+
+// Routine separate e lente: Odino non esegue l'intero catalogo in una volta.
+// Il saluto 4-5-6 viene invece costruito sul render originale muovendo solo il
+// braccio, come richiesto.
+const ROUTINE_POSE: PassoPosa[][] = [
+  [
+    { posa: null, durata: 6500 },
+    { posa: 11, durata: 1700 },
+    { posa: 2, durata: 2100 },
+    { posa: 3, durata: 2100 },
+    { posa: null, durata: 9000 },
+  ],
+  [
+    { posa: null, durata: 8000 },
+    { posa: 7, durata: 3300 },
+    { posa: null, durata: 1800 },
+    { posa: 8, durata: 3600 },
+    { posa: null, durata: 10500 },
+  ],
+  [
+    { posa: null, durata: 7500 },
+    { posa: 9, durata: 3300 },
+    { posa: null, durata: 1800 },
+    { posa: 10, durata: 3000 },
+    { posa: null, durata: 1800 },
+    { posa: 11, durata: 3000 },
+    { posa: null, durata: 1800 },
+    { posa: 12, durata: 3500 },
+    { posa: null, durata: 11000 },
+  ],
+  [
+    { posa: null, durata: 9500 },
+    { posa: 13, durata: 1700 },
+    { posa: 14, durata: 1150 },
+    { posa: 15, durata: 1500 },
+    { posa: null, durata: 12500 },
+  ],
+]
+
+const ROUTINE_SALUTO: PassoPosa[] = [
+  { posa: 4, durata: 800 },
+  { posa: 5, durata: 3600 },
+  { posa: 6, durata: 850 },
+  { posa: null, durata: 3500 },
+]
 
 // ODINO, l'assistente del sito.
 //
@@ -63,8 +129,10 @@ export default function Odino() {
             : 'Raccontami la tua attività'
 
   const [aperto, setAperto] = useState(false)
-  const [mostraSaluto, setMostraSaluto] = useState(false)
-  const salutoControllato = useRef(false)
+  const [posa, setPosa] = useState<NumeroPosa | null>(null)
+  const [numeroRoutine, setNumeroRoutine] = useState(0)
+  const [salutoPronto, setSalutoPronto] = useState(false)
+  const [movimentoRidotto, setMovimentoRidotto] = useState(true)
   // Nessun percorso preselezionato: all'apertura ODINO chiede, non propone.
   // Aprirsi con un listino significa vendere prima che qualcuno abbia chiesto
   // qualcosa, ed e' il contrario del tono del sito.
@@ -88,6 +156,21 @@ export default function Odino() {
   // L'angolo in basso a destra ha un padrone alla volta: se c'e' gia il popup
   // della segretaria, ODINO aspetta che chiuda invece di sovrapporsi.
   const [angoloDisponibile, setAngoloDisponibile] = useState(true)
+
+  useEffect(() => {
+    let annullato = false
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const aggiorna = () => setMovimentoRidotto(media.matches)
+    aggiorna()
+    media.addEventListener('change', aggiorna)
+    // Carica e decodifica tutte le pose del saluto prima di nascondere la base.
+    void Promise.all([10, 3, 4, 5].map(async indice => {
+      const immagine = new window.Image()
+      immagine.src = POSE_ODINO[indice]
+      await immagine.decode()
+    })).then(() => { if (!annullato) setSalutoPronto(true) }).catch(() => {})
+    return () => { annullato = true; media.removeEventListener('change', aggiorna) }
+  }, [])
 
   useEffect(() => {
     const leggi = () => setConsensoDato(leggiConsenso(document.cookie) !== null)
@@ -121,24 +204,40 @@ export default function Odino() {
   // mezzo schermo. Chiuso, ODINO resta comunque una mascotte alta 116 pixel:
   // l'angolo non e' occupato, ma non e' nemmeno vuoto.
   const visibile = consensoDato && (angoloDisponibile || aperto)
-  useEffect(() => {
-    if (!visibile || aperto) { setMostraSaluto(false); return }
-    if (salutoControllato.current) return
-    salutoControllato.current = true
-    let giaSalutato = salutoMostrato
-    try {
-      giaSalutato ||= sessionStorage.getItem('swa-odino-saluto') === '1'
-      sessionStorage.setItem('swa-odino-saluto', '1')
-    } catch { /* Il saluto resta unico anche con lo storage non disponibile. */ }
-    salutoMostrato = true
-    if (!giaSalutato) setMostraSaluto(true)
-  }, [visibile, aperto])
+  const { vignetta, saluta: avviaSaluto } = useOdinoVignette({
+    enabled: visibile && !aperto, inglese, invito: invitoSaluto,
+    pageKey: percorso, reducedMotion: movimentoRidotto, interacted: aperto,
+  })
+  const mostraSaluto = vignetta?.kind === 'saluto'
   useEffect(() => {
     if (!visibile) { mostraMascotte(false); return }
     if (aperto) { occupaAngolo('odino'); mostraMascotte(false) }
     else { liberaAngolo('odino'); mostraMascotte(true) }
   }, [visibile, aperto])
   useEffect(() => () => { liberaAngolo('odino'); mostraMascotte(false) }, [])
+
+  useEffect(() => {
+    if (!visibile || aperto || movimentoRidotto || (mostraSaluto && !salutoPronto)) {
+      setPosa(null)
+      return
+    }
+
+    const sequenza = mostraSaluto
+      ? ROUTINE_SALUTO
+      : ROUTINE_POSE[numeroRoutine % ROUTINE_POSE.length]
+    const timer: number[] = []
+    let trascorso = 0
+    for (const passo of sequenza) {
+      const prossima = passo.posa
+      timer.push(window.setTimeout(() => setPosa(prossima), trascorso))
+      trascorso += passo.durata
+    }
+    timer.push(window.setTimeout(() => {
+      setPosa(null)
+      if (!mostraSaluto) setNumeroRoutine(numero => numero + 1)
+    }, trascorso))
+    return () => timer.forEach(id => window.clearTimeout(id))
+  }, [aperto, mostraSaluto, numeroRoutine, visibile, movimentoRidotto, salutoPronto])
 
   const seguenti = useMemo(
     () => (corrente?.risposta.poi ?? []).map(id => motore.nodo(id)).filter((n): n is Nodo => Boolean(n)),
@@ -225,19 +324,7 @@ export default function Odino() {
     setApprofondimenti([])
   }
 
-  function inclinaMascotte(e: React.PointerEvent<HTMLButtonElement>) {
-    if (e.pointerType === 'touch') return
-    const box = e.currentTarget.getBoundingClientRect()
-    const x = (e.clientX - box.left) / box.width - .5
-    const y = (e.clientY - box.top) / box.height - .5
-    e.currentTarget.style.setProperty('--odino-rotate-x', `${(-y * 12).toFixed(2)}deg`)
-    e.currentTarget.style.setProperty('--odino-rotate-y', `${(x * 16).toFixed(2)}deg`)
-  }
-
-  function raddrizzaMascotte(e: React.PointerEvent<HTMLButtonElement>) {
-    e.currentTarget.style.setProperty('--odino-rotate-x', '0deg')
-    e.currentTarget.style.setProperty('--odino-rotate-y', '0deg')
-  }
+  const avatarStato = nonCapito ? 'reassuring' : corrente ? 'speaking' : 'signature'
 
   // Aperto resta aperto: se una persona ha gia' cliccato, il popup non lo scaccia.
   if (!visibile) return null
@@ -251,60 +338,53 @@ export default function Odino() {
         type="button"
         className={`${styles.lancio} ${mostraSaluto ? styles.salutoAttivo : ''}`}
         onClick={() => setAperto(true)}
-        onPointerMove={inclinaMascotte}
-        onPointerLeave={raddrizzaMascotte}
+        onPointerEnter={(evento) => {
+          if (evento.pointerType !== 'touch') avviaSaluto()
+        }}
+        onFocus={avviaSaluto}
         aria-label={t.apri}
         title={t.apriBreve}
       >
-        {/* La mascotte e' un'immagine sola, e un'immagine sola non muove le
-            braccia. Qui ne stanno tre copie ritagliate: il corpo senza il
-            braccio che saluta e senza le gambe, il braccio da solo che ruota
-            sulla spalla, le gambe da sole che oscillano sulle anche. Ogni
-            copia mostra solo il suo pezzo, cosi' non si vede niente di doppio.
-            Le palpebre sono due rettangoli del colore del visore che scendono
-            sugli occhi: il battito. La scatola ha le proporzioni esatte
-            dell'immagine (2:3), altrimenti le percentuali dei ritagli
-            finirebbero sulla fascia vuota ai lati. */}
-        <span className={styles.mascotte} aria-hidden="true">
-          <span className={styles.robotLayer}>
+        {/* Una sola famiglia grafica e una sola immagine completa per volta:
+            il dito puntato durante la quiete, gli altri durante i
+            gesti. Nessun cambio di scala, ritaglio o arto staccato. */}
+        <span className={`${styles.mascotte} ${posa !== null ? styles.gestoAttivo : ''}`} aria-hidden="true">
+          <span className={styles.orbita}><i /><i /><i /></span>
+          <span className={`${styles.robotLayer} ${posa !== null ? styles.posaAttiva : ''}`}>
             <span className={styles.corpoBox}>
-              <span className={`${styles.strato} ${styles.tronco}`}>
-                <Image src="/images/odino-mascotte.webp" alt="" fill sizes="112px" priority />
-              </span>
-              <span className={`${styles.strato} ${styles.gambe}`}>
-                <Image src="/images/odino-mascotte.webp" alt="" fill sizes="112px" />
-              </span>
-              <span className={`${styles.strato} ${styles.braccio}`}>
-                <Image src="/images/odino-mascotte.webp" alt="" fill sizes="112px" />
-              </span>
-              <span className={`${styles.palpebra} ${styles.palpebraSinistra}`} />
-              <span className={`${styles.palpebra} ${styles.palpebraDestra}`} />
+              <OdinoGambe src={POSE_ODINO[10]} className={styles.salutoFluido} attivo={!movimentoRidotto && posa === null && !mostraSaluto} />
             </span>
+            {posa !== null && (
+              <span
+                key={`odino-posa-${posa}`}
+                className={`${styles.posaOdino} ${styles.posaEntrata} ${mostraSaluto ? styles.posaSaluto : ''}`}
+                data-posa={posa}
+              >
+                {mostraSaluto && posa === 5 && !movimentoRidotto
+                  ? <OdinoSaluto src={POSE_ODINO[4]} className={styles.salutoFluido} />
+                  : <Image src={POSE_ODINO[posa - 1]} alt="" fill sizes="112px" unoptimized={mostraSaluto} />}
+              </span>
+            )}
           </span>
         </span>
         {/* Il saluto nasce dalla mano: tre bolle salgono e diventano una sola
             nuvola vettoriale, che resta formata mentre cambiano le frasi. */}
-        {mostraSaluto && <span className={styles.saluto} aria-hidden="true">
+        {vignetta && <span key={vignetta.id} data-odino-vignetta={vignetta.kind} className={styles.saluto} aria-hidden="true">
           <i className={styles.bollaUno} />
           <i className={styles.bollaDue} />
           <i className={styles.bollaTre} />
-          <span
-            className={styles.nuvola}
-            onAnimationEnd={(evento) => {
-              if (evento.currentTarget === evento.target) setMostraSaluto(false)
-            }}
-          >
+          <span className={styles.nuvola}>
             <svg viewBox="0 0 220 110" role="presentation" focusable="false">
               <defs>
                 <linearGradient id="odino-nuvola-fondo" x1="30" y1="12" x2="184" y2="101" gradientUnits="userSpaceOnUse">
                   <stop offset="0" stopColor="#ffffff" />
                   <stop offset="0.58" stopColor="#fffdf7" />
-                  <stop offset="1" stopColor="#f8f1df" />
+                  <stop offset="1" stopColor="#edf5ef" />
                 </linearGradient>
                 <linearGradient id="odino-nuvola-bordo" x1="28" y1="12" x2="192" y2="101" gradientUnits="userSpaceOnUse">
                   <stop offset="0" stopColor="#f1d77d" />
-                  <stop offset="0.5" stopColor="#d8aa35" />
-                  <stop offset="1" stopColor="#ed785d" />
+                  <stop offset="0.62" stopColor="#d8aa35" />
+                  <stop offset="1" stopColor="#0f6b4f" />
                 </linearGradient>
               </defs>
               <path
@@ -317,10 +397,7 @@ export default function Odino() {
               />
               <path className={styles.nuvolaRiflesso} d="M39 42c5-13 17-21 31-20 11-9 28-10 40-3" />
             </svg>
-            <span className={styles.scintille} />
-            <strong className={styles.presentazione}>{inglese ? "Hi, I'm Odino!" : 'Ciao, sono Odino!'}</strong>
-            <strong className={styles.aiuto}>{inglese ? 'Can I help you?' : 'Posso aiutarti?'}</strong>
-            <strong className={styles.invito}>{invitoSaluto}</strong>
+            <strong className={styles.fraseVignetta}>{vignetta.text}</strong>
           </span>
         </span>}
         <span className={styles.stato} aria-hidden="true" />
@@ -331,8 +408,8 @@ export default function Odino() {
   return (
     <aside className={styles.pannello} role="dialog" aria-modal="false" aria-label={t.pannello} lang={inglese ? 'en' : 'it'}>
       <header className={styles.testa}>
-        <span className={styles.avatar} aria-hidden="true">
-          <Image src="/images/odino-mascotte.webp" alt="" fill sizes="52px" />
+        <span className={`${styles.avatar} ${corrente ? styles.avatarAttivo : ''}`} aria-hidden="true">
+          <Image src={`/images/odino/avatar/odino-avatar-${avatarStato}.webp`} alt="" fill sizes="52px" />
         </span>
         <div>
           <strong>{ODINO_NOME}</strong>

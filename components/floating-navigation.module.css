@@ -68,8 +68,7 @@
   opacity: 1;
 }
 
-/* Con la mascotte di ODINO nell'angolo i pulsanti salgono sopra di lei: la
-   mascotte e' alta 116px e parte a 18px dal fondo. */
+/* Con la mascotte di ODINO nell'angolo i pulsanti salgono sopra di lei. */
 .sopraMascotte {
   bottom: 154px;
 }
@@ -81,7 +80,7 @@
   }
 
   .sopraMascotte {
-    bottom: calc(128px + env(safe-area-inset-bottom));
+    bottom: calc(98px + env(safe-area-inset-bottom));
   }
 
   .controls button {
