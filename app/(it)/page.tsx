@@ -1,5 +1,6 @@
 import { anteprimaOg } from '@/lib/anteprima'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import {
   Workflow,
@@ -576,7 +577,9 @@ export default function LandingPage() {
           ))}
         </div>
         <div className={styles.legalPartner}>
-          <div className={styles.legalPartnerMark} aria-hidden="true">BCS</div>
+          <div className={styles.legalPartnerMark}>
+            <Image src="/images/studio-bcs-logo.webp" alt="Logo Studio Legale BCS" width={160} height={160} />
+          </div>
           <div className={styles.legalPartnerCopy}>
             <span>Partner legale</span>
             <h3>Studio Legale BCS</h3>
