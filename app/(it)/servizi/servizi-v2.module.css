@@ -333,11 +333,13 @@
 }
 
 .partnerMark { width: 62px; height: 62px; display: grid; place-items: center; border-radius: 6px; background: var(--gold); color: var(--ink); font: 700 19px Georgia, serif; }
+.legalPartner .partnerMark { background: #15231f; }
+.partnerMark img { display: block; box-sizing: border-box; width: 100%; height: 100%; object-fit: contain; padding: 5px; }
 .legalPartner span { color: #8dd5bb; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-.legalPartner h3 { margin: 4px 0; font: 500 22px Georgia, serif; }
+.legalPartner h3 { margin: 4px 0; color: #fff; font: 500 22px Georgia, serif; }
 .legalPartner p { margin: 0; color: #bdcac5; font-size: 12px; }
 .legalPrice { display: grid; padding: 0 22px; border-right: 1px solid rgba(255,255,255,.15); border-left: 1px solid rgba(255,255,255,.15); }
-.legalPrice strong { margin-top: 5px; font: 500 29px Georgia, serif; font-variant-numeric: tabular-nums; }
+.legalPrice strong { margin-top: 5px; color: #fff; font: 500 29px Georgia, serif; font-variant-numeric: tabular-nums; }
 .legalPrice small { color: #bdcac5; font: 500 11px Arial, sans-serif; }
 .partnerCta { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 17px; border-radius: 4px; background: white; color: var(--green-dark); font-size: 12px; font-weight: 800; text-decoration: none; }
 .partnerCta:hover { background: var(--gold); color: var(--ink); }

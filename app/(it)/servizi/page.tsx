@@ -1,5 +1,6 @@
 import { anteprimaOg } from '@/lib/anteprima'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import {
   ArrowRight,
@@ -495,7 +496,9 @@ export default function ServiziPage() {
         </div>
 
         <div className={styles.legalPartner}>
-          <div className={styles.partnerMark} aria-hidden="true">BCS</div>
+          <div className={styles.partnerMark}>
+            <Image src="/images/studio-bcs-logo.webp" alt="Logo Studio Legale BCS" width={160} height={160} />
+          </div>
           <div>
             <span>Partner legale</span>
             <h3>Studio Legale BCS</h3>
