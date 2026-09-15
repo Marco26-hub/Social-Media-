@@ -1,0 +1,26 @@
+.disclosure { min-width: 0; }
+.disclosure > summary { display: none; }
+.body { display: contents; }
+
+@media (max-width: 700px) {
+  .disclosure { margin-top: 14px; }
+  .disclosure > summary {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--sa-line, #dbe2de);
+    color: var(--sa-green, #0f6b4f);
+    cursor: pointer;
+    font: 700 15px/1.4 Arial, sans-serif;
+    list-style: none;
+    touch-action: manipulation;
+  }
+  .disclosure > summary::-webkit-details-marker { display: none; }
+  .disclosure > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+  .disclosure > summary > span { flex: none; font-size: 23px; font-weight: 400; }
+  .disclosure[open] > summary > span { transform: rotate(45deg); }
+  .body { display: block; padding: 10px 0 4px; }
+}

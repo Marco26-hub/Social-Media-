@@ -1,6 +1,7 @@
 import { anteprimaOg } from '@/lib/anteprima'
 import Link from 'next/link'
 import Image from 'next/image'
+import MobileDisclosure from '@/components/MobileDisclosure'
 import type { Metadata } from 'next'
 import {
   Workflow,
@@ -388,6 +389,7 @@ export default function LandingPage() {
           <h2 id="journey-title">Come una richiesta diventa un cliente</h2>
           <p>Ogni servizio ha un compito preciso. Puoi attivarlo da solo oppure inserirlo in un sistema coordinato.</p>
         </div>
+        <MobileDisclosure label="Vedi le 6 fasi, dal contatto alla vendita">
         <ol className={styles.journeyGrid}>
           {JOURNEY.map(item => (
             <li key={item.number}>
@@ -398,6 +400,7 @@ export default function LandingPage() {
             </li>
           ))}
         </ol>
+        </MobileDisclosure>
       </section>
 
       <section className={styles.signalBand} aria-label="Posizionamento del servizio">
@@ -461,11 +464,13 @@ export default function LandingPage() {
             <article key={title} className={styles.service}>
               <span><Icon size={22} aria-hidden="true" /></span>
               <h3>{title}</h3>
+              <MobileDisclosure label={`Dettagli: ${title}`}>
               <p>{text}</p>
               <ul className={styles.serviceList}>
                 {items.map(item => <li key={item}><Check size={15} aria-hidden="true" /> {item}</li>)}
               </ul>
               <Link href={href}>Come funziona: {ancora ?? title} <ChevronRight size={16} aria-hidden="true" /></Link>
+              </MobileDisclosure>
             </article>
           ))}
         </div>
@@ -505,6 +510,7 @@ export default function LandingPage() {
             </Link>
           ))}
         </div>
+        <MobileDisclosure label="Come verifichiamo il lavoro">
         <div className={styles.evidenceGrid}>
           {EVIDENCE.map(item => (
             <article key={item.title}>
@@ -515,6 +521,7 @@ export default function LandingPage() {
             </article>
           ))}
         </div>
+        </MobileDisclosure>
         <aside className={styles.companyProof} aria-label="Dati aziendali verificabili">
           <div>
             <span>Impresa identificata</span>
@@ -621,10 +628,12 @@ export default function LandingPage() {
               <p className={styles.planResult}>{plan.risultato}</p>
               <p className={styles.price}><strong>{plan.prezzo}</strong><span>/mese</span></p>
               <p className={styles.setup}>{plan.setup === 'Setup incluso' ? plan.setup : `${plan.setup} una tantum`}</p>
+              <MobileDisclosure label={`Cosa comprende ${plan.nome}`}>
               <p className={styles.listLabel}>In sintesi</p>
               <ul>
                 {plan.sintesi.map(voce => <li key={voce}><Check size={16} aria-hidden="true" /> {voce}</li>)}
               </ul>
+              </MobileDisclosure>
               <Link href={`/register?piano=${plan.slug}`} className={plan.consigliato ? styles.primaryButton : styles.outlineButton}>
                 {plan.cta} <ArrowRight size={17} aria-hidden="true" />
               </Link>

@@ -494,6 +494,7 @@
 .caseCard:hover { border-color: rgba(15, 107, 79, .46); transform: translateY(-3px); box-shadow: 0 16px 34px rgba(21, 35, 31, .08); }
 .caseMetric {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
   color: var(--sa-green);
@@ -1070,6 +1071,14 @@
   .faqSection { grid-template-columns: 1fr; gap: 45px; }
   .compliance { margin-left: 24px; margin-right: 24px; }
   .legalGrid { grid-template-columns: repeat(2, 1fr); }
+  /* Sotto i 1180 il device e' in modalita' compatta (hamburger, hero a colonna).
+     Le quattro colonne fisse di companyProof (P.IVA .55fr) qui diventano fessure:
+     P.IVA e codice fiscale si spezzano cifra per cifra. Due colonne danno spazio;
+     sotto i 700 un'altra regola porta a colonna singola. */
+  .companyProof { grid-template-columns: 1fr 1fr; }
+  /* Le offerte autonome a due colonne, sotto i 1180, lasciano al testo ~80px:
+     il paragrafo si spezza su otto righe. A colonna piena la card respira. */
+  .standaloneGrid { grid-template-columns: 1fr; }
   .legalPartner { grid-template-columns: 64px minmax(0, 1fr) auto; }
   .legalPartnerCta { grid-column: 2 / 4; }
   .journeyGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1106,6 +1115,9 @@
   .visualStats strong { font-size: 21px; }
   .contentPreview { grid-template-columns: 90px 1fr; }
   .previewMedia span { display: none; }
+  /* Quattro tappe su una riga: senza spazio fra le colonne "Approvazione" e
+     "Pubblicazione" si leggono attaccate. Un filo di gap e 11px le separano. */
+  .visualFlow { column-gap: 8px; }
   .visualFlow span { font-size: 11px; }
   .signalBand { align-items: flex-start; flex-direction: column; padding: 22px 18px; }
   .signalBand div { gap: 11px 16px; }
@@ -1315,7 +1327,6 @@
   .visualStats span, .visualStats small,
   .channelBadge,
   .previewActions,
-  .visualFlow span,
   .journeyGrid li > span,
   .processList li > span,
   .legalPartnerCopy > span, .legalPrice > span,
@@ -1374,3 +1385,51 @@
    112px dal bordo per non passare sotto la mascotte lo rimpiccioliva, e il
    bottone e' la cosa piu' importante della pagina sul telefono. La mascotte gli
    sta sopra per pochi pixel nell'angolo, e va bene cosi'. */
+
+/* Mobile: larghezze utili per il testo, non colonne desktop compresse.
+   I dettagli restano accessibili nei disclosure senza ridurre i caratteri. */
+@media (max-width: 700px) {
+  .section, .journeySection, .pricingSection, .faqSection { padding: 42px 18px; }
+  .hero { gap: 28px; padding-bottom: 42px; }
+  .sectionHeading h2, .compliance h2, .legalHeading h2, .finalCta h2 {
+    font-size: 32px;
+    line-height: 1.15;
+    overflow-wrap: break-word;
+  }
+  .sectionHeading { margin-bottom: 0; }
+  .caseGrid { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 24px; }
+  .caseCard { padding: 18px; gap: 10px; }
+  .caseCard strong { font-size: 18px; overflow-wrap: anywhere; }
+  .caseCard p { font-size: 15px; line-height: 1.5; overflow-wrap: break-word; }
+  .caseMetric { gap: 8px 12px; font-size: 36px; }
+  .caseMetric small { max-width: none; font-size: 12.5px; }
+  .companyProof { grid-template-columns: minmax(0, 1fr); }
+  .companyProof div { padding: 12px 16px; }
+  .companyProof span { margin-bottom: 4px; font-size: 12.5px; }
+  .companyProof strong { font-size: 14px; }
+  .serviceGrid { gap: 12px; }
+  .service { display: grid; grid-template-columns: 42px minmax(0, 1fr); align-items: center; column-gap: 14px; padding: 18px; }
+  .service > h3 { margin: 0; font-size: 18px; line-height: 1.35; overflow-wrap: break-word; }
+  .service > details { grid-column: 1 / -1; }
+  .service:hover, .benefit:hover, .caseCard:hover { transform: none; }
+  .service a { min-height: 44px; overflow-wrap: anywhere; }
+  .service a svg { flex: none; }
+  .serviceList { margin-top: 16px; padding-top: 14px; }
+  .journeyGrid, .evidenceGrid { margin-top: 8px; }
+  .journeyGrid li { min-height: 0; padding: 18px 54px 18px 18px; }
+  .journeyGrid h3 { margin-top: 12px; }
+  .percorso { margin-top: 24px; }
+  .percorso > li { padding: 20px; }
+  .percorso h3 { margin-top: 12px; }
+  .benefit, .priceCard { padding: 20px; }
+  .priceCard > details { margin-bottom: 16px; }
+  .priceCard .listLabel { display: none; }
+  .priceCard ul { padding-top: 0; border-top: 0; margin-bottom: 14px; }
+  .compliance { padding: 42px 18px; }
+  .legalSection { padding: 42px 18px; }
+  .finalCta { padding-top: 42px; padding-bottom: 68px; }
+}
+
+@media (min-width: 701px) and (max-width: 860px) {
+  .caseGrid { grid-template-columns: minmax(0, 1fr); }
+}
