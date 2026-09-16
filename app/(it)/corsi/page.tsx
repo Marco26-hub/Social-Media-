@@ -17,7 +17,7 @@ export const revalidate = 300
 
 const title = 'Corsi online per imprese e professionisti | SWA'
 const description =
-  'Corsi online di Social Web Automation: videolezioni con accesso immediato dopo l’acquisto, area riservata e avanzamento salvato. Fatti da chi questi servizi li eroga ogni giorno.'
+  'Corsi di Social Web Automation per imprese e professionisti: aule in diretta a numero chiuso e videocorsi, con il programma completo prima dell’acquisto e un’area riservata dove ritrovare tutto.'
 
 const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Vorrei informazioni sui corsi online di Social Web Automation.')}`
 
@@ -33,7 +33,7 @@ const comeFunziona = [
   {
     icona: MonitorPlay,
     titolo: 'Scegli il corso',
-    testo: 'Il programma e le lezioni sono elencati prima dell’acquisto, con le anteprime gratuite da guardare subito.',
+    testo: 'Sulla pagina di ogni corso trovi il programma completo e, per le aule in diretta, le date degli incontri e i posti rimasti.',
   },
   {
     icona: ShieldCheck,
@@ -42,15 +42,15 @@ const comeFunziona = [
   },
   {
     icona: BadgeCheck,
-    titolo: 'Guardi quando vuoi',
-    testo: 'Le lezioni restano nella tua area riservata e il punto in cui sei arrivato viene salvato, da computer o da telefono.',
+    titolo: 'Segui dalla tua area',
+    testo: 'Nella tua area riservata trovi il collegamento agli incontri, le registrazioni e le lezioni, con il punto in cui sei arrivato. Da computer o da telefono.',
   },
 ]
 
 const faq = [
   {
     q: 'Quanto dura l’accesso al corso?',
-    a: 'L’accesso non scade: una volta acquistato il corso resta nella tua area riservata e puoi riguardare le lezioni quante volte vuoi.',
+    a: 'Non scade. Lezioni e registrazioni degli incontri restano nella tua area riservata, e puoi riguardarle quante volte vuoi.',
   },
   {
     q: 'Posso scaricare i video?',
@@ -61,8 +61,8 @@ const faq = [
     a: 'I prezzi indicati sono IVA esclusa, come per gli altri servizi a listino.',
   },
   {
-    q: 'Posso chiedere il rimborso?',
-    a: 'Per i consumatori il diritto di recesso è di quattordici giorni, ma decade quando si chiede l’accesso immediato al contenuto digitale e lo si dichiara al momento dell’acquisto. La richiesta e la dichiarazione vengono raccolte in modo esplicito prima del pagamento.',
+    q: 'Posso recedere e chiedere il rimborso?',
+    a: 'Se acquisti come impresa o professionista, il recesso non è previsto. Se acquisti come privato hai quattordici giorni dal pagamento. Per un corso già disponibile, prima di pagare ti chiediamo se vuoi entrare subito: se confermi, il diritto si chiude quando ti diamo l’accesso. Per un corso in prevendita i quattordici giorni restano interi, e se il corso esce prima che scadano ti chiediamo le stesse conferme prima di aprirlo.',
   },
   {
     q: 'Serve un account per acquistare?',
@@ -121,11 +121,11 @@ export default async function CorsiPage() {
       <section className={base.hero}>
         <nav className={base.breadcrumbs}><Link href="/">Home</Link><span>/</span><span>Corsi</span></nav>
         <p className={base.eyebrow}>Formazione per imprese e professionisti</p>
-        <h1>Impara a fare quello che facciamo, con chi lo fa ogni giorno.</h1>
+        <h1>Formazione pratica, con chi questi temi li applica ogni giorno.</h1>
         <p className={base.lead}>
-          Videolezioni pratiche su social, visibilità e adempimenti, nate dal lavoro che
-          svolgiamo per le aziende. Accesso immediato dopo l’acquisto, area riservata
-          personale e avanzamento salvato.
+          Aule in diretta a numero chiuso e videocorsi da seguire quando vuoi. Il programma
+          completo è sulla pagina di ogni corso, prima dell’acquisto; dopo il pagamento
+          trovi tutto nella tua area riservata.
         </p>
         <div className={base.heroActions}>
           <a href="#catalogo" className={base.primary}>Vedi i corsi <ArrowRight size={17} aria-hidden="true" /></a>

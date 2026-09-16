@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { requireAuth } from '@/lib/auth-utils'
-import { consensoConsegnaDaRaccogliere, getCorsoPerAcquisto, registraConsensoConsegna } from '@/lib/corsi-db'
+import { consensoConsegnaDaRaccogliere, getCorsoPerAcquisto, haAccessoAlCorso, registraConsensoConsegna } from '@/lib/corsi-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +27,11 @@ export async function POST(request: Request) {
     }
 
     const corso = await getCorsoPerAcquisto(slug)
-    if (!corso) return NextResponse.json({ error: 'Corso non disponibile' }, { status: 404 })
+    // Corso inesistente e corso non comprato rispondono allo stesso modo: prima
+    // la risposta «gia registrato» arrivava anche a chi non l'aveva mai pagato.
+    if (!corso || !(await haAccessoAlCorso(utente.id, corso.id))) {
+      return NextResponse.json({ error: 'Corso non disponibile' }, { status: 404 })
+    }
 
     // Se non erano dovute, non si scrive niente e si risponde ok: la pagina
     // aveva gia l'accesso e una seconda richiesta non deve dare errore.
