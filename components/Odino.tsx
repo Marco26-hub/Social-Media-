@@ -233,6 +233,7 @@ export default function Odino() {
   })
   const mostraSaluto = vignetta?.kind === 'saluto'
   const animazioneAttiva = movimentoRidotto ? null : animazionePerPosa(posa, mostraSaluto)
+  const saltoAttivo = posa === 13 || posa === 14 || posa === 15
   useEffect(() => {
     if (!visibile) { mostraMascotte(false); return }
     if (aperto) { occupaAngolo('odino'); mostraMascotte(false) }
@@ -393,6 +394,15 @@ export default function Odino() {
                 <OdinoGambe src={POSE_ODINO[10]} className={styles.salutoFluido} attivo={!movimentoRidotto && posa === null && !mostraSaluto} />
               )}
             </span>
+            {!movimentoRidotto && !saltoAttivo && (
+              <span className={styles.espressione} aria-hidden="true" data-odino-expression>
+                <i className={`${styles.palpebra} ${styles.palpebraSinistra}`} data-odino-eyelid="left" />
+                <i className={`${styles.palpebra} ${styles.palpebraDestra}`} data-odino-eyelid="right" />
+                <span className={styles.occhiLuce} />
+                <i className={styles.bocca} data-odino-mouth />
+                <span className={styles.medagliaNome}>ODINO</span>
+              </span>
+            )}
           </span>
         </span>
         {/* Il saluto nasce dalla mano: tre bolle salgono e diventano una sola

@@ -131,6 +131,13 @@
   transform-origin: 50% 90%;
   filter: drop-shadow(0 7px 8px rgba(5, 23, 16, .16));
 }
+.espressione {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: block;
+  pointer-events: none;
+}
 .posaAttiva .corpoBox { opacity: 0 }
 .gestoAttivo { animation: none }
 
@@ -276,6 +283,7 @@
   transform-origin: 50% 0;
 }
 .salutoAttivo .bocca { animation: odinoParla 3.4s .05s ease-in-out both }
+.lancio:not(.salutoAttivo) .bocca { animation: odinoBoccaIdle 6.4s .8s ease-in-out infinite }
 
 .medagliaNome {
   position: absolute;
@@ -578,6 +586,13 @@
   73% { opacity: .72; transform: scaleY(.3) scaleX(1) }
   84% { opacity: .84; transform: scaleY(.62) scaleX(.95) }
   94% { opacity: 0; transform: scaleY(.2) scaleX(1) }
+}
+@keyframes odinoBoccaIdle {
+  0%, 58%, 100% { opacity: 0; transform: scaleY(.2) scaleX(.94) }
+  62% { opacity: .72; transform: scaleY(.55) scaleX(.98) }
+  66% { opacity: .82; transform: scaleY(.28) scaleX(1.04) }
+  70% { opacity: .7; transform: scaleY(.48) scaleX(.96) }
+  74% { opacity: 0; transform: scaleY(.2) scaleX(1) }
 }
 @keyframes odinoMedaglia {
   0%, 72%, 100% { filter: brightness(1); transform: translateZ(2px) scale(1) }

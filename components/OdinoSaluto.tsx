@@ -59,7 +59,7 @@ export function OdinoGambe({ src, className, attivo }: { src: string; className:
             <feFuncG type="linear" slope="1" intercept="-0.00196078431372549" />
           </feComponentTransfer>
           <feDisplacementMap in="SourceGraphic" in2="gambeNeutre" scale="0" xChannelSelector="R" yChannelSelector="G" result="passo">
-            {attivo && <animate attributeName="scale" values="0;0;14;0;-14;0;0" keyTimes="0;.38;.5;.61;.72;.84;1" dur="11s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1" />}
+            {attivo && <animate attributeName="scale" values="0;0;20;4;-18;-3;0" keyTimes="0;.3;.43;.56;.69;.82;1" dur="8.4s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1" />}
           </feDisplacementMap>
           {/* Conserva i pixel originali del busto. Il confine è nella zona
               neutra della mappa, sopra le ginocchia: nessun arto separato. */}
