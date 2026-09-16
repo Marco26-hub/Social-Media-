@@ -222,12 +222,6 @@
   background: var(--surface);
 }
 
-.prezzoPieno {
-  margin: -8px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
 .prevendita {
   margin: 0;
   padding: 12px 14px;

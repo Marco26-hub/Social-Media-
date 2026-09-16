@@ -18,7 +18,16 @@ export const dynamic = 'force-dynamic'
 
 // Pagina di acquisto: fuori dall'indice. Il contenuto indicizzabile e la pagina
 // del corso, questa e solo un passaggio del pagamento.
-export const metadata: Metadata = { robots: { index: false, follow: true } }
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const corso = await getCorsoPubblicoBySlug(slug)
+  return {
+    // Senza titolo la scheda del browser mostrava quello della home: chi sta
+    // pagando deve vedere cosa sta comprando anche li.
+    title: corso ? `Acquista ${corso.titolo} | SWA` : 'Acquisto corso | SWA',
+    robots: { index: false, follow: true },
+  }
+}
 
 function dataItaliana(iso: string): string {
   return new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso))
@@ -68,9 +77,11 @@ export default async function AcquistaCorsoPage({ params }: { params: Promise<{ 
             </p>
             {corso.in_prevendita && corso.disponibile_dal && (
               <p className={styles.prevendita}>
-                <strong>Prevendita.</strong> Le lezioni saranno nella tua area riservata
-                dal {dataItaliana(corso.disponibile_dal)} e ti avvisiamo per email appena
-                sono online.
+                <strong>Prevendita.</strong>{' '}
+                {corso.modalita === 'live'
+                  ? `Il corso parte dal ${dataItaliana(corso.disponibile_dal)}: il collegamento agli incontri arriva nella tua area riservata.`
+                  : `Le lezioni saranno nella tua area riservata dal ${dataItaliana(corso.disponibile_dal)}.`}
+                {' '}Ti avvisiamo per email appena è tutto pronto.
               </p>
             )}
             <ul className={styles.inclusi}>

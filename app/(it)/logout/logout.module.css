@@ -1,0 +1,149 @@
+/* Pagina di uscita. Stessa tavolozza della pagina di accesso, in entrambi i
+   temi, ma un foglio suo: la prima versione riusava le classi del login senza
+   la sua impaginazione, e il titolo andava a capo a ogni parola. */
+
+.page {
+  --ink: #15231f;
+  --muted: #68756f;
+  --green: #0f6b4f;
+  --green-dark: #094c39;
+  --line: #dbe2de;
+  --panel: #fff;
+  --paper: #f4f6f3;
+  --ombra: #dceee7;
+  color-scheme: light;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 32px 18px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+:global(html[data-theme='dark']) .page {
+  --ink: #edf4f1;
+  --muted: #9eaca6;
+  --green: #49d6a0;
+  --green-dark: #25b67f;
+  --line: #293b35;
+  --panel: #121a17;
+  --paper: #080b09;
+  --ombra: #102c24;
+  color-scheme: dark;
+}
+
+.scheda {
+  width: min(460px, 100%);
+  display: grid;
+  gap: 18px;
+  padding: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 18px 22px 0 var(--ombra);
+}
+
+.marchio {
+  justify-self: start;
+  display: inline-flex;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #0f6b4f;
+}
+
+.marchio img {
+  display: block;
+  width: 82px;
+  height: auto;
+}
+
+.occhiello {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 0 0;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.scheda h1 {
+  margin: 0;
+  font: 500 30px/1.12 Georgia, 'Times New Roman', serif;
+  text-wrap: balance;
+}
+
+.testo {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.azioni {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.esci {
+  min-height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 4px;
+  background: #0f6b4f;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.esci:hover:not(:disabled) {
+  background: #094c39;
+}
+
+.esci:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.resta {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.resta:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.esci:focus-visible,
+.resta:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .scheda {
+    padding: 26px 22px;
+    box-shadow: 8px 10px 0 var(--ombra);
+  }
+  .scheda h1 {
+    font-size: 26px;
+  }
+}

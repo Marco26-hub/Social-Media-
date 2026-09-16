@@ -244,11 +244,16 @@ export default async function CorsoPage({ params }: { params: Promise<{ slug: st
                     : 'Posti esauriti per questa edizione'}
               </p>
             )}
-            {corso.in_prevendita && corso.disponibile_dal && (
+            {/* Nessuna promessa di prezzo: in prevendita il prezzo e lo stesso,
+                cambia solo quando si riceve il corso. Chi l'ha gia comprato non
+                rilegge l'avviso — lo dice il riquadro qui sotto. */}
+            {corso.in_prevendita && corso.disponibile_dal && !giaAcquistato && (
               <p className={styles.prevendita}>
-                <strong>Prevendita.</strong> Le lezioni saranno disponibili nella tua area
-                riservata dal {dataItaliana(corso.disponibile_dal)}. Compri ora al prezzo di
-                prevendita e ti avvisiamo per email appena sono online.
+                <strong>Prevendita.</strong>{' '}
+                {corso.modalita === 'live'
+                  ? `Il corso parte dal ${dataItaliana(corso.disponibile_dal)}: il collegamento agli incontri arriva nella tua area riservata.`
+                  : `Le lezioni saranno nella tua area riservata dal ${dataItaliana(corso.disponibile_dal)}.`}
+                {' '}Ti avvisiamo per email appena è tutto pronto.
               </p>
             )}
 
@@ -256,7 +261,7 @@ export default async function CorsoPage({ params }: { params: Promise<{ slug: st
               <>
                 <p className={styles.possesso}>
                   {corso.in_prevendita && corso.disponibile_dal
-                    ? `Hai già prenotato questo corso. Le lezioni arrivano il ${dataItaliana(corso.disponibile_dal)}.`
+                    ? `Hai già prenotato questo corso. ${corso.modalita === 'live' ? 'Si parte' : 'Le lezioni arrivano'} il ${dataItaliana(corso.disponibile_dal)}.`
                     : 'Hai già questo corso.'}
                 </p>
                 <Link href={`/portale/corsi/${corso.slug}`} className={base.primary}>

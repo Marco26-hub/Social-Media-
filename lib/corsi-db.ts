@@ -832,7 +832,7 @@ export async function eliminaCorso(id: string): Promise<{ eliminato: boolean; mo
     [id],
   )
   if (venduto) {
-    return { eliminato: false, motivo: 'Questo corso e stato venduto: si puo togliere dal catalogo, non eliminare.' }
+    return { eliminato: false, motivo: 'Questo corso è stato venduto: si può togliere dal catalogo, non eliminare.' }
   }
   await q('DELETE FROM corsi WHERE id = $1', [id])
   return { eliminato: true }

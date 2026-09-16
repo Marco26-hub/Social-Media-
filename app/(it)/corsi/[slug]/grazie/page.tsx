@@ -11,7 +11,10 @@ import base from '@/styles/content-page.module.css'
 export const dynamic = 'force-dynamic'
 
 // Pagina di ritorno dal pagamento: non deve finire nell'indice.
-export const metadata: Metadata = { robots: { index: false, follow: false } }
+export const metadata: Metadata = {
+  title: 'Grazie per l’acquisto | SWA',
+  robots: { index: false, follow: false },
+}
 
 const wa = `https://wa.me/393477196603?text=${encodeURIComponent('Ciao! Ho appena acquistato un corso online.')}`
 
