@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { requireAdmin } from '@/lib/auth-utils'
-import { impostaAccessoAcquisto, listVenditeCorsi } from '@/lib/corsi-db'
+import { impostaAccessoAcquisto } from '@/lib/corsi-db'
 
 export const dynamic = 'force-dynamic'
-
-export async function GET() {
-  try {
-    await requireAdmin()
-    return NextResponse.json(await listVenditeCorsi())
-  } catch (e) {
-    return apiError(e)
-  }
-}
 
 // Chiude o riapre l'accesso a mano. Il webhook chiude da solo i rimborsi
 // totali; questo copre quello che una macchina non puo decidere — un rimborso
@@ -20,7 +11,7 @@ export async function GET() {
 // sbagliato — ed e anche il modo per rimediare a una chiusura non dovuta.
 export async function PATCH(request: Request) {
   try {
-    await requireAdmin()
+    const admin = await requireAdmin()
     const { id, azione } = await request.json() as Record<string, unknown>
     if (typeof id !== 'string' || !id) {
       return NextResponse.json({ error: 'Acquisto non indicato' }, { status: 400 })
@@ -28,7 +19,9 @@ export async function PATCH(request: Request) {
     if (azione !== 'chiudi' && azione !== 'riapri') {
       return NextResponse.json({ error: 'Azione non valida' }, { status: 400 })
     }
-    const fatto = await impostaAccessoAcquisto(id, azione === 'chiudi' ? 'refunded' : 'paid')
+    // Chi l'ha fatto finisce nello storico: e una decisione presa da una persona
+    // e deve restare scritto quale.
+    const fatto = await impostaAccessoAcquisto(id, azione === 'chiudi' ? 'refunded' : 'paid', admin.email || admin.id)
     if (!fatto) {
       // Un ordine mai pagato non ha un accesso da chiudere: rispondere ok
       // lascerebbe credere il contrario.

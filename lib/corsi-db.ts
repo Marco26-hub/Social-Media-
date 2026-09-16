@@ -1,5 +1,6 @@
 import { dbReady, q, q1 } from '@/lib/db'
 import { rimborsoChiudeAccesso } from '@/lib/corsi-rimborso'
+import { GIORNI_RECESSO } from '@/lib/corsi-recesso'
 import { TERMINI_VERSIONE } from '@/lib/termini-versione'
 
 // Accesso ai dati dei corsi online. Niente SQL nelle pagine: qui dentro e basta,
@@ -388,6 +389,11 @@ export async function consensoConsegnaDaRaccogliere(userId: string, corsoId: str
         -- Solo quando c'e davvero qualcosa da consegnare: finche il corso non e
         -- disponibile non c'e nessuna esecuzione da far iniziare.
         AND (c.disponibile_dal IS NULL OR c.disponibile_dal <= now())
+        -- Solo se il diritto e ancora vivo. Il termine corre dal pagamento
+        -- (lib/corsi-recesso.ts): con una prevendita lunga, alla consegna e quasi
+        -- sempre gia scaduto, e chiedere di rinunciare a un diritto che non c'e
+        -- piu sarebbe solo un ostacolo in piu per chi ha pagato.
+        AND a.paid_at > now() - make_interval(days => ${GIORNI_RECESSO})
       LIMIT 1`,
     [userId, corsoId],
   )
@@ -408,6 +414,7 @@ export async function registraConsensoConsegna(userId: string, corsoId: string):
       RETURNING id`,
     [userId, corsoId],
   )
+  if (row) await registraEventoCorso(String(row.id), 'consenso_consegna', {})
   return Boolean(row)
 }
 
@@ -646,7 +653,12 @@ export async function creaAcquistoPending(
     ],
   )
   if (!row) throw new Error('Creazione ordine corso non riuscita')
-  return String(row.id)
+  const acquistoId = String(row.id)
+  await registraEventoCorso(acquistoId, 'ordine_creato', {
+    customer_type: consensi.customerType,
+    importo_cents: corso.prezzo_cents,
+  })
+  return acquistoId
 }
 
 export async function collegaSessioneStripe(acquistoId: string, sessionId: string): Promise<void> {
@@ -656,6 +668,7 @@ export async function collegaSessioneStripe(acquistoId: string, sessionId: strin
       WHERE id = $1`,
     [acquistoId, sessionId],
   )
+  await registraEventoCorso(acquistoId, 'checkout_aperto', { stripe_session_id: sessionId })
 }
 
 export async function segnaCheckoutFallito(acquistoId: string, motivo: string): Promise<void> {
@@ -667,6 +680,7 @@ export async function segnaCheckoutFallito(acquistoId: string, motivo: string): 
       WHERE id = $1`,
     [acquistoId, motivo.slice(0, 500)],
   )
+  await registraEventoCorso(acquistoId, 'checkout_fallito', { motivo: motivo.slice(0, 500) })
 }
 
 /** Chiamata dal webhook Stripe quando il pagamento e confermato. */
@@ -674,6 +688,7 @@ export async function segnaAcquistoPagato(
   acquistoId: string,
   dati: { sessionId?: string; paymentIntentId?: string; amountCents?: number },
 ): Promise<{ userId: string; corsoId: string; titolo: string; slug: string } | null> {
+  const giaPagato = await q1(`SELECT 1 AS ok FROM corso_acquisti WHERE id = $1 AND status = 'paid'`, [acquistoId])
   const row = await q1(
     `UPDATE corso_acquisti a
         SET status = 'paid',
@@ -688,6 +703,12 @@ export async function segnaAcquistoPagato(
     [acquistoId, dati.sessionId ?? null, dati.paymentIntentId ?? null, dati.amountCents ?? null],
   )
   if (!row) return null
+  if (!giaPagato) {
+    await registraEventoCorso(acquistoId, 'pagato', {
+      stripe_payment_intent_id: dati.paymentIntentId ?? null,
+      importo_cents: dati.amountCents ?? null,
+    })
+  }
   return {
     userId: String(row.user_id),
     corsoId: String(row.corso_id),
@@ -912,50 +933,6 @@ export async function eliminaIncontro(id: string): Promise<void> {
   await q('DELETE FROM corso_incontri WHERE id = $1', [id])
 }
 
-export type VenditaCorso = {
-  id: string
-  corso_titolo: string
-  corso_slug: string
-  studente_nome: string | null
-  studente_email: string
-  amount_cents: number
-  currency: string
-  status: string
-  customer_type: string
-  paid_at: string | null
-  created_at: string
-}
-
-/** Vendite dei corsi, le piu recenti per prime. */
-export async function listVenditeCorsi(limite = 200): Promise<VenditaCorso[]> {
-  if (!dbReady()) return []
-  const rows = await q(
-    `SELECT a.id, a.amount_cents, a.currency, a.status, a.customer_type,
-            a.paid_at, a.created_at,
-            c.titolo AS corso_titolo, c.slug AS corso_slug,
-            p.nome AS studente_nome, p.email AS studente_email
-       FROM corso_acquisti a
-       JOIN corsi c    ON c.id = a.corso_id
-       JOIN profiles p ON p.id = a.user_id
-      ORDER BY a.created_at DESC
-      LIMIT $1`,
-    [limite],
-  )
-  return rows.map(row => ({
-    id: String(row.id),
-    corso_titolo: String(row.corso_titolo),
-    corso_slug: String(row.corso_slug),
-    studente_nome: row.studente_nome ? String(row.studente_nome) : null,
-    studente_email: String(row.studente_email ?? ''),
-    amount_cents: Number(row.amount_cents ?? 0),
-    currency: String(row.currency ?? 'eur'),
-    status: String(row.status ?? ''),
-    customer_type: String(row.customer_type ?? ''),
-    paid_at: row.paid_at ? new Date(String(row.paid_at)).toISOString() : null,
-    created_at: new Date(String(row.created_at)).toISOString(),
-  }))
-}
-
 // ── Rimborsi ────────────────────────────────────────────────────────────────
 
 export type EsitoRimborso = {
@@ -1023,6 +1000,10 @@ export async function registraRimborsoCorso(
       WHERE id = $1`,
     [riga.id, importi.rimborsatoCents, totale],
   )
+  await registraEventoCorso(String(riga.id), totale ? 'rimborso_totale' : 'rimborso_parziale', {
+    rimborsato_cents: importi.rimborsatoCents,
+    pagato_cents: amountCents,
+  })
 
   return {
     acquistoId: String(riga.id),
@@ -1051,6 +1032,7 @@ export async function registraRimborsoCorso(
 export async function impostaAccessoAcquisto(
   acquistoId: string,
   stato: 'paid' | 'refunded',
+  autore = 'sistema',
 ): Promise<boolean> {
   if (!dbReady()) return false
   const row = await q1(
@@ -1063,6 +1045,14 @@ export async function impostaAccessoAcquisto(
       RETURNING id`,
     [acquistoId, stato],
   )
+  if (row) {
+    await registraEventoCorso(
+      acquistoId,
+      stato === 'refunded' ? 'accesso_chiuso_a_mano' : 'accesso_riaperto_a_mano',
+      {},
+      autore,
+    )
+  }
   return Boolean(row)
 }
 
@@ -1089,4 +1079,149 @@ export async function impostaAccessoAcquisto(
 export function sqlProfiloSoloCorso(alias: string): string {
   return `(COALESCE(${alias}.pacchetto, '') = ''
            AND EXISTS (SELECT 1 FROM corso_acquisti ca WHERE ca.user_id = ${alias}.id))`
+}
+
+// ── Storico degli ordini ────────────────────────────────────────────────────
+
+export type TipoEventoCorso =
+  | 'ordine_creato'
+  | 'checkout_aperto'
+  | 'checkout_fallito'
+  | 'pagato'
+  | 'account_attivato'
+  | 'consenso_consegna'
+  | 'rimborso_parziale'
+  | 'rimborso_totale'
+  | 'accesso_chiuso_a_mano'
+  | 'accesso_riaperto_a_mano'
+
+/**
+ * Aggiunge un passo allo storico di un ordine.
+ *
+ * Non deve mai far fallire l'operazione che lo registra: un pagamento arrivato
+ * resta arrivato anche se lo storico non si scrive. Per questo l'errore viene
+ * solo registrato nel log del server, non rilanciato.
+ */
+export async function registraEventoCorso(
+  acquistoId: string,
+  tipo: TipoEventoCorso,
+  dettaglio: Record<string, unknown> = {},
+  autore = 'sistema',
+): Promise<void> {
+  if (!dbReady() || !acquistoId) return
+  try {
+    await q(
+      `INSERT INTO corso_eventi (acquisto_id, tipo, autore, dettaglio) VALUES ($1, $2, $3, $4::jsonb)`,
+      [acquistoId, tipo, autore, JSON.stringify(dettaglio)],
+    )
+  } catch (errore) {
+    console.error('[corsi] storico non scritto', tipo, acquistoId, errore instanceof Error ? errore.message : errore)
+  }
+}
+
+export type EventoCorso = {
+  tipo: TipoEventoCorso
+  autore: string
+  dettaglio: Record<string, unknown>
+  created_at: string
+}
+
+export type OrdineCorsoAdmin = {
+  id: string
+  corso_titolo: string
+  corso_slug: string
+  corso_modalita: Modalita
+  corso_disponibile_dal: string | null
+  studente_id: string
+  studente_nome: string | null
+  studente_email: string
+  studente_azienda: string | null
+  studente_telefono: string | null
+  /** 'active' = entra nell'area riservata; 'pending' = non ha ancora pagato. */
+  account_status: string
+  customer_type: string
+  amount_cents: number
+  currency: string
+  status: string
+  created_at: string
+  paid_at: string | null
+  stripe_session_id: string | null
+  stripe_payment_intent_id: string | null
+  /** Quando il consumatore ha rinunciato al recesso, se l'ha fatto. */
+  rinuncia_recesso_il: string | null
+  rimborsato_cents: number
+  eventi: EventoCorso[]
+}
+
+/**
+ * Tutti gli ordini dei corsi con il loro storico, per l'amministrazione.
+ *
+ * E la stessa informazione che il tab Pagamenti mostra per i pacchetti — chi,
+ * cosa, quanto, in che stato, quando — piu cio che i corsi hanno in proprio:
+ * l'account, le dichiarazioni sul recesso e i passi dell'ordine.
+ */
+export async function listOrdiniCorsiAdmin(limite = 300): Promise<OrdineCorsoAdmin[]> {
+  if (!dbReady()) return []
+  const rows = await q(
+    `SELECT a.id, a.customer_type, a.amount_cents, a.currency, a.status,
+            a.created_at, a.paid_at, a.stripe_session_id, a.stripe_payment_intent_id,
+            a.early_performance_requested, a.withdrawal_loss_acknowledged,
+            a.metadata->>'consenso_consegna_il' AS consenso_consegna_il,
+            COALESCE((a.metadata->>'rimborsato_cents')::int, 0) AS rimborsato_cents,
+            c.titolo AS corso_titolo, c.slug AS corso_slug, c.modalita AS corso_modalita,
+            c.disponibile_dal AS corso_disponibile_dal,
+            p.id AS studente_id, p.nome AS studente_nome, p.email AS studente_email,
+            p.azienda AS studente_azienda, p.telefono AS studente_telefono,
+            p.status AS account_status,
+            COALESCE(
+              (SELECT json_agg(json_build_object(
+                        'tipo', e.tipo, 'autore', e.autore,
+                        'dettaglio', e.dettaglio, 'created_at', e.created_at
+                      ) ORDER BY e.created_at)
+                 FROM corso_eventi e WHERE e.acquisto_id = a.id),
+              '[]'::json
+            ) AS eventi
+       FROM corso_acquisti a
+       JOIN corsi c    ON c.id = a.corso_id
+       JOIN profiles p ON p.id = a.user_id
+      ORDER BY COALESCE(a.paid_at, a.created_at) DESC
+      LIMIT $1`,
+    [limite],
+  )
+
+  const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null)
+
+  return rows.map(row => {
+    const rinunciaAllAcquisto = Boolean(row.early_performance_requested) && Boolean(row.withdrawal_loss_acknowledged)
+    // La rinuncia puo essere avvenuta in due momenti: all'acquisto, per un corso
+    // gia disponibile, o alla consegna, per un corso comprato in prevendita.
+    const rinunciaIl = row.consenso_consegna_il
+      ? iso(row.consenso_consegna_il)
+      : rinunciaAllAcquisto ? iso(row.paid_at) : null
+
+    return {
+      id: String(row.id),
+      corso_titolo: String(row.corso_titolo),
+      corso_slug: String(row.corso_slug),
+      corso_modalita: String(row.corso_modalita ?? 'registrato') as Modalita,
+      corso_disponibile_dal: iso(row.corso_disponibile_dal),
+      studente_id: String(row.studente_id),
+      studente_nome: row.studente_nome ? String(row.studente_nome) : null,
+      studente_email: String(row.studente_email ?? ''),
+      studente_azienda: row.studente_azienda ? String(row.studente_azienda) : null,
+      studente_telefono: row.studente_telefono ? String(row.studente_telefono) : null,
+      account_status: String(row.account_status ?? ''),
+      customer_type: String(row.customer_type ?? ''),
+      amount_cents: Number(row.amount_cents ?? 0),
+      currency: String(row.currency ?? 'eur'),
+      status: String(row.status ?? ''),
+      created_at: iso(row.created_at) as string,
+      paid_at: iso(row.paid_at),
+      stripe_session_id: row.stripe_session_id ? String(row.stripe_session_id) : null,
+      stripe_payment_intent_id: row.stripe_payment_intent_id ? String(row.stripe_payment_intent_id) : null,
+      rinuncia_recesso_il: rinunciaIl,
+      rimborsato_cents: Number(row.rimborsato_cents ?? 0),
+      eventi: (Array.isArray(row.eventi) ? row.eventi : []) as EventoCorso[],
+    }
+  })
 }

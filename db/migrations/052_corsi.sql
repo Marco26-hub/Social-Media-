@@ -170,3 +170,28 @@ create table if not exists corso_incontri (
 
 create index if not exists corso_incontri_corso_idx
   on corso_incontri (corso_id, inizio_il);
+
+-- Storico di ogni ordine di corso, un passo per riga, mai modificato.
+--
+-- Le colonne di corso_acquisti dicono com'e l'ordine adesso. Questa tabella dice
+-- come ci e arrivato: quando e stato aperto il pagamento, quando e arrivato,
+-- quando l'account si e attivato, quando sono state raccolte le dichiarazioni
+-- sul recesso, quando e chi ha chiuso o riaperto l'accesso. E cio che serve se
+-- un cliente contesta, e cio che le colonne da sole perdono: uno stato
+-- sovrascritto non ricorda da dove veniva.
+--
+-- Si aggiunge e basta. Un evento non si corregge: se qualcosa era sbagliato, si
+-- registra l'evento che lo rimette a posto.
+create table if not exists corso_eventi (
+  id           uuid primary key default gen_random_uuid(),
+  acquisto_id  uuid not null references corso_acquisti(id) on delete cascade,
+  tipo         text not null,
+  -- Chi ha causato il passo: 'sistema' (webhook, pagina), oppure l'id del
+  -- profilo di chi ha agito dall'amministrazione.
+  autore       text not null default 'sistema',
+  dettaglio    jsonb not null default '{}'::jsonb,
+  created_at   timestamptz not null default now()
+);
+
+create index if not exists corso_eventi_acquisto_idx
+  on corso_eventi (acquisto_id, created_at);

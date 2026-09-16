@@ -3,7 +3,7 @@ import { dbReady, q, q1 } from '@/lib/db'
 import { stripeSecretLivemode, verifyStripeWebhookSignature } from '@/lib/stripe'
 import { activateRegistration, PACCHETTO_FALLBACK, PACCHETTO_PIANO } from '@/lib/provisioning'
 import { notifyCorsoAcquistato, notifyCorsoRimborsato, notifyStandaloneOrderPaid, sendAccountActivated, sendCorsoAcquistato, sendStandaloneOrderConfirmed } from '@/lib/email'
-import { registraRimborsoCorso, segnaAcquistoPagato } from '@/lib/corsi-db'
+import { registraEventoCorso, registraRimborsoCorso, segnaAcquistoPagato } from '@/lib/corsi-db'
 import { SITE_URL } from '@/lib/site-config'
 import { getPackage } from '@/lib/packages'
 import { metaContextFromSessionMetadata, sendMetaConversionEvent } from '@/lib/meta-conversions-api'
@@ -315,12 +315,16 @@ async function handleCorsoPaid(obj: StripeObject) {
   })
   if (!esito) throw new Error(`Acquisto corso ${acquistoId} non trovato`)
 
-  const profilo = await q1(
+  const attivato = await q1(
     `UPDATE profiles SET status = 'active', updated_at = now()
       WHERE id = $1 AND status IS DISTINCT FROM 'active'
       RETURNING email, nome`,
     [esito.userId],
-  ) || await q1('SELECT email, nome FROM profiles WHERE id = $1', [esito.userId])
+  )
+  // Solo quando l'account e passato davvero ad attivo: chi era gia cliente non
+  // ha nessuna attivazione da registrare.
+  if (attivato) await registraEventoCorso(acquistoId, 'account_attivato', {})
+  const profilo = attivato || await q1('SELECT email, nome FROM profiles WHERE id = $1', [esito.userId])
 
   const corso = await q1(
     'SELECT titolo, slug, disponibile_dal FROM corsi WHERE id = $1',
