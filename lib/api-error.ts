@@ -14,6 +14,11 @@ export function apiError(e: unknown): NextResponse {
   if (/nessun cliente selezionato/i.test(msg)) {
     return NextResponse.json({ error: 'Nessun cliente selezionato' }, { status: 400 })
   }
+  // Sezione corsi con la migrazione 052 non ancora applicata: e un servizio
+  // non ancora disponibile, non un errore interno da nascondere.
+  if (/Migrazione dei corsi non applicata/.test(msg)) {
+    return NextResponse.json({ error: msg }, { status: 503 })
+  }
   // Errori di parsing JSON del body
   if (/JSON|Unexpected token|Expected property/i.test(msg)) {
     return NextResponse.json({ error: 'Richiesta non valida (JSON malformato)' }, { status: 400 })

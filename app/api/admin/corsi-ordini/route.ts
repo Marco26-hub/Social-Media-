@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-error'
 import { requireAdmin } from '@/lib/auth-utils'
-import { listOrdiniCorsiAdmin } from '@/lib/corsi-db'
+import { corsiPronti, listOrdiniCorsiAdmin } from '@/lib/corsi-db'
 import { dbReady } from '@/lib/db'
 import { stripeConfigured, stripeSecretLivemode } from '@/lib/stripe'
 
@@ -15,6 +15,11 @@ export async function GET() {
     await requireAdmin()
     if (!dbReady()) {
       return NextResponse.json({ ordini: [], stripe_configured: false, stripe_mode: 'not_configured' })
+    }
+    // Le letture dei corsi senza tabelle rispondono «nessun ordine», che qui
+    // sarebbe falso: si dice che manca la migrazione.
+    if (!(await corsiPronti())) {
+      return NextResponse.json({ ordini: [], needs_migration: true })
     }
     const livemode = stripeSecretLivemode()
     return NextResponse.json({

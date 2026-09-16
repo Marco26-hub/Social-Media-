@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
 import { sendAccountActivated } from '@/lib/email'
 import { activateRegistration } from '@/lib/provisioning'
-import { sqlProfiloSoloCorso } from '@/lib/corsi-db'
+import { corsiPronti, sqlProfiloSoloCorso } from '@/lib/corsi-db'
 
 const DEMO_PENDING = [
   { id: 'demo-1', nome: 'Mario Rossi', email: 'mario@negoziorossi.it', azienda: 'Negozio Rossi', telefono: '+39 340 1112223', pacchetto: 'crescita', created_at: '2026-07-05T09:12:00Z' },
@@ -21,11 +21,14 @@ export async function GET() {
   try {
     await requireAdmin()
     if (isDemo() || !dbReady()) return NextResponse.json(DEMO_PENDING)
+    // Senza le tabelle dei corsi non esistono acquisti non conclusi da escludere,
+    // e nominarle nella query la farebbe fallire: la coda tornerebbe un 500.
+    const filtroCorsi = (await corsiPronti()) ? `AND NOT ${sqlProfiloSoloCorso('p')}` : ''
     const rows = await q(
       `SELECT p.id, p.nome, p.email, p.azienda, p.telefono, p.pacchetto, p.created_at
        FROM profiles p
        WHERE p.status = 'pending'
-         AND NOT ${sqlProfiloSoloCorso('p')}
+         ${filtroCorsi}
        ORDER BY p.created_at ASC`,
     )
     return NextResponse.json(rows)
@@ -47,10 +50,9 @@ export async function PATCH(request: Request) {
 
     // La coda non li mostra piu, ma la route si raggiunge anche senza passare
     // dalla pagina: il controllo sta qui, non solo nell'elenco.
-    const soloCorso = await q1(
-      `SELECT 1 AS ok FROM profiles p WHERE p.id = $1 AND ${sqlProfiloSoloCorso('p')}`,
-      [id],
-    )
+    const soloCorso = (await corsiPronti())
+      ? await q1(`SELECT 1 AS ok FROM profiles p WHERE p.id = $1 AND ${sqlProfiloSoloCorso('p')}`, [id])
+      : null
     if (soloCorso) {
       return NextResponse.json(
         {

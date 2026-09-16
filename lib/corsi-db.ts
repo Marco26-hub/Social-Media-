@@ -3,6 +3,50 @@ import { rimborsoChiudeAccesso } from '@/lib/corsi-rimborso'
 import { GIORNI_RECESSO } from '@/lib/corsi-recesso'
 import { TERMINI_VERSIONE } from '@/lib/termini-versione'
 
+// ── Tabelle presenti ────────────────────────────────────────────────────────
+
+let tabelleCorsiConfermate = false
+
+/**
+ * True quando il database risponde E le tabelle dei corsi esistono.
+ *
+ * Il codice arriva in produzione al push, la migrazione 052 e un passo a parte.
+ * Nel tempo fra i due — o se la migrazione non viene applicata affatto — ogni
+ * lettura delle tabelle dei corsi fallirebbe. E non solo nelle pagine nuove:
+ * il layout dell'area clienti conta i corsi di chi entra, la coda delle
+ * registrazioni esclude gli acquisti non conclusi, il webhook cerca i rimborsi
+ * fra gli ordini dei corsi. Provato su un database senza la 052: l'area di
+ * tutti i clienti paganti mostrava un errore, le registrazioni rispondevano 500
+ * e il webhook falliva sul rimborso di qualunque prodotto — il che, ripetuto,
+ * porta Stripe a disattivare l'endpoint e a smettere di mandare anche i
+ * pagamenti dei pacchetti.
+ *
+ * Con le tabelle assenti le letture rispondono «nessun corso»: il sito
+ * funziona come prima della sezione corsi. Si controlla la tabella creata per
+ * ultima dalla 052, cosi una migrazione interrotta a meta non passa per
+ * completa. L'esito positivo si ricorda, perche una migrazione applicata non
+ * torna indietro; quello negativo no, cosi il sito se ne accorge da solo appena
+ * la migrazione viene applicata.
+ */
+export async function corsiPronti(): Promise<boolean> {
+  if (!dbReady()) return false
+  if (tabelleCorsiConfermate) return true
+  try {
+    const row = await q1(`SELECT to_regclass('public.corso_eventi') IS NOT NULL AS ok`)
+    tabelleCorsiConfermate = Boolean(row?.ok)
+    return tabelleCorsiConfermate
+  } catch {
+    return false
+  }
+}
+
+export const MESSAGGIO_MIGRAZIONE_CORSI = 'Migrazione dei corsi non applicata'
+
+/** Per le scritture dell'amministrazione: meglio un messaggio chiaro di un errore SQL. */
+export async function richiediCorsiPronti(): Promise<void> {
+  if (!(await corsiPronti())) throw new Error(MESSAGGIO_MIGRAZIONE_CORSI)
+}
+
 // Accesso ai dati dei corsi online. Niente SQL nelle pagine: qui dentro e basta,
 // come per il resto del progetto.
 //
@@ -185,7 +229,7 @@ async function caricaIncontri(corsoId: string): Promise<Incontro[]> {
  * costerebbe una tabella di prenotazioni e una scadenza da spazzare.
  */
 export async function postiLiberi(corsoId: string, postiTotali: number | null): Promise<number | null> {
-  if (postiTotali === null || !dbReady()) return null
+  if (postiTotali === null || !(await corsiPronti())) return null
   const row = await q1(
     `SELECT COUNT(*)::int AS occupati
        FROM corso_acquisti
@@ -209,7 +253,7 @@ export async function listCorsiPubblicati(filtri: {
   categoria?: string
   livello?: string
 } = {}): Promise<CorsoCatalogo[]> {
-  if (!dbReady()) return []
+  if (!(await corsiPronti())) return []
 
   const where: string[] = ['c.pubblicato = true']
   const params: unknown[] = []
@@ -240,7 +284,7 @@ export async function listCorsiPubblicati(filtri: {
 }
 
 export async function listCategorieCorsi(): Promise<string[]> {
-  if (!dbReady()) return []
+  if (!(await corsiPronti())) return []
   const rows = await q(
     `SELECT DISTINCT categoria
        FROM corsi
@@ -316,7 +360,7 @@ async function caricaProgramma(corsoId: string, sbloccato: boolean, userId?: str
 
 /** Pagina pubblica del corso: contenuti visibili solo per le anteprime. */
 export async function getCorsoPubblicoBySlug(slug: string): Promise<CorsoConProgramma | null> {
-  if (!dbReady()) return null
+  if (!(await corsiPronti())) return null
 
   const row = await q1(
     `SELECT ${CAMPI_CATALOGO}, c.pubblicato, c.seo_title, c.seo_description, ${CONTEGGI_CATALOGO}
@@ -349,7 +393,7 @@ export async function getCorsoPubblicoBySlug(slug: string): Promise<CorsoConProg
  * deve venire dal database e non da qualcosa che il browser puo cambiare.
  */
 export async function getSpettatore(userId: string): Promise<{ nome: string | null; email: string; azienda: string | null } | null> {
-  if (!dbReady()) return null
+  if (!(await corsiPronti())) return null
   const row = await q1('SELECT nome, email, azienda FROM profiles WHERE id = $1 LIMIT 1', [userId])
   if (!row) return null
   return {
@@ -376,7 +420,7 @@ export async function getSpettatore(userId: string): Promise<{ nome: string | nu
  * a loro e non hanno mai avuto quel diritto da perdere.
  */
 export async function consensoConsegnaDaRaccogliere(userId: string, corsoId: string): Promise<boolean> {
-  if (!dbReady()) return false
+  if (!(await corsiPronti())) return false
   const row = await q1(
     `SELECT 1 AS ok
        FROM corso_acquisti a
@@ -402,7 +446,7 @@ export async function consensoConsegnaDaRaccogliere(userId: string, corsoId: str
 
 /** Registra le due dichiarazioni. Da qui l'esecuzione e iniziata. */
 export async function registraConsensoConsegna(userId: string, corsoId: string): Promise<boolean> {
-  if (!dbReady()) return false
+  if (!(await corsiPronti())) return false
   const row = await q1(
     `UPDATE corso_acquisti
         SET early_performance_requested = true,
@@ -420,7 +464,7 @@ export async function registraConsensoConsegna(userId: string, corsoId: string):
 
 /** True se l'utente ha un acquisto pagato per quel corso. */
 export async function haAccessoAlCorso(userId: string, corsoId: string): Promise<boolean> {
-  if (!dbReady()) return false
+  if (!(await corsiPronti())) return false
   const row = await q1(
     `SELECT 1 AS ok
        FROM corso_acquisti
@@ -438,7 +482,7 @@ export type CorsoAcquistato = CorsoCatalogo & {
 
 /** I corsi comprati da uno studente, con l'avanzamento. */
 export async function listCorsiUtente(userId: string): Promise<CorsoAcquistato[]> {
-  if (!dbReady()) return []
+  if (!(await corsiPronti())) return []
   const rows = await q(
     `SELECT ${CAMPI_CATALOGO},
             COALESCE(COUNT(l.id), 0)::int       AS lezioni_totali,
@@ -464,7 +508,7 @@ export async function listCorsiUtente(userId: string): Promise<CorsoAcquistato[]
 
 /** Quanti corsi ha comprato: serve alla navigazione dell'area cliente. */
 export async function contaCorsiUtente(userId: string): Promise<number> {
-  if (!dbReady()) return 0
+  if (!(await corsiPronti())) return 0
   const row = await q1(
     `SELECT COUNT(*)::int AS n FROM corso_acquisti WHERE user_id = $1 AND status = 'paid'`,
     [userId],
@@ -478,7 +522,7 @@ export async function contaCorsiUtente(userId: string): Promise<number> {
  * controllo di accesso vive qui, non nella pagina.
  */
 export async function getCorsoPerStudente(userId: string, slug: string): Promise<CorsoConProgramma | null> {
-  if (!dbReady()) return null
+  if (!(await corsiPronti())) return null
 
   const row = await q1(
     `SELECT ${CAMPI_CATALOGO}, c.pubblicato, c.seo_title, c.seo_description,
@@ -523,7 +567,7 @@ export async function getChiaveVideoAutorizzata(
   lezioneId: string,
   userId: string | null,
 ): Promise<{ key: string; titolo: string } | null> {
-  if (!dbReady()) return null
+  if (!(await corsiPronti())) return null
 
   const row = await q1(
     `SELECT l.video_storage_key, l.titolo, l.anteprima_gratuita, m.corso_id
@@ -552,7 +596,7 @@ export async function getChiaveVideoAutorizzata(
 
 /** Segna o annulla il completamento di una lezione, solo se il corso e acquistato. */
 export async function setProgresso(userId: string, lezioneId: string, completata: boolean): Promise<boolean> {
-  if (!dbReady()) return false
+  if (!(await corsiPronti())) return false
 
   const consentita = await q1(
     `SELECT 1 AS ok
@@ -599,7 +643,7 @@ export type CorsoPerAcquisto = {
  * quanto viene addebitato.
  */
 export async function getCorsoPerAcquisto(slug: string): Promise<CorsoPerAcquisto | null> {
-  if (!dbReady()) return null
+  if (!(await corsiPronti())) return null
   const row = await q1(
     `SELECT id, slug, titolo, prezzo_cents, currency, pubblicato, disponibile_dal,
             modalita, posti_totali
@@ -719,7 +763,7 @@ export async function segnaAcquistoPagato(
 
 /** Stato dell'ordine per la pagina di ritorno dal pagamento. */
 export async function getStatoAcquistoBySession(sessionId: string): Promise<{ status: string; slug: string; titolo: string } | null> {
-  if (!dbReady()) return null
+  if (!(await corsiPronti())) return null
   const row = await q1(
     `SELECT a.status, c.slug, c.titolo
        FROM corso_acquisti a
@@ -761,7 +805,7 @@ export type CorsoAdmin = CorsoCatalogo & {
 
 /** Elenco completo per l'amministrazione: pubblicati e non, con le vendite. */
 export async function listCorsiAdmin(): Promise<CorsoAdmin[]> {
-  if (!dbReady()) return []
+  if (!(await corsiPronti())) return []
   const rows = await q(
     `SELECT ${CAMPI_CATALOGO}, c.pubblicato, c.in_evidenza, c.ordine,
             c.seo_title, c.seo_description, c.link_accesso,
@@ -797,7 +841,7 @@ export async function listCorsiAdmin(): Promise<CorsoAdmin[]> {
 
 /** Un corso con tutto dentro, per la pagina di modifica. */
 export async function getCorsoAdmin(id: string): Promise<(CorsoAdmin & { moduli: Modulo[]; incontri: Incontro[] }) | null> {
-  if (!dbReady()) return null
+  if (!(await corsiPronti())) return null
   const tutti = await listCorsiAdmin()
   const corso = tutti.find(c => c.id === id)
   if (!corso) return null
@@ -822,6 +866,7 @@ function valoriScrivibili(dati: Record<string, unknown>, colonne: Set<string>): 
 }
 
 export async function creaCorso(dati: Record<string, unknown>): Promise<string> {
+  await richiediCorsiPronti()
   const [campi, valori] = valoriScrivibili(dati, COLONNE_CORSO)
   if (!campi.includes('slug') || !campi.includes('titolo') || !campi.includes('prezzo_cents')) {
     throw new Error('Servono slug, titolo e prezzo')
@@ -835,6 +880,7 @@ export async function creaCorso(dati: Record<string, unknown>): Promise<string> 
 }
 
 export async function aggiornaCorso(id: string, dati: Record<string, unknown>): Promise<boolean> {
+  await richiediCorsiPronti()
   const [campi, valori] = valoriScrivibili(dati, COLONNE_CORSO)
   if (!campi.length) return false
   const set = campi.map((campo, i) => `${campo} = $${i + 2}`).join(', ')
@@ -848,6 +894,7 @@ export async function aggiornaCorso(id: string, dati: Record<string, unknown>): 
  * ha pagato. Un corso venduto si toglie dal catalogo con pubblicato = false.
  */
 export async function eliminaCorso(id: string): Promise<{ eliminato: boolean; motivo?: string }> {
+  await richiediCorsiPronti()
   const venduto = await q1(
     `SELECT 1 AS ok FROM corso_acquisti WHERE corso_id = $1 AND status = 'paid' LIMIT 1`,
     [id],
@@ -867,6 +914,7 @@ const COLONNE_LEZIONE = new Set([
 const COLONNE_INCONTRO = new Set(['titolo', 'ordine', 'inizio_il', 'durata_min', 'video_storage_key', 'note'])
 
 export async function creaModulo(corsoId: string, dati: Record<string, unknown>): Promise<string> {
+  await richiediCorsiPronti()
   const [campi, valori] = valoriScrivibili(dati, COLONNE_MODULO)
   const row = await q1(
     `INSERT INTO corso_moduli (corso_id${campi.length ? ', ' + campi.join(', ') : ''})
@@ -877,6 +925,7 @@ export async function creaModulo(corsoId: string, dati: Record<string, unknown>)
 }
 
 export async function aggiornaModulo(id: string, dati: Record<string, unknown>): Promise<boolean> {
+  await richiediCorsiPronti()
   const [campi, valori] = valoriScrivibili(dati, COLONNE_MODULO)
   if (!campi.length) return false
   const set = campi.map((campo, i) => `${campo} = $${i + 2}`).join(', ')
@@ -885,10 +934,12 @@ export async function aggiornaModulo(id: string, dati: Record<string, unknown>):
 }
 
 export async function eliminaModulo(id: string): Promise<void> {
+  await richiediCorsiPronti()
   await q('DELETE FROM corso_moduli WHERE id = $1', [id])
 }
 
 export async function creaLezione(moduloId: string, dati: Record<string, unknown>): Promise<string> {
+  await richiediCorsiPronti()
   const [campi, valori] = valoriScrivibili(dati, COLONNE_LEZIONE)
   const row = await q1(
     `INSERT INTO corso_lezioni (modulo_id${campi.length ? ', ' + campi.join(', ') : ''})
@@ -899,6 +950,7 @@ export async function creaLezione(moduloId: string, dati: Record<string, unknown
 }
 
 export async function aggiornaLezione(id: string, dati: Record<string, unknown>): Promise<boolean> {
+  await richiediCorsiPronti()
   const [campi, valori] = valoriScrivibili(dati, COLONNE_LEZIONE)
   if (!campi.length) return false
   const set = campi.map((campo, i) => `${campo} = $${i + 2}`).join(', ')
@@ -907,10 +959,12 @@ export async function aggiornaLezione(id: string, dati: Record<string, unknown>)
 }
 
 export async function eliminaLezione(id: string): Promise<void> {
+  await richiediCorsiPronti()
   await q('DELETE FROM corso_lezioni WHERE id = $1', [id])
 }
 
 export async function creaIncontro(corsoId: string, dati: Record<string, unknown>): Promise<string> {
+  await richiediCorsiPronti()
   const [campi, valori] = valoriScrivibili(dati, COLONNE_INCONTRO)
   if (!campi.includes('inizio_il')) throw new Error('Serve la data dell\'incontro')
   const row = await q1(
@@ -922,6 +976,7 @@ export async function creaIncontro(corsoId: string, dati: Record<string, unknown
 }
 
 export async function aggiornaIncontro(id: string, dati: Record<string, unknown>): Promise<boolean> {
+  await richiediCorsiPronti()
   const [campi, valori] = valoriScrivibili(dati, COLONNE_INCONTRO)
   if (!campi.length) return false
   const set = campi.map((campo, i) => `${campo} = $${i + 2}`).join(', ')
@@ -930,6 +985,7 @@ export async function aggiornaIncontro(id: string, dati: Record<string, unknown>
 }
 
 export async function eliminaIncontro(id: string): Promise<void> {
+  await richiediCorsiPronti()
   await q('DELETE FROM corso_incontri WHERE id = $1', [id])
 }
 
@@ -969,7 +1025,7 @@ export async function registraRimborsoCorso(
   paymentIntentId: string,
   importi: { rimborsatoCents: number },
 ): Promise<EsitoRimborso | null> {
-  if (!dbReady() || !paymentIntentId) return null
+  if (!paymentIntentId || !(await corsiPronti())) return null
 
   const riga = await q1(
     `SELECT a.id, a.user_id, a.corso_id, a.amount_cents, a.status,
@@ -1034,7 +1090,7 @@ export async function impostaAccessoAcquisto(
   stato: 'paid' | 'refunded',
   autore = 'sistema',
 ): Promise<boolean> {
-  if (!dbReady()) return false
+  if (!(await corsiPronti())) return false
   const row = await q1(
     `UPDATE corso_acquisti
         SET status = $2,
@@ -1108,7 +1164,7 @@ export async function registraEventoCorso(
   dettaglio: Record<string, unknown> = {},
   autore = 'sistema',
 ): Promise<void> {
-  if (!dbReady() || !acquistoId) return
+  if (!acquistoId || !(await corsiPronti())) return
   try {
     await q(
       `INSERT INTO corso_eventi (acquisto_id, tipo, autore, dettaglio) VALUES ($1, $2, $3, $4::jsonb)`,
@@ -1161,7 +1217,7 @@ export type OrdineCorsoAdmin = {
  * l'account, le dichiarazioni sul recesso e i passi dell'ordine.
  */
 export async function listOrdiniCorsiAdmin(limite = 300): Promise<OrdineCorsoAdmin[]> {
-  if (!dbReady()) return []
+  if (!(await corsiPronti())) return []
   const rows = await q(
     `SELECT a.id, a.customer_type, a.amount_cents, a.currency, a.status,
             a.created_at, a.paid_at, a.stripe_session_id, a.stripe_payment_intent_id,

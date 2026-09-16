@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { apiError } from '@/lib/api-error'
 import { requireAdmin } from '@/lib/auth-utils'
-import { creaCorso, listCorsiAdmin } from '@/lib/corsi-db'
+import { MESSAGGIO_MIGRAZIONE_CORSI, corsiPronti, creaCorso, listCorsiAdmin } from '@/lib/corsi-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +13,9 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     await requireAdmin()
+    if (!(await corsiPronti())) {
+      return NextResponse.json({ error: `${MESSAGGIO_MIGRAZIONE_CORSI}: il catalogo sarà disponibile dopo la 052.` }, { status: 503 })
+    }
     return NextResponse.json(await listCorsiAdmin())
   } catch (e) {
     return apiError(e)
