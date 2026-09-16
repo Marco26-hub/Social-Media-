@@ -120,6 +120,17 @@
   transform: scale(1.18);
   transform-origin: 50% 90%;
 }
+.gestoVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: scale(1.18);
+  transform-origin: 50% 90%;
+  filter: drop-shadow(0 7px 8px rgba(5, 23, 16, .16));
+}
 .posaAttiva .corpoBox { opacity: 0 }
 .gestoAttivo { animation: none }
 
@@ -149,6 +160,7 @@
   transform: scale(1.18); transform-origin: 50% 90%;
   filter: drop-shadow(0 7px 8px rgba(5, 23, 16, .16));
 }
+
 .posaEntrata[data-posa='2'] { animation-name: odinoPosaRespira }
 .posaEntrata[data-posa='3'] { animation-name: odinoPosaEspira }
 .posaEntrata[data-posa='7'] { animation-name: odinoPosaAscolta }
@@ -320,6 +332,8 @@
     drop-shadow(0 2px 2px rgba(8, 20, 15, .1));
 }
 .nuvolaSagoma {
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
   transform-box: fill-box;
   transform-origin: center;
   animation: none;
@@ -348,9 +362,13 @@
 }
 .fraseVignetta { isolation: isolate; z-index: 1 }
 @keyframes vignettaLeggibile {
-  0% { opacity: 0; transform: translateY(4px) }
-  4%, 96% { opacity: 1; transform: none }
-  100% { opacity: 0; transform: translateY(-2px) }
+  0% { opacity: 0; transform: translateY(7px) scale(.86) rotate(2deg) }
+  4% { opacity: 1; transform: translateY(-2px) scale(1.035) rotate(-1deg) }
+  8% { opacity: 1; transform: none }
+  28%, 68% { opacity: 1; transform: translateY(-2px) rotate(-.7deg) }
+  48%, 88% { opacity: 1; transform: translateY(0) rotate(.7deg) }
+  96% { opacity: 1; transform: none }
+  100% { opacity: 0; transform: translateY(-3px) scale(.97) }
 }
 .scintille {
   position: absolute;
