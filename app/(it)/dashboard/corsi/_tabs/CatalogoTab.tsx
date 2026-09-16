@@ -62,7 +62,7 @@ export default function CatalogoTab() {
   function slugDaTitolo(valore: string) {
     return valore
       .toLowerCase()
-      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // via gli accenti: «à» diventa «a»
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .slice(0, 80)

@@ -2,6 +2,7 @@ import { dbReady, q, q1 } from '@/lib/db'
 import { rimborsoChiudeAccesso } from '@/lib/corsi-rimborso'
 import { GIORNI_RECESSO } from '@/lib/corsi-recesso'
 import { TERMINI_VERSIONE } from '@/lib/termini-versione'
+import { valoreColonna } from '@/lib/corsi-validazione'
 
 // ── Tabelle presenti ────────────────────────────────────────────────────────
 
@@ -860,7 +861,8 @@ function valoriScrivibili(dati: Record<string, unknown>, colonne: Set<string>): 
   for (const [chiave, valore] of Object.entries(dati)) {
     if (!colonne.has(chiave)) continue
     campi.push(chiave)
-    valori.push(valore === '' ? null : valore)
+    // Controllo e conversione colonna per colonna: vedi lib/corsi-validazione.ts.
+    valori.push(valoreColonna(chiave, valore))
   }
   return [campi, valori]
 }

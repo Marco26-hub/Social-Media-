@@ -14,6 +14,15 @@ export function apiError(e: unknown): NextResponse {
   if (/nessun cliente selezionato/i.test(msg)) {
     return NextResponse.json({ error: 'Nessun cliente selezionato' }, { status: 400 })
   }
+  // Dati dell'amministrazione dei corsi rifiutati dal controllo: il messaggio
+  // e scritto per chi compila il modulo e va mostrato cosi com'e.
+  if (e instanceof Error && e.name === 'DatoNonValido') {
+    return NextResponse.json({ error: msg }, { status: 400 })
+  }
+  // Un id che non e un uuid non indica nessuna riga.
+  if (/invalid input syntax for type uuid/i.test(msg)) {
+    return NextResponse.json({ error: 'Elemento non trovato' }, { status: 404 })
+  }
   // Sezione corsi con la migrazione 052 non ancora applicata: e un servizio
   // non ancora disponibile, non un errore interno da nascondere.
   if (/Migrazione dei corsi non applicata/.test(msg)) {
