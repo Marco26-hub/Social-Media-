@@ -244,6 +244,49 @@ conservazione. In ogni caso mancano nel checkout **P.IVA, codice fiscale,
 indirizzo e codice SDI o PEC**: la pagina del corso promette «Fattura intestata
 alla tua azienda» senza che il sistema raccolga i dati per farla.
 
+### Verifica di pubblicazione (16 settembre)
+
+Fatta su una copia separata del progetto, con un database creato da zero e
+portato alla 051 — cioe com'e oggi la produzione — poi migrato a server acceso.
+
+**Ordine di pubblicazione.** Il codice ora puo andare online PRIMA della 052:
+`corsiPronti()` fa rispondere «nessun corso» a ogni lettura finche le tabelle
+non esistono, e appena la migrazione e applicata il sito se ne accorge senza
+riavvio. Senza questa guardia, prima della migrazione, l'area di tutti i
+clienti paganti andava in errore, le Registrazioni rispondevano 500 e il
+webhook falliva sul rimborso di qualunque prodotto. Ordine consigliato comunque:
+push, controllo del deploy, `npm run migrate`, controllo di /corsi.
+
+**Cosa e stato provato:** migrazione da zero e ripetuta (la seconda la salta);
+14 route di amministrazione con un cliente loggato non admin, tutte 403; un
+cliente che tenta lezioni, video, pagina e consenso di un corso non suo,
+sempre negato; il flusso admin intero dall'interfaccia fino alla pagina
+pubblica; pagine nuove a 375 px senza nulla che esce dallo schermo; build di
+produzione con 60 collegamenti controllati e nessuno rotto.
+
+**Trovato e corretto:** creare un corso dall'amministrazione non era mai
+riuscito (descrizione vuota trasformata in null su una colonna obbligatoria).
+Ora ci sono i controlli di lib/corsi-validazione.ts.
+
+**Trovato e NON toccato, perche non viene dai corsi:**
+
+- **`npm audit` fallisce** con le dipendenze di `main`: Next.js 15.5.23 (critico,
+  riguarda server Windows, non Vercel), sharp e js-yaml. La CI si ferma li, su
+  questo branch come su `main`. Si risolve con Next 15.5.25 (patch) e
+  `npm audit fix`, in un commit a parte.
+- **La CSP blocca i font Google dell'area clienti** (Fraunces, Space Grotesk,
+  importati da `portale.module.css` dal luglio): online il portale usa i font
+  di ripiego. Serve `fonts.googleapis.com` in `style-src` e
+  `fonts.gstatic.com` in `font-src`, oppure caricare i font con `next/font`.
+- **BotID in una build di produzione locale** risponde 500 sulle route di
+  acquisto, quelle esistenti comprese: gli serve un'intestazione che c'e solo su
+  Vercel. Non e un difetto; per provare il checkout in locale si usa `npm run dev`.
+
+**Lavorare nella stessa cartella di un'altra sessione.** Cancellare `.next` o
+cambiare `.env.local` qui rompe il server di chi sta guardando il sito. Per le
+prove di lunga durata: `git worktree add --detach`, `node_modules` in link, un
+`.env.local` proprio e una porta diversa.
+
 ### Cosa manca per vendere
 
 1. **Registrazione che porta dritta al pagamento** (deciso, non ancora scritto).
