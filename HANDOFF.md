@@ -195,6 +195,55 @@ piu, e non se ne accorge nessuno.
 I testi sono scritti perche il documento dica cio che il codice fa davvero.
 **Restano da far validare prima del push.**
 
+### Tracciamento degli ordini e registro incassi
+
+**Storico degli ordini dei corsi** — `corso_eventi` (nella 052) tiene ogni passo,
+una riga per passo, mai modificata, con l'autore quando e un'azione manuale.
+Il blocco «Corsi acquistati» (`components/CorsiOrdiniAdmin.tsx`) e lo stesso nel
+tab Pagamenti e nel tab Vendite dei corsi; solo il secondo ha i pulsanti per
+chiudere e riaprire l'accesso.
+
+**Registro incassi** — in cima al tab Pagamenti, per mese o trimestre, con export
+CSV di tutto il venduto (`lib/incassi.ts`). Da sapere:
+
+- i **rinnovi dei servizi in abbonamento** si leggono da `stripe_webhook_events`,
+  perche `standalone_service_orders` conserva solo l'ultima fattura. **Non
+  cancellare mai quella tabella**: e l'unica storia completa di quei rinnovi.
+- i **rimborsi** sono registrati solo per i corsi. Per pacchetti, servizi e
+  consulenze il webhook non li gestisce, quindi il registro non li vede.
+- la **consulenza** non chiede se il cliente e un'impresa: nel registro esce
+  «Non indicato».
+
+`scripts/prova-webhook-corsi.mjs` firma eventi come Stripe con un segreto locale
+(`STRIPE_WEBHOOK_SECRET=whsec_prova_locale` nel `.env.local`) e prova tutto il
+dopo-pagamento senza chiavi.
+
+### IVA: da verificare subito, riguarda i pacchetti gia in vendita
+
+La registrazione dei pacchetti mostra al cliente **«IVA 22%»** e **«Primo
+addebito = canone x 1,22»** (`app/(it)/register/page.tsx`). Ma
+`createStripeCheckoutSession` manda a Stripe `unit_amount` = canone, **senza
+`tax_rates` e senza `automatic_tax`**, e nessun'altra parte del codice aggiunge
+l'IVA. Salvo impostazioni sul pannello Stripe che da qui non si vedono, a un
+cliente Crescita si mostrano 1.207,80 € e se ne addebitano 990.
+
+Lo stesso vale per consulenze, servizi e corsi: tutto il sito dice «IVA
+esclusa» e Stripe incassa l'importo di listino. **Verifica: aprire una fattura
+reale di un pacchetto sul pannello Stripe e guardare il totale.** Se e il
+canone senza IVA, o l'IVA non viene incassata, o i prezzi vanno dichiarati IVA
+inclusa — e la scelta dipende dal regime fiscale, quindi dal commercialista.
+
+### Fatturazione elettronica
+
+Stripe non trasmette allo SdI: il suo PDF non e una fattura valida in Italia.
+Nel codice non c'e alcun collegamento SdI. Le strade sono tre — export al
+commercialista (fatto), gestionale collegato a Stripe, o un piccolo generatore
+di XML FatturaPA da caricare sul portale dell'Agenzia o inviare via PEC — e
+tutte richiedono di sapere dal commercialista regime fiscale, numerazione e
+conservazione. In ogni caso mancano nel checkout **P.IVA, codice fiscale,
+indirizzo e codice SDI o PEC**: la pagina del corso promette «Fattura intestata
+alla tua azienda» senza che il sistema raccolga i dati per farla.
+
 ### Cosa manca per vendere
 
 1. **Registrazione che porta dritta al pagamento** (deciso, non ancora scritto).
