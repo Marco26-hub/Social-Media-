@@ -103,6 +103,7 @@ export default function VenditeTab() {
         {pagate.length} {pagate.length === 1 ? 'acquisto pagato' : 'acquisti pagati'} · {euro(incasso)} incassati.
         Sono compresi i tentativi non andati a buon fine, che restano visibili per capire dove si perdono gli acquisti.
         Un rimborso totale chiude l’accesso da solo; uno parziale no, e va deciso qui.
+        Chi ha iniziato un acquisto senza pagare è qui e non in Registrazioni: il suo account si attiva da solo quando completa il pagamento.
       </p>
 
       {errore && <div className="card p-4 mb-4 text-sm text-red-700 bg-red-50 border-red-200">{errore}</div>}

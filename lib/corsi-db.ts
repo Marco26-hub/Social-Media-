@@ -1065,3 +1065,28 @@ export async function impostaAccessoAcquisto(
   )
   return Boolean(row)
 }
+
+// ── Acquisti non completati e coda delle registrazioni ──────────────────────
+
+/**
+ * Condizione SQL: il profilo `alias` e solo un acquisto di corso non concluso.
+ *
+ * Chi inizia a comprare un corso e non paga resta con un profilo 'pending',
+ * senza pacchetto. Nella coda delle registrazioni sembrava identico a chi si
+ * era registrato per un pacchetto social, ma non lo e, e le due azioni di
+ * quella coda sono entrambe sbagliate per lui:
+ *   - «Attiva» crea un workspace social completo, cioe un pannello regalato a
+ *     chi voleva un corso e non l'ha nemmeno pagato;
+ *   - «Rifiuta» mette il profilo a 'rejected', e da li quella persona non puo
+ *     piu comprare: la registrazione le dice che l'account esiste e il login la
+ *     respinge.
+ * Il suo posto e il tab Vendite dei corsi, dove l'ordine compare come non
+ * completato. Se poi paga, il webhook attiva il profilo da solo.
+ *
+ * E una stringa e non una funzione perche serve dentro una WHERE: la coda la
+ * usa per escluderli, l'azione per rifiutarsi di toccarli.
+ */
+export function sqlProfiloSoloCorso(alias: string): string {
+  return `(COALESCE(${alias}.pacchetto, '') = ''
+           AND EXISTS (SELECT 1 FROM corso_acquisti ca WHERE ca.user_id = ${alias}.id))`
+}
