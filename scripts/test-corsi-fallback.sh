@@ -54,7 +54,10 @@ prova 'area studente' 307 "$(codice "$BASE/portale/corsi")"
 
 if [ "$conDatabase" != "0" ]; then
   prova 'catalogo amministrazione' 401 "$(codice "$BASE/api/data/corsi")"
-  prova 'vendite' 401 "$(codice "$BASE/api/data/corsi/vendite")"
+  prova 'ordini dei corsi' 401 "$(codice "$BASE/api/admin/corsi-ordini")"
+  prova 'export dei corsi' 401 "$(codice "$BASE/api/admin/corsi-ordini/export")"
+  prova 'registro incassi' 401 "$(codice "$BASE/api/admin/incassi")"
+  prova 'export del registro incassi' 401 "$(codice "$BASE/api/admin/incassi/export?periodo=2026-T3")"
 fi
 
 echo

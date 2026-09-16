@@ -7,6 +7,8 @@ import { readApiError } from '@/lib/ai-client'
 import ConsulenzeAdmin from '@/components/ConsulenzeAdmin'
 import RecessiAdmin from '@/components/RecessiAdmin'
 import StandaloneServiceOrdersAdmin from '@/components/StandaloneServiceOrdersAdmin'
+import CorsiOrdiniAdmin from '@/components/CorsiOrdiniAdmin'
+import RegistroIncassi from '@/components/RegistroIncassi'
 
 type PaymentClient = {
   id: string
@@ -315,7 +317,9 @@ export default function PagamentiAdminPage() {
         </div>
       </div>
 
+      <RegistroIncassi />
       <StandaloneServiceOrdersAdmin />
+      <CorsiOrdiniAdmin />
       <ConsulenzeAdmin />
       <RecessiAdmin />
 
