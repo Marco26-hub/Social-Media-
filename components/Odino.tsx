@@ -15,7 +15,7 @@ import { TESTI, WHATSAPP_ODINO } from '@/lib/odino/testi'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
 import { EVENTO_RIQUADRO, chiOccupa, liberaAngolo, mostraMascotte, occupaAngolo } from '@/lib/riquadri'
 import styles from './odino.module.css'
-import OdinoSaluto, { OdinoGambe } from './OdinoSaluto'
+import { OdinoGambe } from './OdinoSaluto'
 import { useOdinoVignette } from './useOdinoVignette'
 
 const POSE_ODINO = [
@@ -83,6 +83,29 @@ const ROUTINE_SALUTO: PassoPosa[] = [
   { posa: 6, durata: 850 },
   { posa: null, durata: 3500 },
 ]
+
+const ANIMAZIONI_ODINO = {
+  wave: '/images/odino/animations/odino-wave-smooth.webm',
+  breathe: '/images/odino/animations/odino-breathe-smooth.webm',
+  listen: '/images/odino/animations/odino-listen-smooth.webm',
+  think: '/images/odino/animations/odino-think-smooth.webm',
+  explain: '/images/odino/animations/odino-explain-smooth.webm',
+  pointUp: '/images/odino/animations/odino-point-up-smooth.webm',
+  invite: '/images/odino/animations/odino-invite-smooth.webm',
+  jump: '/images/odino/animations/odino-jump-smooth.webm',
+} as const
+
+function animazionePerPosa(posa: NumeroPosa | null, saluto: boolean) {
+  if (saluto) return ANIMAZIONI_ODINO.wave
+  if (posa === 2 || posa === 3) return ANIMAZIONI_ODINO.breathe
+  if (posa === 7) return ANIMAZIONI_ODINO.listen
+  if (posa === 8) return ANIMAZIONI_ODINO.think
+  if (posa === 9) return ANIMAZIONI_ODINO.explain
+  if (posa === 10) return ANIMAZIONI_ODINO.pointUp
+  if (posa === 12) return ANIMAZIONI_ODINO.invite
+  if (posa === 13 || posa === 14 || posa === 15) return ANIMAZIONI_ODINO.jump
+  return null
+}
 
 // ODINO, l'assistente del sito.
 //
@@ -209,6 +232,7 @@ export default function Odino() {
     pageKey: percorso, reducedMotion: movimentoRidotto, interacted: aperto,
   })
   const mostraSaluto = vignetta?.kind === 'saluto'
+  const animazioneAttiva = movimentoRidotto ? null : animazionePerPosa(posa, mostraSaluto)
   useEffect(() => {
     if (!visibile) { mostraMascotte(false); return }
     if (aperto) { occupaAngolo('odino'); mostraMascotte(false) }
@@ -350,21 +374,25 @@ export default function Odino() {
             gesti. Nessun cambio di scala, ritaglio o arto staccato. */}
         <span className={`${styles.mascotte} ${posa !== null ? styles.gestoAttivo : ''}`} aria-hidden="true">
           <span className={styles.orbita}><i /><i /><i /></span>
-          <span className={`${styles.robotLayer} ${posa !== null ? styles.posaAttiva : ''}`}>
+          <span className={styles.robotLayer}>
             <span className={styles.corpoBox}>
-              <OdinoGambe src={POSE_ODINO[10]} className={styles.salutoFluido} attivo={!movimentoRidotto && posa === null && !mostraSaluto} />
+              {animazioneAttiva ? (
+                <video
+                  key={animazioneAttiva}
+                  className={styles.gestoVideo}
+                  src={animazioneAttiva}
+                  poster={POSE_ODINO[10]}
+                  autoPlay
+                  muted
+                  playsInline
+                  preload="auto"
+                  aria-hidden="true"
+                  data-odino-video={animazioneAttiva}
+                />
+              ) : (
+                <OdinoGambe src={POSE_ODINO[10]} className={styles.salutoFluido} attivo={!movimentoRidotto && posa === null && !mostraSaluto} />
+              )}
             </span>
-            {posa !== null && (
-              <span
-                key={`odino-posa-${posa}`}
-                className={`${styles.posaOdino} ${styles.posaEntrata} ${mostraSaluto ? styles.posaSaluto : ''}`}
-                data-posa={posa}
-              >
-                {mostraSaluto && posa === 5 && !movimentoRidotto
-                  ? <OdinoSaluto src={POSE_ODINO[4]} className={styles.salutoFluido} />
-                  : <Image src={POSE_ODINO[posa - 1]} alt="" fill sizes="112px" unoptimized={mostraSaluto} />}
-              </span>
-            )}
           </span>
         </span>
         {/* Il saluto nasce dalla mano: tre bolle salgono e diventano una sola
