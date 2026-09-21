@@ -111,12 +111,20 @@ export default function AiCasaScena({
       return
     }
 
-    let visibile = false
-    const osservatore = new IntersectionObserver(
-      ([voce]) => { visibile = voce.isIntersecting },
-      { threshold: 0.15 },
-    )
-    osservatore.observe(el)
+    // Si parte da «visibile», non da «nascosta».
+    //
+    // Prima era il contrario, e la scrittura aspettava il primo verdetto
+    // dell'osservatore per cominciare. Se quel verdetto non arriva — scheda in
+    // secondo piano, osservatore non supportato, primo giro che tarda — lo
+    // schermo del Mac resta vuoto per sempre, ed è la cosa che sulla pagina si
+    // guarda per prima. Meglio sbagliare scrivendo: il browser rallenta da sé i
+    // timer di una scheda nascosta, quindi il costo di un giro di troppo è
+    // trascurabile, mentre un hero vuoto è un difetto che si vede.
+    let visibile = true
+    const osservatore = 'IntersectionObserver' in window
+      ? new IntersectionObserver(([voce]) => { visibile = voce.isIntersecting }, { threshold: 0.15 })
+      : null
+    osservatore?.observe(el)
 
     let annullato = false
     let attesa: ReturnType<typeof setTimeout> | undefined
@@ -156,7 +164,7 @@ export default function AiCasaScena({
     return () => {
       annullato = true
       if (attesa) clearTimeout(attesa)
-      osservatore.disconnect()
+      osservatore?.disconnect()
     }
   }, [battute])
 
