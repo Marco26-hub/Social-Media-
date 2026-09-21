@@ -59,9 +59,9 @@ export default function AiCasaLanding() {
               AI a casa tua.
             </h1>
             <p className={styles.lead}>
-              Ti consegniamo un Mac con l&rsquo;intelligenza artificiale già dentro: scelta in
-              base alla macchina, installata, tarata e collaudata. Si accende e funziona. I tuoi
-              documenti restano sulla tua scrivania.
+              Scegliamo insieme il Mac giusto, lo ordini tu ad Apple, e te lo mettiamo in mano
+              con l&rsquo;intelligenza artificiale già dentro: installata, tarata sulla macchina e
+              collaudata. Si accende e funziona. I tuoi documenti restano sulla tua scrivania.
             </p>
 
             <div className={styles.azioni}>
@@ -111,7 +111,8 @@ export default function AiCasaLanding() {
             <h3 className={styles.cardTitolo}>Nessun canone che cresce</h3>
             <p className={styles.cardTesto}>
               La macchina la compri una volta. Non ci sono crediti da ricaricare, limiti mensili o
-              aumenti di listino decisi altrove.
+              aumenti di listino decisi altrove. La manutenzione, se la vuoi, è una tua scelta:
+              senza, il sistema continua a funzionare lo stesso.
             </p>
           </article>
 
@@ -166,7 +167,7 @@ export default function AiCasaLanding() {
             <h3 className={styles.cardTitolo}>Collaudo e consegna</h3>
             <p className={styles.cardTesto}>
               La macchina parte solo dopo una prova lunga, registrata. Te la consegniamo accesa,
-              con mezz&rsquo;ora insieme per vedere come si usa.
+              e restiamo il tempo che serve a vedere insieme come si usa.
             </p>
           </article>
         </div>
@@ -263,9 +264,10 @@ export default function AiCasaLanding() {
 
         <p className={styles.nota}>
           Il taglio esatto lo scegliamo insieme, sul lavoro che devi fare: consigliamo solo
-          configurazioni che abbiamo provato davvero. I riferimenti che usiamo sono misurati sulle
-          nostre macchine, non presi da una scheda tecnica. Prezzi, tempi di consegna e garanzia
-          dipendono dal modello scelto e te li mettiamo per iscritto prima di qualsiasi ordine.
+          configurazioni che abbiamo provato davvero, e i riferimenti che usiamo sono misurati sulle
+          nostre macchine, non presi da una scheda tecnica. Prezzo della macchina, tempi di consegna
+          e garanzia sono quelli di Apple: te li mettiamo per iscritto insieme alla configurazione,
+          prima che tu ordini qualsiasi cosa.
         </p>
       </section>
 
@@ -454,7 +456,7 @@ export default function AiCasaLanding() {
 
         <div className={styles.righe}>
           <div className={styles.riga}>
-            <span className={styles.rigaVoce}>Manutenzione</span>
+            <span className={styles.rigaVoce}>Manutenzione (facoltativa)</span>
             <span className={styles.rigaDettaglio}>
               Aggiornamento dei modelli, controllo trimestrale, assistenza da remoto
               entro un giorno lavorativo. Copre la parte di intelligenza artificiale,
