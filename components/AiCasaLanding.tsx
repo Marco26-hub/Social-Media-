@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import PublicFooter from './PublicFooter'
 import PublicHeader from './PublicHeader'
 import FloatingNavigation from './FloatingNavigation'
@@ -268,6 +269,89 @@ export default function AiCasaLanding() {
         </p>
       </section>
 
+      {/* Conformità.
+
+          Qui si vende, non si spiega la norma: niente articoli, niente date,
+          niente importi di sanzione. Il dettaglio normativo sta nei termini e
+          nella consulenza dello Studio Legale BCS, che è dove qualcuno ne
+          risponde. Resta una riga sola di verità scomoda — tenere il modello in
+          casa non esenta da niente — perché toglierla sarebbe una promessa
+          falsa, e il pubblico di questa pagina (avvocati, commercialisti) la
+          smonterebbe in dieci secondi. */}
+      <section className={styles.sezione} id="conformita" aria-labelledby="titolo-conformita">
+        <p className={styles.occhiello}>AI Act &middot; già in vigore</p>
+        <h2 id="titolo-conformita" className={styles.titoloSezione}>
+          Non è un problema del 2027. È adesso.
+        </h2>
+        <p className={styles.introSezione}>
+          Le regole europee sull&rsquo;intelligenza artificiale sono già in vigore, e
+          la prima domanda che ti farà chiunque venga a controllare è sempre la
+          stessa: dove sono finiti i dati. Se la risposta è &ldquo;non si sono mai
+          mossi da qui&rdquo;, hai già risolto la parte più scomoda.
+        </p>
+
+        <div className={styles.griglia4}>
+          <article className={styles.card}>
+            <p className={styles.cardNumero}>Dati</p>
+            <h3 className={styles.cardTitolo}>Non sono mai usciti</h3>
+            <p className={styles.cardTesto}>
+              Nessun fornitore esterno da dichiarare, nessun documento finito chissà
+              dove. La risposta più semplice è anche la più difficile da contestare.
+            </p>
+          </article>
+
+          <article className={styles.card}>
+            <p className={styles.cardNumero}>Segreto</p>
+            <h3 className={styles.cardTitolo}>Il riserbo professionale regge</h3>
+            <p className={styles.cardTesto}>
+              Avvocati, commercialisti, consulenti del lavoro, studi medici: il
+              fascicolo del cliente resta dov&rsquo;è sempre stato.
+            </p>
+          </article>
+
+          <article className={styles.card}>
+            <p className={styles.cardNumero}>Tracce</p>
+            <h3 className={styles.cardTitolo}>Le tracce le tieni tu</h3>
+            <p className={styles.cardTesto}>
+              Quando devi dimostrare come hai lavorato, non devi chiederlo a un
+              fornitore e aspettare che risponda.
+            </p>
+          </article>
+
+          <article className={styles.card}>
+            <p className={styles.cardNumero}>Riuso</p>
+            <h3 className={styles.cardTitolo}>Niente si allena sui tuoi file</h3>
+            <p className={styles.cardTesto}>
+              Non c&rsquo;è una clausola di cui fidarsi: il modello lavora sul tuo
+              computer e non ha nessun posto dove mandare niente.
+            </p>
+          </article>
+        </div>
+
+        <div className={styles.dichiarazione}>
+          <p className={styles.dichiarazioneTitolo}>Una cosa te la diciamo contro il nostro interesse.</p>
+          <p className={styles.dichiarazioneTesto}>
+            Tenere l&rsquo;intelligenza artificiale in casa <strong>non ti esenta dalle
+            regole</strong>: dipendono da cosa ci fai, non da dove gira. Chi te la
+            vende come una scorciatoia ti sta creando un problema più grande di
+            quello che ti risolve. Noi installiamo la macchina; per la parte legale
+            c&rsquo;è chi ne risponde con la firma.
+          </p>
+        </div>
+
+        <div className={styles.azioni}>
+          <Link className={styles.azionePrimaria} href="/consulenza">
+            Parlane con l&rsquo;avvocato
+          </Link>
+          <Link className={styles.azioneSecondaria} href="/corsi">
+            Corsi sull&rsquo;AI Act
+          </Link>
+          <Link className={styles.azioneSecondaria} href="/trasparenza-ai">
+            Come la usiamo noi
+          </Link>
+        </div>
+      </section>
+
       {/* Il listino.
 
           Va in pagina e non dietro un preventivo per una ragione sola: la frase
@@ -398,7 +482,9 @@ export default function AiCasaLanding() {
         <p className={styles.nota}>
           Prezzi del servizio IVA esclusa. Il prezzo della macchina è quello del
           listino Apple, IVA inclusa, e lo paghi direttamente ad Apple: non passa da
-          noi e non ci guadagniamo sopra.
+          noi e non ci guadagniamo sopra. Che cosa comprende ciascun pacchetto, che
+          cosa non garantisce e come si recede sta scritto nelle{' '}
+          <Link href="/termini">condizioni</Link>, al punto 5.
         </p>
       </section>
 
@@ -471,9 +557,9 @@ export default function AiCasaLanding() {
           <a className={styles.azionePrimaria} href={WHATSAPP} target="_blank" rel="noopener noreferrer">
             Scrivici su WhatsApp
           </a>
-          <a className={styles.azioneSecondaria} href="/contatti">
+          <Link className={styles.azioneSecondaria} href="/contatti">
             Tutti i contatti
-          </a>
+          </Link>
         </div>
       </section>
 
