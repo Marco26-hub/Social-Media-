@@ -5,7 +5,7 @@ import { VIDEO_COMPRESO, VIDEO_PACCHETTI } from '@/lib/video-listino'
 export type StandaloneService = {
   slug: 'blog-seo' | 'web-commerce' | 'web-impresa' | 'lead-pilot' | 'agenda-clienti' | 'tutto-in-uno' | 'voce-base' | 'voce-attivita' | 'voce-azienda'
     | 'video-start' | 'video-silver' | 'video-gold' | 'video-platinum'
-    | 'profili-social-gbp' | 'ai-analisi'
+    | 'profili-social-gbp' | 'ai-analisi' | 'ai-manutenzione'
   name: string
   shortName: string
   amountCents: number
@@ -108,6 +108,25 @@ export const STANDALONE_SERVICES: StandaloneService[] = [
       'Configurazione consigliata, memoria compresa',
       'Proposta scritta a prezzo fisso',
       'Importo scalato per intero dal pacchetto scelto',
+    ],
+  },
+  {
+    slug: 'ai-manutenzione',
+    name: 'AI a casa tua — manutenzione',
+    shortName: 'Manutenzione AI locale',
+    amountCents: 7900,
+    displayPrice: '€79',
+    billingMode: 'subscription',
+    cadenceLabel: 'al mese',
+    description:
+      'Aggiornamento dei modelli quando esce qualcosa di meglio, controllo trimestrale dello stato della macchina, assistenza da remoto entro un giorno lavorativo e ripristino della configurazione se il Mac viene reinstallato. Copre la parte di intelligenza artificiale, non l’assistenza informatica generale della postazione.',
+    onboarding:
+      'Si attiva dopo l’installazione, sulla macchina che abbiamo consegnato e collaudato. Il rinnovo è automatico e si disdice quando vuoi: alla disdetta il sistema resta sul computer e continua a funzionare.',
+    features: [
+      'Aggiornamento dei modelli installati',
+      'Controllo trimestrale dello stato della macchina',
+      'Assistenza da remoto entro un giorno lavorativo',
+      'Ripristino della configurazione dopo una reinstallazione',
     ],
   },
   {

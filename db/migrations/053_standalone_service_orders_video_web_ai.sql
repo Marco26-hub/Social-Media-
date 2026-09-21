@@ -5,7 +5,8 @@
 -- erano acquistabili dalle pagine e dal form, ma un ordine con quegli slug
 -- veniva respinto dal database DOPO il pagamento su Stripe — cioe' un incasso
 -- senza ordine registrato. Qui si rimettono in pari, e si aggiunge
--- 'ai-analisi', l'analisi iniziale del servizio «AI a casa tua».
+-- 'ai-analisi' e 'ai-manutenzione', i due pezzi acquistabili del servizio
+-- «AI a casa tua».
 
 alter table standalone_service_orders
   drop constraint if exists standalone_service_orders_service_slug_check;
@@ -27,5 +28,6 @@ alter table standalone_service_orders
     'video-gold',
     'video-platinum',
     'profili-social-gbp',
-    'ai-analisi'
+    'ai-analisi',
+    'ai-manutenzione'
   ));

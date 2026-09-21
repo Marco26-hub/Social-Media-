@@ -18,6 +18,30 @@ const SERVICE_SLUG_CHECK = `service_slug IN (${SLUG_AMMESSI.map(slug => `'${slug
 
 let schemaPromise: Promise<void> | null = null
 
+/** I promemoria delle fatture da emettere a mano. Vedi 054_fatture_da_emettere.sql. */
+async function ensureInvoicesTable() {
+  await q(`CREATE TABLE IF NOT EXISTS standalone_service_invoices (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id uuid NOT NULL REFERENCES standalone_service_orders(id) ON DELETE CASCADE,
+    stripe_ref text NOT NULL,
+    kind text NOT NULL CHECK (kind IN ('invoice', 'payment')),
+    amount_cents integer NOT NULL CHECK (amount_cents > 0),
+    currency text NOT NULL DEFAULT 'eur',
+    paid_at timestamptz NOT NULL DEFAULT now(),
+    period_start timestamptz,
+    period_end timestamptz,
+    hosted_invoice_url text,
+    invoice_pdf text,
+    issued_at timestamptz,
+    issued_note text,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`)
+  await q(`CREATE UNIQUE INDEX IF NOT EXISTS standalone_service_invoices_ref_uidx
+    ON standalone_service_invoices(stripe_ref)`)
+  await q(`CREATE INDEX IF NOT EXISTS standalone_service_invoices_da_emettere_idx
+    ON standalone_service_invoices(paid_at DESC) WHERE issued_at IS NULL`)
+}
+
 async function initializeSchema() {
   const existing = await q1(`SELECT
     to_regclass('public.standalone_service_orders') AS relation,
@@ -35,6 +59,9 @@ async function initializeSchema() {
       await q('ALTER TABLE standalone_service_orders DROP CONSTRAINT IF EXISTS standalone_service_orders_service_slug_check')
       await q(`ALTER TABLE standalone_service_orders ADD CONSTRAINT standalone_service_orders_service_slug_check CHECK (${SERVICE_SLUG_CHECK})`)
     }
+  }
+  if (existing?.relation) {
+    await ensureInvoicesTable()
   }
   if (existing?.relation && existing?.migrations) {
     const applied = await q1('SELECT checksum FROM schema_migrations WHERE filename = $1 LIMIT 1', [MIGRATION])
@@ -99,6 +126,27 @@ async function initializeSchema() {
     ON standalone_service_orders(status, created_at DESC)`)
   await q(`CREATE INDEX IF NOT EXISTS standalone_service_orders_email_idx
     ON standalone_service_orders(lower(email), created_at DESC)`)
+  await q(`CREATE TABLE IF NOT EXISTS standalone_service_invoices (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id uuid NOT NULL REFERENCES standalone_service_orders(id) ON DELETE CASCADE,
+    stripe_ref text NOT NULL,
+    kind text NOT NULL CHECK (kind IN ('invoice', 'payment')),
+    amount_cents integer NOT NULL CHECK (amount_cents > 0),
+    currency text NOT NULL DEFAULT 'eur',
+    paid_at timestamptz NOT NULL DEFAULT now(),
+    period_start timestamptz,
+    period_end timestamptz,
+    hosted_invoice_url text,
+    invoice_pdf text,
+    issued_at timestamptz,
+    issued_note text,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`)
+  await q(`CREATE UNIQUE INDEX IF NOT EXISTS standalone_service_invoices_ref_uidx
+    ON standalone_service_invoices(stripe_ref)`)
+  await q(`CREATE INDEX IF NOT EXISTS standalone_service_invoices_da_emettere_idx
+    ON standalone_service_invoices(paid_at DESC) WHERE issued_at IS NULL`)
+
   await q(`CREATE TABLE IF NOT EXISTS schema_migrations (
     filename text PRIMARY KEY,
     checksum text NOT NULL,

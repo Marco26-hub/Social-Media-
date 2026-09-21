@@ -189,6 +189,42 @@ async function handleConsulenzaPaid(obj: StripeObject) {
   }
 }
 
+/**
+ * Registra un incasso fra le fatture da emettere.
+ *
+ * Stripe manda la sua ricevuta, ma la fattura fiscale la emette il Titolare a
+ * mano. Sugli abbonamenti non basta guardare l'ordine: il rinnovo è automatico
+ * e ogni mese nasce un incasso nuovo, mentre sull'ordine le colonne
+ * last_invoice_* vengono sovrascritte — il mese scorso sparisce. Qui ogni
+ * incasso lascia la sua riga, e finché issued_at è nullo resta nel promemoria
+ * del pannello.
+ *
+ * L'indice unico su stripe_ref rende l'inserimento ripetibile: Stripe rimanda
+ * lo stesso evento più volte, e un promemoria doppio farebbe emettere due
+ * fatture per lo stesso incasso.
+ */
+async function registraIncassoDaFatturare(input: {
+  orderId: string
+  stripeRef: string
+  kind: 'invoice' | 'payment'
+  amountCents: number
+  currency?: string
+  periodStart?: string | null
+  periodEnd?: string | null
+  hostedInvoiceUrl?: string | null
+  invoicePdf?: string | null
+}) {
+  if (!input.stripeRef || input.amountCents <= 0) return
+  await q(
+    `INSERT INTO standalone_service_invoices
+       (order_id, stripe_ref, kind, amount_cents, currency, period_start, period_end, hosted_invoice_url, invoice_pdf)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     ON CONFLICT (stripe_ref) DO NOTHING`,
+    [input.orderId, input.stripeRef, input.kind, input.amountCents, input.currency || 'eur',
+      input.periodStart || null, input.periodEnd || null, input.hostedInvoiceUrl || null, input.invoicePdf || null],
+  )
+}
+
 async function handleStandaloneCheckoutCompleted(obj: StripeObject) {
   const orderId = standaloneOrderId(obj)
   if (!orderId) throw new Error('Checkout servizio senza service_order_id')
@@ -206,13 +242,23 @@ async function handleStandaloneCheckoutCompleted(obj: StripeObject) {
             paid_at = CASE WHEN $2 = 'paid' THEN COALESCE(paid_at, now()) ELSE paid_at END,
             updated_at = now()
       WHERE id = $1
-      RETURNING id, service_name, nome, azienda, email, amount_cents, paid_at`,
+      RETURNING id, service_name, nome, azienda, email, amount_cents, billing_mode, paid_at`,
     [orderId, paid ? 'paid' : 'checkout_complete', str(obj.id) || null, customerId || null,
       subscriptionId || null, paymentIntentId || null],
   )
   if (!order) throw new Error(`Ordine servizio ${orderId} non trovato`)
 
   if (paid) {
+    if (str(order.billing_mode) === 'payment') {
+      await registraIncassoDaFatturare({
+        orderId: String(order.id),
+        stripeRef: str(obj.id),
+        kind: 'payment',
+        amountCents: int(obj.amount_total) || int(order.amount_cents),
+        currency: str(obj.currency) || 'eur',
+      })
+    }
+
     const meta = metadata(obj)
     await Promise.allSettled([
       // Vedi handleConsulenzaPaid: il Purchase con il consenso catturato al checkout.
@@ -284,6 +330,20 @@ async function handleStandaloneInvoice(obj: StripeObject, order: Record<string, 
       objectId(obj.payment_intent) || null, str(obj.id) || null, str(obj.hosted_invoice_url) || null,
       str(obj.invoice_pdf) || null, ts(period.start), ts(period.end), paid],
   )
+
+  if (paid) {
+    await registraIncassoDaFatturare({
+      orderId: String(order.id),
+      stripeRef: str(obj.id),
+      kind: 'invoice',
+      amountCents: int(obj.amount_paid) || int(obj.amount_due),
+      currency: str(obj.currency) || 'eur',
+      periodStart: ts(period.start),
+      periodEnd: ts(period.end),
+      hostedInvoiceUrl: str(obj.hosted_invoice_url) || null,
+      invoicePdf: str(obj.invoice_pdf) || null,
+    })
+  }
 }
 
 async function handleCheckoutCompleted(obj: StripeObject) {

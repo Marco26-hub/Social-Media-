@@ -181,6 +181,7 @@ const PAGINA_SERVIZIO: Partial<Record<StandaloneService['slug'], string>> = {
   'profili-social-gbp': '/servizi/gestione-social-media',
   'lead-pilot': '/servizi/ricerca-clienti-b2b',
   'ai-analisi': '/servizi/ai-a-casa-tua',
+  'ai-manutenzione': '/servizi/ai-a-casa-tua',
   'agenda-clienti': '/servizi/agenda-clienti-whatsapp',
   'tutto-in-uno': '/servizi/agenda-clienti-whatsapp',
   'voce-base': '/servizi/segretaria-telefonica-ai',
