@@ -26,6 +26,7 @@ const ARTICOLI: Record<string, Collegamento> = {
   '/servizi/video-produzione': { href: '/blog/video-social-aziendali-come-farli-bene', label: 'Video aziendali: dove si perde davvero la qualita' },
   '/servizi/ricerca-clienti-b2b': { href: '/blog/ricerca-clienti-b2b-come-costruire-lista', label: 'Come si costruisce una lista B2B che vale' },
   '/consulenza': { href: '/blog/ai-act-obblighi-pmi-cosa-fare', label: 'AI Act: gli obblighi che riguardano una PMI' },
+  '/servizi/ai-a-casa-tua': { href: '/blog/ai-act-obblighi-pmi-cosa-fare', label: 'AI Act: gli obblighi che riguardano una PMI' },
 }
 
 export function articoloPerServizio(percorsoServizio: string): Collegamento | undefined {

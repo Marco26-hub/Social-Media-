@@ -3,6 +3,7 @@ import PublicFooter from './PublicFooter'
 import PublicHeader from './PublicHeader'
 import FloatingNavigation from './FloatingNavigation'
 import AiCasaScena from './AiCasaScena'
+import { numeroItaliano } from '@/lib/euro'
 import { metodoServizio } from '@/lib/metodo'
 import { SITE_URL } from '@/lib/site-config'
 import styles from './ai-casa-landing.module.css'
@@ -530,6 +531,9 @@ export default function AiCasaLanding() {
           <Link className={styles.azioneSecondaria} href="/corsi">
             Corsi sull&rsquo;AI Act
           </Link>
+          <Link className={styles.azioneSecondaria} href="/blog/ai-act-obblighi-pmi-cosa-fare">
+            AI Act: gli obblighi di una PMI
+          </Link>
           <Link className={styles.azioneSecondaria} href="/trasparenza-ai">
             Come la usiamo noi
           </Link>
@@ -567,7 +571,7 @@ export default function AiCasaLanding() {
               <h3 className={styles.pianoNome}>{pacchetto.nome}</h3>
               <p className={styles.pianoPerChi}>{pacchetto.perChi}</p>
               <p className={styles.pianoPrezzo}>
-                {pacchetto.prezzo.toLocaleString('it-IT')} <small>€</small>
+                {numeroItaliano(pacchetto.prezzo)} <small>€</small>
               </p>
               <p className={styles.pianoTesto}>{pacchetto.sintesi}</p>
               <ul className={styles.pianoElenco}>
@@ -599,6 +603,9 @@ export default function AiCasaLanding() {
           </Link>
           <Link className={styles.azioneSecondaria} href="/corsi">
             Corsi sull&rsquo;AI Act
+          </Link>
+          <Link className={styles.azioneSecondaria} href="/blog/ai-act-obblighi-pmi-cosa-fare">
+            AI Act: gli obblighi di una PMI
           </Link>
           <Link className={styles.azioneSecondaria} href="/trasparenza-ai">
             Come la usiamo noi

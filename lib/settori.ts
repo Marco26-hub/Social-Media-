@@ -220,6 +220,7 @@ export const SETTORI: Settore[] = [
       { q: 'Dove restano i contatti raccolti dal sito?', a: 'I contatti sono dell’agenzia e restano nei suoi sistemi, anche prima dei 12 mesi che portano il sito in vostra proprietà. Noi trattiamo solo ciò che serve al servizio attivato, e non riutilizziamo i vostri materiali per addestrare nulla. Il modulo registra anche da quale contenuto è arrivata la richiesta, così sapete che cosa ha funzionato. Export e cancellazioni si chiedono quando volete.' },
     ],
     correlati: [
+      { href: '/servizi/ai-a-casa-tua', label: 'AI a casa tua' },
       { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
       { href: '/servizi/gestione-social-media', label: 'Gestione social media' },
       { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
@@ -398,6 +399,7 @@ export const SETTORI: Settore[] = [
       { q: 'Dove si controlla che cosa è stato detto?', a: 'Il registro chiamate è consultabile dal personale autorizzato e riporta esito, riepilogo e trascrizione dei minuti usati, da 600 a 3000 al mese secondo il piano. È il punto in cui si verifica se una risposta ha rispettato le regole, e da lì nascono le correzioni del controllo mensile. Accessi e permessi si assegnano per ruolo, così chi non deve vedere una conversazione non la vede.' },
     ],
     correlati: [
+      { href: '/servizi/ai-a-casa-tua', label: 'AI a casa tua' },
       { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
       { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
       { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
@@ -455,6 +457,7 @@ export const SETTORI: Settore[] = [
       { q: 'Quali invii sono compresi ogni mese?', a: 'Il pacchetto compreso è di 1000 invii al mese, contati sui messaggi effettivamente partiti dopo il via libera della segreteria: le bozze preparate e scartate non consumano nulla. Gli invii oltre soglia si pagano a consumo alla tariffa del piano, e i costi delle piattaforme di messaggistica sono indicati separatamente. Per uno studio che lavora su richiami e conferme la soglia copre l’attività ordinaria.' },
     ],
     correlati: [
+      { href: '/servizi/ai-a-casa-tua', label: 'AI a casa tua' },
       { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
       { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
       { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
@@ -512,6 +515,7 @@ export const SETTORI: Settore[] = [
       { q: 'Quali contenuti pubblica uno studio di fisioterapia?', a: `I contenuti utili sono quelli che spiegano il lavoro senza dare indicazioni terapeutiche: esercizi generici di prevenzione, attrezzatura, percorsi tipo, persone che lavorano in studio, 16 pubblicazioni al mese per canale con Presenza, ${PREZZI.presenza}. Ogni pezzo passa dalla vostra approvazione prima di uscire. Ciò che riguarda casi singoli o risultati clinici resta fuori dal calendario editoriale.` },
     ],
     correlati: [
+      { href: '/servizi/ai-a-casa-tua', label: 'AI a casa tua' },
       { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
       { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
       { href: '/servizi/gestione-social-media', label: 'Gestione social media' },
