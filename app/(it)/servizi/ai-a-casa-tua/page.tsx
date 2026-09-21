@@ -6,7 +6,7 @@ import { SITE_URL } from '@/lib/site-config'
 const path = '/servizi/ai-a-casa-tua'
 const title = 'AI a casa tua: Mac con intelligenza artificiale locale | SWA'
 const description =
-  'Mac e Mac mini consegnati con l’intelligenza artificiale gia’ installata, tarata sulla macchina e collaudata. Funziona sul tuo computer, senza cloud e senza canone mensile.'
+  'Mac e Mac mini consegnati con l’intelligenza artificiale già installata, tarata sulla macchina e collaudata. Funziona sul tuo computer, senza cloud e senza canone mensile.'
 
 export const metadata: Metadata = {
   title,

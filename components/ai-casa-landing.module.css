@@ -208,6 +208,22 @@
   padding: 8px 14px;
 }
 
+/* Le briciole: stessa funzione e stesso posto delle altre pagine di servizio,
+   con i colori di questa (stanno sul verde foresta, non sulla carta). */
+.briciole {
+  align-items: center;
+  color: rgba(255, 250, 240, 0.62);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.briciole a { color: var(--gold-soft); text-decoration: none; }
+.briciole a:hover { text-decoration: underline; }
+.briciole span[aria-hidden] { opacity: 0.45; }
+
 /* ─── scena 3D ──────────────────────────────────────────────────────────── */
 
 .scena {

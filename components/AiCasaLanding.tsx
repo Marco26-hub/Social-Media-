@@ -3,10 +3,101 @@ import PublicFooter from './PublicFooter'
 import PublicHeader from './PublicHeader'
 import FloatingNavigation from './FloatingNavigation'
 import AiCasaScena from './AiCasaScena'
+import { metodoServizio } from '@/lib/metodo'
 import { SITE_URL } from '@/lib/site-config'
 import styles from './ai-casa-landing.module.css'
 
 const PERCORSO = '/servizi/ai-a-casa-tua'
+
+/** Il listino. Sta qui perché lo leggono sia le schede sia i dati strutturati:
+ *  un prezzo scritto due volte prima o poi diverge, e il prezzo che finisce nei
+ *  dati strutturati è quello che i motori mostrano fuori dal sito. */
+const PACCHETTI = [
+  {
+    id: 'installazione',
+    nome: 'Installazione',
+    perChi: 'Hai già il Mac',
+    prezzo: 490,
+    sintesi: 'Un intervento sulla macchina che usi già, se regge il lavoro.',
+    voci: [
+      'Installazione completa e taratura',
+      'Collaudo della macchina',
+      '30 minuti di formazione',
+      '30 giorni di assistenza',
+    ],
+  },
+  {
+    id: 'chiavi-in-mano',
+    nome: 'Chiavi in mano',
+    perChi: 'Professionisti e studi',
+    prezzo: 990,
+    scelto: true,
+    sintesi: 'Dalla scelta della macchina alla consegna, acceso e collaudato.',
+    voci: [
+      'Scelta della configurazione e ordine assistito',
+      'Installazione, taratura e collaudo registrato',
+      '1 ora di formazione e documento scritto',
+      '90 giorni di assistenza',
+    ],
+  },
+  {
+    id: 'studio',
+    nome: 'Studio',
+    perChi: 'Fino a 3 postazioni',
+    prezzo: 1990,
+    sintesi: 'Tre macchine, oppure una sola condivisa con un profilo a testa.',
+    voci: [
+      'Profili separati per persona',
+      'Procedure scritte per il gruppo',
+      '2 ore di formazione',
+      '6 mesi di assistenza',
+    ],
+  },
+  {
+    id: 'pmi',
+    nome: 'PMI',
+    perChi: 'Da 4 a 10 postazioni',
+    prezzo: 4900,
+    sintesi:
+      'L’AI dentro l’azienda, sui documenti che avete già, con regole scritte su cosa può leggere e cosa no.',
+    voci: [
+      'Macchina condivisa in rete, permessi per reparto',
+      'Formazione al gruppo in due sessioni',
+      'Referente unico',
+      '12 mesi di assistenza',
+    ],
+  },
+] as const
+
+/** Le domande. Stesso motivo del listino: la pagina e il nodo FAQPage devono
+ *  dire la stessa cosa, e le risposte sono già scritte per stare in piedi da
+ *  sole — che è quello che serve a un assistente che le cita. */
+const DOMANDE = [
+  {
+    q: 'Me lo installo da solo, no?',
+    a: 'Puoi. Il software si scarica gratis, e il primo giorno funziona. Poi arriva la sessione lunga, la memoria finisce e il Mac si inchioda mentre stai lavorando. Quello che compri qui è la macchina che non si inchioda: tarata, provata e con qualcuno a cui scrivere.',
+  },
+  {
+    q: 'È come ChatGPT?',
+    a: 'Si usa allo stesso modo, ma gira sul tuo computer. Non ha il mondo intero dentro e non naviga: in cambio non manda i tuoi documenti a nessuno, non ha limiti mensili e funziona anche senza rete.',
+  },
+  {
+    q: 'E se voglio usare anche un modello in cloud?',
+    a: 'Si può fare, e a volte conviene: per certi lavori i modelli grandi online sono più bravi. Ma va detto chiaro: quello che mandi a un servizio in cloud esce dalla tua macchina e finisce sotto le condizioni di quel fornitore. Per questo consegniamo le macchine con il solo modello locale attivo. Il collegamento a un servizio esterno lo aggiungiamo solo se ce lo chiedi, resta separato, e prima ti diciamo quali dati passano di là.',
+  },
+  {
+    q: 'Posso usarlo sul Mac che ho già?',
+    a: 'Dipende dalla macchina, e te lo diciamo prima: se non regge, te lo diciamo invece di venderti un’installazione che ti rallenta il lavoro.',
+  },
+  {
+    q: 'Se si rompe qualcosa?',
+    a: 'Il Mac ha la garanzia del produttore. Sulla parte che installiamo noi restiamo raggiungibili: si riprende la configurazione e si rimette a posto senza rifare tutto da zero.',
+  },
+  {
+    q: 'Quanto costa?',
+    a: 'Il nostro lavoro parte da 490 € e il pacchetto più scelto costa 990 €. La macchina la paghi ad Apple al suo prezzo, e dipende da quanta memoria ti serve davvero: te lo diciamo dopo dieci minuti di telefonata.',
+  },
+] as const
 const WHATSAPP_NUMBER = '393477196603'
 const WHATSAPP = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
   'Ciao! Vorrei un Mac con l’AI gia’ installata.',
@@ -26,17 +117,93 @@ const WHATSAPP = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
  *    la macchina non si blocca, e restano nostri.
  */
 export default function AiCasaLanding() {
+  const urlPagina = `${SITE_URL}${PERCORSO}`
+  const fasi = metodoServizio('ai-a-casa-tua').fasi
+
+  // Le altre pagine di servizio passano da MarketingDetailPage, che costruisce
+  // questo grafo da sé. Questa ha un'impaginazione propria, quindi il grafo si
+  // scrive qui — ma nella stessa forma, o due pagine sorelle direbbero ai
+  // motori due cose diverse sullo stesso tipo di servizio.
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Service',
-    '@id': `${SITE_URL}${PERCORSO}#service`,
-    name: 'AI a casa tua',
-    serviceType: 'Installazione di intelligenza artificiale locale su Mac',
-    description:
-      'Mac e Mac mini consegnati con l’intelligenza artificiale gia’ installata, tarata sulla memoria della macchina e collaudata. L’AI lavora sul computer del cliente, senza cloud e senza canone.',
-    provider: { '@id': `${SITE_URL}/#organization` },
-    areaServed: 'IT',
-    url: `${SITE_URL}${PERCORSO}`,
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${urlPagina}#webpage`,
+        url: urlPagina,
+        name: 'AI a casa tua',
+        inLanguage: 'it-IT',
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        // Quali blocchi hanno senso letti ad alta voce da un assistente: il
+        // titolo, l'attacco e le domande, che sono già scritte per stare in
+        // piedi fuori dalla pagina.
+        speakable: {
+          '@type': 'SpeakableSpecification',
+          cssSelector: ['h1', '[class*="lead"]', '[class*="faq"] summary', '[class*="faq"] p'],
+        },
+        about: { '@id': `${urlPagina}#service` },
+      },
+      {
+        '@type': 'Service',
+        '@id': `${urlPagina}#service`,
+        name: 'AI a casa tua',
+        serviceType: 'Installazione di intelligenza artificiale locale su Mac',
+        description:
+          'Mac e Mac mini consegnati con l’intelligenza artificiale già installata, tarata sulla memoria della macchina e collaudata. Il modello lavora sul computer del cliente, senza cloud e senza canone.',
+        provider: { '@id': `${SITE_URL}/#organization` },
+        areaServed: { '@type': 'Country', name: 'Italia' },
+        url: urlPagina,
+        // I prezzi dichiarati sono quelli del nostro lavoro. Il computer non
+        // entra: non lo vendiamo, e metterlo qui farebbe credere il contrario
+        // a chi legge solo i dati strutturati.
+        offers: PACCHETTI.map(pacchetto => ({
+          '@type': 'Offer',
+          name: pacchetto.nome,
+          description: pacchetto.sintesi,
+          price: pacchetto.prezzo,
+          priceCurrency: 'EUR',
+          url: `${urlPagina}#prezzi`,
+          category: pacchetto.perChi,
+          priceSpecification: {
+            '@type': 'PriceSpecification',
+            price: pacchetto.prezzo,
+            priceCurrency: 'EUR',
+            valueAddedTaxIncluded: false,
+          },
+        })),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Servizi', item: `${SITE_URL}/servizi` },
+          { '@type': 'ListItem', position: 3, name: 'AI a casa tua', item: urlPagina },
+        ],
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: DOMANDE.map(domanda => ({
+          '@type': 'Question',
+          name: domanda.q,
+          acceptedAnswer: { '@type': 'Answer', text: domanda.a },
+        })),
+      },
+      {
+        '@type': 'HowTo',
+        '@id': `${urlPagina}#howto`,
+        name: 'Come funziona AI a casa tua, passo per passo',
+        description:
+          'Dal primo colloquio alla macchina consegnata accesa, con l’intelligenza artificiale installata e collaudata.',
+        inLanguage: 'it-IT',
+        step: fasi.map((fase, indice) => ({
+          '@type': 'HowToStep',
+          position: indice + 1,
+          name: fase.title,
+          text: fase.text,
+          url: `${urlPagina}#come-funziona`,
+        })),
+      },
+    ],
   }
 
   return (
@@ -52,6 +219,17 @@ export default function AiCasaLanding() {
       <section className={styles.palco} aria-labelledby="titolo-ai-casa">
         <div className={styles.hero}>
           <div className={styles.heroTesto}>
+            {/* Le briciole mancavano: le pagine sorelle le hanno, e il nodo
+                BreadcrumbList di questa pagina dichiarava un percorso che sullo
+                schermo non esisteva. */}
+            <nav className={styles.briciole} aria-label="Percorso">
+              <Link href="/">Home</Link>
+              <span aria-hidden="true">/</span>
+              <Link href="/servizi">Servizi</Link>
+              <span aria-hidden="true">/</span>
+              <span>AI a casa tua</span>
+            </nav>
+
             <p className={`${styles.occhiello} ${styles.occhielloChiaro}`}>
               AI locale · Mac configurati da SWA
             </p>
@@ -89,10 +267,11 @@ export default function AiCasaLanding() {
       <section className={styles.sezione} aria-labelledby="titolo-perche">
         <p className={styles.occhiello}>Perché sulla tua macchina</p>
         <h2 id="titolo-perche" className={styles.titoloSezione}>
-          L&rsquo;AI che usi ogni giorno non dovrebbe vivere a casa di qualcun altro.
+          L&rsquo;intelligenza artificiale in locale non è una rinuncia. È il contrario.
         </h2>
         <p className={styles.introSezione}>
-          Le tre cose che cambiano quando il modello gira sul computer che hai davanti.
+          Le tre cose che cambiano quando il modello gira sul computer che hai davanti,
+          invece che a casa di qualcun altro.
         </p>
 
         <div className={styles.griglia3}>
@@ -377,120 +556,54 @@ export default function AiCasaLanding() {
         </p>
 
         <div className={styles.listino}>
-          <article className={styles.piano}>
-            <h3 className={styles.pianoNome}>Installazione</h3>
-            <p className={styles.pianoPerChi}>Hai già il Mac</p>
-            <p className={styles.pianoPrezzo}>
-              490 <small>€</small>
-            </p>
-            <p className={styles.pianoTesto}>
-              Un intervento sulla macchina che usi già, se regge il lavoro.
-            </p>
-            <ul className={styles.pianoElenco}>
-              <li>Installazione completa e taratura</li>
-              <li>Collaudo della macchina</li>
-              <li>30 minuti di formazione</li>
-              <li>30 giorni di assistenza</li>
-            </ul>
-          </article>
-
-          <article className={`${styles.piano} ${styles.pianoScelto}`}>
-            <span className={styles.pianoEtichetta}>Il più scelto</span>
-            <h3 className={styles.pianoNome}>Chiavi in mano</h3>
-            <p className={styles.pianoPerChi}>Professionisti e studi</p>
-            <p className={styles.pianoPrezzo}>
-              990 <small>€</small>
-            </p>
-            <p className={styles.pianoTesto}>
-              Dalla scelta della macchina alla consegna, acceso e collaudato.
-            </p>
-            <ul className={styles.pianoElenco}>
-              <li>Scelta della configurazione e ordine assistito</li>
-              <li>Installazione, taratura e collaudo registrato</li>
-              <li>1 ora di formazione e documento scritto</li>
-              <li>90 giorni di assistenza</li>
-            </ul>
-          </article>
-
-          <article className={styles.piano}>
-            <h3 className={styles.pianoNome}>Studio</h3>
-            <p className={styles.pianoPerChi}>Fino a 3 postazioni</p>
-            <p className={styles.pianoPrezzo}>
-              1.990 <small>€</small>
-            </p>
-            <p className={styles.pianoTesto}>
-              Tre macchine, oppure una sola condivisa con un profilo a testa.
-            </p>
-            <ul className={styles.pianoElenco}>
-              <li>Profili separati per persona</li>
-              <li>Procedure scritte per il gruppo</li>
-              <li>2 ore di formazione</li>
-              <li>6 mesi di assistenza</li>
-            </ul>
-          </article>
-
-          <article className={styles.piano}>
-            <h3 className={styles.pianoNome}>PMI</h3>
-            <p className={styles.pianoPerChi}>Da 4 a 10 postazioni</p>
-            <p className={styles.pianoPrezzo}>
-              4.900 <small>€</small>
-            </p>
-            <p className={styles.pianoTesto}>
-              L&rsquo;AI dentro l&rsquo;azienda, sui documenti che avete già, con regole
-              scritte su cosa può leggere e cosa no.
-            </p>
-            <ul className={styles.pianoElenco}>
-              <li>Macchina condivisa in rete, permessi per reparto</li>
-              <li>Formazione al gruppo in due sessioni</li>
-              <li>Referente unico</li>
-              <li>12 mesi di assistenza</li>
-            </ul>
-          </article>
+          {PACCHETTI.map(pacchetto => (
+            <article
+              key={pacchetto.id}
+              className={'scelto' in pacchetto && pacchetto.scelto ? `${styles.piano} ${styles.pianoScelto}` : styles.piano}
+            >
+              {'scelto' in pacchetto && pacchetto.scelto && (
+                <span className={styles.pianoEtichetta}>Il più scelto</span>
+              )}
+              <h3 className={styles.pianoNome}>{pacchetto.nome}</h3>
+              <p className={styles.pianoPerChi}>{pacchetto.perChi}</p>
+              <p className={styles.pianoPrezzo}>
+                {pacchetto.prezzo.toLocaleString('it-IT')} <small>€</small>
+              </p>
+              <p className={styles.pianoTesto}>{pacchetto.sintesi}</p>
+              <ul className={styles.pianoElenco}>
+                {pacchetto.voci.map(voce => (
+                  <li key={voce}>{voce}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
         </div>
 
         <div className={styles.dichiarazione}>
-          <p className={styles.dichiarazioneTitolo}>Prima si decide, poi si spende.</p>
+          <p className={styles.dichiarazioneTitolo}>Una cosa te la diciamo contro il nostro interesse.</p>
           <p className={styles.dichiarazioneTesto}>
-            L&rsquo;analisi costa <strong>290 €</strong>: sopralluogo o call, scelta della
-            configurazione e proposta scritta a prezzo fisso. Se poi procedi, la
-            scaliamo per intero dal pacchetto.
+            Tenere l&rsquo;intelligenza artificiale in casa <strong>non ti esenta dalle
+            regole</strong>: dipendono da cosa ci fai, non da dove gira. Chi te la
+            vende come una scorciatoia ti sta creando un problema più grande di
+            quello che ti risolve. Noi installiamo la macchina; per la parte legale
+            c&rsquo;è chi ne risponde con la firma. E se in futuro vuoi affiancare un
+            modello in cloud, <strong>quello che gli mandi esce dalla macchina</strong>:
+            te lo diciamo prima, lo attiviamo solo se lo chiedi e resta separato da
+            quello che gira in locale.
           </p>
         </div>
 
-        <div className={styles.righe}>
-          <div className={styles.riga}>
-            <span className={styles.rigaVoce}>Manutenzione (facoltativa)</span>
-            <span className={styles.rigaDettaglio}>
-              Aggiornamento dei modelli, controllo trimestrale, assistenza da remoto
-              entro un giorno lavorativo. Copre la parte di intelligenza artificiale,
-              non l&rsquo;assistenza informatica generale.
-            </span>
-            <span className={styles.rigaPrezzo}>da 79 €/mese</span>
-          </div>
-
-          <div className={styles.riga}>
-            <span className={styles.rigaVoce}>Interventi fuori pacchetto</span>
-            <span className={styles.rigaDettaglio}>In sede o da remoto, minimo un&rsquo;ora.</span>
-            <span className={styles.rigaPrezzo}>120 €/ora</span>
-          </div>
-
-          <div className={styles.riga}>
-            <span className={styles.rigaVoce}>Trasferta</span>
-            <span className={styles.rigaDettaglio}>
-              Compresa entro 30 km. Da 30 a 100 km, 60 € a intervento. Oltre, il
-              chilometraggio e il tempo di viaggio, sempre scritti nel preventivo.
-            </span>
-            <span className={styles.rigaPrezzo}>inclusa entro 30 km</span>
-          </div>
+        <div className={styles.azioni}>
+          <Link className={styles.azionePrimaria} href="/consulenza">
+            Parlane con l&rsquo;avvocato
+          </Link>
+          <Link className={styles.azioneSecondaria} href="/corsi">
+            Corsi sull&rsquo;AI Act
+          </Link>
+          <Link className={styles.azioneSecondaria} href="/trasparenza-ai">
+            Come la usiamo noi
+          </Link>
         </div>
-
-        <p className={styles.nota}>
-          Prezzi del servizio IVA esclusa. Il prezzo della macchina è quello del
-          listino Apple, IVA inclusa, e lo paghi direttamente ad Apple: non passa da
-          noi e non ci guadagniamo sopra. Che cosa comprende ciascun pacchetto, che
-          cosa non garantisce e come si recede sta scritto nelle{' '}
-          <Link href="/termini">condizioni</Link>, al punto 5.
-        </p>
       </section>
 
       <section className={styles.sezione} aria-labelledby="titolo-domande">
@@ -500,63 +613,12 @@ export default function AiCasaLanding() {
         </h2>
 
         <div className={styles.faq}>
-          <details className={styles.faqVoce}>
-            <summary>Me lo installo da solo, no?</summary>
-            <p>
-              Puoi. Il software si scarica gratis, e il primo giorno funziona. Poi arriva la
-              sessione lunga, la memoria finisce e il Mac si inchioda mentre stai lavorando. Quello
-              che compri qui è la macchina che non si inchioda: tarata, provata e con
-              qualcuno a cui scrivere.
-            </p>
-          </details>
-
-          <details className={styles.faqVoce}>
-            <summary>È come ChatGPT?</summary>
-            <p>
-              Si usa allo stesso modo, ma gira sul tuo computer. Non ha il mondo intero dentro e non
-              naviga: in cambio non manda i tuoi documenti a nessuno, non ha limiti mensili e
-              funziona anche senza rete.
-            </p>
-          </details>
-
-          <details className={styles.faqVoce}>
-            <summary>E se voglio usare anche un modello in cloud?</summary>
-            <p>
-              Si può fare, e a volte conviene: per certi lavori i modelli grandi online
-              sono più bravi. Ma va detto chiaro: <strong>quello che mandi a un servizio
-              in cloud esce dalla tua macchina</strong> e finisce sotto le condizioni di
-              quel fornitore. Per questo consegniamo le macchine con il solo modello
-              locale attivo. Il collegamento a un servizio esterno lo aggiungiamo solo se
-              ce lo chiedi, resta separato, e prima ti diciamo quali dati passano di là.
-            </p>
-          </details>
-
-          <details className={styles.faqVoce}>
-            <summary>Posso usarlo sul Mac che ho già?</summary>
-            <p>
-              Dipende dalla macchina, e te lo diciamo prima: se non regge, te lo diciamo invece di
-              venderti un&rsquo;installazione che ti rallenta il lavoro.
-            </p>
-          </details>
-
-          <details className={styles.faqVoce}>
-            <summary>Se si rompe qualcosa?</summary>
-            <p>
-              Il Mac ha la garanzia del produttore. Sulla parte che installiamo noi restiamo
-              raggiungibili: si riprende la configurazione e si rimette a posto senza rifare tutto
-              da zero.
-            </p>
-          </details>
-
-          <details className={styles.faqVoce}>
-            <summary>Quanto costa?</summary>
-            <p>
-              Il nostro lavoro parte da 490 € e il pacchetto più scelto costa 990 €:
-              il listino completo è <a href="#prezzi">qui sopra</a>. La macchina la
-              paghi ad Apple al suo prezzo, e dipende da quanta memoria ti serve
-              davvero: te lo diciamo dopo dieci minuti di telefonata.
-            </p>
-          </details>
+          {DOMANDE.map(domanda => (
+            <details key={domanda.q} className={styles.faqVoce}>
+              <summary>{domanda.q}</summary>
+              <p>{domanda.a}</p>
+            </details>
+          ))}
         </div>
       </section>
 
