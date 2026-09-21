@@ -170,7 +170,7 @@ export default function AiCasaLanding({ contenuto: c }: { contenuto: ContenutoAi
         <h2 id="titolo-perche" className={styles.titoloSezione}>{c.perche.h2}</h2>
         <p className={styles.introSezione}>{c.perche.intro}</p>
 
-        <div className={styles.griglia3}>
+        <div className={styles.griglia4}>
           {c.perche.card.map(card => (
             <article key={card.titolo} className={styles.card}>
               <p className={styles.cardNumero}>{card.numero}</p>
@@ -220,7 +220,7 @@ export default function AiCasaLanding({ contenuto: c }: { contenuto: ContenutoAi
         <h2 id="titolo-tagli" className={styles.titoloSezione}>{c.tagli.h2}</h2>
         <p className={styles.introSezione}>{c.tagli.intro}</p>
 
-        <div className={styles.griglia3}>
+        <div className={styles.griglia4}>
           {c.tagli.card.map(card => (
             <article key={card.nome} className={styles.taglio}>
               <div className={styles.taglioBarra} />

@@ -504,7 +504,6 @@
 
 /* ─── riquadri su carta ─────────────────────────────────────────────────── */
 
-.griglia3 { display: grid; gap: 18px; grid-template-columns: repeat(3, 1fr); margin-top: 40px; }
 .griglia4 { display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); margin-top: 40px; }
 
 .card {
@@ -851,12 +850,12 @@
 /* ─── schermi stretti ───────────────────────────────────────────────────── */
 
 @media (max-width: 1024px) {
-  .griglia3, .griglia4, .listino { grid-template-columns: repeat(2, 1fr); }
+  .griglia4, .listino { grid-template-columns: repeat(2, 1fr); }
   .fascia { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
-  .griglia3, .griglia4, .listino { grid-template-columns: 1fr; }
+  .griglia4, .listino { grid-template-columns: 1fr; }
   .scena { height: 300px; }
   .mac { width: 88vw; }
   /* Il bagliore che segue il puntatore non ha senso sul dito: resta fermo. */

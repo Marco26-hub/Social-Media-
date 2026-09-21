@@ -110,11 +110,12 @@ export const AI_CASA_IT: ContenutoAiCasa = {
   perche: {
     occhiello: 'Perché sulla tua macchina',
     h2: 'L’intelligenza artificiale in locale non è una rinuncia. È il contrario.',
-    intro: 'Le tre cose che cambiano quando il modello gira sul computer che hai davanti, invece che a casa di qualcun altro.',
+    intro: 'Quello che cambia quando il modello gira sul computer che hai davanti, invece che a casa di qualcun altro.',
     card: [
       { numero: '01', titolo: 'I documenti restano tuoi', testo: 'Preventivi, contratti, elenchi clienti: il modello li legge sulla macchina. Non vengono caricati da nessuna parte, quindi non c’è un fornitore a cui chiedere che fine hanno fatto.' },
       { numero: '02', titolo: 'Nessun canone che cresce', testo: 'La macchina la compri una volta. Non ci sono crediti da ricaricare, limiti mensili o aumenti di listino decisi altrove. La manutenzione, se la vuoi, è una tua scelta: senza, il sistema continua a funzionare lo stesso.' },
       { numero: '03', titolo: 'Funziona anche senza rete', testo: 'In treno, in cantiere, in aereo, con la linea che va e viene. L’AI è nel computer: se si accende il Mac, funziona.' },
+      { numero: '04', titolo: 'Non cambia sotto i piedi', testo: 'Il servizio che usi oggi domani può alzare il prezzo, cambiare condizioni, togliere una funzione o chiudere. Quello che gira sulla tua macchina continua a funzionare come il giorno in cui te l’abbiamo consegnato, finché sei tu a decidere di cambiarlo.' },
     ],
   },
   come: {
@@ -146,6 +147,7 @@ export const AI_CASA_IT: ContenutoAiCasa = {
       { nome: 'Scrivania', ruolo: 'Mac mini', testo: 'Per chi lavora da fermo: la macchina sta accesa, l’AI è sempre pronta e costa meno di un portatile a parità di memoria.' },
       { nome: 'In giro', ruolo: 'Portatile', testo: 'Per chi va dai clienti. Stessa AI, stesso pulsante, anche senza linea: in sala d’attesa o in cantiere cambia poco.' },
       { nome: 'Lavoro lungo', ruolo: 'Memoria alta', testo: 'Per chi lavora su documenti lunghi e sessioni di ore. Qui la memoria in più non è un vezzo: è la differenza tra ricominciare da capo e continuare.' },
+      { nome: 'Tutto lo studio', ruolo: 'Macchina condivisa', testo: 'Una sola macchina in rete che serve più persone, con un profilo a testa e i permessi divisi per reparto. Costa meno di una macchina per scrivania e si aggiorna in un posto solo.' },
     ],
     nota: 'Il taglio esatto lo scegliamo insieme, sul lavoro che devi fare: consigliamo solo configurazioni che abbiamo provato davvero, e i riferimenti che usiamo sono misurati sulle nostre macchine, non presi da una scheda tecnica. Prezzo della macchina, tempi di consegna e garanzia sono quelli di Apple: te li mettiamo per iscritto insieme alla configurazione, prima che tu ordini qualsiasi cosa.',
   },
@@ -254,11 +256,12 @@ export const AI_CASA_EN: ContenutoAiCasa = {
   perche: {
     occhiello: 'Why on your own machine',
     h2: 'Running AI locally is not a compromise. It is the opposite.',
-    intro: 'Three things change when the model runs on the computer in front of you, instead of in someone else’s building.',
+    intro: 'What changes when the model runs on the computer in front of you, instead of in someone else’s building.',
     card: [
       { numero: '01', titolo: 'Your documents stay yours', testo: 'Quotes, contracts, client lists: the model reads them on the machine. Nothing is uploaded anywhere, so there is no supplier to ask where your files ended up.' },
       { numero: '02', titolo: 'No fee that keeps growing', testo: 'You buy the machine once. No credits to top up, no monthly caps, no price rises decided elsewhere. Maintenance is optional: without it the system keeps working exactly the same.' },
       { numero: '03', titolo: 'It works without a connection', testo: 'On a train, on site, on a plane, with a line that comes and goes. The AI is in the computer: if the Mac turns on, it works.' },
+      { numero: '04', titolo: 'It does not change under you', testo: 'The service you use today can raise its price tomorrow, change its terms, drop a feature or shut down. What runs on your machine keeps working exactly as it did the day we handed it over, until you decide otherwise.' },
     ],
   },
   come: {
@@ -290,6 +293,7 @@ export const AI_CASA_EN: ContenutoAiCasa = {
       { nome: 'Desk', ruolo: 'Mac mini', testo: 'For work that stays put: the machine is always on, the AI is always ready, and it costs less than a laptop with the same memory.' },
       { nome: 'On the move', ruolo: 'Laptop', testo: 'For those who visit clients. Same AI, same button, no connection needed: a waiting room or a building site makes little difference.' },
       { nome: 'Long work', ruolo: 'High memory', testo: 'For long documents and sessions that run for hours. Here the extra memory is not a luxury: it is the difference between starting over and carrying on.' },
+      { nome: 'The whole practice', ruolo: 'Shared machine', testo: 'One machine on the network serving several people, a profile each and permissions split by department. It costs less than one machine per desk and it is updated in a single place.' },
     ],
     nota: 'We choose the exact configuration together, based on the work you need done: we only recommend setups we have actually tested, and the figures we use are measured on our own machines, not taken from a spec sheet. The price of the machine, delivery times and warranty are Apple’s: we put them in writing together with the configuration, before you order anything.',
   },
