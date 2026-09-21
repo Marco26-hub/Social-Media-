@@ -21,20 +21,21 @@ import styles from './ai-casa-landing.module.css'
  * il bagliore resta al centro e la conversazione compare gia' scritta.
  */
 
-type Battuta = { chi: 'tu' | 'ai'; testo: string }
+import type { BattutaTerminale } from '@/lib/ai-casa-contenuti'
 
-const CONVERSAZIONE: readonly Battuta[] = [
-  { chi: 'tu', testo: 'Leggi il contratto e dimmi cosa devo controllare.' },
-  { chi: 'ai', testo: 'Tre punti: il rinnovo è automatico, la penale vale solo dopo il primo anno e il recesso va mandato 60 giorni prima.' },
-  { chi: 'tu', testo: 'Preparami la risposta al cliente.' },
-  { chi: 'ai', testo: 'Pronta. Tono cortese, due righe, con la data di scadenza già calcolata.' },
-]
+type Battuta = BattutaTerminale
 
 /** Quanto resta scritto prima di ricominciare, in millisecondi. */
 const PAUSA_FINALE = 4200
 const VELOCITA = 26
 
-export default function AiCasaScena() {
+export default function AiCasaScena({
+  intestazione,
+  battute,
+}: {
+  intestazione: string
+  battute: readonly Battuta[]
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const [scritte, setScritte] = useState<Battuta[]>([])
   const [inCorso, setInCorso] = useState('')
@@ -105,7 +106,7 @@ export default function AiCasaScena() {
     if (!el) return
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setScritte([...CONVERSAZIONE])
+      setScritte([...battute])
       setFermo(true)
       return
     }
@@ -131,7 +132,7 @@ export default function AiCasaScena() {
     const ciclo = async () => {
       while (!annullato) {
         setScritte([])
-        for (const battuta of CONVERSAZIONE) {
+        for (const battuta of battute) {
           await aspettaVisibile()
           if (annullato) return
           setChiScrive(battuta.chi)
@@ -157,7 +158,7 @@ export default function AiCasaScena() {
       if (attesa) clearTimeout(attesa)
       osservatore.disconnect()
     }
-  }, [])
+  }, [battute])
 
   return (
     <div ref={ref} className={styles.scena}>
@@ -175,7 +176,7 @@ export default function AiCasaScena() {
             <div className={styles.terminale} aria-hidden="true">
               <p className={styles.terminaleTesta}>
                 <span className={styles.uiPunto} />
-                AI locale &middot; sul tuo Mac
+                {intestazione}
               </p>
 
               <div className={styles.terminaleCorpo}>

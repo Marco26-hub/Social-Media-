@@ -56,6 +56,7 @@ const MOBILE_LINKS_EN = [
     label: 'All services',
     sotto: [
       ...SERVIZI_EN.map(s => ({ href: `/en/services/${s.slug}`, label: s.config.serviceName })),
+      { href: '/en/services/local-ai-on-your-mac', label: 'Local AI on your Mac' },
       { href: '/en/services/ai-phone-assistant', label: 'AI phone assistant' },
       { href: '/en/services/client-diary-whatsapp', label: 'Diary, clients and WhatsApp' },
     ],

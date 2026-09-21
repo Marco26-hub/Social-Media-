@@ -37,3 +37,7 @@ output/
 tmp/
 __pycache__/
 .env*.local
+
+# Il link ai node_modules che si crea quando si lavora in un worktree: il
+# pattern con la barra sopra non lo prende, perche non e una cartella.
+node_modules
