@@ -770,6 +770,17 @@
 
 .dichiarazioneTesto { color: var(--testo-attenuato); font-size: 14px; line-height: 1.6; margin: 0; max-width: 620px; }
 
+/* Il riquadro adesso porta anche il bottone: su schermo largo il testo tiene la
+   sinistra e il bottone sta in fondo, su schermo stretto vanno uno sotto
+   l'altro e il bottone prende tutta la riga. */
+.dichiarazione { justify-content: space-between; }
+.dichiarazione > div { flex: 1 1 420px; }
+.dichiarazione .azionePrimaria { flex: 0 0 auto; }
+
+@media (max-width: 640px) {
+  .dichiarazione .azionePrimaria { width: 100%; }
+}
+
 .righe { display: grid; gap: 0; margin-top: 30px; }
 
 .riga {

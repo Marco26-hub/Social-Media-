@@ -1,10 +1,20 @@
 import { q, q1 } from '@/lib/db'
+import { STANDALONE_SERVICES } from '@/lib/standalone-services'
 
 const MIGRATION = '043_standalone_service_orders.sql'
 const CHECKSUM = 'd58a805a43d4ad1e38bf04d2260e67cbfaf7d05dc866d4e824c579c740f1e8fd'
 const SERVICE_EXTENSION_MIGRATION = '051_standalone_service_orders_agenda_voice.sql'
 const SERVICE_EXTENSION_CHECKSUM = 'c9cb5385b9f7e6f922166a5621c78e7d833ac1c67f48850dbdb7e7005d5e4f26'
-const SERVICE_SLUG_CHECK = `service_slug IN ('blog-seo', 'web-commerce', 'lead-pilot', 'agenda-clienti', 'tutto-in-uno', 'voce-base', 'voce-attivita', 'voce-azienda')`
+// L'elenco ammesso dal vincolo si ricava dal catalogo, non si riscrive a mano.
+//
+// Scritto a mano si era gia' rotto: 'web-impresa', 'profili-social-gbp' e i
+// quattro pacchetti video erano in vendita sulle pagine e nel form di acquisto,
+// ma non in questo elenco. Chi li avesse comprati avrebbe pagato su Stripe e
+// l'ordine sarebbe stato respinto dal database — un incasso senza ordine, che
+// e' il modo peggiore di scoprire un difetto. Qui il vincolo segue il catalogo
+// per costruzione, quindi non puo' piu' restare indietro.
+const SLUG_AMMESSI = STANDALONE_SERVICES.map(servizio => servizio.slug)
+const SERVICE_SLUG_CHECK = `service_slug IN (${SLUG_AMMESSI.map(slug => `'${slug}'`).join(', ')})`
 
 let schemaPromise: Promise<void> | null = null
 
@@ -19,7 +29,9 @@ async function initializeSchema() {
         AND conname = 'standalone_service_orders_service_slug_check'
       LIMIT 1`)
     const definition = String(constraint?.definition || '')
-    if (!definition.includes('agenda-clienti') || !definition.includes('voce-azienda')) {
+    // Basta che ne manchi uno: il vincolo va riscritto per intero.
+    const mancanti = SLUG_AMMESSI.filter(slug => !definition.includes(`'${slug}'`))
+    if (mancanti.length > 0) {
       await q('ALTER TABLE standalone_service_orders DROP CONSTRAINT IF EXISTS standalone_service_orders_service_slug_check')
       await q(`ALTER TABLE standalone_service_orders ADD CONSTRAINT standalone_service_orders_service_slug_check CHECK (${SERVICE_SLUG_CHECK})`)
     }
