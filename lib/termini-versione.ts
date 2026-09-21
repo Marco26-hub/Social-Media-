@@ -16,6 +16,9 @@
 // modelli di terze parti, obblighi del cliente su privacy e AI Act, assistenza
 // inclusa — e i tre casi di recesso relativi (consumatore, computer,
 // manutenzione). Cambia cio a cui il cliente si obbliga, quindi la versione sale.
+// Stesso giorno: dichiarato nel 5.3 che con un modello in cloud i dati escono dal
+// computer, che la consegna avviene con il solo modello locale attivo e che il
+// collegamento esterno si attiva solo su richiesta.
 export const TERMINI_VERSIONE = '2026-09-21'
 
 /** Come si legge in pagina: «in vigore dal 12 settembre 2026». */

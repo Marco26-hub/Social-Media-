@@ -75,7 +75,7 @@ export default function AiCasaLanding() {
 
             <p className={styles.prove}>
               <span>Gira sul tuo Mac</span>
-              <span>I dati non escono di casa</span>
+              <span>I dati restano sulla macchina</span>
               <span>Funziona senza rete</span>
               <span>Un solo pulsante</span>
             </p>
@@ -337,7 +337,10 @@ export default function AiCasaLanding() {
             regole</strong>: dipendono da cosa ci fai, non da dove gira. Chi te la
             vende come una scorciatoia ti sta creando un problema più grande di
             quello che ti risolve. Noi installiamo la macchina; per la parte legale
-            c&rsquo;è chi ne risponde con la firma.
+            c&rsquo;è chi ne risponde con la firma. E se in futuro vuoi affiancare un
+            modello in cloud, <strong>quello che gli mandi esce dalla macchina</strong>:
+            te lo diciamo prima, lo attiviamo solo se lo chiedi e resta separato da
+            quello che gira in locale.
           </p>
         </div>
 
@@ -513,6 +516,18 @@ export default function AiCasaLanding() {
               Si usa allo stesso modo, ma gira sul tuo computer. Non ha il mondo intero dentro e non
               naviga: in cambio non manda i tuoi documenti a nessuno, non ha limiti mensili e
               funziona anche senza rete.
+            </p>
+          </details>
+
+          <details className={styles.faqVoce}>
+            <summary>E se voglio usare anche un modello in cloud?</summary>
+            <p>
+              Si può fare, e a volte conviene: per certi lavori i modelli grandi online
+              sono più bravi. Ma va detto chiaro: <strong>quello che mandi a un servizio
+              in cloud esce dalla tua macchina</strong> e finisce sotto le condizioni di
+              quel fornitore. Per questo consegniamo le macchine con il solo modello
+              locale attivo. Il collegamento a un servizio esterno lo aggiungiamo solo se
+              ce lo chiedi, resta separato, e prima ti diciamo quali dati passano di là.
             </p>
           </details>
 
