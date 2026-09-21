@@ -66,6 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/servizi/blog-seo',
       '/servizi/siti-e-commerce',
       '/servizi/ricerca-clienti-b2b',
+      '/servizi/ai-a-casa-tua',
       '/servizi/segretaria-telefonica-ai',
       '/servizi/agenda-clienti-whatsapp',
       '/servizi/video-produzione',

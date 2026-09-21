@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ClipboardCheck,
   ChevronRight,
+  Cpu,
   Globe2,
   BookOpenText,
   Layers3,
@@ -65,6 +66,12 @@ const SOLUTIONS: SolutionLink[] = [
     label: 'Ricerca Clienti B2B',
     description: 'Aziende in target, verificate e prioritarie.',
     icon: Target,
+  },
+  {
+    href: '/servizi/ai-a-casa-tua',
+    label: 'AI a casa tua',
+    description: 'Un Mac con l’AI installata e collaudata.',
+    icon: Cpu,
   },
   {
     href: '/servizi/segretaria-telefonica-ai',

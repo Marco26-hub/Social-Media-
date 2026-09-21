@@ -79,6 +79,12 @@ const IT: Record<string, Anteprima> = {
     sottotitolo: `Pilot con contatti qualificati e priorità dichiarate, ${PREZZI.b2b}.`,
     tinta: 'notte',
   },
+  '/servizi/ai-a-casa-tua': {
+    occhiello: 'AI a casa tua',
+    titolo: 'L’intelligenza artificiale gira sul tuo Mac.',
+    sottotitolo: 'Macchina scelta, installata e collaudata: i documenti restano tuoi, senza cloud e senza canone.',
+    tinta: 'notte',
+  },
   '/servizi/segretaria-telefonica-ai': {
     occhiello: 'Segretaria telefonica AI',
     titolo: 'Risponde mentre hai le mani occupate.',

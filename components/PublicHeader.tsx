@@ -27,6 +27,7 @@ const MOBILE_LINKS = [
       { href: '/servizi/blog-seo', label: 'Blog SEO + GEO' },
       { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
       { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B' },
+      { href: '/servizi/ai-a-casa-tua', label: 'AI a casa tua' },
       { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
       { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
       { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },

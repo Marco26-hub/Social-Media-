@@ -35,6 +35,7 @@ const voce = (titolo: string, percorso: string, descrizione: string) =>
 
 const SERVIZI: Array<[string, string, string]> = [
   ['Gestione social media', '/servizi/gestione-social-media', `Piano editoriale, produzione, approvazione e pubblicazione su 2 canali. Presenza ${PREZZI.presenza}, Crescita ${PREZZI.crescita}.`],
+  ['AI a casa tua', '/servizi/ai-a-casa-tua', 'Mac e Mac mini consegnati con intelligenza artificiale locale installata, tarata sulla macchina e collaudata: i documenti restano sul computer del cliente, senza cloud e senza canone per persona. Servizio da 490 €, pacchetto completo 990 €; il computer si paga ad Apple a listino, senza ricarico.'],
   ['Segretaria telefonica AI', '/servizi/segretaria-telefonica-ai', `Risponde con le informazioni approvate, propone gli orari liberi e fissa l’appuntamento. Piani ${PREZZI.voce}, da 300 a 1500 minuti.`],
   ['Agenda, clienti e WhatsApp', '/servizi/agenda-clienti-whatsapp', `Trova chi non torna e gli orari rimasti liberi, prepara i messaggi e li lascia da approvare. ${PREZZI.agenda}, 1000 invii inclusi.`],
   ['Siti web e landing page', '/servizi/siti-e-commerce', `Landing e siti base mobile-first, ${PREZZI.web}. Dopo 12 mesi di canone il progetto è del cliente.`],
