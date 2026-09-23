@@ -182,7 +182,8 @@ export default function ClienteDetailPage() {
     }
   }
 
-  // Pacchetto acquistato dal cliente (upgrade/downgrade). '' = nessun pacchetto → null.
+  // Pacchetto operativo del cliente. "libero" mantiene una quota su misura e
+  // abilita l'import di campagne gia approvate senza trattarle come Crescita.
   async function savePacchetto() {
     if (!cliente) return
     setSavingPkg(true)
@@ -195,13 +196,14 @@ export default function ClienteDetailPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Salvataggio fallito')
-      const nuovo = (pacchetto === 'presenza' || pacchetto === 'crescita') ? pacchetto : null
+      const nuovo = (pacchetto === 'libero' || pacchetto === 'presenza' || pacchetto === 'crescita') ? pacchetto : null
       const packageSpec = PACKAGE_LIST.find(item => item.id === nuovo)
-      if (packageSpec) setContenutiMese(String(packageSpec.contenutiMese))
+      const quotaAggiornata = packageSpec?.contenutiMese ?? (nuovo === 'libero' ? 24 : undefined)
+      if (quotaAggiornata !== undefined) setContenutiMese(String(quotaAggiornata))
       setCliente(prev => prev ? {
         ...prev,
         pacchetto: nuovo,
-        contenuti_mese: packageSpec?.contenutiMese ?? prev.contenuti_mese,
+        contenuti_mese: quotaAggiornata ?? prev.contenuti_mese,
       } : prev)
       setPkgMsg({ type: 'ok', text: 'Pacchetto aggiornato.' })
     } catch (e) {
@@ -359,7 +361,8 @@ export default function ClienteDetailPage() {
             onChange={e => setPacchetto(e.target.value)}
             className="input flex-1 text-sm"
           >
-            <option value="">Nessun pacchetto (solo piano libero)</option>
+            <option value="">Nessun pacchetto configurato</option>
+            <option value="libero">Piano libero — progetto su misura · 24 contenuti</option>
             {PACKAGE_LIST.map(p => (
               <option key={p.id} value={p.id}>{p.nome} — €{p.prezzoMese}/mese · {p.contenutiMese} contenuti</option>
             ))}

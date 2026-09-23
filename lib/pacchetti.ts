@@ -79,16 +79,43 @@ export const PACCHETTI: Pacchetto[] = [
   },
 ]
 
-export const PACCHETTO_SLUGS = new Set(PACCHETTI.map(p => p.slug))
+// Piano operativo non acquistabile dal sito: serve per lavori su misura e per
+// campagne editoriali gia prodotte che SWA deve importare senza rigenerarle.
+export const PACCHETTO_LIBERO: Pacchetto = {
+  slug: 'libero',
+  nome: 'Piano libero',
+  eyebrow: 'Progetto editoriale su misura',
+  prezzo: 'Su misura',
+  setup: 'Configurazione dedicata',
+  sottotitolo: 'Numero, mix e calendario seguono la strategia approvata, senza vincoli di un pacchetto standard.',
+  idealePer: 'Campagne personalizzate e piani gia pronti da importare senza modifiche AI.',
+  risultato: 'Piano personalizzato e controllato',
+  cta: 'Gestito da SWA',
+  features: [
+    'Quota e mix definiti dalla strategia approvata',
+    'Import esatto di hook, caption, CTA e media',
+    'Controllo finale prima di qualsiasi invio',
+  ],
+  sintesi: [
+    'Strategia e calendario su misura',
+    'Copy e creativita importati senza rigenerazione',
+    'Approvazione prima della pubblicazione',
+  ],
+  inBreve: 'Piano operativo configurato dall’agenzia per un progetto specifico.',
+  consigliato: false,
+}
+
+export const PACCHETTO_SLUGS = new Set([...PACCHETTI.map(p => p.slug), PACCHETTO_LIBERO.slug])
 
 export function pacchettoBySlug(slug: string | null | undefined): Pacchetto | undefined {
   if (!slug) return undefined
+  if (slug.toLowerCase() === PACCHETTO_LIBERO.slug) return PACCHETTO_LIBERO
   return PACCHETTI.find(p => p.slug === slug.toLowerCase())
 }
 
 // Conserva la lettura dei valori storici senza esporre i vecchi pacchetti.
 export const PIANO_TO_PACCHETTO_SLUG: Record<string, string> = {
-  free: 'presenza',
+  free: 'libero',
   starter: 'presenza',
   pro: 'presenza',
   slancio: 'crescita',
@@ -106,5 +133,5 @@ export function pacchettoSlugFromPiano(piano: string | null | undefined): string
 }
 
 export function pacchettoFromPiano(piano: string | null | undefined): Pacchetto {
-  return pacchettoBySlug(pacchettoSlugFromPiano(piano)) || PACCHETTI[0]
+  return pacchettoBySlug(pacchettoSlugFromPiano(piano)) || PACCHETTO_LIBERO
 }

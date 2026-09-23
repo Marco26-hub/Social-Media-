@@ -173,10 +173,42 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
   })
   const attivi = nelCiclo.filter(row => !STATI_INATTIVI.has(testo(row.status).toUpperCase()))
 
+  // Una campagna pronta conta due grandezze diverse: i concept inclusi nella
+  // quota (24) e le pubblicazioni coordinate sui canali (48). Trattare le 48
+  // righe come 48 contenuti "extra" produceva un falso allarme proprio sul
+  // piano corretto. I metadati dell'import rendono esplicite entrambe.
+  const readyRows = attivi.filter(row => testo(row.campaign_mode) === 'ready_free')
+  const readyMeta = readyRows.length ? (() => {
+    const first = readyRows[0]
+    let expectedMix: Record<string, number> = {}
+    const rawMix = first.campaign_expected_mix
+    if (rawMix && typeof rawMix === 'object' && !Array.isArray(rawMix)) expectedMix = rawMix as Record<string, number>
+    else if (typeof rawMix === 'string') {
+      try { expectedMix = JSON.parse(rawMix) as Record<string, number> } catch { expectedMix = {} }
+    }
+    const concepts = new Set(readyRows.map(row => testo(row.campaign_content_key)).filter(Boolean))
+    return {
+      expectedContents: Number(first.campaign_expected_contents) || quota,
+      expectedPublications: Number(first.campaign_expected_publications) || readyRows.length,
+      expectedMix,
+      concepts: concepts.size,
+    }
+  })() : null
+  const audited = readyMeta ? readyRows : attivi
+
   const checks: PlanAuditCheck[] = []
 
   // 1. COPERTURA — il ciclo contiene i contenuti venduti?
-  if (quota > 0) {
+  if (readyMeta) {
+    const complete = readyMeta.concepts === readyMeta.expectedContents
+      && readyRows.length === readyMeta.expectedPublications
+    checks.push(check(
+      'copertura',
+      'Copertura della campagna pronta',
+      complete ? 'ok' : 'blocco',
+      `${readyMeta.concepts}/${readyMeta.expectedContents} concept e ${readyRows.length}/${readyMeta.expectedPublications} pubblicazioni coordinate.`,
+    ))
+  } else if (quota > 0) {
     const mancanti = Math.max(0, quota - attivi.length)
     const extra = Math.max(0, attivi.length - quota)
     checks.push(mancanti > 0
@@ -193,7 +225,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
 
   // 2. SETTIMANE — è il controllo che scopre la fase mai generata.
   const perSettimana = [0, 0, 0, 0]
-  attivi.forEach(row => {
+  audited.forEach(row => {
     const s = settimanaCiclo(dataDi(row), dal)
     if (s >= 1 && s <= 4) perSettimana[s - 1]++
   })
@@ -208,10 +240,26 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
   // 3. MIX FORMATI — confrontato sul totale REALMENTE pianificato, non sulla
   // quota: con una cartella campagna il totale legittimamente sale, ma le
   // proporzioni vendute devono restare quelle.
-  if (pkg && attivi.length) {
-    const mix = packageMixForPeriod(pkg, 'mensile', attivi.length)
+  if (readyMeta && audited.length) {
     const conta = { post: 0, carousel: 0, story: 0, reel: 0 }
-    attivi.forEach(row => {
+    audited.forEach(row => {
+      const format = normalizzaFormato(row.formato)
+      if (format === 'carousel') conta.carousel++
+      else if (format === 'story') conta.story++
+      else if (format === 'reel') conta.reel++
+      else conta.post++
+    })
+    const formats = ['post', 'carousel', 'story', 'reel'] as const
+    const differences = formats.filter(format => conta[format] !== Number(readyMeta.expectedMix[format] || 0))
+    checks.push(differences.length
+      ? check('mix', 'Mix della campagna approvata', 'blocco',
+          differences.map(format => `${format}: ${conta[format]} invece di ${Number(readyMeta.expectedMix[format] || 0)}`).join(', '))
+      : check('mix', 'Mix della campagna approvata', 'ok',
+          `Mix esatto: ${conta.post} post · ${conta.carousel} caroselli · ${conta.story} Story · ${conta.reel} Reel.`))
+  } else if (pkg && audited.length) {
+    const mix = packageMixForPeriod(pkg, 'mensile', audited.length)
+    const conta = { post: 0, carousel: 0, story: 0, reel: 0 }
+    audited.forEach(row => {
       const f = normalizzaFormato(row.formato)
       if (f === 'carousel') conta.carousel++
       else if (f === 'story') conta.story++
@@ -238,7 +286,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
   // 4. MEDIA — un carosello con una slide non è un carosello.
   const senzaMedia: string[] = []
   const sottoSoglia: string[] = []
-  attivi.forEach(row => {
+  audited.forEach(row => {
     const formato = normalizzaFormato(row.formato)
     if (formato === 'articolo') return
     const regola = MEDIA_PER_FORMATO[formato] || MEDIA_PER_FORMATO.post
@@ -261,7 +309,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
   // esclusa: in quel caso il riuso e il cross-post dichiarato del concept.
   const mediaUsati = new Map<string, Record<string, unknown>[]>()
   const mediaDuplicati = new Set<string>()
-  attivi.forEach(row => {
+  audited.forEach(row => {
     const urls = mediaDi(row)
     if (new Set(urls).size !== urls.length) mediaDuplicati.add(etichetta(row))
     urls.forEach(url => {
@@ -285,7 +333,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
         'Nessun file media e riutilizzato fra concept diversi.'))
 
   // 5. SLOT ROTTI — quello che la generazione non è riuscita a produrre.
-  const rotti = attivi.filter(row =>
+  const rotti = audited.filter(row =>
     testo(row.status).toUpperCase() === 'ERRORE_MANUALE'
     || testo(row.note).startsWith('[GENERATION_FALLBACK]')).map(etichetta)
   checks.push(rotti.length
@@ -293,7 +341,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
         `${rotti.length} slot sono rimasti da completare: apri il contenuto e rigeneralo dal calendario.`, rotti)
     : check('slot', 'Slot da sistemare', 'ok', 'Nessuno slot incompleto rimasto nel ciclo.'))
 
-  const segnaposto = attivi.filter(row =>
+  const segnaposto = audited.filter(row =>
     ['tema', 'hook', 'caption', 'primary_message'].some(field => isPlaceholderEditorialText(row[field]))
   ).map(etichetta)
   checks.push(segnaposto.length
@@ -303,7 +351,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
         'Nessun segnaposto o residuo di generazione nel piano.'))
 
   // 6. COPY — senza hook o caption non è pubblicabile.
-  const senzaCopy = attivi.filter(row => !testo(row.hook) || !testo(row.caption)).map(etichetta)
+  const senzaCopy = audited.filter(row => !testo(row.hook) || !testo(row.caption)).map(etichetta)
   checks.push(senzaCopy.length
     ? check('copy', 'Copy completo', 'blocco',
         `${senzaCopy.length} contenuti senza hook o senza caption.`, senzaCopy)
@@ -313,7 +361,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
   // ripetere l'apertura. È il difetto che i piani generati prima della
   // correzione della fase mostrano: due mezzi mesi identici.
   const fasiPerMeta = { apertura: new Set<string>(), chiusura: new Set<string>() }
-  attivi.forEach(row => {
+  audited.forEach(row => {
     const fase = faseFunnel(row)
     if (!fase) return
     const s = settimanaCiclo(dataDi(row), dal)
@@ -337,7 +385,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
   // dello stesso concept su due social NON sono duplicati: sono il prodotto.
   const visti: CreativeRecord[] = []
   const duplicati: string[] = []
-  attivi.forEach(row => {
+  audited.forEach(row => {
     const record = row as CreativeRecord
     const confrontabili = visti.filter(prev => !isCoordinatedCrossPlatformVariant(record, prev))
     if (findCreativeNearDuplicate(record, confrontabili)) duplicati.push(etichetta(row))
@@ -354,7 +402,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
   // confondere coordinamento con duplicazione.
   const variantiCopiate: string[] = []
   const precedentiVarianti: CreativeRecord[] = []
-  attivi.forEach(row => {
+  audited.forEach(row => {
     if (findCrossPlatformCopyDuplicate(row as CreativeRecord, precedentiVarianti)) {
       variantiCopiate.push(etichetta(row))
     }
@@ -367,7 +415,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
         'Le varianti coordinate non sono copie testuali fra canali.'))
 
   const hashtagGroups = new Map<string, string[]>()
-  attivi.forEach(row => {
+  audited.forEach(row => {
     const signature = hashtagBlockSignature(row.hashtag)
     if (signature.split(' ').filter(Boolean).length < 3) return
     const ids = hashtagGroups.get(signature) || []
@@ -385,7 +433,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
 
   const firmeVisuali = new Map<string, Record<string, unknown>[]>()
   const firmeDuplicate = new Set<string>()
-  attivi.forEach(row => {
+  audited.forEach(row => {
     const signature = /VISUAL_SIGNATURE:\s*([^\n]+)/i.exec(testo(row.production_notes))?.[1]?.trim()
     if (!signature) return
     const peers = firmeVisuali.get(signature) || []
@@ -404,7 +452,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
 
   // 9. GATE AUTO-DICHIARATI — il modello scrive "REVISE" nelle note quando lui
   // stesso giudica il contenuto non pronto. Finora nessuno le rileggeva.
-  const daRivedere = attivi.filter(row =>
+  const daRivedere = audited.filter(row =>
     /(?:PROFILE_COHERENCE|CINEMATIC_GATE)\s*:\s*REVISE/i.test(testo(row.production_notes))).map(etichetta)
   checks.push(daRivedere.length
     ? check('gate', 'Gate di coerenza e regia', 'attenzione',
@@ -417,8 +465,8 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
   return {
     dal,
     al,
-    attesi: quota,
-    pianificati: attivi.length,
+    attesi: readyMeta?.expectedPublications ?? quota,
+    pianificati: audited.length,
     settimanePiene,
     bloccanti,
     attenzioni,

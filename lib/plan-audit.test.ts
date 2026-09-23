@@ -169,3 +169,44 @@ test('the same media file on different concepts is reported but a coordinated cr
   assert.equal(checkById(report, 'media-duplicati').stato, 'attenzione')
   assert.deepEqual(checkById(report, 'media-duplicati').contenuti, ['OTHER', 'IG1', 'FB1'])
 })
+
+test('a ready free campaign counts 24 concepts as 48 coordinated publications', () => {
+  const formats = [
+    ...Array(8).fill('post'),
+    ...Array(6).fill('carousel'),
+    ...Array(8).fill('reel'),
+    ...Array(2).fill('story'),
+  ]
+  const phases = ['ATTENZIONE', 'FIDUCIA', 'SCELTA', 'AZIONE']
+  const expectedMix = { post: 16, carousel: 12, reel: 16, story: 4 }
+  const rows = formats.flatMap((formato, index) => ['instagram', 'facebook'].map((canale, platformIndex) => {
+    const week = Math.floor(index / 6)
+    const mediaBase = `https://cdn.test/${index + 1}-${canale}`
+    return contenuto({
+      id_contenuto: `READY_${index + 1}_${canale}`,
+      campaign_content_key: `${formato}_${String(index + 1).padStart(2, '0')}`,
+      campaign_mode: 'ready_free',
+      campaign_expected_contents: 24,
+      campaign_expected_publications: 48,
+      campaign_expected_mix: expectedMix,
+      canale,
+      formato,
+      data_pubblicazione: `2026-09-${String(1 + week * 7 + (index % 6)).padStart(2, '0')}`,
+      funnel_stage: phases[week],
+      hook: `Hook ${index + 1} adattato ${canale}`,
+      caption: `Caption ${index + 1} adattata ${canale}`,
+      link_media_1: formato === 'reel' ? `${mediaBase}.mp4` : `${mediaBase}-1.jpg`,
+      link_media_2: formato === 'carousel' ? `${mediaBase}-2.jpg` : null,
+      link_media_3: formato === 'carousel' ? `${mediaBase}-3.jpg` : null,
+      campaign_order: index + 1,
+      platformIndex,
+    })
+  }))
+  const report = auditPianoCiclo({ rows, quota: 24, pkg: null, oggi: OGGI })
+  assert.equal(report.attesi, 48)
+  assert.equal(report.pianificati, 48)
+  assert.equal(checkById(report, 'copertura').stato, 'ok')
+  assert.match(checkById(report, 'copertura').dettaglio, /24\/24 concept e 48\/48 pubblicazioni/)
+  assert.equal(checkById(report, 'mix').stato, 'ok')
+  assert.equal(report.bloccanti, 0)
+})

@@ -1,4 +1,4 @@
-import { Pool, types } from 'pg'
+import { Pool, types, type PoolClient, type QueryResultRow } from 'pg'
 
 // Colonne `date` (OID 1082) restituite come STRINGA 'YYYY-MM-DD', non come Date.
 //
@@ -82,4 +82,32 @@ export async function q(query: string, params: unknown[] = []): Promise<QueryRow
 export async function q1(query: string, params: unknown[] = []): Promise<QueryRow | null> {
   const rows = await q(query, params)
   return rows[0] || null
+}
+
+export type TransactionQuery = <T extends QueryResultRow = QueryRow>(
+  query: string,
+  params?: unknown[],
+) => Promise<T[]>
+
+// Le sostituzioni di un piano editoriale devono essere atomiche: o entrano
+// tutte le pubblicazioni nuove e spariscono soltanto le bozze non inviate, o il
+// calendario resta esattamente com'era. Questo helper evita una sequenza di q()
+// su connessioni diverse (che non costituirebbe una vera transazione).
+export async function withTransaction<T>(callback: (query: TransactionQuery, client: PoolClient) => Promise<T>): Promise<T> {
+  const client = await getPool().connect()
+  const query: TransactionQuery = async (sql, params = []) => {
+    const result = await client.query(sql, params)
+    return result.rows
+  }
+  try {
+    await client.query('BEGIN')
+    const result = await callback(query, client)
+    await client.query('COMMIT')
+    return result
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
 }

@@ -25,7 +25,7 @@ export interface Cliente {
   email: string | null
   telefono: string | null
   piano: 'free' | 'pro' | 'agency' | 'enterprise'
-  pacchetto: 'presenza' | 'crescita' | null
+  pacchetto: 'libero' | 'presenza' | 'crescita' | null
   timezone: string
   contenuti_mese: number
   attivo: boolean

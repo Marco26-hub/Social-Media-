@@ -4,6 +4,7 @@ import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteId } from '@/lib/auth-utils'
 import { isDemo } from '@/lib/demo'
 import { pacchettoFromPiano, pacchettoSlugFromPiano } from '@/lib/pacchetti'
+import { getTableColumns } from '@/lib/db-schema'
 
 export const dynamic = 'force-dynamic'
 
@@ -225,8 +226,12 @@ export async function GET() {
     // (NON_APPROVATO). Un contenuto rifiutato non deve consumare quota — come già
     // avveniva quando "rifiuta" lo rimandava in BOZZA. Senza questa esclusione il
     // rifiuto non libererebbe più quota al cliente.
+    const calendarioColumns = await getTableColumns('calendario')
+    const conteggio = calendarioColumns.has('campaign_content_key')
+      ? `count(DISTINCT COALESCE(NULLIF(campaign_content_key, ''), id::text))::int`
+      : 'count(*)::int'
     const usedRows = await q(
-      `SELECT count(*)::int AS usati
+      `SELECT ${conteggio} AS usati
        FROM calendario
        WHERE cliente_id = $1
          AND date_trunc('month', data_pubblicazione::date) = date_trunc('month', CURRENT_DATE)

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { PLATFORM_LIST, type PlatformKey } from '@/lib/social-config'
-import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2, Image as ImageIcon, Film, Layers, Smartphone, Music2, FolderUp } from 'lucide-react'
+import { Target, Calendar, CalendarRange, Sparkles, Loader2, Check, X, Info, ImagePlus, Trash2, AlertTriangle, CheckCircle2, Image as ImageIcon, Film, Layers, Smartphone, Music2, FolderUp, FileJson2, ShieldCheck } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 import AIModelSelector from '@/components/AIModelSelector'
 import { useActiveClienteId } from '@/lib/tenant/client'
@@ -25,6 +25,11 @@ import {
 import { compareCampaignFolderGroups, folderGroupKey, parseCampaignFolderFile, type CampaignFolderAsset } from '@/lib/campaign-folder'
 import { BUSINESS_CATEGORY_OPTIONS, resolveBusinessCategory, type BusinessCategoryId } from '@/lib/business-categories'
 import { calculateCampaignAssetRequirements } from '@/lib/campaign-asset-requirements'
+import {
+  buildReadyCampaignPublications,
+  parseReadyCampaignManifest,
+  type ReadyCampaignManifest,
+} from '@/lib/ready-campaign'
 
 type QualitySelection = 'auto' | ContentQuality
 // `tag` = marcatura manuale ("questa foto è del carosello, questo MP4 del reel").
@@ -199,6 +204,11 @@ export default function PianoPage() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [folderPreview, setFolderPreview] = useState<FolderPreview | null>(null)
   const folderInputRef = useRef<HTMLInputElement | null>(null)
+  const readyManifestInputRef = useRef<HTMLInputElement | null>(null)
+  const [readyManifest, setReadyManifest] = useState<ReadyCampaignManifest | null>(null)
+  const [readyManifestName, setReadyManifestName] = useState('')
+  const [readyManifestError, setReadyManifestError] = useState('')
+  const [importingReady, setImportingReady] = useState(false)
   // Media gia presenti nello storage per questo cliente: proposti al rientro
   // nella pagina, cosi non si ricarica la stessa cartella (ogni ricaricamento
   // duplicava centinaia di MB, perche i nomi ricevono un token casuale).
@@ -234,6 +244,8 @@ export default function PianoPage() {
   const caricamentiVecchi = Math.max(0, assetRecuperabili.length - ultimoCaricamento.length)
   const [fallbackPopup, setFallbackPopup] = useState<{ count: number; completed: number } | null>(null)
   const [clientePkg, setClientePkg] = useState<PackageSpec | null>(null)
+  const [clientePacchetto, setClientePacchetto] = useState('')
+  const [clientePkgLoading, setClientePkgLoading] = useState(true)
   // Quota reale del cliente (clienti.contenuti_mese): l'admin può sovrascrivere
   // il numero di contenuti del pacchetto, e il fabbisogno media deve seguirla.
   const [clienteQuota, setClienteQuota] = useState<number | null>(null)
@@ -270,22 +282,110 @@ export default function PianoPage() {
   useEffect(() => {
     let alive = true
     async function loadPkg() {
-      if (!clienteId) { setClientePkg(null); setClienteQuota(null); setClienteSettore(''); setClienteNome(''); return }
+      setClientePkgLoading(true)
+      if (!clienteId) { setClientePkg(null); setClientePacchetto(''); setClienteQuota(null); setClienteSettore(''); setClienteNome(''); setClientePkgLoading(false); return }
       try {
         const rows = await fetch('/api/data/clienti').then(r => r.ok ? r.json() : [])
         const c = Array.isArray(rows) ? rows.find((x: { id?: string; slug?: string }) => x.id === clienteId || x.slug === clienteId) : null
         const quota = Number(c?.contenuti_mese)
         if (alive) {
           setClientePkg(getPackage(c?.pacchetto))
+          setClientePacchetto(typeof c?.pacchetto === 'string' ? c.pacchetto : '')
           setClienteQuota(Number.isFinite(quota) && quota > 0 ? quota : null)
           setClienteSettore(typeof c?.settore === 'string' ? c.settore : '')
           setClienteNome(typeof c?.nome === 'string' ? c.nome : '')
         }
-      } catch { if (alive) { setClientePkg(null); setClienteQuota(null) } }
+      } catch { if (alive) { setClientePkg(null); setClientePacchetto(''); setClienteQuota(null) } }
+      finally { if (alive) setClientePkgLoading(false) }
     }
     loadPkg()
     return () => { alive = false }
   }, [clienteId])
+
+  const readyAssets = useMemo(() => planAssets.map(asset => ({
+    url: asset.url,
+    name: asset.name,
+    kind: asset.kind,
+    tag: asset.tag,
+    campaign_key: asset.campaignKey,
+    relative_path: asset.relativePath,
+    week: asset.week,
+    platform: asset.platform,
+    content_key: asset.contentKey,
+    sequence: asset.sequence,
+  })), [planAssets])
+
+  const readyPreview = useMemo(() => readyManifest
+    ? buildReadyCampaignPublications(readyManifest, readyAssets)
+    : null, [readyManifest, readyAssets])
+
+  async function caricaManifestoPiano(file: File | null) {
+    setReadyManifestError('')
+    setReadyManifest(null)
+    setReadyManifestName('')
+    if (!file) return
+    try {
+      const parsed = parseReadyCampaignManifest(await file.text())
+      const preview = buildReadyCampaignPublications(parsed, readyAssets)
+      setReadyManifest(parsed)
+      setReadyManifestName(file.name)
+      if (!preview.validation.ok) {
+        setReadyManifestError(preview.validation.errors.slice(0, 6).join(' · '))
+      }
+    } catch (error) {
+      setReadyManifestError(error instanceof Error ? error.message : 'Manifesto JSON non valido')
+    }
+  }
+
+  async function importaCampagnaPronta() {
+    setMsg(null)
+    if (!clienteId || !readyManifest) return
+    if (!readyPreview?.validation.ok) {
+      setMsg({ type: 'err', text: 'Import bloccato: completa il manifesto o i media indicati in rosso.' })
+      return
+    }
+    setImportingReady(true)
+    try {
+      const requestBody = {
+        cliente_id: clienteId,
+        manifest: readyManifest,
+        uploaded_assets: readyAssets,
+      }
+      const previewResponse = await fetch('/api/generate/ready-campaign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...requestBody, dry_run: true }),
+      })
+      const previewData = await previewResponse.json().catch(() => ({})) as Record<string, unknown>
+      if (!previewResponse.ok) throw new Error(String(previewData.error || 'Controllo preventivo fallito'))
+      const replaceable = Number(previewData.replaceable || 0)
+      const confirmed = window.confirm(
+        `Importare ${readyManifest.expected_contents} contenuti coordinati (${readyManifest.expected_publications} pubblicazioni)?\n\n`
+        + `${replaceable} bozze/contenuti non inviati verranno sostituiti. I contenuti gia pubblicati o presenti su Blotato restano protetti.\n\n`
+        + 'Hook, caption, CTA e media verranno copiati esattamente dal manifesto, senza usare il modello AI.',
+      )
+      if (!confirmed) return
+      const response = await fetch('/api/generate/ready-campaign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...requestBody, dry_run: false }),
+      })
+      const data = await response.json().catch(() => ({})) as Record<string, unknown>
+      if (!response.ok) throw new Error(String(data.error || 'Import campagna fallito'))
+      setClientePkg(null)
+      setClientePacchetto('libero')
+      setClienteQuota(readyManifest.expected_contents)
+      setCalendarioPulizia({ inCorso: false, messaggio: '', candidati: 0 })
+      setMsg({
+        type: 'ok',
+        text: `Campagna pronta importata: ${data.concepts} contenuti, ${data.publications} pubblicazioni, piano SWA impostato su Libero. Nessun invio a Blotato.`,
+      })
+    } catch (error) {
+      setMsg({ type: 'err', text: error instanceof Error ? error.message : 'Import campagna fallito' })
+    } finally {
+      setImportingReady(false)
+    }
+  }
 
   const activeBusinessCategory = useMemo(
     () => resolveBusinessCategory(businessCategory, { sector: clienteSettore, clientName: clienteNome }),
@@ -1736,6 +1836,86 @@ export default function PianoPage() {
           )}
         </div>
 
+        {/* Campagna gia pronta: e un import deterministico, non una generazione.
+            Il manifesto blocca copy, CTA, date e abbinamento dei 214 media. */}
+        <div className="mb-4 rounded-2xl border-2 border-slate-800 bg-slate-950 p-4 text-white shadow-lg">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-emerald-400/15 p-2 text-emerald-300"><ShieldCheck className="h-5 w-5" /></div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold">Importa un piano già pronto</p>
+              <p className="mt-1 text-xs text-slate-300">
+                Per campagne prodotte e approvate: nessun modello AI riscrive hook, caption o CTA. Il sistema verifica ogni media e crea soltanto slot “Da approvare”.
+              </p>
+              <p className="mt-1 text-[11px] text-slate-400">
+                Piano cliente attuale: <span className="font-semibold text-white">{clientePkgLoading ? 'caricamento…' : clientePacchetto === 'libero' ? 'Piano libero' : clientePkg?.nome || 'non configurato'}</span>
+              </p>
+            </div>
+          </div>
+
+          <input
+            ref={readyManifestInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={event => { caricaManifestoPiano(event.target.files?.[0] || null); event.target.value = '' }}
+          />
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => readyManifestInputRef.current?.click()}
+              disabled={importingReady || uploadingImages}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-900 px-3 py-2.5 text-xs font-semibold hover:border-emerald-400 hover:bg-slate-800 disabled:opacity-50"
+            >
+              <FileJson2 className="h-4 w-4" />
+              {readyManifestName || 'Carica swa-ready-campaign.json'}
+            </button>
+            {readyManifest && (
+              <button
+                type="button"
+                onClick={() => { setReadyManifest(null); setReadyManifestName(''); setReadyManifestError('') }}
+                disabled={importingReady}
+                className="rounded-xl border border-slate-600 px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+              >
+                Rimuovi manifesto
+              </button>
+            )}
+          </div>
+
+          {readyManifest && readyPreview && (
+            <div className={`mt-3 rounded-xl border p-3 text-xs ${readyPreview.validation.ok ? 'border-emerald-400/40 bg-emerald-400/10' : 'border-rose-400/50 bg-rose-400/10'}`}>
+              <p className="font-bold">
+                {readyPreview.validation.ok ? 'Controllo superato' : 'Import bloccato'} · {readyManifest.expected_contents} contenuti · {readyManifest.expected_publications} pubblicazioni · {planAssets.filter(asset => asset.kind !== 'audio').length} media selezionati
+              </p>
+              <p className="mt-1 text-slate-300">{readyManifest.strategy}</p>
+              {!readyPreview.validation.ok && (
+                <ul className="mt-2 space-y-1 text-rose-200">
+                  {readyPreview.validation.errors.slice(0, 6).map(error => <li key={error}>• {error}</li>)}
+                </ul>
+              )}
+              {readyPreview.validation.errors.length > 6 && <p className="mt-1 text-rose-200">Altri {readyPreview.validation.errors.length - 6} errori da correggere.</p>}
+              {readyManifestError && <p className="mt-2 text-rose-200">{readyManifestError}</p>}
+            </div>
+          )}
+          {!readyManifest && readyManifestError && <p className="mt-2 text-xs text-rose-300">{readyManifestError}</p>}
+
+          <button
+            type="button"
+            onClick={importaCampagnaPronta}
+            disabled={!readyManifest || !readyPreview?.validation.ok || importingReady || uploadingImages || clientePkgLoading}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {importingReady ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5" />}
+            {importingReady ? 'Controllo e import in corso…' : 'Importa senza AI e imposta Piano libero'}
+          </button>
+          <p className="mt-2 text-center text-[11px] text-slate-400">Prima simula la sostituzione e chiede conferma. Pubblicati e record Blotato non vengono toccati.</p>
+        </div>
+
+        {readyManifest && (
+          <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-center text-xs font-medium text-amber-900">
+            Manifesto pronto attivo: la generazione AI è disabilitata per evitare modifiche accidentali al piano approvato.
+          </p>
+        )}
+
         {/* Modalità pacchetto: se il cliente ha un pacchetto, un click genera i contenuti compresi */}
         {clientePkg && (
           <div className="mb-3 p-3 rounded-xl bg-white/70 border border-emerald-200">
@@ -1765,7 +1945,7 @@ export default function PianoPage() {
             )}
             <button
               onClick={() => generaPacchetto()}
-              disabled={runningPkg || running || uploadingImages || piattaforme.length === 0 || piattaforme.length > clientePkg.social}
+              disabled={runningPkg || running || uploadingImages || Boolean(readyManifest) || clientePkgLoading || piattaforme.length === 0 || piattaforme.length > clientePkg.social}
               className="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
             >
               {runningPkg ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
@@ -1789,7 +1969,7 @@ export default function PianoPage() {
 
         <button
           onClick={chiediConferma}
-          disabled={running || runningPkg || uploadingImages || piattaforme.length === 0}
+          disabled={running || runningPkg || uploadingImages || Boolean(readyManifest) || clientePkgLoading || piattaforme.length === 0}
           className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
         >
           {running ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
@@ -1807,14 +1987,14 @@ export default function PianoPage() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => (clientePkg ? generaPacchetto(1) : genera(1))}
-                disabled={running || runningPkg || uploadingImages || piattaforme.length === 0}
+                disabled={running || runningPkg || uploadingImages || Boolean(readyManifest) || clientePkgLoading || piattaforme.length === 0}
                 className="btn-secondary py-2.5 justify-center text-sm disabled:opacity-50"
               >
                 Fase 1 · settimane 1-2
               </button>
               <button
                 onClick={() => (clientePkg ? generaPacchetto(2) : genera(2))}
-                disabled={running || runningPkg || uploadingImages || piattaforme.length === 0}
+                disabled={running || runningPkg || uploadingImages || Boolean(readyManifest) || clientePkgLoading || piattaforme.length === 0}
                 className="btn-secondary py-2.5 justify-center text-sm disabled:opacity-50"
               >
                 Fase 2 · settimane 3-4

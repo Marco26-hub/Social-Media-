@@ -59,7 +59,9 @@ export async function POST(request: Request) {
     // \u2014 mai coerente col pacchetto mostrato (es. Presenza dichiara 16).
     const pianoEff = piano || 'pro'
     const pacchettoSlug = pacchettoSlugFromPiano(pianoEff)
-    const pkgNumeri = PACCHETTO_PIANO[pacchettoSlug] || PACCHETTO_FALLBACK
+    const pkgNumeri = pacchettoSlug === 'libero'
+      ? { piano: 'free', contenuti: 24 }
+      : PACCHETTO_PIANO[pacchettoSlug] || PACCHETTO_FALLBACK
     const rows = await q(
       'INSERT INTO clienti (nome, slug, settore, email, telefono, piano, pacchetto, contenuti_mese, attivo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true) RETURNING id',
       [nome, slug, settore || null, email || null, telefono || null, pianoEff, pacchettoSlug, pkgNumeri.contenuti]
@@ -108,6 +110,7 @@ export async function PATCH(request: Request) {
     if (typeof body.pacchetto === 'string' && body.contenuti_mese === undefined) {
       const pkgScelto = getPackage(body.pacchetto)
       if (pkgScelto) body.contenuti_mese = pkgScelto.contenutiMese
+      else if (body.pacchetto.trim().toLowerCase() === 'libero') body.contenuti_mese = 24
     }
 
     const fields: string[] = []
