@@ -165,6 +165,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         : format === 'story'
           ? 'STRUTTURA OBBLIGATORIA: "scenes" con ESATTAMENTE 3 frame distinti: apertura, sviluppo, risoluzione/CTA. Il terzo chiude la tensione aperta dal primo.'
           : 'Compila anche primary_message oltre a hook, caption e CTA.'
+    const premiumHigh = String(row.quality_level || '').toLowerCase() === 'high'
 
     const response = await callAI({
       model: body.model || 'google/gemma-4-31b-it:free',
@@ -173,7 +174,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       maxTokens: 7000,
       timeoutMs: 70000,
       deadlineAt: Date.now() + REGEN_BUDGET_MS,
-      systemPrompt: 'Sei un senior social media strategist italiano. Rispondi solo con un singolo oggetto JSON valido. Non inventare prezzi, dati o claim non forniti.',
+      systemPrompt: `Sei un senior social media strategist italiano. Rispondi solo con un singolo oggetto JSON valido. Non inventare prezzi, dati o claim non forniti.${premiumHigh ? ' STANDARD HIGH/PREMIUM OBBLIGATORIO: il contenuto deve avere un angolo specifico, una micro-prova osservabile, una progressione narrativa completa e una CTA coerente con il lavoro commerciale. Vietati copy generici, frasi da brochure, domande decorative e CTA intercambiabili con qualunque brand.' : ''}`,
       userPrompt: `${buildBrandContext(brand)}
 
 ${buildBusinessCategoryContext(activeCategory)}
@@ -204,6 +205,13 @@ ${storyRule}
 Per Instagram usa al massimo 5 hashtag totali. Gli hashtag stanno SOLO nel campo hashtag, mai in coda alla caption, e ognuno e' una parola breve e leggibile: vietati gli hashtag-frase che inghiottono un concetto.
 ${['reel','short','video','story'].includes(format) ? `La caption di questo formato non deve superare ${CAPTION_VIDEO_MAX} caratteri e deve chiudersi con una frase completa: oltre quel limite viene accorciata prima di pubblicare.` : ''}
 Scrivi in italiano corretto, concreto e coerente con il formato.
+${premiumHigh ? `STANDARD PREMIUM HIGH — VINCOLANTE:
+- l'hook deve promettere un payoff preciso che le scene mantengono;
+- ogni scena deve aggiungere informazione, prova o avanzamento: nessun riempitivo;
+- la caption deve seguire hook -> prova concreta -> beneficio -> CTA, senza ripetere il testo stampato sul visual;
+- primary_message deve esprimere una sola tesi commerciale specifica;
+- usa un dettaglio realmente visibile nei media come prova; non descrivere genericamente "contenuti" o "strategia";
+- se non puoi soddisfare questi criteri, restituisci comunque la struttura completa senza dichiararla pronta.` : ''}
 
 Output JSON:
 {"hook":"","caption":"","hashtag":"","cta":"","tema":"","primary_message":"","scenes":[],"slides":[],"overlay_text":"","alt_text":"","tags":[],"idea_visual":"","voiceover_script":"","music_mood":""}`,
@@ -256,11 +264,18 @@ Output JSON:
     const nuovoStato = motivo ? 'ERRORE_MANUALE' : 'DA_APPROVARE'
     const nuovaNota = motivo ? `[${issues.length ? 'NARRATIVE_GATE' : 'NOVELTY_GATE'}] ${motivo}` : null
     const nuovoErrore = motivo ? `${issues.length ? 'Struttura narrativa da completare' : 'Contenuto da differenziare'}: ${motivo}` : null
+    const noveltyProblems = [
+      platformCopy ? `adattamento ${channel} copiato` : '',
+      hashtagCopy ? 'blocco hashtag ripetuto' : '',
+      clone ? `somiglianza creativa ${Math.round(clone.score * 100)}%` : '',
+    ].filter(Boolean)
     const productionNotes = [
       String(row.production_notes || '')
         .split('\n')
-        .filter(line => !/^\s*(EDITORIAL_SLOT|EDITORIAL_CONCEPT|STRATEGY_PROFILE|VISUAL_SIGNATURE|CHANNEL_ADAPTATION):/i.test(line))
+        .filter(line => !/^\s*(EDITORIAL_SLOT|EDITORIAL_CONCEPT|STRATEGY_PROFILE|VISUAL_SIGNATURE|CHANNEL_ADAPTATION|NARRATIVE_GATE|NOVELTY_GATE):/i.test(line))
         .join('\n'),
+      `NARRATIVE_GATE: ${issues.length ? `REVISE ${issues.map(issue => issue.message).join('; ')}` : 'PASS'}`,
+      `NOVELTY_GATE: ${noveltyProblems.length ? `REVISE ${noveltyProblems.join('; ')}` : 'PASS'}`,
       ...editorialDirectionNotes(editorialDirection),
     ].filter(Boolean).join('\n')
     const updated = await q(

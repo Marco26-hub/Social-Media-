@@ -379,23 +379,6 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
           </div>
         )}
 
-        {!finalAssetMode && (
-          <div className="absolute bottom-3 left-3 right-12 text-white text-[11px] z-10">
-            <p className="line-clamp-2 leading-snug drop-shadow">{caption ?? hook ?? currentFrameTitle}</p>
-            {hashtag && <p className="text-[9px] opacity-90 mt-1 truncate drop-shadow">{hashtag}</p>}
-            <p className="text-[9px] mt-1.5 flex items-center gap-1 opacity-90">
-              <Music2 className="w-3 h-3" /> {audioTitle || (haAudio ? 'traccia caricata' : 'audio originale')}
-            </p>
-          </div>
-        )}
-        {finalAssetMode && (
-          <div className="absolute bottom-3 left-3 right-12 text-white text-[9px] z-10">
-            <p className="flex items-center gap-1 opacity-90 drop-shadow">
-              <Music2 className="w-3 h-3" /> {audioTitle || (haAudio ? 'traccia caricata' : 'audio originale')}
-            </p>
-          </div>
-        )}
-
         {/* Sidebar azioni */}
         <div className="absolute right-2 bottom-24 flex flex-col gap-3.5 items-center text-white z-10">
           <div className="flex flex-col items-center">
@@ -418,6 +401,24 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
         {!videoUrl && total > 1 && ` · ${total} scene → un MP4 unico al montaggio`}
         {!videoUrl && total === 1 && ' · anteprima statica'}
       </p>
+      {/* Caption, hashtag e nome file non sono testo impresso sul Reel. Tenerli
+          dentro il player copriva hook e CTA gia presenti nei master finali e
+          faceva sembrare difettoso un asset corretto. Restano consultabili in
+          un pannello separato, come metadati editoriali. */}
+      {!finalAssetMode && (caption || hook || hashtag) && (
+        <div className="mt-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-left shadow-sm">
+          <p className="line-clamp-3 text-[11px] leading-relaxed text-gray-700">{caption || hook}</p>
+          {hashtag && <p className="mt-1 truncate text-[10px] font-medium text-brand-700">{hashtag}</p>}
+        </div>
+      )}
+      {(audioTitle || haAudio) && (
+        <p
+          className="mt-1.5 flex items-center justify-center gap-1 text-[10px] text-gray-500"
+          title={audioTitle || 'Traccia audio associata'}
+        >
+          <Music2 className="h-3 w-3" /> Traccia audio associata
+        </p>
+      )}
     </div>
   )
 }
