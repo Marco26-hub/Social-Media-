@@ -22,6 +22,13 @@ test('accepts a complete five-scene Reel', () => {
   assert.deepEqual(issues, [])
 })
 
+test('accepts three-frame Stories and the four-frame strategy with a separate CTA', () => {
+  for (const scenes of [['Apertura', 'Sviluppo', 'Risoluzione e CTA'], ['Apertura', 'Sviluppo', 'Risoluzione', 'CTA']]) {
+    assert.deepEqual(evaluateNarrativeContract({ formato: 'story', hook: 'Guarda il profilo', cta: 'Scrivi in DM', scenes }), [])
+  }
+  assert.ok(evaluateNarrativeContract({ formato: 'story', hook: 'Guarda il profilo', cta: 'Scrivi in DM', scenes: ['A', 'B', 'C', 'D', 'E'] }).some(issue => issue.code === 'story_frame_count'))
+})
+
 test('rejects an incomplete or duplicated Story sequence', () => {
   const issues = evaluateNarrativeContract({
     formato: 'story',

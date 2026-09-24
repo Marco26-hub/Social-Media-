@@ -163,7 +163,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       : format === 'carousel'
         ? 'STRUTTURA OBBLIGATORIA: "slides" con 5-10 elementi distinti e progressivi (cover, problema, sviluppo/prova, payoff, CTA), uno per ogni immagine gia assegnata.'
         : format === 'story'
-          ? 'STRUTTURA OBBLIGATORIA: "scenes" con ESATTAMENTE 3 frame distinti: apertura, sviluppo, risoluzione/CTA. Il terzo chiude la tensione aperta dal primo.'
+          ? 'STRUTTURA OBBLIGATORIA: "scenes" con 3 o 4 frame distinti secondo la sequenza della strategia e dei media assegnati: apertura, sviluppo, risoluzione/CTA; con 4 frame separa risoluzione e CTA finale. Conserva ordine e numero dei frame gia previsti, senza tagliare il quarto frame CTA. L’ultimo chiude la tensione aperta dal primo.'
           : 'Compila anche primary_message oltre a hook, caption e CTA.'
     const premiumHigh = String(row.quality_level || '').toLowerCase() === 'high'
 

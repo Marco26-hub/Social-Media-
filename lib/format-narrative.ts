@@ -119,11 +119,11 @@ N-1. PAYOFF/RECAP: ricompone il valore e risponde alla cover.
 N. CTA: una sola azione con motivo per salvare, condividere, commentare o contattare.
 Compila slides con numero, ruolo, titolo, testo, visual, obiettivo_slide e raccordo_successivo. Le slide devono funzionare in ordine, mai come poster indipendenti assemblati per caso.
 
-STORY — 3 frame, 9:16:
+STORY — 3 o 4 frame, 9:16, secondo la sequenza della strategia:
 1. APERTURA: domanda o tensione immediata.
 2. SVILUPPO: contesto/prova che fa avanzare la storia.
 3. RISOLUZIONE/CTA: risposta e azione realmente supportata, per esempio "Scrivi BOWLING in DM"; niente finti sticker.
-Compila scenes con 3 frame e ruolo, testo, visual, durata e raccordo. Il terzo frame deve chiudere l'open loop del primo.
+Compila scenes con 3 frame, oppure 4 quando la strategia separa risoluzione e CTA finale. Conserva tutte le immagini assegnate in ordine, con ruolo, testo, visual, durata e raccordo. L'ultimo frame deve chiudere l'open loop del primo; non eliminare la CTA di una sequenza a 4 frame.
 
 POST STATICO — 4:5:
 - Il visual contiene un solo hook breve e una gerarchia chiara; la fotografia resta protagonista.
@@ -154,7 +154,7 @@ export function evaluateNarrativeContract(item: Record<string, unknown>): Narrat
     }
   } else if (format === 'story') {
     const frames = firstSequence(item, ['scenes', 'frames', 'scene'])
-    if (frames.length !== 3) issues.push({ code: 'story_frame_count', message: `Story: servono esattamente 3 frame narrativi (attuali: ${frames.length})` })
+    if (frames.length < 3 || frames.length > 4) issues.push({ code: 'story_frame_count', message: `Story: servono 3 o 4 frame narrativi secondo la strategia (attuali: ${frames.length})` })
     if (duplicateSequenceItems(frames) > 0) {
       issues.push({ code: 'story_frame_duplicate', message: 'Story: frame duplicati o senza avanzamento narrativo' })
     }
