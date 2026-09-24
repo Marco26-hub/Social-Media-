@@ -5,6 +5,9 @@ import { isFreeOpenRouterModel, isVisionModel } from './ai-model'
 test('recognises vision models used by the social generator', () => {
   assert.equal(isVisionModel('google/gemini-2.5-flash'), true)
   assert.equal(isVisionModel('openai/gpt-4o-mini'), true)
+  assert.equal(isVisionModel('openai/gpt-6-luna'), true)
+  assert.equal(isVisionModel('openai/gpt-6-sol'), true)
+  assert.equal(isVisionModel('openai/gpt-6-astra'), true)
   assert.equal(isVisionModel('google/gemma-4-31b-it:free'), false)
 })
 

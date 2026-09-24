@@ -47,7 +47,8 @@ export function preflightRow(row: Record<string, unknown>, tz: string = DEFAULT_
   const hook = String(row.hook || '').trim()
   const caption = String(row.caption || '').trim()
   const hashtag = String(row.hashtag || '').trim()
-  if (!hook && !caption) warnings.push('Testo vuoto (hook e caption mancanti)')
+  if (!hook) errors.push({ code: 'hook', message: 'Hook mancante: il contenuto non è pronto per Blotato' })
+  if (!caption) errors.push({ code: 'caption', message: 'Caption mancante: il contenuto non è pronto per Blotato' })
   if (platform === 'instagram') {
     const count = hashtagCount([hashtag, hook, caption, String(row.cta || '')].join('\n'))
     if (count > MAX_BLOTATO_INSTAGRAM_HASHTAGS) {

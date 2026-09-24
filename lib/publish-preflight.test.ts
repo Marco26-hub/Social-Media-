@@ -25,3 +25,16 @@ test('Facebook Story is accepted as a Reel video adaptation', () => {
   assert.equal(result.ok, true)
   assert.ok(result.warnings.some(warning => /Reel video/.test(warning)))
 })
+
+test('content without hook or caption is blocked before Blotato sync', () => {
+  const result = preflightRow({
+    ...baseStory,
+    canale: 'instagram',
+    hook: '',
+    caption: '',
+  })
+
+  assert.equal(result.ok, false)
+  assert.ok(result.errors.some(error => error.code === 'hook'))
+  assert.ok(result.errors.some(error => error.code === 'caption'))
+})
