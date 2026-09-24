@@ -63,6 +63,7 @@ function publicationRow(
     'status', 'note', 'media_validato', 'checked_copy', 'checked_media',
     'link_media_1', 'link_media_2', 'link_media_3', 'link_media_4', 'link_media_5',
     'link_media_6', 'link_media_7', 'link_media_8', 'link_media_9', 'link_media_10',
+    'reel_audio_url', 'reel_audio_title', 'reel_audio_source_url', 'reel_audio_license',
     'quality_level', 'audience_segment', 'funnel_stage', 'angle', 'primary_message',
     'idea_visual', 'creative_brief', 'production_notes', 'expected_outcome',
     'production_cycle_stage', 'content_checklist',
@@ -89,6 +90,10 @@ function publicationRow(
     'SI',
     'SI',
     ...media,
+    publication.audio?.url || null,
+    publication.audio_title,
+    publication.audio_source_url,
+    publication.audio_license,
     'high',
     'PMI e professionisti italiani',
     publication.phase,
@@ -99,7 +104,14 @@ function publicationRow(
     'READY_CAMPAIGN: copy, CTA e media bloccati dal manifesto approvato. Nessuna generazione AI.',
     publication.objective,
     'review',
-    JSON.stringify(['hook presente', 'caption presente', 'CTA presente', 'media completi', 'approvazione umana richiesta']),
+    JSON.stringify([
+      'hook presente',
+      'caption presente',
+      'CTA presente',
+      'media completi',
+      ...((publication.format === 'reel' || publication.format === 'story') ? ['audio presente e documentato'] : []),
+      'approvazione umana richiesta',
+    ]),
     publication.campaign_content_key,
     publication.campaign_week,
     JSON.stringify(sourcePaths),
@@ -230,8 +242,8 @@ export async function POST(request: Request) {
       }
 
       await tx(
-        `UPDATE clienti SET pacchetto = 'libero', contenuti_mese = $2, updated_at = now() WHERE id = $1`,
-        [clienteId, manifest.expected_contents],
+        `UPDATE clienti SET pacchetto = $2, contenuti_mese = $3, updated_at = now() WHERE id = $1`,
+        [clienteId, manifest.package, manifest.expected_contents],
       )
       await tx(
         `INSERT INTO log_pubblicazioni
@@ -246,7 +258,7 @@ export async function POST(request: Request) {
       ok: true,
       dry_run: false,
       campaign: manifest.campaign_cycle_id,
-      package: 'libero',
+      package: manifest.package,
       quota: manifest.expected_contents,
       concepts: manifest.expected_contents,
       publications: built.publications.length,

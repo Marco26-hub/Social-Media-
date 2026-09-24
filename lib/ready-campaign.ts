@@ -12,6 +12,12 @@ export type ReadyCampaignPlatformCopy = {
   hashtags: string[]
 }
 
+export type ReadyCampaignAudio = {
+  title: string
+  source_url: string
+  license: string
+}
+
 export type ReadyCampaignContent = {
   order: number
   source_id: string
@@ -24,13 +30,14 @@ export type ReadyCampaignContent = {
   intent: string
   visual_brief: string
   media_count: number
+  audio: ReadyCampaignAudio | null
   copy: Record<ReadyCampaignPlatform, ReadyCampaignPlatformCopy>
 }
 
 export type ReadyCampaignManifest = {
   schema_version: 1
   mode: 'ready_campaign'
-  package: 'libero'
+  package: 'libero' | 'presenza' | 'crescita'
   campaign_id: string
   campaign_cycle_id: string
   brand: string
@@ -76,6 +83,10 @@ export type ReadyCampaignPublication = {
   intent: string
   visual_brief: string
   media: ReadyCampaignAsset[]
+  audio: ReadyCampaignAsset | null
+  audio_title: string | null
+  audio_source_url: string | null
+  audio_license: string | null
 }
 
 export type ReadyCampaignValidation = {
@@ -125,6 +136,16 @@ function normalizeCopy(raw: unknown): ReadyCampaignPlatformCopy {
   }
 }
 
+function normalizeAudio(raw: unknown): ReadyCampaignAudio | null {
+  if (!isObject(raw)) return null
+  const audio = {
+    title: text(raw.title),
+    source_url: text(raw.source_url),
+    license: text(raw.license),
+  }
+  return audio.title || audio.source_url || audio.license ? audio : null
+}
+
 function normalizeContent(raw: unknown): ReadyCampaignContent {
   const source = isObject(raw) ? raw : {}
   const rawCopy = isObject(source.copy) ? source.copy : {}
@@ -140,6 +161,7 @@ function normalizeContent(raw: unknown): ReadyCampaignContent {
     intent: text(source.intent),
     visual_brief: text(source.visual_brief),
     media_count: int(source.media_count),
+    audio: normalizeAudio(source.audio),
     copy: {
       instagram: normalizeCopy(rawCopy.instagram),
       facebook: normalizeCopy(rawCopy.facebook),
@@ -154,7 +176,7 @@ export function parseReadyCampaignManifest(value: unknown): ReadyCampaignManifes
   return {
     schema_version: int(source.schema_version) as 1,
     mode: text(source.mode) as 'ready_campaign',
-    package: text(source.package) as 'libero',
+    package: text(source.package) as ReadyCampaignManifest['package'],
     campaign_id: text(source.campaign_id),
     campaign_cycle_id: text(source.campaign_cycle_id),
     brand: text(source.brand),
@@ -182,7 +204,9 @@ export function validateReadyCampaignManifest(manifest: ReadyCampaignManifest): 
   const warnings: string[] = []
   if (manifest.schema_version !== 1) errors.push('schema_version deve essere 1')
   if (manifest.mode !== 'ready_campaign') errors.push('mode deve essere ready_campaign')
-  if (manifest.package !== 'libero') errors.push('package deve essere libero')
+  if (!['libero', 'presenza', 'crescita'].includes(manifest.package)) {
+    errors.push('package deve essere libero, presenza o crescita')
+  }
   if (!manifest.campaign_id) errors.push('campaign_id mancante')
   if (!manifest.campaign_cycle_id) errors.push('campaign_cycle_id mancante')
   if (!manifest.brand) errors.push('brand mancante')
@@ -225,6 +249,14 @@ export function validateReadyCampaignManifest(manifest: ReadyCampaignManifest): 
     if (!content.visual_brief) errors.push(`${label}: visual_brief mancante`)
     if (content.media_count < 1 || content.media_count > 10) errors.push(`${label}: media_count deve essere 1-10`)
     if (content.format === 'carousel' && content.media_count < 3) errors.push(`${label}: un carosello richiede almeno 3 media`)
+    if (content.format === 'reel' || content.format === 'story') {
+      if (!content.audio) errors.push(`${label}: scheda audio mancante`)
+      else {
+        if (!content.audio.title) errors.push(`${label}: titolo audio mancante`)
+        if (!content.audio.source_url) errors.push(`${label}: fonte audio mancante`)
+        if (!content.audio.license) errors.push(`${label}: licenza audio mancante`)
+      }
+    }
     manifest.platforms.forEach(platform => {
       const copy = content.copy[platform]
       if (!copy.hook) errors.push(`${label}/${platform}: hook mancante`)
@@ -259,7 +291,9 @@ export function buildReadyCampaignPublications(
   const errors = [...manifestValidation.errors]
   const warnings = [...manifestValidation.warnings]
   const grouped = new Map<string, ReadyCampaignAsset[]>()
+  const groupedAudio = new Map<string, ReadyCampaignAsset[]>()
   const usableAssets = assets.filter(asset => asset.kind !== 'audio' && text(asset.url))
+  const usableAudio = assets.filter(asset => asset.kind === 'audio' && text(asset.url))
   usableAssets.forEach(asset => {
     const key = assetKey(asset)
     if (key === ':') return
@@ -268,6 +302,14 @@ export function buildReadyCampaignPublications(
     grouped.set(key, group)
   })
   grouped.forEach(group => group.sort((left, right) => assetSequence(left) - assetSequence(right) || text(left.name).localeCompare(text(right.name), 'it', { numeric: true })))
+  usableAudio.forEach(asset => {
+    const key = assetKey(asset)
+    if (key === ':') return
+    const group = groupedAudio.get(key) || []
+    group.push(asset)
+    groupedAudio.set(key, group)
+  })
+  groupedAudio.forEach(group => group.sort((left, right) => text(left.name).localeCompare(text(right.name), 'it', { numeric: true })))
 
   const usedUrls = new Set<string>()
   const publications: ReadyCampaignPublication[] = []
@@ -283,7 +325,16 @@ export function buildReadyCampaignPublications(
         if (group.length !== content.media_count) {
           errors.push(`${label}: ${group.length} media trovati, ${content.media_count} attesi`)
         }
+        const audioGroup = groupedAudio.get(key) || []
+        const requiresAudio = content.format === 'reel' || content.format === 'story'
+        if (requiresAudio && audioGroup.length !== 1) {
+          errors.push(`${label}: ${audioGroup.length} audio trovati, 1 atteso`)
+        }
+        if (!requiresAudio && audioGroup.length) {
+          warnings.push(`${label}: audio ignorato per formato ${content.format}`)
+        }
         group.forEach(asset => usedUrls.add(asset.url))
+        if (requiresAudio) audioGroup.forEach(asset => usedUrls.add(asset.url))
         const copy = content.copy[platform]
         publications.push({
           id_contenuto: `READY_${cycleToken}_${String(content.order).padStart(2, '0')}_${platform === 'instagram' ? 'IG' : 'FB'}`,
@@ -303,6 +354,10 @@ export function buildReadyCampaignPublications(
           intent: content.intent,
           visual_brief: content.visual_brief,
           media: group.slice(0, 10),
+          audio: requiresAudio ? audioGroup[0] || null : null,
+          audio_title: requiresAudio ? content.audio?.title || audioGroup[0]?.name || null : null,
+          audio_source_url: requiresAudio ? content.audio?.source_url || null : null,
+          audio_license: requiresAudio ? content.audio?.license || null : null,
         })
       })
     })
@@ -310,7 +365,7 @@ export function buildReadyCampaignPublications(
   if (publications.length !== manifest.expected_publications) {
     errors.push(`Create ${publications.length} pubblicazioni, attese ${manifest.expected_publications}`)
   }
-  const unusedAssets = usableAssets.filter(asset => !usedUrls.has(asset.url)).length
+  const unusedAssets = [...usableAssets, ...usableAudio].filter(asset => !usedUrls.has(asset.url)).length
   if (unusedAssets) warnings.push(`${unusedAssets} media caricati non appartengono al manifesto`)
   return {
     publications,

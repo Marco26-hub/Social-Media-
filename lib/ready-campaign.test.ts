@@ -35,6 +35,7 @@ function manifest(): ReadyCampaignManifest {
       intent: 'Far conoscere SWA',
       visual_brief: 'Ritratto editoriale cinematografico',
       media_count: 1,
+      audio: null,
       copy: {
         instagram: { hook: 'Hook Instagram', caption: 'Caption Instagram', cta: 'Scrivi PROVA', hashtags: ['#swa'] },
         facebook: { hook: 'Hook Facebook', caption: 'Caption Facebook', cta: 'Contattaci', hashtags: [] },
@@ -78,4 +79,53 @@ test('blocca l import quando manca anche un solo media', () => {
   ])
   assert.equal(result.validation.ok, false)
   assert.match(result.validation.errors.join('\n'), /facebook: 0 media trovati, 1 attesi/)
+})
+
+test('lega un solo audio a ogni Reel usando content_key e piattaforma', () => {
+  const value = manifest()
+  value.mix = { post: 0, carousel: 0, reel: 1, story: 0 }
+  value.contents[0] = {
+    ...value.contents[0],
+    source_id: 'REEL_01_TEST',
+    content_key: 'reel_01',
+    format: 'reel',
+    audio: {
+      title: 'Inspiring Corporate Music — JonasBlakewood',
+      source_url: 'https://pixabay.com/music/corporate-inspiring-corporate-music-562847/',
+      license: 'Pixabay Content License',
+    },
+  }
+  const assets = [
+    { url: 'https://cdn.test/ig.png', kind: 'image' as const, platform: 'instagram' as const, content_key: 'reel_01', sequence: 1 },
+    { url: 'https://cdn.test/fb.png', kind: 'image' as const, platform: 'facebook' as const, content_key: 'reel_01', sequence: 1 },
+    { url: 'https://cdn.test/ig.mp3', kind: 'audio' as const, platform: 'instagram' as const, content_key: 'reel_01' },
+    { url: 'https://cdn.test/fb.mp3', kind: 'audio' as const, platform: 'facebook' as const, content_key: 'reel_01' },
+  ]
+  const result = buildReadyCampaignPublications(value, assets)
+  assert.equal(result.validation.ok, true)
+  assert.equal(result.publications[0].audio?.url, 'https://cdn.test/ig.mp3')
+  assert.equal(result.publications[1].audio?.url, 'https://cdn.test/fb.mp3')
+  assert.equal(result.publications[0].audio_source_url, value.contents[0].audio?.source_url)
+})
+
+test('blocca Reel e Story senza audio assegnato', () => {
+  const value = manifest()
+  value.mix = { post: 0, carousel: 0, reel: 1, story: 0 }
+  value.contents[0] = {
+    ...value.contents[0],
+    source_id: 'REEL_01_TEST',
+    content_key: 'reel_01',
+    format: 'reel',
+    audio: {
+      title: 'Traccia test',
+      source_url: 'https://pixabay.com/music/example/',
+      license: 'Pixabay Content License',
+    },
+  }
+  const result = buildReadyCampaignPublications(value, [
+    { url: 'https://cdn.test/ig.png', platform: 'instagram', content_key: 'reel_01', sequence: 1 },
+    { url: 'https://cdn.test/fb.png', platform: 'facebook', content_key: 'reel_01', sequence: 1 },
+  ])
+  assert.equal(result.validation.ok, false)
+  assert.match(result.validation.errors.join('\n'), /0 audio trovati, 1 atteso/)
 })
