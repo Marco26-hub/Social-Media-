@@ -145,6 +145,20 @@ function scopedCampaignContentKey(placement: FolderPlacement): string {
   return `${placement.campaignKey}__${placement.contentKey}`
 }
 
+function resolveItemObjective(value: unknown, funnelStage: unknown, planObjective: unknown): string {
+  const itemObjective = String(value || '').trim().toLowerCase()
+  if (itemObjective && itemObjective !== 'mix') return itemObjective
+
+  const requested = String(planObjective || '').trim().toLowerCase()
+  if (requested && requested !== 'mix') return requested
+
+  const stage = String(funnelStage || '').trim().toLowerCase()
+  if (/fiducia|trust|consideration/.test(stage)) return 'educazione'
+  if (/scelta|azione|conversion|decision|purchase/.test(stage)) return 'vendita'
+  if (/community|relazione/.test(stage)) return 'community'
+  return 'awareness'
+}
+
 function buildPlanAssetContext(
   shown: string[],
   labels: Map<string, string>,
@@ -559,6 +573,23 @@ export async function POST(request: Request) {
     }
 
     const calendarioColumns = await getTableColumns('calendario')
+    const existingCampaignRows = calendarioColumns.has('campaign_content_key')
+      ? await q(
+          `SELECT campaign_content_key, canale
+             FROM calendario
+            WHERE cliente_id = $1
+              AND campaign_content_key IS NOT NULL
+              AND trim(campaign_content_key) <> ''`,
+          [effectiveClienteId],
+        ) as Record<string, unknown>[]
+      : []
+    // Idempotenza forte della campagna: Instagram e Facebook sono due adattamenti
+    // leciti dello stesso concept, ma la stessa coppia content_key+canale deve
+    // esistere una sola volta anche se il browser ritenta la richiesta o l'utente
+    // preme di nuovo Genera.
+    const existingCampaignSlots = new Set(existingCampaignRows.map(row =>
+      `${String(row.campaign_content_key || '').trim().toLowerCase()}|${String(row.canale || '').trim().toLowerCase()}`,
+    ))
     const historyColumns = EDITORIAL_HISTORY_COLUMNS.filter(column => calendarioColumns.has(column))
     const historySelect = historyColumns.length ? historyColumns.join(', ') : 'hook, tema'
     // Lo storico e una tabella diversa e puo avere meno colonne: filtrarlo con
@@ -1133,7 +1164,7 @@ Output SOLO JSON array valido:
 STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rifiutato):
 - reel/short/video: "scenes" con ESATTAMENTE 5 elementi, ruoli hook, tensione, prova, payoff, cta_loop. Una riga di descrizione ciascuno basta.
 - carousel: "slides" con 5-10 elementi distinti (cover, problema, sviluppo/prova, payoff, CTA).
-- story: "scenes" con ESATTAMENTE 3 frame (apertura, sviluppo, risoluzione/CTA).
+- story: "scenes" con 3 o 4 frame secondo la strategia e i media assegnati (apertura, sviluppo, risoluzione/CTA; con 4 frame separa risoluzione e CTA finale).
 - post/pin: "primary_message" compilato oltre a hook e caption.` : ''}`
             : qualityPrompt)
           + historyContext + faseContinuitaContext + creativeDirection.context + temporalContext + trendContext
@@ -1806,6 +1837,18 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
       const [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10] = nextChunkMediaSlots(chunk, String(item.canale || ''), String(item.formato || 'post'), item.media_refs, item.content_key)
       const mediaAssegnati = [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10]
         .filter((url): url is string => Boolean(url))
+      const assignedFolderPlacement = media1 ? assetPlacements.get(media1) : undefined
+      const isCampaignFolderImport = assetPlacements.size > 0
+      const campaignContentKey = isCampaignFolderImport
+        ? pickText(item, ['content_key']) || (assignedFolderPlacement ? scopedCampaignContentKey(assignedFolderPlacement) : null)
+        : null
+      const campaignSlotKey = campaignContentKey
+        ? `${String(campaignContentKey).trim().toLowerCase()}|${String(item.canale || '').trim().toLowerCase()}`
+        : null
+      if (campaignSlotKey && existingCampaignSlots.has(campaignSlotKey)) {
+        scartati.push(`duplicato bloccato: ${campaignContentKey} (${String(item.canale || '')}) esiste gia`)
+        continue
+      }
       if (contentQuality === 'high') {
         const chiaveSequenza = /carousel|carosello/i.test(String(item.formato || '')) ? 'slides' : 'scenes'
         const sequenzaModello = item[chiaveSequenza]
@@ -1816,8 +1859,12 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
       }
       const narrativeIssues = contentQuality === 'high' ? evaluateNarrativeContract(item) : []
       const narrativeReason = narrativeIssues.map(issue => issue.message).join('; ')
-      if (noveltyReason) noveltyReviewCount++
-      else acceptedCreativeItems.push(item)
+      if (noveltyReason) {
+        noveltyReviewCount++
+        scartati.push(`duplicato editoriale bloccato: ${noveltyReason}`)
+        continue
+      }
+      acceptedCreativeItems.push(item)
       const existingProductionNotes = pickText(item, ['production_notes', 'note_produzione'])
         .split('\n')
         .filter(line => !/^\s*(MONTHLY_DNA|NOVELTY_GATE|EDITORIAL_SLOT|EDITORIAL_CONCEPT|STRATEGY_PROFILE|VISUAL_SIGNATURE|CHANNEL_ADAPTATION):/i.test(line))
@@ -1889,8 +1936,6 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
         'campaign_content_key', 'campaign_week', 'campaign_source_paths',
         'strategy_profile', 'business_category',
       ]
-      const assignedFolderPlacement = media1 ? assetPlacements.get(media1) : undefined
-      const isCampaignFolderImport = assetPlacements.size > 0
       const campaignSourcePaths = [media1, media2, media3, media4, media5, media6, media7, media8, media9, media10]
         .filter((url): url is string => Boolean(url))
         .map(url => assetPlacements.get(url)?.relativePath || '')
@@ -1903,7 +1948,7 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
         item.ora_pubblicazione,
         item.canale || 'instagram',
         item.formato || 'post',
-        item.obiettivo || obiettivo || 'mix',
+        resolveItemObjective(item.obiettivo, item.funnel_stage, obiettivo),
         item.product_id || null,
         item.nome_prodotto || null,
         item.tema || null,
@@ -1966,9 +2011,7 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
         jsonbParam(pickJson(item, ['next_iteration_actions', 'azioni_prossima_iterazione', 'next_actions'])),
         jsonbParam(pickJson(item, ['missing_inputs', 'input_mancanti'])),
         jsonbParam(pickJson(item, ['content_checklist', 'checklist'])),
-        isCampaignFolderImport
-          ? pickText(item, ['content_key']) || (assignedFolderPlacement ? scopedCampaignContentKey(assignedFolderPlacement) : null)
-          : null,
+        campaignContentKey,
         isCampaignFolderImport ? assignedFolderPlacement?.week || chunk.week || null : null,
         jsonbParam(campaignSourcePaths.length ? campaignSourcePaths : null),
         activeStrategyProfile.id,
@@ -1977,6 +2020,7 @@ STRUTTURA OBBLIGATORIA anche in versione compatta (senza, il contenuto viene rif
       try {
         const usedFallback = await insertCalendario(insertColumns, insertValues)
         if (usedFallback) schemaFallbackUsed = true
+        if (campaignSlotKey) existingCampaignSlots.add(campaignSlotKey)
         inseriti.push({ id_contenuto, canale: item.canale as string, data_pubblicazione: item.data_pubblicazione as string })
         if (isGenerationFallback) fallbackInseriti++
       } catch (error) {
