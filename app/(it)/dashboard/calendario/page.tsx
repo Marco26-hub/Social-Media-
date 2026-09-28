@@ -57,6 +57,22 @@ type ShiftResult = {
   date?: Array<{ id_contenuto: string; da: string; a: string }>
 }
 
+type ReadyCampaignResult = {
+  ok: boolean
+  applicato: boolean
+  campaign_cycle_id: string
+  campaign_key: string
+  month: string
+  concepts: number
+  publications: number
+  to_update: number
+  to_insert: number
+  duplicates: number
+  removed_duplicates?: number
+  problems?: string[]
+  dates?: Array<{ order: number; content_key: string; date: string }>
+}
+
 // Referto del controllo finale del ciclo (app/api/data/plan-audit + lib/plan-audit).
 type PlanAudit = {
   dal: string
@@ -236,6 +252,12 @@ function CalendarioInner() {
   const [shifting, setShifting] = useState(false)
   const [shiftPreview, setShiftPreview] = useState<ShiftResult | null>(null)
   const [shiftError, setShiftError] = useState<string | null>(null)
+  const [readyOpen, setReadyOpen] = useState(false)
+  const [readyManifest, setReadyManifest] = useState<unknown>(null)
+  const [readyFileName, setReadyFileName] = useState('')
+  const [readyPreview, setReadyPreview] = useState<ReadyCampaignResult | null>(null)
+  const [readyBusy, setReadyBusy] = useState(false)
+  const [readyError, setReadyError] = useState<string | null>(null)
   const [requeuing, setRequeuing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<{ type: 'ok' | 'warn' | 'err'; text: string } | null>(null)
   const [vista, setVista] = useState<'lista' | 'griglia'>('lista')
@@ -678,6 +700,58 @@ function CalendarioInner() {
       setShiftPreview(null)
     } finally {
       setShifting(false)
+    }
+  }
+
+  async function leggiManifesto(file: File | null) {
+    setReadyPreview(null)
+    setReadyError(null)
+    setReadyManifest(null)
+    setReadyFileName(file?.name || '')
+    if (!file) return
+    try {
+      setReadyManifest(JSON.parse(await file.text()))
+    } catch {
+      setReadyError('Il file scelto non contiene un manifesto JSON valido.')
+    }
+  }
+
+  async function ripristinaDaManifesto(applica: boolean) {
+    if (!readyManifest) {
+      setReadyError('Scegli prima il file swa-ready-campaign.json della campagna.')
+      return
+    }
+    setReadyBusy(true)
+    setReadyError(null)
+    try {
+      const res = await fetch('/api/data/calendario/ready-campaign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manifest: readyManifest, dry_run: !applica, remove_duplicates: true }),
+      })
+      if (!res.ok) throw new Error(await readApiError(res, 'Ripristino della strategia fallito'))
+      const data = await res.json() as ReadyCampaignResult
+      setReadyPreview(data)
+      if (applica) {
+        setReadyOpen(false)
+        setReadyPreview(null)
+        setReadyManifest(null)
+        setReadyFileName('')
+        setFilter('DA_APPROVARE')
+        setSelectedDay(null)
+        setSyncMsg({
+          type: 'ok',
+          text: `Strategia ${data.month} ripristinata dal manifesto: ${data.publications} pubblicazioni, ${data.to_update} riallineate, ${data.to_insert} create`
+            + (data.removed_duplicates ? `, ${data.removed_duplicates} doppioni rimossi` : '')
+            + '. Tutto è Da approvare; nulla è stato inviato a Blotato.',
+        })
+        await fetchData()
+      }
+    } catch (e) {
+      setReadyError((e as Error).message)
+      if (!applica) setReadyPreview(null)
+    } finally {
+      setReadyBusy(false)
     }
   }
 
@@ -1292,6 +1366,10 @@ function CalendarioInner() {
                 <CalendarClock className="w-4 h-4" />
                 <span>Sposta piano</span>
               </button>
+              <button onClick={() => { setReadyOpen(true); setReadyPreview(null); setReadyError(null) }} className="rounded-xl bg-amber-300 px-3 py-2 text-xs font-semibold text-amber-950 shadow-sm hover:bg-amber-200 inline-flex items-center gap-1.5" title="Ripristina date, copy e media dal manifesto ufficiale senza usare l'AI e senza inviare a Blotato">
+                <ClipboardCheck className="w-4 h-4" />
+                <span>Ripristina strategia</span>
+              </button>
               <button onClick={requeuePassati} disabled={requeuing} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 disabled:opacity-60 inline-flex items-center gap-1.5" title="Sposta i contenuti approvati in ritardo e recupera gli invii Blotato rimasti programmati">
                 {requeuing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
                 <span>{requeuing ? 'Rimetto in coda...' : 'Rimetti in coda i passati'}</span>
@@ -1431,6 +1509,49 @@ function CalendarioInner() {
                 </p>
               )}
               {shiftPreview.ignorati > 0 && <p className="mt-1 text-gray-500">{shiftPreview.ignorati} gia pubblicati o archiviati restano dove sono.</p>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {readyOpen && (
+        <div className="mb-4 overflow-hidden rounded-xl border border-amber-300 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-amber-200 bg-amber-50 px-4 py-3">
+            <div>
+              <p className="font-semibold text-amber-950">Ripristina la strategia dal manifesto ufficiale</p>
+              <p className="text-xs text-amber-800">Riallinea contenuti, giorni, copy, media e audio. Protegge gli altri cicli e blocca qualsiasi riga già inviata a Blotato.</p>
+            </div>
+            <button type="button" onClick={() => { setReadyOpen(false); setReadyPreview(null); setReadyError(null) }} className="text-xs font-medium text-gray-500 hover:text-gray-800">Chiudi</button>
+          </div>
+          <div className="flex flex-wrap items-end gap-3 px-4 py-3">
+            <label className="text-xs font-medium text-gray-700">
+              Manifesto campagna
+              <input
+                type="file"
+                accept="application/json,.json"
+                onChange={event => leggiManifesto(event.target.files?.[0] || null)}
+                className="mt-1 block max-w-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+              />
+              <span className="mt-1 block text-[11px] font-normal text-gray-500">{readyFileName || 'Scegli swa-ready-campaign.json'}</span>
+            </label>
+            <button type="button" onClick={() => ripristinaDaManifesto(false)} disabled={readyBusy || !readyManifest} className="btn-secondary py-2 px-4 text-sm disabled:opacity-60">
+              {readyBusy && !readyPreview ? 'Controllo...' : 'Anteprima sicura'}
+            </button>
+            {readyPreview && !readyPreview.applicato && (
+              <button type="button" onClick={() => ripristinaDaManifesto(true)} disabled={readyBusy || !readyPreview.ok} className="btn-primary py-2 px-4 text-sm disabled:opacity-60">
+                {readyBusy ? 'Ripristino...' : `Conferma ${readyPreview.publications} pubblicazioni`}
+              </button>
+            )}
+          </div>
+          {readyError && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-xs text-red-700">{readyError}</p>}
+          {readyPreview && !readyPreview.applicato && (
+            <div className="border-t border-amber-100 bg-amber-50/60 px-4 py-3 text-xs text-slate-700">
+              <p><span className="font-semibold">Solo {readyPreview.month}</span> · ciclo {readyPreview.campaign_key} · {readyPreview.concepts} concept / {readyPreview.publications} pubblicazioni.</p>
+              <p className="mt-1">{readyPreview.to_update} righe esistenti saranno riallineate, {readyPreview.to_insert} mancanti saranno create, {readyPreview.duplicates} doppioni non inviati saranno rimossi.</p>
+              <p className="mt-1 font-medium text-emerald-800">Tutte tornano in Da approvare. Nessun invio a Blotato.</p>
+              <div className="mt-2 grid max-h-52 gap-x-4 overflow-auto rounded-lg border border-amber-200 bg-white p-2 sm:grid-cols-2 lg:grid-cols-3" aria-label="Tabella date del manifesto">
+                {readyPreview.dates?.map(row => <p key={row.content_key}>{String(row.order).padStart(2, '0')} · {row.content_key} → {formatShortDate(row.date)}</p>)}
+              </div>
             </div>
           )}
         </div>
