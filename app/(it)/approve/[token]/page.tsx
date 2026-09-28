@@ -22,6 +22,7 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
   const [token, setToken] = useState('')
+  const [changeNote, setChangeNote] = useState('')
 
   useEffect(() => {
     params.then(p => setToken(p.token))
@@ -68,7 +69,7 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
       const res = await fetch('/api/data/approve', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, status }),
+        body: JSON.stringify({ token, status, note_cliente: status === 'rejected' ? changeNote.trim() : null }),
       })
       if (!res.ok) throw new Error('Operazione fallita')
       setDone(true)
@@ -104,6 +105,8 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
   const c = data as Record<string, string>
   const tipoInvio = c.tipo_invio || 'approvazione'
   const isFeedback = tipoInvio === 'feedback'
+  const publicationText = [c.hook, c.caption && c.caption !== c.hook ? c.caption : '', c.formato === 'story' ? '' : c.cta, c.hashtag]
+    .filter(Boolean).join('\n\n')
   const contenuto = {
     id: c.id || '',
     cliente_id: c.cliente_id || '',
@@ -152,9 +155,9 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
         {/* Header */}
         <div className="text-center mb-6">
           <div className="mb-4"><ApprovalBrand /></div>
-          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-3 ${
+          <div className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-3 ${
             isFeedback ? 'bg-amber-100 text-amber-800' : 'bg-brand-600 text-white'
-          }">
+          }`}>
             <Clock className="w-3 h-3" />
             {isFeedback ? 'Richiesta parere' : 'Approvazione contenuto'}
           </div>
@@ -173,28 +176,23 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
             <span className="text-2xl">{c.canale === 'instagram' ? '📸' : c.canale === 'facebook' ? '🔵' : c.canale === 'tiktok' ? '🎵' : c.canale === 'pinterest' ? '📌' : '▶️'}</span>
             <div>
               <p className="font-semibold text-gray-900 text-sm capitalize">{c.canale} · {c.formato}</p>
-              <p className="text-xs text-gray-400">{c.data_pubblicazione} {c.ora_pubblicazione?.slice(0, 5)} {c.nome_prodotto && `· ${c.nome_prodotto}`}</p>
+              <p className="text-xs text-gray-500">Pubblicazione prevista: {c.data_pubblicazione} {c.ora_pubblicazione?.slice(0, 5)}</p>
             </div>
           </div>
 
-          <PostPreview c={contenuto} brand={{ brand_name: c.cliente_nome, social_handle: c.social_handle, sito_url: c.sito_url }} />
+          <PostPreview c={contenuto} brand={{ brand_name: c.cliente_nome, social_handle: c.social_handle, sito_url: c.sito_url }} clientView />
 
-          <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
-            {c.hook && <div><p className="text-[10px] uppercase text-gray-400 font-semibold">Hook</p><p className="text-sm font-medium text-gray-900">{c.hook}</p></div>}
-            {c.caption && <div><p className="text-[10px] uppercase text-gray-400 font-semibold">Caption</p><p className="text-sm text-gray-700 whitespace-pre-wrap">{c.caption}</p></div>}
-            {c.hashtag && <div><p className="text-[10px] uppercase text-gray-400 font-semibold">Hashtag</p><p className="text-xs text-brand-600">{c.hashtag}</p></div>}
-            {c.cta && <div><p className="text-[10px] uppercase text-gray-400 font-semibold">CTA</p><p className="text-xs text-gray-700">{c.cta}</p></div>}
+          <div className="mt-5 border-t border-gray-100 pt-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-2">Testo del contenuto</h2>
+            <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap break-words">{publicationText || 'Nessun testo previsto.'}</p>
           </div>
         </div>
 
         {/* Actions */}
         <div className="card p-5">
-          <p className="text-xs text-gray-500 mb-3 text-center">
-            {isFeedback
-              ? 'Il tuo parere è importante per creare contenuti sempre migliori.'
-              : 'Il tuo feedback aiuta il team a migliorare i contenuti.'
-            }
-          </p>
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">La tua risposta</h2>
+          <label htmlFor="change-note" className="block text-sm text-gray-700 mb-2">Cosa vorresti modificare? <span className="text-gray-500">Facoltativo</span></label>
+          <textarea id="change-note" value={changeNote} onChange={event => setChangeNote(event.target.value)} rows={3} maxLength={2000} placeholder="Scrivi qui le modifiche richieste" className="w-full rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100 mb-4" />
           {isFeedback ? (
             <div className="flex flex-col gap-3">
               <div className="flex gap-3">
@@ -207,7 +205,7 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
                   Mi piace
                 </button>
               </div>
-              <p className="text-[10px] text-gray-400 text-center">Il contenuto rimarrà in bozza. L’admin riceverà il tuo feedback.</p>
+              <p className="text-xs text-gray-500 text-center">Il team riceverà la tua risposta.</p>
             </div>
           ) : (
             <div className="flex gap-3">
@@ -223,7 +221,7 @@ export default function ApprovePage({ params }: { params: Promise<{ token: strin
           )}
         </div>
 
-        <p className="text-center text-[10px] text-gray-400 mt-4">Link valido 7 giorni · Social Web Automation V2</p>
+        <p className="text-center text-xs text-gray-500 mt-4">Link valido 7 giorni · Social Web Automation</p>
       </div>
     </div>
   )

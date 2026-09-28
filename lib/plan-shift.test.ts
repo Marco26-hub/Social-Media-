@@ -39,6 +39,23 @@ test('content already sent to Blotato is never moved', () => {
   assert.equal(plan.bloccatiBlotato, 1)
 })
 
+test('Blotato scheduled status also blocks the move without a remote id', () => {
+  const plan = pianificaSpostamento([
+    riga({ id: 'a' }),
+    riga({ id: 'b', blotato_status: 'scheduled' }),
+  ], 2, OGGI)
+  assert.deepEqual(plan.spostabili.map(s => s.id), ['a'])
+  assert.equal(plan.bloccatiBlotato, 1)
+})
+
+test('a collapsed multiweek campaign is not falsely repaired by a uniform shift', () => {
+  const plan = pianificaSpostamento([
+    riga({ id: 'a', campaign_week: 1, data_pubblicazione: '2026-10-01' }),
+    riga({ id: 'b', campaign_week: 2, data_pubblicazione: '2026-10-01' }),
+  ], 2, '2026-09-28')
+  assert.match(String(plan.errore), /già concentrato/)
+})
+
 test('published and archived content stays where it is', () => {
   const plan = pianificaSpostamento([
     riga({ id: 'a' }),

@@ -54,6 +54,7 @@ type ShiftResult = {
   ignorati: number
   prima_data: string
   nuova_prima_data: string
+  date?: Array<{ id_contenuto: string; da: string; a: string }>
 }
 
 // Referto del controllo finale del ciclo (app/api/data/plan-audit + lib/plan-audit).
@@ -208,7 +209,7 @@ function CalendarioInner() {
   const [bulkDeleting, setBulkDeleting] = useState(false)
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false)
   const [bulkMoveDate, setBulkMoveDate] = useState('')
-  const [bulkMoveTime, setBulkMoveTime] = useState('')
+  const [bulkMovePreview, setBulkMovePreview] = useState<ShiftResult | null>(null)
   const [bulkMoving, setBulkMoving] = useState(false)
   // Conferma "non approvare": rejectTarget = singolo post (tasto rosso), rejectBulkOpen = selezione multipla.
   const [rejectTarget, setRejectTarget] = useState<Contenuto | null>(null)
@@ -1018,66 +1019,34 @@ function CalendarioInner() {
     }
   }
 
-  async function bulkMove() {
+  async function bulkMove(applica: boolean) {
     if (!bulkMoveDate || !selectedIds.size) return
-    const selectedRows = contenuti.filter(item => selectedIds.has(item.id))
-    const movable = selectedRows.filter(item => !item.blotato_post_id
-      && item.blotato_status !== 'scheduled'
-      && item.blotato_status !== 'published'
-      && !['PUBBLICATO', 'ARCHIVIATO'].includes(item.status))
-    const skipped = selectedRows.length - movable.length
-    if (!movable.length) {
-      setAdminError('I contenuti selezionati sono già sincronizzati o pubblicati: rimettili in coda prima di spostarli.')
-      setBulkMoveOpen(false)
-      return
-    }
     setBulkMoving(true)
     setAdminError(null)
     try {
-      const movedIds = new Set<string>()
-      let failed = 0
       if (demo) {
-        movable.forEach(item => movedIds.add(item.id))
-        setDemoData(prev => prev.map(item => movedIds.has(item.id) ? {
-          ...item,
-          data_pubblicazione: bulkMoveDate,
-          ...(bulkMoveTime ? { ora_pubblicazione: bulkMoveTime } : {}),
-        } : item))
+        throw new Error('Spostamento multiplo non disponibile nella demo.')
+      }
+      const res = await fetch('/api/data/calendario/shift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [...selectedIds], riparti_da: bulkMoveDate, dry_run: !applica }),
+      })
+      if (!res.ok) throw new Error(await readApiError(res, 'Spostamento fallito'))
+      const result = await res.json() as ShiftResult
+      if (!applica) {
+        setBulkMovePreview(result)
       } else {
-        const results = await Promise.allSettled(movable.map(async item => {
-          const res = await fetch('/api/data/calendario', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: item.id,
-              data_pubblicazione: bulkMoveDate,
-              ...(bulkMoveTime ? { ora_pubblicazione: bulkMoveTime } : {}),
-            }),
-          })
-          if (!res.ok) throw new Error(await readApiError(res, `Spostamento ${item.id_contenuto} fallito`))
-          return item.id
-        }))
-        results.forEach(result => { if (result.status === 'fulfilled') movedIds.add(result.value) })
-        failed = movable.length - movedIds.size
+        setSelectedIds(new Set())
+        setBulkMoveOpen(false)
+        setBulkMovePreview(null)
+        setBulkMoveDate('')
+        setSyncMsg({ type: 'ok', text: `${result.spostati} contenuti slittati di ${result.giorni > 0 ? '+' : ''}${result.giorni} giorni, mantenendo distanze e orari.` })
+        await fetchData()
       }
-      setContenuti(prev => prev.map(item => movedIds.has(item.id) ? {
-        ...item,
-        data_pubblicazione: bulkMoveDate,
-        ...(bulkMoveTime ? { ora_pubblicazione: bulkMoveTime } : {}),
-      } : item))
-      setSelectedIds(new Set())
-      setBulkMoveOpen(false)
-      setBulkMoveDate('')
-      setBulkMoveTime('')
-      if (failed || skipped) {
-        setAdminError([
-          failed ? `${failed} contenuti non spostati` : '',
-          skipped ? `${skipped} saltati perché già sincronizzati` : '',
-        ].filter(Boolean).join(' · '))
-      }
-      setSyncMsg({ type: 'ok', text: `${movedIds.size} contenuti spostati al ${formatDateLabel(bulkMoveDate)}.` })
     } catch (e) {
       setAdminError((e as Error).message)
+      setBulkMovePreview(null)
     } finally {
       setBulkMoving(false)
     }
@@ -1453,6 +1422,9 @@ function CalendarioInner() {
                 <span className="font-semibold">{shiftPreview.spostati} contenuti</span> si spostano di {shiftPreview.giorni > 0 ? '+' : ''}{shiftPreview.giorni} giorni:
                 si parte dal <span className="font-semibold">{formatShortDate(shiftPreview.nuova_prima_data)}</span> invece che dal {formatShortDate(shiftPreview.prima_data)}.
               </p>
+              <div className="mt-2 max-h-40 overflow-auto rounded-lg border border-slate-200 bg-white p-2" aria-label="Date dei contenuti prima e dopo lo slittamento">
+                {shiftPreview.date?.map((row, index) => <p key={`${row.id_contenuto}-${index}`}>{row.id_contenuto}: {formatShortDate(row.da)} → {formatShortDate(row.a)}</p>)}
+              </div>
               {shiftPreview.bloccati_blotato > 0 && (
                 <p className="mt-1 text-amber-800">
                   {shiftPreview.bloccati_blotato} contenuti sono gia stati inviati a Blotato e NON verranno spostati: la loro data di uscita vive sul server di Blotato, cambiarla qui creerebbe un calendario che mente. Per spostarli davvero vanno annullati la e rimessi in coda.
@@ -1778,9 +1750,9 @@ function CalendarioInner() {
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <button
                   onClick={() => {
-                    const first = contenuti.find(item => selectedIds.has(item.id))
-                    setBulkMoveDate(first ? toYmd(first.data_pubblicazione) : todayIso)
-                    setBulkMoveTime('')
+                    const dates = contenuti.filter(item => selectedIds.has(item.id)).map(item => toYmd(item.data_pubblicazione)).sort()
+                    setBulkMoveDate(dates[0] || todayIso)
+                    setBulkMovePreview(null)
                     setBulkMoveOpen(true)
                   }}
                   className="py-1.5 px-3 text-xs inline-flex items-center gap-1.5 rounded-lg font-medium bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors"
@@ -2714,40 +2686,38 @@ function CalendarioInner() {
                 <CalendarClock className="h-5 w-5" />
               </span>
               <div>
-                <h2 className="font-bold text-gray-900">Sposta {selectedIds.size} contenuti</h2>
-                <p className="text-xs text-gray-500">Inclusi i contenuti ancora da approvare</p>
+                <h2 className="font-bold text-gray-900">Slitta {selectedIds.size} contenuti</h2>
+                <p className="text-xs text-gray-500">Conserva le distanze tra i giorni e gli orari</p>
               </div>
             </div>
             <div className="space-y-4 p-5">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-gray-700">Nuova data</label>
+                <label className="mb-1 block text-xs font-semibold text-gray-700">Nuova data del primo contenuto selezionato</label>
                 <input
                   type="date"
                   value={bulkMoveDate}
-                  onChange={event => setBulkMoveDate(event.target.value)}
+                  onChange={event => { setBulkMoveDate(event.target.value); setBulkMovePreview(null) }}
                   className="input w-full"
                   required
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-gray-700">Nuova ora <span className="font-normal text-gray-400">(facoltativa)</span></label>
-                <input
-                  type="time"
-                  value={bulkMoveTime}
-                  onChange={event => setBulkMoveTime(event.target.value)}
-                  className="input w-full"
-                />
-                <p className="mt-1 text-[11px] text-gray-500">Lascia vuoto per mantenere l’orario di ciascun contenuto.</p>
-              </div>
+              <p className="text-xs text-gray-600">Gli altri contenuti slittano dello stesso numero di giorni: non finiscono tutti nella data scelta.</p>
+              {bulkMovePreview && (
+                <div className="max-h-44 overflow-auto rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-950">
+                  <p className="font-semibold">Anteprima: {bulkMovePreview.spostati} contenuti, {bulkMovePreview.giorni > 0 ? '+' : ''}{bulkMovePreview.giorni} giorni</p>
+                  {bulkMovePreview.date?.map((row, index) => <p key={`${row.id_contenuto}-${index}`}>{row.id_contenuto}: {formatShortDate(row.da)} → {formatShortDate(row.a)}</p>)}
+                  {bulkMovePreview.bloccati_blotato > 0 && <p className="mt-2 font-semibold text-amber-800">{bulkMovePreview.bloccati_blotato} già su Blotato: non spostati.</p>}
+                </div>
+              )}
               <p className="rounded-lg border border-sky-100 bg-sky-50 p-3 text-xs text-sky-800">
                 I contenuti già programmati o pubblicati su Blotato verranno saltati. Prima devono essere rimessi in coda.
               </p>
             </div>
             <div className="flex gap-3 border-t p-5">
               <button type="button" onClick={() => setBulkMoveOpen(false)} disabled={bulkMoving} className="btn-secondary flex-1 justify-center">Annulla</button>
-              <button type="button" onClick={bulkMove} disabled={bulkMoving || !bulkMoveDate} className="btn-primary flex-1 justify-center">
+              <button type="button" onClick={() => bulkMove(Boolean(bulkMovePreview))} disabled={bulkMoving || !bulkMoveDate} className="btn-primary flex-1 justify-center">
                 {bulkMoving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Move className="h-4 w-4" />}
-                {bulkMoving ? 'Sposto...' : 'Sposta'}
+                {bulkMoving ? 'Calcolo...' : bulkMovePreview ? 'Conferma slittamento' : 'Mostra anteprima'}
               </button>
             </div>
           </div>

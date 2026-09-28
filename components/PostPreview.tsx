@@ -101,7 +101,7 @@ function VisualBriefCard({ icon, title, description, accent = 'from-gray-700 to-
   )
 }
 
-function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, canale, formato, canaleIcon, finalAssetMode, audioUrl, audioTitle }: {
+function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, canale, formato, canaleIcon, finalAssetMode, audioUrl, audioTitle, clientView }: {
   imgs: string[]
   storyboard?: VisualItem[]
   handle: string
@@ -113,6 +113,7 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
   formato: string
   canaleIcon: string
   finalAssetMode?: boolean
+  clientView?: boolean
   audioUrl?: string | null
   audioTitle?: string | null
 }) {
@@ -380,7 +381,7 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
         )}
 
         {/* Sidebar azioni */}
-        <div className="absolute right-2 bottom-24 flex flex-col gap-3.5 items-center text-white z-10">
+        {!clientView && <div className="absolute right-2 bottom-24 flex flex-col gap-3.5 items-center text-white z-10">
           <div className="flex flex-col items-center">
             <Heart className="w-6 h-6 drop-shadow" />
             <span className="text-[9px] font-semibold mt-0.5 drop-shadow">1.2K</span>
@@ -392,20 +393,20 @@ function ReelPlayer({ imgs, storyboard, handle, caption, hook, hashtag, aspect, 
           <div className="flex flex-col items-center">
             <Send className="w-6 h-6 drop-shadow" />
           </div>
-        </div>
+        </div>}
       </div>
-      <p className="text-center text-xs text-gray-400 mt-2">
+      {!clientView && <p className="text-center text-xs text-gray-400 mt-2">
         Preview {canale} · {formato}
         {/* Dire che diventeranno un video unico: senza, l'anteprima che scorre
             fa pensare a una sequenza di immagini separate come una Story. */}
         {!videoUrl && total > 1 && ` · ${total} scene → un MP4 unico al montaggio`}
         {!videoUrl && total === 1 && ' · anteprima statica'}
-      </p>
+      </p>}
       {/* Caption, hashtag e nome file non sono testo impresso sul Reel. Tenerli
           dentro il player copriva hook e CTA gia presenti nei master finali e
           faceva sembrare difettoso un asset corretto. Restano consultabili in
           un pannello separato, come metadati editoriali. */}
-      {!finalAssetMode && (caption || hook || hashtag) && (
+      {!clientView && !finalAssetMode && (caption || hook || hashtag) && (
         <div className="mt-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-left shadow-sm">
           <p className="line-clamp-3 text-[11px] leading-relaxed text-gray-700">{caption || hook}</p>
           {hashtag && <p className="mt-1 truncate text-[10px] font-medium text-brand-700">{hashtag}</p>}
@@ -736,7 +737,7 @@ const ASPECT: Record<string, string> = {
   'x-video':             'aspect-video',        // 16:9
 }
 
-export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandHandleInfo }) {
+export default function PostPreview({ c, brand, clientView = false }: { c: Contenuto; brand?: BrandHandleInfo; clientView?: boolean }) {
   const key = `${c.canale}-${c.formato}`
   const aspect = ASPECT[key] ?? 'aspect-square'
   const handle = resolveHandle(c.canale, brand)
@@ -799,7 +800,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
             </div>
           )}
           {/* Reply input */}
-          <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent">
+          {!clientView && <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent">
             {socialUrls.message ? (
               <a
                 href={socialUrls.message}
@@ -814,9 +815,9 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
                 Invia messaggio...
               </div>
             )}
-          </div>
+          </div>}
         </div>
-        <p className="text-center text-xs text-gray-400 mt-2">Preview {c.canale} story</p>
+        {!clientView && <p className="text-center text-xs text-gray-400 mt-2">Preview {c.canale} story</p>}
       </div>
     )
   }
@@ -886,6 +887,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
         formato={c.formato}
         canaleIcon={CANALE_ICON[c.canale] || '📸'}
         finalAssetMode={finalAssetMode}
+        clientView={clientView}
         audioUrl={c.reel_audio_url}
         audioTitle={c.reel_audio_title}
       />
@@ -905,9 +907,9 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
           ) : (
             <VisualBriefCard icon="📌" title={fallbackVisualTitle} description={fallbackVisualDescription} accent="from-red-600 via-rose-700 to-slate-950" />
           )}
-          <button className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+          {!clientView && <button className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">
             Salva
-          </button>
+          </button>}
         </div>
         <div className="mt-2 px-1">
           <p className="text-sm font-semibold text-gray-900 line-clamp-2">{c.hook}</p>
@@ -931,7 +933,7 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
           </div>
           <div>
             <p className="text-xs font-semibold text-gray-900">{handle}</p>
-            <p className="text-[10px] text-gray-400">Sponsorizzato · {c.canale}</p>
+            <p className="text-[10px] text-gray-500">{c.canale}</p>
           </div>
         </div>
         <MoreHorizontal className="w-4 h-4 text-gray-400" />
@@ -955,15 +957,15 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
       </div>
 
       {/* Azioni IG-style */}
-      <div className="px-3 pt-2.5 pb-1 flex items-center gap-3">
+      {!clientView && <div className="px-3 pt-2.5 pb-1 flex items-center gap-3">
         <Heart className="w-5 h-5" />
         <MessageCircle className="w-5 h-5" />
         <Send className="w-5 h-5" />
         <Bookmark className="w-5 h-5 ml-auto" />
-      </div>
+      </div>}
 
       {/* Caption */}
-      <div className="px-3 pb-3">
+      {!clientView && <div className="px-3 pb-3">
         <p className="text-xs text-gray-900">
           <span className="font-semibold mr-1">{handle}</span>
           <span className="font-medium">{c.hook}</span>
@@ -974,12 +976,9 @@ export default function PostPreview({ c, brand }: { c: Contenuto; brand?: BrandH
         {c.hashtag && (
           <p className="text-xs text-blue-700 mt-1 truncate">{c.hashtag}</p>
         )}
-        {c.cta && (
-          <button className={`mt-2 w-full text-xs font-semibold py-2 rounded-lg ${isFB ? 'bg-blue-600 text-white' : 'border border-gray-200 text-gray-900'}`}>
-            {c.cta}
-          </button>
-        )}
+        {c.cta && <p className="mt-2 text-xs text-gray-700">{c.cta}</p>}
       </div>
+      }
     </div>
   )
 }

@@ -75,7 +75,7 @@ export async function PATCH(request: Request) {
 
     // status='pending' rende la decisione MONOUSO: una volta approvato/rifiutato il
     // token non può più ribaltare la scelta (prima era ripetibile entro i 7 giorni).
-    const rows = await q("SELECT id, cliente_id, contenuto_id FROM approval_tokens WHERE token = $1 AND expires_at > now() AND status = 'pending'", [token])
+    const rows = await q("SELECT id, cliente_id, contenuto_id, tipo_invio FROM approval_tokens WHERE token = $1 AND expires_at > now() AND status = 'pending'", [token])
     if (!rows.length) return NextResponse.json({ error: 'Token non valido, scaduto o già usato' }, { status: 404 })
 
     const row = rows[0] as Record<string, string>
@@ -88,10 +88,15 @@ export async function PATCH(request: Request) {
     )
 
     // If approved, update calendario status
-    if (status === 'approved') {
+    if (status === 'approved' && row.tipo_invio !== 'feedback') {
       await q(
-        `UPDATE calendario SET status = 'APPROVATO', approvato_da = 'cliente', data_approvazione = $1 WHERE id_contenuto = $2 AND cliente_id = $3`,
+        `UPDATE calendario SET status = 'APPROVATO', approvato_da = 'cliente', data_approvazione = $1 WHERE id_contenuto = $2 AND cliente_id = $3 AND status = 'DA_APPROVARE'`,
         [now, row.contenuto_id, row.cliente_id],
+      )
+    } else if (status === 'rejected' && row.tipo_invio !== 'feedback') {
+      await q(
+        `UPDATE calendario SET status = 'NON_APPROVATO' WHERE id_contenuto = $1 AND cliente_id = $2 AND status = 'DA_APPROVARE'`,
+        [row.contenuto_id, row.cliente_id],
       )
     }
 

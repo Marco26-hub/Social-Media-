@@ -27,6 +27,7 @@ export async function POST(request: Request) {
       giorni?: number
       riparti_da?: string
       da?: string
+      ids?: string[]
       dry_run?: boolean
     }
     const dryRun = body.dry_run !== false
@@ -39,12 +40,17 @@ export async function POST(request: Request) {
     if (!clientRows.length) return NextResponse.json({ error: 'Cliente non trovato' }, { status: 404 })
     const oggi = oggiNelFuso(String(clientRows[0].timezone || 'Europe/Rome'))
 
+    const ids = body.ids
+    if (ids !== undefined && (!Array.isArray(ids) || !ids.length || ids.length > 500 || ids.some(id => typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))) {
+      return NextResponse.json({ error: 'Selezione dei contenuti non valida.' }, { status: 400 })
+    }
     const rows = await q(
-      `SELECT id, id_contenuto, data_pubblicazione, status, blotato_post_id
+      `SELECT id, id_contenuto, data_pubblicazione, status, blotato_post_id, blotato_status, campaign_week
          FROM calendario
         WHERE cliente_id = $1 AND data_pubblicazione >= $2::date
+          ${ids ? 'AND id = ANY($3::uuid[])' : ''}
         ORDER BY data_pubblicazione, ora_pubblicazione`,
-      [cid, body.da && /^\d{4}-\d{2}-\d{2}$/.test(body.da) ? body.da : oggi],
+      [cid, body.da && /^\d{4}-\d{2}-\d{2}$/.test(body.da) ? body.da : oggi, ...(ids ? [ids] : [])],
     ) as Record<string, unknown>[]
 
     let giorni = Number(body.giorni)
@@ -68,6 +74,7 @@ export async function POST(request: Request) {
       ignorati: piano.ignorati,
       prima_data: piano.primaData,
       nuova_prima_data: piano.nuovaPrimaData,
+      date: piano.spostabili.map(({ id_contenuto, da, a }) => ({ id_contenuto, da, a })),
     }
     if (dryRun) return NextResponse.json(riepilogo)
 

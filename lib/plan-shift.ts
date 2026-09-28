@@ -73,7 +73,7 @@ export function primoGiornoSpostabile(rows: ShiftRow[], oggi: string, da?: strin
       const data = dataDi(row)
       if (!data || data < soglia) return false
       if (STATI_FERMI.has(testo(row.status).toUpperCase())) return false
-      return !testo(row.blotato_post_id)
+      return !testo(row.blotato_post_id) && !['scheduled', 'published'].includes(testo(row.blotato_status).toLowerCase())
     })
     .map(dataDi)
     .sort()
@@ -135,7 +135,7 @@ export function pianificaSpostamento(
 
   for (const row of candidati) {
     if (STATI_FERMI.has(testo(row.status).toUpperCase())) { ignorati++; continue }
-    if (testo(row.blotato_post_id)) { bloccatiBlotato++; continue }
+    if (testo(row.blotato_post_id) || ['scheduled', 'published'].includes(testo(row.blotato_status).toLowerCase())) { bloccatiBlotato++; continue }
     const da2 = dataDi(row)
     spostabili.push({
       id: String(row.id),
@@ -147,6 +147,17 @@ export function pianificaSpostamento(
 
   if (!spostabili.length) {
     return { ...vuoto, bloccatiBlotato, ignorati, errore: 'Nessun contenuto da spostare: sono tutti pubblicati o gia inviati a Blotato.' }
+  }
+
+  // Uno slittamento uniforme non può ricostruire un calendario già schiacciato
+  // su un unico giorno. Evitiamo di confermare una falsa "riparazione".
+  const idsSpostabili = new Set(spostabili.map(item => item.id))
+  const settimane = new Set(candidati
+    .filter(row => idsSpostabili.has(String(row.id)))
+    .map(row => Number(row.campaign_week))
+    .filter(week => Number.isInteger(week) && week > 0))
+  if (settimane.size > 1 && new Set(spostabili.map(item => item.da)).size === 1) {
+    return { ...vuoto, bloccatiBlotato, ignorati, errore: 'Il calendario è già concentrato in un solo giorno: uno slittamento non può ripristinare la sequenza originale. Ripristina prima le date dal piano editoriale.' }
   }
 
   const date = spostabili.map(s => s.a).sort()
