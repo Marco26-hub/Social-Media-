@@ -51,6 +51,14 @@ const TASK_WHY: Record<Task, string> = {
   'blog-articolo':    'Articoli long-form: modello con output ampio. Free per iniziare, a pagamento per qualità superiore.',
 }
 
+function contextWindowTokens(value: string): number | null {
+  const match = String(value || '').trim().toUpperCase().match(/([\d.]+)\s*([KM])?/)
+  if (!match) return null
+  const amount = Number(match[1])
+  if (!Number.isFinite(amount)) return null
+  return Math.round(amount * (match[2] === 'M' ? 1_000_000 : match[2] === 'K' ? 1_000 : 1))
+}
+
 // Fallback se il catalogo live non è raggiungibile: id verificati (stessi della
 // cascade backend) + un modello immagini di default.
 const OPENROUTER_FALLBACK: Model[] = [
@@ -158,6 +166,11 @@ export default function AIModelSelector({ task }: { task?: Task }) {
     : []
 
   const totalShown = textFree.length + textPaid.length + imageModels.length
+  const contextTokens = contextWindowTokens(selected.context)
+  const hasWideEditorialContext = selected.category === 'text' && contextTokens !== null && contextTokens >= 128_000
+  const taskGuidance = task === 'piano-editoriale' && hasWideEditorialContext
+    ? `Contesto ampio attivo (${selected.context}): adatto al piano editoriale completo.`
+    : task ? TASK_WHY[task] : ''
 
   return (
     <div className="card p-4 md:p-5 mb-6 bg-gradient-to-br from-white to-gray-50 border-gray-100 overflow-visible">
@@ -196,7 +209,9 @@ export default function AIModelSelector({ task }: { task?: Task }) {
             <p className="font-semibold text-gray-900 truncate">{selected.name}</p>
             <p className="text-xs text-gray-500 mt-0.5 truncate">OpenRouter · contesto {selected.context}</p>
             {task && (
-              <p className="text-[11px] text-amber-700 mt-1 leading-snug">{TASK_WHY[task]}</p>
+              <p className={`text-[11px] mt-1 leading-snug ${task === 'piano-editoriale' && hasWideEditorialContext ? 'text-emerald-700' : 'text-amber-700'}`}>
+                {taskGuidance}
+              </p>
             )}
           </div>
         </div>
