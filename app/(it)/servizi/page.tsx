@@ -117,6 +117,23 @@ const servicesPageJsonLd = {
 
 const SERVICES = [
   {
+    ...metodoServizio('ai-a-casa-tua'),
+    id: 'ai-a-casa-tua',
+    title: 'L’intelligenza artificiale che lavora dentro il tuo ufficio.',
+    description:
+      'Un Mac consegnato con l’AI già installata, scelta in base alla macchina, tarata e collaudata. I documenti restano sul computer: niente cloud, niente canone per persona, funziona anche senza rete. Il Mac lo paghi ad Apple al suo prezzo, a noi paghi il lavoro.',
+    included: [
+      'Scelta della macchina sul lavoro che devi fare',
+      'Installazione completa e taratura sulla macchina',
+      'Un solo pulsante: si apre, si sceglie, si lavora',
+      'Collaudo registrato consegnato insieme al computer',
+      'Formazione e istruzioni scritte in italiano',
+      'Assistenza inclusa da 30 giorni a 12 mesi',
+    ],
+    strumento: { nome: 'Una prova sui tuoi documenti', beneficio: 'Prima di comprare qualsiasi cosa, proviamo su un documento vero dei tuoi e vedi che risposta esce.' },
+    outcome: 'Lavoro ripetitivo più veloce, senza mandare fuori un solo documento riservato.',
+  },
+  {
     ...metodoServizio('gestionale-ristoranti'),
     id: 'gestionale-ristoranti',
     title: 'Ordine e pagamento passano dal telefono del cliente.',
@@ -446,7 +463,16 @@ export default function ServiziPage() {
                 <div className={styles.outcome}><Target size={17} aria-hidden="true" /><span><strong>Risultato atteso:</strong> {outcome}</span></div>
                 <div className={styles.serviceLinks}>
                   <Link href={href} className={site.outlineButton}>Come funziona: {label} <ArrowRight size={16} aria-hidden="true" /></Link>
-                  <Link href="/pacchetti" className={styles.listinoLink}>Listino completo <ArrowRight size={14} aria-hidden="true" /></Link>
+                  {/* Il listino di quasi tutti i servizi sta in /pacchetti.
+                      "AI a casa tua" ha il suo in pagina, perche' non e' un
+                      canone: mandare li' chi cerca il prezzo di quel servizio
+                      lo porterebbe a un listino che non lo nomina. */}
+                  <Link
+                    href={id === 'ai-a-casa-tua' ? `${href}#prezzi` : '/pacchetti'}
+                    className={styles.listinoLink}
+                  >
+                    Listino completo <ArrowRight size={14} aria-hidden="true" />
+                  </Link>
                 </div>
               </div>
             </article>

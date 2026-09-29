@@ -26,6 +26,8 @@ import PublicFooter from '@/components/PublicFooter'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicHeader from '@/components/PublicHeader'
 import SegretariaPopup from '@/components/SegretariaPopup'
+import TrustpilotWidget from '@/components/TrustpilotWidget'
+import { TRUSTPILOT_ATTIVO, TRUSTPILOT_PROFILO_URL } from '@/lib/trustpilot'
 import styles from '@/styles/landing.module.css'
 import { PREZZI } from '@/lib/prezzi-ingresso'
 
@@ -397,6 +399,18 @@ export default function LandingPage() {
             </article>
           ))}
         </div>
+        {/* Prova di terzi dentro «Prove verificabili»: la sezione promette
+            riscontri controllabili, e le recensioni sono l'unico pezzo che non
+            scriviamo noi. Compare solo con gli ID TrustBox in ambiente, cosi'
+            non resta mai una fascia vuota al posto del widget. */}
+        {TRUSTPILOT_ATTIVO && (
+          <div className={styles.trustpilotBand}>
+            <TrustpilotWidget locale="it-IT" />
+            <a href={TRUSTPILOT_PROFILO_URL} target="_blank" rel="noopener noreferrer">
+              Leggi tutte le recensioni su Trustpilot <ArrowRight size={15} aria-hidden="true" />
+            </a>
+          </div>
+        )}
       </section>
 
       <section id="compliance" className={styles.compliance} aria-labelledby="compliance-title">

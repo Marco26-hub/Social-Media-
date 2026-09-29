@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   TRUSTPILOT_ATTIVO,
   TRUSTPILOT_BUSINESS_UNIT_ID,
@@ -45,11 +45,21 @@ function caricaBootstrap(): Promise<void> {
   return bootstrapPromise
 }
 
+type Tema = 'light' | 'dark'
+
+// Il TrustBox e' disegnato da Trustpilot dentro un iframe: il tema non si eredita
+// dal CSS della pagina, va passato come attributo. Fisso su `light` diventava un
+// riquadro bianco dentro la fascia scura, quindi di default segue il tema del
+// sito usando lo stesso evento del ThemeToggle.
+function temaCorrente(): Tema {
+  return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
+}
+
 type Props = {
   /** Altezza dichiarata dal template scelto nella dashboard TrustBox. */
   height?: string
-  /** Tema del box: va accordato al fondo su cui viene messo. */
-  theme?: 'light' | 'dark'
+  /** `auto` segue il tema del sito; i valori fissi servono su fondi forzati. */
+  theme?: Tema | 'auto'
   /**
    * Lingua del box. Era fissa a `it-IT`, e sulla home inglese avrebbe stampato
    * «recensioni» e le date in italiano dentro una pagina in inglese.
@@ -60,11 +70,24 @@ type Props = {
 
 export default function TrustpilotWidget({
   height = '52px',
-  theme = 'light',
+  theme = 'auto',
   locale = 'it-IT',
   className,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null)
+  // Si parte da `light` anche in `auto`: al primo render sul server il tema non
+  // e' leggibile, e il widget viene comunque montato dall'effetto.
+  const [temaAuto, setTemaAuto] = useState<Tema>('light')
+
+  useEffect(() => {
+    if (theme !== 'auto') return
+    setTemaAuto(temaCorrente())
+    const sincronizza = () => setTemaAuto(temaCorrente())
+    window.addEventListener('swa-theme-change', sincronizza)
+    return () => window.removeEventListener('swa-theme-change', sincronizza)
+  }, [theme])
+
+  const temaEffettivo: Tema = theme === 'auto' ? temaAuto : theme
 
   useEffect(() => {
     if (!TRUSTPILOT_ATTIVO) return
@@ -85,7 +108,7 @@ export default function TrustpilotWidget({
     return () => {
       annullato = true
     }
-  }, [locale, height, theme])
+  }, [locale, height, temaEffettivo])
 
   if (!TRUSTPILOT_ATTIVO) return null
 
@@ -98,7 +121,7 @@ export default function TrustpilotWidget({
       data-businessunit-id={TRUSTPILOT_BUSINESS_UNIT_ID}
       data-style-height={height}
       data-style-width="100%"
-      data-theme={theme}
+      data-theme={temaEffettivo}
     >
       <a href={TRUSTPILOT_PROFILO_URL} target="_blank" rel="noopener noreferrer">
         {locale === 'en-US'

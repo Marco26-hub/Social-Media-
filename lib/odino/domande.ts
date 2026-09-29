@@ -275,11 +275,25 @@ const PESI: Record<Lingua, Map<string, number>> = {
 
 const CORPUS: Record<Lingua, Domanda[]> = { it: DOMANDE, en: DOMANDE_EN }
 
+// Descrivono l'intenzione della domanda, non il suo oggetto. Da sole non
+// possono scegliere una risposta: «realizzate ascensori?» non deve aprire la
+// FAQ «realizzate siti?» soltanto perché condivide il verbo. Il tema vero —
+// ascensori, siti, social, GDPR — deve comparire anche nella fonte candidata.
+const INTENTI_GENERICI = new Set([
+  'fate', 'facciamo', 'vendete', 'vendiamo', 'offrite', 'offriamo',
+  'realizzate', 'realizziamo', 'producete', 'produciamo', 'fornite', 'forniamo',
+  'servizio', 'servizi', 'prodotto', 'prodotti',
+  'costa', 'costo', 'prezzo', 'prezzi', 'preventivo', 'tariffa', 'tariffe',
+  'sell', 'offer', 'provide', 'make', 'produce', 'service', 'services',
+  'product', 'products', 'cost', 'price', 'prices', 'quote', 'fee', 'fees',
+])
+
 export type Lingua = 'it' | 'en'
 
 export function cercaDomande(testo: string, quante = 4, lingua: Lingua = 'it'): Domanda[] {
   const cercati = [...new Set(termini(testo))]
   if (!cercati.length) return []
+  const specifici = cercati.filter(t => !INTENTI_GENERICI.has(t))
 
   const peso = PESI[lingua]
   // Un termine che il sito non usa mai non aiuta a scegliere, ma non deve
@@ -293,17 +307,24 @@ export function cercaDomande(testo: string, quante = 4, lingua: Lingua = 'it'): 
     const nelTitolo = new Set(d.termini)
     const nellaRisposta = new Set(d.terminiRisposta)
     let p = 0
+    let specificiTrovati = 0
     for (const t of cercati) {
       const w = pesoDi(t)
-      if (nelTitolo.has(t)) p += w * 3
-      else if (nellaRisposta.has(t)) p += w
+      let trovato = false
+      if (nelTitolo.has(t)) { p += w * 3; trovato = true }
+      else if (nellaRisposta.has(t)) { p += w; trovato = true }
       else if (t.length > 5) {
         const radice = t.slice(0, 5)
-        if ([...nelTitolo].some(x => x.startsWith(radice))) p += w * 2
-        else if ([...nellaRisposta].some(x => x.startsWith(radice))) p += w * 0.6
+        if ([...nelTitolo].some(x => x.startsWith(radice))) { p += w * 2; trovato = true }
+        else if ([...nellaRisposta].some(x => x.startsWith(radice))) { p += w * 0.6; trovato = true }
       }
+      if (trovato && !INTENTI_GENERICI.has(t)) specificiTrovati++
     }
-    return { d, p }
+    // Se la frase contiene un oggetto preciso, almeno metà dei suoi termini
+    // significativi deve essere sostenuta dalla risposta. Un solo verbo comune
+    // non e' piu' sufficiente a far sembrare competente ODINO sul tema sbagliato.
+    const coperturaMinima = specifici.length ? Math.ceil(specifici.length / 2) : 0
+    return { d, p: specificiTrovati >= coperturaMinima ? p : 0 }
   })
 
   // La soglia e' relativa e volutamente alta. Con una soglia bassa la ricerca

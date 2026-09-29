@@ -27,6 +27,7 @@ const MOBILE_LINKS = [
       { href: '/servizi/blog-seo', label: 'Blog SEO + GEO' },
       { href: '/servizi/siti-e-commerce', label: 'Siti ed e-commerce' },
       { href: '/servizi/ricerca-clienti-b2b', label: 'Ricerca Clienti B2B' },
+      { href: '/servizi/ai-a-casa-tua', label: 'AI a casa tua' },
       { href: '/servizi/segretaria-telefonica-ai', label: 'Segretaria telefonica AI' },
       { href: '/servizi/agenda-clienti-whatsapp', label: 'Agenda, clienti e WhatsApp' },
       { href: '/servizi/video-produzione', label: 'Riprese video in azienda' },
@@ -56,6 +57,7 @@ const MOBILE_LINKS_EN = [
     label: 'All services',
     sotto: [
       ...SERVIZI_EN.map(s => ({ href: `/en/services/${s.slug}`, label: s.config.serviceName })),
+      { href: '/en/services/local-ai-on-your-mac', label: 'Local AI on your Mac' },
       { href: '/en/services/ai-phone-assistant', label: 'AI phone assistant' },
       { href: '/en/services/client-diary-whatsapp', label: 'Diary, clients and WhatsApp' },
     ],

@@ -8,6 +8,12 @@
 export type FaseEn = { number: string; title: string; text: string }
 
 const FASI: Record<string, FaseEn[]> = {
+  'ai-a-casa-tua': [
+    { number: '01', title: 'What you actually need', text: 'We start from the work, not from the computer: what you want the AI to do, on which documents and for how many hours a day. The right machine comes out of that, and it is often smaller than the one you would have bought on your own.' },
+    { number: '02', title: 'Which machine', text: 'We tell you which Mac to get and how much memory it takes, because memory decides how long a conversation can get. You order the Mac from Apple at their list price: we make nothing on it.' },
+    { number: '03', title: 'Installation and tuning', text: 'We install the system and tune it to that machine, so it holds up under long work without slowing everything else down. What you end up with is one button in the Dock: press it, choose, work.' },
+    { number: '04', title: 'Testing and handover', text: 'The machine only leaves after a long test run, recorded and handed over with the computer. We bring it to you switched on, with the time to show you how it works and a number to write to afterwards.' },
+  ],
   'gestione-social-media': [
     { number: '01', title: 'What we collect at the start', text: 'The kick-off is the session where we collect services, prices, photos, materials and the phrases you never want to read on your 2 profiles. One meeting is enough: we write the rest and you correct anything that does not sound like you.' },
     { number: '02', title: 'When you see the calendar', text: 'The first month’s calendar is ready before the month begins, with dates, formats and topics already assigned to the 2 channels. You read it calmly, remove what does not convince you, and only then does production start.' },

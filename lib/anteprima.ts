@@ -79,6 +79,12 @@ const IT: Record<string, Anteprima> = {
     sottotitolo: `Pilot con contatti qualificati e priorità dichiarate, ${PREZZI.b2b}.`,
     tinta: 'notte',
   },
+  '/servizi/ai-a-casa-tua': {
+    occhiello: 'AI a casa tua',
+    titolo: 'L’intelligenza artificiale gira sul tuo Mac.',
+    sottotitolo: 'Macchina scelta, installata e collaudata: i documenti restano tuoi, senza cloud e senza canone.',
+    tinta: 'notte',
+  },
   '/servizi/segretaria-telefonica-ai': {
     occhiello: 'Segretaria telefonica AI',
     titolo: 'Risponde mentre hai le mani occupate.',
@@ -214,6 +220,12 @@ const IT: Record<string, Anteprima> = {
 }
 
 const EN: Record<string, Anteprima> = {
+  '/en/services/local-ai-on-your-mac': {
+    occhiello: 'Local AI on your Mac',
+    titolo: 'The AI runs on your own computer.',
+    sottotitolo: 'Machine chosen, installed and tested: your documents stay yours, no cloud and no monthly fee.',
+    tinta: 'notte',
+  },
   '/en/services/restaurant-management-system': {
     occhiello: 'Tavolo · Restaurant system',
     titolo: 'Scan, order and pay. The room sees everything.',

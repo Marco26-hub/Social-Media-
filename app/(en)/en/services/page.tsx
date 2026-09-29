@@ -1,7 +1,7 @@
 import { anteprimaOg } from '@/lib/anteprima'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, CalendarClock, Clapperboard, ClipboardCheck, FileSearch, Globe2, Newspaper, PhoneCall, Scale, Share2, Target, UtensilsCrossed, Workflow, type LucideIcon } from 'lucide-react'
+import { ArrowRight, CalendarClock, Clapperboard, ClipboardCheck, Cpu, FileSearch, Globe2, Newspaper, PhoneCall, Scale, Share2, Target, UtensilsCrossed, Workflow, type LucideIcon } from 'lucide-react'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '@/styles/english.module.css'
 
@@ -27,6 +27,7 @@ const services: { id: string; href?: string; icon: LucideIcon; title: string; te
   { id: 'web', href: '/en/services/websites-ecommerce', icon: Globe2, title: 'Websites and e-commerce', text: 'Landing pages, corporate websites and online stores built for clear offers, mobile use, analytics, SEO foundations and measurable conversion paths.' },
   { id: 'leads', href: '/en/services/b2b-lead-research', icon: Target, title: 'B2B lead research', text: 'We define the ideal company profile, research up to 30 matching organisations and provide sources, exclusions and priorities. No automated outreach and no guaranteed meetings or sales.' },
   { id: 'video', href: '/en/services/video-production', icon: Clapperboard, title: 'Video shot on site', text: 'We come and film where you work, with a photographer, lights and proper lenses. Four monthly plans, from 5 to 20 vertical videos a month, spread across the weeks rather than delivered in one batch. From €590 per month; travel inside the agreed area is included.' },
+  { id: 'local-ai', href: '/en/services/local-ai-on-your-mac', icon: Cpu, title: 'Local AI on your Mac', text: 'A Mac handed over with artificial intelligence already installed, tuned to that machine and tested. Your documents never leave the computer: no cloud, no per-seat fee, and it works offline. You pay Apple for the machine at their list price; our work starts at €490.' },
   { id: 'phone', href: '/en/services/ai-phone-assistant', icon: PhoneCall, title: 'AI phone assistant', text: 'A number that answers while your hands are busy. It gives the services, prices and opening hours you approved, reads the calendar and books a slot; anything outside the rules is passed to you. From €199 per month, 600 minutes included — about ten hours of phone.' },
   { id: 'agenda', href: '/en/services/client-diary-whatsapp', icon: CalendarClock, title: 'Diary and client recall', text: 'Each day the system reads the diary and the history, finds who has not come back and drafts the message. Nothing leaves without your yes. From €390 per month, 1000 messages included. No guarantee on how many people return.' },
   { id: 'jobs', href: '/en/services/job-reporting', icon: ClipboardCheck, title: 'Job reports and field work', text: 'For work done away from the office: checklists built on your real services, photos, hours, the client signature on the phone and a PDF before the team leaves. Paired with a website that turns requests into jobs. Quoted after review.' },

@@ -11,7 +11,15 @@
 //
 // 2026-09-12: aggiunto il punto 4 sui corsi online e i casi del recesso per
 // contenuto digitale, prevendita e aule in diretta.
-export const TERMINI_VERSIONE = '2026-09-12'
+// 2026-09-21: aggiunto il punto 5 sul servizio «AI a casa tua» — computer non
+// venduto dal Titolare, prezzi una tantum, trasferta, limiti di garanzia sui
+// modelli di terze parti, obblighi del cliente su privacy e AI Act, assistenza
+// inclusa — e i tre casi di recesso relativi (consumatore, computer,
+// manutenzione). Cambia cio a cui il cliente si obbliga, quindi la versione sale.
+// Stesso giorno: dichiarato nel 5.3 che con un modello in cloud i dati escono dal
+// computer, che la consegna avviene con il solo modello locale attivo e che il
+// collegamento esterno si attiva solo su richiesta.
+export const TERMINI_VERSIONE = '2026-09-21'
 
 /** Come si legge in pagina: «in vigore dal 12 settembre 2026». */
 export const TERMINI_DATA = new Date(`${TERMINI_VERSIONE}T00:00:00.000Z`)

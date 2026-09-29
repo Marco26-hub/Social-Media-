@@ -31,6 +31,7 @@ const ALTRE_LANDING: Record<string, string> = {
   '/servizi/segretaria-telefonica-ai': '/en/services/ai-phone-assistant',
   '/servizi/agenda-clienti-whatsapp': '/en/services/client-diary-whatsapp',
   '/servizi/gestionale-ristoranti': '/en/services/restaurant-management-system',
+  '/servizi/ai-a-casa-tua': '/en/services/local-ai-on-your-mac',
 }
 
 export const COPPIE_LINGUA: Record<string, string> = {

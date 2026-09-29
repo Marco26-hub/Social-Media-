@@ -137,6 +137,12 @@
 .journey p { margin: 0; color: #b8c6c0; font-size: 12px; line-height: 1.6; }
 .proofGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1px; margin-top: 42px; border: 1px solid var(--line); background: var(--line); }
 .band .proofGrid { border-color: rgba(255, 255, 255, .13); background: rgba(255, 255, 255, .13); }
+
+/* Gemella della fascia italiana: stessa struttura, variabili del tema inglese. */
+.trustpilotBand { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-top: 14px; padding: 20px 25px; border: 1px solid var(--line); }
+.trustpilotBand > :global(.trustpilot-widget) { flex: 1 1 260px; min-width: 0; }
+.trustpilotBand a { display: inline-flex; align-items: center; gap: 7px; color: var(--green); font-size: 13px; font-weight: 500; text-decoration: none; }
+.trustpilotBand a:hover { text-decoration: underline; }
 .band .proof { background: #14251f; color: #fff; }
 .band .proof h3 { color: #fff; }
 .band .proof p { color: #b8c6c0; }
@@ -266,6 +272,8 @@
 /* Su verde menta acceso il bianco scende a 1,8:1: qui il testo va scuro. */
 :global(html[data-theme='dark']) .headerCta,
 :global(html[data-theme='dark']) .primary { color: #08281d; }
+:global(html[data-theme='dark']) .trustpilotBand { border-color: #23423a; background: #10241e; }
+:global(html[data-theme='dark']) .trustpilotBand a { color: #7fd7b4; }
 :global(html[data-theme='dark']) .closing { background: #0f3d2d; }
 :global(html[data-theme='dark']) .closing .primary { background: #fff; color: #094c39; }
 /* Il prezzo ha !important: senza pari peso resterebbe scuro su scheda scura. */

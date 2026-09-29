@@ -37,3 +37,19 @@ output/
 tmp/
 __pycache__/
 .env*.local
+
+# Master e scarti di lavorazione di ODINO — 35 MB che nessuna riga di codice
+# cita. Il sito carica gli avatar come `odino-avatar-${stato}.webp` (16-20 KB) e
+# i fotogrammi da `motion-uniform/` 01-15: quelli sono tracciati. Tutto il resto
+# qui sotto e' materiale di export, tenuto in locale.
+ODINO_AVATAR_PREVIEW/
+ODINO_AVATAR_PREVIEW.zip
+public/images/odino/avatar/*-512.png
+public/images/odino/motion/
+public/images/odino/turnaround/
+public/images/odino/preview/
+public/images/odino/raccordi/
+public/images/odino/motion-uniform/odino-1[6-9]-*.png
+public/images/odino/odino-motion-strip.webp
+public/images/odino/odino-turnaround-strip.webp
+public/images/odino/manifest.json

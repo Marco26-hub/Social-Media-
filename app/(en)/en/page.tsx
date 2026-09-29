@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { ArrowRight, FileSearch, Globe2, Newspaper, Scale, Share2, Target } from 'lucide-react'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '@/styles/english.module.css'
+import TrustpilotWidget from '@/components/TrustpilotWidget'
+import { TRUSTPILOT_ATTIVO, TRUSTPILOT_PROFILO_URL } from '@/lib/trustpilot'
 
 const title = 'Social, SEO, Websites and B2B Leads for SMEs | SWA'
 const description = 'Social Web Automation runs social media, content, SEO and GEO, websites and lead research for Italian SMEs, with your approval before anything is published.'
@@ -117,6 +119,14 @@ export default function EnglishHomePage() {
           <article className={styles.proof}><h3>Editorial examples</h3><p>The public Journal shows content structure, tone and publishing quality.</p></article>
           <article className={styles.proof}><h3>Transparent pilots</h3><p>The B2B Pilot has fixed deliverables, verifiable sources and no guaranteed outcomes.</p></article>
         </div>
+        {TRUSTPILOT_ATTIVO && (
+          <div className={styles.trustpilotBand}>
+            <TrustpilotWidget locale="en-US" />
+            <a href={TRUSTPILOT_PROFILO_URL} target="_blank" rel="noopener noreferrer">
+              Read all reviews on Trustpilot <ArrowRight size={15} aria-hidden="true" />
+            </a>
+          </div>
+        )}
       </section>
 
       <section className={styles.closing}>

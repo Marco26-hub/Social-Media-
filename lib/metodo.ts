@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { CalendarClock, Clapperboard, ClipboardCheck, Globe2, Megaphone, Newspaper, PhoneCall, ScanSearch, Target, UtensilsCrossed, Workflow } from 'lucide-react'
+import { CalendarClock, Clapperboard, ClipboardCheck, Cpu, Globe2, Megaphone, Newspaper, PhoneCall, ScanSearch, Target, UtensilsCrossed, Workflow } from 'lucide-react'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 
 // Sorgente unica del metodo, servizio per servizio.
@@ -24,6 +24,19 @@ export type MetodoServizio = {
 }
 
 export const METODO_SERVIZI: readonly MetodoServizio[] = [
+  {
+    slug: 'ai-a-casa-tua',
+    href: '/servizi/ai-a-casa-tua',
+    label: 'AI a casa tua',
+    icon: Cpu,
+    consegna: 'Un Mac consegnato con l’AI installata, tarata e collaudata',
+    fasi: [
+      { number: '01', title: 'Cosa ti serve davvero', text: 'Partiamo dal lavoro, non dal computer: che cosa vuoi far fare all’intelligenza artificiale, su quali documenti e quante ore al giorno. Da qui esce la macchina giusta, e spesso è più piccola di quella che avresti comprato da solo.' },
+      { number: '02', title: 'Quale macchina', text: 'Ti diciamo quale Mac prendere e quanta memoria serve, perché è la memoria a decidere quanto lunga può essere una conversazione. Il Mac lo ordini tu ad Apple, al prezzo di listino: non ci guadagniamo niente sopra.' },
+      { number: '03', title: 'Installazione e taratura', text: 'Installiamo il sistema e lo tariamo su quella macchina, perché regga il lavoro lungo senza rallentare tutto il resto. Alla fine hai un pulsante nel Dock: lo premi, scegli e lavori.' },
+      { number: '04', title: 'Collaudo e consegna', text: 'La macchina esce solo dopo una prova lunga, registrata e consegnata insieme al computer. Te la portiamo accesa, con il tempo per vedere insieme come si usa e un numero a cui scrivere dopo.' },
+    ],
+  },
   {
     slug: 'gestione-social-media',
     href: '/servizi/gestione-social-media',

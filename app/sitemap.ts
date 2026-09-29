@@ -70,6 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/servizi/blog-seo',
       '/servizi/siti-e-commerce',
       '/servizi/ricerca-clienti-b2b',
+      '/servizi/ai-a-casa-tua',
       '/servizi/segretaria-telefonica-ai',
       '/servizi/agenda-clienti-whatsapp',
       '/servizi/video-produzione',
@@ -128,6 +129,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ['/en/services/ai-phone-assistant', '/servizi/segretaria-telefonica-ai'],
       ['/en/services/client-diary-whatsapp', '/servizi/agenda-clienti-whatsapp'],
       ['/en/services/restaurant-management-system', '/servizi/gestionale-ristoranti'],
+      ['/en/services/local-ai-on-your-mac', '/servizi/ai-a-casa-tua'],
     ].map(([en, it]) => ({
       url: `${SITE_URL}${en}`,
       lastModified: englishUpdated,

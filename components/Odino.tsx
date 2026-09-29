@@ -220,7 +220,15 @@ export default function Odino() {
     return () => window.removeEventListener('keydown', esc)
   }, [aperto])
 
-  useEffect(() => { corpoRef.current?.scrollTo({ top: 0, behavior: 'smooth' }) }, [corrente])
+  // Ogni invio deve portare la nuova risposta in vista. Prima lo scroll
+  // tornava in alto soltanto quando cambiava un percorso noto: una domanda
+  // sconosciuta lasciava il pannello nella posizione precedente e sembrava
+  // non avere ricevuto risposta, anche se il fallback era stato renderizzato.
+  useEffect(() => {
+    // Immediate: the answer must already be visible when React paints it.
+    // A smooth scroll left the fallback briefly below the fold on mobile.
+    corpoRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+  }, [corrente, nonCapito, approfondimenti])
 
   // Il pannello aperto copre l'angolo: chi ci sta sotto — i pulsanti «torna su»
   // e «indietro» — deve poterlo sapere invece di finire dietro un riquadro alto
@@ -460,7 +468,7 @@ export default function Odino() {
 
       <div className={styles.corpo} ref={corpoRef}>
         {nonCapito ? (
-          <>
+          <section role="status" aria-live="polite" data-odino-fallback>
             <h2 className={styles.titolo}>{t.titoloNonSo}</h2>
             <p className={styles.testo}>{t.nonSo(nonCapito)}</p>
             {/* Il passaggio a una persona, con la domanda gia' scritta dentro.
@@ -475,7 +483,7 @@ export default function Odino() {
                 {t.scriviAUnaPersona}
               </a>
             </p>
-          </>
+          </section>
         ) : !corrente ? (
           <>
             <h2 className={styles.titolo}>{t.titoloVuoto}</h2>
@@ -565,6 +573,7 @@ export default function Odino() {
             onChange={e => setScritto(e.target.value)}
             placeholder={t.campoPlaceholder}
             autoComplete="off"
+            maxLength={500}
           />
           <button type="submit" aria-label={t.invia} title={t.invia}>
             <Send size={17} aria-hidden="true" />

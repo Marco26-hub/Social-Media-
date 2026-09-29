@@ -445,6 +445,15 @@
 .evidenceGrid article > svg { color: var(--sa-green); }
 .evidenceGrid h3 { margin: 18px 0 8px; font-size: 17px; }
 .evidenceGrid p { margin: 0; color: var(--sa-muted); font-size: 13px; line-height: 1.55; }
+
+/* Fascia Trustpilot in coda a «Prove verificabili». Il box e' servito dentro un
+   iframe di Trustpilot: l'altezza la decide il template scelto in dashboard, qui
+   si regola solo il contorno. Il link resta fuori dall'iframe perche' chi ha lo
+   script bloccato deve comunque poter arrivare al profilo. */
+.trustpilotBand { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-top: 14px; padding: 20px 25px; border: 1px solid var(--sa-line); background: var(--sa-white); }
+.trustpilotBand > :global(.trustpilot-widget) { flex: 1 1 260px; min-width: 0; }
+.trustpilotBand a { display: inline-flex; align-items: center; gap: 7px; color: var(--sa-green); font-size: 13px; font-weight: 500; text-decoration: none; }
+.trustpilotBand a:hover { text-decoration: underline; }
 .evidenceGrid a { display: inline-flex; align-items: center; gap: 6px; margin-top: 20px; color: var(--sa-green); font-size: 12px; font-weight: 800; text-decoration: none; }
 
 .processLayout { display: grid; grid-template-columns: .85fr 1fr; gap: 90px; align-items: start; }
@@ -811,6 +820,8 @@
   border-bottom: 1px solid rgba(73, 214, 160, .16);
 }
 :global(html[data-theme='dark']) .signalBand span { color: #d7e5df; }
+:global(html[data-theme='dark']) .trustpilotBand { border-color: #23423a; background: #10241e; }
+:global(html[data-theme='dark']) .trustpilotBand a { color: #7fd7b4; }
 
 :global(html[data-theme='dark']) .navbar {
   border-color: rgba(238, 244, 241, .12);

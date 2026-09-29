@@ -1,11 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { AlertTriangle, CalendarDays, ExternalLink, FileText, Globe2, Loader2, Newspaper, PhoneCall, RefreshCw, Target } from 'lucide-react'
+import type { StandaloneService } from '@/lib/standalone-services'
+import { AlertTriangle, CalendarDays, Check, Cpu, ExternalLink, FileText, Globe2, Loader2, Newspaper, PhoneCall, RefreshCw, Target } from 'lucide-react'
 
 type Order = {
   id: string
-  service_slug: 'blog-seo' | 'web-commerce' | 'lead-pilot' | 'agenda-clienti' | 'tutto-in-uno' | 'voce-base' | 'voce-attivita' | 'voce-azienda'
+  // Lo slug arriva dal catalogo: ripeterlo a mano qui significava dimenticarne
+  // sei per strada (video, sito impresa, profili social).
+  service_slug: StandaloneService['slug']
   service_name: string
   amount_cents: number
   currency: string
@@ -23,7 +26,27 @@ type Order = {
   created_at: string
 }
 
-type Payload = { needs_migration: boolean; stripe_configured: boolean; orders: Order[]; error?: string }
+/** Un incasso che aspetta la fattura fiscale. */
+type Fattura = {
+  id: string
+  order_id: string
+  stripe_ref: string
+  kind: 'invoice' | 'payment'
+  amount_cents: number
+  currency: string
+  paid_at: string
+  period_start: string | null
+  period_end: string | null
+  hosted_invoice_url: string | null
+  invoice_pdf: string | null
+  service_name: string
+  nome: string
+  azienda: string | null
+  email: string
+  customer_type: string
+}
+
+type Payload = { needs_migration: boolean; stripe_configured: boolean; orders: Order[]; fatture?: Fattura[]; error?: string }
 
 function money(cents: number, currency = 'eur') {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: currency.toUpperCase() }).format(cents / 100)
@@ -69,7 +92,77 @@ export default function StandaloneServiceOrdersAdmin() {
     finally { setBusy('') }
   }
 
+  async function segnaFattura(invoiceId: string, issued: boolean) {
+    setBusy(invoiceId); setError('')
+    try {
+      const response = await fetch('/api/admin/service-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoice_id: invoiceId, issued }),
+      })
+      const payload = await response.json() as { error?: string }
+      if (!response.ok) throw new Error(payload.error || 'Aggiornamento non riuscito')
+      await load()
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Errore aggiornamento') }
+    finally { setBusy('') }
+  }
+
+  const fatture = data?.fatture ?? []
+
   return (
+    <>
+      {/* Il promemoria sta sopra gli ordini perché è l'unica cosa in questa
+          pagina che richiede un'azione con una scadenza fiscale. Sparisce da
+          solo quando la lista è vuota: un riquadro sempre presente diventa
+          arredamento e smette di essere letto. */}
+      {fatture.length > 0 && (
+        <section className="card mb-6 overflow-hidden border border-amber-200">
+          <header className="flex items-center justify-between gap-3 border-b border-amber-100 bg-amber-50 p-4">
+            <div>
+              <h2 className="font-semibold text-amber-900">Fatture da emettere ({fatture.length})</h2>
+              <p className="text-xs text-amber-800">Stripe ha incassato. La fattura fiscale va emessa dal gestionale e poi segnata qui.</p>
+            </div>
+            <button onClick={load} className="btn-secondary text-xs"><RefreshCw className="h-3.5 w-3.5" /> Aggiorna</button>
+          </header>
+          <div className="divide-y divide-amber-100">
+            {fatture.map(fattura => (
+              <article key={fattura.id} className="grid gap-3 p-4 md:grid-cols-[1.4fr_.8fr_.7fr_auto] md:items-center">
+                <div>
+                  <p className="font-semibold text-gray-900">{fattura.nome}{fattura.azienda ? ` — ${fattura.azienda}` : ''}</p>
+                  <p className="text-xs text-gray-500">{fattura.email}</p>
+                  <p className="mt-1 text-xs text-gray-600">{fattura.service_name}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{money(fattura.amount_cents, fattura.currency)}</p>
+                  <p className="text-xs text-gray-500">
+                    {fattura.kind === 'invoice' ? 'Rinnovo' : 'Pagamento unico'}
+                    {fattura.customer_type === 'consumatore' ? ' · consumatore' : ' · impresa o professionista'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-500">Incassato {date(fattura.paid_at)}</p>
+                  {fattura.period_start && fattura.period_end && (
+                    <p className="text-xs text-gray-500">Periodo {date(fattura.period_start)} — {date(fattura.period_end)}</p>
+                  )}
+                  {fattura.hosted_invoice_url && (
+                    <a href={fattura.hosted_invoice_url} target="_blank" rel="noreferrer" className="mt-1 inline-flex gap-1 text-xs text-brand-600">
+                      <FileText className="h-3 w-3" /> Ricevuta Stripe
+                    </a>
+                  )}
+                </div>
+                <button
+                  onClick={() => segnaFattura(fattura.id, true)}
+                  disabled={busy === fattura.id}
+                  className="btn-primary text-xs disabled:opacity-60"
+                >
+                  {busy === fattura.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Fattura emessa
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
     <section className="card mb-6 overflow-hidden">
       <header className="flex items-center justify-between border-b border-gray-100 p-4">
         <div><h2 className="font-semibold text-gray-900">Servizi acquistati</h2><p className="text-xs text-gray-500">Ordini Stripe separati dai pacchetti social</p></div>
@@ -80,7 +173,7 @@ export default function StandaloneServiceOrdersAdmin() {
           : data?.needs_migration ? <div className="flex gap-2 p-5 text-sm text-amber-700"><AlertTriangle className="h-5 w-5" />Migrazione ordini servizi non applicata.</div>
             : !data?.orders.length ? <div className="p-8 text-center text-sm text-gray-400">Nessun ordine servizio.</div>
               : <div className="divide-y divide-gray-100">{data.orders.map(order => {
-                const Icon = order.service_slug === 'blog-seo' ? Newspaper : order.service_slug === 'web-commerce' ? Globe2 : order.service_slug === 'lead-pilot' ? Target : order.service_slug === 'agenda-clienti' || order.service_slug === 'tutto-in-uno' ? CalendarDays : PhoneCall
+                const Icon = order.service_slug.startsWith('ai-') ? Cpu : order.service_slug === 'blog-seo' ? Newspaper : order.service_slug === 'web-commerce' ? Globe2 : order.service_slug === 'lead-pilot' ? Target : order.service_slug === 'agenda-clienti' || order.service_slug === 'tutto-in-uno' ? CalendarDays : PhoneCall
                 return <article key={order.id} className="grid gap-3 p-4 md:grid-cols-[1.25fr_.7fr_.8fr_auto] md:items-center">
                   <div className="min-w-0"><div className="flex items-center gap-2"><Icon className="h-4 w-4 text-brand-600" /><strong className="truncate text-sm text-gray-900">{order.service_name}</strong><span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone(order.status)}`}>{order.status}</span></div><p className="mt-1 text-xs text-gray-500">{order.azienda || order.nome} · <a href={`mailto:${order.email}`} className="hover:underline">{order.email}</a></p></div>
                   <div><p className="text-sm font-bold text-gray-900">{money(order.amount_cents, order.currency)}{order.service_slug === 'lead-pilot' ? '' : '/mese'}</p><p className="text-xs text-gray-500">Ordinato {date(order.created_at)}</p></div>
@@ -89,5 +182,6 @@ export default function StandaloneServiceOrdersAdmin() {
                 </article>
               })}</div>}
     </section>
+    </>
   )
 }
