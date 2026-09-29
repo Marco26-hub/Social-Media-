@@ -199,6 +199,10 @@ function CalendarioInner() {
   const requestedContentId = searchParams.get('open')?.trim() || ''
   const openedContentIdRef = useRef<string | null>(null)
   const [contenuti, setContenuti]   = useState<Contenuto[]>([])
+  // La lista puo essere filtrata, ma i contatori di stato devono descrivere il
+  // mese intero. Altrimenti, dopo un sync, il filtro APPROVATO mostra 0 "In
+  // coda" e fa sembrare che il contenuto sia sparito.
+  const [overviewContenuti, setOverviewContenuti] = useState<Contenuto[]>([])
   const [loading, setLoading]       = useState(true)
   const [selected, setSelected]     = useState<Contenuto | null>(null)
   const [filterStatus, setFilter]   = useState<string>(searchParams.get('filter') ?? 'DA_APPROVARE')
@@ -320,6 +324,7 @@ function CalendarioInner() {
         ].some(value => String(value || '').toLowerCase().includes(needle)))
       }
       setContenuti(filtered)
+      setOverviewContenuti(demoData)
       setLoading(false)
       return
     }
@@ -334,7 +339,13 @@ function CalendarioInner() {
 
     setLoadError(null)
     try {
-      const res = await fetch(`/api/data/calendario?${params.toString()}`)
+      const overviewParams = new URLSearchParams()
+      if (clienteId) overviewParams.set('cliente_id', clienteId)
+      overviewParams.set('limit', '200')
+      const [res, overviewRes] = await Promise.all([
+        fetch(`/api/data/calendario?${params.toString()}`),
+        fetch(`/api/data/calendario?${overviewParams.toString()}`),
+      ])
       if (res.ok) {
         const data = await res.json()
         setContenuti(data as Contenuto[])
@@ -342,6 +353,9 @@ function CalendarioInner() {
         // NON fingere "nessun contenuto" su un errore server: distingui vuoto da guasto.
         setContenuti([])
         setLoadError(await readApiError(res, 'Errore nel caricamento dei contenuti'))
+      }
+      if (overviewRes.ok) {
+        setOverviewContenuti(await overviewRes.json() as Contenuto[])
       }
     } catch (e) {
       setContenuti([])
@@ -1293,20 +1307,20 @@ function CalendarioInner() {
     : calendarItems
   const stats = {
     total: contenuti.length,
-    daApprovare: contenuti.filter(c => c.status === 'DA_APPROVARE').length,
-    approvati: contenuti.filter(c => c.status === 'APPROVATO').length,
-    nonApprovati: contenuti.filter(c => c.status === 'NON_APPROVATO').length,
+    daApprovare: overviewContenuti.filter(c => c.status === 'DA_APPROVARE').length,
+    approvati: overviewContenuti.filter(c => c.status === 'APPROVATO').length,
+    nonApprovati: overviewContenuti.filter(c => c.status === 'NON_APPROVATO').length,
     // Un contenuto inviato a Blotato conta come pubblicato solo quando Blotato
     // lo conferma. Lo status locale passa a PUBBLICATO gia al momento della
     // programmazione, quindi da solo contava anche i post ancora in coda: il
     // pannello diceva "8 pubblicati" con 4 usciti davvero e 4 ancora da uscire.
-    pubblicati: contenuti.filter(c => c.blotato_status === 'published'
+    pubblicati: overviewContenuti.filter(c => c.blotato_status === 'published'
       || (c.status === 'PUBBLICATO' && !c.blotato_post_id)).length,
-    inCoda: contenuti.filter(c => c.blotato_status === 'scheduled' || c.blotato_status === 'in-progress').length,
-    errori: contenuti.filter(c => c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE' || c.blotato_status === 'failed' || Boolean(c.errore_tecnico)).length,
-    oggi: contenuti.filter(c => c.data_pubblicazione === todayIso).length,
-    video: contenuti.filter(c => c.media_type === 'video' || ['reel', 'video', 'short', 'story'].includes(c.formato)).length,
-    trend: contenuti.filter(c => c.obiettivo === 'trending' || c.template_style || c.creative_brief || c.quality_level === 'high').length,
+    inCoda: overviewContenuti.filter(c => c.blotato_status === 'scheduled' || c.blotato_status === 'in-progress').length,
+    errori: overviewContenuti.filter(c => c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE' || c.blotato_status === 'failed' || Boolean(c.errore_tecnico)).length,
+    oggi: overviewContenuti.filter(c => c.data_pubblicazione === todayIso).length,
+    video: overviewContenuti.filter(c => c.media_type === 'video' || ['reel', 'video', 'short', 'story'].includes(c.formato)).length,
+    trend: overviewContenuti.filter(c => c.obiettivo === 'trending' || c.template_style || c.creative_brief || c.quality_level === 'high').length,
   }
   // Quanti dei selezionati sono davvero rifiutabili (solo DA_APPROVARE): serve al
   // modale di conferma bulk per non promettere un rifiuto su post già pubblicati.
