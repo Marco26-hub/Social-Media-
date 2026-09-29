@@ -151,6 +151,38 @@ test('ignores loose audio libraries at the strategy root', () => {
   assert.deepEqual(parsed.errors, [])
 })
 
+test('ignores the SWA Pixabay library even when ready tracks use content folders', () => {
+  const readyTrack = parseCampaignFolderFile({
+    name: 'REEL_13_AUDIO.mp3',
+    type: 'audio/mpeg',
+    relativePath: '09_CRESCITA_Per_Strategia/00_AUDIO_PIXABAY/PRONTI_CONTENUTI/REEL_13_GENERATORE_VS_REGIA/REEL_13_AUDIO.mp3',
+  })
+  const sourceTrack = parseCampaignFolderFile({
+    name: 'SCELTA_Minimal_Tech_PaulYudin.mp3',
+    type: 'audio/mpeg',
+    relativePath: '09_CRESCITA_Per_Strategia/00_AUDIO_PIXABAY/SORGENTI/SCELTA_Minimal_Tech_PaulYudin.mp3',
+  })
+
+  for (const parsed of [readyTrack, sourceTrack]) {
+    assert.equal(parsed.kind, 'unsupported')
+    assert.deepEqual(parsed.errors, [])
+  }
+})
+
+test('keeps canonical audio assignments inside platform folders', () => {
+  const parsed = parseCampaignFolderFile({
+    name: 'REEL_13_AUDIO.mp3',
+    type: 'audio/mpeg',
+    relativePath: '09_CRESCITA_Per_Strategia/Instagram/03_SCELTA/REEL_13_GENERATORE_VS_REGIA/REEL_13_AUDIO.mp3',
+  })
+
+  assert.equal(parsed.kind, 'audio')
+  assert.equal(parsed.week, 3)
+  assert.equal(parsed.platform, 'instagram')
+  assert.equal(parsed.contentKey, 'reel_13')
+  assert.deepEqual(parsed.errors, [])
+})
+
 test('keeps an explicit post folder when its descriptive name contains stories', () => {
   const parsed = parseCampaignFolderFile({
     name: 'POST_24.png',

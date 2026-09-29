@@ -134,13 +134,18 @@ function inferSequence(filename: string): number | null {
 function isLooseAudio(relativePath: string, kind: CampaignFolderAsset['kind']): boolean {
   if (kind !== 'audio') return false
   const segments = relativePath.split('/').map(normalized).filter(Boolean)
-  if (segments.length < 2 || segments.at(-2) !== 'audio') return false
-
-  // An audio folder directly under the strategy root is a source library,
-  // not an editorial assignment. Audio inside a Reel/Story folder is valid.
-  return !segments.slice(0, -2).some(segment =>
-    /\b(?:reel|reels|video|short|shorts|story|stories|storia|storie)\b/.test(segment),
+  const directories = segments.slice(0, -1)
+  const hasAudioLibraryDirectory = directories.some(segment =>
+    /^(?:\d+\s*)?audio(?:\s|$)/.test(segment)
+    || /^(?:libreria|library)\s+audio(?:\s|$)/.test(segment),
   )
+  if (!hasAudioLibraryDirectory) return false
+
+  // A named audio library (for example 00_AUDIO_PIXABAY) contains source and
+  // ready-to-copy tracks. Even when its children are named REEL_01/STORY_06,
+  // they are not platform assignments. The canonical copies under
+  // Instagram/Facebook content folders remain valid and are uploaded.
+  return !directories.some(segment => /^(?:instagram|insta|ig|facebook|fb|fcb)$/.test(segment))
 }
 
 export function parseCampaignFolderFile(file: CampaignFolderFile): CampaignFolderAsset {
