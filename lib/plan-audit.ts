@@ -47,7 +47,11 @@ export type PlanAuditReport = {
   dal: string
   al: string
   attesi: number
+  // Numero di concept editoriali unici. Una campagna su due canali produce due
+  // pubblicazioni per concept, ma la quota del pacchetto resta 24 concept.
   pianificati: number
+  // Righe/copie di canale effettivamente presenti nel calendario.
+  pubblicazioni: number
   settimanePiene: number
   bloccanti: number
   attenzioni: number
@@ -121,6 +125,25 @@ function etichetta(row: Record<string, unknown>): string {
   return testo(row.id_contenuto) || testo(row.id) || dataDi(row) || '?'
 }
 
+function chiaveConcept(row: Record<string, unknown>): string {
+  const governed = testo(row.campaign_content_key || row.content_key).toLowerCase()
+  // Senza una chiave esplicita non possiamo fondere due righe solo per
+  // somiglianza: rischieremmo di nascondere due contenuti davvero distinti.
+  return governed || `row:${etichetta(row)}`
+}
+
+function conceptUnici(rows: Record<string, unknown>[]): Record<string, unknown>[] {
+  const byKey = new Map<string, Record<string, unknown>>()
+  for (const row of rows) {
+    const key = chiaveConcept(row)
+    const current = byKey.get(key)
+    // Instagram e Facebook dello stesso concept hanno data/formato identici.
+    // Preferiamo Instagram soltanto per rendere stabile il rappresentante.
+    if (!current || testo(row.canale).toLowerCase() === 'instagram') byKey.set(key, row)
+  }
+  return [...byKey.values()]
+}
+
 // Fase del funnel dichiarata dal modello, ricondotta alle quattro dell'agenzia.
 // Il campo è testo libero: arrivano sia "ATTENZIONE" sia "awareness" sia "TOFU".
 function faseFunnel(row: Record<string, unknown>): string {
@@ -172,20 +195,21 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
     return Boolean(d) && d >= dal && d <= al
   })
   const attivi = nelCiclo.filter(row => !STATI_INATTIVI.has(testo(row.status).toUpperCase()))
+  const concept = conceptUnici(attivi)
 
   const checks: PlanAuditCheck[] = []
 
   // 1. COPERTURA — il ciclo contiene i contenuti venduti?
   if (quota > 0) {
-    const mancanti = Math.max(0, quota - attivi.length)
-    const extra = Math.max(0, attivi.length - quota)
+    const mancanti = Math.max(0, quota - concept.length)
+    const extra = Math.max(0, concept.length - quota)
     checks.push(mancanti > 0
       ? check('copertura', 'Copertura del pacchetto', 'blocco',
-          `${attivi.length} contenuti attivi su ${quota} previsti: ne mancano ${mancanti}. Se hai generato solo una fase, genera l'altra dalla pagina Piano.`)
+          `${concept.length} concept attivi su ${quota} previsti (${attivi.length} pubblicazioni): ne mancano ${mancanti}. Se hai generato solo una fase, genera l'altra dalla pagina Piano.`)
       : check('copertura', 'Copertura del pacchetto', extra > 0 ? 'attenzione' : 'ok',
           extra > 0
-            ? `${attivi.length} contenuti attivi, ${extra} oltre la quota di ${quota} (tipico di una cartella campagna che impone più gruppi).`
-            : `${attivi.length} contenuti attivi, quota ${quota} rispettata.`))
+            ? `${concept.length} concept attivi, ${extra} oltre la quota di ${quota} (${attivi.length} pubblicazioni sui canali).`
+            : `${concept.length} concept attivi, quota ${quota} rispettata (${attivi.length} pubblicazioni sui canali).`))
   } else {
     checks.push(check('copertura', 'Copertura del pacchetto', 'attenzione',
       'Quota del cliente non impostata: impossibile dire se il ciclo è completo. Imposta i contenuti/mese nella scheda cliente.'))
@@ -193,7 +217,7 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
 
   // 2. SETTIMANE — è il controllo che scopre la fase mai generata.
   const perSettimana = [0, 0, 0, 0]
-  attivi.forEach(row => {
+  concept.forEach(row => {
     const s = settimanaCiclo(dataDi(row), dal)
     if (s >= 1 && s <= 4) perSettimana[s - 1]++
   })
@@ -208,10 +232,10 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
   // 3. MIX FORMATI — confrontato sul totale REALMENTE pianificato, non sulla
   // quota: con una cartella campagna il totale legittimamente sale, ma le
   // proporzioni vendute devono restare quelle.
-  if (pkg && attivi.length) {
-    const mix = packageMixForPeriod(pkg, 'mensile', attivi.length)
+  if (pkg && concept.length) {
+    const mix = packageMixForPeriod(pkg, 'mensile', concept.length)
     const conta = { post: 0, carousel: 0, story: 0, reel: 0 }
-    attivi.forEach(row => {
+    concept.forEach(row => {
       const f = normalizzaFormato(row.formato)
       if (f === 'carousel') conta.carousel++
       else if (f === 'story') conta.story++
@@ -418,7 +442,8 @@ export function auditPianoCiclo(input: PlanAuditInput): PlanAuditReport {
     dal,
     al,
     attesi: quota,
-    pianificati: attivi.length,
+    pianificati: concept.length,
+    pubblicazioni: attivi.length,
     settimanePiene,
     bloccanti,
     attenzioni,

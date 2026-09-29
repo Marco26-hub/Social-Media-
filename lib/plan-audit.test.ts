@@ -63,6 +63,7 @@ test('the audit window follows the 28-day cycle, not the calendar month', () => 
 test('a complete cycle passes every blocking check', () => {
   const report = auditPianoCiclo({ rows: cicloCompleto(), quota: 24, pkg: PACKAGES.crescita, oggi: OGGI })
   assert.equal(report.pianificati, 24)
+  assert.equal(report.pubblicazioni, 24)
   assert.equal(report.settimanePiene, 4)
   assert.equal(report.bloccanti, 0, `bloccanti inattesi: ${report.checks.filter(c => c.stato === 'blocco').map(c => `${c.id}=${c.dettaglio}`).join(' | ')}`)
   assert.equal(report.pronto, true)
@@ -107,11 +108,71 @@ test('coordinated variants of one concept on two socials are not duplicates', ()
   // ripetizione: segnalarli renderebbe il referto rumore puro.
   const rows = [
     contenuto({ id_contenuto: 'IG1', canale: 'instagram', content_key: 'reel-01', hook: 'Stesso hook coordinato sui due social' }),
-    contenuto({ id_contenuto: 'FB1', canale: 'facebook', content_key: 'reel-01', hook: 'Stesso hook coordinato sui due social', data_pubblicazione: '2026-09-02' }),
+    contenuto({ id_contenuto: 'FB1', canale: 'facebook', content_key: 'reel-01', hook: 'Stesso hook coordinato sui due social', caption: 'Una caption Facebook realmente adattata al pubblico del canale.', data_pubblicazione: '2026-09-02' }),
   ]
   const report = auditPianoCiclo({ rows, quota: 0, pkg: null, oggi: OGGI })
   assert.equal(checkById(report, 'duplicati').stato, 'ok')
-  assert.equal(checkById(report, 'adattamenti-canale').stato, 'attenzione')
+  assert.equal(checkById(report, 'adattamenti-canale').stato, 'ok')
+})
+
+test('24 concepts adapted to two channels count as 24 concepts and 48 publications', () => {
+  const phases = ['ATTENZIONE', 'FIDUCIA', 'SCELTA', 'AZIONE']
+  const formats = [
+    ...Array(12).fill('post'),
+    ...Array(6).fill('carousel'),
+    ...Array(2).fill('story'),
+    ...Array(4).fill('reel'),
+  ]
+  const rows = formats.flatMap((formato, index) => {
+    const week = Math.floor(index / 6)
+    const date = `2026-09-${String(1 + week * 7 + (index % 6)).padStart(2, '0')}`
+    const key = `concept_${String(index + 1).padStart(2, '0')}`
+    const base = {
+      campaign_content_key: `campaign__${key}`,
+      data_pubblicazione: date,
+      formato,
+      status: 'DA_APPROVARE',
+      hook: `Hook coordinato del concept ${index + 1}`,
+      funnel_stage: phases[week],
+      link_media_1: `https://cdn.test/${key}-1.${formato === 'reel' ? 'mp4' : 'jpg'}`,
+      ...(formato === 'carousel' ? {
+        link_media_2: `https://cdn.test/${key}-2.jpg`,
+        link_media_3: `https://cdn.test/${key}-3.jpg`,
+      } : {}),
+    }
+    return [
+      contenuto({
+        ...base,
+        id_contenuto: `${key}_IG`,
+        canale: 'instagram',
+        caption: `Caption Instagram distinta per il concept ${index + 1}, pensata per una lettura rapida.`,
+        hashtag: `#swaig${index + 1} #profilo${index + 1} #strategia${index + 1}`,
+      }),
+      contenuto({
+        ...base,
+        id_contenuto: `${key}_FB`,
+        canale: 'facebook',
+        caption: `Approfondimento Facebook differente per il concept ${index + 1}, con piu contesto e una CTA dedicata.`,
+        hashtag: `#swafb${index + 1} #impresa${index + 1} #metodo${index + 1}`,
+        link_media_1: `https://cdn.test/${key}-fb-1.${formato === 'reel' ? 'mp4' : 'jpg'}`,
+        ...(formato === 'carousel' ? {
+          link_media_2: `https://cdn.test/${key}-fb-2.jpg`,
+          link_media_3: `https://cdn.test/${key}-fb-3.jpg`,
+        } : {}),
+      }),
+    ]
+  })
+
+  const report = auditPianoCiclo({ rows, quota: 24, pkg: PACKAGES.crescita, oggi: OGGI })
+
+  assert.equal(report.pianificati, 24)
+  assert.equal(report.pubblicazioni, 48)
+  assert.equal(checkById(report, 'copertura').stato, 'ok')
+  assert.match(checkById(report, 'copertura').dettaglio, /24 concept.*48 pubblicazioni/)
+  assert.equal(checkById(report, 'settimane').stato, 'ok')
+  assert.match(checkById(report, 'settimane').dettaglio, /6 · 6 · 6 · 6/)
+  assert.equal(checkById(report, 'mix').stato, 'ok')
+  assert.equal(checkById(report, 'adattamenti-canale').stato, 'ok')
 })
 
 test('the same hook reused on the same channel is reported', () => {

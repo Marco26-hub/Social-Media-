@@ -23,7 +23,7 @@ const QUEUED_REMOTE_STATUSES = new Set(['scheduled', 'in-progress'])
 export default function StatusBadge({ status, blotatoStatus }: { status: Status | string; blotatoStatus?: string | null }) {
   const inCoda = status === 'PUBBLICATO' && QUEUED_REMOTE_STATUSES.has(String(blotatoStatus || '').toLowerCase())
   const c = inCoda
-    ? { bg: 'bg-blue-100', text: 'text-blue-800', label: 'In coda' }
+    ? { bg: 'bg-blue-100', text: 'text-blue-800', label: 'In coda Blotato' }
     : config[status] ?? { bg: 'bg-gray-100', text: 'text-gray-600', label: status }
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${c.bg} ${c.text}`}>

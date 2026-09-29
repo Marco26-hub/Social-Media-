@@ -30,7 +30,7 @@ const CATEGORIE = [
   ['trending', 'Trending'],
   ['seo', 'SEO / Blog'],
 ]
-const STATI: Status[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','NON_APPROVATO','PUBBLICATO','ERRORE','ERRORE_MANUALE']
+const STATI: string[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','NON_APPROVATO','IN_CODA','PUBBLICATO','ERRORE','ERRORE_MANUALE']
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', linkedin: '💼', threads: '🧵', x: '✖️', youtube_shorts: '▶️', blog: '📝'
 }
@@ -79,6 +79,7 @@ type PlanAudit = {
   al: string
   attesi: number
   pianificati: number
+  pubblicazioni: number
   settimanePiene: number
   bloccanti: number
   attenzioni: number
@@ -302,7 +303,13 @@ function CalendarioInner() {
     setLoading(true)
     if (demo) {
       let filtered = demoData
-      if (filterStatus !== 'tutti') filtered = filtered.filter(c => c.status === filterStatus)
+      if (filterStatus === 'IN_CODA') {
+        filtered = filtered.filter(c => ['scheduled', 'in-progress'].includes(String(c.blotato_status || '').toLowerCase()))
+      } else if (filterStatus === 'PUBBLICATO') {
+        filtered = filtered.filter(c => c.blotato_status === 'published' || (c.status === 'PUBBLICATO' && !c.blotato_post_id))
+      } else if (filterStatus !== 'tutti') {
+        filtered = filtered.filter(c => c.status === filterStatus)
+      }
       if (filterCanale !== 'tutti') filtered = filtered.filter(c => c.canale === filterCanale)
       if (filterFormato !== 'tutti') filtered = filtered.filter(c => c.formato === filterFormato)
       if (filterCategoria !== 'tutti') filtered = filtered.filter(c => c.obiettivo === filterCategoria)
@@ -415,8 +422,12 @@ function CalendarioInner() {
       const res = await fetch(`/api/data/calendario/${c.id}/sync-uno`, { method: 'POST' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Sincronizzazione singola fallita')
-      const label = data.status === 'scheduled'
-        ? 'inviato a Blotato: programmato per davvero.'
+      const label = data.status === 'published'
+        ? 'risulta già pubblicato su Blotato.'
+        : data.status === 'scheduled'
+        ? data.already_synced
+          ? 'era già stato sincronizzato ed è in coda su Blotato.'
+          : 'inviato a Blotato: ora è in coda per la pubblicazione.'
         : data.status === 'visual_review'
           ? 'video pronto: apri Preview e approvalo di nuovo; non è stato pubblicato.'
           : data.status === 'visual_pending'
@@ -425,13 +436,16 @@ function CalendarioInner() {
           ? 'dry-run: pubblicazione non attiva, nessun invio reale.'
           : `non inviato: ${data.reason || 'scartato dal pre-flight'}`
       setSyncMsg({
-        type: data.status === 'scheduled' ? 'ok' : ['dry_run', 'visual_pending', 'visual_review'].includes(data.status) ? 'warn' : 'err',
+        type: ['scheduled', 'published'].includes(data.status) ? 'ok' : ['dry_run', 'visual_pending', 'visual_review'].includes(data.status) ? 'warn' : 'err',
         text: `${c.canale} · ${c.formato} — ${label}`,
       })
-      await fetchData()
     } catch (e) {
       setSyncMsg({ type: 'err', text: (e as Error).message })
     } finally {
+      // Anche se il server risponde con un errore, il primo tentativo potrebbe
+      // aver completato la sincronizzazione. Rileggere sempre il calendario
+      // impedisce di lasciare a schermo un APPROVATO ormai gia in coda.
+      await fetchData()
       setSaving(null)
     }
   }
@@ -660,8 +674,8 @@ function CalendarioInner() {
       setSyncMsg({
         type: data.pronto ? (data.attenzioni ? 'warn' : 'ok') : 'err',
         text: data.pronto
-          ? `Piano completo: ${data.pianificati} contenuti sul ciclo${data.attenzioni ? `, ${data.attenzioni} cose da guardare` : ', nessun problema'}.`
-          : `Piano NON completo: ${data.bloccanti} problemi bloccanti su ${data.pianificati} contenuti. Leggi il referto qui sotto.`,
+          ? `Piano completo: ${data.pianificati} concept / ${data.pubblicazioni} pubblicazioni${data.attenzioni ? `, ${data.attenzioni} cose da guardare` : ', nessun problema'}.`
+          : `Piano NON completo: ${data.bloccanti} problemi bloccanti su ${data.pianificati} concept. Leggi il referto qui sotto.`,
       })
     } catch (e) {
       setSyncMsg({ type: 'err', text: (e as Error).message })
@@ -1568,7 +1582,7 @@ function CalendarioInner() {
                 {planAudit.pronto ? 'Piano del ciclo completo' : 'Piano del ciclo NON completo'}
               </p>
               <p className={`text-xs ${planAudit.pronto ? 'text-violet-800' : 'text-red-800'}`}>
-                Ciclo di 4 settimane dal {formatShortDate(planAudit.dal)} al {formatShortDate(planAudit.al)} · {planAudit.pianificati} contenuti attivi
+                Ciclo di 4 settimane dal {formatShortDate(planAudit.dal)} al {formatShortDate(planAudit.al)} · {planAudit.pianificati} concept / {planAudit.pubblicazioni} pubblicazioni
                 {planAudit.attesi > 0 && ` su ${planAudit.attesi} previsti`} · {planAudit.settimanePiene}/4 settimane coperte
               </p>
             </div>
@@ -1610,7 +1624,7 @@ function CalendarioInner() {
           <div className="grid grid-cols-2 gap-px bg-gray-100 sm:grid-cols-3 lg:grid-cols-6">
             {[
               { label: 'Pubblicati confermati', value: packageReconcile.summary.published, tone: 'text-emerald-700', filter: 'PUBBLICATO' },
-              { label: 'In coda Blotato', value: packageReconcile.summary.queued, tone: 'text-blue-700', filter: 'PUBBLICATO' },
+              { label: 'In coda Blotato', value: packageReconcile.summary.queued, tone: 'text-blue-700', filter: 'IN_CODA' },
               { label: 'Non ancora inviati', value: packageReconcile.summary.not_sent, tone: 'text-amber-700', filter: 'DA_APPROVARE' },
               { label: 'Falliti', value: packageReconcile.summary.failed, tone: 'text-red-700', filter: 'ERRORE' },
               { label: 'Mancano da creare', value: packageReconcile.summary.missing_to_create, tone: 'text-violet-700', filter: 'tutti' },

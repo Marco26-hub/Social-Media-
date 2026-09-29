@@ -30,11 +30,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'contenuto non trovato' }, { status: 404 })
   }
   const row = rows[0]
+  // Idempotenza: il primo click puo avere gia creato il post su Blotato mentre
+  // il browser mostra ancora per pochi istanti il badge APPROVATO. Un secondo
+  // click non e un errore e soprattutto non deve creare un doppione: restituiamo
+  // lo stato remoto gia noto e lasciamo che la UI si riallinei.
+  if (row.blotato_post_id) {
+    const remoteStatus = String(row.blotato_status || '').toLowerCase()
+    return NextResponse.json({
+      ok: true,
+      status: remoteStatus === 'published' ? 'published' : 'scheduled',
+      already_synced: true,
+      blotatoId: String(row.blotato_post_id),
+    })
+  }
   if (row.status !== 'APPROVATO') {
     return NextResponse.json({ error: `contenuto non APPROVATO (stato attuale: ${row.status}): sincronizzabile solo un contenuto approvato` }, { status: 400 })
-  }
-  if (row.blotato_post_id) {
-    return NextResponse.json({ error: 'contenuto già sincronizzato su Blotato' }, { status: 400 })
   }
 
   const tzRows = await q('SELECT timezone FROM clienti WHERE id = $1 LIMIT 1', [cid])

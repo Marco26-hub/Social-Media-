@@ -182,7 +182,19 @@ export async function GET(request: Request) {
       params.push(value)
       where.push(`${column} = $${params.length}`)
     }
-    addFilter('status', status)
+    // PUBBLICATO e IN_CODA sono due viste diverse anche se, per compatibilita
+    // storica, entrambe hanno status locale PUBBLICATO. Lo stato remoto Blotato
+    // decide se il post e solo programmato oppure realmente uscito.
+    if (status === 'IN_CODA') {
+      where.push(`blotato_status IN ('scheduled', 'in-progress')`)
+    } else if (status === 'PUBBLICATO') {
+      where.push(`(
+        blotato_status = 'published'
+        OR (status = 'PUBBLICATO' AND blotato_post_id IS NULL)
+      )`)
+    } else {
+      addFilter('status', status)
+    }
     addFilter('canale', canale)
     addFilter('formato', formato)
     addFilter('obiettivo', obiettivo)

@@ -286,7 +286,11 @@ export function findCrossPlatformCopyDuplicate(
     const hashtagsA = hashtagBlockSignature(candidate.hashtag)
     const hashtagsB = hashtagBlockSignature(row.hashtag)
     if (hashtagsA.split(' ').filter(Boolean).length >= 2 && hashtagsA === hashtagsB) fields.push('hashtag')
-    if (fields.length) return { fields, channel: text(row.canale) }
+    // Lo stesso hook breve può essere una scelta editoriale intenzionale tra
+    // Instagram e Facebook: mantiene la promessa del concept mentre caption e
+    // CTA vengono adattate. È copia/incolla quando la caption intera coincide,
+    // oppure quando almeno due elementi (hook/hashtag/caption) sono identici.
+    if (fields.includes('caption') || fields.length >= 2) return { fields, channel: text(row.canale) }
   }
   return null
 }

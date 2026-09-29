@@ -147,6 +147,24 @@ test('coordinated variants must adapt copy instead of copying it verbatim', () =
   assert.equal(findCrossPlatformCopyDuplicate(facebookAdapted, [instagram]), null)
 })
 
+test('coordinated variants may keep one short hook when the platform copy is adapted', () => {
+  const instagram = {
+    campaign_content_key: 'story_06',
+    canale: 'instagram',
+    hook: 'Dove perde forza il tuo profilo?',
+    caption: 'Tre segnali veloci da controllare nel profilo Instagram.',
+    hashtag: '#swa #profilo #instagram',
+  }
+  const facebook = {
+    ...instagram,
+    canale: 'facebook',
+    caption: 'Una verifica piu ragionata per capire dove il profilo aziendale perde chiarezza.',
+    hashtag: '#socialwebautomation #impresa #facebook',
+  }
+
+  assert.equal(findCrossPlatformCopyDuplicate(facebook, [instagram]), null)
+})
+
 test('a complete hashtag block is detected regardless of tag order', () => {
   const previous = [{ hook: 'Primo contenuto', hashtag: '#swa #bowling #regiasocial' }]
   const candidate = { hook: 'Secondo contenuto', hashtag: '#regiasocial #SWA #bowling' }
