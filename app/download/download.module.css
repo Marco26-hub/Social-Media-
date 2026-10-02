@@ -64,6 +64,8 @@
 .download:hover { background: #0f4525; transform: translateY(-1px); }
 .empty { padding: 3.5rem 1.5rem; border: 1px dashed #bad1bf; border-radius: 1.25rem; background: rgba(255,255,255,.55); color: #56705e; text-align: center; }
 .empty strong { display: block; margin-bottom: .4rem; color: #193d25; font-size: 1.1rem; }
+.unavailable { border-color: #e5b576; background: #fffaf2; color: #80521a; }
+.unavailable strong { color: #713f12; }
 .footer { padding: 3rem 0 1rem; color: #6f7f74; font-size: .82rem; }
 
 @media (max-width: 700px) {

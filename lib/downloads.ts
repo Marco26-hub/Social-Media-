@@ -1,4 +1,4 @@
-import { del, get, put, type PutBlobResult } from '@vercel/blob'
+import { del, get, head, put, type PutBlobResult } from '@vercel/blob'
 import type { DownloadItem } from '@/lib/downloads-shared'
 
 export type { DownloadItem } from '@/lib/downloads-shared'
@@ -11,6 +11,16 @@ type DownloadCatalog = {
   items: DownloadItem[]
 }
 
+export class DownloadStorageError extends Error {
+  constructor(
+    public readonly code: 'not_configured' | 'unavailable' | 'invalid_catalog',
+    message: string,
+  ) {
+    super(message)
+    this.name = 'DownloadStorageError'
+  }
+}
+
 function emptyCatalog(): DownloadCatalog {
   return { version: 1, items: [] }
 }
@@ -19,23 +29,51 @@ export function isDownloadStorageConfigured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN || (process.env.BLOB_STORE_ID && process.env.VERCEL_OIDC_TOKEN))
 }
 
+export function isDownloadStorageError(error: unknown): error is DownloadStorageError {
+  return error instanceof DownloadStorageError
+}
+
 export function isDownloadPathname(pathname: string) {
   return pathname.startsWith(FILES_PREFIX) && !pathname.includes('..')
 }
 
 async function readCatalog(): Promise<DownloadCatalog> {
-  if (!isDownloadStorageConfigured()) return emptyCatalog()
+  // Questo catalogo è la fonte dati dei download: non esiste un fallback su DB
+  // locale o un elenco fittizio. Un errore deve restare visibile a admin e log.
+  if (!isDownloadStorageConfigured()) {
+    throw new DownloadStorageError('not_configured', 'Storage download non configurato')
+  }
 
-  const result = await get(CATALOG_PATHNAME, { access: 'public', useCache: false })
-  if (!result || result.statusCode !== 200 || !result.stream) return emptyCatalog()
+  let result: Awaited<ReturnType<typeof get>>
+  try {
+    result = await get(CATALOG_PATHNAME, { access: 'public', useCache: false })
+  } catch (error) {
+    console.error('[downloads] catalog read failed:', error)
+    throw new DownloadStorageError('unavailable', 'Storage download momentaneamente non disponibile')
+  }
+
+  // Il primo utilizzo non ha ancora un catalogo: è l'unico caso in cui un elenco
+  // vuoto è valido. Tutti gli altri problemi restano errori espliciti.
+  if (!result) return emptyCatalog()
+  if (result.statusCode !== 200 || !result.stream) {
+    console.error('[downloads] unexpected catalog response:', result.statusCode)
+    throw new DownloadStorageError('unavailable', 'Storage download momentaneamente non disponibile')
+  }
 
   try {
     const raw = await new Response(result.stream).text()
     const parsed = JSON.parse(raw) as Partial<DownloadCatalog>
-    if (parsed.version !== 1 || !Array.isArray(parsed.items)) return emptyCatalog()
-    return { version: 1, items: parsed.items.filter(isValidDownloadItem) }
-  } catch {
-    return emptyCatalog()
+    if (parsed.version !== 1 || !Array.isArray(parsed.items)) {
+      throw new Error('Formato catalogo non supportato')
+    }
+    const items = parsed.items.filter(isValidDownloadItem)
+    if (items.length !== parsed.items.length) {
+      throw new Error('Il catalogo contiene materiali non validi')
+    }
+    return { version: 1, items }
+  } catch (error) {
+    console.error('[downloads] invalid catalog:', error)
+    throw new DownloadStorageError('invalid_catalog', 'Catalogo download non valido')
   }
 }
 
@@ -63,6 +101,28 @@ async function writeCatalog(catalog: DownloadCatalog) {
     allowOverwrite: true,
     cacheControlMaxAge: 60,
   })
+}
+
+export async function getVerifiedDownloadBlob(pathname: string): Promise<Pick<PutBlobResult, 'pathname' | 'url' | 'downloadUrl' | 'contentType'>> {
+  if (!isDownloadPathname(pathname)) throw new Error('Percorso file non consentito')
+  if (!isDownloadStorageConfigured()) {
+    throw new DownloadStorageError('not_configured', 'Storage download non configurato')
+  }
+
+  try {
+    const blob = await head(pathname)
+    if (!isDownloadPathname(blob.pathname)) throw new Error('Percorso file non consentito')
+    return {
+      pathname: blob.pathname,
+      url: blob.url,
+      downloadUrl: blob.downloadUrl,
+      contentType: blob.contentType,
+    }
+  } catch (error) {
+    if (error instanceof DownloadStorageError) throw error
+    console.error('[downloads] uploaded file verification failed:', error)
+    throw new DownloadStorageError('unavailable', 'Il file caricato non è verificabile nello storage')
+  }
 }
 
 export async function listDownloads(includeHidden = false) {

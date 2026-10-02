@@ -1,12 +1,18 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth-utils'
-import { isDownloadPathname } from '@/lib/downloads'
+import { isDownloadPathname, isDownloadStorageConfigured } from '@/lib/downloads'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
+    if (!isDownloadStorageConfigured()) {
+      return NextResponse.json(
+        { error: 'Lo storage download non è momentaneamente disponibile. Riprova tra poco.' },
+        { status: 503 },
+      )
+    }
     const body = await request.json() as HandleUploadBody
     const response = await handleUpload({
       body,

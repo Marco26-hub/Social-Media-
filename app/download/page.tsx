@@ -29,10 +29,14 @@ function fileType(contentType: string, filename: string) {
 
 export default async function DownloadPage() {
   let items = [] as Awaited<ReturnType<typeof listDownloads>>
+  let unavailable = false
   try {
     items = await listDownloads()
-  } catch {
-    // Se Blob non è ancora configurato, la pagina resta pubblica e ordinata.
+  } catch (error) {
+    // Non trasformare un problema di connessione in un catalogo "vuoto": il
+    // cliente riceve un messaggio chiaro, mentre il dettaglio resta nei log.
+    console.error('[download page] public catalog unavailable:', error)
+    unavailable = true
   }
 
   return (
@@ -48,10 +52,15 @@ export default async function DownloadPage() {
             <h1 id="download-title">Materiali pronti per te.</h1>
             <p className={styles.intro}>Scarica qui documenti, immagini e file condivisi dal team SWA.</p>
           </div>
-          <p className={styles.count}>{items.length === 1 ? '1 materiale disponibile' : `${items.length} materiali disponibili`}</p>
+          <p className={styles.count}>{unavailable ? 'Servizio temporaneamente non disponibile' : items.length === 1 ? '1 materiale disponibile' : `${items.length} materiali disponibili`}</p>
         </section>
 
-        {items.length ? (
+        {unavailable ? (
+          <section className={`${styles.empty} ${styles.unavailable}`} role="alert">
+            <strong>I materiali non sono momentaneamente disponibili.</strong>
+            Riprova tra poco oppure contattaci se ti serve un file con urgenza.
+          </section>
+        ) : items.length ? (
           <section className={styles.grid} aria-label="Materiali disponibili">
             {items.map(item => {
               const { label, Icon } = fileType(item.contentType, item.originalName)

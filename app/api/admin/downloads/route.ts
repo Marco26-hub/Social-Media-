@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server'
-import { addDownload, isDownloadPathname, listDownloads, removeDownload, replaceDownload, updateDownload } from '@/lib/downloads'
+import { addDownload, getVerifiedDownloadBlob, isDownloadStorageError, listDownloads, removeDownload, replaceDownload, updateDownload } from '@/lib/downloads'
 import { requireAdmin } from '@/lib/auth-utils'
 
 export const dynamic = 'force-dynamic'
 
 function errorResponse(error: unknown) {
-  const message = error instanceof Error ? error.message : 'Operazione non riuscita'
-  const status = /non autenticato|riservata ad admin/i.test(message) ? 401 : 400
+  const rawMessage = error instanceof Error ? error.message : 'Operazione non riuscita'
+  const status = /non autenticato|riservata ad admin/i.test(rawMessage)
+    ? 401
+    : isDownloadStorageError(error)
+      ? 503
+      : 400
+  const message = isDownloadStorageError(error)
+    ? 'Lo storage download non è momentaneamente disponibile. Riprova tra poco.'
+    : rawMessage
+  if (status >= 500) console.error('[admin downloads] storage error:', error)
   return NextResponse.json({ error: message }, { status })
 }
 
@@ -34,17 +42,12 @@ export async function POST(request: Request) {
     if (!Number.isFinite(size) || size < 0) throw new Error('Dimensione file non valida')
 
     const pathname = requiredString(blob.pathname, 'Percorso file')
-    if (!isDownloadPathname(pathname)) throw new Error('Percorso file non consentito')
+    const verifiedBlob = await getVerifiedDownloadBlob(pathname)
     const item = await addDownload({
       title: requiredString(body.title, 'Titolo'),
       description: typeof body.description === 'string' ? body.description : '',
       originalName: requiredString(body.originalName, 'Nome file'),
-      blob: {
-        pathname,
-        url: requiredString(blob.url, 'URL file'),
-        downloadUrl: requiredString(blob.downloadUrl, 'URL download'),
-        contentType: requiredString(blob.contentType, 'Tipo file'),
-      },
+      blob: verifiedBlob,
       size,
     })
     return NextResponse.json({ item }, { status: 201 })
@@ -75,15 +78,10 @@ export async function PATCH(request: Request) {
       const size = Number(body.size)
       if (!Number.isFinite(size) || size < 0) throw new Error('Dimensione file non valida')
       const pathname = requiredString(blob.pathname, 'Percorso file')
-      if (!isDownloadPathname(pathname)) throw new Error('Percorso file non consentito')
+      const verifiedBlob = await getVerifiedDownloadBlob(pathname)
       const item = await replaceDownload(id, {
         originalName: requiredString(body.originalName, 'Nome file'),
-        blob: {
-          pathname,
-          url: requiredString(blob.url, 'URL file'),
-          downloadUrl: requiredString(blob.downloadUrl, 'URL download'),
-          contentType: requiredString(blob.contentType, 'Tipo file'),
-        },
+        blob: verifiedBlob,
         size,
       })
       return NextResponse.json({ item })
