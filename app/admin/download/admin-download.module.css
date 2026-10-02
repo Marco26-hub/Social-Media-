@@ -1,0 +1,52 @@
+.page { min-height: 100vh; background: #f5f8f6; color: #14251a; padding: clamp(1rem, 3vw, 2.5rem); }
+.shell { max-width: 74rem; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 1.5rem; }
+.logo { display: block; box-sizing: content-box; width: auto; height: 2.35rem; padding: .35rem .5rem; border-radius: .7rem; background: #0f172a; box-shadow: 0 8px 20px rgba(15, 23, 42, .16); object-fit: contain; margin-bottom: 1rem; }
+.eyebrow { margin: 0 0 .45rem; color: #15803d; font-size: .76rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.header h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.7rem); letter-spacing: -.045em; }
+.header p { margin: .55rem 0 0; color: #5f7164; line-height: 1.5; }
+.publicLink { display: inline-flex; align-items: center; gap: .45rem; flex: 0 0 auto; padding: .75rem .9rem; border: 1px solid #cde0d0; border-radius: .7rem; background: white; color: #166534; font-size: .88rem; font-weight: 750; text-decoration: none; }
+.notice { margin-bottom: 1rem; padding: 1rem 1.1rem; border: 1px solid #f2cd7e; border-radius: .8rem; background: #fff8e8; color: #72551b; font-size: .92rem; line-height: 1.5; }
+.notice code { padding: .1rem .28rem; border-radius: .25rem; background: rgba(255,255,255,.65); font-size: .84em; }
+.panel { padding: clamp(1rem, 3vw, 1.65rem); border: 1px solid #dce8df; border-radius: 1rem; background: white; box-shadow: 0 10px 30px rgba(24, 65, 36, .05); }
+.panel + .panel { margin-top: 1rem; }
+.panel h2 { margin: 0 0 1.1rem; font-size: 1.13rem; letter-spacing: -.02em; }
+.fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: .9rem; }
+.field { display: grid; gap: .4rem; }
+.field label { color: #49604f; font-size: .78rem; font-weight: 750; }
+.field input, .field textarea { width: 100%; border: 1px solid #cbd9ce; border-radius: .6rem; background: #fff; color: #182b1e; font: inherit; font-size: .93rem; outline: none; padding: .7rem .75rem; }
+.field textarea { min-height: 5.5rem; resize: vertical; }
+.field input:focus, .field textarea:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(34,197,94,.13); }
+.wide { grid-column: 1 / -1; }
+.actions { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; margin-top: 1rem; }
+.primary, .secondary, .danger { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 2.55rem; padding: 0 .95rem; border: 0; border-radius: .6rem; font: inherit; font-size: .88rem; font-weight: 800; cursor: pointer; }
+.primary { background: #166534; color: white; }
+.primary:hover { background: #14532d; }
+.primary:disabled, .secondary:disabled, .danger:disabled { cursor: wait; opacity: .55; }
+.secondary { border: 1px solid #cbd9ce; background: white; color: #285436; }
+.danger { border: 1px solid #f3c4c4; background: #fff5f5; color: #b42318; }
+.message { color: #26663b; font-size: .88rem; font-weight: 650; }
+.error { color: #ba2c20; font-size: .88rem; font-weight: 650; }
+.listHeader { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.listHeader h2 { margin-bottom: 0; }
+.material { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; padding: 1.25rem 0; border-top: 1px solid #e4ece6; }
+.material:first-of-type { margin-top: 1.15rem; }
+.materialTitle { display: flex; align-items: center; gap: .55rem; }
+.materialTitle h3 { margin: 0; font-size: 1rem; }
+.hidden { padding: .22rem .45rem; border-radius: 99rem; background: #edf0ee; color: #647168; font-size: .7rem; font-weight: 800; text-transform: uppercase; }
+.materialMeta { margin: .4rem 0 0; color: #68796d; font-size: .82rem; }
+.editGrid { display: grid; grid-template-columns: .8fr 1.3fr; gap: .65rem; margin-top: 1rem; }
+.toggle { display: flex; align-items: center; gap: .5rem; margin-top: .75rem; color: #3e5746; font-size: .85rem; font-weight: 650; }
+.toggle input { width: 1rem; height: 1rem; accent-color: #15803d; }
+.materialActions { display: flex; align-items: flex-start; gap: .55rem; flex-wrap: wrap; }
+.replace { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; margin-top: .85rem; color: #526557; font-size: .82rem; }
+.replace input { max-width: 16rem; }
+.empty { padding: 2rem 0 .25rem; color: #65776a; font-size: .94rem; }
+
+@media (max-width: 680px) {
+  .header, .material { grid-template-columns: 1fr; flex-direction: column; }
+  .publicLink { align-self: flex-start; }
+  .fields, .editGrid { grid-template-columns: 1fr; }
+  .wide { grid-column: auto; }
+  .materialActions { align-items: stretch; }
+}
