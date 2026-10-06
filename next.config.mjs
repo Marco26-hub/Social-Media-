@@ -70,6 +70,10 @@ const nextConfig = {
   // finisce sulla parte telefonica, la piu cercata delle due.
   async redirects() {
     return [
+      // URL storico individuato da Search Console: il suffisso del prezzo mensile
+      // non e' una pagina autonoma. Lo portiamo al listino, invece di lasciare
+      // Google e chi arriva da un vecchio link su una 404.
+      { source: '/mese', destination: '/pacchetti', permanent: true },
       { source: '/servizi/segretaria-ai', destination: '/servizi/segretaria-telefonica-ai', permanent: true },
     ]
   },
