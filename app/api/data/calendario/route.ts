@@ -8,6 +8,7 @@ import { isDemo } from '@/lib/demo'
 import { demoContenuti } from '@/lib/demo-data'
 import { getTableColumns } from '@/lib/db-schema'
 import { toYmd } from '@/lib/publish/blotato-map'
+import { isLocalPreflightFailure } from '@/lib/calendar-recovery'
 
 // L'approvazione non innesca piu alcun montaggio (l'invio a Blotato e il render
 // avvengono solo dalle route di sincronizzazione). Il tetto resta alto perche la
@@ -242,11 +243,11 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'contenuto non trovato' }, { status: 404 })
     }
     if (
-      body.data_pubblicazione
-      && (existingContent[0] as Record<string, unknown>).blotato_post_id
-      && body.data_pubblicazione !== toYmd((existingContent[0] as Record<string, unknown>).data_pubblicazione)
+      (existingContent[0] as Record<string, unknown>).blotato_post_id
+      && ((body.data_pubblicazione && body.data_pubblicazione !== toYmd(existingContent[0].data_pubblicazione))
+        || (body.ora_pubblicazione && String(body.ora_pubblicazione).slice(0, 5) !== String(existingContent[0].ora_pubblicazione).slice(0, 5)))
     ) {
-      return NextResponse.json({ error: 'contenuto già sincronizzato con Blotato: rimettilo in coda prima di cambiare data' }, { status: 409 })
+      return NextResponse.json({ error: 'contenuto già sincronizzato: verifica o modifica la programmazione su Blotato, senza reinviarlo' }, { status: 409 })
     }
 
     const fields: string[] = []
@@ -260,6 +261,19 @@ export async function PATCH(request: Request) {
       }
       params.push(val)
       fields.push(`${key} = $${params.length}`)
+    }
+    // Una data nuova rende obsoleto SOLO il vecchio preflight locale di data
+    // passata, non un errore remoto o uno stato di pubblicazione reale.
+    if ((body.data_pubblicazione || body.ora_pubblicazione) && body.status !== 'APPROVATO'
+      && isLocalPreflightFailure(existingContent[0])) {
+      const oldRemote = await q(`SELECT id FROM log_pubblicazioni WHERE cliente_id = $1 AND id_contenuto = $2
+        AND status_finale = 'RIMESSO_IN_CODA'
+        AND messaggio LIKE '%invio Blotato scheduled non confermato, riferimento azzerato%' LIMIT 1`, [cid, existingContent[0].id_contenuto])
+      if (!oldRemote.length) {
+        for (const column of ['errore_tecnico', 'blotato_status', 'blotato_sync_at']) {
+          if (calendarioColumns.has(column) && !fields.some(field => field.startsWith(`${column} = `))) fields.push(`${column} = NULL`)
+        }
+      }
     }
     if (body.status === 'APPROVATO') {
       const existing = existingContent[0] as Record<string, unknown>

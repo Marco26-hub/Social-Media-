@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
 import type { Contenuto } from '@/lib/types'
 import { preflightRow } from '@/lib/publish/preflight'
 import { toYmd } from '@/lib/publish/blotato-map'
+import { calendarDisplayStatus } from '@/lib/calendar-display'
 
 // Vista calendario a griglia mensile (stile Blotato), affiancata alla lista.
 // Ogni giorno mostra i post programmati come mini-card (ora + canale + stato),
@@ -17,7 +18,7 @@ const CANALE_ICON: Record<string, string> = {
 
 function statusDot(status: string): string {
   if (status === 'PUBBLICATO') return 'bg-green-500'
-  if (status === 'APPROVATO') return 'bg-blue-500'
+  if (status === 'APPROVATO' || status === 'IN_CODA') return 'bg-blue-500'
   if (status === 'ERRORE' || status === 'ERRORE_MANUALE') return 'bg-red-500'
   if (status === 'DA_APPROVARE') return 'bg-amber-500'
   if (status === 'NON_APPROVATO') return 'bg-rose-400'
@@ -142,7 +143,7 @@ export default function CalendarGrid({ items, tz, onSelect, onMove }: {
                           title={!movable ? 'Contenuto già sincronizzato: non spostabile' : pf.ok ? `${it.canale} · ${it.formato} · trascina per spostare` : `Blocca sync: ${pf.errors.map(e => e.message).join('; ')}`}
                           className={`w-full flex items-center gap-1 rounded-md px-1 py-0.5 text-left text-[11px] bg-slate-50 hover:bg-slate-100 transition-opacity ${movable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${draggingId === it.id ? 'opacity-40' : ''}`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot(it.status)}`} />
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot(calendarDisplayStatus(it))}`} />
                           <span className="shrink-0">{CANALE_ICON[it.canale] || '📄'}</span>
                           <span className="text-gray-600 shrink-0">{(it.ora_pubblicazione || '').slice(0, 5)}</span>
                           {it.content_series_id && it.content_series_position && it.content_series_total && (

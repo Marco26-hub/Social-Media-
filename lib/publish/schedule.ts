@@ -13,6 +13,7 @@ import { accorciaCaption } from '@/lib/caption-limits'
 import { hashtagCount, normalizeHashtagsForPublish, normalizeInstagramPublishPayload, stripHashtags } from '@/lib/hashtags'
 import { remotionSourceHash, renderSwaSocialVideo } from '@/lib/remotion-renderer'
 import { hasFinalCampaignAsset, requiresRenderedVisualReview } from '@/lib/publish/visual-review'
+import { uniquePublishCopy } from '@/lib/publish-copy'
 
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 
@@ -82,6 +83,17 @@ export async function scheduleOnBlotato(
   if (await isDryRunForCliente(clienteId)) {
     console.warn(`[Blotato] cliente ${clienteId} in dry_run (settings) → nessun post reale.`)
     return { status: 'dry_run' }
+  }
+
+  // Mai reinviare una scheda il cui vecchio recupero ha cancellato l'ID remoto.
+  const erasedRemote = await q(
+    `SELECT id FROM log_pubblicazioni WHERE cliente_id = $1 AND id_contenuto = $2
+       AND status_finale = 'RIMESSO_IN_CODA'
+       AND messaggio LIKE '%invio Blotato scheduled non confermato, riferimento azzerato%' LIMIT 1`,
+    [clienteId, row.id_contenuto],
+  )
+  if (erasedRemote.length) {
+    return { status: 'skipped', reason: 'Storico di invio Blotato presente: reinvio bloccato per evitare doppioni. Verificare la pubblicazione originale.' }
   }
 
   const blotatoKey = await getBlotatoKey(clienteId)
@@ -452,8 +464,8 @@ export async function scheduleOnBlotato(
   const asStr = (v: unknown) => (typeof v === 'string' && v) || (typeof v === 'number' ? String(v) : '')
   const data = (result && typeof result === 'object' ? (result as Record<string, unknown>) : {}) as Record<string, unknown>
   const nested = (data.data || data.post || data.item || {}) as Record<string, unknown>
-  const blotatoId = asStr(data.id)
-    || asStr(data.postSubmissionId)
+  const blotatoId = asStr(data.postSubmissionId)
+    || asStr(data.id)
     || asStr(data.submissionId)
     || asStr(data.scheduled_id)
     || asStr(data.postId)
@@ -517,9 +529,7 @@ function buildPlatformContent(canale: string, formato: string, row: ContentRow):
   // il payload veniva trattato come story ma il testo riceveva CTA e link, che
   // nelle story non sono cliccabili. Una sola normalizzazione per entrambi.
   const formatoNorm = formato.trim().toLowerCase()
-  const hook = (row.hook || '') as string
-  const caption = (row.caption || '') as string
-  const cta = (row.cta || '') as string
+  const { hook, caption, cta } = uniquePublishCopy(String(row.hook || ''), String(row.caption || ''), String(row.cta || ''))
   const hashtag = normalizeHashtagsForPublish(canale, (row.hashtag || '') as string)
   const nomeProdotto = (row.nome_prodotto || '') as string
   const linkProdotto = ((row.link_prodotto_finale || row.link_prodotto || '') as string).trim()

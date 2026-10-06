@@ -8,6 +8,8 @@ import { CheckCircle, XCircle, RefreshCw, Eye, Info, ChevronDown, Filter, Sparkl
 import CalendarGrid from '@/components/CalendarGrid'
 import { preflightRow } from '@/lib/publish/preflight'
 import { toYmd } from '@/lib/publish/blotato-map'
+import { recoveryBlockReason } from '@/lib/calendar-recovery'
+import { calendarDisplayStatus } from '@/lib/calendar-display'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
@@ -179,7 +181,7 @@ function formatMonthLabel(month: string) {
 
 function statusTone(status: string) {
   if (status === 'PUBBLICATO') return 'bg-green-500'
-  if (status === 'APPROVATO') return 'bg-blue-500'
+  if (status === 'APPROVATO' || status === 'IN_CODA') return 'bg-blue-500'
   if (status === 'ERRORE' || status === 'ERRORE_MANUALE') return 'bg-red-500'
   if (status === 'NON_APPROVATO') return 'bg-rose-400'
   if (status === 'DA_APPROVARE') return 'bg-amber-500'
@@ -232,6 +234,12 @@ function CalendarioInner() {
   const [bulkMoveDate, setBulkMoveDate] = useState('')
   const [bulkMovePreview, setBulkMovePreview] = useState<ShiftResult | null>(null)
   const [bulkMoving, setBulkMoving] = useState(false)
+  const [recoveryOpen, setRecoveryOpen] = useState(false)
+  const [recoveryId, setRecoveryId] = useState('')
+  const [recoveryDate, setRecoveryDate] = useState('')
+  const [recoveryTime, setRecoveryTime] = useState('')
+  const [recoveryPreview, setRecoveryPreview] = useState<string | null>(null)
+  const [recoveryError, setRecoveryError] = useState<string | null>(null)
   // Conferma "non approvare": rejectTarget = singolo post (tasto rosso), rejectBulkOpen = selezione multipla.
   const [rejectTarget, setRejectTarget] = useState<Contenuto | null>(null)
   const [rejectBulkOpen, setRejectBulkOpen] = useState(false)
@@ -243,6 +251,7 @@ function CalendarioInner() {
   const [dryRun, setDryRun] = useState<boolean | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [reconciling, setReconciling] = useState(false)
+  const [copyRepairing, setCopyRepairing] = useState<string | null>(null)
   const [packageReconcile, setPackageReconcile] = useState<PackageReconcile | null>(null)
   const [auditing, setAuditing] = useState(false)
   const [planAudit, setPlanAudit] = useState<PlanAudit | null>(null)
@@ -643,7 +652,33 @@ function CalendarioInner() {
     }
   }
 
-  // Sincronizza su Blotato i contenuti APPROVATI non ancora inviati (pubblicazione).
+  async function repairQueuedCopy(c: Contenuto) {
+    setCopyRepairing(c.id)
+    setSyncMsg(null)
+    try {
+      const requestRepair = async (dryRun: boolean) => {
+        const res = await fetch('/api/data/blotato-copy-repair', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: [c.id], dry_run: dryRun }),
+        })
+        if (!res.ok) throw new Error(await readApiError(res, 'Correzione testo in coda fallita'))
+        return res.json() as Promise<{ results: Array<{ before: string; after: string; changed: boolean }> }>
+      }
+      const preview = await requestRepair(true)
+      const result = preview.results[0]
+      if (!result) throw new Error('Simulazione senza risultato: nessuna modifica applicata.')
+      if (!window.confirm(`${c.id_contenuto}: correggere soltanto le ripetizioni del testo?\nMedia, account e orario restano invariati. Non verrà creato un nuovo post.\n\nPRIMA:\n${result.before}\n\nDOPO:\n${result.after}`)) return
+      await requestRepair(false)
+      await fetchData()
+      setSyncMsg({ type: 'ok', text: `${c.id_contenuto}: testo verificato e riallineato, senza reinvio né cambio di orario.` })
+    } catch (error) {
+      setSyncMsg({ type: 'err', text: (error as Error).message })
+    } finally {
+      setCopyRepairing(null)
+    }
+  }
+
+  // Legge lo stato remoto senza creare un nuovo invio.
   async function reconcileBlotato(showMessage = true): Promise<PackageReconcile | null> {
     setReconciling(true)
     if (showMessage) setSyncMsg(null)
@@ -824,27 +859,30 @@ function CalendarioInner() {
     }
   }
 
-  // Rimette in coda i contenuti approvati in ritardo e recupera gli invii
-  // Blotato rimasti scheduled dopo conferma esplicita dell'utente.
-  async function requeuePassati() {
-    if (stalli.length > 0 && !window.confirm(
-      `${stalli.length} contenuti risultano inviati a Blotato ma non confermati. Hai verificato che NON siano già stati pubblicati sui social? Proseguendo verranno riprogrammati e potrebbero essere pubblicati di nuovo.`,
-    )) return
+  // Il recupero non è più un batch implicito: un solo contenuto e uno slot
+  // scelto dall'utente, con dry-run prima della conferma.
+  async function requeuePassati(applica: boolean) {
     setRequeuing(true)
-    setSyncMsg(null)
+    setRecoveryError(null)
     try {
-      const res = await fetch('/api/data/calendario/requeue-passati', { method: 'POST' })
+      const res = await fetch('/api/data/calendario/requeue-passati', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: recoveryId, giorno: recoveryDate, ora: recoveryTime, dry_run: !applica }),
+      })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.hint || data.error || 'Requeue fallito')
-      setSyncMsg({
-        type: 'ok',
-        text: data.count === 0
-          ? (data.note || 'Nessun contenuto in ritardo da rimettere in coda.')
-          : `${data.count} contenuti rimessi in coda: ${data.requeued.map((r: { canale: string; a: { giorno: string; ora: string } }) => `${r.canale} → ${r.a.giorno} ${r.a.ora}`).join(', ')}.`,
-      })
-      await fetchData()
+      if (!applica) {
+        const item = data.requeued?.[0]
+        if (!item) throw new Error('Nessun contenuto recuperabile.')
+        setRecoveryPreview(`${item.id_contenuto} · ${item.canale}: ${item.da.giorno} ${item.da.ora} → ${item.a.giorno} ${item.a.ora}`)
+      } else {
+        setRecoveryOpen(false)
+        setSyncMsg({ type: 'ok', text: data.note || 'Data aggiornata. Nessun contenuto inviato a Blotato.' })
+        await fetchData()
+      }
     } catch (e) {
-      setSyncMsg({ type: 'err', text: (e as Error).message })
+      setRecoveryPreview(null)
+      setRecoveryError((e as Error).message)
     } finally {
       setRequeuing(false)
     }
@@ -1264,7 +1302,7 @@ function CalendarioInner() {
     setDragOverDate(null)
     if (toYmd(c.data_pubblicazione) === newDate) return true
     if (c.blotato_post_id || c.blotato_status === 'scheduled' || c.blotato_status === 'published' || ['PUBBLICATO', 'ARCHIVIATO'].includes(c.status)) {
-      setSyncMsg({ type: 'err', text: 'Contenuto già sincronizzato con Blotato: rimettilo prima in coda, poi potrai spostarlo.' })
+      setSyncMsg({ type: 'err', text: 'Contenuto già sincronizzato: verifica o modifica la programmazione su Blotato, senza reinviarlo dal recupero dei ritardi.' })
       return false
     }
     if (demo) {
@@ -1325,7 +1363,7 @@ function CalendarioInner() {
   // Quanti dei selezionati sono davvero rifiutabili (solo DA_APPROVARE): serve al
   // modale di conferma bulk per non promettere un rifiuto su post già pubblicati.
   const rejectableSelectedCount = [...selectedIds].filter(id => contenuti.find(c => c.id === id)?.status === 'DA_APPROVARE').length
-  const nextContent = calendarItems.find(c => c.data_pubblicazione >= todayIso && c.status !== 'PUBBLICATO')
+  const nextContent = calendarItems.find(c => c.data_pubblicazione >= todayIso && calendarDisplayStatus(c) !== 'PUBBLICATO')
   // Inviati a Blotato ma mai confermati: l'orario è passato e lo stato è fermo a
   // 'scheduled'. Tolleranza di 15' per non allarmare su un ritardo fisiologico.
   const stalli = contenuti.filter(c => {
@@ -1398,7 +1436,7 @@ function CalendarioInner() {
                 <ClipboardCheck className="w-4 h-4" />
                 <span>Ripristina strategia</span>
               </button>
-              <button onClick={requeuePassati} disabled={requeuing} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 disabled:opacity-60 inline-flex items-center gap-1.5" title="Sposta i contenuti approvati in ritardo e recupera gli invii Blotato rimasti programmati">
+              <button onClick={() => { setRecoveryOpen(true); setRecoveryId(''); setRecoveryDate(''); setRecoveryTime(''); setRecoveryPreview(null); setRecoveryError(null) }} disabled={requeuing} className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/15 disabled:opacity-60 inline-flex items-center gap-1.5" title="Scegli un solo contenuto approvato mai inviato e un nuovo orario; non tocca pubblicati o contenuti futuri">
                 {requeuing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
                 <span>{requeuing ? 'Rimetto in coda...' : 'Rimetti in coda i passati'}</span>
               </button>
@@ -1676,7 +1714,7 @@ function CalendarioInner() {
             <p className="mt-0.5 text-red-700">
               Lo stato remoto è fermo all&apos;invio: finché nessuno rilegge Blotato resta &quot;programmato&quot; anche se il post è già uscito.
               Premi <strong>Verifica Blotato</strong> come prima cosa. Se dopo la verifica risulta ancora programmato, controlla sul social:
-              se il post c&apos;è non rimetterlo in coda — verrebbe pubblicato una seconda volta.
+              gli invii già effettuati non vengono rimessi in coda né reinviati dal recupero dei ritardi.
             </p>
             <button
               type="button"
@@ -1937,7 +1975,8 @@ function CalendarioInner() {
             const showDateHeader = c.data_pubblicazione !== previousDate
             const dayItems = visibleCalendarItems.filter(item => item.data_pubblicazione === c.data_pubblicazione)
             const dayStatus = dayItems.reduce<Record<string, number>>((acc, item) => {
-              acc[item.status] = (acc[item.status] || 0) + 1
+              const status = calendarDisplayStatus(item)
+              acc[status] = (acc[status] || 0) + 1
               return acc
             }, {})
             const scoreLabel = scores[c.id] ? String(scores[c.id].score_globale ?? 'Valuta') : 'Valuta'
@@ -1974,7 +2013,7 @@ function CalendarioInner() {
                 </div>
               )}
               <div className={`card overflow-hidden border-slate-200/80 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg md:p-4 ${dragItem === c.id ? 'opacity-50 scale-95' : ''} ${selectedIds.has(c.id) ? 'ring-2 ring-brand-400' : ''}`}>
-              <div className={`mb-3 h-1 rounded-full ${statusTone(c.status)}`} />
+              <div className={`mb-3 h-1 rounded-full ${statusTone(calendarDisplayStatus(c))}`} />
               <div className="flex flex-wrap items-start gap-3 md:gap-4">
                 {(() => {
                   const movable = !c.blotato_post_id && c.blotato_status !== 'scheduled' && c.blotato_status !== 'published' && !['PUBBLICATO', 'ARCHIVIATO'].includes(c.status)
@@ -1989,7 +2028,7 @@ function CalendarioInner() {
                         setDragItem(c.id)
                       }}
                       onDragEnd={() => { setDragItem(null); setDragOverDate(null) }}
-                      title={movable ? 'Trascina in un altro giorno' : 'Già sincronizzato: rimettilo in coda prima di spostarlo'}
+                      title={movable ? 'Trascina in un altro giorno' : 'Già sincronizzato: verifica la programmazione su Blotato'}
                       className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border ${movable ? 'cursor-grab border-slate-200 bg-slate-50 text-slate-500 hover:border-brand-300 hover:text-brand-700 active:cursor-grabbing' : 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'}`}
                     >
                       <GripVertical className="h-4 w-4" />
@@ -2207,6 +2246,12 @@ function CalendarioInner() {
                     <button onClick={() => syncUno(c)} disabled={saving === c.id} title="Sincronizza SOLO questo contenuto su Blotato (non l'intero batch)" className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
                       {saving === c.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />}
                       <span className="hidden md:inline">Sincronizza questo</span>
+                    </button>
+                  )}
+                  {c.blotato_status === 'scheduled' && c.blotato_post_id && (
+                    <button onClick={() => repairQueuedCopy(c)} disabled={copyRepairing !== null} title="Simula e correggi ripetizioni del testo remoto, senza cambiare media o orario" className="btn-secondary py-1.5 px-2 md:px-3 justify-center">
+                      <RefreshCw className={`w-3.5 h-3.5 ${copyRepairing === c.id ? 'animate-spin' : ''}`} />
+                      <span className="hidden md:inline">Correggi ripetizioni</span>
                     </button>
                   )}
                   <button
@@ -2826,7 +2871,38 @@ function CalendarioInner() {
         </div>
       )}
 
-      {/* Modale conferma eliminazione multipla */}
+      {recoveryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => !requeuing && setRecoveryOpen(false)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="recovery-title" className="w-full max-w-lg rounded-xl bg-white shadow-2xl" onClick={event => event.stopPropagation()}>
+            <div className="border-b p-5">
+              <h2 id="recovery-title" className="font-bold text-gray-900">Recupera un contenuto non inviato</h2>
+              <p className="mt-1 text-xs text-gray-600">Pubblicati, invii Blotato e uscite future restano protetti. Nessuno spostamento automatico del piano.</p>
+            </div>
+            <div className="space-y-4 p-5">
+              <label className="block text-sm text-gray-700">Contenuto in ritardo
+                <select className="input mt-1 w-full" value={recoveryId} onChange={event => { setRecoveryId(event.target.value); setRecoveryPreview(null) }}>
+                  <option value="">Scegli il contenuto da recuperare</option>
+                  {overviewContenuti.filter(c => !recoveryBlockReason(c, clienteTz)).map(c => (
+                    <option key={c.id} value={c.id}>{c.id_contenuto} · {c.canale} · {c.data_pubblicazione} {formatTimeLabel(c.ora_pubblicazione)}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block text-sm text-gray-700">Nuova data<input type="date" className="input mt-1 w-full" value={recoveryDate} onChange={event => { setRecoveryDate(event.target.value); setRecoveryPreview(null) }} /></label>
+                <label className="block text-sm text-gray-700">Nuova ora<input type="time" className="input mt-1 w-full" value={recoveryTime} onChange={event => { setRecoveryTime(event.target.value); setRecoveryPreview(null) }} /></label>
+              </div>
+              {recoveryPreview && <p className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">{recoveryPreview}<br />Solo questa scheda verrà spostata; resterà approvata, non inviata.</p>}
+              {recoveryError && <p role="alert" className="text-sm text-red-700">{recoveryError}</p>}
+            </div>
+            <div className="flex gap-3 border-t p-5">
+              <button onClick={() => setRecoveryOpen(false)} disabled={requeuing} className="btn-secondary flex-1 justify-center">Annulla</button>
+              <button onClick={() => requeuePassati(Boolean(recoveryPreview))} disabled={requeuing || !recoveryId || !recoveryDate || !recoveryTime} className="btn-primary flex-1 justify-center">{requeuing ? 'Verifico...' : recoveryPreview ? 'Conferma questo recupero' : 'Mostra anteprima'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale spostamento multiplo */}
       {bulkMoveOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => !bulkMoving && setBulkMoveOpen(false)}>
           <div className="w-full max-w-md rounded-xl bg-white shadow-2xl" onClick={event => event.stopPropagation()}>
@@ -2859,7 +2935,7 @@ function CalendarioInner() {
                 </div>
               )}
               <p className="rounded-lg border border-sky-100 bg-sky-50 p-3 text-xs text-sky-800">
-                I contenuti già programmati o pubblicati su Blotato verranno saltati. Prima devono essere rimessi in coda.
+                I contenuti già programmati o pubblicati su Blotato verranno saltati. Verifica il loro stato su Blotato: non usare il recupero dei ritardi per reinviarli.
               </p>
             </div>
             <div className="flex gap-3 border-t p-5">
