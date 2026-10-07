@@ -76,6 +76,33 @@ function tooMany(retryAfter: number) {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  const isMarketplace = pathname === '/marketplace' || pathname.startsWith('/marketplace/')
+    || pathname === '/tools' || pathname.startsWith('/tools/')
+  if (isMarketplace) {
+    if (isDemo()) return NextResponse.next()
+    const marketplaceToken = await getToken({ req: request, secret: AUTH_SECRET })
+    const marketplaceRole = marketplaceToken?.ruolo as string | undefined
+    const isMarketplaceAdmin = marketplaceRole === 'admin' || marketplaceRole === 'super_admin'
+    if (!marketplaceToken) {
+      if (pathname.startsWith('/tools/api/')) {
+        return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
+      }
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('callbackUrl', `${pathname}${request.nextUrl.search}`)
+      return NextResponse.redirect(loginUrl)
+    }
+    if (!isMarketplaceAdmin) {
+      if (pathname.startsWith('/tools/api/')) {
+        return NextResponse.json({ error: 'Accesso riservato agli amministratori' }, { status: 403 })
+      }
+      return NextResponse.redirect(new URL('/portale', request.url))
+    }
+    return NextResponse.next()
+  }
+
+  // Academy gestisce internamente login, ruoli admin/cliente e approvazioni.
+  if (pathname === '/academy' || pathname.startsWith('/academy/')) return NextResponse.next()
+
   // Rate limit PRIMA del bypass demo: anche in demo con chiave BYO si bruciano token.
   if (pathname.startsWith('/api/generate')) {
     const rl = rateLimit(genHits, clientIp(request), GEN_WINDOW_MS, GEN_MAX)

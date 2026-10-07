@@ -1,4 +1,5 @@
 import { withBotId } from 'botid/next/config'
+import { ecosystemRewrites } from './lib/ecosystem/rewrites.mjs'
 
 // CSP pragmatica. NB: 'unsafe-inline' su script-src resta NECESSARIO perché le
 // pagine sono per lo più statiche/prerenderizzate e il bootstrap inline di Next su
@@ -54,6 +55,30 @@ const noIndexHeaders = [
   { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
 ]
 
+const academyCsp = csp
+  .replace(
+    "frame-src 'self' https://widget.trustpilot.com",
+    "frame-src 'self' https://widget.trustpilot.com https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
+  )
+
+const marketplaceCsp = csp
+  .replace(
+    "script-src 'self'",
+    "script-src 'self' https://*.clerk.accounts.dev https://clerk.socialautomation.app",
+  )
+  .replace(
+    "connect-src 'self'",
+    "connect-src 'self' https://*.clerk.accounts.dev https://clerk.socialautomation.app",
+  )
+  .replace(
+    "img-src 'self'",
+    "img-src 'self' https://img.clerk.com https://images.clerk.dev",
+  )
+  .replace(
+    "frame-src 'self'",
+    "frame-src 'self' https://*.clerk.accounts.dev https://clerk.socialautomation.app https://challenges.cloudflare.com",
+  )
+
 const remotionServerFiles = [
   './remotion/**/*',
   './.remotion-bundle/**/*',
@@ -65,6 +90,9 @@ const remotionServerFiles = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async rewrites() {
+    return { beforeFiles: ecosystemRewrites(), afterFiles: [], fallback: [] }
+  },
   // La pagina unica della Segretaria AI e stata divisa in due, una per tipo di
   // ricerca. Chi arriva dal vecchio indirizzo — menu, sitemap, link gia in giro —
   // finisce sulla parte telefonica, la piu cercata delle due.
@@ -114,6 +142,9 @@ const nextConfig = {
       { source: '/approve/:path*', headers: noIndexHeaders },
       { source: '/preview/:path*', headers: noIndexHeaders },
       { source: '/api/:path*', headers: noIndexHeaders },
+      { source: '/marketplace/:path*', headers: noIndexHeaders },
+      { source: '/academy/:path*', headers: [...noIndexHeaders, { key: 'Content-Security-Policy', value: academyCsp }] },
+      { source: '/tools/:path*', headers: [...noIndexHeaders, { key: 'Content-Security-Policy', value: marketplaceCsp }] },
       // /blog e gli articoli sono force-dynamic perche' risolvono il cliente
       // dall'hostname. Senza questo restavano 'no-store': mai in cache, TTFB
       // tre volte quello delle pagine statiche, proprio sul contenuto che i

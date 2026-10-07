@@ -7,6 +7,7 @@ import {
   CircleHelp,
   Home,
   LayoutGrid,
+  Layers3,
   Menu,
   Newspaper,
   PackageCheck,
@@ -35,6 +36,8 @@ type MobileMenuProps = {
 const MENU_ICONS: Record<string, LucideIcon> = {
   '/': Home,
   '/servizi': LayoutGrid,
+  '/marketplace': Layers3,
+  '/corsi': Newspaper,
   '/servizi/gestione-social-media': LayoutGrid,
   '/servizi/seo-geo': LayoutGrid,
   '/servizi/blog-seo': Newspaper,

@@ -28,6 +28,13 @@ export default function LoginPage() {
   const [accessHint, setAccessHint] = useState<AccessHint | null>(null)
   const router = useRouter()
 
+  function destinationAfterLogin() {
+    const callbackUrl = new URLSearchParams(window.location.search).get('callbackUrl')
+    return callbackUrl?.startsWith('/') && !callbackUrl.startsWith('//')
+      ? callbackUrl
+      : '/dashboard/clienti'
+  }
+
   useEffect(() => {
     async function checkDemo() {
       try {
@@ -51,7 +58,7 @@ export default function LoginPage() {
             redirect: false,
           })
           if (result?.ok) {
-            router.push('/dashboard/clienti')
+            router.push(destinationAfterLogin())
           } else {
             setLoading(false)
           }
@@ -90,7 +97,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard/clienti')
+    router.push(destinationAfterLogin())
   }
 
   if (isDemo && loading) {

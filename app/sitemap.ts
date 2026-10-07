@@ -74,6 +74,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/servizi/gestionale-ristoranti',
       '/metodo',
       '/pacchetti',
+      '/corsi',
       '/faq',
       '/contatti',
     ].map(path => ({

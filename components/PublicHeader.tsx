@@ -18,6 +18,8 @@ import styles from './public-header.module.css'
 // allungava il menu per dire una cosa che si vedeva due centimetri sopra.
 const MOBILE_LINKS = [
   { href: '/', label: 'Home' },
+  { href: '/marketplace', label: 'Marketplace SWA' },
+  { href: '/corsi', label: 'SWA Academy' },
   {
     href: '/servizi',
     label: 'Tutti i servizi',

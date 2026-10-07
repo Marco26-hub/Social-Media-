@@ -37,6 +37,18 @@ type SolutionLink = {
 
 const SOLUTIONS: SolutionLink[] = [
   {
+    href: '/marketplace',
+    label: 'Marketplace SWA',
+    description: 'Strumenti digitali per la tua attività.',
+    icon: Layers3,
+  },
+  {
+    href: '/corsi',
+    label: 'SWA Academy',
+    description: 'Corsi e formazione con area personale.',
+    icon: BookOpenText,
+  },
+  {
     href: '/servizi/gestione-social-media',
     label: 'Gestione social',
     description: 'Strategia, contenuti e pubblicazione.',
