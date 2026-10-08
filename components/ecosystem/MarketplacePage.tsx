@@ -1,5 +1,5 @@
 import Link from 'next/link';import {ArrowRight,ArrowUpRight,Check,Sparkles} from 'lucide-react';
-import {getSwaTools,contactHref} from '@/lib/ecosystem/marketplace';import Catalog from './Catalog';import VideoPlayer from './VideoPlayer';
+import {getSwaTools,contactHref} from '@/lib/ecosystem/marketplace';import type {SwaTool} from '@/lib/ecosystem/catalog';import Catalog from './Catalog';import VideoPlayer from './VideoPlayer';
 const faqs=[
  ['Che cos’è il marketplace SWA?','È il punto di partenza per conoscere gli strumenti digitali selezionati da SWA. Ogni scheda spiega a cosa serve il tool, a chi è utile e come iniziare.'],
  ['Chi è Odino?','Odino è la mascotte di SWA. Nei video presenta strumenti, idee e applicazioni pratiche: il primo episodio è dedicato ai contenuti UGC, i prossimi esploreranno altri argomenti.'],
@@ -8,7 +8,9 @@ const faqs=[
  ['Chi mi aiuta a scegliere?','Puoi parlare direttamente con SWA. Partiamo dal tuo obiettivo e ti aiutiamo a capire quale strumento o servizio ha senso per la tua attività.']
 ];
 export default async function MarketplacePage(){
- const tools=await getSwaTools();const count=tools.filter(t=>!t.is_coming_soon).length;
+ let tools:SwaTool[]=[];let unavailable=false;
+ try{tools=await getSwaTools()}catch(error){unavailable=true;console.error('[marketplace] catalogo non disponibile',error)}
+ const count=tools.filter(t=>!t.is_coming_soon).length;
  return <main id="main-content" className="swa-marketplace">
  <section className="swa-hero swa-section"><div className="swa-hero-copy"><p className="swa-kicker"><span/> SWA MARKETPLACE · STRUMENTI DIGITALI</p>
  <h1>Meno passaggi.<br/>Più spazio<br/><em>alle tue idee.</em></h1>
@@ -24,7 +26,7 @@ export default async function MarketplacePage(){
  <ul className="swa-check-list"><li><Check size={17}/> Parti dalle foto del tuo prodotto</li><li><Check size={17}/> Scegli il messaggio e lo stile</li><li><Check size={17}/> Richiedi un esempio per la tua attività</li></ul>
  <Link className="swa-button" href="/marketplace/ugc">Scopri UGC Video Creator <ArrowUpRight size={18}/></Link>
  <p className="swa-small">Il primo di tanti argomenti. Segui Odino su <a href="https://www.instagram.com/socialwebautomation/">Instagram</a>.</p></div></section>
- <Catalog tools={tools}/>
+ {unavailable?<section id="strumenti" className="swa-section"><div className="swa-service-error" role="alert"><strong>Marketplace temporaneamente non collegato.</strong><span>Il catalogo non ha risposto. Riprova tra poco oppure contatta SWA: l’errore è stato registrato.</span></div></section>:<Catalog tools={tools}/>}
  <section className="swa-method"><div className="swa-section"><div className="swa-section-top"><div><p className="swa-kicker">IL METODO SWA</p><h2>Uno strumento serve.<br/><em>Una direzione fa la differenza.</em></h2></div><p>Puoi iniziare in autonomia.<br/>Quando serve, ci siamo anche noi.</p></div>
  <div className="swa-steps">{[['01','Parti dall’obiettivo','Vuoi nuovi contenuti, dati più ordinati o meno attività ripetitive? Cominciamo da qui.'],['02','Scegli e sperimenta','Esplora il tool dedicato e verifica come si adatta al tuo modo di lavorare.'],['03','Costruisci continuità','Collega gli strumenti alla strategia della tua attività, con il supporto del team SWA.']].map(([n,t,d])=><div key={n}><span>{n}</span><h3>{t}</h3><p>{d}</p></div>)}</div></div></section>
  <section className="swa-section swa-faq"><div><p className="swa-kicker">PRIMA DI INIZIARE</p><h2>Facciamo<br/><em>chiarezza.</em></h2><p>Hai un’esigenza particolare?<br/><a className="swa-text-link" href={contactHref('un consiglio sul tool più adatto alla mia attività')}>Parlane con SWA <ArrowUpRight size={16}/></a></p></div><div>{faqs.map(([q,a])=><details key={q}><summary>{q}<span>+</span></summary><p>{a}</p></details>)}</div></section>

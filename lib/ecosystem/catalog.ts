@@ -17,7 +17,10 @@ export type PublicCourse = {
 }
 
 async function publicCatalog<T>(origin: string | undefined, prefix: string, key: string): Promise<T[]> {
-  if (!origin) return []
+  if (!origin) {
+    console.error(`[ecosystem] SWA_${key === 'tools' ? 'MARKETPLACE' : 'ACADEMY'}_ORIGIN non configurata`)
+    throw new Error(`Catalogo ${key} non configurato`)
+  }
   const url = new URL(`${prefix}/api/public/catalog`, origin)
   const response = await fetch(url, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) })
   if (!response.ok) throw new Error(`Catalogo ${key} temporaneamente non disponibile`)

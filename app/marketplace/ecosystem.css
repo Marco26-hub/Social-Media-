@@ -1,6 +1,33 @@
 /* SWA presentation layer: shared by catalogue and every tool landing. */
 .swa-marketplace-scope{--swa-green:#153b32;--swa-ink:#15231f;--swa-muted:#58685f;--swa-paper:#fffdf7;--swa-line:#dce2d8;--swa-coral:#e27658;--swa-gold:#e3b43c;--font-display:Georgia,'Times New Roman',serif;--font-body:Arial,Helvetica,sans-serif}
 .swa-marketplace-scope{background:var(--swa-paper);color:var(--swa-ink);font-family:var(--font-body)}
+.swa-service-error{display:grid;gap:9px;padding:24px;border:1px solid #d18a75;border-left:4px solid var(--swa-coral);border-radius:5px;background:#fff1ed;color:#692719;font:13px/1.6 var(--font-body)}
+.swa-service-error strong{font-size:15px}.swa-service-error span{color:inherit}
+html[data-theme='dark'] .swa-marketplace-scope{--swa-green:#62c99b;--swa-ink:#edf5ef;--swa-muted:#a9bbb0;--swa-paper:#08110e;--swa-line:#263b32;background:#08110e;color:#edf5ef}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-header,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-final{background:#0d2c22}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-hero-art,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-feature-video,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-detail-reel,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-audience,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-method{background-color:#101d18}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-tool-card,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-gate-card,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-art-note,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-gate-points>div{background:#0d1814}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-tool-card.featured,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-trial aside,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-gate-icon{background:#14271f}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-tool-icon{background:#15271f;color:#83d9b2;border-color:#315143}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-detail-panel{background:#102f25;box-shadow:12px 12px 0 #1b3329}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-gate-card{box-shadow:16px 18px 0 #14271f}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-gate-form input:not([type=checkbox]),
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-gate-form textarea{background:#08110e;color:#edf5ef;border-color:#315143}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-button{color:#08110e}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-button.light{background:#edf5ef;color:#0d2c22;border-color:#edf5ef}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-marketplace em,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-detail em{color:#83d9b2}
+html[data-theme='dark'] .swa-service-error{background:#2b1713;color:#ffd8cc;border-color:#a85c48}
 :where(.swa-marketplace-scope) a{color:inherit}:where(.swa-marketplace-scope) button{cursor:pointer}:where(.swa-marketplace-scope) button,:where(.swa-marketplace-scope) input{font-family:var(--font-body)}
 :where(.swa-marketplace-scope) h1,:where(.swa-marketplace-scope) h2,:where(.swa-marketplace-scope) h3,:where(.swa-marketplace-scope) p{margin-top:0}:where(.swa-marketplace-scope) h1,:where(.swa-marketplace-scope) h2,:where(.swa-marketplace-scope) h3{font-weight:400}:where(.swa-marketplace-scope) h1,:where(.swa-marketplace-scope) h2{letter-spacing:-.045em}
 :where(.swa-marketplace-scope) .swa-section{max-width:1200px;margin:0 auto;padding:88px 32px}
