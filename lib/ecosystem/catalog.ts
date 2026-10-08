@@ -22,7 +22,10 @@ async function publicCatalog<T>(origin: string | undefined, prefix: string, key:
     throw new Error(`Catalogo ${key} non configurato`)
   }
   const url = new URL(`${prefix}/api/public/catalog`, origin)
-  const response = await fetch(url, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) })
+  const headers = origin === process.env.SWA_MARKETPLACE_ORIGIN && process.env.SWA_MARKETPLACE_BYPASS_SECRET
+    ? { 'x-vercel-protection-bypass': process.env.SWA_MARKETPLACE_BYPASS_SECRET }
+    : undefined
+  const response = await fetch(url, { headers, next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) })
   if (!response.ok) throw new Error(`Catalogo ${key} temporaneamente non disponibile`)
   const payload = await response.json()
   if (!Array.isArray(payload[key])) throw new Error(`Risposta catalogo ${key} non valida`)

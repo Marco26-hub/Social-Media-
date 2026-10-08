@@ -81,7 +81,7 @@ export async function middleware(request: NextRequest) {
   if (isMarketplace) {
     if (isDemo()) return NextResponse.next()
     const marketplaceToken = await getToken({ req: request, secret: AUTH_SECRET })
-    const marketplaceRole = marketplaceToken?.ruolo as string | undefined
+    const marketplaceRole = (marketplaceToken?.ruolo as string | undefined) || 'user'
     const isMarketplaceAdmin = marketplaceRole === 'admin' || marketplaceRole === 'super_admin'
     if (!marketplaceToken) {
       if (pathname.startsWith('/tools/api/')) {
@@ -91,13 +91,23 @@ export async function middleware(request: NextRequest) {
       loginUrl.searchParams.set('callbackUrl', `${pathname}${request.nextUrl.search}`)
       return NextResponse.redirect(loginUrl)
     }
-    if (!isMarketplaceAdmin) {
+    const isMarketplaceAdminRoute = pathname === '/tools/admin' || pathname.startsWith('/tools/admin/')
+      || pathname === '/tools/api/admin' || pathname.startsWith('/tools/api/admin/')
+    if (isMarketplaceAdminRoute && !isMarketplaceAdmin) {
       if (pathname.startsWith('/tools/api/')) {
         return NextResponse.json({ error: 'Accesso riservato agli amministratori' }, { status: 403 })
       }
       return NextResponse.redirect(new URL('/portale', request.url))
     }
-    return NextResponse.next()
+    const requestHeaders = new Headers(request.headers)
+    const bypassSecret = process.env.SWA_MARKETPLACE_BYPASS_SECRET?.trim()
+    if (pathname.startsWith('/tools/') && bypassSecret) {
+      requestHeaders.set('x-vercel-protection-bypass', bypassSecret)
+    }
+    requestHeaders.set('x-swa-user-id', String(marketplaceToken.id || marketplaceToken.sub || ''))
+    requestHeaders.set('x-swa-user-email', String(marketplaceToken.email || ''))
+    requestHeaders.set('x-swa-user-role', marketplaceRole)
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   // Academy gestisce internamente login, ruoli admin/cliente e approvazioni.
