@@ -73,6 +73,14 @@ function tooMany(retryAfter: number) {
   )
 }
 
+async function signMarketplaceIdentity(userId: string, email: string, role: string, secret: string) {
+  const timestamp = String(Date.now())
+  const payload = `${userId}\n${email}\n${role}\n${timestamp}`
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload))
+  return { timestamp, signature: Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, '0')).join('') }
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -107,6 +115,11 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set('x-swa-user-id', String(marketplaceToken.id || marketplaceToken.sub || ''))
     requestHeaders.set('x-swa-user-email', String(marketplaceToken.email || ''))
     requestHeaders.set('x-swa-user-role', marketplaceRole)
+    const ssoSecret = process.env.SWA_MARKETPLACE_SSO_SECRET?.trim()
+    if (!ssoSecret) return NextResponse.json({ error: 'Collegamento Marketplace non configurato' }, { status: 503 })
+    const signed = await signMarketplaceIdentity(String(marketplaceToken.id || marketplaceToken.sub || ''), String(marketplaceToken.email || ''), marketplaceRole, ssoSecret)
+    requestHeaders.set('x-swa-auth-time', signed.timestamp)
+    requestHeaders.set('x-swa-auth-signature', signed.signature)
     return NextResponse.next({ request: { headers: requestHeaders } })
   }
 

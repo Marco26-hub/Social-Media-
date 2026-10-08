@@ -26,6 +26,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isDemo, setIsDemo] = useState(false)
   const [accessHint, setAccessHint] = useState<AccessHint | null>(null)
+  const [registration, setRegistration] = useState({
+    href: '/register?accesso=swa&callbackUrl=%2Fportale',
+    marketplace: false,
+  })
   const router = useRouter()
 
   function destinationAfterLogin() {
@@ -36,6 +40,16 @@ export default function LoginPage() {
   }
 
   useEffect(() => {
+    const requestedCallback = new URLSearchParams(window.location.search).get('callbackUrl') || ''
+    const safeCallback = requestedCallback.startsWith('/') && !requestedCallback.startsWith('//')
+      ? requestedCallback
+      : '/portale'
+    const marketplace = safeCallback.startsWith('/marketplace') || safeCallback.startsWith('/tools')
+    setRegistration({
+      href: `/register?accesso=${marketplace ? 'marketplace' : 'swa'}&callbackUrl=${encodeURIComponent(safeCallback)}`,
+      marketplace,
+    })
+
     async function checkDemo() {
       try {
         const res = await fetch('/api/system/health')
@@ -228,6 +242,9 @@ export default function LoginPage() {
 
           <p className={styles.support}>
             Problemi con l’accesso? <a href="mailto:swsdautomation@gmail.com">Contatta l’assistenza</a>
+          </p>
+          <p className={styles.support}>
+            Non hai ancora un account? <Link href={registration.href}>Richiedi l’accesso {registration.marketplace ? 'al Marketplace' : 'a SWA'}</Link>
           </p>
         </div>
       </section>

@@ -25,9 +25,15 @@ function RegisterBrand() {
 function RegisterForm() {
   const params = useSearchParams()
   const initialPiano = (params.get('piano') || '').toLowerCase()
+  const accessMode = (params.get('accesso') || '').toLowerCase()
+  const accessOnly = accessMode === 'swa' || accessMode === 'marketplace'
+  const requestedCallback = params.get('callbackUrl') || ''
+  const callbackUrl = requestedCallback.startsWith('/') && !requestedCallback.startsWith('//')
+    ? requestedCallback
+    : accessMode === 'marketplace' ? '/marketplace' : '/portale'
 
   const [pacchetto, setPacchetto] = useState(
-    PACCHETTI.some(p => p.slug === initialPiano) ? initialPiano : 'crescita',
+    accessOnly ? '' : PACCHETTI.some(p => p.slug === initialPiano) ? initialPiano : 'crescita',
   )
   const [nome, setNome] = useState('')
   const [azienda, setAzienda] = useState('')
@@ -100,9 +106,11 @@ function RegisterForm() {
         <div className={styles.success}>
           <span className={styles.successIcon}><CheckCircle2 size={34} /></span>
           <h1>Richiesta ricevuta</h1>
-          <p>Grazie! Abbiamo registrato la tua richiesta per il pacchetto <strong>{PACCHETTI.find(p => p.slug === pacchetto)?.nome}</strong>.</p>
-          <p>Attiviamo il tuo account a breve e ti avvisiamo via email a <strong>{email}</strong>.</p>
-          <Link href="/" className={styles.backBtn}><ArrowLeft size={16} /> Torna alla home</Link>
+          {accessOnly
+            ? <p>Grazie! Abbiamo registrato la richiesta di accesso {accessMode === 'marketplace' ? 'al Marketplace SWA' : 'alla tua Area cliente'}.</p>
+            : <p>Grazie! Abbiamo registrato la tua richiesta per il pacchetto <strong>{PACCHETTI.find(p => p.slug === pacchetto)?.nome}</strong>.</p>}
+          <p>Per proteggere i servizi, un amministratore approva l’account. Ti avvisiamo via email a <strong>{email}</strong> appena potrai entrare.</p>
+          <Link href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`} className={styles.backBtn}><ArrowLeft size={16} /> Vai all’accesso</Link>
         </div>
       </div>
     )
@@ -112,31 +120,37 @@ function RegisterForm() {
     <div className={styles.card}>
       <RegisterBrand />
 
-      <h1 className={styles.title}>Crea il tuo account</h1>
+      <h1 className={styles.title}>{accessOnly ? 'Richiedi il tuo accesso' : 'Crea il tuo account'}</h1>
       <p className={styles.subtitle}>
-        Scegli il pacchetto, registrati e attiviamo il tuo pannello. L&apos;approvazione è rapida.
+        {accessOnly
+          ? accessMode === 'marketplace'
+            ? 'Crea le tue credenziali SWA per accedere al Marketplace. L’account resta cliente e non mostra funzioni amministrative.'
+            : 'Crea le tue credenziali per l’Area cliente SWA. L’account resta separato dalle funzioni amministrative.'
+          : 'Scegli il pacchetto, registrati e attiviamo il tuo pannello. L’approvazione è rapida.'}
       </p>
 
       {error && <p className={styles.error}>{error}</p>}
 
       <form onSubmit={handleSubmit}>
-        <span className={styles.label}>Pacchetto scelto</span>
-        <div className={styles.pkgGrid}>
-          {PACCHETTI.map(p => (
-            <button
-              key={p.slug}
-              type="button"
-              onClick={() => setPacchetto(p.slug)}
-              className={`${styles.pkg} ${pacchetto === p.slug ? styles.pkgActive : ''}`}
-            >
-              {p.consigliato && <span className={styles.pkgReco}>Consigliato</span>}
-              <span className={styles.pkgName}>{p.nome}</span>
-              <span className={styles.pkgPrice}>{p.prezzo}/mese</span>
-            </button>
-          ))}
-        </div>
+        {!accessOnly && <>
+          <span className={styles.label}>Pacchetto scelto</span>
+          <div className={styles.pkgGrid}>
+            {PACCHETTI.map(p => (
+              <button
+                key={p.slug}
+                type="button"
+                onClick={() => setPacchetto(p.slug)}
+                className={`${styles.pkg} ${pacchetto === p.slug ? styles.pkgActive : ''}`}
+              >
+                {p.consigliato && <span className={styles.pkgReco}>Consigliato</span>}
+                <span className={styles.pkgName}>{p.nome}</span>
+                <span className={styles.pkgPrice}>{p.prezzo}/mese</span>
+              </button>
+            ))}
+          </div>
+        </>}
 
-        {pianoScelto && (
+        {!accessOnly && pianoScelto && (
           <div className={styles.riepilogo}>
             <div className={styles.riepilogoTotale}>
               <div><span>Canone mensile</span><b>{euro(prezzoCentesimi)}</b></div>
@@ -216,17 +230,19 @@ function RegisterForm() {
         )}
 
         <button className={styles.submit} type="submit" disabled={loading}>
-          {loading ? 'Invio…' : <>Registrati <ArrowRight size={17} /></>}
+          {loading ? 'Invio…' : <>{accessOnly ? 'Invia richiesta di accesso' : 'Registrati'} <ArrowRight size={17} /></>}
         </button>
 
         <p className={styles.hint}>
           <ShieldCheck size={15} />
-          Il pagamento avviene nella pagina Stripe successiva. I piani coprono la sola crescita organica.
+          {accessOnly
+            ? 'Nessun pagamento in questa fase. SWA verifica la richiesta e abilita soltanto l’area cliente richiesta.'
+            : 'Il pagamento avviene nella pagina Stripe successiva. I piani coprono la sola crescita organica.'}
         </p>
       </form>
 
       <p className={styles.footNote}>
-        Hai già un account? <Link href="/login">Accedi</Link>
+        Hai già un account? <Link href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}>Accedi</Link>
       </p>
     </div>
   )
