@@ -9,6 +9,7 @@ import { demoContenuti } from '@/lib/demo-data'
 import { getTableColumns } from '@/lib/db-schema'
 import { toYmd } from '@/lib/publish/blotato-map'
 import { isLocalPreflightFailure } from '@/lib/calendar-recovery'
+import { editableSchedule, validatedScheduleTime } from '@/lib/calendar-schedule-edit'
 
 // L'approvazione non innesca piu alcun montaggio (l'invio a Blotato e il render
 // avvengono solo dalle route di sincronizzazione). Il tetto resta alto perche la
@@ -241,6 +242,14 @@ export async function PATCH(request: Request) {
     const existingContent = await q('SELECT * FROM calendario WHERE id = $1 AND cliente_id = $2', [id, cid])
     if (!existingContent.length) {
       return NextResponse.json({ error: 'contenuto non trovato' }, { status: 404 })
+    }
+    if (body.data_pubblicazione !== undefined || body.ora_pubblicazione !== undefined) {
+      if (!editableSchedule(existingContent[0]) || ['scheduled', 'in-progress'].includes(String(existingContent[0].blotato_status))) {
+        return NextResponse.json({ error: 'Programmazione protetta: usa la modifica della coda per i post programmati. I pubblicati non si spostano.' }, { status: 409 })
+      }
+      const timezone = await q('SELECT timezone FROM clienti WHERE id = $1', [cid])
+      validatedScheduleTime(String(body.data_pubblicazione ?? toYmd(existingContent[0].data_pubblicazione)),
+        String(body.ora_pubblicazione ?? existingContent[0].ora_pubblicazione).slice(0, 5), String(timezone[0]?.timezone || 'Europe/Rome'))
     }
     if (
       (existingContent[0] as Record<string, unknown>).blotato_post_id

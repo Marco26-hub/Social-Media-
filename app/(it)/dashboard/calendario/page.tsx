@@ -14,6 +14,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
+import PostScheduleEditor from '@/components/PostScheduleEditor'
 import { readGenerationGate } from '@/lib/generation-gates'
 import { readClienteId } from '@/lib/use-data'
 import { readAISettings, readApiError } from '@/lib/ai-client'
@@ -2116,10 +2117,12 @@ function CalendarioInner() {
                         </>
                       )}
                     </span>
-                    <span className="text-xs text-gray-600 ml-auto inline-flex items-center gap-1.5 rounded-full bg-gray-50 border border-gray-200 px-2 py-1 font-medium">
-                      <span>{formatDateLabel(c.data_pubblicazione)}</span>
-                      <span className="text-gray-300">·</span>
-                      <span className="font-mono">{formatTimeLabel(c.ora_pubblicazione)}</span>
+                    <span className="ml-auto">
+                      <PostScheduleEditor post={c} demo={demo} onSaved={(day, time) => {
+                        const update = (items: Contenuto[]) => items.map(item => item.id === c.id ? { ...item, data_pubblicazione: day, ora_pubblicazione: time } : item)
+                        if (demo) setDemoData(update); else setContenuti(update)
+                        setSelected(current => current?.id === c.id ? { ...current, data_pubblicazione: day, ora_pubblicazione: time } : current)
+                      }} />
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
@@ -2282,27 +2285,14 @@ function CalendarioInner() {
                 <p className="text-sm text-gray-500">
                   {selected.canale} · {selected.formato} · {formatCategoryLabel(selected.obiettivo)} · {formatDateLabel(selected.data_pubblicazione)} alle {formatTimeLabel(selected.ora_pubblicazione)}
                 </p>
-                {!selected.blotato_post_id
-                  && selected.blotato_status !== 'scheduled'
-                  && selected.blotato_status !== 'published'
-                  && !['PUBBLICATO', 'ARCHIVIATO'].includes(selected.status)
-                  && (
-                    <label className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-gray-600">
-                      <CalendarDays className="h-4 w-4" />
-                      <input
-                        type="date"
-                        value={toYmd(selected.data_pubblicazione)}
-                        aria-label="Sposta contenuto a un'altra data"
-                        className="border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700"
-                        onChange={async event => {
-                          const newDate = event.target.value
-                          if (newDate && await handleDrop(selected, newDate)) {
-                            setSelected(current => current ? { ...current, data_pubblicazione: newDate } : current)
-                          }
-                        }}
-                      />
-                    </label>
-                  )}
+                <div className="mt-2">
+                  <PostScheduleEditor key={selected.id} post={selected} demo={demo} onSaved={(day, time) => {
+                    const id = selected.id
+                    const update = (items: Contenuto[]) => items.map(item => item.id === id ? { ...item, data_pubblicazione: day, ora_pubblicazione: time } : item)
+                    if (demo) setDemoData(update); else setContenuti(update)
+                    setSelected(current => current?.id === id ? { ...current, data_pubblicazione: day, ora_pubblicazione: time } : current)
+                  }} />
+                </div>
                 {selected.quality_level && (
                   <span className="inline-flex mt-2 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-violet-100 text-violet-700">
                     Qualità {selected.quality_level}
