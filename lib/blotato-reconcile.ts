@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { q, withTransaction } from './db'
 import { getBlotatoKey } from './blotato-key'
-import { matchesPublishedProof } from './blotato-published-match'
+import { publishedProofMismatch } from './blotato-published-match'
 import { remoteCalendarTime } from './calendar-display'
 import { zonedToUtcIso, CANALE_TO_BLOTATO } from './publish/blotato-map'
 import { CalendarScheduleError } from './calendar-slot'
@@ -96,13 +96,18 @@ export async function reconcileClienteBlotato(cid: string, month?: string, deps 
             AND event_type = 'post_submission' AND entity_id = $2 AND payload->>'submission_id' = $3 ORDER BY created_at DESC LIMIT 1`,
             [cid, String(row.id), submissionId]))[0]?.payload as BlotatoRow | undefined
           const originalPage = (originalTarget?.target as BlotatoRow | undefined)?.pageId
-          const proofRow = originalPage ? { ...row, blotato_target_page_id: originalPage } : row
+          const proofRow = { ...row, ...(originalPage ? { blotato_target_page_id: originalPage } : {}), blotato_original_media_urls: originalTarget?.media_urls }
           const proofs: BlotatoRow[] = []
+          const mismatches: string[] = []
           for (const candidate of candidates) {
             if (!candidate.id) throw new Error('Prova pubblicazione senza ID')
             const detail = await read(`/v2/published-posts/${encodeURIComponent(String(candidate.id))}`)
             const proof = detail.publishedPost as BlotatoRow | undefined
-            if (proof && String(proof.id) === String(candidate.id) && matchesPublishedProof(proofRow, proof, start, end)) proofs.push(proof)
+            if (proof && String(proof.id) === String(candidate.id)) {
+              const mismatch = publishedProofMismatch(proofRow, proof, start, end)
+              if (!mismatch) proofs.push(proof)
+              else mismatches.push(mismatch)
+            } else mismatches.push('dettaglio pubblicazione assente o ID diverso')
           }
           if (proofs.length === 1) {
             const proof = proofs[0]
@@ -111,7 +116,7 @@ export async function reconcileClienteBlotato(cid: string, month?: string, deps 
           } else if (proofs.length > 1) {
             throw new Error('Più pubblicazioni coincidono: possibile duplicato, nessuna modifica')
           } else if (update.status === 'in-progress' || (update.time && Date.parse(update.time.iso) < deps.now() - 15 * 60000)) {
-            throw new Error('Invio scaduto senza prova univoca: stato conservato, non reinviare')
+            throw new Error(`Invio scaduto senza prova univoca: ${mismatches.length ? [...new Set(mismatches)].join('; ') : 'nessun candidato con hook/piattaforma/data corrispondenti'}. Non reinviare`)
           }
         }
         const oldStatus = row.blotato_status ?? null

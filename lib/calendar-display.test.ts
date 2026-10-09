@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 import { calendarDisplayStatus, remoteCalendarTime } from './calendar-display'
 import { uniquePublishCopy, repairQueuedText } from './publish-copy'
-import { matchesPublishedProof } from './blotato-published-match'
+import { matchesPublishedProof, publishedProofMismatch } from './blotato-published-match'
 
 test('scheduled is queued in every view, not published even after its date', () => {
   assert.equal(calendarDisplayStatus({ status: 'PUBBLICATO', blotato_status: 'scheduled' }), 'IN_CODA')
@@ -44,4 +44,13 @@ test('queued correction preserves the rest of the published payload text', () =>
   const ig = 'Un hook.\n\nUna regia. Condividilo con chi gestisce i tuoi social.\n\nCondividilo con chi gestisce i social'
   assert.equal(repairQueuedText(ig, 'Un hook.', 'Condividilo con chi gestisce i social'), 'Un hook.\n\nUna regia. Condividilo con chi gestisce i tuoi social.')
   assert.equal(repairQueuedText('Un testo senza doppioni.', 'Un hook.', 'Scrivi PROVA'), 'Un testo senza doppioni.')
+})
+
+test('publication proof reports the missing evidence and can use exact original ledger media', () => {
+  const row = { canale: 'instagram', platform_account_id: 'swa', hook: 'Un mese.', link_media_1: 'https://swa/replaced.mp4', blotato_original_media_urls: ['https://swa/original.mp4'] }
+  const proof = { createdAt: '2026-10-05T20:00:00Z', platform: 'instagram', content: 'Un mese. Sei mosse.',
+    rawPost: { post: { accountId: 'swa', content: { platform: 'instagram', text: 'Un mese. Sei mosse.', mediaUrls: ['https://swa/original.mp4'] } } } }
+  assert.equal(matchesPublishedProof(row, proof, '2026-10-01', '2026-11-01'), true)
+  assert.equal(publishedProofMismatch(row, { ...proof, rawPost: null }, '2026-10-01', '2026-11-01'), 'payload originale non disponibile')
+  assert.equal(matchesPublishedProof({ ...row, platform_account_id: 'other' }, proof, '2026-10-01', '2026-11-01'), false)
 })
