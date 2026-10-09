@@ -14,7 +14,7 @@
 
 ## Test prima del deploy
 
-- Suite automatica: 191 test passati prima dell'integrazione del nuovo commit remoto.
+- Suite automatica: 194 test passati dopo l'integrazione del nuovo commit remoto (191 prima del merge).
 - Build Next di produzione riuscita; IndexNow disattivato nell'ambiente preview di verifica.
 - 11 scenari end-to-end passati con Next reale, PostgreSQL isolato e simulatore Blotato locale: anteprima, conferma verificata, collisioni, concorrenza, esito incerto, ledger, riconciliazione, callback, cron, card/editor, isolamento/admin e blocco del reinvio.
 - Gli end-to-end non hanno utilizzato dati clienti, chiavi reali o API di pubblicazione reali.
