@@ -35,7 +35,7 @@
     "botid": "^1.5.11",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.511.0",
-    "next": "15.5.23",
+    "next": "^15.5.27",
     "next-auth": "^4.24.15",
     "pg": "^8.13.1",
     "postcss": "8.5.26",
@@ -49,7 +49,7 @@
   "devDependencies": {
     "@types/pg": "^8.11.10",
     "eslint": "^9",
-    "eslint-config-next": "15.5.23",
+    "eslint-config-next": "^15.5.27",
     "playwright": "^1.61.1"
   },
   "overrides": {

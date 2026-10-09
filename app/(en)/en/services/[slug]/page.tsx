@@ -4,6 +4,7 @@ import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/Ma
 import { anteprimaOg } from '@/lib/anteprima'
 import { SERVIZI_EN, servizioEn } from '@/lib/servizi.en'
 import { SITE_URL } from '@/lib/site-config'
+import { seoAlternates } from '@/lib/seo-alternates'
 
 // Le schede di servizio inglesi.
 //
@@ -26,16 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: servizio.title,
     description: servizio.description,
-    alternates: {
-      canonical: url,
-      // La gemella italiana esiste, e adesso e' una sola: la coppia e'
-      // reciproca e hreflang vale di nuovo qualcosa.
-      languages: {
-        'it-IT': `${SITE_URL}${servizio.slugIt}`,
-        en: url,
-        'x-default': `${SITE_URL}${servizio.slugIt}`,
-      },
-    },
+    alternates: seoAlternates(`/en/services/${slug}`),
     openGraph: {
       title: servizio.title,
       description: servizio.description,

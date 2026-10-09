@@ -1,0 +1,3 @@
+{
+  "crons": [{ "path": "/api/cron/blotato-reconcile", "schedule": "*/5 * * * *" }]
+}

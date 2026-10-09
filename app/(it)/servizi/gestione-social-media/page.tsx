@@ -1,4 +1,5 @@
 import { anteprimaOg } from '@/lib/anteprima'
+import { seoAlternates } from '@/lib/seo-alternates'
 import type { Metadata } from 'next'
 import { Megaphone } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
@@ -13,7 +14,7 @@ const description = 'Servizio gestito di social media management per PMI: strate
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: `${SITE_URL}/servizi/gestione-social-media` },
+  alternates: seoAlternates('/servizi/gestione-social-media'),
   openGraph: { title, description, url: `${SITE_URL}/servizi/gestione-social-media` , images: anteprimaOg('/servizi/gestione-social-media'), type: 'website',},
   twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/servizi/gestione-social-media') },
 }

@@ -211,7 +211,7 @@ const SERVICES = [
       'Riprese a blocchi, mezza giornata o giornata intera',
       'Un volto davanti alla camera, se serve',
       'Scatti fotografici dalla stessa sessione',
-      'Montaggio e sottotitoli nel piano attivo',
+      'Montaggio, sottotitoli e grafiche inclusi nel pacchetto video',
       'Materiale riutilizzabile per settimane',
     ],
     strumento: { nome: 'Una sessione, settimane di uscite', beneficio: 'Mezza giornata di riprese alimenta il calendario per settimane: non si organizza un set per ogni contenuto.' },
@@ -526,14 +526,14 @@ export default function ServiziPage() {
           <p className={site.eyebrow}>Tutto in una tabella</p>
           <h2 id="table-title">Che cosa esce, e da quanto parte.</h2>
           <p>
-            Dieci aree di lavoro, attivabili una alla volta o insieme. I prezzi sono
+            Servizi attivabili una alla volta o insieme. I prezzi sono
             d’ingresso e IVA esclusa: il preventivo cambia con il perimetro, e viene
             scritto prima di cominciare.
           </p>
         </div>
         <div className={styles.tableWrap}>
           <table className={styles.summaryTable}>
-            <caption>Servizi di Social Web Automation: consegna mensile e prezzo d’ingresso</caption>
+            <caption>Servizi di Social Web Automation: attività comprese e prezzo d’ingresso</caption>
             <thead>
               <tr>
                 <th scope="col">Servizio</th>

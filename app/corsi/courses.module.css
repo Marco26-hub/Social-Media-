@@ -12,6 +12,8 @@
 .learningMap strong { font-size: 15px; }
 .learningMap li p { margin: 7px 0 0; font-size: 14px; line-height: 1.6; color: #d0dfd2; }
 .mapNote { color: #d0dfd2; font-size: 12px; line-height: 1.7; margin-bottom: 0; }
+:global(html[data-theme='dark']) .learningMap { background: #102f25; box-shadow: 10px 10px 0 #1b3329; }
+:global(html[data-theme='dark']) .highlight { color: #83d9b2; }
 .section p { font-size: 15px; line-height: 1.8; }
 .section h3 { font-family: Arial, Helvetica, sans-serif; font-weight: 700; }
 .lead { max-width: 730px; color: var(--swa-muted); }

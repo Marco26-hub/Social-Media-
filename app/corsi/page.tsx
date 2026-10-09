@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { anteprimaOg } from '@/lib/anteprima'
 import { getPublicCourses, type PublicCourse } from '@/lib/ecosystem/catalog'
 import { SITE_URL } from '@/lib/site-config'
 import styles from './courses.module.css'
 import { courseFaq as faq } from '@/lib/public-faq'
 
 const title = 'Corsi AI e automazione online | SWA Academy'
-const description = 'Esplora i corsi AI e automazione di SWA Academy e la formazione AI Act per PMI in preparazione con Studio Legale BCS. Programmi e anteprime disponibili.'
+const description = 'Formazione AI e automazione per PMI e professionisti. Informazioni sui percorsi SWA Academy e sulla formazione AI Act in preparazione con Studio Legale BCS.'
 const contact = 'https://wa.me/393477196603?text=Vorrei%20informazioni%20sui%20corsi%20AI%20SWA'
 const aiActContact = 'https://wa.me/393477196603?text=Vorrei%20informazioni%20sui%20video%20corsi%20AI%20Act%20per%20PMI%20con%20Studio%20Legale%20BCS'
 const aiActTopics = [
@@ -21,8 +22,8 @@ const aiActTopics = [
 export const metadata: Metadata = {
   title, description,
   alternates: { canonical: `${SITE_URL}/corsi` },
-  openGraph: { title, description, url: `${SITE_URL}/corsi`, type: 'website', locale: 'it_IT', siteName: 'SWA Academy' },
-  twitter: { card: 'summary_large_image', title, description },
+  openGraph: { title, description, url: `${SITE_URL}/corsi`, type: 'website', locale: 'it_IT', siteName: 'SWA Academy', images: anteprimaOg('/corsi') },
+  twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/corsi') },
 }
 export default async function CoursesPage() {
   let courses: PublicCourse[] = []
@@ -43,7 +44,8 @@ export default async function CoursesPage() {
       <div className={styles.heroGrid}><div><p className="swa-kicker">SWA ACADEMY · FORMAZIONE ONLINE</p>
       <h1>Corsi AI e automazione.<br /><span className={styles.highlight}>Dal capire al fare.</span></h1>
       <p className="swa-detail-intro">L’intelligenza artificiale diventa utile quando sai dove applicarla, cosa chiedere e come controllare il risultato. Esplora la formazione SWA per portare più metodo nel tuo lavoro digitale.</p>
-      <div className="swa-actions"><a href="#catalogo" className="swa-button">Esplora i corsi</a><a href="#corso-ai-act" className="swa-text-link">Formazione AI Act →</a><a href="#come-funziona" className="swa-text-link">Come funziona →</a></div>
+      <div className="swa-actions"><a href={courses.length ? '#catalogo' : contact} className="swa-button">{courses.length ? 'Esplora i corsi' : 'Richiedi informazioni'}</a><a href="#corso-ai-act" className="swa-text-link">Formazione AI Act →</a><a href="#come-funziona" className="swa-text-link">Come funziona →</a></div>
+      {!courses.length && <p className={styles.heroNote}>Il catalogo non è al momento consultabile. Puoi chiedere programma, disponibilità e condizioni: questa pagina non conferma iscrizioni o acquisti.</p>}
       <p className={styles.heroNote}>Per professionisti, imprese e chi vuole orientarsi nell’AI. Programmi e requisiti sono specifici per ogni percorso.</p></div>
       <aside className={styles.learningMap} aria-label="Un metodo per usare l’AI nel lavoro"><p className={styles.mapKicker}>PRIMA IL METODO. POI LO STRUMENTO.</p><h2>Un obiettivo.<br />Un processo.<br />Una verifica.</h2><ol>
         <li><span>01</span><div><strong>Definisci il compito</strong><p>Quale problema vuoi affrontare?</p></div></li>
@@ -64,7 +66,7 @@ export default async function CoursesPage() {
       <div><span>USO RESPONSABILE</span><h3>Dal risultato alla verifica</h3><p>Controllare informazioni e fonti; evitare di inserire dati personali o riservati senza le necessarie autorizzazioni.</p></div>
     </div><p className="swa-small">Approfondisci <Link href="/metodo">il metodo SWA</Link> e <Link href="/trasparenza-ai">la trasparenza sull’uso dell’AI</Link>.</p></div></section>
 
-    <section id="catalogo" className={`swa-section ${styles.section}`}><div className="swa-section-top"><div><p className="swa-kicker">IL CATALOGO SWA ACADEMY</p><h2>I corsi pubblicati.</h2></div><p>Confronta il programma.<br />Scegli in base al tuo obiettivo.</p></div>
+    <section id="catalogo" className={`swa-section ${styles.section}`}><div className="swa-section-top"><div><p className="swa-kicker">IL CATALOGO SWA ACADEMY</p><h2>{courses.length ? 'I corsi pubblicati.' : 'Informazioni sui percorsi.'}</h2></div><p>{courses.length ? 'Confronta programma, livello e condizioni.' : 'Chiedi disponibilità e programma prima di iscriverti.'}</p></div>
       {courses.length ? <div className="swa-tool-grid">{courses.map(course => <article key={course.id} className="swa-tool-card">
         <p className="swa-kicker">{course.category || 'Formazione SWA'}</p><h3>{course.title}</h3><p>{course.subtitle || course.description}</p>
         <p>Livello: {course.level} · {course.modules.reduce((sum, module) => sum + module.lessons.length, 0)} lezioni</p>
@@ -82,7 +84,7 @@ export default async function CoursesPage() {
       </div><aside className={styles.aiActAside}><p className="swa-kicker">PER TITOLARI, RESPONSABILI E TEAM</p><h3>Informati sul percorso.</h3><p>I video corsi non sono ancora disponibili nell’Academy. Chiedi a SWA programma definitivo, calendario, prezzo e condizioni di partecipazione.</p><a href={aiActContact} className="swa-button">Richiedi informazioni AI Act</a><p className="swa-small">Questo collegamento apre una richiesta su WhatsApp: non conferma un’iscrizione e non avvia alcun pagamento.</p><hr /><h3>Hai un caso specifico?</h3><p>La consulenza individuale è un servizio distinto dalla formazione.</p><Link href="/consulenza" className="swa-text-link">Scopri la consulenza legale →</Link></aside></div>
       <p className={styles.aiActDisclaimer}>I contenuti hanno finalità formativa: non sostituiscono il parere sul caso concreto e non costituiscono una certificazione o una garanzia automatica di conformità.</p>
     </div></section>
-    <section id="come-funziona" className="swa-method"><div className={`swa-section ${styles.section}`}><p className="swa-kicker">UN PERCORSO CHIARO</p><h2>Prima scegli.<br />Poi entra nella tua Academy.</h2><div className="swa-steps">
+    <section id="come-funziona" className="swa-method"><div className={`swa-section ${styles.section}`}><p className="swa-kicker">UN PERCORSO CHIARO</p><h2>{courses.length ? 'Prima scegli. Poi entra nella tua Academy.' : 'Prima verifica disponibilità e programma.'}</h2><p className="swa-small">Il percorso di iscrizione e accesso qui descritto si applica ai corsi effettivamente pubblicati. Se il catalogo non è disponibile, chiedi informazioni a SWA: nessun corso è prenotato o acquistato da questa pagina.</p><div className="swa-steps">
       <div><span>01</span><h3>Scegli</h3><p>Leggi programma, livello e condizioni del corso.</p></div>
       <div><span>02</span><h3>Accedi</h3><p>Iscriviti nell’area corsi e completa l’acquisto quando previsto.</p></div>
       <div><span>03</span><h3>Impara</h3><p>Segui le lezioni e ritrova il tuo avanzamento nella tua area personale.</p></div>
@@ -92,6 +94,6 @@ export default async function CoursesPage() {
 
     <section id="faq-corsi" className={`swa-section swa-faq ${styles.section}`}><div><p className="swa-kicker">DOMANDE FREQUENTI</p><h2>Prima di iniziare.</h2><p>Le informazioni generali per orientarti. Programma e condizioni specifiche restano nella scheda di ogni corso.</p><a href={contact} className="swa-text-link">Hai una domanda sul percorso? →</a></div><div>{faq.map(([question, answer]) => <details key={question}><summary>{question}<span aria-hidden="true">+</span></summary><p>{answer}</p></details>)}</div></section>
 
-    <section className="swa-final"><div><p className="swa-kicker">IL PROSSIMO PASSO</p><h2>Parti da ciò<br />che ti serve.</h2><p>Scegli un percorso pubblicato oppure raccontaci il tuo obiettivo.</p></div><div className="swa-final-actions"><a href="#catalogo" className="swa-button light">Esplora il catalogo</a><Link href="/download" className="swa-text-link">Scopri le risorse e i download →</Link></div></section>
+    <section className="swa-final"><div><p className="swa-kicker">IL PROSSIMO PASSO</p><h2>Parti da ciò<br />che ti serve.</h2><p>{courses.length ? 'Scegli un percorso pubblicato oppure raccontaci il tuo obiettivo.' : 'Raccontaci cosa vuoi imparare e chiedi informazioni sui percorsi.'}</p></div><div className="swa-final-actions"><a href={courses.length ? '#catalogo' : contact} className="swa-button light">{courses.length ? 'Esplora il catalogo' : 'Chiedi informazioni sui corsi'}</a><Link href="/blog" className="swa-text-link">Leggi le guide del Journal SWA →</Link></div></section>
   </main>
 }

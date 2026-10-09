@@ -93,6 +93,7 @@ export async function POST() {
   let visualReview = 0
   let dryRun = 0
   let skipped = 0
+  const skippedReasons: Array<{ id_contenuto: string; reason: string }> = []
   const errors: { id_contenuto: string; canale: string; error: string }[] = []
 
   // BUDGET DI TEMPO. Un reel senza MP4 viene MONTATO qui (Remotion) e il
@@ -120,7 +121,10 @@ export async function POST() {
       else if (outcome.status === 'visual_pending') visualPending++
       else if (outcome.status === 'visual_review') visualReview++
       else if (outcome.status === 'dry_run') dryRun++
-      else skipped++
+      else {
+        skipped++
+        skippedReasons.push({ id_contenuto: String(row.id_contenuto || row.id), reason: outcome.reason })
+      }
     } catch (e) {
       const msg = (e as Error).message?.slice(0, 500) || 'errore sconosciuto'
       errors.push({
@@ -137,7 +141,9 @@ export async function POST() {
             `UPDATE calendario
                SET status = 'ERRORE', errore_tecnico = $1, blotato_status = 'failed',
                    blotato_sync_at = now(), publish_lock_id = NULL
-             WHERE id = $2 AND cliente_id = $3`,
+             WHERE id = $2 AND cliente_id = $3 AND blotato_post_id IS NULL AND blotato_post_url IS NULL AND publish_lock_id IS NULL
+               AND NOT EXISTS (SELECT 1 FROM integration_events WHERE cliente_id = $3 AND provider = 'blotato'
+                 AND event_type = 'post_submission' AND entity_id = $2::text AND status IN ('processing','processed'))`,
             [msg, row.id, clienteId],
           )
         } catch (persistErr) {
@@ -165,6 +171,7 @@ export async function POST() {
     visual_review: visualReview,
     dry_run: dryRun,
     skipped,
+    skipped_reasons: skippedReasons,
     failed: errors.length,
     // Quanti approvati non sono stati toccati in questo giro: vanno lavorati
     // rilanciando la sincronizzazione.

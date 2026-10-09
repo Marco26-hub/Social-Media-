@@ -83,3 +83,21 @@ export async function q1(query: string, params: unknown[] = []): Promise<QueryRo
   const rows = await q(query, params)
   return rows[0] || null
 }
+
+// Le advisory lock devono restare sulla stessa transazione, anche sul pooler
+// Supabase transaction-mode. Non usare session-lock attraverso chiamate q().
+export async function withTransaction<T>(work: (query: typeof q) => Promise<T>): Promise<T> {
+  const client = await getPool().connect()
+  try {
+    await client.query('BEGIN')
+    const query: typeof q = async (sql, params = []) => (await client.query(sql, params)).rows
+    const result = await work(query)
+    await client.query('COMMIT')
+    return result
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
+}

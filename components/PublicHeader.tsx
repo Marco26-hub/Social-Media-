@@ -96,7 +96,7 @@ export default function PublicHeader({ ctaHref, ctaLabel, locale = 'it' }: { cta
           {isEnglish ? 'IT' : 'EN'}
         </Link>
         <ThemeToggle />
-        <Link href="/login?cambia=1" className={styles.account}>
+        <Link href="/login?cambia=1" prefetch={false} className={styles.account}>
           <LogIn size={15} aria-hidden="true" /> {isEnglish ? 'Client area' : 'Area cliente'}
         </Link>
         <a href={ctaHref} target="_blank" rel="noopener noreferrer" className={styles.cta}>

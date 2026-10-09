@@ -39,7 +39,7 @@ const IT: Record<string, Anteprima> = {
   },
   '/servizi': {
     occhiello: 'Tutti i servizi',
-    titolo: 'Undici competenze, un solo interlocutore.',
+    titolo: 'Servizi digitali, un solo interlocutore.',
     sottotitolo: 'Social, SEO e GEO, blog, siti, video, lead B2B, voce, agenda, gestionali.',
     tinta: 'verde',
   },
@@ -119,6 +119,12 @@ const IT: Record<string, Anteprima> = {
     occhiello: 'Listino',
     titolo: 'Prezzi scritti prima, non dopo il preventivo.',
     sottotitolo: `Presenza ${PREZZI.presenza} · Crescita ${PREZZI.crescita} · Blog ${PREZZI.blog}. IVA esclusa.`,
+    tinta: 'oro',
+  },
+  '/corsi': {
+    occhiello: 'SWA Academy · Formazione',
+    titolo: 'AI e automazione: prima il metodo.',
+    sottotitolo: 'Chiedi programma, disponibilità e condizioni dei percorsi. Formazione AI Act in preparazione.',
     tinta: 'oro',
   },
   '/metodo': {
@@ -222,7 +228,7 @@ const EN: Record<string, Anteprima> = {
   },
   '/en/services': {
     occhiello: 'All services',
-    titolo: 'Eleven capabilities, one point of contact.',
+    titolo: 'Digital services, one point of contact.',
     sottotitolo: 'Social, SEO and GEO, blog, websites, video, B2B leads, voice, diary, systems.',
     tinta: 'verde',
   },

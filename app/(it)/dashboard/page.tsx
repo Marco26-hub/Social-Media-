@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { demoContenuti, demoLogs } from '@/lib/demo-data'
 import { PLATFORM_LIST } from '@/lib/social-config'
 import { isDemo } from '@/lib/demo'
+import { matchesCalendarFilter, isCalendarError } from '@/lib/calendar-filters'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,8 +28,8 @@ async function getStats() {
       brandConfigurato: true,
       prodotti: 3,
       daApprovare: demoContenuti.filter(c => c.status === 'DA_APPROVARE').length,
-      pubblicati7g: demoContenuti.filter(c => c.status === 'PUBBLICATO').length,
-      errori: demoContenuti.filter(c => c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE').length,
+      pubblicati7g: demoContenuti.filter(c => matchesCalendarFilter(c, 'PUBBLICATO')).length,
+      errori: demoContenuti.filter(isCalendarError).length,
       inCoda: demoContenuti.filter(c => c.status === 'APPROVATO').length,
       jobAttivi: 0,
       jobFalliti: 0,
@@ -51,8 +52,8 @@ async function getStats() {
     productRows,
   ] = await Promise.all([
     q('SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND status = $2', [cid, 'DA_APPROVARE']),
-    q('SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND status = $2 AND data_pubblicazione >= $3', [cid, 'PUBBLICATO', weekAgo]),
-    q("SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND status IN ('ERRORE','ERRORE_MANUALE')", [cid]),
+    q("SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND (blotato_status = 'published' OR (status = 'PUBBLICATO' AND blotato_post_id IS NULL)) AND data_pubblicazione >= $2", [cid, weekAgo]),
+    q("SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND (status IN ('ERRORE','ERRORE_MANUALE') OR blotato_status = 'failed' OR NULLIF(errore_tecnico, '') IS NOT NULL)", [cid]),
     q('SELECT count(*)::int as c FROM calendario WHERE cliente_id = $1 AND status = $2', [cid, 'APPROVATO']),
     q("SELECT count(*)::int as c FROM generation_jobs WHERE cliente_id = $1 AND status IN ('queued','running')", [cid]),
     q('SELECT count(*)::int as c FROM generation_jobs WHERE cliente_id = $1 AND status = $2', [cid, 'failed']),
@@ -119,9 +120,9 @@ export default async function DashboardPage() {
 
   const stats = [
     { label: 'Da approvare',          value: daApprovare ?? 0, icon: Clock,         color: 'text-yellow-600', bg: 'bg-yellow-50', href: '/dashboard/calendario?filter=DA_APPROVARE' },
-    { label: 'Pubblicati (7 giorni)', value: pubblicati7g ?? 0,icon: TrendingUp,    color: 'text-green-600',  bg: 'bg-green-50',  href: '/dashboard/marketing?tab=log' },
+    { label: 'Pubblicati (7 giorni)', value: pubblicati7g ?? 0,icon: TrendingUp,    color: 'text-green-600',  bg: 'bg-green-50',  href: '/dashboard/calendario?filter=PUBBLICATO' },
     { label: 'Pronti da pubblicare',  value: inCoda ?? 0,      icon: Send,          color: 'text-blue-600',   bg: 'bg-blue-50',   href: '/dashboard/calendario?filter=APPROVATO' },
-    { label: 'Da sistemare',          value: errori ?? 0,      icon: AlertCircle,   color: 'text-red-600',    bg: 'bg-red-50',    href: '/dashboard/calendario?filter=ERRORE' },
+    { label: 'Da sistemare',          value: errori ?? 0,      icon: AlertCircle,   color: 'text-red-600',    bg: 'bg-red-50',    href: '/dashboard/calendario?filter=ERRORI' },
   ]
 
   const statusColor: Record<string, string> = {

@@ -218,20 +218,9 @@ export async function middleware(request: NextRequest) {
   // pannello doveva prima disconnettersi. Qui la sessione viene chiusa e il
   // form mostrato, cosi l'ingresso e sempre consapevole.
   if (isAuthPage && request.nextUrl.searchParams.has('cambia')) {
-    const response = NextResponse.next()
-    // Entrambi i nomi: senza prefisso in HTTP locale, con prefisso in HTTPS.
-    // Il prefisso __Secure- obbliga l'attributo Secure: senza, il browser
-    // scarta il Set-Cookie e la sessione sopravvive alla cancellazione.
-    for (const nome of ['next-auth.session-token', '__Secure-next-auth.session-token']) {
-      response.cookies.set(nome, '', {
-        path: '/',
-        maxAge: 0,
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: nome.startsWith('__Secure-'),
-      })
-    }
-    return response
+    // Nessuna mutazione su GET, neanche quando Next normalizza gli header
+    // prefetch. La pagina montata esegue il logout POST protetto da CSRF.
+    return NextResponse.next()
   }
 
   // Dopo il login: admin → gestione clienti; cliente → la sua area.

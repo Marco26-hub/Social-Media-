@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
+import { signIn, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, LogIn, ShieldCheck } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
@@ -52,6 +52,11 @@ export default function LoginPage() {
 
     async function checkDemo() {
       try {
+        if (new URLSearchParams(window.location.search).has('cambia')) {
+          setLoading(true)
+          await signOut({ redirect: false })
+          setLoading(false)
+        }
         const res = await fetch('/api/system/health')
         const data = await res.json()
         const hintRes = await fetch('/api/system/access')
@@ -78,6 +83,10 @@ export default function LoginPage() {
           }
         }
       } catch {
+        setLoading(false)
+        if (new URLSearchParams(window.location.search).has('cambia')) {
+          setError('Cambio account non completato. Ricarica la pagina prima di accedere.')
+        }
         // In modalità normale viene mostrato il form di accesso.
       }
     }

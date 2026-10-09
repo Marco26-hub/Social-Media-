@@ -1,4 +1,5 @@
 import { anteprimaOg } from '@/lib/anteprima'
+import { seoAlternates } from '@/lib/seo-alternates'
 import { CANONE_A_CARICO_CLIENTE } from '@/lib/canone-incluso'
 import type { Metadata } from 'next'
 import { Globe2 } from 'lucide-react'
@@ -12,7 +13,7 @@ const description = 'Landing page e siti web mobile-first a partire da 19,90 €
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: `${SITE_URL}/servizi/siti-e-commerce` },
+  alternates: seoAlternates('/servizi/siti-e-commerce'),
   openGraph: { title, description, url: `${SITE_URL}/servizi/siti-e-commerce` , images: anteprimaOg('/servizi/siti-e-commerce'), type: 'website',},
   twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/servizi/siti-e-commerce') },
 }

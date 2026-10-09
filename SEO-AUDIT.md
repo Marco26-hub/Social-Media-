@@ -262,3 +262,63 @@ Assistenti telefonici AI: [supportAI](https://www.supportai.it/) · [6inUfficio]
 Richiami e promemoria: [imageandbeauty.it](https://www.imageandbeauty.it/blog/appuntamenti-mancati-salone-no-show/) · [StudioReminder](https://studioreminder.com/)
 Agenzie GEO in Italia: [OTO](https://www.oto.agency/blog/migliori-agenzie-geo-italia) · [Tready](https://www.tready.it/tecnologie-per-il-marketing/geo-ottimizzazione-chatgpt-perplexity-gemini/)
 Concorrenti locali: [Effepilab Cermenate](https://www.effepilab.it/italia/nord-italia/lombardia/como/cermenate/) · [Brianza Digitale](https://brianza-digitale-cermenate.localo.site/)
+
+---
+
+# Marketplace: audit funzionale, SEO e GEO
+
+Data: 8 ottobre 2026. Verifica del browser live e del codice dei due repository.
+
+## Esito funzionale live prima delle correzioni
+
+| Tool | Evidenza osservata | Limite del controllo |
+| --- | --- | --- |
+| UGC Video Creator | Workspace aperto con sessione SWA; campo API Gemini visibile; generazione disabilitata senza chiave | Nessuna immagine/video generata: occorrono API personale e accesso Veo |
+| Forfettari AI | Workspace fermo ad Anteprima locale | Collegamento SWA corretto nel codice; storico DB non collegato |
+| Crypto Fiscale | Workspace fermo ad Anteprima locale | Collegamento SWA corretto nel codice; elaborazione locale, nessuno storico DB |
+| Trading Fiscale | Workspace fermo ad Anteprima locale | API e frontend ancora basati su Clerk; Supabase/storage/piani da verificare con account autorizzato |
+| RavvedimentoFacile | Workspace fermo ad Anteprima locale | Accesso e storico ancora basati su Clerk/Supabase; piani da collegare senza bypass |
+| AI Crisi | Landing esterna caricata con accesso/prova dedicati | Operazioni autenticate, ricerca e generazione non testate |
+| Legal AI Penale | Dashboard rimanda al login Clerk BCS-AI, con etichetta Development mode; console segnala Error fetching cases | Sessione SWA non trasferita; fascicoli, trascrizioni e DB non testati |
+| Mercati Finanziari Analyzer | Servizio Render prima in avvio, poi landing caricata | Bridge MT5, feed e report non testati; account esterno separato |
+| App del Consenso | Landing caricata; QR/codice, conferma reciproca, revoca e percorsi mobile descritti | Non create sessioni né inseriti dati personali; backend non verificato |
+| Bot AI | Progetto coming soon nel catalogo | Non è un tool operativo |
+| Prompt Lab | Progetto coming soon nel catalogo | Non è un tool operativo |
+
+L'apertura di una landing non prova che il software funzioni end-to-end.
+
+## SEO/GEO: prima e dopo
+
+Prima: title concatenava nome e summary con lunghezza variabile; schema software generico; FAQ visibili ma non rappresentate nei dati strutturati. La scheda UGC citava crediti del piano mentre il workspace usa una chiave personale. Consenso aveva descrizioni generiche, non aderenti al percorso della sua landing.
+
+Dopo nel codice: metadata e canonical assoluti generati dallo stesso catalogo visibile; Open Graph e Twitter coerenti; pubblico, funzionalità e FAQ rappresentati nei dati strutturati. Nessun prezzo, recensione, disponibilità o risultato inventato. Scheda UGC aggiornata con API Gemini personale, Veo e assenza di salvataggio della chiave nel DB. Scheda Consenso descrive pairing, conferma reciproca, revoca e uso mobile, senza attribuire efficacia legale ai documenti.
+
+Non si promettono rich result FAQ o citazioni nei motori AI. I dati strutturati sono descrittivi, non una garanzia di visibilità.
+
+## Blocco di indicizzazione
+
+Marketplace, schede e workspace sono protetti da login. Robots esclude Marketplace e tools. Le nuove metadata mantengono noindex: non viene indebolita l'autenticazione per ottenere visibilità.
+
+Per SEO/GEO pubblico serve la decisione del proprietario: rendere pubbliche solo le schede descrittive e lasciare workspace/API protetti. Solo dopo quella decisione aggiornare robots, sitemap e indexabilità. Nessun dato personale, chiave API o documento cliente va inserito negli output SEO.
+
+## Correzioni di affidabilità
+
+- Crypto: rimozione file corretta senza duplicare gli altri; formato sconosciuto e report senza transazioni rifiutati con errore visibile; errori di elaborazione non lasciano la UI bloccata.
+- Catalogo: fallback statico ora segnalato nei log; non equivale a disponibilità dei servizi DB.
+- Trading storage: fallimenti di lettura non più silenziosi nei log, senza includere identificativi o contenuti dei file.
+- Navigazione tools: riconoscimento server della firma SWA per non mostrare Accedi a una sessione già autenticata; link al Marketplace principale.
+- Tool non collegati: messaggio esplicito di indisponibilità invece di Anteprima locale.
+- Forfettari e Crypto: componenti gratuiti esistenti collegati alla firma SWA senza simulare un token Clerk. Calcoli invariati; assenza dello storico dichiarata.
+- Riferimenti al vecchio marchio rimossi dalla FAQ Analyzer e dal pulsante legacy del Marketplace. La landing esterna softi.ultrabot.space conserva il marchio: il suo sorgente non è presente nel repository copiato.
+
+## Verifiche
+
+- 3 test SEO/schema superati.
+- 106 assert del motore Crypto superati a runtime. La compilazione isolata del vecchio file test segnala 6 assert con oggetti passati come booleani; non è una validazione normativa delle formule.
+- Build SWA superata; warning preesistenti e IndexNow fallito per DNS nell'ambiente locale.
+- E2E locale firmato superato: simulazione Forfettari, rimozione file Crypto, errore formato sconosciuto, report vuoto, accesso UGC e blocco senza API; componenti SWA non esposti senza firma. Trading/Ravvedimento esplicitamente bloccati. Nessuna generazione, acquisto o scrittura DB.
+- Configurazione Vercel Marketplace letta solo per i nomi delle variabili: in Production è presente solo SWA_MARKETPLACE_SSO_SECRET. Mancano configurazione Clerk e Supabase. Non sono state esportate chiavi.
+
+Priorità: completare l'identità SWA nei moduli e API a pagamento, verificare piani e isolamento tra clienti su Supabase, poi testare con dati sintetici le operazioni autenticate dei servizi esterni. Servono accessi ai servizi dedicati; per AI serve una chiave cliente con autorizzazione ai consumi.
+
+Build Marketplace finale superata dopo le correzioni; modifiche di questo audit non ancora pubblicate.

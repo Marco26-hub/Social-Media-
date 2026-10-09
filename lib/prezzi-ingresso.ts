@@ -4,6 +4,7 @@ import { PACCHETTI } from '@/lib/pacchetti'
 import { SEGRETARIA_LISTINO } from '@/lib/segretaria-listino'
 import { STANDALONE_SERVICES } from '@/lib/standalone-services'
 import { VIDEO_DA } from '@/lib/video-listino'
+import { SALA_DA } from '@/lib/ristoranti-listino'
 
 // Prezzi d’ingresso, derivati una volta sola dalle sorgenti uniche dei servizi.
 //
@@ -83,7 +84,7 @@ export const PREZZO_INGRESSO: Record<string, string> = {
   'video-produzione': VIDEO_DA,
   'gestione-lavorazioni': 'Su preventivo',
   automazione: 'Su preventivo',
-  'gestionale-ristoranti': 'da 39 € al mese',
+  'gestionale-ristoranti': `da ${SALA_DA} al mese`,
   legale: `${CONSULENZA_PREZZO} / ${CONSULENZA_LEGALE.durataMinuti} minuti`,
 }
 

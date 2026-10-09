@@ -11,6 +11,7 @@ import { SERVIZI_EN } from '@/lib/servizi.en'
 import { TRADUZIONI as ENGLISH_PAIRS } from '@/lib/lingue'
 import { SWA_BLOG_ARTICLES } from '@/lib/swa-blog-content'
 import { SWA_BLOG_ARTICLES_EN } from '@/lib/swa-blog-content.en'
+import { seoAlternates } from '@/lib/seo-alternates'
 
 type PublishedArticle = { slug: string; updated_at: string | Date | null }
 
@@ -18,13 +19,7 @@ type PublishedArticle = { slug: string; updated_at: string | Date | null }
 function languageAlternates(italianPath: string) {
   const englishPath = ENGLISH_PAIRS[italianPath]
   if (!englishPath) return undefined
-  return {
-    languages: {
-      'it-IT': `${SITE_URL}${italianPath === '/' ? '' : italianPath}`,
-      en: `${SITE_URL}${englishPath}`,
-      'x-default': `${SITE_URL}${italianPath === '/' ? '' : italianPath}`,
-    },
-  }
+  return { languages: seoAlternates(italianPath).languages as Record<string, string> }
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -196,7 +191,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...SWA_BLOG_ARTICLES.map(article => ({
       url: `${SITE_URL}/blog/${article.slug}`,
-      lastModified: new Date(article.data_pubblicazione || marketingUpdated),
+      lastModified: new Date(article.updated_at || article.data_pubblicazione || marketingUpdated),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
       alternates: languageAlternates(`/blog/${article.slug}`),
@@ -210,12 +205,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...SWA_BLOG_ARTICLES_EN.map(article => ({
       url: `${SITE_URL}/en/blog/${article.slug}`,
-      lastModified: new Date(article.data_pubblicazione || marketingUpdated),
+      lastModified: new Date(article.updated_at || article.data_pubblicazione || marketingUpdated),
       changeFrequency: 'monthly' as const,
       priority: 0.6,
       alternates: languageAlternates(`/blog/${article.slugIt}`),
     })),
   ]
+
+  // Solo le pagine effettivamente revisionate nell'audit del 9 ottobre.
+  const revisedPaths = new Set([
+    '/', '/servizi', '/pacchetti', '/chi-siamo', '/corsi', '/en/services',
+    '/en/privacy', '/en/cookie-policy', '/en/services/seo-geo', '/en/services/video-production',
+    '/servizi/gestione-social-media', '/servizi/seo-geo', '/servizi/blog-seo',
+    '/servizi/siti-e-commerce', '/servizi/ricerca-clienti-b2b',
+    '/servizi/segretaria-telefonica-ai', '/servizi/agenda-clienti-whatsapp',
+    '/servizi/video-produzione', '/servizi/automazione-gestionali', '/servizi/gestione-lavorazioni',
+  ])
+  for (const page of pages) {
+    if (revisedPaths.has(new URL(page.url).pathname)) page.lastModified = new Date('2026-10-09T00:00:00.000Z')
+  }
 
   if (!dbReady()) return pages
 

@@ -1,4 +1,6 @@
 import { Clapperboard, ClipboardCheck, Globe2, Megaphone, Newspaper, ScanSearch, Target, Workflow } from 'lucide-react'
+import { SEO_SERVICE_COPY } from '@/lib/seo-service-copy'
+import { VIDEO_MONTAGGIO_EN } from '@/lib/video-listino'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { CANONE_A_CARICO_CLIENTE_EN } from '@/lib/canone-incluso'
 import { EN_PRICES } from '@/lib/settori.en'
@@ -190,26 +192,27 @@ export const SERVIZI_EN: ServizioEn[] = [
         occhiello: 'How we measure',
         h2: 'The five criteria we weight a block’s citability with',
         intro:
-          'It is not an assessment by eye: every block of text comes back with a score and with the corrections already written. It is the same method we measure our own pages with before publishing them.',
+          SEO_SERVICE_COPY.en.rubric,
         caption: 'Citability rubric: the weight of each criterion and what it measures',
         colonne: ['Criterion', 'Weight', 'What it measures'],
         righe: [
-          ['Answer quality', '30%', 'Whether the first sentence actually answers the question instead of circling it.'],
+          ['Answer quality', '30%', 'Whether the text clearly answers the reader’s question.'],
           ['Standalone block', '25%', 'Whether the passage makes sense pulled out of the page, without the surrounding context.'],
           ['Structure', '20%', 'Headings, lists and tables an engine can read without interpreting.'],
-          ['Data density', '15%', 'How many verifiable quantities there are per hundred words.'],
+          ['Verifiable data', '15%', 'Whether relevant facts and quantities have verifiable sources and context, without unnecessary numbers.'],
           ['Uniqueness', '10%', 'How far the passage differs from what everyone else already says.'],
         ],
       },
       faq: [
-        { q: 'What is the difference between SEO and GEO?', a: 'SEO works on being found inside a list of results; GEO works on the probability that your content is understood and cited by an AI answering system. They are two different jobs on the same material: the first optimises pages and structure, the second measures how well a block of text answers immediately, stands on its own and carries a verifiable fact.' },
-        { q: 'How is the citability of a piece of content measured?', a: 'With five weighted criteria, calculated rather than estimated by eye: answer quality 30%, standalone block 25%, structure 20%, data density 15%, uniqueness 10%. Every block comes back with its score and with the corrections already written, not with a list of good advice. It is the same method we measure our own pages with before publishing them.' },
+        { q: 'What is the difference between SEO and GEO?', a: SEO_SERVICE_COPY.en.difference },
+        { q: 'How is the citability of a piece of content measured?', a: SEO_SERVICE_COPY.en.rubric },
+        { q: 'What is a concrete example of a revision?', a: SEO_SERVICE_COPY.en.example },
         { q: 'Can you guarantee first position on Google?', a: 'No, and anyone promising it is selling something they do not control. No supplier can guarantee an organic position or a citation from an AI system, because both depend on third-party algorithms and on competitors. We can guarantee the work: audit, structure, intent, structured data and improvement priorities, with the checks that show what changed.' },
         { q: 'What exactly do you deliver?', a: 'A technical and editorial audit, the search intent map with one page per intent, the optimisation specifications, the structured data and the list of priorities. They are operational documents: they say what to change, on which page and in what order, so your own developer can do the work if you prefer.' },
         { q: 'Does the service include the 12 monthly articles?', a: `No, they are two separate services. SEO + GEO is the audit, structure, intent and priority work, while continuous production of 12 articles a month is the Blog SEO + GEO service, at ${EN_PRICES.blog}. They combine well — the strategy decides what to write and the blog writes it — but each can be activated on its own.` },
         { q: 'Do I need a blog to work on SEO and GEO?', a: 'Not always, but it helps a great deal. Commercial pages cover the searches of people already evaluating a purchase, while the questions people ask before that — how it works, what it costs, what the difference is — need content of their own. Without it you compete only on the most crowded searches, which are also the most expensive.' },
         { q: 'How long before something changes?', a: 'It depends on technical state, competition and domain authority, and no serious date can be promised. Technical corrections take effect in weeks, editorial coverage in months. What you see immediately is the work: corrected pages, valid structured data and measured content, all verifiable the same day.' },
-        { q: 'Is my site readable by AI systems?', a: 'It gets checked, and often the answer is no. We verify that the answering systems’ crawlers are allowed in robots.txt, that a summary file for AI exists, that the structured data is valid and that content answers in the first sentence. These are concrete checks: either they are there or they are not, and they are fixed quickly.' },
+        { q: 'Is my site readable by AI systems?', a: SEO_SERVICE_COPY.en.readability },
       ],
       related: [
         { href: '/en/blog', label: 'SWA Journal' },
@@ -277,7 +280,7 @@ export const SERVIZI_EN: ServizioEn[] = [
     slugIt: '/servizi/video-produzione',
     title: 'Video filmed on your premises | SWA',
     description:
-      'A photographer, lights and proper lenses come to you. Four monthly plans, from 5 to 20 vertical videos a month, edited and published inside your plan.',
+      'On-site video production: filming, editing, subtitles and graphics included in monthly packages. Social scheduling and publishing are separate services.',
     config: {
       eyebrow: 'Filming on your premises',
       title: 'Professional equipment, at your place.',
@@ -296,7 +299,7 @@ export const SERVIZI_EN: ServizioEn[] = [
       outcomes: [
         { title: 'Equipment', text: 'Controlled lighting, dedicated microphones, stabilisation and lenses: the kit that changes the result for the same subject.' },
         { title: 'Volume', text: 'One session produces weeks of material: we film in blocks, not one video at a time.' },
-        { title: 'Consistency', text: 'The footage enters the editorial plan and is edited and published by us, with nothing changing hands.' },
+        { title: 'Consistency', text: 'Videos are edited and delivered as agreed in the proposal. If you also activate a social plan, the calendar, approval and publishing stay coordinated.' },
       ],
       deliverablesTitle: 'What happens on filming day.',
       deliverablesIntro: 'We do not arrive to improvise. The plan of what gets filmed exists first, because we already know what will be published in the following weeks.',
@@ -306,7 +309,7 @@ export const SERVIZI_EN: ServizioEn[] = [
         { title: 'A presenter, if you want one', text: 'You can appear, a member of your staff can, or we bring a professional presenter, a man or a woman.' },
         { title: 'The place and the craft', text: 'The premises, the gestures, the details of the trade. This is the material that makes a profile credible even without speaking.' },
         { title: 'Photos from the same set', text: 'The same session also produces stills for posts, covers and the website, without organising a second day.' },
-        { title: 'Delivery and editing', text: 'The footage enters the plan: editing, subtitles and publication are already included in the active social plan.' },
+        { title: 'Delivery and editing', text: 'Editing, post-production, subtitles and graphics are included in the video package. Social publishing is coordinated through the social plan, if active.' },
       ],
       process: metodoServizioEn('video-produzione'),
       tabella: {
@@ -326,7 +329,7 @@ export const SERVIZI_EN: ServizioEn[] = [
         { q: 'How long does a filming session take?', a: 'Half a day is almost always enough for several weeks of material, because we film in blocks instead of one piece at a time. A full day is needed when there are several locations, several people on camera or products to set up. We fix the length at the site visit, before the quote.' },
         { q: 'Do I have to appear in the videos?', a: 'No. You can appear, a member of your staff can, or we bring a professional presenter, a man or a woman. The choice follows who your service speaks to, not taste: a format without a face carried on consistently beats a talking format abandoned after three weeks.' },
         { q: 'Do we have to close the business to film?', a: 'No, and we do not recommend it: footage shot while you work is the most credible. At the site visit we choose the quieter hours and film in blocks, without stopping customers. It is why the site visit comes before the quote and not after.' },
-        { q: 'Is editing included in the filming price?', a: 'Editing, subtitles and publication are part of the active social plan, not of the filming. Filming produces the raw material; the plan turns it into scheduled posts. They add up, they do not replace each other: without an active plan the footage stays material someone has to edit.' },
+        { q: 'Is editing included in the filming price?', a: VIDEO_MONTAGGIO_EN },
         { q: 'What equipment do you bring?', a: 'A photographer, lights, dedicated microphones, stabilisation and lenses. What makes the difference in a business video is not camera resolution: it is controlled light, clean audio and steady framing — exactly the three things missing when you film in a hurry with whatever is at hand.' },
         { q: 'Do we get photos as well, or only video?', a: 'The same session also produces stills, and it is one of the reasons it is worth it: images are needed for posts, covers and the website, and organising a second day with a photographer costs more than the half day where everything is done together.' },
         { q: 'What does filming cost?', a: `There are four plans, and the fee per video falls as the volume rises: ${VIDEO_PACCHETTI.map(v => `${v.nome} ${v.video} videos at €${v.prezzo}`).join(', ')}. These are monthly fees, cancelled with the notice written in the contract. A single bespoke promotional video starts at €800 on the Italian market: here we film in a batch, five videos per session instead of one at a time, and that is the reason for the difference. Prices exclude VAT, travel inside the agreed area included.` },

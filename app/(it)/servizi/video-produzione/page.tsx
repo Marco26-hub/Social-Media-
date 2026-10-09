@@ -1,8 +1,9 @@
 import { anteprimaOg } from '@/lib/anteprima'
+import { seoAlternates } from '@/lib/seo-alternates'
 import type { Metadata } from 'next'
 import { Clapperboard } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
-import { VIDEO_CONSEGNA, VIDEO_ESCLUSO, VIDEO_PACCHETTI, euroVideo } from '@/lib/video-listino'
+import { VIDEO_CONSEGNA, VIDEO_ESCLUSO, VIDEO_MONTAGGIO, VIDEO_PACCHETTI, euroVideo } from '@/lib/video-listino'
 import { SITE_URL } from '@/lib/site-config'
 import { euro } from '@/lib/euro'
 import { metodoServizio } from '@/lib/metodo'
@@ -14,13 +15,13 @@ import { metodoServizio } from '@/lib/metodo'
 
 const path = '/servizi/video-produzione'
 const title = 'Riprese video in azienda con fotografo e volto | SWA'
-const description = 'Veniamo da te a girare con fotografo, luci, audio e ottiche, e se serve un volto davanti alla camera. Montaggio e pubblicazione sono già nel piano social.'
+const description = 'Produzione video in azienda: riprese, montaggio, sottotitoli e grafiche inclusi nei pacchetti mensili. Calendario e pubblicazione social sono servizi distinti.'
 
 export const metadata: Metadata = {
   title,
   description,
   keywords: ['riprese video aziendali', 'video per social', 'fotografo aziendale', 'reel professionali', 'volto per i video', 'produzione video PMI'],
-  alternates: { canonical: `${SITE_URL}${path}` },
+  alternates: seoAlternates('/servizi/video-produzione'),
   openGraph: { title, description, url: `${SITE_URL}${path}`, type: 'website' , images: anteprimaOg('/servizi/video-produzione')},
   twitter: { card: 'summary_large_image', title, description },
 }
@@ -42,7 +43,7 @@ const config = {
   outcomes: [
     { title: 'Strumenti', text: 'Illuminazione controllata, microfoni dedicati, stabilizzazione e ottiche: la dotazione che cambia il risultato a parità di soggetto.' },
     { title: 'Quantità', text: 'Una sessione produce il materiale per settimane: si gira a blocchi, non un video alla volta.' },
-    { title: 'Continuità', text: 'Il girato entra nel piano editoriale e viene montato e pubblicato da noi, senza passaggi di mano.' },
+    { title: 'Continuità', text: 'I video vengono montati e consegnati secondo la proposta. Se attivi anche il piano social, calendario, approvazione e pubblicazione restano coordinati.' },
   ],
   deliverablesTitle: 'Che cosa succede il giorno delle riprese.',
   deliverablesIntro: 'Non arriviamo a improvvisare. Il piano di quello che si gira esiste prima, perché sappiamo già che cosa andrà pubblicato nelle settimane successive.',
@@ -52,14 +53,14 @@ const config = {
     { title: 'Un volto, se lo vuoi', text: 'Puoi comparire tu, può farlo una persona del tuo staff, oppure portiamo noi un volto professionista, uomo o donna.' },
     { title: 'Ambiente e lavorazione', text: 'Il posto, i gesti, i dettagli del mestiere. È il materiale che rende un profilo credibile anche senza parlare.' },
     { title: 'Foto dallo stesso set', text: 'Dalla stessa sessione escono anche gli scatti per post, copertine e sito, senza organizzare un secondo giorno.' },
-    { title: 'Consegna e montaggio', text: 'Il girato entra nel piano: montaggio, sottotitoli e pubblicazione sono già compresi nel piano social attivo.' },
+    { title: 'Consegna e montaggio', text: 'Montaggio, post-produzione, sottotitoli e grafiche sono inclusi nel pacchetto video. La pubblicazione sui canali è coordinata dal piano social, se attivo.' },
   ],
   process: metodoServizio('video-produzione').fasi,
   faq: [
     { q: 'Quanto dura una sessione di riprese?', a: 'Mezza giornata basta quasi sempre per il materiale di diverse settimane, perché si gira a blocchi invece che un contenuto alla volta. La giornata intera serve quando ci sono più location, più persone davanti alla camera o prodotti da allestire. La durata la fissiamo nel sopralluogo, prima del preventivo.' },
     { q: 'Devo comparire io nei video?', a: 'No. Puoi comparire tu, può farlo una persona del tuo staff, oppure portiamo noi un volto professionista, uomo o donna. La scelta si fa guardando a chi parla il tuo servizio, non per gusto: un formato senza volto portato avanti con continuità batte un formato parlato abbandonato dopo tre settimane.' },
     { q: 'Devo chiudere l’attività per girare?', a: 'No, e non lo consigliamo: le riprese fatte mentre si lavora sono le più credibili. Nel sopralluogo scegliamo le fasce in cui l’attività è più tranquilla e giriamo a blocchi, senza fermare i clienti. È il motivo per cui il sopralluogo viene prima del preventivo e non dopo.' },
-    { q: 'Il montaggio è compreso nel prezzo delle riprese?', a: 'Montaggio, sottotitoli e pubblicazione fanno parte del piano social attivo, non delle riprese. Le riprese producono la materia prima; il piano la trasforma in uscite programmate. Si sommano, non si sostituiscono: senza un piano attivo il girato resta materiale che qualcuno deve montare.' },
+    { q: 'Il montaggio è compreso nel prezzo delle riprese?', a: VIDEO_MONTAGGIO },
     { q: 'Che attrezzatura portate?', a: 'Fotografo, luci, microfoni dedicati, stabilizzazione e ottiche. La differenza in un video aziendale non la fa la risoluzione della fotocamera: la fanno luce controllata, audio pulito e inquadrature stabili, che sono esattamente le tre cose che mancano quando si gira in fretta con quello che c’è.' },
     { q: 'Escono anche le foto o solo i video?', a: 'Dalla stessa sessione escono anche gli scatti fotografici, ed è uno dei motivi per cui conviene: le immagini servono ai post, alle copertine e al sito, e organizzare un secondo giorno con un fotografo costa più della mezza giornata in cui si fa tutto insieme.' },
     { q: 'Quanto costano le riprese?', a: `Ci sono quattro pacchetti, e il canone scende in proporzione man mano che i video aumentano: ${VIDEO_PACCHETTI.map(v => `${v.nome} ${v.video} video a ${euro(v.prezzo)}`).join(', ')}. Sono canoni mensili e si disdicono con il preavviso scritto nel contratto. Un singolo video promozionale su misura parte da 800 € sul mercato italiano: qui si gira a lotto, cinque video per sessione invece di uno alla volta, ed è questa la ragione della differenza. Prezzi IVA esclusa, spostamento nell’area concordata compreso. Allestimenti particolari, più location o un volto professionista si quotano dopo il sopralluogo.` },

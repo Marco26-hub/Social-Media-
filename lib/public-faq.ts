@@ -1,3 +1,5 @@
+import { PACCHETTI } from '@/lib/pacchetti'
+
 export const groups=[
   {title:'Servizio e processo',items:[
     {q:'Social Automation è un software o un servizio?',a:'È un servizio gestito. Il portale rende semplici approvazioni e risultati, ma strategia, produzione e pubblicazione vengono svolte dal team Social Automation.'},
@@ -5,7 +7,7 @@ export const groups=[
     {q:'Quali aziende seguite?',a:'Lavoriamo soprattutto con PMI, attività locali e professionisti che vogliono coordinare social, contenuti, sito e visibilità organica.'},
   ]},
   {title:'Pacchetti e costi',items:[
-    {q:'Quanto costa la gestione social?',a:'Presenza costa 490 € al mese per 2 social e 16 contenuti. Crescita costa 990 € al mese per 3 social e 24 contenuti, con un articolo SEO + GEO e gestione di una campagna ADS. IVA esclusa.'},
+    {q:'Quanto costa la gestione social?',a:`${PACCHETTI[0].nome} costa ${PACCHETTI[0].prezzo} al mese per 2 social, con 16 contenuti per canale e fino a 32 pubblicazioni. ${PACCHETTI[1].nome} costa ${PACCHETTI[1].prezzo} al mese per 2 social, con 24 contenuti per canale e fino a 48 pubblicazioni, più un articolo SEO + GEO. Entrambi coprono crescita organica; campagne a pagamento su configurazione personalizzata. IVA esclusa.`},
     {q:'Il budget pubblicitario è incluso?',a:'No. Il budget versato alle piattaforme resta separato dal canone ed è concordato in base agli obiettivi.'},
     {q:'Esiste una soluzione personalizzata?',a:'Sì. Più brand, volumi elevati, automazioni, e-commerce, produzione video e integrazioni vengono configurati dopo un’analisi iniziale.'},
   ]},
@@ -29,4 +31,3 @@ export const courseFaq = [
   ['Dove ritrovo le lezioni dopo l’iscrizione?', 'Nell’area personale Academy, con l’account usato per l’iscrizione. I corsi a pagamento richiedono la conferma del pagamento; nell’area corsi puoi ritrovare le lezioni e il tuo avanzamento.'],
   ['L’acquisto include gli strumenti AI utilizzati?', 'Non dare per inclusi gli abbonamenti a servizi esterni: verifica ciò che è indicato nella scheda del corso. Un corso e un abbonamento a un tool sono prodotti distinti.'],
 ]
-

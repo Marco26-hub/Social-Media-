@@ -1,4 +1,6 @@
 import { SETTORI } from '@/lib/settori'
+import { TRADUZIONI } from '@/lib/lingue'
+import { SWA_BLOG_ARTICLES_EN } from '@/lib/swa-blog-content.en'
 
 // Collegamenti fra le sezioni del sito.
 //
@@ -29,5 +31,11 @@ const ARTICOLI: Record<string, Collegamento> = {
 }
 
 export function articoloPerServizio(percorsoServizio: string): Collegamento | undefined {
+  if (percorsoServizio.startsWith('/en/')) {
+    const italianPath = Object.keys(TRADUZIONI).find(path => TRADUZIONI[path] === percorsoServizio)
+    const italianArticle = italianPath && ARTICOLI[italianPath]
+    const article = italianArticle && SWA_BLOG_ARTICLES_EN.find(a => `/blog/${a.slugIt}` === italianArticle.href)
+    return article ? { href: `/en/blog/${article.slug}`, label: article.h1 } : undefined
+  }
   return ARTICOLI[percorsoServizio]
 }

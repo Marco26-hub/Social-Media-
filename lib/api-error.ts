@@ -4,6 +4,9 @@ import { NextResponse } from 'next/server'
 // corretti invece del 500 generico. Nessun dettaglio sensibile esposto.
 export function apiError(e: unknown): NextResponse {
   const msg = e instanceof Error ? e.message : 'Errore'
+  if (msg === 'Database non disponibile') {
+    return NextResponse.json({ error: 'Servizio temporaneamente non disponibile. Nessun dato è stato salvato.' }, { status: 503 })
+  }
 
   if (/non autenticato/i.test(msg)) {
     return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })

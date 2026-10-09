@@ -1,4 +1,5 @@
 import { anteprimaOg } from '@/lib/anteprima'
+import { SALA_NOTA_PREZZI_EN } from '@/lib/ristoranti-listino'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, CalendarClock, Clapperboard, ClipboardCheck, FileSearch, Globe2, Newspaper, PhoneCall, Scale, Share2, Target, UtensilsCrossed, Workflow, type LucideIcon } from 'lucide-react'
@@ -31,6 +32,7 @@ const services: { id: string; href?: string; icon: LucideIcon; title: string; te
   { id: 'agenda', href: '/en/services/client-diary-whatsapp', icon: CalendarClock, title: 'Diary and client recall', text: 'Each day the system reads the diary and the history, finds who has not come back and drafts the message. Nothing leaves without your yes. From €390 per month, 1000 messages included. No guarantee on how many people return.' },
   { id: 'jobs', href: '/en/services/job-reporting', icon: ClipboardCheck, title: 'Job reports and field work', text: 'For work done away from the office: checklists built on your real services, photos, hours, the client signature on the phone and a PDF before the team leaves. Paired with a website that turns requests into jobs. Quoted after review.' },
   { id: 'systems', href: '/en/services/systems-automation', icon: Workflow, title: 'Systems automation', text: 'The management system, CRM, forms and archive stop asking for the same data three times. We connect what already works through the available interfaces and build from scratch only where no standard exists. Quoted after mapping the flows.' },
+  { id: 'restaurant', href: '/en/services/restaurant-management-system', icon: Globe2, title: 'Tavolo restaurant system', text: SALA_NOTA_PREZZI_EN },
   { id: 'compliance', href: '/en/legal-advice', icon: Scale, title: 'AI Act, GDPR and compliance', text: 'Operational assessment, policies and documented responsibilities for companies using AI and personal data. Legal representation and certifications are not included unless agreed separately.' },
 ]
 
@@ -69,7 +71,7 @@ export default function EnglishServicesPage() {
       <a className={styles.skipLink} href="#main-content">Skip to content</a>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <section className={styles.hero}>
-        <div><p className={styles.eyebrow}>Eleven distinct capabilities</p><h1>One service map, with clear boundaries.</h1><p className={styles.heroLead}>Use social and Blog to build awareness, SEO + GEO to improve discovery, Web to convert, B2B research to find opportunities and compliance to operate responsibly.</p><div className={styles.actions}><Link className={styles.primary} href="/en/pricing">Compare offers <ArrowRight size={16} aria-hidden="true" /></Link><Link className={styles.secondary} href="/servizi">Italian details</Link></div></div>
+        <div><p className={styles.eyebrow}>Digital services with clear scope</p><h1>One service map, with clear boundaries.</h1><p className={styles.heroLead}>Use social and Blog to build awareness, SEO + GEO to improve discovery, Web to convert, B2B research to find opportunities and compliance to operate responsibly.</p><div className={styles.actions}><Link className={styles.primary} href="/en/pricing">Compare offers <ArrowRight size={16} aria-hidden="true" /></Link><Link className={styles.secondary} href="/servizi">Italian details</Link></div></div>
         <aside className={styles.heroPanel}><strong>What remains deliberately separate.</strong><ol><li>SEO + GEO means search work plus clearer pages for AI answer tools.</li><li>Blog SEO + GEO produces 12 monthly articles.</li><li>B2B research supplies verified companies, not guaranteed sales.</li><li>Included work is confirmed before activation.</li></ol></aside>
       </section>
       <section className={styles.section}>

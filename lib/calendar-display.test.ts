@@ -32,7 +32,8 @@ test('publication proof never matches another account, platform, month or media'
   assert.equal(match({ ...proof, rawPost: null }), false)
   assert.equal(match({ ...proof, createdAt: '2026-09-05T20:00:00Z' }), false)
   assert.equal(match({ ...proof, platform: 'facebook' }), false)
-  assert.equal(match({ ...proof, mediaUrls: ['https://other/video.mp4'] }), false)
+  assert.equal(match({ ...proof, mediaUrls: ['https://cdn.blotato/video-copy.mp4'] }), true)
+  assert.equal(match({ ...proof, rawPost: { ...proof.rawPost, content: { ...proof.rawPost.content, mediaUrls: ['https://other/video.mp4'] } } }), false)
   assert.equal(match({ ...proof, rawPost: { ...proof.rawPost, accountId: 'other' } }), false)
 })
 

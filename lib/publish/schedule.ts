@@ -2,7 +2,7 @@
 // Chiamato quando status → APPROVATO. Supporta tutti i formati.
 
 import { randomUUID } from 'node:crypto'
-import { q } from '@/lib/db'
+import { q, withTransaction } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 import { validateMediaUrls } from '@/lib/media-validate'
 import { getBlotatoKey } from '@/lib/blotato-key'
@@ -14,6 +14,8 @@ import { hashtagCount, normalizeHashtagsForPublish, normalizeInstagramPublishPay
 import { remotionSourceHash, renderSwaSocialVideo } from '@/lib/remotion-renderer'
 import { hasFinalCampaignAsset, requiresRenderedVisualReview } from '@/lib/publish/visual-review'
 import { uniquePublishCopy } from '@/lib/publish-copy'
+import { assertFreeCalendarSlot, lockCalendarChannel, lockBlotatoAccount, assertFreeBlotatoReservation } from '@/lib/calendar-slot'
+import { listBlotatoSchedules, remoteSlotCollision } from '@/lib/blotato-schedules'
 
 const BLOTATO_API_BASE = process.env.BLOTATO_API_URL || 'https://backend.blotato.com'
 
@@ -68,6 +70,10 @@ export async function scheduleOnBlotato(
   row: ContentRow,
   timezone: string = DEFAULT_TIMEZONE,
 ): Promise<PublishOutcome> {
+  if (row.blotato_post_id || row.blotato_post_url || ['scheduled','in-progress','published'].includes(String(row.blotato_status))) {
+    return { status: 'skipped', reason: 'Invio originale già presente: verificare Blotato, senza creare un altro post.' }
+  }
+  if (row.status !== 'APPROVATO') return { status: 'skipped', reason: 'Approvazione non presente: nessun invio.' }
   // Guardia pubblicazione: se non live (demo o PUBLISH_ENABLED != true) → dry-run.
   // Il contenuto resta APPROVATO senza blotato_post_id: verrà pubblicato quando
   // si abilita PUBLISH_ENABLED e si rilancia la sincronizzazione Blotato.
@@ -203,7 +209,7 @@ export async function scheduleOnBlotato(
     if (row.id) {
       await q(
         `UPDATE calendario SET blotato_status = 'failed', errore_tecnico = $1, blotato_sync_at = now(), updated_at = now()
-         WHERE id = $2 AND cliente_id = $3`,
+         WHERE id = $2 AND cliente_id = $3 AND blotato_post_id IS NULL AND blotato_post_url IS NULL AND status = 'APPROVATO'`,
         [`Pre-flight Blotato: ${reason.slice(0, 500)}`, row.id, clienteId],
       ).catch(() => {})
     }
@@ -216,6 +222,12 @@ export async function scheduleOnBlotato(
   // click multiplo sul tasto Sincronizza) l'UPDATE non trova la riga e saltiamo.
   // Elimina i post duplicati su Blotato.
   const rowId = row.id ? String(row.id) : ''
+  // Un timeout/kill dopo POST non prova che Blotato non abbia accettato il
+  // contenuto. Il registro persistente protegge anche un publish_lock scaduto.
+  if (!rowId) throw new Error('Pubblicazione senza record persistente: invio bloccato')
+  const previousSubmission = await q(`SELECT id FROM integration_events WHERE cliente_id = $1 AND provider = 'blotato'
+    AND event_type = 'post_submission' AND entity_id = $2 AND status IN ('processing','processed') LIMIT 1`, [clienteId, rowId])
+  if (previousSubmission.length) return { status: 'skipped', reason: 'Invio originale già registrato o esito non confermato: non reinviare; verificare Blotato.' }
   let lockId: string | null = null
   if (rowId) {
     lockId = randomUUID()
@@ -225,6 +237,7 @@ export async function scheduleOnBlotato(
        WHERE id = $2 AND cliente_id = $3
          AND (publish_lock_id IS NULL OR updated_at < now() - interval '6 minutes')
          AND blotato_post_id IS NULL
+         AND blotato_post_url IS NULL AND status = 'APPROVATO'
        RETURNING id`,
       [lockId, rowId, clienteId],
     )
@@ -441,6 +454,29 @@ export async function scheduleOnBlotato(
   const mediaTypeLabel = target.mediaType ? ` mediaType=${String(target.mediaType)}` : ''
   console.log(`[Blotato] Sending ${canale}→${platform} account=${accountId}${targetLabel}${mediaTypeLabel} scheduled at ${scheduledTime}`)
 
+  // Snapshot IMMUTABILE del target originale; prima di ogni richiesta remota.
+  // Lo stesso record serve a provare la pagina Facebook, senza indovinarla
+  // dalle preferenze correnti (che possono essere cambiate nel frattempo).
+  const intent = await withTransaction(async query => {
+    await lockCalendarChannel(query, clienteId, canale)
+    await lockBlotatoAccount(query, accountId, platform, String(target.pageId || '') || null)
+    const latest = (await query('SELECT * FROM calendario WHERE id = $1 AND cliente_id = $2 FOR UPDATE', [rowId, clienteId]))[0]
+    if (!latest || latest.publish_lock_id !== lockId || latest.status !== 'APPROVATO'
+      || latest.blotato_post_id || zonedToUtcIso(latest.data_pubblicazione, latest.ora_pubblicazione, timezone) !== scheduledTime) {
+      throw new Error('Scheda, approvazione o orario cambiati durante l’invio: nessun post creato')
+    }
+    await assertFreeCalendarSlot(query, clienteId, rowId, canale, String(latest.data_pubblicazione), String(latest.ora_pubblicazione).slice(0, 5))
+    await assertFreeBlotatoReservation(query, rowId, accountId, platform, String(target.pageId || '') || null, scheduledTime)
+    const schedules = await listBlotatoSchedules(blotatoKey)
+    if (remoteSlotCollision(schedules, accountId, platform, String(target.pageId || '') || null, scheduledTime)) throw new Error('Slot già occupato su Blotato: nessun nuovo invio; scegli un altro orario')
+    return (await query(`INSERT INTO integration_events (cliente_id, provider, event_type, direction, status, entity_type, entity_id, payload)
+    SELECT $1, 'blotato', 'post_submission', 'outbound', 'processing', 'calendario', $2::text, $4::jsonb
+    FROM calendario WHERE id = $2::uuid AND cliente_id = $1 AND publish_lock_id = $3
+      AND blotato_post_id IS NULL AND NOT EXISTS (SELECT 1 FROM integration_events WHERE cliente_id = $1
+        AND provider = 'blotato' AND event_type = 'post_submission' AND entity_id = $2::text AND status IN ('processing','processed'))
+    RETURNING id`, [clienteId, rowId, lockId, JSON.stringify({ account_id: accountId, target, scheduled_time: scheduledTime, media_urls: mediaUrls })]))[0]
+  })
+  if (!intent) throw new Error('Lock perso o invio già registrato: nessun nuovo post creato')
   const res = await fetch(`${BLOTATO_API_BASE}/v2/posts`, {
     method: 'POST',
     headers: {
@@ -449,33 +485,35 @@ export async function scheduleOnBlotato(
       'blotato-api-key': blotatoKey,
     },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(20000),
   })
 
   if (!res.ok) {
+    // Solo un rifiuto certo 4xx (non timeout) consente un futuro tentativo
+    // esplicito corretto. Su timeout/5xx il registro resta processing.
+    if (res.status >= 400 && res.status < 500 && res.status !== 408) {
+      await q("UPDATE integration_events SET status = 'failed', error_message = $1, processed_at = now() WHERE id = $2",
+        [`Blotato HTTP ${res.status}: richiesta rifiutata`, intent.id])
+    }
     const error = await res.text().catch(() => 'Unknown error')
     throw new Error(`Blotato ${res.status}: ${error.slice(0, 200)}`)
   }
 
   const result = await res.json()
-  // Blotato in versioni diverse restituisce l'id in campi diversi. Allarghiamo il
-  // fallback su tutte le forme viste (postSubmissionId, submissionId, scheduled_id,
-  // data.id, post.id, item.id). Se davvero manca sempre → throw esplicito invece
-  // di skipped silenzioso: il contratto è rotto e va investigato subito.
+  // Solo l'identificativo dell'invio originale documentato da Blotato.
+  // Un ID di schedule o di post pubblicato non è intercambiabile con questo.
   const asStr = (v: unknown) => (typeof v === 'string' && v) || (typeof v === 'number' ? String(v) : '')
   const data = (result && typeof result === 'object' ? (result as Record<string, unknown>) : {}) as Record<string, unknown>
-  const nested = (data.data || data.post || data.item || {}) as Record<string, unknown>
   const blotatoId = asStr(data.postSubmissionId)
-    || asStr(data.id)
-    || asStr(data.submissionId)
-    || asStr(data.scheduled_id)
-    || asStr(data.postId)
-    || asStr(nested.id)
-    || asStr(nested.postId)
-    || asStr(nested.submissionId)
 
   if (!blotatoId) {
     throw new Error(`Blotato 2xx senza id post: contratto rotto. Body: ${JSON.stringify(result).slice(0, 200)}`)
   }
+
+  // Salva l'ID anche nel ledger PRIMA di aggiornare la scheda: se il processo
+  // viene interrotto, l'invio accettato è recuperabile, mai ripetibile alla cieca.
+  await q(`UPDATE integration_events SET status = 'processed', payload = payload || $1::jsonb, processed_at = now() WHERE id = $2`,
+    [JSON.stringify({ submission_id: blotatoId }), intent.id])
 
   // Aggiorna status locale. Persiste anche l'accountId risolto se la riga non
   // l'aveva (così i sync successivi e la UI lo mostrano senza ririsolvere).
@@ -485,16 +523,16 @@ export async function scheduleOnBlotato(
         `UPDATE calendario
          SET status = 'PUBBLICATO', blotato_post_id = $1, blotato_status = 'scheduled', blotato_scheduled_at = $2,
              blotato_sync_at = now(), publish_lock_id = NULL, errore_tecnico = NULL, platform_account_id = $5
-         WHERE id = $3 AND cliente_id = $4`,
-        [String(blotatoId), scheduledTime, row.id, clienteId, accountId],
+         WHERE id = $3 AND cliente_id = $4 AND publish_lock_id = $6 AND blotato_post_id IS NULL`,
+        [String(blotatoId), scheduledTime, row.id, clienteId, accountId, lockId],
       )
     } else {
       await q(
         `UPDATE calendario
          SET status = 'PUBBLICATO', blotato_post_id = $1, blotato_status = 'scheduled', blotato_scheduled_at = $2,
              blotato_sync_at = now(), publish_lock_id = NULL, errore_tecnico = NULL
-         WHERE id = $3 AND cliente_id = $4`,
-        [String(blotatoId), scheduledTime, row.id, clienteId],
+         WHERE id = $3 AND cliente_id = $4 AND publish_lock_id = $5 AND blotato_post_id IS NULL`,
+        [String(blotatoId), scheduledTime, row.id, clienteId, lockId],
       )
     }
   }
@@ -512,7 +550,7 @@ export async function scheduleOnBlotato(
           `UPDATE calendario
            SET status = 'ERRORE', publish_lock_id = NULL, blotato_status = 'failed',
                errore_tecnico = $1, blotato_sync_at = now(), updated_at = now()
-           WHERE id = $2 AND cliente_id = $3 AND publish_lock_id = $4`,
+           WHERE id = $2 AND cliente_id = $3 AND publish_lock_id = $4 AND blotato_post_id IS NULL AND blotato_post_url IS NULL`,
           [`Pipeline pubblicazione: ${message.slice(0, 500)}`, rowId, clienteId, lockId],
         )
       } catch (persistError) {

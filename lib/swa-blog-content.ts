@@ -105,7 +105,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
       {
         h2: 'SEO e GEO a confronto, voce per voce',
         paragrafi: [
-          'Le due discipline lavorano sullo stesso contenuto ma rispondono a due domande diverse: la SEO chiede «questa pagina merita di comparire fra i risultati?», la GEO chiede «questo passaggio si può citare in una risposta?». La tabella mette le differenze una accanto all’altra.',
+          'SEO, GEO e AEO condividono le basi tecniche ed editoriali. Cambia la superficie osservata: risultati di ricerca, risposte dirette o risposte generate. La tabella distingue obiettivi e verifiche, non formule di ranking separate.',
         ],
         tabella: {
           caption: 'Differenze fra SEO e GEO su sei dimensioni operative',
@@ -114,9 +114,9 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
             ['Obiettivo', 'Comparire fra i risultati di ricerca', 'Essere citati dentro una risposta generata'],
             ['Dove appare il risultato', 'Nella pagina dei risultati, come link', 'Dentro il testo della risposta, con o senza link'],
             ['Unità di misura', 'Posizione, clic, impressioni', 'Presenza e frequenza della citazione'],
-            ['Che cosa premia', 'Rilevanza, autorevolezza del dominio, esperienza d’uso', 'Risposte brevi e autonome, dati verificabili, fonti citate'],
+            ['Base di qualità condivisa', 'Contenuti utili, affidabili e accessibili', 'Gli stessi contenuti utili e affidabili; nessuna lunghezza o struttura speciale richiesta'],
             ['Struttura utile', 'Titoli, link interni, dati strutturati', 'Blocchi domanda e risposta, tabelle, elenchi, definizioni'],
-            ['Come si verifica', 'Search Console e posizionamento sulle chiavi', 'Interrogando i motori di risposta sulle domande dei clienti'],
+            ['Come si verifica', 'Search Console, query e pagine', 'Campioni ripetuti di domande, dichiarando sistema, data e contesto; un prompt non misura la quota di mercato'],
           ],
         },
       },
@@ -153,7 +153,7 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     faq: [
       { domanda: 'La GEO sostituisce la SEO?', risposta: 'No. La GEO utilizza una base tecnica ed editoriale molto simile alla SEO e la estende al modo in cui i sistemi generativi comprendono e sintetizzano le fonti.' },
       { domanda: 'È possibile garantire una citazione su ChatGPT o Gemini?', risposta: 'No. Nessun operatore può controllare o garantire le citazioni prodotte da un sistema AI esterno.' },
-      { domanda: 'Serve un file llms.txt?', risposta: 'Può fornire un riepilogo utile ad alcuni sistemi, ma non sostituisce indicizzazione, contenuti di qualità, dati strutturati e autorevolezza.' },
+      { domanda: 'Serve un file llms.txt?', risposta: 'No, non è un requisito per Google e le sue funzioni AI. È un riepilogo facoltativo per eventuali sistemi che lo utilizzano: non sostituisce accessibilità, indicizzazione o contenuti utili e non apre pagine private ai crawler.' },
       { domanda: 'Quanto tempo serve per vedere risultati?', risposta: 'Dipende dallo stato iniziale del sito, dalla concorrenza, dalla frequenza di pubblicazione e dall’autorevolezza acquisita. Non esiste una tempistica garantita.' },
     ],
     cta_finale: 'Una strategia SEO e GEO efficace parte da un audit concreto. Scopri il servizio SWA dedicato alla visibilità organica.',
@@ -162,10 +162,11 @@ export const SWA_BLOG_ARTICLES: BlogArticleData[] = [
     autore: 'Marco Dibenedetto',
     tempo_lettura_min: 7,
     data_pubblicazione: '2026-08-11T08:10:00.000Z',
+    updated_at: '2026-10-09T00:00:00.000Z',
     // Fonti primarie: un contenuto ancorato e' piu' facile da citare per un
     // motore di risposta di uno che afferma e basta.
     fonti: [
-      { titolo: 'Google Search Central, funzionalità AI nella ricerca', url: 'https://developers.google.com/search/docs/appearance/ai-features', nota: 'Come Google seleziona le pagine da mostrare nelle risposte generate.' },
+      { titolo: 'Google Search Central, ottimizzazione per le funzioni AI', url: 'https://developers.google.com/search/docs/fundamentals/ai-optimization-guide', nota: 'Le basi SEO restano valide; llms.txt e frammentazione artificiale del testo non sono requisiti.' },
       { titolo: 'Schema.org, tipo FAQPage', url: 'https://schema.org/FAQPage', nota: 'La specifica del vocabolario usato per marcare le domande frequenti.' },
       { titolo: 'llms.txt, la proposta di standard', url: 'https://llmstxt.org/', nota: 'Il formato con cui un sito dichiara i propri contenuti ai modelli linguistici.' },
       { titolo: 'OpenAI, i crawler e come consentirli', url: 'https://platform.openai.com/docs/bots', nota: 'Elenco ufficiale degli user agent di OpenAI e regole per robots.txt.' },

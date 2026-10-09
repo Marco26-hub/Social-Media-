@@ -37,11 +37,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (row.blotato_post_id) {
     const remoteStatus = String(row.blotato_status || '').toLowerCase()
     return NextResponse.json({
-      ok: true,
-      status: remoteStatus === 'published' ? 'published' : 'scheduled',
+      ok: remoteStatus !== 'failed',
+      status: ['published', 'scheduled', 'in-progress', 'failed'].includes(remoteStatus) ? remoteStatus : 'verification_pending',
+      ...(remoteStatus === 'failed' ? { error: 'Invio Blotato fallito: verifica l’errore prima di effettuare un nuovo invio.' } : {}),
       already_synced: true,
       blotatoId: String(row.blotato_post_id),
-    })
+    }, { status: remoteStatus === 'failed' ? 409 : 200 })
   }
   if (row.status !== 'APPROVATO') {
     return NextResponse.json({ error: `contenuto non APPROVATO (stato attuale: ${row.status}): sincronizzabile solo un contenuto approvato` }, { status: 400 })

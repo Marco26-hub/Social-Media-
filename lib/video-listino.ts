@@ -61,6 +61,9 @@ export const VIDEO_ESCLUSO =
 /** Prezzo d'ingresso, per il listino e le pagine che lo citano. */
 export const VIDEO_DA = `da ${VIDEO_PACCHETTI[0].prezzo} € al mese`
 
+export const VIDEO_MONTAGGIO = 'Sì. I pacchetti di produzione video comprendono ideazione, script, riprese, montaggio e post-produzione, sottotitoli e grafiche. Il piano social è un servizio distinto: coordina calendario, approvazione e pubblicazione sui canali. Puoi attivare la produzione video anche senza un piano social; modalità di consegna e lavorazioni extra sono definite nella proposta.'
+export const VIDEO_MONTAGGIO_EN = 'Yes. The video production packages include concept, script, filming, editing and post-production, subtitles and graphics. The social plan is a separate service: it coordinates the calendar, approval and publishing on your channels. You can activate video production without a social plan; delivery arrangements and extra work are defined in the proposal.'
+
 export function euroVideo(p: PacchettoVideo): string {
   return euro(p.prezzo)
 }

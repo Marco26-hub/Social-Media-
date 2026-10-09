@@ -195,7 +195,7 @@ const CASES = [
 ]
 
 const FAQ = [
-  { q: 'Che cosa fate, in concreto?', a: 'Ci occupiamo del lavoro digitale che un’azienda non ha tempo di fare: i contenuti social e i video, il sito, la visibilità sui motori di ricerca, la ricerca di clienti B2B, il telefono che risponde quando sei occupato e i sistemi che tolgono passaggi manuali. Sono dieci aree: si attivano una alla volta oppure insieme, e ognuna ha il suo prezzo pubblico.' },
+  { q: 'Che cosa fate, in concreto?', a: 'Ci occupiamo del lavoro digitale che un’azienda non ha tempo di fare: i contenuti social e i video, il sito, la visibilità sui motori di ricerca, la ricerca di clienti B2B, il telefono che risponde quando sei occupato e i sistemi che tolgono passaggi manuali. I servizi si attivano una alla volta oppure insieme, con prezzi a listino o preventivo dichiarati.' },
   { q: 'Chi ci lavora davvero?', a: 'Social Web Automation è la ditta individuale di Marco Dibenedetto, con sede a Cermenate in provincia di Como. Il lavoro è coordinato da una persona sola, con specialisti selezionati area per area: quando chiami risponde sempre la stessa persona, e quella persona conosce anche il tuo sito. Non è un centralino e non è un software da imparare.' },
   { q: 'Da quanto si parte?', a: `Il gradino più basso è il sito, ${PREZZI.web} per una landing semplice. Il blog costa ${PREZZI.blog} per dodici articoli, la ricerca clienti B2B ${PREZZI.b2b}, l’assistente telefonico ${PREZZI.voce} e la gestione social ${PREZZI.presenza}. Tutti i prezzi sono pubblici sulla pagina dei pacchetti, IVA esclusa.` },
   { q: 'In quanto tempo si vedono le prime cose?', a: 'I primi contenuti arrivano entro il primo mese di lavoro, e li vedi prima che escano. Quello che non si può promettere è quando arrivano i risultati commerciali: dipendono dal mercato, dai concorrenti e da quanto è già solida la tua presenza. Per questo garantiamo il processo e non il posizionamento.' },
@@ -246,14 +246,13 @@ export default function LandingPage() {
           <p className={styles.kicker}><Sparkles size={16} aria-hidden="true" /> Servizi digitali integrati per PMI</p>
           <h1 id="hero-title">Tutto il digitale della tua azienda, un interlocutore solo.</h1>
           <p className={styles.heroLead}>
-            Ci occupiamo di quello che oggi affideresti a tre o quattro fornitori diversi:
-            i contenuti, il sito, la visibilità sui motori, il telefono che risponde quando
-            sei occupato. Tu approvi prima che esca qualcosa, e quando serve una risposta
-            sai già chi chiamare.
+            Siti web, gestione social, SEO e automazioni per PMI e professionisti.
+            Coordiniamo produzione e collegamenti; tu approvi i contenuti prima della
+            pubblicazione e i costi prima dell’avvio.
           </p>
           <div className={styles.heroActions}>
             <Link href="/servizi" className={styles.primaryButton}>
-              Trova la soluzione <ArrowRight size={18} aria-hidden="true" />
+              Esplora i servizi SWA <ArrowRight size={18} aria-hidden="true" />
             </Link>
             <a href={waLink(TRIAL_MSG)} target="_blank" rel="noopener noreferrer" className={styles.secondaryButton}>Richiedi una prova social</a>
           </div>

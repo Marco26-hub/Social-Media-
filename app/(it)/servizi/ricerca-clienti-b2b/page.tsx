@@ -1,4 +1,5 @@
 import { anteprimaOg } from '@/lib/anteprima'
+import { seoAlternates } from '@/lib/seo-alternates'
 import type { Metadata } from 'next'
 import { Target } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
@@ -15,7 +16,7 @@ const description = 'Ricerca clienti B2B: definiamo il cliente ideale e consegni
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: `${SITE_URL}${path}` },
+  alternates: seoAlternates('/servizi/ricerca-clienti-b2b'),
   openGraph: { title, description, url: `${SITE_URL}${path}` , images: anteprimaOg('/servizi/ricerca-clienti-b2b'), type: 'website',},
   twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/servizi/ricerca-clienti-b2b') },
 }

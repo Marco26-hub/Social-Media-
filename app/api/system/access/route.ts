@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
-import { dbReady } from '@/lib/db'
 import { isDemo } from '@/lib/demo'
 
 const DEFAULT_DEMO_USER = 'admin'
 const DEFAULT_DEMO_PASSWORD = '1234567'
 
 export async function GET() {
-  const demo = isDemo() || !dbReady()
+  const demo = isDemo()
   const showInProduction = process.env.SHOW_LOGIN_HINT === 'true'
 
   if (!demo && !showInProduction) {

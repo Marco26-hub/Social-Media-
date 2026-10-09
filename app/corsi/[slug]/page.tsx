@@ -4,16 +4,29 @@ import { notFound } from 'next/navigation'
 import { getPublicCourses } from '@/lib/ecosystem/catalog'
 import { SITE_URL } from '@/lib/site-config'
 import { JsonLd } from '@/components/ecosystem/StructuredData'
+import { anteprimaOg } from '@/lib/anteprima'
+
+async function courseState(slug: string) {
+  try { return { course: (await getPublicCourses()).find(c => c.slug === slug), unavailable: false } }
+  catch { return { course: undefined, unavailable: true } }
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const course = (await getPublicCourses()).find(c => c.slug === slug)
+  const { course, unavailable } = await courseState(slug)
+  if (unavailable) return { title: 'Catalogo corsi non disponibile | SWA Academy', robots: { index: false, follow: true } }
   return course ? { title: `${course.title} | SWA Academy`, description: course.subtitle || course.description,
-    alternates: { canonical: `${SITE_URL}/corsi/${course.slug}` } } : {}
+    alternates: { canonical: `${SITE_URL}/corsi/${course.slug}` },
+    openGraph: { title: `${course.title} | SWA Academy`, description: course.subtitle || course.description,
+      url: `${SITE_URL}/corsi/${course.slug}`, type: 'website', locale: 'it_IT', images: course.imageUrl ? [course.imageUrl] : anteprimaOg('/corsi') } } : {}
 }
 export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const course = (await getPublicCourses()).find(c => c.slug === slug)
+  const { course, unavailable } = await courseState(slug)
+  if (unavailable) return <main id="main-content" className="swa-detail"><section className="swa-section swa-detail-hero">
+    <h1>Il catalogo corsi non è disponibile.</h1><p className="swa-detail-intro">Non possiamo verificare questo percorso. Chiedi disponibilità, programma e condizioni prima di iscriverti: nessun acquisto è avviato da questa pagina.</p>
+    <div className="swa-actions"><Link href="/corsi" className="swa-button">Informazioni sui corsi</Link><a href="https://wa.me/393477196603?text=Vorrei%20informazioni%20sui%20corsi%20SWA" className="swa-text-link">Contatta SWA →</a></div>
+  </section></main>
   if (!course) notFound()
   return <main id="main-content" className="swa-detail">
     <JsonLd data={{ '@context': 'https://schema.org', '@type': 'Course', name: course.title,

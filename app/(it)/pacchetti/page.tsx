@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 }
 
 const faq = [
-  { q: 'I prezzi includono l’IVA?', a: 'No. I prezzi indicati sono mensili e IVA esclusa.' },
+  { q: 'I prezzi includono l’IVA?', a: 'No. Tutti i prezzi sono IVA esclusa. La cadenza è indicata per ciascuna voce: i canoni sono mensili, mentre il Pilot B2B e l’apertura dei profili sono una tantum. Eventuali costi di avvio, consumi extra e servizi esterni sono distinti e dichiarati nella proposta prima dell’attivazione.' },
   { q: 'L’hosting è compreso? E il dominio?', a: CANONE_A_CARICO_CLIENTE },
   { q: 'Il setup iniziale ha un costo?', a: 'Nei pacchetti social Presenza e Crescita il setup è incluso. Per Blog e Web eventuali integrazioni esterne vengono definite prima dell’avvio.' },
   { q: 'Il piano Crescita comprende le campagne a pagamento?', a: 'No. Presenza e Crescita sono piani di sola crescita organica. Le campagne ADS rientrano nella configurazione personalizzata: la gestione viene concordata e il budget versato alla piattaforma resta separato e sotto il controllo del cliente.' },
@@ -55,7 +55,8 @@ const PROFILI = STANDALONE_SERVICES.find(s => s.slug === 'profili-social-gbp')!
 const comparisonRows = [
   ['Prezzo mensile, IVA esclusa', PACCHETTI[0].prezzo, PACCHETTI[1].prezzo, BLOG_SERVICE.displayPrice, PREZZI.web.replace('a partire da ', 'da '), PREZZI.b2b],
   ['Canali social a scelta', '2', '2', '—', '—', '—'],
-  ['Contenuti social mensili', '16', '24', '—', '—', '—'],
+  ['Contenuti mensili per ciascun social', '16', '24', '—', '—', '—'],
+  ['Pubblicazioni sui 2 social', '32', '48', '—', '—', '—'],
   ['Reel, Story o Short', '4', '6', '—', '—', '—'],
   ['Articoli SEO + GEO', '—', '1/mese', '12/mese', 'SEO tecnica', '—'],
   // Le campagne a pagamento sono uscite dai piani: restano nelle
@@ -110,8 +111,8 @@ export default function PacchettiPage() {
       <section className={base.hero}>
         <nav className={base.breadcrumbs}><Link href="/">Home</Link><span>/</span><span>Pacchetti</span></nav>
         <p className={base.eyebrow}>Soluzioni e prezzi trasparenti</p>
-        <h1>Cinque soluzioni chiare. Una configurazione su misura quando serve.</h1>
-        <p className={base.lead}>Presenza e Crescita gestiscono i social. Blog costruisce copertura organica, Web realizza il punto di conversione e il Pilot B2B qualifica nuove aziende in target.</p>
+        <h1>Servizi digitali e piani social: scegli il lavoro che ti serve.</h1>
+        <p className={base.lead}>Presenza e Crescita gestiscono 2 social. Blog, Web, video, ricerca B2B, telefono e agenda si attivano anche separatamente. Per ogni servizio trovi canone o prezzo una tantum, attività incluse e costi di avvio quando previsti.</p>
         <div className={base.heroActions}>
           <a href="#confronto" className={base.primary}>Confronta le soluzioni <ArrowRight size={17} aria-hidden="true" /></a>
           <a href={wa} target="_blank" rel="noopener noreferrer" className={base.secondary}>Aiutami a scegliere</a>
@@ -364,7 +365,7 @@ export default function PacchettiPage() {
       </section>
 
       <section className={styles.custom}>
-        <div><span>Configurazione personalizzata</span><h2>Più brand, volumi elevati o integrazioni.</h2><p>Costruiamo un perimetro dedicato quando le cinque soluzioni standard non rappresentano il processo reale dell’azienda.</p></div>
+        <div><span>Configurazione personalizzata</span><h2>Più brand, volumi elevati o integrazioni.</h2><p>Costruiamo un perimetro dedicato quando i servizi a listino non rappresentano il processo reale dell’azienda.</p></div>
         <a href={wa} target="_blank" rel="noopener noreferrer">Progettiamo la soluzione <ArrowRight size={17} aria-hidden="true" /></a>
       </section>
       <section className={`${base.section} ${base.faqLayout}`}><div className={base.sectionHeading}><p className={base.eyebrow}>FAQ pacchetti</p><h2>Costi e condizioni in chiaro.</h2></div><div className={base.faqList}>{faq.map(item => <details key={item.q}><summary>{item.q}<span>+</span></summary><p>{item.a}</p></details>)}</div></section>

@@ -98,6 +98,9 @@ export default async function EnglishArticlePage({ params }: { params: Promise<{
             {article.data_pubblicazione && formatDate(article.data_pubblicazione) && (
               <time dateTime={article.data_pubblicazione}>{formatDate(article.data_pubblicazione)}</time>
             )}
+            {article.updated_at && article.updated_at !== article.data_pubblicazione && formatDate(article.updated_at) && (
+              <time dateTime={article.updated_at}>Updated {formatDate(article.updated_at)}</time>
+            )}
             {article.tempo_lettura_min && <span><Clock3 size={14} aria-hidden="true" /> {article.tempo_lettura_min} min read</span>}
           </div>
         </header>

@@ -6,7 +6,7 @@ import { SUB_RESPONSABILI, TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '@/components/legal.module.css'
 
-const META_TITLE = 'Privacy Policy — Social Web Automation'
+const META_TITLE = 'Privacy Policy (English) — Social Web Automation'
 const META_DESCRIPTION =
   'What personal data we process, on which legal basis, for how long, with whom we share it and how to exercise your GDPR rights.'
 

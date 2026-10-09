@@ -1,4 +1,5 @@
 import { anteprimaOg } from '@/lib/anteprima'
+import { seoAlternates } from '@/lib/seo-alternates'
 import type { Metadata } from 'next'
 import { Newspaper } from 'lucide-react'
 import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/MarketingDetailPage'
@@ -13,7 +14,7 @@ const description = 'Servizio Blog SEO + GEO: 12 articoli mensili pianificati, r
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: `${SITE_URL}${BLOG_SERVICE.path}` },
+  alternates: seoAlternates('/servizi/blog-seo'),
   openGraph: { title, description, url: `${SITE_URL}${BLOG_SERVICE.path}` , images: anteprimaOg('/servizi/blog-seo'), type: 'website',},
   twitter: { card: 'summary_large_image', title, description, images: anteprimaOg('/servizi/blog-seo') },
 }

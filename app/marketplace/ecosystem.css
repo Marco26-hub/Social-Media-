@@ -6,6 +6,15 @@
 html[data-theme='dark'] .swa-marketplace-scope{--swa-green:#62c99b;--swa-ink:#edf5ef;--swa-muted:#a9bbb0;--swa-paper:#08110e;--swa-line:#263b32;background:#08110e;color:#edf5ef}
 html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-header,
 html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-final{background:#0d2c22}
+/* I pannelli scuri non possono ereditare --swa-paper, che di notte è scuro. */
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-final,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-final .swa-text-link{color:#edf5ef}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-button:hover{background:#83d9b2}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-filters button[aria-pressed=true]{color:#08110e}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-play-circle{color:#153b32}
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-value-strip span,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-steps>div>span,
+html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-benefits article>span{color:#e4a28a}
 html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-hero-art,
 html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-feature-video,
 html[data-theme='dark'] :where(.swa-marketplace-scope) .swa-detail-reel,

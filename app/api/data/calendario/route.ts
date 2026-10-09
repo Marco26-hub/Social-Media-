@@ -9,6 +9,9 @@ import { demoContenuti } from '@/lib/demo-data'
 import { getTableColumns } from '@/lib/db-schema'
 import { toYmd } from '@/lib/publish/blotato-map'
 import { isLocalPreflightFailure } from '@/lib/calendar-recovery'
+import { matchesCalendarFilter } from '@/lib/calendar-filters'
+import { changeCalendarTime, type TimeEdit } from '@/lib/blotato-reschedule'
+import { CalendarScheduleError } from '@/lib/calendar-slot'
 
 // L'approvazione non innesca piu alcun montaggio (l'invio a Blotato e il render
 // avvengono solo dalle route di sincronizzazione). Il tetto resta alto perche la
@@ -159,7 +162,7 @@ export async function GET(request: Request) {
 
     if (isDemo() || !dbReady()) {
       let rows = demoContenuti
-      if (status && status !== 'tutti') rows = rows.filter((item) => item.status === status)
+      if (status && status !== 'tutti') rows = rows.filter((item) => matchesCalendarFilter(item, status))
       if (canale && canale !== 'tutti') rows = rows.filter((item) => item.canale === canale)
       if (formato && formato !== 'tutti') rows = rows.filter((item) => item.formato === formato)
       if (obiettivo && obiettivo !== 'tutti') rows = rows.filter((item) => item.obiettivo === obiettivo)
@@ -193,6 +196,14 @@ export async function GET(request: Request) {
         blotato_status = 'published'
         OR (status = 'PUBBLICATO' AND blotato_post_id IS NULL)
       )`)
+    } else if (status === 'ERRORI') {
+      where.push(`(status IN ('ERRORE','ERRORE_MANUALE') OR blotato_status = 'failed' OR NULLIF(errore_tecnico, '') IS NOT NULL)`)
+    } else if (status === 'NON_INVIATI') {
+      where.push(`(blotato_post_id IS NULL AND status NOT IN ('PUBBLICATO','ERRORE','NON_APPROVATO','ARCHIVIATO'))`)
+    } else if (status === 'VIDEO') {
+      where.push(`(media_type = 'video' OR formato IN ('reel','video','short','story'))`)
+    } else if (status === 'PREMIUM') {
+      where.push(`(obiettivo = 'trending' OR NULLIF(template_style, '') IS NOT NULL OR NULLIF(creative_brief, '') IS NOT NULL OR quality_level = 'high')`)
     } else {
       addFilter('status', status)
     }
@@ -242,12 +253,16 @@ export async function PATCH(request: Request) {
     if (!existingContent.length) {
       return NextResponse.json({ error: 'contenuto non trovato' }, { status: 404 })
     }
-    if (
-      (existingContent[0] as Record<string, unknown>).blotato_post_id
-      && ((body.data_pubblicazione && body.data_pubblicazione !== toYmd(existingContent[0].data_pubblicazione))
-        || (body.ora_pubblicazione && String(body.ora_pubblicazione).slice(0, 5) !== String(existingContent[0].ora_pubblicazione).slice(0, 5)))
-    ) {
-      return NextResponse.json({ error: 'contenuto già sincronizzato: verifica o modifica la programmazione su Blotato, senza reinviarlo' }, { status: 409 })
+    if ('data_pubblicazione' in body || 'ora_pubblicazione' in body) {
+      if (Object.keys(body).some(key => !['id', 'data_pubblicazione', 'ora_pubblicazione', 'dry_run', 'expected_schedule'].includes(key))) {
+        return NextResponse.json({ error: 'Salva data e ora separatamente dalle altre modifiche.' }, { status: 400 })
+      }
+      const result = await changeCalendarTime(cid, String(id), body as TimeEdit)
+      return NextResponse.json(result, { status: result.ok ? 200 : 502, headers: { 'Cache-Control': 'no-store' } })
+    }
+    const sent = existingContent[0].blotato_post_id || existingContent[0].blotato_post_url
+    if (sent && Object.keys(body).some(key => ['canale', 'formato', 'platform_account_id', 'hook', 'caption', 'cta', 'hashtag', 'reel_audio_url'].includes(key) || key.startsWith('link_media_'))) {
+      return NextResponse.json({ error: 'Contenuto già inviato: testo, media e destinazione sono protetti. Non creare un nuovo invio.' }, { status: 409 })
     }
 
     const fields: string[] = []
@@ -284,7 +299,10 @@ export async function PATCH(request: Request) {
       // l'utente preme "Riprova pubblicazione", pero, quel vecchio id impedirebbe
       // allo scheduler di acquisire il lock e il contenuto non verrebbe reinviato.
       // Azzera solo tentativi falliti, mai post scheduled/published.
-      if (isPublishRetry) {
+      if (isPublishRetry && existing.blotato_post_id) {
+        return NextResponse.json({ error: 'Invio remoto già presente: verifica l’esito originale prima di ogni nuovo tentativo. I riferimenti non vengono azzerati.' }, { status: 409 })
+      }
+      if (isPublishRetry && !existing.blotato_post_id) {
         for (const column of ['blotato_post_id', 'blotato_status', 'blotato_post_url', 'blotato_scheduled_at', 'blotato_sync_at']) {
           if (calendarioColumns.has(column)) fields.push(`${column} = NULL`)
         }
@@ -375,6 +393,7 @@ export async function PATCH(request: Request) {
       ...(skippedSchemaFields.length ? { schema_fallback: true, skipped_fields: skippedSchemaFields } : {}),
     })
   } catch (e) {
+    if (e instanceof CalendarScheduleError) return NextResponse.json({ error: e.message }, { status: e.status })
     return apiError(e)
   }
 }

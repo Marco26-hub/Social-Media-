@@ -10,6 +10,7 @@ import { STANDALONE_SERVICES, type StandaloneService } from '@/lib/standalone-se
 import { SWA_BLOG_ARTICLES } from '@/lib/swa-blog-content'
 import { SWA_BLOG_ARTICLES_EN } from '@/lib/swa-blog-content.en'
 import { VIDEO_PACCHETTI } from '@/lib/video-listino'
+import { SALA_NOTA_PREZZI } from '@/lib/ristoranti-listino'
 
 // /llms.txt
 //
@@ -44,6 +45,7 @@ const SERVIZI: Array<[string, string, string]> = [
   ['Ricerca clienti B2B', '/servizi/ricerca-clienti-b2b', `Fino a 30 aziende analizzate su fonti pubbliche verificate, ${PREZZI.b2b}. Nessun invio automatico.`],
   ['Rapportini di intervento', '/servizi/gestione-lavorazioni', 'Sito, applicazione di campo e pannello ufficio per rapporti di intervento con foto, ore e firma del cliente. Su preventivo.'],
   ['Automazione e gestionali', '/servizi/automazione-gestionali', 'Collegamento fra gestionale, CRM, moduli e archivi, e automazione dei passaggi manuali ricorrenti. Su preventivo.'],
+  ['Tavolo, gestionale ristoranti', '/servizi/gestionale-ristoranti', SALA_NOTA_PREZZI],
   ['Consulenza AI Act e GDPR', '/consulenza', `Consulenza legale con ${TITOLARE.partnerLegale}. ${PREZZO_INGRESSO.legale}.`],
 ]
 

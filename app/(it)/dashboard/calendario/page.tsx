@@ -10,10 +10,12 @@ import { preflightRow } from '@/lib/publish/preflight'
 import { toYmd } from '@/lib/publish/blotato-map'
 import { recoveryBlockReason } from '@/lib/calendar-recovery'
 import { calendarDisplayStatus } from '@/lib/calendar-display'
+import { matchesCalendarFilter, isCalendarError } from '@/lib/calendar-filters'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { demoContenuti } from '@/lib/demo-data'
 import PostPreview from '@/components/PostPreview'
+import PostScheduleEditor from '@/components/PostScheduleEditor'
 import { readGenerationGate } from '@/lib/generation-gates'
 import { readClienteId } from '@/lib/use-data'
 import { readAISettings, readApiError } from '@/lib/ai-client'
@@ -32,7 +34,7 @@ const CATEGORIE = [
   ['trending', 'Trending'],
   ['seo', 'SEO / Blog'],
 ]
-const STATI: string[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','NON_APPROVATO','IN_CODA','PUBBLICATO','ERRORE','ERRORE_MANUALE']
+const STATI: string[] = ['DA_APPROVARE','BOZZA','IDEA','APPROVATO','NON_APPROVATO','IN_CODA','PUBBLICATO','ERRORI','ERRORE','ERRORE_MANUALE','VIDEO','PREMIUM']
 const CANALE_ICON: Record<string, string> = {
   instagram: '📸', facebook: '🔵', tiktok: '🎵', pinterest: '📌', linkedin: '💼', threads: '🧵', x: '✖️', youtube_shorts: '▶️', blog: '📝'
 }
@@ -100,6 +102,7 @@ type PackageReconcile = {
   reconciled: number
   checked?: number
   unchecked?: number
+  deferred?: boolean
   remote_errors?: Array<{ id_contenuto: string; error: string }>
   summary: {
     included: number
@@ -279,6 +282,18 @@ function CalendarioInner() {
   const demo = useRuntimeDemo()
 
   const clienteId = readClienteId()
+  const activeClienteRef = useRef(clienteId)
+  activeClienteRef.current = clienteId
+  const reconcileInFlight = useRef(false)
+  const loadSequence = useRef(0)
+  const reconcileHandlerRef = useRef<(showMessage: boolean) => Promise<PackageReconcile | null>>(async () => null)
+  const [reconcileError, setReconcileError] = useState<string | null>(null)
+  const requestedFilter = searchParams.get('filter') || 'DA_APPROVARE'
+  useEffect(() => {
+    setFilter(requestedFilter)
+    setSelectedDay(null)
+    setCanale('tutti'); setFormato('tutti'); setCategoria('tutti')
+  }, [requestedFilter])
 
   useEffect(() => {
     fetch('/api/data/brand').then(r => r.ok ? r.json() : null).then(setBrand).catch(() => setBrand(null))
@@ -313,16 +328,12 @@ function CalendarioInner() {
   }, [filterStatus, filterCanale, filterFormato, filterCategoria, searchText, selectedDay, clienteId])
 
   const fetchData = useCallback(async () => {
+    const sequence = ++loadSequence.current
+    const current = () => sequence === loadSequence.current && activeClienteRef.current === clienteId
     setLoading(true)
     if (demo) {
       let filtered = demoData
-      if (filterStatus === 'IN_CODA') {
-        filtered = filtered.filter(c => ['scheduled', 'in-progress'].includes(String(c.blotato_status || '').toLowerCase()))
-      } else if (filterStatus === 'PUBBLICATO') {
-        filtered = filtered.filter(c => c.blotato_status === 'published' || (c.status === 'PUBBLICATO' && !c.blotato_post_id))
-      } else if (filterStatus !== 'tutti') {
-        filtered = filtered.filter(c => c.status === filterStatus)
-      }
+      filtered = filtered.filter(c => matchesCalendarFilter(c, filterStatus))
       if (filterCanale !== 'tutti') filtered = filtered.filter(c => c.canale === filterCanale)
       if (filterFormato !== 'tutti') filtered = filtered.filter(c => c.formato === filterFormato)
       if (filterCategoria !== 'tutti') filtered = filtered.filter(c => c.obiettivo === filterCategoria)
@@ -355,22 +366,26 @@ function CalendarioInner() {
         fetch(`/api/data/calendario?${params.toString()}`),
         fetch(`/api/data/calendario?${overviewParams.toString()}`),
       ])
+      const data = res.ok ? await res.json() : null
+      const overview = overviewRes.ok ? await overviewRes.json() : null
+      const error = res.ok ? null : await readApiError(res, 'Errore nel caricamento dei contenuti')
+      if (!current()) return
       if (res.ok) {
-        const data = await res.json()
         setContenuti(data as Contenuto[])
       } else {
         // NON fingere "nessun contenuto" su un errore server: distingui vuoto da guasto.
         setContenuti([])
-        setLoadError(await readApiError(res, 'Errore nel caricamento dei contenuti'))
+        setLoadError(error)
       }
       if (overviewRes.ok) {
-        setOverviewContenuti(await overviewRes.json() as Contenuto[])
+        setOverviewContenuti(overview as Contenuto[])
       }
     } catch (e) {
+      if (!current()) return
       setContenuti([])
       setLoadError((e as Error)?.message || 'Errore di rete nel caricamento dei contenuti')
     }
-    setLoading(false)
+    if (current()) setLoading(false)
   }, [filterStatus, filterCanale, filterFormato, filterCategoria, searchText, demo, demoData, clienteId])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -391,6 +406,7 @@ function CalendarioInner() {
       const r = await fetch(`/api/data/calendario?cliente_id=${encodeURIComponent(clienteId)}`)
       if (!r.ok) return
       const all = await r.json() as Contenuto[]
+      if (activeClienteRef.current !== clienteId) return
       const found = all.find(c => c.id_contenuto === idContenuto)
       if (found) setSelected(found)
     } catch { /* noop */ }
@@ -680,6 +696,9 @@ function CalendarioInner() {
 
   // Legge lo stato remoto senza creare un nuovo invio.
   async function reconcileBlotato(showMessage = true): Promise<PackageReconcile | null> {
+    if (reconcileInFlight.current || demo) return null
+    const cid = clienteId
+    reconcileInFlight.current = true
     setReconciling(true)
     if (showMessage) setSyncMsg(null)
     try {
@@ -687,25 +706,66 @@ function CalendarioInner() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
+        signal: AbortSignal.timeout(85000),
       })
       if (!res.ok) throw new Error(await readApiError(res, 'Verifica Blotato fallita'))
       const data = await res.json() as PackageReconcile
+      if (activeClienteRef.current !== cid) return null
       setPackageReconcile(data)
+      setReconcileError(data.remote_errors?.length ? `${data.remote_errors.length} stati non confermati: nessun reinvio effettuato.` : null)
       if (showMessage) {
         const errorNote = data.remote_errors?.length ? ` ${data.remote_errors.length} stati non verificati.` : ''
         setSyncMsg({
-          type: data.remote_errors?.length ? 'err' : 'ok',
-          text: `Blotato verificato: ${data.summary.published} pubblicati, ${data.summary.queued} in coda, ${data.summary.failed} falliti.${errorNote}`,
+          type: data.remote_errors?.length ? 'err' : data.deferred || data.unchecked ? 'warn' : 'ok',
+          text: data.deferred ? 'Verifica già in corso o appena eseguita: controllo rinviato al prossimo ciclo, nessun reinvio.'
+            : `Blotato verificato: ${data.summary.published} pubblicati, ${data.summary.queued} in coda, ${data.summary.failed} falliti.${errorNote}`,
         })
       }
       await fetchData()
       return data
     } catch (e) {
-      if (showMessage) setSyncMsg({ type: 'err', text: (e as Error).message })
+      if (activeClienteRef.current === cid) {
+        setReconcileError((e as Error).message)
+        if (showMessage) setSyncMsg({ type: 'err', text: (e as Error).message })
+      }
       return null
     } finally {
+      reconcileInFlight.current = false
       setReconciling(false)
     }
+  }
+  reconcileHandlerRef.current = reconcileBlotato
+
+  // Il ritorno degli stati non dipende più dal click manuale o da un webhook.
+  // La verifica non crea post; il cron copre anche i periodi a browser chiuso.
+  useEffect(() => {
+    if (demo) return
+    let lastCheck = 0
+    const check = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - lastCheck < 90000) return
+      if (reconcileInFlight.current) return
+      lastCheck = Date.now()
+      void reconcileHandlerRef.current(false)
+    }
+    setPackageReconcile(null); setReconcileError(null)
+    check()
+    const interval = window.setInterval(check, 120000)
+    document.addEventListener('visibilitychange', check)
+    return () => { window.clearInterval(interval); document.removeEventListener('visibilitychange', check) }
+  }, [clienteId, demo])
+
+  function showCardFilter(filter: string, day: string | null = null) {
+    setFilter(filter); setSelectedDay(day)
+    setCanale('tutti'); setFormato('tutti'); setCategoria('tutti'); setSearchText('')
+    setSelectedIds(new Set()); setVista('lista')
+  }
+
+  function scheduleSaved(c: Contenuto, day: string, time: string) {
+    if (demo) {
+      const update = (items: Contenuto[]) => items.map(item => item.id === c.id ? { ...item, data_pubblicazione: day, ora_pubblicazione: time } : item)
+      setDemoData(update)
+      setSelected(current => current?.id === c.id ? { ...current, data_pubblicazione: day, ora_pubblicazione: time } : current)
+    } else { void fetchData(); if (selected?.id === c.id) void refreshSelected(c.id_contenuto) }
   }
 
   // Controllo finale del ciclo: guarda il piano COME INSIEME (copertura, quattro
@@ -842,11 +902,12 @@ function CalendarioInner() {
       const restoNote = data.rimasti
         ? ` ⏳ Restano ${data.rimasti} contenuti da lavorare: premi di nuovo "Sincronizza Blotato" per continuare.`
         : ''
+      const skipNote = data.skipped ? ` ${data.skipped} non inviati: ${(data.skipped_reasons || []).map((item: { id_contenuto: string; reason: string }) => `${item.id_contenuto}: ${item.reason}`).join('; ') || 'verifica i blocchi del calendario'}.` : ''
       setSyncMsg({
-        type: data.failed ? 'err' : (data.dry_run || data.visual_pending || data.visual_review || data.rimasti) ? 'warn' : 'ok',
+        type: data.failed ? 'err' : (data.skipped || data.dry_run || data.visual_pending || data.visual_review || data.rimasti) ? 'warn' : 'ok',
         text: data.candidates === 0
           ? 'Nessun contenuto approvato da sincronizzare.'
-          : `${data.synced} contenuti inviati a Blotato${failNote}.${dryNote}${visualNote}${pendingNote}${restoNote}`,
+          : `${data.synced} contenuti inviati a Blotato${failNote}.${dryNote}${visualNote}${pendingNote}${restoNote}${skipNote}`,
       })
       // Dopo l'invio rileggi Blotato: scheduled non equivale a pubblicato. Questo
       // aggiorna anche gli invii dei giorni scorsi rimasti senza webhook.
@@ -1334,7 +1395,7 @@ function CalendarioInner() {
     d.setDate(d.getDate() - d.getDay() + 1 + i)
     return d.toISOString().split('T')[0]
   })
-  const todayIso = new Date().toISOString().split('T')[0]
+  const todayIso = new Intl.DateTimeFormat('en-CA', { timeZone: clienteTz }).format(new Date())
   const calendarItems = [...contenuti].sort((a, b) => {
     const left = `${a.data_pubblicazione || '9999-12-31'} ${a.ora_pubblicazione || '99:99'}`
     const right = `${b.data_pubblicazione || '9999-12-31'} ${b.ora_pubblicazione || '99:99'}`
@@ -1346,7 +1407,7 @@ function CalendarioInner() {
   const stats = {
     total: contenuti.length,
     daApprovare: overviewContenuti.filter(c => c.status === 'DA_APPROVARE').length,
-    approvati: overviewContenuti.filter(c => c.status === 'APPROVATO').length,
+    approvati: overviewContenuti.filter(c => matchesCalendarFilter(c, 'APPROVATO')).length,
     nonApprovati: overviewContenuti.filter(c => c.status === 'NON_APPROVATO').length,
     // Un contenuto inviato a Blotato conta come pubblicato solo quando Blotato
     // lo conferma. Lo status locale passa a PUBBLICATO gia al momento della
@@ -1355,7 +1416,7 @@ function CalendarioInner() {
     pubblicati: overviewContenuti.filter(c => c.blotato_status === 'published'
       || (c.status === 'PUBBLICATO' && !c.blotato_post_id)).length,
     inCoda: overviewContenuti.filter(c => c.blotato_status === 'scheduled' || c.blotato_status === 'in-progress').length,
-    errori: overviewContenuti.filter(c => c.status === 'ERRORE' || c.status === 'ERRORE_MANUALE' || c.blotato_status === 'failed' || Boolean(c.errore_tecnico)).length,
+    errori: overviewContenuti.filter(isCalendarError).length,
     oggi: overviewContenuti.filter(c => c.data_pubblicazione === todayIso).length,
     video: overviewContenuti.filter(c => c.media_type === 'video' || ['reel', 'video', 'short', 'story'].includes(c.formato)).length,
     trend: overviewContenuti.filter(c => c.obiettivo === 'trending' || c.template_style || c.creative_brief || c.quality_level === 'high').length,
@@ -1460,21 +1521,23 @@ function CalendarioInner() {
           </div>
           <div className="mt-6 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
             {[
-              { label: 'Da approvare', value: stats.daApprovare, tone: 'text-amber-200' },
-              { label: 'Oggi', value: stats.oggi, tone: 'text-brand-100' },
-              { label: 'Approvati', value: stats.approvati, tone: 'text-blue-200' },
-              { label: 'Non approvati', value: stats.nonApprovati, tone: 'text-rose-200' },
-              { label: 'Pubblicati', value: stats.pubblicati, tone: 'text-emerald-200' },
-              { label: 'In coda', value: stats.inCoda, tone: 'text-sky-200' },
-              { label: 'Errori', value: stats.errori, tone: 'text-red-200' },
-              { label: 'Reel/Video', value: stats.video, tone: 'text-fuchsia-200' },
-              { label: 'Trend/Premium', value: stats.trend, tone: 'text-violet-200' },
-              { label: 'Canali', value: channelEntries.length, tone: 'text-slate-100' },
+              { label: 'Da approvare', value: stats.daApprovare, tone: 'text-amber-200', filter: 'DA_APPROVARE' },
+              { label: 'Oggi', value: stats.oggi, tone: 'text-brand-100', filter: 'tutti', day: todayIso },
+              { label: 'Approvati', value: stats.approvati, tone: 'text-blue-200', filter: 'APPROVATO' },
+              { label: 'Non approvati', value: stats.nonApprovati, tone: 'text-rose-200', filter: 'NON_APPROVATO' },
+              { label: 'Pubblicati', value: stats.pubblicati, tone: 'text-emerald-200', filter: 'PUBBLICATO' },
+              { label: 'In coda', value: stats.inCoda, tone: 'text-sky-200', filter: 'IN_CODA' },
+              { label: 'Errori', value: stats.errori, tone: 'text-red-200', filter: 'ERRORI' },
+              { label: 'Reel/Video', value: stats.video, tone: 'text-fuchsia-200', filter: 'VIDEO' },
+              { label: 'Trend/Premium', value: stats.trend, tone: 'text-violet-200', filter: 'PREMIUM' },
+              { label: 'Canali', value: channelEntries.length, tone: 'text-slate-100', filter: 'tutti' },
             ].map(item => (
-              <div key={item.label} className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+              <button key={item.label} type="button" onClick={() => showCardFilter(item.filter, item.day || null)}
+                aria-label={`Mostra ${item.label}: ${item.value}`} aria-pressed={filterStatus === item.filter && selectedDay === (item.day || null)}
+                className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10 text-left hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
                 <p className={`text-xl font-black ${item.tone}`}>{item.value}</p>
                 <p className="text-[10px] uppercase tracking-wide text-slate-300">{item.label}</p>
-              </div>
+              </button>
             ))}
           </div>
           {channelEntries.length > 0 && (
@@ -1500,6 +1563,7 @@ function CalendarioInner() {
           {syncMsg.text}
         </div>
       )}
+      {reconcileError && <p role="alert" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">Aggiornamento stati Blotato: {reconcileError} I riferimenti originali restano protetti.</p>}
 
       {shiftOpen && (
         <div className="mb-4 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
@@ -1677,12 +1741,12 @@ function CalendarioInner() {
             {[
               { label: 'Pubblicati confermati', value: packageReconcile.summary.published, tone: 'text-emerald-700', filter: 'PUBBLICATO' },
               { label: 'In coda Blotato', value: packageReconcile.summary.queued, tone: 'text-blue-700', filter: 'IN_CODA' },
-              { label: 'Non ancora inviati', value: packageReconcile.summary.not_sent, tone: 'text-amber-700', filter: 'DA_APPROVARE' },
-              { label: 'Falliti', value: packageReconcile.summary.failed, tone: 'text-red-700', filter: 'ERRORE' },
+              { label: 'Non ancora inviati', value: packageReconcile.summary.not_sent, tone: 'text-amber-700', filter: 'NON_INVIATI' },
+              { label: 'Falliti', value: packageReconcile.summary.failed, tone: 'text-red-700', filter: 'ERRORI' },
               { label: 'Mancano da creare', value: packageReconcile.summary.missing_to_create, tone: 'text-violet-700', filter: 'tutti' },
               { label: 'Mancano da pubblicare', value: packageReconcile.summary.missing_to_publish, tone: 'text-fuchsia-700', filter: 'tutti' },
             ].map(item => (
-              <button key={item.label} type="button" onClick={() => setFilter(item.filter)} className="min-h-20 bg-white p-3 text-left hover:bg-gray-50" title={`Filtra: ${item.label}`}>
+              <button key={item.label} type="button" onClick={() => showCardFilter(item.filter)} className="min-h-20 bg-white p-3 text-left hover:bg-gray-50" title={`Filtra: ${item.label}`}>
                 <p className={`text-xl font-black ${item.tone}`}>{item.value}</p>
                 <p className="text-[10px] font-medium uppercase text-gray-500">{item.label}</p>
               </button>
@@ -1692,7 +1756,7 @@ function CalendarioInner() {
             <div className="border-t px-4 py-2 text-xs text-amber-800">
               {packageReconcile.summary.extra_planned > 0 && <span>{packageReconcile.summary.extra_planned} contenuti pianificati oltre quota. </span>}
               {Boolean(packageReconcile.remote_errors?.length) && <span>{packageReconcile.remote_errors?.length} stati non letti da Blotato; riprova la verifica. </span>}
-              {Boolean(packageReconcile.unchecked) && <span>{packageReconcile.unchecked} contenuti oltre il limite del controllo singolo.</span>}
+              {Boolean(packageReconcile.unchecked) && <span>{packageReconcile.unchecked} controlli rinviati al prossimo ciclo (budget o verifica concorrente).</span>}
             </div>
           )}
         </div>
@@ -1793,7 +1857,7 @@ function CalendarioInner() {
           {['tutti', ...STATI].map(s => (
             <button
               key={s}
-              onClick={() => setFilter(s)}
+              onClick={() => showCardFilter(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 filterStatus === s
                   ? 'bg-brand-600 text-white'
@@ -2116,10 +2180,8 @@ function CalendarioInner() {
                         </>
                       )}
                     </span>
-                    <span className="text-xs text-gray-600 ml-auto inline-flex items-center gap-1.5 rounded-full bg-gray-50 border border-gray-200 px-2 py-1 font-medium">
-                      <span>{formatDateLabel(c.data_pubblicazione)}</span>
-                      <span className="text-gray-300">·</span>
-                      <span className="font-mono">{formatTimeLabel(c.ora_pubblicazione)}</span>
+                    <span className="ml-auto">
+                      <PostScheduleEditor post={c} demo={demo} onSaved={(day, time) => scheduleSaved(c, day, time)} />
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
@@ -2282,27 +2344,9 @@ function CalendarioInner() {
                 <p className="text-sm text-gray-500">
                   {selected.canale} · {selected.formato} · {formatCategoryLabel(selected.obiettivo)} · {formatDateLabel(selected.data_pubblicazione)} alle {formatTimeLabel(selected.ora_pubblicazione)}
                 </p>
-                {!selected.blotato_post_id
-                  && selected.blotato_status !== 'scheduled'
-                  && selected.blotato_status !== 'published'
-                  && !['PUBBLICATO', 'ARCHIVIATO'].includes(selected.status)
-                  && (
-                    <label className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-gray-600">
-                      <CalendarDays className="h-4 w-4" />
-                      <input
-                        type="date"
-                        value={toYmd(selected.data_pubblicazione)}
-                        aria-label="Sposta contenuto a un'altra data"
-                        className="border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700"
-                        onChange={async event => {
-                          const newDate = event.target.value
-                          if (newDate && await handleDrop(selected, newDate)) {
-                            setSelected(current => current ? { ...current, data_pubblicazione: newDate } : current)
-                          }
-                        }}
-                      />
-                    </label>
-                  )}
+                <div className="mt-2">
+                  <PostScheduleEditor key={selected.id} post={selected} demo={demo} onSaved={(day, time) => scheduleSaved(selected, day, time)} />
+                </div>
                 {selected.quality_level && (
                   <span className="inline-flex mt-2 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-violet-100 text-violet-700">
                     Qualità {selected.quality_level}

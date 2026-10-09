@@ -6,7 +6,7 @@ import { TITOLARE } from '@/lib/legal-config'
 import { SITE_URL } from '@/lib/site-config'
 import styles from '@/components/legal.module.css'
 
-const META_TITLE = 'Cookie Policy — Social Web Automation'
+const META_TITLE = 'Cookie Policy (English) — Social Web Automation'
 const META_DESCRIPTION =
   'Which cookies this site uses, which it does not, and how to change your mind at any time. No third-party script is loaded on this website.'
 

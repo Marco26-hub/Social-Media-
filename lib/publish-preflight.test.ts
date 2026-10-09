@@ -6,6 +6,7 @@ import { preflightRow } from './publish/preflight'
 const baseStory = {
   formato: 'story',
   hook: 'Una storia',
+  caption: 'Una caption completa per il test di pubblicazione.',
   data_pubblicazione: '2099-08-31',
   ora_pubblicazione: '20:00',
   link_media_1: 'https://example.com/frame-01.png',

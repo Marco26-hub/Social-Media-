@@ -13,11 +13,12 @@ export async function getSession() {
 export async function requireAuth() {
   const session = await getSession()
   if (!session?.user?.id) {
-    if (isDemo() || !dbReady()) {
+    if (isDemo()) {
       return { id: 'demo-user', email: 'demo@social-automation.local', name: 'Admin Demo' }
     }
     throw new Error('Non autenticato')
   }
+  if (!isDemo() && !dbReady()) throw new Error('Database non disponibile')
   return session.user as { id: string; email: string; name: string }
 }
 
