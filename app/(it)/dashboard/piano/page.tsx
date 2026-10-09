@@ -25,6 +25,7 @@ import {
 import { compareCampaignFolderGroups, folderGroupKey, parseCampaignFolderFile, type CampaignFolderAsset } from '@/lib/campaign-folder'
 import { BUSINESS_CATEGORY_OPTIONS, resolveBusinessCategory, type BusinessCategoryId } from '@/lib/business-categories'
 import { calculateCampaignAssetRequirements } from '@/lib/campaign-asset-requirements'
+import { campaignToday, validateCampaignStart } from '@/lib/campaign-start-date'
 
 type QualitySelection = 'auto' | ContentQuality
 // `tag` = marcatura manuale ("questa foto è del carosello, questo MP4 del reel").
@@ -183,6 +184,8 @@ function SemaforoMedia({ titolo, pulsante, requisiti, verifica, caricati }: {
 
 export default function PianoPage() {
   const [periodo, setPeriodo] = useState<'settimanale' | 'mensile'>('settimanale')
+  const [publicationStartDate, setPublicationStartDate] = useState('')
+  const [clienteTz, setClienteTz] = useState('Europe/Rome')
   const [piattaforme, setPiattaforme] = useState<PlatformKey[]>(['instagram', 'facebook'])
   const [obiettivo, setObiettivo] = useState('mix')
   const [businessCategory, setBusinessCategory] = useState<BusinessCategoryId>('auto')
@@ -269,6 +272,8 @@ export default function PianoPage() {
   // e alimenta il calcolo del fabbisogno media (quante foto/MP4 servono).
   useEffect(() => {
     let alive = true
+    setPublicationStartDate('')
+    setClienteTz('Europe/Rome')
     async function loadPkg() {
       if (!clienteId) { setClientePkg(null); setClienteQuota(null); setClienteSettore(''); setClienteNome(''); return }
       try {
@@ -280,6 +285,7 @@ export default function PianoPage() {
           setClienteQuota(Number.isFinite(quota) && quota > 0 ? quota : null)
           setClienteSettore(typeof c?.settore === 'string' ? c.settore : '')
           setClienteNome(typeof c?.nome === 'string' ? c.nome : '')
+          setClienteTz(typeof c?.timezone === 'string' ? c.timezone : 'Europe/Rome')
         }
       } catch { if (alive) { setClientePkg(null); setClienteQuota(null) } }
     }
@@ -706,6 +712,8 @@ export default function PianoPage() {
   async function genera(faseArg?: 1 | 2) {
     setConfirmOpen(false)
     setMsg(null)
+    try { validateCampaignStart(publicationStartDate, clienteTz) }
+    catch (error) { setMsg({ type: 'err', text: (error as Error).message }); return }
 
     // Accetta SOLO 1 o 2: se qualcuno ripassa `genera` come handler React,
     // l'evento del click non deve finire nel body (JSON circolare).
@@ -716,7 +724,7 @@ export default function PianoPage() {
       return
     }
 
-    const aiSettings = readAISettings()
+    const aiSettings = { ...readAISettings(), start_date: publicationStartDate || undefined }
     const faseLabel = fase ? ` · fase ${fase} (sett. ${fase === 1 ? '1-2' : '3-4'})` : ''
     // Fase mensile: metà settimane per volta → richiesta più corta, meno rischio timeout.
     const result = await gen.run<{
@@ -793,12 +801,14 @@ export default function PianoPage() {
   async function generaPacchetto(faseArg?: 1 | 2) {
     setMsg(null)
     if (!clientePkg) return
+    try { validateCampaignStart(publicationStartDate, clienteTz) }
+    catch (error) { setMsg({ type: 'err', text: (error as Error).message }); return }
     if (!demo && !clienteId) { setMsg({ type: 'err', text: 'Cliente non selezionato' }); return }
     if (piattaforme.length > clientePkg.social) {
       setMsg({ type: 'err', text: `Il pacchetto ${clientePkg.nome} include fino a ${clientePkg.social} social: riduci la selezione.` })
       return
     }
-    const aiSettings = readAISettings()
+    const aiSettings = { ...readAISettings(), start_date: publicationStartDate || undefined }
     // La fase DEVE comparire nella barra e nell'errore: senza, "Piano mensile ·
     // pacchetto Crescita" era identico per il mese intero e per le sole settimane
     // 1-2, e da un errore non si capiva quale dei due run fosse fallito.
@@ -1273,6 +1283,14 @@ export default function PianoPage() {
           </div>
 
           <div className="mt-4 border-y border-gray-200 py-3">
+            <label className="mb-3 block text-xs font-semibold text-gray-950">
+              Data di inizio pubblicazione
+              <input type="date" value={publicationStartDate} min={campaignToday(clienteTz)}
+                onChange={event => setPublicationStartDate(event.target.value)}
+                disabled={uploadingImages || gen.isRunning('piano') || gen.isRunning('piano-pacchetto') || gen.isRunning('piano-fase-1') || gen.isRunning('piano-fase-2')}
+                className="mt-1 block rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-normal" />
+              <span className="mt-1 block text-[11px] font-normal text-gray-500">Partenza della strategia nel fuso {clienteTz}. Settimane e sequenza restano invariate; i contenuti restano da approvare. Se lasci vuoto, resta la partenza automatica attuale.</span>
+            </label>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-gray-950">Cartella campagna SWA</p>

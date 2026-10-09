@@ -2,16 +2,19 @@ import path from 'path'
 import { NextResponse } from 'next/server'
 import { requireClienteId } from '@/lib/auth-utils'
 import { apiError } from '@/lib/api-error'
-import { dbReady, q } from '@/lib/db'
+import { dbReady, q, withTransaction } from '@/lib/db'
+import { CalendarScheduleError, lockCalendarChannel } from '@/lib/calendar-slot'
 import { getTableColumns, filterExistingColumnPairs } from '@/lib/db-schema'
 import { insertCalendarioRow } from '@/lib/calendario-insert'
 import { isDemo } from '@/lib/demo'
+import { validateCampaignStart } from '@/lib/campaign-start-date'
 import { isStorageConfigured, listFromStorage, publicUrlForKey } from '@/lib/storage'
 import {
   canonicalAssetContentKey,
   canonicalDbContentKey,
   publicationTime,
   validateReadyCampaign,
+  readyCampaignWithStart,
   type ReadyCampaignContent,
   type ReadyCampaignManifest,
 } from '@/lib/ready-campaign'
@@ -38,6 +41,7 @@ type StoredAsset = {
 }
 
 type ImportBody = {
+  start_date?: string
   manifest?: unknown
   campaign_key?: string
   dry_run?: boolean
@@ -107,7 +111,7 @@ function canonicalScore(row: Record<string, unknown>, expectedHook: string): num
   return score
 }
 
-async function updateRow(id: string, clienteId: string, values: Record<string, unknown>, columns: Set<string>) {
+async function updateRow(id: string, clienteId: string, values: Record<string, unknown>, columns: Set<string>, query: typeof q) {
   const entries = Object.entries(values).filter(([key]) => columns.has(key))
   if (!entries.length) return
   const params: unknown[] = [id, clienteId]
@@ -116,7 +120,7 @@ async function updateRow(id: string, clienteId: string, values: Record<string, u
     return `${key} = $${params.length}`
   })
   if (columns.has('updated_at')) fields.push('updated_at = now()')
-  await q(`UPDATE calendario SET ${fields.join(', ')} WHERE id = $1 AND cliente_id = $2`, params)
+  await query(`UPDATE calendario SET ${fields.join(', ')} WHERE id = $1 AND cliente_id = $2`, params)
 }
 
 export async function POST(request: Request) {
@@ -125,11 +129,20 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({})) as ImportBody
     const validation = validateReadyCampaign(body.manifest)
     if (!validation.manifest) return NextResponse.json({ error: validation.errors.join(' ') }, { status: 400 })
-    const manifest = validation.manifest
+    const clients = dbReady() && !isDemo() ? await q('SELECT * FROM clienti WHERE id = $1 LIMIT 1', [clienteId]) : []
+    let startDate: string | undefined
+    try {
+      startDate = validateCampaignStart(body.start_date, String(clients[0]?.timezone || 'Europe/Rome'))
+    } catch (error) {
+      return NextResponse.json({ error: (error as Error).message }, { status: 400 })
+    }
+    const manifest = readyCampaignWithStart(validation.manifest, startDate)
+    const dates = manifest.contents.map(content => content.date).sort()
+    const dateRange = { start_date: dates[0], end_date: dates[dates.length - 1] }
     const dryRun = body.dry_run !== false
 
     if (isDemo() || !dbReady()) {
-      return NextResponse.json({ ok: true, demo: true, applicato: false, month: manifest.contents[0].date.slice(0, 7) })
+      return NextResponse.json({ ok: false, demo: true, applicato: false, ...dateRange, month: dates[0].slice(0, 7), concepts: manifest.contents.length, publications: manifest.contents.length * 2, dates: manifest.contents.map(content => ({ order: content.order, content_key: content.content_key, date: content.date })), problems: ['Anteprima non applicabile: database non configurato.'] })
     }
     if (!isStorageConfigured()) return NextResponse.json({ error: 'Storage media non configurato.' }, { status: 503 })
 
@@ -149,7 +162,8 @@ export async function POST(request: Request) {
 
     const locked = existing.filter(row =>
       Boolean(row.blotato_post_id || row.publish_lock_id)
-      || ['scheduled', 'published'].includes(String(row.blotato_status || '').toLowerCase()),
+      || Boolean(String(row.blotato_status || '').trim())
+      || ['PUBBLICATO', 'IN_CODA', 'IN_PUBBLICAZIONE'].includes(String(row.status || '').toUpperCase()),
     )
     if (locked.length) {
       return NextResponse.json({
@@ -176,7 +190,17 @@ export async function POST(request: Request) {
     }))
 
     const problems: string[] = []
+    const occupied = new Set<string>()
     for (const slot of slots) {
+      const time = String(slot.canonical?.ora_pubblicazione || publicationTime(slot.platform, slot.content.format)).slice(0, 5)
+      const key = `${slot.platform}|${slot.content.date}|${time}`
+      if (occupied.has(key)) problems.push(`Più contenuti nello stesso slot ${key}: correggi gli orari prima dell’importazione.`)
+      occupied.add(key)
+      const collision = await q(`SELECT id_contenuto FROM calendario WHERE cliente_id = $1 AND canale = $2
+        AND data_pubblicazione = $3::date AND date_trunc('minute', ora_pubblicazione::interval) = $4::time::interval
+        AND id <> ALL($5::uuid[]) AND status NOT IN ('ARCHIVIATO','NON_APPROVATO') LIMIT 1`,
+        [clienteId, slot.platform, slot.content.date, time, existing.map(row => row.id)])
+      if (collision.length) problems.push(`Slot occupato su ${slot.platform} da ${collision[0].id_contenuto}: scegli un’altra data di partenza.`)
       const expected = Math.max(1, Math.min(Number(slot.content.media_count || 1), 10))
       if (slot.visuals.length < expected) problems.push(`${slot.platform}/${slot.content.content_key}: ${slot.visuals.length}/${expected} media`)
       if (/^(reel|story)$/.test(slot.content.format) && slot.audio.length !== 1) {
@@ -190,6 +214,7 @@ export async function POST(request: Request) {
       campaign_cycle_id: manifest.campaign_cycle_id,
       campaign_key: campaignKey,
       month,
+      ...dateRange,
       concepts: manifest.contents.length,
       publications: slots.length,
       to_update: slots.filter(slot => slot.canonical).length,
@@ -205,6 +230,24 @@ export async function POST(request: Request) {
     }
 
     const columns = await getTableColumns('calendario')
+    const removedDuplicates = await withTransaction(async query => {
+      // Same locks as single-post scheduling. Recheck under row locks so a
+      // concurrent sender cannot turn a previewed draft into a sent post.
+      for (const platform of ['facebook', 'instagram']) await lockCalendarChannel(query, clienteId, platform)
+      const fresh = await query('SELECT * FROM calendario WHERE cliente_id = $1 AND campaign_content_key LIKE $2 FOR UPDATE', [clienteId, `${campaignKey}__%`])
+      if (fresh.length !== existing.length || fresh.some(row => !existing.some(old => old.id === row.id && String(old.updated_at) === String(row.updated_at)) || row.blotato_post_id || row.publish_lock_id || String(row.blotato_status || '').trim() || ['PUBBLICATO', 'IN_CODA', 'IN_PUBBLICAZIONE'].includes(String(row.status || '').toUpperCase()))) {
+        throw new CalendarScheduleError('Il ciclo è cambiato o contiene invii protetti: ripeti l’anteprima.')
+      }
+      const intents = await query(`SELECT entity_id FROM integration_events WHERE cliente_id = $1 AND provider = 'blotato'
+        AND event_type = 'post_submission' AND status IN ('processing','processed') AND entity_id = ANY($2::text[]) LIMIT 1`, [clienteId, fresh.map(row => String(row.id))])
+      if (intents.length) throw new CalendarScheduleError('Ripristino bloccato: un invio Blotato è in corso o già accettato. Verifica gli stati prima di importare.')
+      for (const slot of slots) {
+        const collision = await query(`SELECT id_contenuto FROM calendario WHERE cliente_id = $1 AND canale = $2
+          AND data_pubblicazione = $3::date AND date_trunc('minute', ora_pubblicazione::interval) = $4::time::interval
+          AND id <> ALL($5::uuid[]) AND status NOT IN ('ARCHIVIATO','NON_APPROVATO') LIMIT 1`,
+          [clienteId, slot.platform, slot.content.date, slot.canonical?.ora_pubblicazione || publicationTime(slot.platform, slot.content.format), existing.map(row => row.id)])
+        if (collision.length) throw new CalendarScheduleError(`Slot occupato su ${slot.platform} da ${collision[0].id_contenuto}: scegli un’altra data di partenza.`)
+      }
     for (const slot of slots) {
       const media = slot.visuals.slice(0, 10).map(asset => asset.url)
       const values: Record<string, unknown> = {
@@ -241,24 +284,27 @@ export async function POST(request: Request) {
       for (let index = 0; index < 10; index++) values[`link_media_${index + 1}`] = media[index] || null
 
       if (slot.canonical) {
-        await updateRow(String(slot.canonical.id), clienteId, values, columns)
+        await updateRow(String(slot.canonical.id), clienteId, values, columns, query)
       } else {
         const idContenuto = `CR${Date.now().toString(36).toUpperCase()}_${slot.content.order}_${slot.platform === 'instagram' ? 'IG' : 'FB'}`
         const entries = Object.entries({ cliente_id: clienteId, id_contenuto: idContenuto, ...values })
         const filtered = filterExistingColumnPairs(entries.map(([key]) => key), entries.map(([, value]) => value), columns)
-        await insertCalendarioRow(filtered.columns, filtered.values)
+        await insertCalendarioRow(filtered.columns, filtered.values, query)
       }
     }
 
     let removedDuplicates = 0
     if (body.remove_duplicates && duplicateRows.length) {
       const ids = duplicateRows.map(row => String(row.id)).filter(Boolean)
-      const removed = await q('DELETE FROM calendario WHERE cliente_id = $1 AND id = ANY($2::uuid[]) AND blotato_post_id IS NULL AND publish_lock_id IS NULL RETURNING id', [clienteId, ids])
+      const removed = await query('DELETE FROM calendario WHERE cliente_id = $1 AND id = ANY($2::uuid[]) AND blotato_post_id IS NULL AND publish_lock_id IS NULL RETURNING id', [clienteId, ids])
       removedDuplicates = removed.length
     }
+    return removedDuplicates
+    })
 
     return NextResponse.json({ ...summary, applicato: true, removed_duplicates: removedDuplicates })
   } catch (error) {
+    if (error instanceof CalendarScheduleError) return NextResponse.json({ error: error.message }, { status: error.status })
     return apiError(error)
   }
 }

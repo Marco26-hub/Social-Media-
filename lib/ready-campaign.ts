@@ -1,3 +1,5 @@
+import { isCalendarDate, moveCampaignDates } from '@/lib/campaign-start-date'
+
 export type ReadyCampaignCopy = {
   hook?: string
   caption?: string
@@ -27,7 +29,6 @@ export type ReadyCampaignManifest = {
   contents: ReadyCampaignContent[]
 }
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const CONTENT_KEY_RE = /^(reel|post|story|carousel)_([0-9]{2})$/
 
 export function canonicalDbContentKey(contentKey: string): string {
@@ -54,7 +55,7 @@ export function validateReadyCampaign(value: unknown): { manifest?: ReadyCampaig
     if (seen.has(content.content_key)) errors.push(`${label}: content_key duplicato (${content.content_key}).`)
     seen.add(content.content_key)
     if (!Number.isInteger(content.week) || content.week < 1 || content.week > 5) errors.push(`${label}: week non valida.`)
-    if (!DATE_RE.test(String(content.date || ''))) errors.push(`${label}: date non valida.`)
+    if (!isCalendarDate(content.date)) errors.push(`${label}: date non valida.`)
     if (!content.copy?.instagram?.hook || !content.copy?.instagram?.caption) errors.push(`${label}: copy Instagram incompleto.`)
     if (!content.copy?.facebook?.hook || !content.copy?.facebook?.caption) errors.push(`${label}: copy Facebook incompleto.`)
   }
@@ -76,3 +77,6 @@ export function publicationTime(platform: 'instagram' | 'facebook', format: stri
   return format === 'story' ? '20:45' : '20:00'
 }
 
+export function readyCampaignWithStart(manifest: ReadyCampaignManifest, start?: string): ReadyCampaignManifest {
+  return start ? { ...manifest, contents: moveCampaignDates(manifest.contents, start) } : manifest
+}

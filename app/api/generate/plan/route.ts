@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { validateCampaignStart } from '@/lib/campaign-start-date'
 import { callAI, extractJSONArray } from '@/lib/ai'
 import { dbReady, q } from '@/lib/db'
 import { requireAuth, requireClienteAccess } from '@/lib/auth-utils'
@@ -214,7 +215,7 @@ function fmtDate(d: Date): string {
 }
 function addDays(d: Date, days: number): Date {
   const copy = new Date(d)
-  copy.setDate(copy.getDate() + days)
+  copy.setUTCDate(copy.getUTCDate() + days)
   return copy
 }
 
@@ -452,7 +453,7 @@ export async function POST(request: Request) {
   const requestStartedAt = Date.now()
   try {
     await requireAuth()
-    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita, media_urls, uploaded_assets, fase, visual_effects, visual_preset, use_trending_effects, include_weekend, use_web_trends, pacchetto, business_category, strategy_profile } = await request.json()
+    const { cliente_id, piattaforme, obiettivo, model, openrouter_key, periodo, quality, quality_level, post_quality, qualita, media_urls, uploaded_assets, fase, visual_effects, visual_preset, use_trending_effects, include_weekend, use_web_trends, pacchetto, business_category, strategy_profile, start_date } = await request.json()
     // Modalità "piano del pacchetto": la generazione è guidata dalla ricetta del
     // pacchetto (numero, mix, social, qualità) invece che dai parametri manuali.
     // Il body dice SOLO che la si vuole: quale pacchetto sia davvero è un dato
@@ -538,13 +539,20 @@ export async function POST(request: Request) {
     const effectiveClienteId = clientContext.clienteId
     if (!effectiveClienteId) return NextResponse.json({ error: 'Nessun cliente selezionato' }, { status: 400 })
     await requireClienteAccess(effectiveClienteId)
+    let startDate: string | undefined
+    try {
+      startDate = validateCampaignStart(start_date, String(clientContext.cliente?.timezone || 'Europe/Rome'))
+    } catch (error) {
+      return NextResponse.json({ error: (error as Error).message }, { status: 400 })
+    }
+    const planStart = startDate ? new Date(`${startDate}T12:00:00Z`) : new Date()
     const requestedQuality = quality ?? quality_level ?? post_quality ?? qualita
 
     if (isDemo() || !dbReady()) {
       const demoQuality = pkgRequested?.quality ?? resolveContentQuality({ requestedQuality })
       const demoCreativeDirection = createMonthlyCreativeDirection({
         clienteId: effectiveClienteId,
-        startISO: fmtDate(new Date()),
+        startISO: fmtDate(planStart),
       })
       const selectedPlatforms = new Set<string>(piattaforme)
       if (pkgRequested && selectedPlatforms.size > pkgRequested.social) {
@@ -677,7 +685,7 @@ export async function POST(request: Request) {
     }
     const creativeDirection = createMonthlyCreativeDirection({
       clienteId: effectiveClienteId,
-      startISO: fmtDate(new Date()),
+      startISO: fmtDate(planStart),
       brandName: typeof brand?.brand_name === 'string' ? brand.brand_name : '',
       campaignKey: campaignKeysInPlan[0] || undefined,
     })
@@ -704,7 +712,7 @@ ${buildExtendedOutputSchema(contentQuality)}
     // maxTokens abbastanza alto. Bonus: ogni blocco riceve una fetta diversa
     // delle foto caricate, quindi la vision copre molte più immagini nel mese
     // invece delle sole prime 7 di sempre.
-    const today = new Date()
+    const today = planStart
     // ANCORA DELLA FASE 2 — la seconda fase deve RIPRENDERE dove finisce la
     // prima, non ripartire da "oggi + 14 giorni". Le due fasi sono un mese solo
     // spezzato in due richieste: se la fase 1 e stata riprogrammata (slittamento
@@ -712,7 +720,7 @@ ${buildExtendedOutputSchema(contentQuality)}
     // lascia un buco o accavalla le settimane. Qui la fase 2 parte dal giorno
     // dopo l'ultimo contenuto gia pianificato.
     let ancoraFase: Date | null = null
-    if (faseNum === 2 && effectiveClienteId && dbReady() && !isDemo()) {
+    if (!startDate && faseNum === 2 && effectiveClienteId && dbReady() && !isDemo()) {
       const ultime = await q(
         `SELECT max(data_pubblicazione) AS ultima FROM calendario
           WHERE cliente_id = $1 AND data_pubblicazione >= $2::date AND canale <> 'blog'`,

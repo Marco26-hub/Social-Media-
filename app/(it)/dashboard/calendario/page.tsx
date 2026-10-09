@@ -62,6 +62,8 @@ type ShiftResult = {
 }
 
 type ReadyCampaignResult = {
+  start_date?: string
+  end_date?: string
   ok: boolean
   applicato: boolean
   campaign_cycle_id: string
@@ -271,6 +273,7 @@ function CalendarioInner() {
   const [shiftError, setShiftError] = useState<string | null>(null)
   const [readyOpen, setReadyOpen] = useState(false)
   const [readyManifest, setReadyManifest] = useState<unknown>(null)
+  const [readyStartDate, setReadyStartDate] = useState('')
   const [readyFileName, setReadyFileName] = useState('')
   const [readyPreview, setReadyPreview] = useState<ReadyCampaignResult | null>(null)
   const [readyBusy, setReadyBusy] = useState(false)
@@ -288,6 +291,9 @@ function CalendarioInner() {
   const loadSequence = useRef(0)
   const reconcileHandlerRef = useRef<(showMessage: boolean) => Promise<PackageReconcile | null>>(async () => null)
   const [reconcileError, setReconcileError] = useState<string | null>(null)
+  useEffect(() => {
+    setReadyManifest(null); setReadyPreview(null); setReadyFileName(''); setReadyStartDate(''); setReadyError(null)
+  }, [clienteId])
   const requestedFilter = searchParams.get('filter') || 'DA_APPROVARE'
   useEffect(() => {
     setFilter(requestedFilter)
@@ -828,6 +834,7 @@ function CalendarioInner() {
 
   async function leggiManifesto(file: File | null) {
     setReadyPreview(null)
+    setReadyStartDate('')
     setReadyError(null)
     setReadyManifest(null)
     setReadyFileName(file?.name || '')
@@ -850,7 +857,7 @@ function CalendarioInner() {
       const res = await fetch('/api/data/calendario/ready-campaign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ manifest: readyManifest, dry_run: !applica, remove_duplicates: true }),
+        body: JSON.stringify({ manifest: readyManifest, dry_run: !applica, remove_duplicates: true, start_date: readyStartDate || undefined }),
       })
       if (!res.ok) throw new Error(await readApiError(res, 'Ripristino della strategia fallito'))
       const data = await res.json() as ReadyCampaignResult
@@ -860,11 +867,12 @@ function CalendarioInner() {
         setReadyPreview(null)
         setReadyManifest(null)
         setReadyFileName('')
+        setReadyStartDate('')
         setFilter('DA_APPROVARE')
         setSelectedDay(null)
         setSyncMsg({
           type: 'ok',
-          text: `Strategia ${data.month} ripristinata dal manifesto: ${data.publications} pubblicazioni, ${data.to_update} riallineate, ${data.to_insert} create`
+          text: `Strategia ${data.start_date || data.month}${data.end_date ? ` → ${data.end_date}` : ''} ripristinata dal manifesto: ${data.publications} pubblicazioni, ${data.to_update} riallineate, ${data.to_insert} create`
             + (data.removed_duplicates ? `, ${data.removed_duplicates} doppioni rimossi` : '')
             + '. Tutto è Da approvare; nulla è stato inviato a Blotato.',
         })
@@ -1664,6 +1672,13 @@ function CalendarioInner() {
               />
               <span className="mt-1 block text-[11px] font-normal text-gray-500">{readyFileName || 'Scegli swa-ready-campaign.json'}</span>
             </label>
+            <label className="text-xs font-medium text-gray-700">
+              Data di inizio pubblicazione
+              <input type="date" value={readyStartDate} min={todayIso} disabled={readyBusy}
+                onChange={event => { setReadyStartDate(event.target.value); setReadyPreview(null); setReadyError(null) }}
+                className="mt-1 block rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm" />
+              <span className="mt-1 block max-w-xs text-[11px] font-normal text-gray-500">Facoltativa: sposta l’intera sequenza mantenendo intervalli e orari. Vuota: usa le date originali del manifesto. Nessun invio automatico.</span>
+            </label>
             <button type="button" onClick={() => ripristinaDaManifesto(false)} disabled={readyBusy || !readyManifest} className="btn-secondary py-2 px-4 text-sm disabled:opacity-60">
               {readyBusy && !readyPreview ? 'Controllo...' : 'Anteprima sicura'}
             </button>
@@ -1676,7 +1691,7 @@ function CalendarioInner() {
           {readyError && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-xs text-red-700">{readyError}</p>}
           {readyPreview && !readyPreview.applicato && (
             <div className="border-t border-amber-100 bg-amber-50/60 px-4 py-3 text-xs text-slate-700">
-              <p><span className="font-semibold">Solo {readyPreview.month}</span> · ciclo {readyPreview.campaign_key} · {readyPreview.concepts} concept / {readyPreview.publications} pubblicazioni.</p>
+              <p><span className="font-semibold">{readyPreview.start_date ? `${formatShortDate(readyPreview.start_date)} → ${formatShortDate(readyPreview.end_date || readyPreview.start_date)}` : readyPreview.month}</span> · ciclo {readyPreview.campaign_key} · {readyPreview.concepts} concept / {readyPreview.publications} pubblicazioni.</p>
               <p className="mt-1">{readyPreview.to_update} righe esistenti saranno riallineate, {readyPreview.to_insert} mancanti saranno create, {readyPreview.duplicates} doppioni non inviati saranno rimossi.</p>
               <p className="mt-1 font-medium text-emerald-800">Tutte tornano in Da approvare. Nessun invio a Blotato.</p>
               <div className="mt-2 grid max-h-52 gap-x-4 overflow-auto rounded-lg border border-amber-200 bg-white p-2 sm:grid-cols-2 lg:grid-cols-3" aria-label="Tabella date del manifesto">
