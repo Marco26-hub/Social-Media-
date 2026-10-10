@@ -111,6 +111,18 @@ export function validateFileMeta(meta: FileMeta): FileMetaResult {
 type ItemTextResult =
   | { ok: true; title: string; description: string | null }
   | { ok: false; error: string }
+type DescriptionResult = { ok: true; description: string | null } | { ok: false; error: string }
+
+function validateDescription(raw: unknown): DescriptionResult {
+  if (raw === undefined || raw === null) return { ok: true, description: null }
+  if (typeof raw !== 'string') return { ok: false, error: 'La descrizione non è valida.' }
+  // La descrizione può andare a capo: qui si tolgono solo i bordi.
+  const description = raw.trim()
+  if (description.length > DESCRIPTION_MAX) {
+    return { ok: false, error: `La descrizione può avere al massimo ${DESCRIPTION_MAX} caratteri.` }
+  }
+  return { ok: true, description: description || null }
+}
 
 export function validateItemText(input: { title: unknown; description?: unknown }): ItemTextResult {
   if (typeof input.title !== 'string') return { ok: false, error: 'Inserisci un titolo.' }
@@ -121,15 +133,8 @@ export function validateItemText(input: { title: unknown; description?: unknown 
     return { ok: false, error: `Il titolo può avere al massimo ${TITLE_MAX} caratteri.` }
   }
 
-  const rawDescription = input.description
-  if (rawDescription === undefined || rawDescription === null) return { ok: true, title, description: null }
-  if (typeof rawDescription !== 'string') return { ok: false, error: 'La descrizione non è valida.' }
-  // La descrizione può andare a capo: qui si tolgono solo i bordi.
-  const description = rawDescription.trim()
-  if (description.length > DESCRIPTION_MAX) {
-    return { ok: false, error: `La descrizione può avere al massimo ${DESCRIPTION_MAX} caratteri.` }
-  }
-  return { ok: true, title, description: description || null }
+  const parsed = validateDescription(input.description)
+  return parsed.ok ? { ok: true, title, description: parsed.description } : parsed
 }
 
 // Scambia l'elemento con il vicino. Non muta l'array e agli estremi (o con id
@@ -182,6 +187,122 @@ export function isDownloadBlobPathname(pathname: string): boolean {
     !pathname.includes('..') &&
     !pathname.includes('//')
   )
+}
+
+// ---- Parser dei body delle API admin ---------------------------------------
+// Il body arriva da `request.json()`, quindi è `unknown`: qui si controlla tutto
+// e si restituisce solo ciò che le route possono salvare.
+
+type PlainObject = Record<string, unknown>
+
+function isPlainObject(value: unknown): value is PlainObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+const FILE_NAME_MAX = 255
+
+function isHttpsUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false
+  try {
+    return new URL(value).protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+export type CreateItemValue =
+  | { kind: 'link'; title: string; description: string | null; url: string }
+  | {
+      kind: 'file'
+      title: string
+      description: string | null
+      blob: { url: string; downloadUrl: string; pathname: string; contentType: string; size: number; fileName: string }
+    }
+type CreateItemResult = { ok: true; value: CreateItemValue } | { ok: false; error: string }
+
+export function parseCreateItemBody(body: unknown): CreateItemResult {
+  if (!isPlainObject(body)) return { ok: false, error: 'Richiesta non valida.' }
+  if (body.kind !== 'link' && body.kind !== 'file') return { ok: false, error: 'Tipo di scheda non valido.' }
+
+  const text = validateItemText({ title: body.title, description: body.description })
+  if (!text.ok) return text
+  const { title, description } = text
+
+  if (body.kind === 'link') {
+    const url = normalizeLinkUrl(body.url)
+    if (!url) return { ok: false, error: 'Inserisci un link valido (http o https).' }
+    return { ok: true, value: { kind: 'link', title, description, url } }
+  }
+
+  const blob = body.blob
+  if (!isPlainObject(blob)) return { ok: false, error: 'Dati del file mancanti.' }
+  const { url, downloadUrl, pathname, fileName, size } = blob
+  if (!isHttpsUrl(url) || !isHttpsUrl(downloadUrl)) return { ok: false, error: 'Indirizzo del file non valido.' }
+  // isDownloadBlobPathname accetta anche il solo prefisso: nome e tipo si validano sotto con validateFileMeta.
+  if (typeof pathname !== 'string' || !isDownloadBlobPathname(pathname)) {
+    return { ok: false, error: 'Percorso del file non valido.' }
+  }
+  if (
+    typeof fileName !== 'string' ||
+    !fileName.trim() ||
+    fileName.length > FILE_NAME_MAX ||
+    /\p{Cc}/u.test(fileName)
+  ) {
+    return { ok: false, error: 'Nome del file non valido.' }
+  }
+  if (typeof size !== 'number' || !Number.isInteger(size)) return { ok: false, error: 'Dimensione del file non valida.' }
+
+  // Il tipo salvato è quello canonico dell'estensione, mai quello dichiarato dal client.
+  const meta = validateFileMeta({ name: fileName, size, contentType: typeof blob.contentType === 'string' ? blob.contentType : null })
+  if (!meta.ok) return meta
+  return {
+    ok: true,
+    value: { kind: 'file', title, description, blob: { url, downloadUrl, pathname, contentType: meta.contentType, size, fileName } },
+  }
+}
+
+export type UpdateItemValue = { title?: string; description?: string | null; visible?: boolean }
+type UpdateItemResult = { ok: true; value: UpdateItemValue } | { ok: false; error: string }
+
+// PATCH parziale: valgono solo i campi presenti, ma ce ne deve essere almeno uno.
+export function parseUpdateItemBody(body: unknown): UpdateItemResult {
+  if (!isPlainObject(body)) return { ok: false, error: 'Richiesta non valida.' }
+  const value: UpdateItemValue = {}
+
+  if (body.title !== undefined) {
+    const text = validateItemText({ title: body.title })
+    if (!text.ok) return text
+    value.title = text.title
+  }
+  if (body.description !== undefined) {
+    const parsed = validateDescription(body.description)
+    if (!parsed.ok) return parsed
+    value.description = parsed.description
+  }
+  if (body.visible !== undefined) {
+    if (typeof body.visible !== 'boolean') return { ok: false, error: 'La visibilità non è valida.' }
+    value.visible = body.visible
+  }
+
+  if (Object.keys(value).length === 0) return { ok: false, error: 'Nessuna modifica da salvare.' }
+  return { ok: true, value }
+}
+
+// Il nuovo ordine deve contenere esattamente le schede che esistono ora: se nel
+// frattempo ne è stata creata o eliminata una, l'elenco del client è vecchio.
+export function validateReorder(
+  ids: unknown,
+  currentIds: string[],
+): { ok: true; ids: string[] } | { ok: false; error: string } {
+  if (!Array.isArray(ids) || !ids.every(id => typeof id === 'string')) {
+    return { ok: false, error: 'Elenco non valido.' }
+  }
+  const unique = new Set(ids)
+  if (unique.size !== ids.length) return { ok: false, error: 'L’elenco contiene schede ripetute.' }
+  if (ids.length !== currentIds.length || !currentIds.every(id => unique.has(id))) {
+    return { ok: false, error: 'L’elenco è cambiato, ricarica la pagina.' }
+  }
+  return { ok: true, ids: ids as string[] }
 }
 
 // Solo per mostrare la fonte del link: se l'URL non è valido si ricade sul testo.

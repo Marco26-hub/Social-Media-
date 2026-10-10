@@ -9,8 +9,11 @@ import {
   moveItem,
   normalizeAccessCode,
   normalizeLinkUrl,
+  parseCreateItemBody,
+  parseUpdateItemBody,
   validateFileMeta,
   validateItemText,
+  validateReorder,
 } from './download-area'
 
 test('generateAccessCode: 16 caratteri dall’alfabeto, 1000 codici tutti diversi', () => {
@@ -65,4 +68,90 @@ test('pathname dei blob', () => {
 })
 test('linkHostname', () => {
   assert.equal(linkHostname('https://www.github.com/marco'), 'github.com')
+})
+test('parseCreateItemBody: link valido, link pericoloso, file fuori prefisso', () => {
+  assert.deepEqual(parseCreateItemBody({ kind: 'link', title: 'App UGC', url: 'ugc.example.com' }), { ok: true, value: { kind: 'link', title: 'App UGC', description: null, url: 'https://ugc.example.com/' } })
+  assert.equal(parseCreateItemBody({ kind: 'link', title: 'x', url: 'javascript:alert(1)' }).ok, false)
+  assert.equal(parseCreateItemBody({ kind: 'file', title: 'x', blob: { url: 'https://s/x.pdf', downloadUrl: 'https://s/x.pdf?download=1', pathname: 'altro/x.pdf', contentType: 'application/pdf', size: 10, fileName: 'x.pdf' } }).ok, false)
+  assert.equal(parseCreateItemBody({ kind: 'video' }).ok, false)
+})
+test('parseUpdateItemBody richiede almeno un campo valido', () => {
+  assert.deepEqual(parseUpdateItemBody({ visible: false }), { ok: true, value: { visible: false } })
+  assert.equal(parseUpdateItemBody({}).ok, false)
+  assert.equal(parseUpdateItemBody({ title: '' }).ok, false)
+})
+test('validateReorder rifiuta elenchi non aggiornati', () => {
+  assert.deepEqual(validateReorder(['b', 'a'], ['a', 'b']), { ok: true, ids: ['b', 'a'] })
+  assert.equal(validateReorder(['a'], ['a', 'b']).ok, false)
+  assert.equal(validateReorder(['a', 'a'], ['a', 'b']).ok, false)
+  assert.equal(validateReorder(['a', 'c'], ['a', 'b']).ok, false)
+})
+const validBlob = {
+  url: 'https://store.public.blob.vercel-storage.com/swa-download/files/guida-ab12.pdf',
+  downloadUrl: 'https://store.public.blob.vercel-storage.com/swa-download/files/guida-ab12.pdf?download=1',
+  pathname: 'swa-download/files/guida-ab12.pdf',
+  contentType: 'text/html',
+  size: 2048,
+  fileName: 'Guida.PDF',
+}
+test('parseCreateItemBody: file valido, il tipo salvato è quello dell’estensione', () => {
+  const parsed = parseCreateItemBody({ kind: 'file', title: ' Guida  UGC ', description: ' Per iniziare ', blob: validBlob })
+  assert.deepEqual(parsed, {
+    ok: true,
+    value: {
+      kind: 'file',
+      title: 'Guida UGC',
+      description: 'Per iniziare',
+      blob: { ...validBlob, contentType: 'application/pdf' },
+    },
+  })
+})
+test('parseCreateItemBody: file con dati del blob non validi', () => {
+  const file = (blob: unknown) => parseCreateItemBody({ kind: 'file', title: 'x', blob }).ok
+  assert.equal(file(validBlob), true)
+  assert.equal(file(undefined), false)
+  assert.equal(file(null), false)
+  assert.equal(file({ ...validBlob, pathname: 'swa-download/files/../x.pdf' }), false)
+  assert.equal(file({ ...validBlob, pathname: 'altro/x.pdf' }), false)
+  // il solo prefisso supera isDownloadBlobPathname: lo ferma il nome del file
+  assert.equal(file({ ...validBlob, pathname: 'swa-download/files/', fileName: 'x.exe' }), false)
+  assert.equal(file({ ...validBlob, fileName: 'x.exe' }), false)
+  assert.equal(file({ ...validBlob, fileName: 'constructor' }), false)
+  assert.equal(file({ ...validBlob, fileName: '__proto__' }), false)
+  assert.equal(file({ ...validBlob, fileName: 'a\nb.pdf' }), false)
+  assert.equal(file({ ...validBlob, fileName: 'a'.repeat(256) + '.pdf' }), false)
+  assert.equal(file({ ...validBlob, fileName: 42 }), false)
+  assert.equal(file({ ...validBlob, size: 0 }), false)
+  assert.equal(file({ ...validBlob, size: 10.5 }), false)
+  assert.equal(file({ ...validBlob, size: '10' }), false)
+  assert.equal(file({ ...validBlob, size: 250 * 1024 * 1024 + 1 }), false)
+  assert.equal(file({ ...validBlob, url: 'javascript:alert(1)' }), false)
+  assert.equal(file({ ...validBlob, downloadUrl: 'http://insicuro.example.com/x.pdf' }), false)
+})
+test('parseCreateItemBody: corpo non valido o titolo mancante', () => {
+  for (const bad of [null, undefined, 'link', 42, [], {}]) assert.equal(parseCreateItemBody(bad).ok, false)
+  assert.equal(parseCreateItemBody({ kind: 'link', title: '  ', url: 'https://a.example.com' }).ok, false)
+  assert.equal(parseCreateItemBody({ kind: 'link', title: 'x' }).ok, false)
+})
+test('parseUpdateItemBody: campi singoli, descrizione azzerabile, tipi sbagliati', () => {
+  assert.deepEqual(parseUpdateItemBody({ title: '  Nuova   guida ' }), { ok: true, value: { title: 'Nuova guida' } })
+  assert.deepEqual(parseUpdateItemBody({ description: null }), { ok: true, value: { description: null } })
+  assert.deepEqual(parseUpdateItemBody({ description: '  ' }), { ok: true, value: { description: null } })
+  assert.deepEqual(
+    parseUpdateItemBody({ title: 'a', description: 'b', visible: true, id: 'ignorato' }),
+    { ok: true, value: { title: 'a', description: 'b', visible: true } },
+  )
+  assert.equal(parseUpdateItemBody({ visible: 'false' }).ok, false)
+  assert.equal(parseUpdateItemBody({ visible: 0 }).ok, false)
+  assert.equal(parseUpdateItemBody({ description: 42 }).ok, false)
+  assert.equal(parseUpdateItemBody({ description: 'd'.repeat(601) }).ok, false)
+  for (const bad of [null, undefined, 'x', [], [{ visible: true }]]) assert.equal(parseUpdateItemBody(bad).ok, false)
+})
+test('validateReorder: elenco vuoto, forme non valide, elenco più lungo', () => {
+  assert.deepEqual(validateReorder([], []), { ok: true, ids: [] })
+  assert.equal(validateReorder([], ['a']).ok, false)
+  assert.equal(validateReorder(['a', 'b', 'c'], ['a', 'b']).ok, false)
+  assert.equal(validateReorder('a', ['a']).ok, false)
+  assert.equal(validateReorder(null, []).ok, false)
+  assert.equal(validateReorder([1, 2], ['1', '2']).ok, false)
 })
