@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 import {
   buildBlobPathname,
+  describeItem,
   formatBytes,
   generateAccessCode,
   isDownloadBlobPathname,
@@ -154,4 +155,13 @@ test('validateReorder: elenco vuoto, forme non valide, elenco più lungo', () =>
   assert.equal(validateReorder('a', ['a']).ok, false)
   assert.equal(validateReorder(null, []).ok, false)
   assert.equal(validateReorder([1, 2], ['1', '2']).ok, false)
+})
+test('describeItem: file da scaricare e link esterno', () => {
+  assert.deepEqual(describeItem({ kind: 'file', url: 'https://s/g.pdf', downloadUrl: 'https://s/g.pdf?download=1', fileName: 'guida.pdf', sizeBytes: 2_516_582 }), { actionLabel: 'Scarica', href: 'https://s/g.pdf?download=1', meta: 'PDF · 2,4 MB', external: false })
+  assert.deepEqual(describeItem({ kind: 'link', url: 'https://www.github.com/marco/repo', downloadUrl: null, fileName: null, sizeBytes: null }), { actionLabel: 'Apri', href: 'https://www.github.com/marco/repo', meta: 'github.com', external: true })
+})
+test('describeItem: file senza dimensione, senza estensione o senza downloadUrl', () => {
+  assert.deepEqual(describeItem({ kind: 'file', url: 'https://s/g.zip', downloadUrl: null, fileName: 'a.ZIP', sizeBytes: null }), { actionLabel: 'Scarica', href: 'https://s/g.zip', meta: 'ZIP', external: false })
+  assert.equal(describeItem({ kind: 'file', url: 'https://s/x', downloadUrl: null, fileName: 'senza-estensione', sizeBytes: 1536 }).meta, '1,5 KB')
+  assert.equal(describeItem({ kind: 'file', url: 'https://s/x', downloadUrl: null, fileName: null, sizeBytes: null }).meta, '')
 })

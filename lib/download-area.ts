@@ -313,3 +313,34 @@ export function linkHostname(url: string): string {
     return url
   }
 }
+
+// Ciò che serve per mostrare una scheda pubblica: DownloadItem (lib/download-area-db.ts)
+// lo soddisfa, ma qui si dichiara a parte per non importare il codice server.
+type DescribableItem = {
+  kind: 'file' | 'link'
+  url: string
+  downloadUrl: string | null
+  fileName: string | null
+  sizeBytes: number | null
+}
+
+// Testo e destinazione del pulsante di una scheda. Il file punta a `downloadUrl`
+// (forza lo scaricamento); il link esterno si apre altrove e mostra solo il dominio.
+export function describeItem(item: DescribableItem): {
+  actionLabel: 'Scarica' | 'Apri'
+  href: string
+  meta: string
+  external: boolean
+} {
+  if (item.kind === 'link') {
+    return { actionLabel: 'Apri', href: item.url, meta: linkHostname(item.url), external: true }
+  }
+  const extension = item.fileName ? fileExtension(item.fileName).toUpperCase() : ''
+  const size = item.sizeBytes === null ? '' : formatBytes(item.sizeBytes)
+  return {
+    actionLabel: 'Scarica',
+    href: item.downloadUrl ?? item.url,
+    meta: [extension, size].filter(Boolean).join(' · '),
+    external: false,
+  }
+}

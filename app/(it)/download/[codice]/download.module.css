@@ -1,0 +1,108 @@
+/* Solo le schede: hero e sezioni vengono da styles/content-page.module.css.
+   I colori sono i token che `.page` ridefinisce nel tema notte, quindi le schede
+   seguono il tema da sole. Il pulsante usa --green come fondo e --surface come
+   testo: i due token si invertono insieme e il contrasto regge in entrambi i temi. */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 20px;
+  margin: 45px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 6px;
+  background: var(--mint);
+  color: var(--green);
+}
+
+.title {
+  margin: 22px 0 0;
+  font: 500 22px/1.2 Georgia, 'Times New Roman', serif;
+  overflow-wrap: anywhere;
+}
+
+.description {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.action {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  margin-top: 22px;
+  padding: 0 22px;
+  border-radius: 4px;
+  background: var(--green);
+  color: var(--surface);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.action:hover {
+  background: var(--green-dark);
+}
+
+.empty {
+  margin: 45px 0 0;
+  padding: 28px;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+@media (max-width: 700px) {
+  .grid {
+    margin-top: 32px;
+  }
+
+  .card {
+    padding: 22px;
+  }
+
+  .action {
+    align-self: stretch;
+  }
+}
