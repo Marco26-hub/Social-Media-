@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react'
 import { Check, Copy, KeyRound, Loader2, RefreshCw } from 'lucide-react'
+import { SITE_URL } from '@/lib/site-config'
 
 type Props = {
   code: string | null
@@ -19,8 +20,10 @@ export default function SecretLinkSection({ code, onGenerate }: Props) {
 
   useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current) }, [])
 
-  // L'origine si legge solo qui, a elenco già caricato: il primo render non la usa.
-  const link = code ? `${window.location.origin}/download/${code}` : null
+  // Il link da condividere è sempre quello pubblico (dominio canonico del sito):
+  // window.location.origin darebbe un indirizzo non pubblico su un'anteprima di
+  // deploy o sul dominio senza www.
+  const link = code ? `${SITE_URL}/download/${code}` : null
 
   async function copy() {
     if (!link) return
