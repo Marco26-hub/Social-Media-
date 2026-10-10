@@ -13,6 +13,7 @@ import { cercaDomande, domandeDelSettore, type Domanda } from '@/lib/odino/doman
 import { ODINO_NOME } from '@/lib/odino/identita'
 import { TESTI, WHATSAPP_ODINO } from '@/lib/odino/testi'
 import { EVENTO_CONSENSO, leggiConsenso } from '@/lib/cookie-consent'
+import { pathForTelemetry } from '@/lib/download-path'
 import { EVENTO_RIQUADRO, chiOccupa, liberaAngolo, mostraMascotte, occupaAngolo } from '@/lib/riquadri'
 import styles from './odino.module.css'
 import { OdinoGambe } from './OdinoSaluto'
@@ -302,7 +303,8 @@ export default function Odino() {
       void fetch('/api/odino/domande', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domanda, trovata, percorso, fonte, pagina: window.location.pathname, lingua }),
+        // Sull'area download il codice sta nel percorso: alle statistiche va il segnaposto.
+        body: JSON.stringify({ domanda, trovata, percorso, fonte, pagina: pathForTelemetry(window.location.pathname), lingua }),
         keepalive: true,
       }).catch(() => {})
     } catch { /* niente */ }
