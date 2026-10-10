@@ -32,3 +32,26 @@ CREATE TABLE IF NOT EXISTS download_access (
   code        text NOT NULL,
   rotated_at  timestamptz NOT NULL DEFAULT now()
 );
+
+-- Le due tabelle non devono essere leggibili dall'API REST pubblica di Supabase.
+-- Su Supabase i nuovi oggetti di public vengono concessi di default ai ruoli
+-- anon/authenticated e altrove nel repo la RLS e spenta: senza questo blocco il
+-- codice segreto e le schede nascoste si leggerebbero con la sola chiave anon.
+-- RLS attiva e nessuna policy = nessuna riga visibile a chi non e proprietario.
+-- Niente FORCE: l'app e il runner delle migrazioni si collegano come proprietario
+-- delle tabelle e devono continuare a leggere e scrivere.
+ALTER TABLE download_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE download_access ENABLE ROW LEVEL SECURITY;
+
+-- Revoca esplicita dei privilegi, solo se i ruoli esistono: su un Postgres
+-- normale anon/authenticated non ci sono e la migrazione deve girare lo stesso.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+    REVOKE ALL ON download_items, download_access FROM anon;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    REVOKE ALL ON download_items, download_access FROM authenticated;
+  END IF;
+END
+$$;
