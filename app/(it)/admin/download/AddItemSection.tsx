@@ -26,7 +26,7 @@ function uploadErrorMessage(error: unknown): string {
   if (error instanceof Error && /client token/i.test(error.message)) {
     return 'Caricamento non autorizzato: ricarica la pagina e verifica che lo storage dei file sia configurato.'
   }
-  // La richiesta di upload Ã¨ caduta o bloccata (rete, oppure la CSP di un documento
+  // La richiesta di upload è caduta o bloccata (rete, oppure la CSP di un documento
   // caricato prima dell'admin, es. il login): ricaricare la pagina applica quella giusta.
   return 'Caricamento non riuscito: controlla la connessione, ricarica la pagina e riprova.'
 }
