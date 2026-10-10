@@ -17,6 +17,10 @@ class InvalidUploadPathError extends Error {}
 // client su /api/admin/downloads dopo il caricamento.
 export async function POST(request: Request) {
   try {
+    // Prima di tutto la sessione: un chiamante non autorizzato non deve sapere nulla
+    // dello storage (503) né del corpo della richiesta (400). Il controllo resta anche
+    // in onBeforeGenerateToken, dove è l'ultimo prima di rilasciare il token.
+    await requireDownloadAdmin()
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
       return NextResponse.json({ error: 'Storage dei file non configurato.' }, { status: 503 })
     }
