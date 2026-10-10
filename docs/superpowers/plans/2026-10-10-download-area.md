@@ -54,7 +54,7 @@
   - `buildBlobPathname(fileName: string): string` e `isDownloadBlobPathname(pathname: string): boolean`
   - `linkHostname(url: string): string`: hostname senza `www.`
 
-- [ ] **Step 1: Scrivere i test che falliscono** in `lib/download-area.test.ts` (stile di `lib/ai-model.test.ts`):
+- [x] **Step 1: Scrivere i test che falliscono** in `lib/download-area.test.ts` (stile di `lib/ai-model.test.ts`):
 
 ```ts
 test('generateAccessCode: 16 caratteri dall’alfabeto, 1000 codici tutti diversi', () => {
@@ -112,20 +112,20 @@ test('linkHostname', () => {
 })
 ```
 
-- [ ] **Step 2: Eseguire i test e verificare che falliscano**
+- [x] **Step 2: Eseguire i test e verificare che falliscano**
   Run: `npx playwright test lib/download-area.test.ts --workers=1`. Expected: FAIL (modulo `./download-area` non trovato).
 
-- [ ] **Step 3: Implementare `lib/download-area.ts`.**
+- [x] **Step 3: Implementare `lib/download-area.ts`.**
   - `generateAccessCode`: usa `crypto.getRandomValues` con campionamento a rifiuto (scarta i byte `>= 248`, cioè `31 * 8`) per non introdurre distorsioni.
   - `normalizeLinkUrl`: se manca lo schema e la stringa ha la forma `dominio.tld/...` senza spazi, prefissa `https://`; poi usa `new URL()`. Accetta solo `http:`/`https:` e promuove `http:` a `https:`. Rifiuta username/password e lunghezze oltre 2048.
   - `buildBlobPathname`: separa prima estensione e base (sull'ultimo `.`); NFD e rimozione degli accenti, minuscolo; nella base `[^a-z0-9]+` → `-` (punti compresi), trattini ai bordi rimossi, troncata a 80 caratteri; estensione in minuscolo; risultato `swa-download/files/<base>.<ext>`.
   - `isDownloadBlobPathname`: inizia con il prefisso, non contiene `..` né `//`.
   - `formatBytes`: base 1024, `toLocaleString('it-IT', { maximumFractionDigits: 1 })`.
 
-- [ ] **Step 4: Eseguire i test**
+- [x] **Step 4: Eseguire i test**
   Run: `npx playwright test lib/download-area.test.ts --workers=1`. Expected: PASS, 9 test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   `git add lib/download-area.ts lib/download-area.test.ts && git commit -m "Add pure logic for the secret download area"`
 
 ### Task 2: Migrazione 052 e accesso al database
@@ -152,7 +152,7 @@ test('linkHostname', () => {
   - `reorderItems(ids: string[]): Promise<void>`: in `withTransaction`, `position = indice`
   - Ogni funzione DB lancia `new Error('Database non disponibile')` se `!dbReady()`: `apiError` lo traduce in 503.
 
-- [ ] **Step 1: Scrivere i test che falliscono**:
+- [x] **Step 1: Scrivere i test che falliscono**:
 
 ```ts
 test('isMissingDownloadSchema riconosce la migrazione mancante', () => {
@@ -168,10 +168,10 @@ test('rowToDownloadItem converte i campi', () => {
 })
 ```
 
-- [ ] **Step 2:** Run `npx playwright test lib/download-area-db.test.ts --workers=1`. Expected: FAIL (modulo mancante).
-- [ ] **Step 3:** Creare la migrazione e `lib/download-area-db.ts` con le firme sopra.
-- [ ] **Step 4:** Run `npx playwright test lib/download-area-db.test.ts --workers=1` → PASS. Run `npm run migrate:dry` → l'output elenca `052_download_area.sql` dopo `051_...`, senza errori. Se lo script chiede un DB, verificare almeno che il file venga ordinato correttamente leggendo `scripts/run-migrations.mjs`.
-- [ ] **Step 5: Commit** `"Add download area schema and data access"`.
+- [x] **Step 2:** Run `npx playwright test lib/download-area-db.test.ts --workers=1`. Expected: FAIL (modulo mancante).
+- [x] **Step 3:** Creare la migrazione e `lib/download-area-db.ts` con le firme sopra.
+- [x] **Step 4:** Run `npx playwright test lib/download-area-db.test.ts --workers=1` → PASS. Run `npm run migrate:dry` → l'output elenca `052_download_area.sql` dopo `051_...`, senza errori. Se lo script chiede un DB, verificare almeno che il file venga ordinato correttamente leggendo `scripts/run-migrations.mjs`.
+- [x] **Step 5: Commit** `"Add download area schema and data access"`.
 
 ### Task 3: API admin, controllo accessi e caricamento su Blob
 
@@ -201,7 +201,7 @@ test('rowToDownloadItem converte i campi', () => {
   - `POST /api/admin/downloads/upload`: `handleUpload`. In `onBeforeGenerateToken(pathname)`: `requireDownloadAdmin()`, `isDownloadBlobPathname(pathname)`, poi restituisce `{ addRandomSuffix: true, maximumSizeInBytes: MAX_FILE_BYTES, allowedContentTypes: Object.values(ALLOWED_FILE_TYPES) }`. `onUploadCompleted` vuoto (il webhook arriverebbe senza sessione).
   - Firma delle route dinamiche come in `app/api/data/calendario/[id]/regenerate/route.ts`: `{ params }: { params: Promise<{ id: string }> }`. Tutte con `export const dynamic = 'force-dynamic'` ed errori tramite `apiError`.
 
-- [ ] **Step 1: Test che falliscono** (aggiunti a `lib/download-area.test.ts`):
+- [x] **Step 1: Test che falliscono** (aggiunti a `lib/download-area.test.ts`):
 
 ```ts
 test('parseCreateItemBody: link valido, link pericoloso, file fuori prefisso', () => {
@@ -225,10 +225,10 @@ test('validateReorder rifiuta elenchi non aggiornati', () => {
 
   Nota: `normalizeLinkUrl` restituisce l'URL serializzato da `new URL()`, quindi `https://ugc.example.com/` con la barra finale. Il test del Task 1 su `github.com/marco/repo` non ha la barra perché c'è un percorso.
 
-- [ ] **Step 2:** Run `npx playwright test lib/download-area.test.ts --workers=1` → FAIL sui 3 test nuovi.
-- [ ] **Step 3:** `npm install @vercel/blob@^2.8.1`, poi implementare parser, guard e le 5 route secondo il contratto.
-- [ ] **Step 4:** Run `npx playwright test lib/download-area.test.ts lib/download-area-db.test.ts --workers=1` → PASS. Run `npx tsc --noEmit -p tsconfig.json` → nessun errore.
-- [ ] **Step 5: Commit** `"Add admin API for the download area"`.
+- [x] **Step 2:** Run `npx playwright test lib/download-area.test.ts --workers=1` → FAIL sui 3 test nuovi.
+- [x] **Step 3:** `npm install @vercel/blob@^2.8.1`, poi implementare parser, guard e le 5 route secondo il contratto.
+- [x] **Step 4:** Run `npx playwright test lib/download-area.test.ts lib/download-area-db.test.ts --workers=1` → PASS. Run `npx tsc --noEmit -p tsconfig.json` → nessun errore.
+- [x] **Step 5: Commit** `"Add admin API for the download area"`.
 
 ### Task 4: Middleware, intestazioni e CSP
 
@@ -243,11 +243,11 @@ test('validateReorder rifiuta elenchi non aggiornati', () => {
 - Consumes: nulla dai task precedenti, tranne `@vercel/blob` installato (Task 3) per ricavare l'host.
 - Produces: header e redirect che i Task 5 e 6 danno per scontati.
 
-- [ ] **Step 1:** Ricavare l'host delle API Blob dalla versione installata: `grep -rhoE "https://[a-z.]*vercel[a-z.-]*\.(com|app)[a-z/]*blob[a-z/]*" node_modules/@vercel/blob/dist | sort -u`. Annotare l'host esatto (atteso: `https://vercel.com/api/blob`) da usare in `connect-src`.
-- [ ] **Step 2:** Modificare `middleware.ts` e `next.config.mjs`.
-- [ ] **Step 3: Verifica delle intestazioni**: `node -e "import('./next.config.mjs').then(async m => { const h = await m.default.headers(); const i = s => h.findIndex(x => x.source === s); console.log(i('/:path*') < i('/download/:path*') && i('/:path*') < i('/admin/:path*') ? 'ORDINE OK' : 'ORDINE ERRATO'); console.log(JSON.stringify(h.filter(x => /download|admin/.test(x.source)), null, 1)) })"`. Expected: `ORDINE OK`, il `Referrer-Policy: no-referrer` su `/download/:path*`, l'host Blob in `connect-src` su `/admin/:path*`.
-- [ ] **Step 4:** Run `npx tsc --noEmit -p tsconfig.json` → nessun errore.
-- [ ] **Step 5: Commit** `"Protect /admin and harden /download headers"`.
+- [x] **Step 1:** Ricavare l'host delle API Blob dalla versione installata: `grep -rhoE "https://[a-z.]*vercel[a-z.-]*\.(com|app)[a-z/]*blob[a-z/]*" node_modules/@vercel/blob/dist | sort -u`. Annotare l'host esatto (atteso: `https://vercel.com/api/blob/`) da usare in `connect-src`.
+- [x] **Step 2:** Modificare `middleware.ts` e `next.config.mjs`.
+- [x] **Step 3: Verifica delle intestazioni**: `node -e "import('./next.config.mjs').then(async m => { const h = await m.default.headers(); const i = s => h.findIndex(x => x.source === s); console.log(i('/:path*') < i('/download/:path*') && i('/:path*') < i('/admin/:path*') ? 'ORDINE OK' : 'ORDINE ERRATO'); console.log(JSON.stringify(h.filter(x => /download|admin/.test(x.source)), null, 1)) })"`. Expected: `ORDINE OK`, il `Referrer-Policy: no-referrer` su `/download/:path*`, l'host Blob in `connect-src` su `/admin/:path*`.
+- [x] **Step 4:** Run `npx tsc --noEmit -p tsconfig.json` → nessun errore.
+- [x] **Step 5: Commit** `"Protect /admin and harden /download headers"`.
 
 ### Task 5: Pagina pubblica `/download/[codice]`
 
@@ -260,7 +260,7 @@ test('validateReorder rifiuta elenchi non aggiornati', () => {
 - Consumes: `normalizeAccessCode`, `formatBytes`, `linkHostname` (Task 1); `getActiveCode`, `listItems`, `isMissingDownloadSchema`, `DownloadItem` (Task 2).
 - Produces: `describeItem(item: Pick<DownloadItem, 'kind' | 'url' | 'downloadUrl' | 'fileName' | 'sizeBytes'>): { actionLabel: 'Scarica' | 'Apri'; href: string; meta: string; external: boolean }`. Per un file: href `downloadUrl`, meta `"PDF · 2,4 MB"` (estensione in maiuscolo da `fileName`); per un link: href `url`, meta `linkHostname(url)`, `external: true`.
 
-- [ ] **Step 1: Test che fallisce**:
+- [x] **Step 1: Test che fallisce**:
 
 ```ts
 test('describeItem', () => {
@@ -269,8 +269,8 @@ test('describeItem', () => {
 })
 ```
 
-- [ ] **Step 2:** Run del test → FAIL.
-- [ ] **Step 3: Implementare `describeItem` e la pagina.**
+- [x] **Step 2:** Run del test → FAIL.
+- [x] **Step 3: Implementare `describeItem` e la pagina.**
   - `export const dynamic = 'force-dynamic'`.
   - `metadata` statica: `title: 'Materiali riservati | Social Web Automation'`, `robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } }`, nessun `alternates`.
   - `params: Promise<{ codice: string }>`. Flusso: `normalizeAccessCode(codice)` → se `null`, `notFound()` senza toccare il DB. Poi `getActiveCode()`: se c'è un errore, lo schema manca o il codice è diverso, `notFound()`. Infine `listItems({ includeHidden: false })`.
@@ -284,8 +284,8 @@ test('describeItem', () => {
     - niente breadcrumbs (porterebbero a Home e confermerebbero la struttura) e niente JSON-LD.
   - Icone da `lucide-react`: `FileText`, `FileArchive`, `FileImage`, `Film`, `Link2`.
   - CSS solo con i token del sito (`--ink`, `--muted`, `--line`, `--surface`, `--green`, `--paper`), verificati in entrambi i temi.
-- [ ] **Step 4:** Run `npx playwright test lib/download-area.test.ts --workers=1` → PASS. Run `npm run build` → la route `ƒ /download/[codice]` compare nell'elenco e la build termina con exit 0.
-- [ ] **Step 5: Commit** `"Add secret download page with SWA layout"`.
+- [x] **Step 4:** Run `npx playwright test lib/download-area.test.ts --workers=1` → PASS. Run `npm run build` → la route `ƒ /download/[codice]` compare nell'elenco e la build termina con exit 0.
+- [x] **Step 5: Commit** `"Add secret download page with SWA layout"`.
 
 ### Task 6: Pannello `/admin/download`
 
@@ -297,27 +297,27 @@ test('describeItem', () => {
 - Consumes: il contratto HTTP del Task 3; `validateFileMeta`, `validateItemText`, `normalizeLinkUrl`, `buildBlobPathname`, `moveItem`, `formatBytes`, `describeItem` (Task 1 e Task 5); `upload` da `@vercel/blob/client`.
 - Produces: nessuna interfaccia (foglia).
 
-- [ ] **Step 1: Sezione "Link segreto".**
+- [x] **Step 1: Sezione "Link segreto".**
   - Mostra `${location.origin}/download/${code}` con il pulsante "Copia" (`navigator.clipboard.writeText`, conferma "Copiato").
   - "Genera nuovo link" chiede conferma con "Il link attuale smetterà di funzionare per tutti. Continuare?" e chiama `POST /api/admin/downloads/code`.
   - Senza codice, mostra solo "Genera il link".
   - Con `needs_migration`, mostra solo l'avviso "Database non pronto: applica la migrazione 052 (npm run migrate) e ricarica."
-- [ ] **Step 2: Sezione "Aggiungi".**
+- [x] **Step 2: Sezione "Aggiungi".**
   - Due moduli. **File:** input file, titolo (precompilato dal nome del file), descrizione. Valida con `validateFileMeta` e `validateItemText` prima di caricare, poi `upload(buildBlobPathname(file.name), file, { access: 'public', handleUploadUrl: '/api/admin/downloads/upload', multipart: true, onUploadProgress })`, mostrando una barra percentuale, e infine `POST /api/admin/downloads` con `kind:'file'` e i dati del blob. **Link:** titolo, descrizione e URL, validato con `normalizeLinkUrl` (errore "Indirizzo non valido: usa un link https").
   - Un errore dopo il caricamento ("Il file è stato caricato ma la scheda non è stata creata: riprova") non perde i dati del modulo.
-- [ ] **Step 3: Elenco schede.**
+- [x] **Step 3: Elenco schede.**
   - Per ogni scheda: titolo e descrizione modificabili in linea ("Salva" chiama PATCH), un interruttore Visibile/Nascosto (PATCH `visible`), "Su"/"Giù" (`moveItem` + POST reorder; con 409 si ricarica l'elenco e compare il messaggio del server), "Elimina" con conferma ("Eliminare la scheda? Se è un file verrà cancellato.").
   - Accanto a ogni scheda il `meta` di `describeItem` e un link "Anteprima" che apre `href`.
-- [ ] **Step 4:** Run `npx tsc --noEmit -p tsconfig.json`, `npm run lint` e `npm run build` → tutti con exit 0. La build elenca `ƒ /admin/download`.
-- [ ] **Step 5: Commit** `"Add /admin/download panel"`.
+- [x] **Step 4:** Run `npx tsc --noEmit -p tsconfig.json`, `npm run lint` e `npm run build` → tutti con exit 0. La build elenca `ƒ /admin/download`.
+- [x] **Step 5: Commit** `"Add /admin/download panel"`.
 
 ### Task 7: Verifica finale e consegna
 
 **Files:**
 - Modify: `docs/superpowers/plans/2026-10-10-download-area.md`: spuntare i passi completati
 
-- [ ] **Step 1:** Run `npm test` → tutti i test passano, compresi quelli già esistenti. Run `npm run lint` e `npm run build` → exit 0.
-- [ ] **Step 2:** Controllare che nei file versionati non ci siano segreti: `git diff origin/main --stat` e `git diff origin/main | grep -iE "BLOB_READ_WRITE_TOKEN=|vercel-storage\.com/|[a-hjkmnp-z2-9]{16}"` → nessun valore reale (sono ammessi solo i nomi delle variabili e i codici di esempio dei test).
+- [x] **Step 1:** Run `npm test` → tutti i test passano, compresi quelli già esistenti. Run `npm run lint` e `npm run build` → exit 0.
+- [x] **Step 2:** Controllare che nei file versionati non ci siano segreti: `git diff origin/main --stat` e `git diff origin/main | grep -iE "BLOB_READ_WRITE_TOKEN=|vercel-storage\.com/|[a-hjkmnp-z2-9]{16}"` → nessun valore reale (sono ammessi solo i nomi delle variabili e i codici di esempio dei test).
 - [ ] **Step 3:** Fermarsi e riferire al titolare. Restano da fare, con la sua conferma:
   - push del branch;
   - migrazione 052 sul database;
