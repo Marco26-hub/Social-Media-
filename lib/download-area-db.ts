@@ -94,6 +94,13 @@ export async function listItems(opts: { includeHidden: boolean }): Promise<Downl
 
 // La nuova scheda va in fondo alla lista. Se due creazioni arrivano insieme e
 // ottengono la stessa posizione, created_at nell'ORDER BY ne decide l'ordine.
+//
+// Idempotente sul blob: un blob regge una sola scheda (indice unico parziale
+// download_items_blob_pathname_key, migrazione 052). Se esiste già una scheda con
+// quel blob_pathname (riprova dopo una risposta persa, doppio invio) non si crea
+// un duplicato e si restituisce quella esistente. Il target di ON CONFLICT deve
+// ripetere il predicato dell'indice parziale, altrimenti Postgres non lo riconosce.
+// Le schede link hanno blob_pathname nullo e non entrano mai nell'indice.
 export async function createItem(input: NewDownloadItem): Promise<DownloadItem> {
   requireDb()
   const row = await q1(
@@ -102,6 +109,7 @@ export async function createItem(input: NewDownloadItem): Promise<DownloadItem> 
      VALUES
        ($1, $2, $3, $4, $5, $6, $7, $8, $9,
         (SELECT coalesce(max(position), -1) + 1 FROM download_items))
+     ON CONFLICT (blob_pathname) WHERE blob_pathname IS NOT NULL DO NOTHING
      RETURNING ${ITEM_COLUMNS}`,
     [
       input.kind,
@@ -115,8 +123,14 @@ export async function createItem(input: NewDownloadItem): Promise<DownloadItem> 
       input.sizeBytes,
     ],
   )
-  if (!row) throw new Error('Inserimento scheda non riuscito')
-  return rowToDownloadItem(row)
+  if (row) return rowToDownloadItem(row)
+
+  // Nessuna riga restituita: il conflitto c'è stato. Si legge la scheda che ha già quel blob.
+  if (input.blobPathname) {
+    const existing = await q1(`SELECT ${ITEM_COLUMNS} FROM download_items WHERE blob_pathname = $1`, [input.blobPathname])
+    if (existing) return rowToDownloadItem(existing)
+  }
+  throw new Error('Inserimento scheda non riuscito')
 }
 
 // Gli id arrivano dall'URL: si confrontano come testo così un id malformato

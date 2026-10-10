@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { test } from 'playwright/test'
 import {
   createItem,
@@ -62,4 +64,18 @@ test('le funzioni DB rifiutano con "Database non disponibile" senza DATABASE_URL
   } finally {
     if (previous !== undefined) process.env.DATABASE_URL = previous
   }
+})
+
+// Senza Postgres in test non si puo eseguire l'SQL: questo controllo tiene allineati
+// l'indice unico parziale della migrazione 052 e il target di ON CONFLICT di createItem,
+// che deve ripetere il predicato (altrimenti Postgres risponde "no unique or exclusion
+// constraint matching the ON CONFLICT specification" e ogni creazione di file fallisce).
+test('052: indice unico parziale su blob_pathname e ON CONFLICT con lo stesso predicato', () => {
+  const migration = readFileSync(join(process.cwd(), 'db', 'migrations', '052_download_area.sql'), 'utf8')
+  const source = readFileSync(join(process.cwd(), 'lib', 'download-area-db.ts'), 'utf8')
+  assert.match(
+    migration,
+    /CREATE UNIQUE INDEX IF NOT EXISTS download_items_blob_pathname_key ON download_items \(blob_pathname\) WHERE blob_pathname IS NOT NULL;/,
+  )
+  assert.match(source, /ON CONFLICT \(blob_pathname\) WHERE blob_pathname IS NOT NULL DO NOTHING/)
 })

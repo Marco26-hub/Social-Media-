@@ -23,6 +23,11 @@ CREATE TABLE IF NOT EXISTS download_items (
   CHECK (kind = 'link' OR (blob_pathname IS NOT NULL AND download_url IS NOT NULL))
 );
 CREATE INDEX IF NOT EXISTS download_items_position_idx ON download_items (position, created_at);
+-- Un blob puo' reggere una sola scheda: eliminandone una si cancellerebbe il file
+-- dell'altra. Parziale perche' le schede di tipo link hanno blob_pathname nullo.
+-- createItem (lib/download-area-db.ts) si appoggia a questo indice con ON CONFLICT
+-- e ne ripete il predicato: se cambia uno, va cambiato anche l'altro.
+CREATE UNIQUE INDEX IF NOT EXISTS download_items_blob_pathname_key ON download_items (blob_pathname) WHERE blob_pathname IS NOT NULL;
 
 -- Una sola riga: il codice del link segreto attivo.
 -- Nessun INSERT qui: il repository e pubblico e un codice scritto in questo file
@@ -37,7 +42,9 @@ CREATE TABLE IF NOT EXISTS download_access (
 -- Su Supabase i nuovi oggetti di public vengono concessi di default ai ruoli
 -- anon/authenticated e altrove nel repo la RLS e spenta: senza questo blocco il
 -- codice segreto e le schede nascoste si leggerebbero con la sola chiave anon.
--- RLS attiva e nessuna policy = nessuna riga visibile a chi non e proprietario.
+-- RLS attiva e nessuna policy = nessuna riga visibile ai ruoli soggetti a RLS
+-- (anon, authenticated). Il proprietario e i ruoli con BYPASSRLS (es. service_role,
+-- postgres) vedono comunque tutte le righe.
 -- Niente FORCE: l'app e il runner delle migrazioni si collegano come proprietario
 -- delle tabelle e devono continuare a leggere e scrivere.
 ALTER TABLE download_items ENABLE ROW LEVEL SECURITY;
