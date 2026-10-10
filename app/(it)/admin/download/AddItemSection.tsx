@@ -16,6 +16,7 @@ import { callApi } from './api'
 const UPLOAD_URL = '/api/admin/downloads/upload'
 const ACCEPT = Object.keys(ALLOWED_FILE_TYPES).map(extension => `.${extension}`).join(',')
 const UPLOADED_NOT_SAVED = 'Il file è stato caricato ma la scheda non è stata creata: riprova'
+const UPLOADED_NOT_CHECKED = 'Il file è stato caricato ma non riesco a controllare l’elenco delle schede: riprova tra poco'
 
 type UploadedBlob = Awaited<ReturnType<typeof upload>>
 
@@ -35,12 +36,17 @@ function stripExtension(fileName: string): string {
 type FormProps = {
   // Aggiorna l'elenco dopo la creazione di una scheda.
   onCreated: () => Promise<void>
+  // Rilegge l'elenco dal server (e lo aggiorna a video): null se la lettura non riesce.
+  onRefresh: () => Promise<DownloadItem[] | null>
 }
 
-function FileForm({ onCreated }: FormProps) {
+type CreatedCheck = 'yes' | 'no' | 'unknown'
+
+function FileForm({ onCreated, onRefresh }: FormProps) {
   const ids = useId()
   const fileInput = useRef<HTMLInputElement>(null)
   // Blob già caricato ma senza scheda: un "riprova" non deve ricaricare il file.
+  // Va riusato solo dopo aver verificato che nessuna scheda lo usi già (vedi alreadyCreated).
   const uploaded = useRef<{ file: File; blob: UploadedBlob } | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
@@ -61,13 +67,33 @@ function FileForm({ onCreated }: FormProps) {
     if (!titleEdited) setTitle(next ? stripExtension(next.name) : '')
   }
 
+  // Il server ha già una scheda su questo blob? Si legge l'elenco aggiornato.
+  async function alreadyCreated(blob: UploadedBlob): Promise<CreatedCheck> {
+    const items = await onRefresh()
+    if (!items) return 'unknown'
+    return items.some(item => item.blobPathname === blob.pathname) ? 'yes' : 'no'
+  }
+
+  // La scheda esiste: il modulo si svuota, pronto per il file successivo.
+  function finishCreated() {
+    uploaded.current = null
+    setFile(null)
+    setTitle('')
+    setTitleEdited(false)
+    setDescription('')
+    setProgress(0)
+    if (fileInput.current) fileInput.current.value = ''
+    setDone(true)
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
     setError(null)
     setDone(false)
 
-    // Tutta la validazione prima di toccare la rete.
+    // Tutta la validazione prima di toccare la rete (e a ogni tentativo, anche
+    // quando il file è già stato caricato).
     if (!file) {
       setError('Seleziona un file da caricare.')
       return
@@ -84,7 +110,24 @@ function FileForm({ onCreated }: FormProps) {
     }
 
     let blob = uploaded.current?.file === file ? uploaded.current.blob : null
-    if (!blob) {
+    if (blob) {
+      // Riprova con un blob già caricato: il tentativo precedente può essere andato a
+      // buon fine anche se a noi è sembrato fallire. Due schede sullo stesso blob
+      // sono pericolose (eliminandone una si cancella il file dell'altra), quindi
+      // prima si controlla l'elenco e si crea la scheda solo se manca.
+      setPhase('save')
+      const created = await alreadyCreated(blob)
+      if (created === 'yes') {
+        finishCreated()
+        setPhase('idle')
+        return
+      }
+      if (created === 'unknown') {
+        setError(UPLOADED_NOT_CHECKED)
+        setPhase('idle')
+        return
+      }
+    } else {
       setPhase('upload')
       setProgress(0)
       try {
@@ -123,22 +166,25 @@ function FileForm({ onCreated }: FormProps) {
       },
     })
     if (!res.ok) {
-      // Un 400 dice che il blob non è utilizzabile: il riprova deve ricaricarlo.
-      // Con un errore di rete o del server il blob resta valido e si riusa.
-      if (res.status === 400) uploaded.current = null
+      if (res.status === 400) {
+        // Titolo e descrizione sono già stati validati qui sopra con le stesse regole
+        // del server, quindi un 400 riguarda il blob: il riprova deve ricaricarlo.
+        uploaded.current = null
+      } else if (!(res.status >= 400 && res.status < 500)) {
+        // Rete caduta (0) o errore del server (5xx): la scheda potrebbe esistere già.
+        // Si controlla subito, così non si invita a "riprovare" ciò che è già fatto.
+        if ((await alreadyCreated(blob)) === 'yes') {
+          finishCreated()
+          setPhase('idle')
+          return
+        }
+      }
       setError(`${UPLOADED_NOT_SAVED} (${res.error})`)
       setPhase('idle')
       return
     }
 
-    uploaded.current = null
-    setFile(null)
-    setTitle('')
-    setTitleEdited(false)
-    setDescription('')
-    setProgress(0)
-    if (fileInput.current) fileInput.current.value = ''
-    setDone(true)
+    finishCreated()
     await onCreated()
     setPhase('idle')
   }
@@ -213,7 +259,7 @@ function FileForm({ onCreated }: FormProps) {
   )
 }
 
-function LinkForm({ onCreated }: FormProps) {
+function LinkForm({ onCreated }: Pick<FormProps, 'onCreated'>) {
   const ids = useId()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -310,13 +356,13 @@ function LinkForm({ onCreated }: FormProps) {
   )
 }
 
-export default function AddItemSection({ onCreated }: FormProps) {
+export default function AddItemSection({ onCreated, onRefresh }: FormProps) {
   const titleId = useId()
   return (
     <section className="card p-5" aria-labelledby={titleId}>
       <h2 id={titleId} className="font-bold text-gray-900 mb-4">Aggiungi</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <FileForm onCreated={onCreated} />
+        <FileForm onCreated={onCreated} onRefresh={onRefresh} />
         <LinkForm onCreated={onCreated} />
       </div>
     </section>

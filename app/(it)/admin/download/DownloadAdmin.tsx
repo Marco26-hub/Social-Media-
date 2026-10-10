@@ -23,15 +23,27 @@ export default function DownloadAdmin() {
   // Una sola modifica alla volta sull'elenco: finché una richiesta è in corso, le altre azioni sono disattivate.
   const [pending, setPending] = useState(false)
 
-  // Rilegge tutto dal server. Restituisce il messaggio d'errore, o null se è andata bene.
-  const reload = useCallback(async (): Promise<string | null> => {
+  // Rilegge tutto dal server e aggiorna lo stato a video.
+  const fetchList = useCallback(async (): Promise<{ ok: true; items: DownloadItem[] } | { ok: false; error: string }> => {
     const res = await callApi<ListResponse>('/api/admin/downloads')
-    if (!res.ok) return res.error
+    if (!res.ok) return { ok: false, error: res.error }
     setItems(res.data.items)
     setCode(res.data.code)
     setNeedsMigration(res.data.needs_migration)
-    return null
+    return { ok: true, items: res.data.items }
   }, [])
+
+  // Come fetchList, ma restituisce solo il messaggio d'errore (null se è andata bene).
+  const reload = useCallback(async (): Promise<string | null> => {
+    const list = await fetchList()
+    return list.ok ? null : list.error
+  }, [fetchList])
+
+  // Per il modulo file: l'elenco aggiornato, o null se la lettura non riesce.
+  async function refreshItems(): Promise<DownloadItem[] | null> {
+    const list = await fetchList()
+    return list.ok ? list.items : null
+  }
 
   // Primo caricamento (e "Riprova"): l'unico che mostra lo stato "Caricamento".
   const load = useCallback(async () => {
@@ -146,7 +158,7 @@ export default function DownloadAdmin() {
       ) : (
         <div className="space-y-4">
           <SecretLinkSection code={code} onGenerate={generateCode} />
-          <AddItemSection onCreated={handleCreated} />
+          <AddItemSection onCreated={handleCreated} onRefresh={refreshItems} />
 
           <section className="card p-5" aria-labelledby={listTitleId}>
             <h2 id={listTitleId} className="font-bold text-gray-900 mb-4">
