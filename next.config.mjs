@@ -79,6 +79,18 @@ const marketplaceCsp = csp
     "frame-src 'self' https://*.clerk.accounts.dev https://clerk.socialautomation.app https://challenges.cloudflare.com",
   )
 
+// Il pannello /admin carica i file direttamente dal browser su Vercel Blob
+// (upload() di @vercel/blob/client): il PUT va a https://vercel.com/api/blob/?...
+// e i caricamenti multipart a https://vercel.com/api/blob/mpu?... (host e percorsi
+// ricavati da @vercel/blob 2.8.1). Nelle CSP un percorso senza '/' finale vale come
+// corrispondenza esatta e non coprirebbe ne' '/api/blob/' ne' '/api/blob/mpu':
+// la barra finale lo rende un prefisso. Il resto della policy resta quella di `csp`.
+const adminCsp = csp
+  .replace(
+    "connect-src 'self'",
+    "connect-src 'self' https://vercel.com/api/blob/",
+  )
+
 const remotionServerFiles = [
   './remotion/**/*',
   './.remotion-bundle/**/*',
@@ -153,6 +165,19 @@ const nextConfig = {
       { source: '/blog', headers: blogCacheHeaders },
       { source: '/blog/:slug', headers: blogCacheHeaders },
       { source: '/:path*', headers: securityHeaders },
+      // DEVONO restare DOPO '/:path*': per la stessa chiave di header vince l'ultima
+      // voce che corrisponde, quindi qui sostituiscono Referrer-Policy e CSP globali.
+      // /download/<codice> e' leggibile da chiunque abbia il link: niente indicizzazione,
+      // nessuna cache condivisa e il codice non deve uscire nel Referer verso altri siti.
+      {
+        source: '/download/:path*',
+        headers: [
+          ...noIndexHeaders,
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'Cache-Control', value: 'private, no-store' },
+        ],
+      },
+      { source: '/admin/:path*', headers: [...noIndexHeaders, { key: 'Content-Security-Policy', value: adminCsp }] },
     ]
   },
 }
