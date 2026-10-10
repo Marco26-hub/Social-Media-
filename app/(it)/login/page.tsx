@@ -8,6 +8,7 @@ import { signIn, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, LogIn, ShieldCheck } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
+import { needsFullPageLoad } from '@/lib/login-redirect'
 import styles from './login.module.css'
 
 type AccessHint = {
@@ -16,6 +17,15 @@ type AccessHint = {
   username?: string
   password?: string
   note?: string
+}
+
+// Dopo il login si va alla destinazione richiesta. Per /admin si ricarica la
+// pagina (non router.push): la CSP dell'admin, che permette l'upload su Blob,
+// vale solo per un documento caricato da zero, non per una navigazione morbida
+// che resta nel documento di /login (vedi lib/login-redirect.ts).
+function goAfterLogin(destination: string, push: (path: string) => void) {
+  if (needsFullPageLoad(destination)) window.location.assign(destination)
+  else push(destination)
 }
 
 export default function LoginPage() {
@@ -77,7 +87,7 @@ export default function LoginPage() {
             redirect: false,
           })
           if (result?.ok) {
-            router.push(destinationAfterLogin())
+            goAfterLogin(destinationAfterLogin(), path => router.push(path))
           } else {
             setLoading(false)
           }
@@ -120,7 +130,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push(destinationAfterLogin())
+    goAfterLogin(destinationAfterLogin(), path => router.push(path))
   }
 
   if (isDemo && loading) {
