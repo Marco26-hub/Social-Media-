@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useId, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import { moveItem } from '@/lib/download-area'
 import type { DownloadItem } from '@/lib/download-area-db'
 import AddItemSection from './AddItemSection'
@@ -135,6 +136,13 @@ export default function DownloadAdmin() {
   return (
     <div>
       <header className="mb-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1 mb-2 text-xs md:text-sm text-gray-500 hover:underline underline-offset-2"
+        >
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+          Dashboard
+        </Link>
         <h1 className="text-xl md:text-3xl font-bold tracking-tight">Area download</h1>
         <p className="text-xs md:text-sm text-gray-500 mt-1">
           Gestisci i materiali della pagina riservata: li vede solo chi ha il link segreto.
