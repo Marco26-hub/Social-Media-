@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { isDemo } from '@/lib/demo'
 import { requireDownloadAdmin } from '@/lib/download-area-guard'
 import DownloadAdmin from './DownloadAdmin'
 
@@ -22,21 +23,30 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
+function Unavailable({ message }: { message: string }) {
+  return (
+    <Shell>
+      <h1 className="text-xl md:text-3xl font-bold tracking-tight">Area download</h1>
+      <p role="alert" className="card p-4 mt-4 text-sm text-amber-800 bg-amber-50 border-amber-200">
+        {message}
+      </p>
+    </Shell>
+  )
+}
+
 export default async function AdminDownloadPage() {
+  // In demo il guard rifiuta sempre, ma il login demo entra da solo e riporta
+  // qui: reindirizzare creerebbe un ciclo infinito. Si spiega invece il limite.
+  if (isDemo()) {
+    return <Unavailable message="Area download non disponibile in modalità demo: serve il database reale." />
+  }
   try {
     await requireDownloadAdmin()
   } catch (e) {
     // Senza database non c'è sessione da verificare: reindirizzare al login non
     // servirebbe, quindi si spiega cosa manca. Ogni altro errore vale come "non ammesso".
     if (e instanceof Error && e.message === 'Database non disponibile') {
-      return (
-        <Shell>
-          <h1 className="text-xl md:text-3xl font-bold tracking-tight">Area download</h1>
-          <p role="alert" className="card p-4 mt-4 text-sm text-amber-800 bg-amber-50 border-amber-200">
-            Database non disponibile: configura DATABASE_URL e ricarica.
-          </p>
-        </Shell>
-      )
+      return <Unavailable message="Database non disponibile: configura DATABASE_URL e ricarica." />
     }
     redirect('/login?callbackUrl=/admin/download')
   }
