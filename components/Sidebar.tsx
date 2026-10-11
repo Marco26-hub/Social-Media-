@@ -6,10 +6,11 @@ import { useState, useEffect } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import ClienteSelector from '@/components/ClienteSelector'
 import { isDemo } from '@/lib/demo'
+import { needsFullPageLoad } from '@/lib/login-redirect'
 import {
   LayoutDashboard, Calendar, Settings,
   LogOut, Zap, Menu, X, Target,
-  Users, Sparkles, TrendingUp, Globe, CreditCard, BookOpen, MessageCircleQuestion,
+  Users, Sparkles, TrendingUp, Globe, CreditCard, BookOpen, MessageCircleQuestion, Download,
 } from 'lucide-react'
 
 type NavItem = { href: string; label: string; icon?: React.ElementType; emoji?: string; external?: boolean; adminOnly?: boolean }
@@ -49,6 +50,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: '/dashboard/clienti',  label: 'Clienti',        icon: Users, adminOnly: true },
       { href: '/dashboard/settings', label: 'Configurazione', icon: Settings, adminOnly: true },
+      { href: '/admin/download',     label: 'Area download',  icon: Download, adminOnly: true },
       { href: '/dashboard/odino',    label: 'Domande a ODINO', icon: MessageCircleQuestion, adminOnly: true },
       { href: '/dashboard/guida',    label: 'Come funziona',  icon: BookOpen, adminOnly: true },
       { href: '/',                   label: 'Vedi landing',   icon: Globe, external: true },
@@ -152,23 +154,40 @@ export default function Sidebar() {
                           )
                     )
                     const Icon = item.icon
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        {...(item.external ? { target: '_blank', rel: 'noopener' } : {})}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          active
-                            ? 'bg-brand-600 text-white font-medium'
-                            : 'text-gray-400 hover:text-white hover:bg-white/10'
-                        }`}
-                      >
+                    const className = `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      active
+                        ? 'bg-brand-600 text-white font-medium'
+                        : 'text-gray-400 hover:text-white hover:bg-white/10'
+                    }`
+                    const content = (
+                      <>
                         {item.emoji ? (
                           <span className="w-4 text-center text-base leading-none">{item.emoji}</span>
                         ) : Icon ? (
                           <Icon className="w-4 h-4 flex-shrink-0" />
                         ) : null}
                         <span className="truncate">{item.label}</span>
+                      </>
+                    )
+                    // Il pannello /admin ha una CSP propria (upload su Vercel Blob).
+                    // Con la navigazione interna di Next resterebbe quella della
+                    // dashboard e l'upload verrebbe bloccato: lì serve un <a> normale,
+                    // cioè un caricamento completo della pagina.
+                    if (needsFullPageLoad(item.href)) {
+                      return (
+                        <a key={item.href} href={item.href} className={className}>
+                          {content}
+                        </a>
+                      )
+                    }
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        {...(item.external ? { target: '_blank', rel: 'noopener' } : {})}
+                        className={className}
+                      >
+                        {content}
                       </Link>
                     )
                   })}
