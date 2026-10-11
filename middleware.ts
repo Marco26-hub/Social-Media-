@@ -164,6 +164,9 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request, secret: AUTH_SECRET })
   const isAuthPage = pathname === '/login'
   const isDashboard = pathname.startsWith('/dashboard')
+  // Pannello /admin (es. area download): confronto esatto o con '/', cosi' non
+  // intercetta /api/admin (gia' coperto da isProtectedApi) ne' /administrator.
+  const isAdminPanel = pathname === '/admin' || pathname.startsWith('/admin/')
   const isApprove = pathname.startsWith('/approve')
   const isPreview = pathname.startsWith('/preview')
   const isPublicApprovalApi = pathname === '/api/data/approve' && request.method !== 'POST'
@@ -207,6 +210,19 @@ export async function middleware(request: NextRequest) {
   // portato nella sua area /portale. Contenuti, clienti e pubblicazione (i
   // servizi che vendiamo e che approviamo noi) restano solo all'admin.
   if (isDashboard && token && !isAdmin) {
+    return NextResponse.redirect(new URL('/portale', request.url))
+  }
+
+  // Il pannello /admin segue le stesse regole della dashboard. Senza sessione si
+  // passa dal login con callbackUrl, cosi' dopo l'accesso si torna alla pagina
+  // richiesta.
+  if (isAdminPanel && !token) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('callbackUrl', `${pathname}${request.nextUrl.search}`)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  if (isAdminPanel && token && !isAdmin) {
     return NextResponse.redirect(new URL('/portale', request.url))
   }
 

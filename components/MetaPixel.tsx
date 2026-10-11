@@ -3,6 +3,7 @@
 import { usePathname, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import { EVENTO_CONSENSO, marketingConcesso } from '@/lib/cookie-consent'
+import { isDownloadPath } from '@/lib/download-path'
 
 // Il pixel nel browser e' una scelta a parte dalla misurazione lato server, e
 // va acceso apposta. Senza questo flag bastava valorizzare l'id del pixel per
@@ -21,6 +22,9 @@ declare global {
 function MetaPixelTracker() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  // Sull'area download il codice segreto è nel percorso e il pixel lo manderebbe a
+  // Meta (PageView e eventi automatici): lì il pixel non parte e non si carica.
+  const esclusa = isDownloadPath(pathname)
   const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
@@ -31,7 +35,7 @@ function MetaPixelTracker() {
   }, [])
 
   useEffect(() => {
-    if (!enabled || !PIXEL_ID) return
+    if (!enabled || !PIXEL_ID || esclusa) return
 
     if (!window.fbq) {
       const fbq = function (...args: unknown[]) {
@@ -61,9 +65,9 @@ function MetaPixelTracker() {
     }
 
     window.fbq('track', 'PageView')
-  }, [enabled, pathname, searchParams])
+  }, [enabled, pathname, searchParams, esclusa])
 
-  if (!enabled || !PIXEL_ID) return null
+  if (!enabled || !PIXEL_ID || esclusa) return null
 
   return (
     <noscript>
