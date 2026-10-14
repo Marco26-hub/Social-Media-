@@ -1,6 +1,6 @@
 # Pagina regali che converte e app UGC nel link segreto — design
 
-Data: 2026-10-12 · Stato: approvato a voce, in revisione scritta · Branch: `feat/regali-page` (PR 1), `feat/regali-app-ugc` (PR 2)
+Data: 2026-10-12 · Stato: approvato il 2026-10-14, con la correzione sulla consegna della PR 1 (§8) · Branch: `feat/regali-page` (PR 1), `feat/regali-app-ugc` (PR 2)
 Parte da: [2026-10-10-download-area-design.md](2026-10-10-download-area-design.md) (area download segreta, già online)
 
 ## Scopo
@@ -59,7 +59,7 @@ Ordine delle sezioni, pensato per un telefono largo 390px:
    - La sezione separata «Materiali disponibili» sparisce: al suo posto c'è un'intestazione piccola «I tuoi regali · {n}».
 
 4. **Regali**.
-   - **Prima scheda, se l'interruttore è attivo: l'app UGC**, fissa nel codice:
+   - **Dalla PR 2: prima scheda, se l'interruttore è attivo: l'app UGC**, fissa nel codice:
      - titolo: «App UGC: dalla foto del prodotto al video»;
      - descrizione: «Carichi la foto del tuo prodotto e l'app prepara un'immagine e un video in stile UGC per Reels e TikTok. Funziona con la tua chiave Gemini: l'app è gratuita, immagini e video li paghi a Google.»;
      - pulsante: «Apri l'app». È un link interno a `/download/<codice>/app-ugc`, costruito con il codice della pagina: quando il codice cambia, il link cambia da solo.
@@ -99,7 +99,7 @@ Ordine delle sezioni, pensato per un telefono largo 390px:
    - «Cosa succede se vi scrivo su WhatsApp?» → «Ti risponde una persona. Ci dici di cosa ti occupi, prepariamo la prova e te la mandiamo. Nessun messaggio promozionale senza il tuo sì.»
    - «Quanto costa se poi volete farlo voi?» → «I prezzi sono pubblici: gestione social {PREZZI.presenza}, sito {PREZZI.web}, IVA esclusa. I dettagli sono nella pagina Pacchetti.»
    - «Posso girare il link a un collega?» → «Sì, puoi girarlo a chi vuoi.»
-   - Solo con l'app attiva: «L'app UGC è gratis davvero?» → «L'app sì. La generazione la fa Google con la tua chiave: l'analisi del prodotto rientra nel livello gratuito, mentre immagini e video richiedono la fatturazione attiva sul tuo progetto Google e li paghi a Google, non a noi.»
+   - Dalla PR 2, solo con l'app attiva: «L'app UGC è gratis davvero?» → «L'app sì. La generazione la fa Google con la tua chiave: l'analisi del prodotto rientra nel livello gratuito, mentre immagini e video richiedono la fatturazione attiva sul tuo progetto Google e li paghi a Google, non a noi.»
 
 8. **Chiusura** (`.finalCta`).
    - Occhiello «Nessuna fretta». H2 «I regali sono tuoi comunque.»
@@ -249,7 +249,7 @@ Cosa cambia rispetto all'originale:
 
 **Interfaccia.** `PageTextsSection.tsx`, tra «Link segreto» e «Aggiungi»:
 - quattro campi con contatore di caratteri e il testo standard come segnaposto;
-- l'interruttore «Mostra l'app UGC tra i regali»;
+- dalla PR 2, l'interruttore «Mostra l'app UGC tra i regali». Nella PR 1 la colonna `show_ugc` esiste e l'API la valida, ma il pannello non la mostra e la pagina pubblica la ignora;
 - «Salva i testi»;
 - l'avviso, se il messaggio WhatsApp non contiene la frase: «Senza "Ho preso i regali SWA" non riconosci le chat che arrivano dalla campagna»;
 - il link «Apri la pagina» per controllare il risultato.
@@ -315,9 +315,9 @@ Runner esistente: `playwright/test` con `node:assert`. Su Windows si lancia con 
 
 ## 8. Consegna
 
-1. **PR 1 (`feat/regali-page`):** sezioni 1, 2 e 4, più `SiteOverlays`, 404 del segmento e voce di anteprima. La migrazione 053 si applica in produzione con il runner (`npm run migrate`, checksum sul file LF) prima o dopo il merge: la pagina usa i testi standard finché la tabella manca.
+1. **PR 1 (`feat/regali-page`):** sezioni 1, 2 e 4, più `SiteOverlays`, 404 del segmento e voce di anteprima. **Senza** scheda app, FAQ sull'app e interruttore nel pannello: senza la rotta `app-ugc` il pulsante «Apri l'app» porterebbe a una 404. La migrazione 053 si applica in produzione con il runner (`npm run migrate`, checksum sul file LF) prima o dopo il merge: la pagina usa i testi standard finché la tabella manca.
 2. **Verifica tecnica del §5**, con il titolare.
-3. **PR 2 (`feat/regali-app-ugc`):** sezione 3, CSP e dipendenza.
+3. **PR 2 (`feat/regali-app-ugc`):** sezione 3, CSP e dipendenza, più scheda app, FAQ sull'app e interruttore nel pannello.
 4. **Dopo ogni deploy:** controllo in produzione con il codice di prova. Prima del lancio:
    - password `admin`/`cliente` cambiate;
    - regali veri caricati;
