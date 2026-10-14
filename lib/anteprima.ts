@@ -121,6 +121,15 @@ const IT: Record<string, Anteprima> = {
     sottotitolo: `Presenza ${PREZZI.presenza} · Crescita ${PREZZI.crescita} · Blog ${PREZZI.blog}. IVA esclusa.`,
     tinta: 'oro',
   },
+  // Non è una pagina: è l'anteprima dei link /download/<codice>, che devono
+  // usare questa voce e mai il proprio percorso: anteprimaOg() lo copia
+  // nell'URL dell'immagine, e nel percorso c'è il codice.
+  '/regali': {
+    occhiello: 'Regali',
+    titolo: 'I regali di Social Web Automation.',
+    sottotitolo: 'Materiali gratuiti per chi ci segue: si aprono subito, senza registrazione.',
+    tinta: 'verde',
+  },
   '/corsi': {
     occhiello: 'SWA Academy · Formazione',
     titolo: 'AI e automazione: prima il metodo.',

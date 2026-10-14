@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowUpRight, Facebook, Instagram, Undo2 } from 'lucide-react'
 import { TITOLARE } from '@/lib/legal-config'
 import { RECESSO_FOOTER, VOCI_FOOTER, type LinguaFooter } from '@/lib/footer-voci'
+import { instagramUrl } from '@/lib/social-links'
 import styles from './public-footer.module.css'
 
 const TESTI: Record<LinguaFooter, {
@@ -56,7 +57,7 @@ export default function PublicFooter({ lingua = 'it' }: { lingua?: LinguaFooter 
     {
       name: 'Instagram',
       description: t.instagram,
-      url: process.env.NEXT_PUBLIC_INSTAGRAM_URL?.trim() || 'https://www.instagram.com/socialwebautomation/',
+      url: instagramUrl(),
       icon: Instagram,
       className: styles.instagram,
     },
