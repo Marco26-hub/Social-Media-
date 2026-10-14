@@ -1,10 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
 import {
+  DEFAULT_PAGE_TEXTS,
+  IN_APP_DOWNLOAD_HINT,
+  PAGE_TEXT_LIMITS,
   buildBlobPathname,
+  buildWhatsAppUrl,
   describeItem,
   formatBytes,
   generateAccessCode,
+  hasMarkerPhrase,
   isDownloadBlobPathname,
   linkHostname,
   moveItem,
@@ -12,8 +17,10 @@ import {
   normalizeLinkUrl,
   parseCreateItemBody,
   parseUpdateItemBody,
+  resolvePageTexts,
   validateFileMeta,
   validateItemText,
+  validatePageSettings,
   validateReorder,
 } from './download-area'
 
@@ -157,11 +164,133 @@ test('validateReorder: elenco vuoto, forme non valide, elenco più lungo', () =>
   assert.equal(validateReorder([1, 2], ['1', '2']).ok, false)
 })
 test('describeItem: file da scaricare e link esterno', () => {
-  assert.deepEqual(describeItem({ kind: 'file', url: 'https://s/g.pdf', downloadUrl: 'https://s/g.pdf?download=1', fileName: 'guida.pdf', sizeBytes: 2_516_582 }), { actionLabel: 'Scarica', href: 'https://s/g.pdf?download=1', meta: 'PDF · 2,4 MB', external: false })
-  assert.deepEqual(describeItem({ kind: 'link', url: 'https://www.github.com/marco/repo', downloadUrl: null, fileName: null, sizeBytes: null }), { actionLabel: 'Apri', href: 'https://www.github.com/marco/repo', meta: 'github.com', external: true })
+  assert.deepEqual(describeItem({ kind: 'file', url: 'https://s/g.pdf', downloadUrl: 'https://s/g.pdf?download=1', fileName: 'guida.pdf', contentType: 'application/pdf', sizeBytes: 2_516_582 }), { actionLabel: 'Scarica il PDF', href: 'https://s/g.pdf?download=1', meta: 'PDF · 2,4 MB', external: false, hint: null })
+  assert.deepEqual(describeItem({ kind: 'link', url: 'https://www.github.com/marco/repo', downloadUrl: null, fileName: null, contentType: null, sizeBytes: null }), { actionLabel: 'Apri il link', href: 'https://www.github.com/marco/repo', meta: 'github.com', external: true, hint: null })
 })
 test('describeItem: file senza dimensione, senza estensione o senza downloadUrl', () => {
-  assert.deepEqual(describeItem({ kind: 'file', url: 'https://s/g.zip', downloadUrl: null, fileName: 'a.ZIP', sizeBytes: null }), { actionLabel: 'Scarica', href: 'https://s/g.zip', meta: 'ZIP', external: false })
-  assert.equal(describeItem({ kind: 'file', url: 'https://s/x', downloadUrl: null, fileName: 'senza-estensione', sizeBytes: 1536 }).meta, '1,5 KB')
-  assert.equal(describeItem({ kind: 'file', url: 'https://s/x', downloadUrl: null, fileName: null, sizeBytes: null }).meta, '')
+  // Senza contentType il tipo si ricava dall'estensione: "a.ZIP" in maiuscolo vale ZIP.
+  assert.deepEqual(describeItem({ kind: 'file', url: 'https://s/g.zip', downloadUrl: null, fileName: 'a.ZIP', contentType: null, sizeBytes: null }), { actionLabel: 'Scarica lo ZIP', href: 'https://s/g.zip', meta: 'ZIP', external: false, hint: null })
+  assert.equal(describeItem({ kind: 'file', url: 'https://s/x', downloadUrl: null, fileName: 'senza-estensione', contentType: null, sizeBytes: 1536 }).meta, '1,5 KB')
+  assert.equal(describeItem({ kind: 'file', url: 'https://s/x', downloadUrl: null, fileName: null, contentType: null, sizeBytes: null }).meta, '')
+})
+test('describeItem: tipo sconosciuto o ripiego sull’estensione che non esiste tra quelle ammesse', () => {
+  const file = (fileName: string | null) => ({ kind: 'file' as const, url: 'https://s/x', downloadUrl: null, fileName, contentType: null, sizeBytes: null })
+  // `constructor` e `__proto__` esistono su ogni oggetto: senza Object.hasOwn il ripiego restituirebbe una funzione.
+  for (const name of ['senza-estensione', 'x.sconosciuta', 'x.constructor', 'x.__proto__', null]) {
+    assert.equal(describeItem(file(name)).actionLabel, 'Scarica il file', String(name))
+  }
+})
+
+test('describeItem: etichetta per tipo di file', () => {
+  const file = (fileName: string, contentType: string | null) => ({ kind: 'file' as const, url: `https://s/${fileName}`, downloadUrl: `https://s/${fileName}?download=1`, fileName, contentType, sizeBytes: 1536 })
+  const cases: Array<[string, string, string]> = [
+    ['guida.pdf', 'application/pdf', 'Scarica il PDF'],
+    ['kit.zip', 'application/zip', 'Scarica lo ZIP'],
+    ['foto.png', 'image/png', 'Scarica l’immagine'],
+    ['clip.mp4', 'video/mp4', 'Scarica il video'],
+    ['dati.csv', 'text/csv', 'Scarica il file'],
+  ]
+  for (const [name, type, label] of cases) {
+    const d = describeItem(file(name, type))
+    assert.equal(d.actionLabel, label)
+    assert.equal(d.href, `https://s/${name}?download=1`)
+    assert.equal(d.hint, null)
+    assert.equal(d.external, false)
+  }
+})
+
+test('describeItem: nel browser in-app PDF, immagini e video si aprono nel visore', () => {
+  const file = (fileName: string, contentType: string) => ({ kind: 'file' as const, url: `https://s/${fileName}`, downloadUrl: `https://s/${fileName}?download=1`, fileName, contentType, sizeBytes: 10 })
+  assert.deepEqual(describeItem(file('g.pdf', 'application/pdf'), { inApp: true }), { actionLabel: 'Apri il PDF', href: 'https://s/g.pdf', meta: 'PDF · 10 B', external: false, hint: null })
+  assert.equal(describeItem(file('f.jpg', 'image/jpeg'), { inApp: true }).actionLabel, 'Apri l’immagine')
+  assert.equal(describeItem(file('v.mp4', 'video/mp4'), { inApp: true }).actionLabel, 'Guarda il video')
+  assert.equal(describeItem(file('v.mp4', 'video/mp4'), { inApp: true }).href, 'https://s/v.mp4')
+})
+
+test('describeItem: nel browser in-app ZIP e documenti restano da scaricare, con l’avviso', () => {
+  const zip = describeItem({ kind: 'file', url: 'https://s/k.zip', downloadUrl: 'https://s/k.zip?download=1', fileName: 'k.zip', contentType: 'application/zip', sizeBytes: 10 }, { inApp: true })
+  assert.equal(zip.actionLabel, 'Scarica lo ZIP')
+  assert.equal(zip.href, 'https://s/k.zip?download=1')
+  assert.equal(zip.hint, IN_APP_DOWNLOAD_HINT)
+  const doc = describeItem({ kind: 'file', url: 'https://s/d.docx', downloadUrl: null, fileName: 'd.docx', contentType: null, sizeBytes: null }, { inApp: true })
+  assert.equal(doc.actionLabel, 'Scarica il file')
+  assert.equal(doc.href, 'https://s/d.docx')
+  assert.equal(doc.hint, IN_APP_DOWNLOAD_HINT)
+})
+
+test('describeItem: link esterno e link WhatsApp (host esatto)', () => {
+  const link = (url: string) => ({ kind: 'link' as const, url, downloadUrl: null, fileName: null, contentType: null, sizeBytes: null })
+  assert.equal(describeItem(link('https://github.com/marco/repo')).actionLabel, 'Apri il link')
+  assert.deepEqual(describeItem(link('https://wa.me/393477196603?text=ciao')), { actionLabel: 'Scrivici su WhatsApp', href: 'https://wa.me/393477196603?text=ciao', meta: 'wa.me', external: true, hint: null })
+  assert.equal(describeItem(link('https://wa.me.evil.example/x')).actionLabel, 'Apri il link')
+})
+
+test('DEFAULT_PAGE_TEXTS: dentro i limiti e con la frase marcatore', () => {
+  for (const key of ['eyebrow', 'title', 'lead', 'whatsappText'] as const) {
+    assert.ok(DEFAULT_PAGE_TEXTS[key].length <= PAGE_TEXT_LIMITS[key], key)
+  }
+  assert.ok(hasMarkerPhrase(DEFAULT_PAGE_TEXTS.whatsappText))
+  assert.equal(DEFAULT_PAGE_TEXTS.title, 'Ecco i tuoi regali.')
+})
+
+test('validatePageSettings: spazi tolti, vuoto diventa null, showUgc solo se presente', () => {
+  assert.deepEqual(
+    validatePageSettings({ eyebrow: '  Nuovo   occhiello ', title: '', lead: '   ', whatsappText: 'Ciao! Ho preso i regali SWA.' }),
+    { ok: true, value: { eyebrow: 'Nuovo occhiello', title: null, lead: null, whatsappText: 'Ciao! Ho preso i regali SWA.' } },
+  )
+  assert.deepEqual(validatePageSettings({ showUgc: true }), { ok: true, value: { eyebrow: null, title: null, lead: null, whatsappText: null, showUgc: true } })
+  assert.deepEqual(validatePageSettings({}), { ok: true, value: { eyebrow: null, title: null, lead: null, whatsappText: null } })
+})
+
+test('validatePageSettings: limiti esatti e tipi sbagliati', () => {
+  assert.equal(validatePageSettings({ eyebrow: 'x'.repeat(60) }).ok, true)
+  assert.equal(validatePageSettings({ eyebrow: 'x'.repeat(61) }).ok, false)
+  assert.equal(validatePageSettings({ title: 'x'.repeat(91) }).ok, false)
+  assert.equal(validatePageSettings({ lead: 'x'.repeat(241) }).ok, false)
+  assert.equal(validatePageSettings({ whatsappText: 'x'.repeat(301) }).ok, false)
+  assert.equal(validatePageSettings({ title: 5 }).ok, false)
+  assert.equal(validatePageSettings({ showUgc: 'si' }).ok, false)
+  for (const bad of [null, [], 'testo', 42]) assert.equal(validatePageSettings(bad).ok, false)
+})
+
+test('validatePageSettings: il limite si misura dopo la pulizia, gli errori nominano il campo, showUgc false vale', () => {
+  // spazi ai bordi e ripetuti non contano per il limite; a capo e tabulazioni diventano uno spazio
+  assert.deepEqual(validatePageSettings({ eyebrow: `  ${'x'.repeat(60)}  ` }), { ok: true, value: { eyebrow: 'x'.repeat(60), title: null, lead: null, whatsappText: null } })
+  assert.equal(validatePageSettings({ title: `a${' '.repeat(200)}b` }).ok, true)
+  assert.deepEqual(validatePageSettings({ lead: 'riga uno\n\n\triga due' }), { ok: true, value: { eyebrow: null, title: null, lead: 'riga uno riga due', whatsappText: null } })
+  assert.deepEqual(validatePageSettings({ eyebrow: 'x'.repeat(61) }), { ok: false, error: 'L’occhiello può avere al massimo 60 caratteri.' })
+  assert.deepEqual(validatePageSettings({ title: 5 }), { ok: false, error: 'Il titolo non è valido.' })
+  assert.deepEqual(validatePageSettings({ lead: 'x'.repeat(241) }), { ok: false, error: 'Il sottotitolo può avere al massimo 240 caratteri.' })
+  assert.deepEqual(validatePageSettings({ whatsappText: false }), { ok: false, error: 'Il messaggio WhatsApp non è valido.' })
+  // showUgc: false è un valore (spegne l'app), null no; undefined equivale ad assente
+  assert.deepEqual(validatePageSettings({ showUgc: false }), { ok: true, value: { eyebrow: null, title: null, lead: null, whatsappText: null, showUgc: false } })
+  assert.equal(validatePageSettings({ showUgc: null }).ok, false)
+  const result = validatePageSettings({ title: 'T', showUgc: undefined })
+  assert.ok(result.ok && !Object.hasOwn(result.value, 'showUgc'))
+})
+
+test('resolvePageTexts: il campo vuoto usa il testo standard', () => {
+  assert.deepEqual(resolvePageTexts(null), DEFAULT_PAGE_TEXTS)
+  assert.deepEqual(resolvePageTexts({ title: 'Titolo nuovo', lead: '', eyebrow: null }), { ...DEFAULT_PAGE_TEXTS, title: 'Titolo nuovo' })
+})
+
+test('resolvePageTexts: soli spazi valgono come vuoto e il risultato è una copia dei testi standard', () => {
+  assert.deepEqual(resolvePageTexts({ title: '   ', whatsappText: '\n' }), DEFAULT_PAGE_TEXTS)
+  assert.deepEqual(resolvePageTexts(undefined), DEFAULT_PAGE_TEXTS)
+  // chi modifica il risultato non deve toccare i testi standard condivisi
+  assert.notEqual(resolvePageTexts(null), DEFAULT_PAGE_TEXTS)
+})
+
+test('buildWhatsAppUrl: numero dal titolare e testo codificato', () => {
+  assert.equal(
+    buildWhatsAppUrl('Ciao! Ho preso i regali SWA. Mi occupo di: '),
+    'https://wa.me/393477196603?text=Ciao!%20Ho%20preso%20i%20regali%20SWA.%20Mi%20occupo%20di%3A%20',
+  )
+  assert.equal(buildWhatsAppUrl('attività'), 'https://wa.me/393477196603?text=attivit%C3%A0')
+})
+
+test('hasMarkerPhrase: senza distinguere maiuscole e spazi', () => {
+  assert.equal(hasMarkerPhrase('Ciao! Ho preso i regali SWA.'), true)
+  assert.equal(hasMarkerPhrase('ciao, ho  PRESO i regali swa'), true)
+  assert.equal(hasMarkerPhrase('Ciao! Vorrei una prova.'), false)
 })

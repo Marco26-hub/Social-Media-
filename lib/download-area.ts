@@ -1,6 +1,10 @@
 // Logica pura dell'area download segreta (/download/<codice>): nessun DB, nessuna
 // rete, nessun import di Next. Gira sia sul server sia nel browser (il pannello
 // admin la importa per validare prima dell'upload), quindi niente `node:crypto`.
+// L'unico import è `./legal-config`, dati puri senza dipendenze: da lì viene il
+// numero WhatsApp, che resta così una sola fonte per tutto il sito.
+
+import { TITOLARE } from './legal-config'
 
 export const ACCESS_CODE_LENGTH = 16
 export const MAX_FILE_BYTES = 250 * 1024 * 1024
@@ -314,6 +318,10 @@ export function linkHostname(url: string): string {
   }
 }
 
+// Nota sotto il pulsante dei file che nel browser interno di Instagram/Facebook
+// potrebbero non scaricarsi (ZIP e documenti): rimanda alle istruzioni in alto.
+export const IN_APP_DOWNLOAD_HINT = 'Da Instagram o Facebook potrebbe non scaricarsi: apri la pagina nel browser (istruzioni in alto).'
+
 // Ciò che serve per mostrare una scheda pubblica: DownloadItem (lib/download-area-db.ts)
 // lo soddisfa, ma qui si dichiara a parte per non importare il codice server.
 type DescribableItem = {
@@ -321,26 +329,179 @@ type DescribableItem = {
   url: string
   downloadUrl: string | null
   fileName: string | null
+  contentType: string | null
   sizeBytes: number | null
 }
 
-// Testo e destinazione del pulsante di una scheda. Il file punta a `downloadUrl`
-// (forza lo scaricamento); il link esterno si apre altrove e mostra solo il dominio.
-export function describeItem(item: DescribableItem): {
-  actionLabel: 'Scarica' | 'Apri'
-  href: string
-  meta: string
-  external: boolean
-} {
+type FileCategory = 'pdf' | 'zip' | 'image' | 'video' | 'other'
+
+// Il tipo salvato è quello canonico dell'estensione (vedi ALLOWED_FILE_TYPES):
+// l'estensione serve solo se manca. Object.hasOwn perché "constructor" o
+// "__proto__" come estensione non devono pescare dal prototipo.
+function fileCategory(item: DescribableItem): FileCategory {
+  let type = item.contentType
+  if (!type && item.fileName) {
+    const extension = fileExtension(item.fileName)
+    if (Object.hasOwn(ALLOWED_FILE_TYPES, extension)) type = ALLOWED_FILE_TYPES[extension]
+  }
+  if (type === 'application/pdf') return 'pdf'
+  if (type === 'application/zip') return 'zip'
+  if (type?.startsWith('image/')) return 'image'
+  if (type?.startsWith('video/')) return 'video'
+  return 'other'
+}
+
+const DOWNLOAD_LABELS: Record<FileCategory, string> = {
+  pdf: 'Scarica il PDF',
+  zip: 'Scarica lo ZIP',
+  image: 'Scarica l’immagine',
+  video: 'Scarica il video',
+  other: 'Scarica il file',
+}
+
+// Nel browser interno questi tipi si aprono nel visore (con `url`): lo scaricamento
+// forzato di `downloadUrl` lì spesso non parte. ZIP e documenti non hanno un visore.
+const VIEWER_LABELS: Partial<Record<FileCategory, string>> = {
+  pdf: 'Apri il PDF',
+  image: 'Apri l’immagine',
+  video: 'Guarda il video',
+}
+
+// Host esatto: "wa.me.evil.example" o "evil.example/wa.me" non sono WhatsApp.
+function isWhatsAppUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname === 'wa.me'
+  } catch {
+    return false
+  }
+}
+
+// Testo e destinazione del pulsante di una scheda, più l'eventuale nota da mostrare
+// sotto. Il file punta a `downloadUrl` (forza lo scaricamento), tranne nel browser
+// interno di Instagram/Facebook (`inApp`) per i tipi col visore, che puntano a `url`.
+// Il link esterno si apre altrove e mostra solo il dominio.
+export function describeItem(
+  item: DescribableItem,
+  options: { inApp?: boolean } = {},
+): { actionLabel: string; href: string; meta: string; external: boolean; hint: string | null } {
   if (item.kind === 'link') {
-    return { actionLabel: 'Apri', href: item.url, meta: linkHostname(item.url), external: true }
+    return {
+      actionLabel: isWhatsAppUrl(item.url) ? 'Scrivici su WhatsApp' : 'Apri il link',
+      href: item.url,
+      meta: linkHostname(item.url),
+      external: true,
+      hint: null,
+    }
   }
   const extension = item.fileName ? fileExtension(item.fileName).toUpperCase() : ''
   const size = item.sizeBytes === null ? '' : formatBytes(item.sizeBytes)
+  const meta = [extension, size].filter(Boolean).join(' · ')
+  const category = fileCategory(item)
+
+  const viewerLabel = options.inApp ? VIEWER_LABELS[category] : undefined
+  if (viewerLabel) return { actionLabel: viewerLabel, href: item.url, meta, external: false, hint: null }
+
   return {
-    actionLabel: 'Scarica',
+    actionLabel: DOWNLOAD_LABELS[category],
     href: item.downloadUrl ?? item.url,
-    meta: [extension, size].filter(Boolean).join(' · '),
+    meta,
     external: false,
+    // Dentro l'app restano da scaricare solo ZIP e documenti: lì il download può non partire.
+    hint: options.inApp ? IN_APP_DOWNLOAD_HINT : null,
   }
+}
+
+// ---- Testi della pagina regali ---------------------------------------------
+// Occhiello, titolo, sottotitolo e messaggio WhatsApp li modifica il pannello. Un
+// campo nullo o vuoto vuol dire "usa il testo standard": la pagina pubblica parte
+// sempre da DEFAULT_PAGE_TEXTS e sostituisce solo ciò che è stato salvato.
+
+// Riconosce le chat arrivate dalla campagna (etichetta "Regali" su WhatsApp
+// Business): il messaggio standard la contiene e il pannello avvisa se un messaggio
+// personalizzato la perde.
+export const MARKER_PHRASE = 'Ho preso i regali SWA'
+
+export const PAGE_TEXT_LIMITS = { eyebrow: 60, title: 90, lead: 240, whatsappText: 300 } as const
+
+export type PageTextKey = keyof typeof PAGE_TEXT_LIMITS
+export type PageTexts = Record<PageTextKey, string>
+// Ciò che si salva per ogni testo: null = usa il testo standard.
+export type PageTextOverrides = Record<PageTextKey, string | null>
+// Tutta la riga delle impostazioni: i quattro testi e l'interruttore dell'app UGC.
+export type PageSettings = PageTextOverrides & { showUgc: boolean }
+
+// Il messaggio WhatsApp finisce con uno spazio: chi scrive aggiunge subito di cosa
+// si occupa, dopo "Mi occupo di:".
+export const DEFAULT_PAGE_TEXTS: PageTexts = {
+  eyebrow: 'Riservato a chi ha il link',
+  title: 'Ecco i tuoi regali.',
+  lead: 'Si aprono subito: niente email, niente registrazione. Sono tuoi.',
+  whatsappText: 'Ciao! Ho preso i regali SWA. Vorrei un contenuto di prova gratuito per la mia attività. Mi occupo di: ',
+}
+
+const PAGE_TEXT_KEYS: readonly PageTextKey[] = ['eyebrow', 'title', 'lead', 'whatsappText']
+
+// Nome del campo con l'articolo, per i messaggi d'errore.
+const PAGE_TEXT_LABELS: Record<PageTextKey, string> = {
+  eyebrow: 'L’occhiello',
+  title: 'Il titolo',
+  lead: 'Il sottotitolo',
+  whatsappText: 'Il messaggio WhatsApp',
+}
+
+type PageSettingsResult =
+  | { ok: true; value: PageTextOverrides & { showUgc?: boolean } }
+  | { ok: false; error: string }
+
+// Il body del PUT arriva da `request.json()`. Ogni testo assente o nullo diventa
+// null; una stringa si porta su una riga (spazi e a capo multipli → uno spazio) e
+// si misura DOPO la pulizia, così il limite vale per ciò che verrà mostrato. Se
+// resta vuota diventa null. `showUgc` compare nel risultato solo se è nell'input:
+// chi salva i soli testi non deve azzerare l'interruttore.
+export function validatePageSettings(input: unknown): PageSettingsResult {
+  if (!isPlainObject(input)) return { ok: false, error: 'Richiesta non valida.' }
+
+  const texts: PageTextOverrides = { eyebrow: null, title: null, lead: null, whatsappText: null }
+  for (const key of PAGE_TEXT_KEYS) {
+    const raw = input[key]
+    if (raw === undefined || raw === null) continue
+    const label = PAGE_TEXT_LABELS[key]
+    if (typeof raw !== 'string') return { ok: false, error: `${label} non è valido.` }
+    const text = raw.replace(/\s+/g, ' ').trim()
+    if (text.length > PAGE_TEXT_LIMITS[key]) {
+      return { ok: false, error: `${label} può avere al massimo ${PAGE_TEXT_LIMITS[key]} caratteri.` }
+    }
+    texts[key] = text || null
+  }
+
+  if (input.showUgc === undefined) return { ok: true, value: texts }
+  if (typeof input.showUgc !== 'boolean') return { ok: false, error: 'L’interruttore non è valido.' }
+  return { ok: true, value: { ...texts, showUgc: input.showUgc } }
+}
+
+// Unisce i testi salvati a quelli standard. Vale come vuoto anche una stringa di
+// soli spazi: un titolo bianco romperebbe la pagina, e la pagina non deve rompersi.
+export function resolvePageTexts(stored: Partial<PageTextOverrides> | null | undefined): PageTexts {
+  const texts = { ...DEFAULT_PAGE_TEXTS }
+  if (!stored) return texts
+  for (const key of PAGE_TEXT_KEYS) {
+    const value = stored[key]
+    if (typeof value === 'string' && value.trim()) texts[key] = value
+  }
+  return texts
+}
+
+// Solo cifre, senza "+" né spazi: è il formato che vuole wa.me. Calcolato una volta.
+const WHATSAPP_NUMBER = TITOLARE.telefono.replace(/\D/g, '')
+
+// Link wa.me con il messaggio già scritto. Usato sia dalla pagina regali sia dalla
+// 404 del segmento, con testi diversi.
+export function buildWhatsAppUrl(text: string): string {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`
+}
+
+// Spazi e maiuscole non contano: l'avviso del pannello non deve scattare per
+// differenze che non cambiano la frase ("ho  PRESO i regali swa").
+export function hasMarkerPhrase(text: string): boolean {
+  return text.replace(/\s+/g, ' ').toLowerCase().includes(MARKER_PHRASE.toLowerCase())
 }
