@@ -22,6 +22,7 @@ import {
 import { PREZZO_INGRESSO } from '@/lib/prezzi-ingresso'
 import { BLOG_SERVICE } from '@/lib/blog-service'
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/site-config'
+import { CASES } from '@/lib/prove'
 import PublicFooter from '@/components/PublicFooter'
 import FloatingNavigation from '@/components/FloatingNavigation'
 import PublicHeader from '@/components/PublicHeader'
@@ -168,30 +169,6 @@ const SERVICES = [
 const EVIDENCE = [
   { title: 'Processo social visibile', text: 'Piano, produzione, approvazione e pubblicazione sono descritti passaggio per passaggio: analisi, produzione, tua approvazione, pubblicazione e misura.', href: '/metodo', label: 'Vedi il metodo completo' },
   { title: 'Journal pubblico', text: 'Articoli, struttura editoriale, FAQ e collegamenti mostrano concretamente l’approccio SEO + GEO.', href: '/blog', label: 'Apri il Journal' },
-]
-
-const CASES = [
-  {
-    metric: '24',
-    unit: 'contenuti',
-    title: 'Caso studio Bowling',
-    text: 'Un mese di campagna con 10 Reel, 6 caroselli, 4 Story e 4 post: dal problema del gestore alla CTA commerciale.',
-    href: '/servizi/gestione-social-media',
-  },
-  {
-    metric: '3',
-    unit: 'progetti',
-    title: 'Portfolio web consultabile',
-    text: 'SILKinCOM, Studio Legale BCS e Borsieri Car Service mostrano siti reali, non mockup isolati.',
-    href: '/servizi/siti-e-commerce',
-  },
-  {
-    metric: '30',
-    unit: 'aziende',
-    title: 'Pilot ricerca B2B',
-    text: 'Analisi fino a 30 aziende con criteri concordati, fonti pubbliche e priorità motivata per ogni prospect.',
-    href: '/servizi/ricerca-clienti-b2b',
-  },
 ]
 
 const FAQ = [
