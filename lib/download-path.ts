@@ -13,3 +13,10 @@ export function isDownloadPath(pathname: string | null | undefined): boolean {
 export function pathForTelemetry(pathname: string): string {
   return isDownloadPath(pathname) ? `${DOWNLOAD_PREFIX}[codice]` : pathname
 }
+
+// Banner cookie e Odino non si montano sull'area download: lì non parte nessuna misura
+// che chieda consenso, quindi il banner non avrebbe niente da chiedere, e il primo
+// schermo è dei regali. Sugli altri percorsi restano come prima.
+export function siteOverlaysEnabled(pathname: string | null | undefined): boolean {
+  return !isDownloadPath(pathname)
+}
