@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'playwright/test'
-import { isDownloadPath, pathForTelemetry } from './download-path'
+import { isDownloadPath, pathForTelemetry, siteOverlaysEnabled } from './download-path'
 
 test('isDownloadPath riconosce i percorsi sotto /download/', () => {
   assert.equal(isDownloadPath('/download/k7f3q9xzm2p4v8wn'), true)
@@ -25,4 +25,12 @@ test('pathForTelemetry nasconde il codice e lascia intatti gli altri percorsi', 
   assert.equal(pathForTelemetry('/servizi/segretaria-telefonica-ai'), '/servizi/segretaria-telefonica-ai')
   assert.equal(pathForTelemetry('/'), '/')
   assert.ok(!pathForTelemetry('/download/k7f3q9xzm2p4v8wn').includes('k7f3'))
+})
+
+test('siteOverlaysEnabled: spento su /download/*, acceso altrove', () => {
+  assert.equal(siteOverlaysEnabled('/download/k7f3q9xzm2p4v8wn'), false)
+  assert.equal(siteOverlaysEnabled('/download/k7f3q9xzm2p4v8wn/altro'), false)
+  for (const open of ['/', '/en', '/servizi/seo-geo', '/download', '/blog/download/x', null, undefined]) {
+    assert.equal(siteOverlaysEnabled(open), true, String(open))
+  }
 })

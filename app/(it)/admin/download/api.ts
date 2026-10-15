@@ -3,7 +3,7 @@
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string; status: number }
 
-type ApiInit = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown }
+type ApiInit = { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; body?: unknown }
 
 export async function callApi<T>(url: string, init: ApiInit = {}): Promise<ApiResult<T>> {
   try {
