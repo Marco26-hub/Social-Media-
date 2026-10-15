@@ -103,15 +103,21 @@ type StubbedQuery = (sql: string, params: unknown[]) => Promise<{ rows: unknown[
 
 async function withStubbedPool<T>(query: StubbedQuery, run: () => Promise<T>): Promise<T> {
   const previousUrl = process.env.DATABASE_URL
-  const pool = Pool.prototype as unknown as { query: unknown }
+  const pool = Pool.prototype as unknown as { query?: unknown }
+  // `query` di solito è ereditata dal pool di base e non propria di questa classe: in quel
+  // caso a fine prova si toglie la proprietà messa dallo stub, invece di riassegnarla, così
+  // il prototipo torna com'era e non resta una proprietà propria in più.
+  const hadOwnQuery = Object.hasOwn(pool, 'query')
   const previousQuery = pool.query
-  // Indirizzo finto e senza credenziali: nessuno lo contatta mai.
-  process.env.DATABASE_URL = 'postgres://localhost:5432/finto'
+  // Host riservato `.invalid` (RFC 2606), senza credenziali: non si risolve mai. Se lo stub
+  // smettesse di intercettare `query` il test fallirebbe senza contattare nessun server.
+  process.env.DATABASE_URL = 'postgres://stub.invalid/finto'
   pool.query = (sql: string, params: unknown[] = []) => query(sql, params)
   try {
     return await run()
   } finally {
-    pool.query = previousQuery
+    if (hadOwnQuery) pool.query = previousQuery
+    else delete pool.query
     if (previousUrl === undefined) delete process.env.DATABASE_URL
     else process.env.DATABASE_URL = previousUrl
   }
@@ -185,7 +191,10 @@ test('getPageTextsOrDefault: tabella vuota usa i testi standard, riga salvata us
 
 test('getPageSettings: tabella vuota restituisce le impostazioni vuote, riga presente i campi convertiti', async () => {
   await withStubbedPool(async () => ({ rows: [] }), async () => {
-    assert.deepEqual(await getPageSettings(), EMPTY_PAGE_SETTINGS)
+    const settings = await getPageSettings()
+    assert.deepEqual(settings, EMPTY_PAGE_SETTINGS)
+    // una copia e non la costante condivisa: chi la modifica non deve toccare EMPTY_PAGE_SETTINGS
+    assert.notEqual(settings, EMPTY_PAGE_SETTINGS)
   })
   await withStubbedPool(
     async () => ({ rows: [{ eyebrow: 'E', title: null, lead: null, whatsapp_text: 'W', show_ugc: true }] }),
@@ -219,8 +228,15 @@ test('savePageSettings: senza showUgc passa null all upsert, con showUgc passa i
 test('053: RLS attiva, privilegi revocati, nessun inserimento del codice o dei testi', () => {
   const migration = readFileSync(join(process.cwd(), 'db', 'migrations', '053_download_page_settings.sql'), 'utf8')
   assert.match(migration, /ALTER TABLE download_page_settings ENABLE ROW LEVEL SECURITY;/)
+  // Niente FORCE: varrebbe anche per il proprietario, cioè per l'app e per il runner delle
+  // migrazioni, che senza policy non vedrebbero né scriverebbero più niente.
+  assert.doesNotMatch(migration, /FORCE\s+ROW\s+LEVEL/i)
   assert.match(migration, /REVOKE ALL ON download_page_settings FROM anon;/)
   assert.match(migration, /REVOKE ALL ON download_page_settings FROM authenticated;/)
+  // I due ruoli esistono solo su Supabase: la revoca sta sotto la guardia pg_roles, altrimenti
+  // su un Postgres normale la migrazione si fermerebbe con "role does not exist".
+  assert.match(migration, /pg_roles WHERE rolname = 'anon'/)
+  assert.match(migration, /pg_roles WHERE rolname = 'authenticated'/)
   assert.match(migration, /CHECK \(id = 1\)/)
   assert.doesNotMatch(migration, /INSERT\s+INTO/i)
 })

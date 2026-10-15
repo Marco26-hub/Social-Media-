@@ -19,9 +19,10 @@ const IOS = /iPhone|iPad|iPod/
 const ANDROID = /Android/
 
 export function detectInAppBrowser(userAgent: string | null | undefined): InAppBrowser {
-  // Il tipo ammette solo string, null e undefined, ma il valore arriva da un header.
-  // Il controllo è esplicito perché `test()` converte in stringa anche un array o un
-  // oggetto e troverebbe "Instagram" dove lo user-agent non è nemmeno una stringa.
+  // Il tipo ammette solo string, null e undefined (`headers().get()` dà `string | null`):
+  // il controllo resta come difesa per chi chiama da codice non tipizzato. È esplicito
+  // perché `test()` converte in stringa anche un array o un oggetto e troverebbe
+  // "Instagram" dove lo user-agent non è nemmeno una stringa.
   if (typeof userAgent !== 'string') return { app: null, os: 'other' }
   const app = INSTAGRAM.test(userAgent) ? 'instagram' : FACEBOOK.test(userAgent) ? 'facebook' : null
   const os = IOS.test(userAgent) ? 'ios' : ANDROID.test(userAgent) ? 'android' : 'other'

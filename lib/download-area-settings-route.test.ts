@@ -18,6 +18,10 @@ test('settings: GET in demo risponde 403', async () => {
 })
 
 test('settings: PUT in demo risponde 403 prima di leggere il corpo', async () => {
-  const res = await withDemo(() => PUT(new Request('http://localhost/api/admin/downloads/settings', { method: 'PUT', body: 'non e json' })))
+  const request = new Request('http://localhost/api/admin/downloads/settings', { method: 'PUT', body: 'non e json' })
+  const res = await withDemo(() => PUT(request))
   assert.equal(res.status, 403)
+  // Il 403 non basta: anche una route che legge il corpo e poi risponde 403 lo darebbe. Che il
+  // guard venga prima si vede dal corpo ancora intatto.
+  assert.equal(request.bodyUsed, false)
 })

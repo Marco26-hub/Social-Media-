@@ -1,5 +1,6 @@
-// Le prove verificabili: la home e la pagina regali leggono gli stessi numeri
-export const CASES = [
+// Le prove verificabili: la home e la pagina regali leggono gli stessi numeri.
+// Sola lettura: ordinare o rovesciare l'array cambierebbe l'ordine per entrambe le pagine.
+export const CASES: ReadonlyArray<{ metric: string; unit: string; title: string; text: string; href: string }> = [
   {
     metric: '24',
     unit: 'contenuti',

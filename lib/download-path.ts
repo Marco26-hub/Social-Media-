@@ -1,4 +1,4 @@
-// Percorsi dell'area download segreta (/download/<codice>) per chi misura il traffico.
+// Percorsi dell'area download segreta (/download/<codice>): statistiche, banner cookie e Odino.
 // Il codice sta nell'URL ed è l'unica "password" della pagina: non deve finire in
 // statistiche o pixel di terzi. Puro, senza import: gira anche nel browser.
 

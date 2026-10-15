@@ -1,6 +1,6 @@
 // Il profilo Instagram di Social Web Automation in un posto solo: lo usano il
-// footer di tutto il sito e la pagina dei regali, e un indirizzo scritto due
-// volte prima o poi diverge.
+// footer di tutto il sito, la pagina dei regali e la sua 404, e un indirizzo
+// scritto più volte prima o poi diverge.
 
 export const INSTAGRAM_HANDLE = '@socialwebautomation'
 

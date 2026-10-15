@@ -439,7 +439,9 @@ export const DEFAULT_PAGE_TEXTS: PageTexts = {
   whatsappText: 'Ciao! Ho preso i regali SWA. Vorrei un contenuto di prova gratuito per la mia attività. Mi occupo di: ',
 }
 
-const PAGE_TEXT_KEYS: readonly PageTextKey[] = ['eyebrow', 'title', 'lead', 'whatsappText']
+// Ricavate dai limiti: una chiave in più in PAGE_TEXT_LIMITS non può essere saltata in
+// silenzio dai cicli di validatePageSettings e resolvePageTexts.
+const PAGE_TEXT_KEYS: readonly PageTextKey[] = Object.keys(PAGE_TEXT_LIMITS) as PageTextKey[]
 
 // Nome del campo con l'articolo, per i messaggi d'errore.
 const PAGE_TEXT_LABELS: Record<PageTextKey, string> = {
@@ -495,9 +497,15 @@ export function resolvePageTexts(stored: Partial<PageTextOverrides> | null | und
 const WHATSAPP_NUMBER = TITOLARE.telefono.replace(/\D/g, '')
 
 // Link wa.me con il messaggio già scritto. Usato sia dalla pagina regali sia dalla
-// 404 del segmento, con testi diversi.
+// 404 del segmento, con testi diversi. validatePageSettings toglie gli spazi ai bordi:
+// un messaggio salvato come "Mi occupo di:" arriverebbe senza lo spazio finale e ciò
+// che scrive il visitatore si attaccherebbe ai due punti. Se il testo, senza la coda di
+// spazi, finisce con ":" se ne rimette uno solo prima di codificare; il messaggio
+// standard (che ne ha già uno) e ogni altro testo danno lo stesso link di prima.
 export function buildWhatsAppUrl(text: string): string {
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`
+  const trimmed = text.trimEnd()
+  const message = trimmed.endsWith(':') ? `${trimmed} ` : text
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
 }
 
 // Spazi e maiuscole non contano: l'avviso del pannello non deve scattare per

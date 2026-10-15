@@ -189,6 +189,8 @@ test('describeItem: etichetta per tipo di file', () => {
     ['foto.png', 'image/png', 'Scarica l’immagine'],
     ['clip.mp4', 'video/mp4', 'Scarica il video'],
     ['dati.csv', 'text/csv', 'Scarica il file'],
+    // il tipo salvato vince sull'estensione, che serve solo quando il tipo manca
+    ['x.png', 'application/pdf', 'Scarica il PDF'],
   ]
   for (const [name, type, label] of cases) {
     const d = describeItem(file(name, type))
@@ -287,6 +289,39 @@ test('buildWhatsAppUrl: numero dal titolare e testo codificato', () => {
     'https://wa.me/393477196603?text=Ciao!%20Ho%20preso%20i%20regali%20SWA.%20Mi%20occupo%20di%3A%20',
   )
   assert.equal(buildWhatsAppUrl('attività'), 'https://wa.me/393477196603?text=attivit%C3%A0')
+})
+
+// validatePageSettings toglie gli spazi ai bordi: un messaggio salvato come "…Mi occupo di:"
+// arriverebbe a WhatsApp senza lo spazio finale e ciò che scrive il visitatore si attaccherebbe
+// ai due punti. buildWhatsAppUrl lo rimette.
+test('buildWhatsAppUrl: un testo che finisce con i due punti riceve uno spazio', () => {
+  assert.equal(
+    buildWhatsAppUrl('Ciao! Mi occupo di:'),
+    'https://wa.me/393477196603?text=Ciao!%20Mi%20occupo%20di%3A%20',
+  )
+})
+
+test('buildWhatsAppUrl: se dopo i due punti c’è già uno spazio ne resta uno solo', () => {
+  const expected = 'https://wa.me/393477196603?text=Ciao!%20Mi%20occupo%20di%3A%20'
+  assert.equal(buildWhatsAppUrl('Ciao! Mi occupo di: '), expected)
+  // più spazi o un a capo in coda contano come uno: l'aggiunta parte dal testo senza la coda
+  assert.equal(buildWhatsAppUrl('Ciao! Mi occupo di:   '), expected)
+  assert.equal(buildWhatsAppUrl('Ciao! Mi occupo di:\n'), expected)
+})
+
+test('buildWhatsAppUrl: senza i due punti in fondo il testo resta com’è', () => {
+  const base = 'https://wa.me/393477196603?text='
+  // lo spazio in coda a un testo senza due punti non si toglie e non si raddoppia
+  assert.equal(buildWhatsAppUrl('Scrivimi qui '), `${base}Scrivimi%20qui%20`)
+  // i due punti a metà frase non contano: devono essere l'ultimo carattere
+  assert.equal(buildWhatsAppUrl('Ciao: sono Anna'), `${base}Ciao%3A%20sono%20Anna`)
+})
+
+test('buildWhatsAppUrl: il messaggio standard dà lo stesso URL di prima', () => {
+  assert.equal(
+    buildWhatsAppUrl(DEFAULT_PAGE_TEXTS.whatsappText),
+    'https://wa.me/393477196603?text=Ciao!%20Ho%20preso%20i%20regali%20SWA.%20Vorrei%20un%20contenuto%20di%20prova%20gratuito%20per%20la%20mia%20attivit%C3%A0.%20Mi%20occupo%20di%3A%20',
+  )
 })
 
 test('hasMarkerPhrase: senza distinguere maiuscole e spazi', () => {

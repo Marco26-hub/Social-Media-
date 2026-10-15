@@ -13,6 +13,13 @@ const UA = {
   facebookIos: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21F90 [FBAN/FBIOS;FBAV/470.0.0.37.109;FBBV/615423890;FBDV/iPhone14,5;FBMD/iPhone;FBSN/iOS;FBSV/17.5;FBSS/3;FBID/phone;FBLC/it_IT;FBOP/5]',
   facebookAndroid: 'Mozilla/5.0 (Linux; Android 14; SM-S911B Build/UP1A.231005.007; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/125.0.6422.165 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/470.0.0.46.109;]',
   messengerIos: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21F90 [FBAN/MessengerForiOS;FBAV/468.0.0.34.113]',
+  // iPad e iPod dentro Instagram e Facebook. Inventati apposta, senza "iPhone" da nessuna parte
+  // (nemmeno in "iPhone OS", che in un user-agent vero di iPod di solito c'è): così il sistema
+  // si decide solo con le alternative iPad e iPod del riconoscimento.
+  instagramIpad: 'Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21F90 Instagram 340.0.0.18.109 (iPad13,1; iOS 17_5; it_IT; it-IT; scale=2.00; 2048x2732; 604214221)',
+  facebookIpod: 'Mozilla/5.0 (iPod; CPU OS 15_8 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/19H370 [FBAN/FBIOS;FBAV/470.0.0.37.109;FBBV/615423890;FBDV/iPod9,1;FBMD/iPod touch;FBSN/iOS;FBSV/15.8;FBSS/2;FBID/phone;FBLC/it_IT;FBOP/5]',
+  // Come instagramIos, ma con "instagram" in minuscolo: pinna il flag /i del riconoscimento.
+  instagramLowercase: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21F90 instagram 340.0.0.18.109 (iPhone14,5; iOS 17_5; it_IT; it-IT; scale=3.00; 1170x2532; 604214221)',
   safariIos: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
   chromeAndroid: 'Mozilla/5.0 (Linux; Android 14; SM-S911B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.165 Mobile Safari/537.36',
   chromeDesktop: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
@@ -24,6 +31,20 @@ test('detectInAppBrowser: Instagram e Facebook, iOS e Android', () => {
   assert.deepEqual(detectInAppBrowser(UA.facebookIos), { app: 'facebook', os: 'ios' })
   assert.deepEqual(detectInAppBrowser(UA.facebookAndroid), { app: 'facebook', os: 'android' })
   assert.deepEqual(detectInAppBrowser(UA.messengerIos), { app: 'facebook', os: 'ios' })
+})
+
+test('detectInAppBrowser: iPad e iPod dentro Instagram o Facebook valgono iOS', () => {
+  // Il fixture non deve contenere "iPhone": se lo avesse, il sistema si deciderebbe senza
+  // passare dalle alternative iPad e iPod e il test non le proverebbe più.
+  for (const ua of [UA.instagramIpad, UA.facebookIpod]) assert.ok(!ua.includes('iPhone'), ua)
+  assert.deepEqual(detectInAppBrowser(UA.instagramIpad), { app: 'instagram', os: 'ios' })
+  assert.deepEqual(detectInAppBrowser(UA.facebookIpod), { app: 'facebook', os: 'ios' })
+})
+
+test('detectInAppBrowser: Instagram si riconosce anche con le lettere minuscole', () => {
+  // Senza la "I" maiuscola da nessuna parte: l'unico modo per trovarlo è il flag /i.
+  assert.ok(!UA.instagramLowercase.includes('Instagram'))
+  assert.deepEqual(detectInAppBrowser(UA.instagramLowercase), { app: 'instagram', os: 'ios' })
 })
 
 test('detectInAppBrowser: i browser veri non scattano', () => {
@@ -40,9 +61,10 @@ test('detectInAppBrowser: Instagram vince se compaiono anche i marcatori di Face
 })
 
 test('detectInAppBrowser: un input che non è una stringa non scatta e non lancia', () => {
-  // Il tipo ammette solo string, null e undefined, ma il valore arriva da un header.
-  // L'array e l'oggetto con toString sono i casi insidiosi: RegExp.test li convertirebbe
-  // in stringa e troverebbe "Instagram" anche se lo user-agent non è una stringa.
+  // Il tipo ammette solo string, null e undefined (`headers().get()` dà `string | null`): il
+  // controllo è una difesa per chi chiama da codice non tipizzato. L'array e l'oggetto con
+  // toString sono i casi insidiosi: RegExp.test li convertirebbe in stringa e troverebbe
+  // "Instagram" anche se lo user-agent non è una stringa.
   const notStrings = [42, true, {}, ['Instagram 340.0.0.18.109'], { toString: () => 'Instagram 340.0.0.18.109' }]
   for (const bad of notStrings) assert.deepEqual(detectInAppBrowser(bad as unknown as string), { app: null, os: 'other' })
 })
