@@ -1,7 +1,9 @@
-/* Solo le schede: hero e sezioni vengono da styles/content-page.module.css.
-   I colori sono i token che `.page` ridefinisce nel tema notte, quindi le schede
-   seguono il tema da sole. Il pulsante usa --green come fondo e --surface come
-   testo: i due token si invertono insieme e il contrasto regge in entrambi i temi. */
+/* Le schede dei regali e le parti proprie della pagina regali: hero e sezioni
+   vengono da styles/content-page.module.css. I colori sono i token che `.page`
+   ridefinisce nel tema notte, quindi le schede seguono il tema da sole. Il pulsante
+   usa --green come fondo e --surface come testo: i due token si invertono insieme e
+   il contrasto regge in entrambi i temi. Dove la superficie resta fissa anche di
+   notte (avviso in-app, chiusura verde) i colori sono fissi. */
 
 .grid {
   display: grid;
@@ -104,5 +106,299 @@
 
   .action {
     align-self: stretch;
+  }
+}
+
+/* ---- Pagina regali ---------------------------------------------------------
+   `.page` sta su <main> insieme a quello di content-page.module.css: serve solo a
+   dare alle regole qui sotto più peso di quelle condivise (`.hero`, `.section`,
+   `.finalCta a` e il padding che content-page dà a ogni link fuori dai paragrafi). */
+
+/* Regali: un'intestazione piccola al posto del titolo di sezione, schede più vicine. */
+.page .gifts {
+  padding-top: 56px;
+}
+
+.giftsHeading {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.giftsHeading + .grid,
+.giftsHeading + .empty {
+  margin-top: 20px;
+}
+
+/* Il link WhatsApp della lista vuota: senza colore proprio prenderebbe il grigio del testo. */
+.empty a {
+  color: var(--green);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Nota sotto il pulsante (ZIP e documenti dentro Instagram o Facebook). Sta sulla
+   scheda, che segue il tema: qui i token vanno bene. */
+.hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Avviso per il browser interno di Instagram e Facebook. Colori fissi: l'avviso
+   resta chiaro anche in tema notte, quindi testo e pulsante non possono passare dai
+   token che si invertono (HANDOFF.md, «Contrasto — il bug ricorrente»). */
+.notice {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 16px max(24px, calc((100vw - 1120px) / 2));
+  border-block: 1px solid #e3bd54;
+  background: #fff4d6;
+  color: #3a2c00;
+}
+
+.noticeText {
+  max-width: 760px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.page .noticeButton {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 4px;
+  background: #0f6b4f;
+  color: #ffffff;
+  font: 800 14px/1.2 Arial, Helvetica, sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.page .noticeButton:hover {
+  background: #094c39;
+}
+
+/* Il contorno oro del resto della pagina sul giallo dell'avviso quasi non si vede. */
+.page .noticeButton:focus-visible,
+.copyInput:focus-visible {
+  outline: 3px solid #3a2c00;
+  outline-offset: 3px;
+}
+
+.copy {
+  justify-self: stretch;
+  max-width: 560px;
+}
+
+.copyInput {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px solid #e3bd54;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #3a2c00;
+  /* Sotto i 16px Safari su iPhone ingrandisce la pagina quando si tocca il campo. */
+  font-size: 16px;
+}
+
+/* Vuoto non occupa spazio, ma resta nella pagina: è la regione che lo screen reader annuncia. */
+.copyStatus {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.copyStatus:not(:empty) {
+  margin-top: 8px;
+}
+
+/* Ponte: la riga sotto il pulsante, per chi non riesce ad aprire WhatsApp. */
+.phoneLine {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Le tre prove (CASES, le stesse della home): superfici e testi dai token del tema. */
+.proofGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.page .proofCard {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.page .proofCard:hover {
+  border-color: var(--green);
+}
+
+.proofMetric {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--green);
+  font: 500 42px/1 Georgia, 'Times New Roman', serif;
+}
+
+.proofMetric small {
+  color: var(--muted);
+  font: 800 11px/1.2 Arial, Helvetica, sans-serif;
+  text-transform: uppercase;
+}
+
+.proofCard strong {
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.proofCard p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.priceLine {
+  max-width: 760px;
+  margin: 28px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.priceLine a {
+  color: var(--green);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Chiusura: pulsante e riga Instagram nella stessa colonna, a destra del testo. */
+.page .finalActions {
+  flex: none;
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  max-width: 300px;
+}
+
+/* La riga Instagram sta sul verde fisso di .finalCta, anche in tema notte: testo
+   chiaro fisso e link sottolineato, perché il colore da solo non lo distingue. Le
+   regole devono battere `.finalCta a`, che fa di ogni link un pulsante bianco. */
+.page .finalActions .finalNote {
+  margin: 0;
+  color: #d5eee5;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.page .finalActions .finalNote a {
+  display: inline;
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: #ffffff;
+  font-size: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 800px) {
+  .proofGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sul telefono titolo e primo regalo (titolo della scheda e pulsante) devono stare
+   nel primo schermo: apertura compatta e schede più basse. Sopra i 700px resta
+   l'apertura delle altre pagine. */
+@media (max-width: 700px) {
+  .page .compactHero {
+    padding: 22px 18px 26px;
+  }
+
+  .page .compactHero > p:first-child {
+    margin-bottom: 10px;
+  }
+
+  .page .compactHero h1 {
+    font-size: 38px;
+  }
+
+  .page .compactHero h1::after {
+    margin-top: 12px;
+  }
+
+  .page .compactHero h1 + p {
+    margin-top: 12px;
+  }
+
+  .page .gifts {
+    padding-top: 24px;
+  }
+
+  .giftsHeading + .grid,
+  .giftsHeading + .empty {
+    margin-top: 14px;
+  }
+
+  .icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .title {
+    margin-top: 14px;
+    font-size: 19px;
+  }
+
+  .notice {
+    justify-items: stretch;
+    padding: 14px 18px;
+  }
+
+  .page .noticeButton {
+    width: 100%;
+  }
+
+  .page .finalActions {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .proofMetric small {
+    font-size: 12.5px;
   }
 }
