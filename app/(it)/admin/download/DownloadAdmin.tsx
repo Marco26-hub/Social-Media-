@@ -7,6 +7,7 @@ import type { DownloadItem } from '@/lib/download-area-db'
 import AddItemSection from './AddItemSection'
 import { callApi, type ApiResult } from './api'
 import ItemCard from './ItemCard'
+import PageTextsSection from './PageTextsSection'
 import SecretLinkSection from './SecretLinkSection'
 
 type ListResponse = { items: DownloadItem[]; code: string | null; needs_migration: boolean }
@@ -168,6 +169,7 @@ export default function DownloadAdmin() {
       ) : (
         <div className="space-y-4">
           <SecretLinkSection code={code} onGenerate={generateCode} />
+          <PageTextsSection code={code} />
           <AddItemSection onCreated={handleCreated} onRefresh={refreshItems} />
 
           <section className="card p-5" aria-labelledby={listTitleId}>
