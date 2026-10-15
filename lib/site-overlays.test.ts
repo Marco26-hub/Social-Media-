@@ -27,8 +27,16 @@ test('SiteOverlays decide con siteOverlaysEnabled', () => {
   assert.match(source, /if \(!siteOverlaysEnabled\(pathname\)\) return null/)
 })
 
+// Conta il verso, non solo la presenza: che isDownloadPath compaia nel file non basta. Con
+// `esclusa` rovesciata, o tolta da uno dei due ritorni anticipati (l'effetto, che manda
+// PageView e carica lo script, e il rendering, che mette l'immagine del noscript), il pixel
+// partirebbe sui regali con il codice segreto nel percorso. Le espressioni stanno su una
+// riga e non usano `$` con il flag `m`, che con i fine riga CRLF non combacerebbe.
 test('MetaPixel resta escluso su /download', () => {
-  assert.match(read('components', 'MetaPixel.tsx'), /isDownloadPath\(pathname\)/)
+  const source = read('components', 'MetaPixel.tsx')
+  assert.match(source, /const esclusa = isDownloadPath\(pathname\)/, 'esclusa deve valere isDownloadPath(pathname), non il suo contrario')
+  const guards = source.match(/if \(!enabled \|\| !PIXEL_ID \|\| esclusa\) return/g) ?? []
+  assert.equal(guards.length, 2, `esclusa deve chiudere i due ritorni anticipati, effetto e rendering: ne trovo ${guards.length}`)
 })
 
 // Si legge il sorgente intero, commenti compresi: in nessun file della pagina nemmeno un

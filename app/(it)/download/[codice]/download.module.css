@@ -339,6 +339,15 @@
   }
 }
 
+/* I testi dell'apertura si modificano dal pannello: una parola lunga senza spazi (un
+   hashtag, un indirizzo) non deve uscire dallo schermo. `.page` ha overflow-x: hidden,
+   quindi ciò che sporge verrebbe tagliato in silenzio sul bordo destro, già nel primo
+   schermo. Vale a ogni larghezza, per questo sta fuori dal media query qui sotto. */
+.page .compactHero h1,
+.page .compactHero p {
+  overflow-wrap: anywhere;
+}
+
 /* Sul telefono titolo e primo regalo (titolo della scheda e pulsante) devono stare
    nel primo schermo: apertura compatta e schede più basse. Sopra i 700px resta
    l'apertura delle altre pagine. */
