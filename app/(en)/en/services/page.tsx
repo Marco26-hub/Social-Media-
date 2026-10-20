@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 }
 
 const services: { id: string; href?: string; icon: LucideIcon; title: string; text: string }[] = [
-  { id: 'restaurant', href: '/en/services/restaurant-management-system', icon: UtensilsCrossed, title: 'Restaurant management system', text: 'QR menu, table ordering and payment, bookings, split bills and live room operations. Payments go to the venue and SWA retains no percentage of sales.' },
+  { id: 'restaurant', href: '/en/services/restaurant-management-system', icon: UtensilsCrossed, title: 'Restaurant management system', text: `QR menu, table ordering and payment, bookings, split bills and live room operations. ${SALA_NOTA_PREZZI_EN}` },
   { id: 'social', href: '/en/services/social-media-management', icon: Share2, title: 'Managed social media', text: 'Monthly strategy, channel-specific content, media planning, approval and publishing. Presence covers 2 channels and 16 pieces; Growth covers 2 channels and 24 pieces.' },
   { id: 'seo', href: '/en/services/seo-geo', icon: FileSearch, title: 'SEO + GEO strategy', text: 'Audit, intent mapping, information architecture, technical priorities, entities and structured data. This defines what to improve; it is not the monthly article-production plan.' },
   { id: 'blog', href: '/en/services/blog-seo-geo', icon: Newspaper, title: 'Blog SEO + GEO', text: 'The ongoing execution layer: 12 articles each month, editorial planning, on-page metadata, FAQs, human review and publishing or CMS-ready delivery.' },
@@ -32,7 +32,6 @@ const services: { id: string; href?: string; icon: LucideIcon; title: string; te
   { id: 'agenda', href: '/en/services/client-diary-whatsapp', icon: CalendarClock, title: 'Diary and client recall', text: 'Each day the system reads the diary and the history, finds who has not come back and drafts the message. Nothing leaves without your yes. From €390 per month, 1000 messages included. No guarantee on how many people return.' },
   { id: 'jobs', href: '/en/services/job-reporting', icon: ClipboardCheck, title: 'Job reports and field work', text: 'For work done away from the office: checklists built on your real services, photos, hours, the client signature on the phone and a PDF before the team leaves. Paired with a website that turns requests into jobs. Quoted after review.' },
   { id: 'systems', href: '/en/services/systems-automation', icon: Workflow, title: 'Systems automation', text: 'The management system, CRM, forms and archive stop asking for the same data three times. We connect what already works through the available interfaces and build from scratch only where no standard exists. Quoted after mapping the flows.' },
-  { id: 'restaurant', href: '/en/services/restaurant-management-system', icon: Globe2, title: 'Tavolo restaurant system', text: SALA_NOTA_PREZZI_EN },
   { id: 'compliance', href: '/en/legal-advice', icon: Scale, title: 'AI Act, GDPR and compliance', text: 'Operational assessment, policies and documented responsibilities for companies using AI and personal data. Legal representation and certifications are not included unless agreed separately.' },
 ]
 

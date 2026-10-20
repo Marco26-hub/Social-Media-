@@ -638,10 +638,10 @@ export const SETTORI: Settore[] = [
       { q: 'Sostituisce il registratore di cassa?', a: 'No. Il sistema gestisce ordine, pagamento e fattura elettronica. Gli obblighi fiscali del locale, registratore telematico compreso, restano quelli previsti dalla normativa e vanno verificati con il vostro consulente.' },
       { q: 'Il personale deve imparare un programma nuovo?', a: 'Il pannello serve a guardare e correggere, non a lavorare tutto il giorno: ordini in corso, prenotazioni, tavoli e menu. Gli accessi sono separati per ruolo, quindi chi è in sala vede la sala e non gli incassi.' },
       { q: 'Posso cambiare il menu da solo?', a: 'Sì. Piatti, prezzi, disponibilità e allergeni si modificano dal pannello e cambiano subito su tutti i tavoli, senza ristampare i codici: il QR punta al tavolo, non al menu.' },
-      { q: 'Posso provarlo prima di decidere?', a: `Sì, ${GIORNI_PROVA} giorni e senza carta. Si carica il vostro menu, si stampano i QR e si fa provare il servizio a un tavolo vero: si capisce sui vostri piatti, non su un esempio generico.` },
+      { q: 'Come richiedo una demo o una prova?', a: `Contatta SWA dal pulsante “Richiedi una demo” per concordare la presentazione del gestionale. La prova nel locale dura ${GIORNI_PROVA} giorni senza carta: definiamo insieme menu, tavoli e configurazione.` },
     ],
     correlati: [
-      { href: 'https://ristoranti-dashboard.vercel.app/', label: 'Guarda il sistema di sala' },
+      { href: '/servizi/gestionale-ristoranti', label: 'Come funziona il gestionale Tavolo' },
       { href: '/servizi/siti-e-commerce', label: 'Siti web e landing' },
       { href: '/servizi/gestione-social-media', label: 'Gestione social media' },
       { href: '/servizi/automazione-gestionali', label: 'Automazione e gestionali' },

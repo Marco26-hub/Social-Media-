@@ -103,7 +103,14 @@ const remotionServerFiles = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
-    return { beforeFiles: ecosystemRewrites(), afterFiles: [], fallback: [] }
+    return {
+      beforeFiles: [
+        { source: '/favicon.ico', destination: '/icon' },
+        ...ecosystemRewrites(),
+      ],
+      afterFiles: [],
+      fallback: [],
+    }
   },
   // La pagina unica della Segretaria AI e stata divisa in due, una per tipo di
   // ricerca. Chi arriva dal vecchio indirizzo — menu, sitemap, link gia in giro —
@@ -114,6 +121,11 @@ const nextConfig = {
       // non e' una pagina autonoma. Lo portiamo al listino, invece di lasciare
       // Google e chi arriva da un vecchio link su una 404.
       { source: '/mese', destination: '/pacchetti', permanent: true },
+      { source: '/month', destination: '/en/pricing', permanent: true },
+      { source: '/en/contact-2', destination: '/en/contact', permanent: true },
+      { source: '/settori/agenzie-immobiliari-2', destination: '/settori/agenzie-immobiliari', permanent: true },
+      { source: '/servizi/segretaria-telefonica-ai-2', destination: '/servizi/segretaria-telefonica-ai', permanent: true },
+      { source: '/settori/cliniche-estetiche-3', destination: '/settori/cliniche-estetiche', permanent: true },
       { source: '/servizi/segretaria-ai', destination: '/servizi/segretaria-telefonica-ai', permanent: true },
     ]
   },

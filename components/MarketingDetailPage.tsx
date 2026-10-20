@@ -63,6 +63,8 @@ export type MarketingDetailConfig = {
   entryOffer?: { label: string; prezzo: string; cadenza: string; testo: string; href: string; cta: string }
   primaryCtaLabel?: string
   primaryCtaHref?: string
+  secondaryCtaLabel?: string
+  secondaryCtaHref?: string
   icon: LucideIcon
   signals: string[]
   outcomes: TextBlock[]
@@ -499,16 +501,20 @@ export default function MarketingDetailPage({ config }: { config: MarketingDetai
           ) : (
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">{isEnglish ? 'Talk to us' : 'Parliamo del progetto'} <ArrowRight size={17} aria-hidden="true" /></a>
           )}
-          <a
-            className={styles.finalCtaProva}
-            href={`https://wa.me/393477196603?text=${encodeURIComponent(isEnglish
-              ? `Hello! Before deciding, I would like a free sample piece about ${config.serviceName.toLowerCase()}.`
-              : `Ciao! Prima di decidere vorrei un contenuto di prova gratuito su ${config.serviceName.toLowerCase()}.`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {isEnglish ? 'Or ask for a free sample first' : 'Oppure chiedi prima un contenuto di prova'}
-          </a>
+          {config.secondaryCtaHref ? (
+            <Link className={styles.finalCtaProva} href={config.secondaryCtaHref}>{config.secondaryCtaLabel}</Link>
+          ) : (
+            <a
+              className={styles.finalCtaProva}
+              href={`https://wa.me/393477196603?text=${encodeURIComponent(isEnglish
+                ? `Hello! Before deciding, I would like a free sample piece about ${config.serviceName.toLowerCase()}.`
+                : `Ciao! Prima di decidere vorrei un contenuto di prova gratuito su ${config.serviceName.toLowerCase()}.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {isEnglish ? 'Or ask for a free sample first' : 'Oppure chiedi prima un contenuto di prova'}
+            </a>
+          )}
         </div>
       </section>
 

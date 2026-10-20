@@ -5,6 +5,7 @@ import MarketingDetailPage, { type MarketingDetailConfig } from '@/components/Ma
 import { prezzoMinimoSettore, type Settore } from '@/lib/settori'
 import { SETTORI_EN } from '@/lib/settori.en'
 import { SITE_URL } from '@/lib/site-config'
+import { richiestaDemoRistoranti } from '@/lib/ristoranti-contatti'
 
 // Le landing di settore riusano l’impaginazione delle pagine servizio: stessa
 // struttura, stessi dati strutturati, stessa resa in tema notte. Cambia solo
@@ -59,6 +60,7 @@ export function metadataSettore(settore: Settore, locale: SettoreLocale = 'it'):
 
 export default function SettorePage({ settore, locale = 'it' }: { settore: Settore; locale?: SettoreLocale }) {
   const isEnglish = locale === 'en'
+  const isRestaurant = settore.slug === 'ristoranti-e-bar'
   const config: MarketingDetailConfig = {
     path: percorsoSettore(settore, locale),
     locale: isEnglish ? 'en' : 'it',
@@ -75,12 +77,20 @@ export default function SettorePage({ settore, locale = 'it' }: { settore: Setto
     priceLabel: settore.prezzoPrincipale?.label,
     priceCadence: settore.prezzoPrincipale?.cadenza,
     entryOffer: settore.offertaIngresso,
-    primaryCtaLabel: isEnglish ? 'Book a call' : 'Richiedi una call',
+    primaryCtaLabel: isRestaurant
+      ? (isEnglish ? 'Request a demo' : 'Richiedi una demo')
+      : (isEnglish ? 'Book a call' : 'Richiedi una call'),
     // /consulenza e' la consulenza legale a pagamento su AI Act e GDPR: chi
     // arriva da una pagina di settore cerca il proprio mestiere, non un
     // avvocato. La richiesta di call va sul canale diretto, con il settore
     // gia' scritto nel messaggio.
-    primaryCtaHref: `https://wa.me/393477196603?text=${encodeURIComponent(isEnglish ? `Hello, I work in ${settore.nome.toLowerCase()} and I would like to book a call.` : `Ciao! Lavoro nel settore ${settore.nome.toLowerCase()} e vorrei una call.`)}`,
+    primaryCtaHref: isRestaurant
+      ? richiestaDemoRistoranti(locale)
+      : `https://wa.me/393477196603?text=${encodeURIComponent(isEnglish ? `Hello, I work in ${settore.nome.toLowerCase()} and I would like to book a call.` : `Ciao! Lavoro nel settore ${settore.nome.toLowerCase()} e vorrei una call.`)}`,
+    ...(isRestaurant ? {
+      secondaryCtaLabel: isEnglish ? 'Contact SWA' : 'Contatta SWA',
+      secondaryCtaHref: isEnglish ? '/en/contact' : '/contatti',
+    } : {}),
     icon: ICONE[settore.slug] ?? Building2,
     signals: settore.segnali,
     outcomes: settore.risultati,

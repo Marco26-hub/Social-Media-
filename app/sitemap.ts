@@ -225,6 +225,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (revisedPaths.has(new URL(page.url).pathname)) page.lastModified = new Date('2026-10-09T00:00:00.000Z')
   }
 
+  const indexingFixPaths = new Set([
+    '/en/services',
+    '/servizi/gestionale-ristoranti', '/en/services/restaurant-management-system',
+    '/settori/ristoranti-e-bar', '/en/settori/ristoranti-e-bar',
+  ])
+  for (const page of pages) {
+    if (indexingFixPaths.has(new URL(page.url).pathname)) page.lastModified = new Date('2026-10-20T00:00:00.000Z')
+  }
+
   if (!dbReady()) return pages
 
   try {

@@ -140,10 +140,10 @@ const ELENCO: Settore[] = [
       { q: 'What do we need to start?', a: 'An account in the venue name to collect payments, the fiscal details, the menu — from a file or typed into the panel — and a print run of the QR codes, one per table. Electronic invoicing additionally needs an accredited SDI intermediary; the Tilby till connection needs their developer programme.' },
       { q: 'Does your name appear on the customer pages?', a: 'No. Logo, colours and details are the venue’s on every page the customer sees: menu, bill, booking and review. Our name appears nowhere.' },
       { q: 'Does it replace the fiscal register?', a: 'No. Fiscal obligations remain with the restaurant and should be checked with your accountant.' },
-      { q: 'Can we try it first?', a: `Yes, ${GIORNI_PROVA} days and with no card. You load your own menu, print the QR codes and let one real table use it: you judge it on your dishes, not on a demo.` },
+      { q: 'How do we request a demo or trial?', a: `Contact SWA using “Request a demo” to arrange a presentation of the system. The on-site trial lasts ${GIORNI_PROVA} days with no card: we agree on the menu, tables and setup together.` },
     ],
     correlati: [
-      { href: 'https://ristoranti-dashboard.vercel.app/', label: 'View the room system' },
+      { href: '/en/services/restaurant-management-system', label: 'How the Tavolo system works' },
       { href: '/en/services', label: 'Websites and content' },
       { href: '/en/pricing', label: 'Pricing' },
     ],
